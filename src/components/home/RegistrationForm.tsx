@@ -6,6 +6,7 @@ import { experienceOptions, roleOptions } from "@/data/program";
 import { tracks } from "@/data/tracks";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/FormField";
+import { registerInterest } from "@/app/register/actions";
 import { emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
@@ -15,6 +16,8 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
   const [data, setData] = useState<RegistrationData>({ ...emptyRegistration, track: defaultTrack ?? "" });
   const [errors, setErrors] = useState<RegistrationErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
 
@@ -23,16 +26,34 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
-  function onSubmit(e: React.FormEvent) {
+  function focusFirst(found: RegistrationErrors) {
+    const first = Object.keys(found)[0];
+    if (first) formRef.current?.querySelector<HTMLElement>(`#${first}`)?.focus();
+    return !!first;
+  }
+
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (pending) return;
+    setServerError("");
     const found = validateRegistration(data);
     setErrors(found);
-    const first = Object.keys(found)[0];
-    if (first) {
-      formRef.current?.querySelector<HTMLElement>(`#${first}`)?.focus();
+    if (focusFirst(found)) return;
+
+    setPending(true);
+    try {
+      const result = await registerInterest(data);
+      if (!result.ok) {
+        if (result.errors) { setErrors(result.errors); focusFirst(result.errors); }
+        setServerError(result.message ?? "");
+        return;
+      }
+    } catch {
+      setServerError("Network error. Please check your connection and try again.");
       return;
+    } finally {
+      setPending(false);
     }
-    // TODO(Supabase): save the registration. Nothing is stored or sent yet.
     setSubmitted(true);
     requestAnimationFrame(() => successRef.current?.focus());
   }
@@ -46,9 +67,8 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
           Thanks, {data.name.trim().split(" ")[0]}. You chose the <strong className="text-paper">{track?.name}</strong> track.
           We will contact you at {data.email.trim()} with next steps. No payment has been taken.
         </p>
-        <p className="mt-4 text-xs font-bold uppercase tracking-wider text-white/60">Preview: this form does not save data yet.</p>
         <Button type="button" variant="inverse" className="mt-6" onClick={() => { setData({ ...emptyRegistration, track: defaultTrack ?? "" }); setSubmitted(false); }}>
-          Start again
+          Register another person
         </Button>
       </div>
     );
@@ -81,7 +101,8 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
         {errors.consent && <p id="consent-error" className="mt-1 text-sm font-semibold text-red-deep">{errors.consent}</p>}
       </div>
       <div className="sm:col-span-2">
-        <Button type="submit" arrow className="w-full sm:w-auto">Register my interest</Button>
+        {serverError && <p role="alert" className="mb-3 border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{serverError}</p>}
+        <Button type="submit" arrow disabled={pending} aria-busy={pending} className="w-full sm:w-auto">{pending ? "Saving…" : "Register my interest"}</Button>
         <p className="mt-3 text-xs text-muted">Registration does not take payment. Payment opens once the cohort is confirmed.</p>
       </div>
     </form>

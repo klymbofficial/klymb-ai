@@ -2,7 +2,7 @@
 
 Frontend for Klymb.ai: a 30-day job-readiness program with five career tracks (QA Engineer, L1/L2 Support, Project Manager, Junior Developer, Reporting Analyst). Each track has daily practical problems, weekly assessments after Days 7/14/21/28, role-specific projects, interview preparation and mock interviews on Days 29–30.
 
-> **Frontend foundation only.** No database, payments, authentication, email or external APIs are connected. Forms validate and show a local success state; nothing is saved. Learner pages use clearly labelled sample data.
+> Registrations are saved to **Supabase** (`registrations` table, insert-only via RLS — see `supabase/migrations/`). Payments, authentication and email are not connected yet. Learner pages use clearly labelled sample data.
 
 ## Setup
 
@@ -77,7 +77,8 @@ src/
 
 ## TODO — next integrations
 
-- [ ] **Supabase** — store registrations, learners, submissions and progress
+- [x] **Supabase** — registrations
+- [ ] **Supabase** — learners, submissions and progress
 - [ ] **Razorpay** — payment step after registration (server-side order creation and signature verification; never trust client-side success)
 - [ ] **Authentication** — learner sign-in (e.g. Supabase Auth, email OTP)
 - [ ] **Real learner dashboard** — replace `src/data/demo.ts` with the signed-in learner's data
