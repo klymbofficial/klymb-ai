@@ -5,7 +5,7 @@ import { DaySubmission } from "@/components/learner/DaySubmission";
 import { Appear } from "@/components/motion/Appear";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Tag } from "@/components/ui/Tag";
-import { assessmentRubric, dailyChecklist } from "@/data/demo";
+import { assessmentRubric, dailyChecklist } from "@/data/learning";
 import { mockInterviewPhase, weekPhases } from "@/data/program";
 import { getTrack } from "@/data/tracks";
 import { thirtyDays } from "@/lib/learn";

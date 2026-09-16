@@ -176,7 +176,7 @@ export const footerLinks = {
     { label: "Career Tracks", href: "/tracks" },
     { label: "Program", href: "/program" },
     { label: "Register", href: "/register" },
-    { label: "Learner dashboard (demo)", href: "/dashboard" },
+    { label: "Learner sign-in", href: "/learn/login" },
   ],
   company: [
     { label: "Contact", href: "/contact" },

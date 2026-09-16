@@ -1,4 +1,7 @@
+"use client";
+
 import clsx from "clsx";
+import { Counter } from "@/components/motion/Counter";
 
 export function StatTile({
   label, value, hint, tone = "ink",
@@ -6,7 +9,7 @@ export function StatTile({
   return (
     <div className="flex flex-col gap-1 bg-paper p-5">
       <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">{label}</p>
-      <p className={clsx("display nums text-4xl", tone === "red" && "text-red", tone === "muted" && "text-muted")}>{value}</p>
+      <p className={clsx("display nums text-4xl", tone === "red" && "text-red", tone === "muted" && "text-muted")}>{typeof value === "number" ? <Counter value={value} /> : value}</p>
       {hint && <p className="text-xs text-muted">{hint}</p>}
     </div>
   );

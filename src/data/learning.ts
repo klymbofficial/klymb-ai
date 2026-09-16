@@ -1,15 +1,7 @@
-/**
- * SAMPLE learner data for the demo dashboard and learning pages.
- * TODO(Real learner dashboard): replace with the signed-in learner's data from Supabase.
- */
-export const demoLearner = {
-  firstName: "Learner",
-  currentDay: 9,
-  completedDays: [1, 2, 3, 4, 5, 6, 7, 8],
-  assessments: [{ afterDay: 7, score: null as number | null, status: "Awaiting feedback" }],
-};
+/** Shared reference content used by the learner day pages. */
 
-/** Generic rubric used in the assessment preview until real scoring exists. */
+/** Rubric shown to learners before each weekly assessment. */
+
 export const assessmentRubric = [
   { criterion: "Correctness", description: "The solution works and addresses the brief." },
   { criterion: "Reasoning", description: "Decisions and trade-offs are explained clearly." },
