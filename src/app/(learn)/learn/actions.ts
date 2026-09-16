@@ -84,8 +84,8 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
   const github = normaliseGithubUsername(String(formData.get("github") ?? ""));
   const linkedin = normaliseLinkedinSlug(String(formData.get("linkedin") ?? ""));
 
-  if (!github) return { error: "Enter your GitHub username, or the link to your GitHub profile." };
-  if (!linkedin) return { error: "Enter your LinkedIn profile link, for example linkedin.com/in/yourname." };
+  if (!github) return { error: "That does not look like a GitHub profile. Paste https://github.com/your-username, or just your username." };
+  if (!linkedin) return { error: "That does not look like a LinkedIn profile. Paste https://www.linkedin.com/in/yourname." };
 
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { error: "You are not enrolled in a cohort." };

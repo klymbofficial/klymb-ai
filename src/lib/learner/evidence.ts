@@ -8,17 +8,19 @@
  */
 
 export function normaliseGithubUsername(input: string): string | null {
-  const value = input.trim().replace(/^@/, "");
-  const fromUrl = value.match(/github\.com\/([A-Za-z0-9-]{1,39})/i)?.[1];
-  const handle = fromUrl ?? value;
-  return /^[A-Za-z0-9-]{1,39}$/.test(handle) ? handle : null;
+  // Accepts any of: octocat · @octocat · github.com/octocat · https://github.com/octocat/repo
+  const value = input.trim().replace(/^@/, "").replace(/\/+$/, "");
+  const fromUrl = value.match(/(?:^|\/\/)(?:www\.)?github\.com\/([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))/i)?.[1];
+  const handle = (fromUrl ?? value.split(/[/?#]/)[0]).trim();
+  return /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(handle) ? handle : null;
 }
 
 export function normaliseLinkedinSlug(input: string): string | null {
-  const value = input.trim();
-  const fromUrl = value.match(/linkedin\.com\/in\/([A-Za-z0-9-]{3,100})/i)?.[1];
-  const slug = fromUrl ?? value.replace(/^@/, "");
-  return /^[A-Za-z0-9-]{3,100}$/.test(slug) ? slug.toLowerCase() : null;
+  // Accepts any of: yourname · linkedin.com/in/yourname · https://www.linkedin.com/in/yourname/?originalSubdomain=in
+  const value = input.trim().replace(/\/+$/, "");
+  const fromUrl = value.match(/(?:^|\/\/)(?:[a-z]{2,3}\.)?(?:www\.)?linkedin\.com\/in\/([A-Za-z0-9\u00C0-\u024F-]{3,100})/i)?.[1];
+  const slug = (fromUrl ?? value.replace(/^@/, "").split(/[/?#]/)[0]).trim();
+  return /^[A-Za-z0-9\u00C0-\u024F-]{3,100}$/.test(slug) ? slug.toLowerCase() : null;
 }
 
 /** The deliverable must live under the learner's own GitHub account. */

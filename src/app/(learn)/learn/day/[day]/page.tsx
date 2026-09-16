@@ -129,7 +129,12 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
               <strong>Expected:</strong> <span dangerouslySetInnerHTML={{ __html: entry.deliverable }} />
               <span className="mt-1 block text-muted"><strong>Reviewer checks:</strong> {entry.reviewerChecks}</span>
             </p>
-            <DaySubmission day={entry.day} submission={submission} needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)} />
+            <DaySubmission
+              day={entry.day}
+              submission={submission}
+              needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)}
+              nextDay={next?.day}
+            />
           </Card>
 
           <nav aria-label="Other days" className="flex justify-between gap-4 border-t-2 border-line pt-5 font-bold">

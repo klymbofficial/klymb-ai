@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { submitDay } from "@/app/(learn)/learn/actions";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import type { Submission } from "@/lib/learner/data";
 
 export function DaySubmission({
-  day, checklist, submission, needsLinkedinPost,
-}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean }) {
+  day, checklist, submission, needsLinkedinPost, nextDay,
+}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean; nextDay?: number }) {
   const [saved, setSaved] = useState(!!submission);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -86,15 +86,15 @@ export function DaySubmission({
           </Button>
           <AnimatePresence>
             {saved && !pending && (
-              <motion.p
-                role="status"
+              <motion.div
                 initial={reduced ? false : { opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
-                className="text-sm font-bold text-red-deep"
+                className="flex flex-wrap items-center gap-4"
               >
-                Saved. You can update it any time.
-              </motion.p>
+                <p role="status" className="text-sm font-bold text-red-deep">Saved. You can update it any time.</p>
+                {nextDay && <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>}
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

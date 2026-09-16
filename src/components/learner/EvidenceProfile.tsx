@@ -17,23 +17,23 @@ export function EvidenceProfile({
       <p className="mt-2 text-sm text-muted">
         {complete
           ? "Every link you submit is checked against these, so nothing in your portfolio can belong to someone else."
-          : "Add these before your first submission. Every link you submit is checked against them."}
+          : "Add these before your first submission. Paste the full profile links — we read the account name from them."}
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="github" className="block text-sm font-bold">GitHub username</label>
+          <label htmlFor="github" className="block text-sm font-bold">GitHub profile or username</label>
           <input
             id="github" name="github" defaultValue={githubUsername ?? ""} spellCheck={false} autoComplete="off"
-            placeholder="your-username"
+            placeholder="https://github.com/your-username"
             className="mt-2 block w-full border-2 border-line bg-white px-3 py-2.5 focus:border-ink focus:outline-none"
           />
         </div>
         <div>
-          <label htmlFor="linkedin" className="block text-sm font-bold">LinkedIn profile</label>
+          <label htmlFor="linkedin" className="block text-sm font-bold">LinkedIn profile URL</label>
           <input
             id="linkedin" name="linkedin" defaultValue={linkedinSlug ?? ""} spellCheck={false} autoComplete="off"
-            placeholder="linkedin.com/in/yourname"
+            placeholder="https://www.linkedin.com/in/yourname"
             className="mt-2 block w-full border-2 border-line bg-white px-3 py-2.5 focus:border-ink focus:outline-none"
           />
         </div>
