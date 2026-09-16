@@ -1,108 +1,142 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { signOutLearner } from "../../actions";
+import { BuildSteps } from "@/components/learner/BuildSteps";
 import { DaySubmission } from "@/components/learner/DaySubmission";
+import { KnowledgeCheck } from "@/components/learner/KnowledgeCheck";
+import { ModuleSidebar } from "@/components/learner/ModuleSidebar";
+import { ResourceList } from "@/components/learner/ResourceList";
 import { Appear } from "@/components/motion/Appear";
-import { Eyebrow } from "@/components/ui/Eyebrow";
-import { Tag } from "@/components/ui/Tag";
-import { assessmentRubric, dailyChecklist } from "@/data/learning";
-import { mockInterviewPhase, weekPhases } from "@/data/program";
-import { getTrack } from "@/data/tracks";
-import { thirtyDays } from "@/lib/learn";
+import { Wordmark } from "@/components/layout/Wordmark";
+import { getPmDay, pmCurriculum } from "@/data/pm-curriculum";
 import { requireLearner } from "@/lib/learner/data";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
+
+function Card({ title, icon, children, className = "" }: { title: string; icon: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`border-2 border-line bg-paper ${className}`}>
+      <h2 className="flex items-center gap-2 border-b-2 border-line px-5 py-3 text-sm font-extrabold">
+        <span aria-hidden="true" className="text-red">{icon}</span>
+        {title}
+      </h2>
+      <div className="p-5">{children}</div>
+    </section>
+  );
+}
 
 export default async function LearnDayPage({ params }: { params: Promise<{ day: string }> }) {
   const state = await requireLearner();
   if (state.state === "not-enrolled") notFound();
 
   const dayNumber = Number((await params).day);
-  const track = getTrack(state.learner.track)!;
-  const days = thirtyDays(track);
-  const entry = days.find((d) => d.day === dayNumber);
+  const entry = getPmDay(dayNumber);
   if (!entry) notFound();
 
   const submission = state.submissions.find((s) => s.day === dayNumber) ?? null;
-  const week = entry.kind === "interview" ? null : track.weeks.find((w) => w.week === entry.week)!;
-  const phase = week ? weekPhases.find((p) => p.week === week.week)! : null;
-  const prev = days.find((d) => d.day === dayNumber - 1);
-  const next = days.find((d) => d.day === dayNumber + 1);
+  const submittedDays = state.submissions.map((s) => s.day);
+  const prev = pmCurriculum.find((d) => d.day === dayNumber - 1);
+  const next = pmCurriculum.find((d) => d.day === dayNumber + 1);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-      <Link href="/learn" className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">← All 30 days</Link>
-
-      <Appear className="mt-6">
-        <div className="flex flex-wrap gap-2">
-          <Tag tone="red">Day {entry.day} of 30</Tag>
-          {phase && <Tag>Week {week!.week} · {phase.name}</Tag>}
-          {submission && <Tag tone="ink">Submitted</Tag>}
+    <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <Link href="/learn" className="flex items-baseline gap-3">
+          <Wordmark className="text-xl" />
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-muted">Project Manager</span>
+        </Link>
+        <div className="flex items-center gap-4 text-sm">
+          <Link href="/learn" className="font-bold underline underline-offset-4 hover:text-red-deep">Dashboard</Link>
+          <form action={signOutLearner}>
+            <button type="submit" className="border border-line px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:border-ink">
+              Sign out
+            </button>
+          </form>
         </div>
+      </header>
 
-        {entry.kind === "challenge" && (
-          <>
-            <Eyebrow className="mt-6">{track.name} · {week!.title}</Eyebrow>
-            <h1 className="display mt-3 text-4xl text-balance sm:text-5xl">{entry.challenge.title}</h1>
-            <div className="mt-6 border-2 border-line bg-paper p-5">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">The workplace problem</p>
-              <p className="mt-2 text-lg font-semibold">{entry.challenge.problem}</p>
-              <p className="mt-4 text-sm text-muted">
-                Builds towards <strong className="text-ink">{week!.assessment.title}</strong> on Day {week!.assessment.afterDay}.
-              </p>
-            </div>
-          </>
-        )}
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
+        <aside className="lg:sticky lg:top-6">
+          <ModuleSidebar currentDay={dayNumber} submitted={submittedDays} />
+        </aside>
 
-        {entry.kind === "assessment" && (
-          <>
-            <Eyebrow className="mt-6">Week {entry.week} assessment</Eyebrow>
-            <h1 className="display mt-3 text-4xl text-balance sm:text-5xl">{entry.title}</h1>
-            <p className="mt-5 text-lg font-semibold">{entry.task}</p>
-            <div className="mt-6 overflow-x-auto border-2 border-line bg-paper">
-              <table className="w-full min-w-[420px] text-left text-sm">
-                <caption className="border-b-2 border-line bg-surface p-3 text-left text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">
-                  How it is scored
-                </caption>
-                <tbody>
-                  {assessmentRubric.map((r) => (
-                    <tr key={r.criterion} className="border-b border-line last:border-0">
-                      <th scope="row" className="p-3 font-extrabold">{r.criterion}</th>
-                      <td className="p-3 text-muted">{r.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-
-        {entry.kind === "interview" && (
-          <>
-            <Eyebrow className="mt-6">{mockInterviewPhase.days}</Eyebrow>
-            <h1 className="display mt-3 text-4xl text-balance sm:text-5xl">
-              {entry.day === 29 ? "Mock interview: technical & scenario" : "Mock interview: behavioural & portfolio"}
-            </h1>
-            <p className="mt-5 text-muted">{mockInterviewPhase.summary}</p>
-            <ul className="mt-5 flex flex-wrap gap-2">
-              {track.interviewTopics.map((t) => <li key={t} className="border-2 border-ink px-3 py-1.5 text-sm font-bold">{t}</li>)}
+        <div className="flex min-w-0 flex-col gap-6">
+          <Appear>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-red-deep">Day {entry.day}</p>
+            <h1 className="display mt-2 text-4xl text-balance sm:text-5xl">{entry.title}</h1>
+            <ul className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+              <li className="border-2 border-line px-2.5 py-1">{entry.points} pts</li>
+              <li className="border-2 border-line px-2.5 py-1">~{entry.estimateMinutes} min</li>
+              <li className="border-2 border-red-deep bg-red-tint px-2.5 py-1 text-red-deep uppercase tracking-wider">
+                {entry.kind === "build" ? "Required" : entry.kind === "assessment" ? "Assessment" : "Mock interview"}
+              </li>
+              {submission && <li className="border-2 border-ink bg-ink px-2.5 py-1 text-paper uppercase tracking-wider">Submitted</li>}
             </ul>
-          </>
-        )}
-      </Appear>
+          </Appear>
 
-      <Appear delay={0.05} className="mt-8">
-        <DaySubmission
-          day={entry.day}
-          checklist={entry.kind === "challenge" ? dailyChecklist : undefined}
-          submission={submission}
-        />
-      </Appear>
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card title="Mission" icon="◎">
+              <p className="font-bold">{entry.title}</p>
+              <p className="mt-2 text-muted">{entry.mission}</p>
+              {entry.concepts.length > 0 && (
+                <>
+                  <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Concepts to learn</p>
+                  <ul className="mt-2 flex flex-col gap-1.5 text-sm">
+                    {entry.concepts.map((c) => (
+                      <li key={c} className="flex gap-2"><span aria-hidden="true" className="text-red">•</span>{c}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </Card>
 
-      <nav aria-label="Other days" className="mt-8 flex justify-between gap-4 border-t-2 border-line pt-6 font-bold">
-        {prev ? <Link href={`/learn/day/${prev.day}`} className="hover:text-red-deep">← Day {prev.day}</Link> : <span />}
-        {next ? <Link href={`/learn/day/${next.day}`} className="hover:text-red-deep">Day {next.day} →</Link> : <span />}
-      </nav>
+            <Card title="Objectives" icon="☑">
+              <ul className="flex flex-col gap-2 text-sm">
+                {entry.objectives.map((o) => (
+                  <li key={o} className="flex gap-2"><span aria-hidden="true" className="text-muted">–</span>{o}</li>
+                ))}
+              </ul>
+              <ul className="mt-5 flex flex-wrap gap-1.5">
+                {entry.tags.map((t) => (
+                  <li key={t} className="bg-surface px-2 py-1 text-[11px] font-bold">{t}</li>
+                ))}
+              </ul>
+            </Card>
+          </div>
+
+          {entry.steps.length > 0 && (
+            <Card title="Build steps" icon="⚒">
+              <BuildSteps steps={entry.steps} />
+            </Card>
+          )}
+
+          {entry.resources.length > 0 && (
+            <Card title="Reference resources" icon="▤">
+              <ResourceList resources={entry.resources} />
+            </Card>
+          )}
+
+          {entry.quiz.length > 0 && (
+            <Card title={entry.kind === "build" ? "Let's test your work" : "Challenge questions"} icon="✎">
+              <KnowledgeCheck day={entry.day} questions={entry.quiz} saved={submission?.quiz_answers ?? null} />
+            </Card>
+          )}
+
+          <Card title="Your deliverable" icon="↥">
+            <p className="mb-4 text-sm">
+              <strong>Expected:</strong> <span dangerouslySetInnerHTML={{ __html: entry.deliverable }} />
+              <span className="mt-1 block text-muted"><strong>Reviewer checks:</strong> {entry.reviewerChecks}</span>
+            </p>
+            <DaySubmission day={entry.day} submission={submission} />
+          </Card>
+
+          <nav aria-label="Other days" className="flex justify-between gap-4 border-t-2 border-line pt-5 font-bold">
+            {prev ? <Link href={`/learn/day/${prev.day}`} className="hover:text-red-deep">← Day {prev.day}</Link> : <span />}
+            {next ? <Link href={`/learn/day/${next.day}`} className="hover:text-red-deep">Day {next.day} →</Link> : <span />}
+          </nav>
+        </div>
+      </div>
     </div>
   );
 }

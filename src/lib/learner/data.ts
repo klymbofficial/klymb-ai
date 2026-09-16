@@ -17,6 +17,7 @@ export interface Learner {
 
 export interface Submission {
   day: number;
+  quiz_answers: string[] | null;
   deliverable_url: string | null;
   note: string | null;
   status: string;
@@ -55,7 +56,7 @@ export async function getLearnerState(): Promise<LearnerState> {
 
   const { data: submissions } = await supabase
     .from("day_submissions")
-    .select("day, deliverable_url, note, status, submitted_at, reviewer_note")
+    .select("day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers")
     .eq("learner_id", learner.id)
     .order("day");
 

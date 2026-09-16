@@ -25,7 +25,7 @@ export function DaySubmission({
   }
 
   return (
-    <div className="border-2 border-line bg-paper p-6">
+    <div>
       {checklist && (
         <fieldset className="mb-6">
           <legend className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Before you submit</legend>
