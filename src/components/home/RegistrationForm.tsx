@@ -6,7 +6,7 @@ import { experienceOptions, roleOptions } from "@/data/program";
 import { tracks } from "@/data/tracks";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/FormField";
-import { registerInterest } from "@/app/register/actions";
+import { registerInterest } from "@/app/(site)/register/actions";
 import { emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
