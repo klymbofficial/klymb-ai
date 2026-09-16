@@ -4,6 +4,7 @@ import { signOutLearner } from "./actions";
 import { Appear } from "@/components/motion/Appear";
 import { Counter } from "@/components/motion/Counter";
 import { DayGrid } from "@/components/learner/DayGrid";
+import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -93,8 +94,12 @@ export default async function LearnHomePage() {
         <DayGrid days={days} submitted={[...doneDays]} />
       </section>
 
-      <section aria-labelledby="evidence" className="mt-10 border-t-2 border-line pt-6">
-        <h2 id="evidence" className="display text-2xl">Your evidence</h2>
+      <section aria-labelledby="evidence" className="mt-10">
+        <EvidenceProfile githubUsername={learner.github_username} linkedinSlug={learner.linkedin_slug} />
+      </section>
+
+      <section aria-labelledby="evidence-links" className="mt-10 border-t-2 border-line pt-6">
+        <h2 id="evidence-links" className="display text-2xl">Your evidence</h2>
         <ul className="mt-3 flex flex-wrap gap-6 text-sm">
           <li>
             <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">GitHub</span>

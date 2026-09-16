@@ -13,11 +13,14 @@ export interface Learner {
   status: string;
   github_url: string | null;
   linkedin_url: string | null;
+  github_username: string | null;
+  linkedin_slug: string | null;
 }
 
 export interface Submission {
   day: number;
   quiz_answers: string[] | null;
+  linkedin_post_url: string | null;
   deliverable_url: string | null;
   note: string | null;
   status: string;
@@ -30,7 +33,7 @@ export type LearnerState =
   | { state: "not-enrolled"; email: string }
   | { state: "enrolled"; learner: Learner; submissions: Submission[] };
 
-const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url, linkedin_url";
+const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug";
 
 /**
  * Resolves the signed-in user to their cohort place.
@@ -56,7 +59,7 @@ export async function getLearnerState(): Promise<LearnerState> {
 
   const { data: submissions } = await supabase
     .from("day_submissions")
-    .select("day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers")
+    .select("day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers, linkedin_post_url")
     .eq("learner_id", learner.id)
     .order("day");
 

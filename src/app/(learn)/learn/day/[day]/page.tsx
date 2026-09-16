@@ -10,6 +10,7 @@ import { ResourceList } from "@/components/learner/ResourceList";
 import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { getPmDay, pmCurriculum } from "@/data/pm-curriculum";
+import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
 import { requireLearner } from "@/lib/learner/data";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -128,7 +129,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
               <strong>Expected:</strong> <span dangerouslySetInnerHTML={{ __html: entry.deliverable }} />
               <span className="mt-1 block text-muted"><strong>Reviewer checks:</strong> {entry.reviewerChecks}</span>
             </p>
-            <DaySubmission day={entry.day} submission={submission} />
+            <DaySubmission day={entry.day} submission={submission} needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)} />
           </Card>
 
           <nav aria-label="Other days" className="flex justify-between gap-4 border-t-2 border-line pt-5 font-bold">

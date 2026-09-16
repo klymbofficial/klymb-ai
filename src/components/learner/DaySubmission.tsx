@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/Button";
 import type { Submission } from "@/lib/learner/data";
 
 export function DaySubmission({
-  day, checklist, submission,
-}: { day: number; checklist?: string[]; submission: Submission | null }) {
+  day, checklist, submission, needsLinkedinPost,
+}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean }) {
   const [saved, setSaved] = useState(!!submission);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -54,6 +54,21 @@ export function DaySubmission({
             className="mt-2 block w-full border-2 border-line bg-white px-3 py-3 focus:border-ink focus:outline-none"
           />
         </div>
+        {needsLinkedinPost && (
+          <div>
+            <label htmlFor={`li-${day}`} className="block text-sm font-bold">Your LinkedIn post</label>
+            <p className="mt-1 text-xs text-muted">
+              Post about a decision you made this week and what you would do differently. Open the post, choose
+              “Copy link to post”, and paste it here. It must be from your own profile.
+            </p>
+            <input
+              id={`li-${day}`} name="linkedin_post_url" type="url" inputMode="url" spellCheck={false}
+              defaultValue={submission?.linkedin_post_url ?? ""}
+              placeholder="https://www.linkedin.com/posts/yourname_…"
+              className="mt-2 block w-full border-2 border-line bg-white px-3 py-3 focus:border-ink focus:outline-none"
+            />
+          </div>
+        )}
         <div>
           <label htmlFor={`note-${day}`} className="block text-sm font-bold">What you did, and why</label>
           <textarea

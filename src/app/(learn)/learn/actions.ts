@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { signIn, signOut } from "@/auth";
+import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -11,6 +12,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const url = String(formData.get("deliverable_url") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
   const quizRaw = formData.get("quiz");
+  const linkedinPost = String(formData.get("linkedin_post_url") ?? "").trim();
 
   if (!Number.isInteger(day) || day < 1 || day > 30) return { ok: false, message: "That is not a valid day." };
   if (url && !/^https?:\/\/.+\..+/i.test(url)) return { ok: false, message: "Enter a full link starting with https://, or leave it blank." };
@@ -34,6 +36,16 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled in a cohort." };
 
+  // Evidence has to be the learner's own.
+  const ownershipError =
+    checkGithubUrl(url, state.learner.github_username) ??
+    checkLinkedinPostUrl(linkedinPost, state.learner.linkedin_slug);
+  if (ownershipError) return { ok: false, message: ownershipError };
+
+  if (LINKEDIN_POST_DAYS.includes(day) && !linkedinPost && !submissionExists(state.submissions, day)) {
+    return { ok: false, message: "This checkpoint needs your LinkedIn post link as well — it is part of the evidence." };
+  }
+
   const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Submissions are unavailable right now." };
 
@@ -46,6 +58,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
         deliverable_url: url || null,
         note: note || null,
         ...(quizAnswers ? { quiz_answers: quizAnswers } : {}),
+        ...(linkedinPost ? { linkedin_post_url: linkedinPost } : {}),
         status: "submitted",
         submitted_at: new Date().toISOString(),
       },
@@ -60,6 +73,43 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   revalidatePath("/learn");
   revalidatePath(`/learn/day/${day}`);
   return { ok: true };
+}
+
+function submissionExists(submissions: { day: number }[], day: number) {
+  return submissions.some((s) => s.day === day);
+}
+
+/** Learners declare their GitHub and LinkedIn once; everything is checked against these. */
+export async function saveEvidenceProfile(_: unknown, formData: FormData) {
+  const github = normaliseGithubUsername(String(formData.get("github") ?? ""));
+  const linkedin = normaliseLinkedinSlug(String(formData.get("linkedin") ?? ""));
+
+  if (!github) return { error: "Enter your GitHub username, or the link to your GitHub profile." };
+  if (!linkedin) return { error: "Enter your LinkedIn profile link, for example linkedin.com/in/yourname." };
+
+  const state = await getLearnerState();
+  if (state.state !== "enrolled") return { error: "You are not enrolled in a cohort." };
+
+  const supabase = createServiceClient();
+  if (!supabase) return { error: "That could not be saved right now." };
+
+  const { error } = await supabase
+    .from("learners")
+    .update({
+      github_username: github,
+      linkedin_slug: linkedin,
+      github_url: `https://github.com/${github}`,
+      linkedin_url: `https://www.linkedin.com/in/${linkedin}`,
+    })
+    .eq("id", state.learner.id);
+
+  if (error) {
+    console.error("profile save failed:", error.code, error.message);
+    return { error: "That could not be saved right now." };
+  }
+
+  revalidatePath("/learn");
+  return { saved: true };
 }
 
 export async function signInLearner() {
