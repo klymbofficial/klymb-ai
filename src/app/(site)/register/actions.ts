@@ -47,6 +47,22 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
 
   const duplicate = error?.code === UNIQUE_VIOLATION;
 
+  if (duplicate) {
+    // Already registered: keep their latest answers rather than the first ones.
+    await supabase
+      .from("registrations")
+      .update({
+        name: data.name,
+        phone: data.phone,
+        track: data.track,
+        job_role: data.currentRole,
+        experience: data.experience,
+        linkedin: data.linkedin || null,
+      })
+      .ilike("email", data.email)
+      .eq("cohort_start", cohort.startDate);
+  }
+
   if (error && !duplicate) {
     console.error("registrations insert failed:", error.code, error.message);
     return { ok: false, message: "Something went wrong saving your registration. Please try again, or email us." };
@@ -55,9 +71,10 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   // Open tracks enrol straight away, so the learner can start Day 1 now.
   let enrolled = false;
   if (getTrack(data.track)?.available) {
-    const { error: enrolError } = await supabase.rpc("enrol_open_track", { p_email: data.email });
+    const { data: placed, error: enrolError } = await supabase.rpc("enrol_open_track", { p_email: data.email });
     if (enrolError) console.error("enrolment failed:", enrolError.code, enrolError.message);
-    else enrolled = true;
+    // The function returns true only when a place actually exists.
+    enrolled = placed === true;
   }
 
   return { ok: true, duplicate, enrolled };
