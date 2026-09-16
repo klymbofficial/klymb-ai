@@ -17,6 +17,8 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
   const [errors, setErrors] = useState<RegistrationErrors>({});
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
+  const [duplicate, setDuplicate] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
   const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -42,12 +44,13 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
 
     setPending(true);
     try {
-      const result = await registerInterest(data);
+      const result = await registerInterest(data, honeypot);
       if (!result.ok) {
         if (result.errors) { setErrors(result.errors); focusFirst(result.errors); }
         setServerError(result.message ?? "");
         return;
       }
+      setDuplicate(!!result.duplicate);
     } catch {
       setServerError("Network error. Please check your connection and try again.");
       return;
@@ -65,7 +68,10 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
         <p className="display text-4xl">Interest registered.</p>
         <p className="mt-4 text-white/80">
           Thanks, {data.name.trim().split(" ")[0]}. You chose the <strong className="text-paper">{track?.name}</strong> track.
-          We will contact you at {data.email.trim()} with next steps. No payment has been taken.
+          {duplicate
+            ? " You had already registered with this email, so nothing was duplicated — we have your details."
+            : ` We will contact you at ${data.email.trim()} with next steps.`}{" "}
+          No payment has been taken.
         </p>
         <Button type="button" variant="inverse" className="mt-6" onClick={() => { setData({ ...emptyRegistration, track: defaultTrack ?? "" }); setSubmitted(false); }}>
           Register another person
@@ -99,6 +105,12 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
           </label>
         </div>
         {errors.consent && <p id="consent-error" className="mt-1 text-sm font-semibold text-red-deep">{errors.consent}</p>}
+      </div>
+      {/* Honeypot: hidden from people, irresistible to bots. */}
+      <div aria-hidden="true" className="pointer-events-none absolute left-[-9999px] size-0 overflow-hidden">
+        <label htmlFor="company-website">Company website</label>
+        <input id="company-website" name="company-website" type="text" tabIndex={-1} autoComplete="off"
+          value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
       </div>
       <div className="sm:col-span-2">
         {serverError && <p role="alert" className="mb-3 border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{serverError}</p>}
