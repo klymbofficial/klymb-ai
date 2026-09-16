@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { contact } from "@/data/config";
 import { experienceOptions, roleOptions } from "@/data/program";
 import { tracks } from "@/data/tracks";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonLink } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/FormField";
 import { registerInterest } from "@/app/(site)/register/actions";
 import { emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
@@ -18,6 +18,7 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
   const [submitted, setSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
   const [duplicate, setDuplicate] = useState(false);
+  const [enrolled, setEnrolled] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -51,6 +52,7 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
         return;
       }
       setDuplicate(!!result.duplicate);
+      setEnrolled(!!result.enrolled);
     } catch {
       setServerError("Network error. Please check your connection and try again.");
       return;
@@ -65,17 +67,32 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
     const track = tracks.find((t) => t.slug === data.track);
     return (
       <div ref={successRef} tabIndex={-1} role="status" className="border-2 border-ink bg-ink p-8 text-paper focus:outline-none">
-        <p className="display text-4xl">Interest registered.</p>
+        <p className="display text-4xl">{enrolled ? "You're in." : "Interest registered."}</p>
         <p className="mt-4 text-white/80">
-          Thanks, {data.name.trim().split(" ")[0]}. You chose the <strong className="text-paper">{track?.name}</strong> track.
-          {duplicate
-            ? " You had already registered with this email, so nothing was duplicated — we have your details."
-            : ` We will contact you at ${data.email.trim()} with next steps.`}{" "}
-          No payment has been taken.
+          {duplicate ? "You had already registered with this email — nothing was duplicated. " : `Thanks, ${data.name.trim().split(" ")[0]}. `}
+          {enrolled ? (
+            <>
+              Your place on the <strong className="text-paper">{track?.name}</strong> track is reserved.
+              Sign in with <strong className="text-paper">{data.email.trim()}</strong> to open Day 1 and start today.
+              No payment has been taken.
+            </>
+          ) : track?.available ? (
+            <>
+              You chose the <strong className="text-paper">{track.name}</strong> track. We will confirm your place
+              at {data.email.trim()} shortly, and you will be able to start Day 1 from there. No payment has been taken.
+            </>
+          ) : (
+            <>
+              You chose the <strong className="text-paper">{track?.name}</strong> track, which opens in a later cohort.
+              We will email {data.email.trim()} the moment it does. No payment has been taken.
+            </>
+          )}
         </p>
-        <Button type="button" variant="inverse" className="mt-6" onClick={() => { setData({ ...emptyRegistration, track: defaultTrack ?? "" }); setSubmitted(false); }}>
-          Register another person
-        </Button>
+        {enrolled && (
+          <div className="mt-6">
+            <ButtonLink href="/learn/login?welcome=1" variant="inverse" arrow>Start Day 1</ButtonLink>
+          </div>
+        )}
       </div>
     );
   }

@@ -1,11 +1,12 @@
 "use server";
 
 import { cohort } from "@/data/config";
+import { getTrack } from "@/data/tracks";
 import { getSupabase } from "@/lib/supabase";
 import { validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 
 export type RegisterResult =
-  | { ok: true; duplicate?: boolean }
+  | { ok: true; duplicate?: boolean; enrolled?: boolean }
   | { ok: false; errors?: RegistrationErrors; message?: string };
 
 /** Postgres unique-violation: this email already registered for this cohort. */
@@ -44,11 +45,20 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     cohort_start: cohort.startDate,
   });
 
-  if (error?.code === UNIQUE_VIOLATION) return { ok: true, duplicate: true };
+  const duplicate = error?.code === UNIQUE_VIOLATION;
 
-  if (error) {
+  if (error && !duplicate) {
     console.error("registrations insert failed:", error.code, error.message);
     return { ok: false, message: "Something went wrong saving your registration. Please try again, or email us." };
   }
-  return { ok: true };
+
+  // Open tracks enrol straight away, so the learner can start Day 1 now.
+  let enrolled = false;
+  if (getTrack(data.track)?.available) {
+    const { error: enrolError } = await supabase.rpc("enrol_open_track", { p_email: data.email });
+    if (enrolError) console.error("enrolment failed:", enrolError.code, enrolError.message);
+    else enrolled = true;
+  }
+
+  return { ok: true, duplicate, enrolled };
 }
