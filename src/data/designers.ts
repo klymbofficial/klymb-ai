@@ -40,6 +40,22 @@ export const designers: Designer[] = [
   // },
 ];
 
+/**
+ * Layout demo only. Enabled with NEXT_PUBLIC_DESIGNER_DEMO=true, never in
+ * production: the roles are generic and the companies are lettered so nothing
+ * here can be mistaken for a real person or a real endorsement.
+ */
+export const demoDesigners: Designer[] = [
+  { name: "Advisor one", title: "Senior Engineering Program Manager", company: "Company A", current: true, contribution: "Reviews the Week 2 estimation model and runs Day 29 technical rounds." },
+  { name: "Advisor two", title: "Senior QA Engineer", company: "Company B", current: true, contribution: "Shapes the testing track and the Day 21 crisis injects." },
+  { name: "Advisor three", title: "Technical Support Lead", company: "Company C", current: true, contribution: "Designed the incident communication exercise." },
+  { name: "Advisor four", title: "Software Development Engineer", company: "Company D", current: true, contribution: "Reviews the code-review and AI-governance days." },
+  { name: "Advisor five", title: "Business Reporting Analyst", company: "Company E", current: true, contribution: "Built the measurement plan and metric definitions." },
+  { name: "Advisor six", title: "Technical Program Manager", company: "Company F", current: true, contribution: "Co-designed the assessment rubric." },
+];
+
+export const designerDemoEnabled = process.env.NEXT_PUBLIC_DESIGNER_DEMO === "true";
+
 /** Shown while the list is empty: true, and stronger than a row of logos. */
 export const designStandard = {
   eyebrow: "How this was built",

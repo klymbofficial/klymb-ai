@@ -1,4 +1,4 @@
-import { designers, designStandard } from "@/data/designers";
+import { demoDesigners, designerDemoEnabled, designers, designStandard } from "@/data/designers";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 
 /**
@@ -6,7 +6,10 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
  * Until then it makes the honest argument instead of an empty grid.
  */
 export function Designers() {
-  if (designers.length === 0) {
+  const isDemo = designers.length === 0 && designerDemoEnabled;
+  const people = isDemo ? demoDesigners : designers;
+
+  if (people.length === 0) {
     return (
       <section aria-labelledby="standard-title" className="border-b-2 border-line py-14 sm:py-20">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.3fr]">
@@ -27,6 +30,11 @@ export function Designers() {
   return (
     <section aria-labelledby="designers-title" className="border-b-2 border-line py-14 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        {isDemo && (
+          <p role="note" className="mb-6 border-2 border-ink bg-ink px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-paper">
+            Layout demo · advisors not yet confirmed · not for publication
+          </p>
+        )}
         <SectionHeader
           id="designers-title"
           eyebrow="Who designed this"
@@ -34,7 +42,7 @@ export function Designers() {
           intro="Each person below shaped a specific part of the program. Their employer is listed to identify them, and does not imply that company endorses Klymb.ai."
         />
         <ul className="mt-10 grid gap-0.5 border-2 border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-          {designers.map((d) => (
+          {people.map((d) => (
             <li key={d.name} className="flex flex-col gap-3 bg-paper p-6">
               <p className="display text-2xl">{d.name}</p>
               <p className="text-sm font-bold text-red-deep">
