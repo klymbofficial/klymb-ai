@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Klymb.ai">
+  <rect width="32" height="32" fill="#201E1D"/>
+  <!-- Arms drawn as strokes from one shared vertex, so the joint stays clean at 16px -->
+  <g stroke="#F3F2F2" stroke-width="5.4" fill="none">
+    <path d="M11 16.8 24.5 6.4"/>
+    <path d="M11 16.8 23 25.4"/>
+  </g>
+  <rect x="6" y="5" width="5.4" height="22" fill="#F3F2F2"/>
+  <!-- the .ai dot -->
+  <rect x="24.5" y="22" width="5" height="5" fill="#EC3013"/>
+</svg>
