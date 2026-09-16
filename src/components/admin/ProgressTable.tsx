@@ -33,7 +33,7 @@ export function ProgressTable({ rows }: { rows: LearnerProgress[] }) {
   return (
     <div className="overflow-x-auto border-2 border-line bg-paper">
       <table className="w-full min-w-[900px] text-left text-sm">
-        <thead className="bg-ink text-paper">
+        <thead className="sticky top-0 z-10 bg-ink text-paper">
           <tr>
             {["Learner", "Track", "Progress", "Days", "Assessments", "Evidence", "Status"].map((h) => (
               <th key={h} scope="col" className="p-3 text-[11px] font-extrabold uppercase tracking-[0.1em]">{h}</th>
@@ -49,7 +49,7 @@ export function ProgressTable({ rows }: { rows: LearnerProgress[] }) {
               </th>
               <td className="p-3 text-xs">{trackName(l.track)}</td>
               <td className="p-3"><DayStrip done={l.days_submitted} /></td>
-              <td className="p-3 tabular-nums font-extrabold">
+              <td className="p-3 nums font-extrabold">
                 {l.days_submitted}<span className="text-muted">/30</span>
                 {l.last_submission_at && (
                   <span className="block text-[11px] font-normal text-muted">
@@ -57,7 +57,7 @@ export function ProgressTable({ rows }: { rows: LearnerProgress[] }) {
                   </span>
                 )}
               </td>
-              <td className="p-3 tabular-nums">
+              <td className="p-3 nums">
                 {l.assessments_scored}<span className="text-muted">/4</span>
                 {l.latest_band && (
                   <span className="mt-0.5 block text-[11px] font-bold text-red-deep">{bandLabel[l.latest_band] ?? l.latest_band}</span>

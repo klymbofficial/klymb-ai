@@ -26,6 +26,7 @@ export function TextField({ id, label, error, optional, ...props }: Base & React
     <div>
       <Label id={id} label={label} optional={optional} />
       <input id={id} name={id} aria-invalid={!!error} aria-describedby={describedBy(id, error)} required={!optional}
+        spellCheck={props.type === "email" || props.type === "tel" || props.type === "url" ? false : undefined}
         className={clsx(control, error ? "border-red-deep" : "border-line")} {...props} />
       <ErrorText id={id} error={error} />
     </div>

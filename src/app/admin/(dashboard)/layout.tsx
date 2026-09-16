@@ -12,6 +12,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
+      <a href="#admin-main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-paper">
+        Skip to content
+      </a>
       <aside className="flex flex-col gap-6 bg-ink px-4 py-5 text-paper lg:w-60 lg:shrink-0 lg:px-5 lg:py-7">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -39,7 +42,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </aside>
 
-      <main className="min-w-0 flex-1 bg-surface">
+      <main id="admin-main" className="min-w-0 flex-1 bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</div>
         <form action={signOut} className="px-4 pb-8 lg:hidden">
           <button type="submit" className="border-2 border-ink px-3 py-2 text-xs font-bold uppercase tracking-wider">Sign out</button>

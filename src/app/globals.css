@@ -15,7 +15,16 @@
   --font-heading: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Taps feel instant; no 300ms double-tap zoom delay. */
+button, a, label, select, summary, input[type="checkbox"] { touch-action: manipulation; }
+
+::selection { background: var(--color-red); color: #fff; }
 
 body {
   background: var(--color-paper);
@@ -28,12 +37,25 @@ body {
 .display {
   font-family: var(--font-heading);
   font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 0.97;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-feature-settings: "ss01";
 }
+
+/* Optical correction: the bigger the type, the tighter it should track. */
+.display.text-6xl, .display.text-7xl { letter-spacing: -0.045em; }
+
+.nums { font-variant-numeric: tabular-nums; }
+
+/* Long tables stay cheap to scroll. */
+.rows-lazy > tr { content-visibility: auto; contain-intrinsic-size: auto 52px; }
 
 @keyframes tick { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
 .tick { animation: tick 1.2s infinite; }
+
+/* Hero day-strip: fills once on load, then rests. */
+@keyframes fill-in { from { transform: scaleY(.25); opacity: .35 } to { transform: scaleY(1); opacity: 1 } }
+.day-tick { transform-origin: bottom; animation: fill-in .5s cubic-bezier(.2, .7, .3, 1) backwards; }
 
 .reveal { opacity: 0; transform: translateY(14px); transition: opacity .5s ease-out, transform .5s ease-out; }
 .reveal.is-visible { opacity: 1; transform: none; }
@@ -41,5 +63,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .tick { animation: none; }
+  .day-tick { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }

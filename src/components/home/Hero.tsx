@@ -4,6 +4,33 @@ import { tracks } from "@/data/tracks";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
+/** The shape of the program: 30 ticks, four assessment days, two mock rounds. */
+function DayStrip() {
+  return (
+    <div className="mt-10 max-w-xl">
+      <div className="flex items-end gap-[3px]" aria-hidden="true">
+        {Array.from({ length: 30 }, (_, i) => {
+          const day = i + 1;
+          const isGate = day % 7 === 0 && day <= 28;
+          const isMock = day > 28;
+          return (
+            <span
+              key={day}
+              className={`day-tick flex-1 ${isGate ? "h-7 bg-red" : isMock ? "h-7 bg-ink" : "h-4 bg-ink/25"}`}
+              style={{ animationDelay: `${i * 22}ms` }}
+            />
+          );
+        })}
+      </div>
+      <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-bold uppercase tracking-wider text-muted">
+        <div className="flex items-center gap-1.5"><span className="size-2 bg-ink/25" aria-hidden="true" /><dt>26 build days</dt></div>
+        <div className="flex items-center gap-1.5"><span className="size-2 bg-red" aria-hidden="true" /><dt>4 assessments</dt></div>
+        <div className="flex items-center gap-1.5"><span className="size-2 bg-ink" aria-hidden="true" /><dt>2 mock interviews</dt></div>
+      </dl>
+    </div>
+  );
+}
+
 export function Hero() {
   return (
     <section aria-labelledby="hero-title" className="border-b-2 border-line">
@@ -14,6 +41,7 @@ export function Hero() {
             Become Job-Ready in <span className="text-red">30&nbsp;Days</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg text-muted sm:text-xl text-pretty">{hero.subheadline}</p>
+          <DayStrip />
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href={hero.primaryCta.href} arrow>{hero.primaryCta.label}</ButtonLink>
             <ButtonLink href={hero.secondaryCta.href} variant="secondary">{hero.secondaryCta.label}</ButtonLink>
