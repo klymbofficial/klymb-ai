@@ -84,4 +84,4 @@ src/
 - [ ] **Real learner dashboard** — replace `src/data/demo.ts` with the signed-in learner's data
 - [ ] **Assessment scoring** — reviewer workflow, rubric scores and feedback
 - [ ] **Email or WhatsApp notifications** — registration confirmation, daily challenge reminders, assessment feedback
-- [ ] **Admin dashboard** — manage cohorts, tracks, content, learners and reviews
+- [ ] **Admin dashboard** — manage cohorts, tracks, content, learners and reviews...
