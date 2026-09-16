@@ -2,11 +2,15 @@ import Link from "next/link";
 import type { Track } from "@/types/program";
 
 export function TrackCard({ track, index }: { track: Track; index: number }) {
+  const open = track.available;
+
   return (
-    <article className="group flex h-full flex-col gap-5 bg-paper p-6 transition-colors hover:bg-red-tint">
+    <article className={`group flex h-full flex-col gap-5 p-6 transition-colors ${open ? "bg-paper hover:bg-red-tint" : "bg-paper/60"}`}>
       <div className="flex items-start justify-between gap-3">
-        <span className="display text-4xl text-red">{String(index + 1).padStart(2, "0")}</span>
-        <span className="text-right text-xs font-bold uppercase tracking-wider text-muted">30 days · 4 assessments</span>
+        <span className={`display text-4xl ${open ? "text-red" : "text-muted"}`}>{String(index + 1).padStart(2, "0")}</span>
+        <span className={`border px-2 py-0.5 text-right text-[11px] font-bold uppercase tracking-wider ${open ? "border-red-deep bg-red-tint text-red-deep" : "border-line text-muted"}`}>
+          {open ? "Enrolling now" : "Opening later"}
+        </span>
       </div>
       <div>
         <h3 className="display text-3xl">{track.name}</h3>
@@ -23,9 +27,11 @@ export function TrackCard({ track, index }: { track: Track; index: number }) {
       </div>
       <Link
         href={`/tracks/${track.slug}`}
-        className="mt-auto inline-flex items-center gap-2 self-start border-2 border-ink px-4 py-2.5 text-sm font-bold uppercase tracking-wider group-hover:bg-ink group-hover:text-paper"
+        className={`mt-auto inline-flex items-center gap-2 self-start border-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider ${
+          open ? "border-ink group-hover:bg-ink group-hover:text-paper" : "border-line text-muted hover:border-ink hover:text-ink"
+        }`}
       >
-        Explore This Track<span className="sr-only">: {track.name}</span>
+        {open ? "Explore This Track" : "Preview The Track"}<span className="sr-only">: {track.name}</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
       </Link>
     </article>

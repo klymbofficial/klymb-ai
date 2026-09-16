@@ -34,14 +34,14 @@ export function TextField({ id, label, error, optional, ...props }: Base & React
 }
 
 export function SelectField({ id, label, error, optional, options, placeholder, ...props }:
-  Base & { options: { value: string; label: string }[]; placeholder: string } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+  Base & { options: { value: string; label: string; disabled?: boolean }[]; placeholder: string } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div>
       <Label id={id} label={label} optional={optional} />
       <select id={id} name={id} aria-invalid={!!error} aria-describedby={describedBy(id, error)} required={!optional}
         className={clsx(control, error ? "border-red-deep" : "border-line")} {...props}>
         <option value="">{placeholder}</option>
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
       </select>
       <ErrorText id={id} error={error} />
     </div>

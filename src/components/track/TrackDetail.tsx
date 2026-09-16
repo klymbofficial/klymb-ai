@@ -35,7 +35,7 @@ export function TrackDetail({ track }: { track: Track }) {
         <div className="mx-auto grid max-w-7xl lg:grid-cols-[1.4fr_1fr]">
           <div className="px-4 py-14 sm:px-6 sm:py-20">
             <div className="flex flex-wrap gap-2">
-              <Tag tone="red">Career track</Tag>
+              <Tag tone={track.available ? "red" : "outline"}>{track.available ? "Enrolling now" : "Opening later"}</Tag>
               <Tag>30 days · 4 assessments · mock interviews</Tag>
             </div>
             <h1 className="display mt-6 text-[clamp(2.75rem,7vw,5.5rem)]">
@@ -44,9 +44,19 @@ export function TrackDetail({ track }: { track: Track }) {
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-muted">{track.description}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href={`/register?track=${track.slug}`} arrow>Choose This Track</ButtonLink>
+              {track.available ? (
+                <ButtonLink href={`/register?track=${track.slug}`} arrow>Choose This Track</ButtonLink>
+              ) : (
+                <ButtonLink href="/tracks/project-manager" arrow>See the track that is open</ButtonLink>
+              )}
               <ButtonLink href="#curriculum" variant="secondary">See the 30 days</ButtonLink>
             </div>
+            {!track.available && (
+              <p className="mt-4 max-w-xl border-l-2 border-line pl-4 text-sm text-muted">
+                This track is still being built. The {track.name} curriculum below is the plan, not a finished program —
+                the Project Manager track is the one enrolling for this cohort.
+              </p>
+            )}
           </div>
           <div className="border-t-2 border-line bg-surface px-4 py-10 sm:px-6 lg:border-t-0 lg:border-l-2">
             <Eyebrow>What&apos;s changing in this role</Eyebrow>
@@ -135,7 +145,9 @@ export function TrackDetail({ track }: { track: Track }) {
             <p className="display mt-2 text-6xl">{formatINR(pricing.launchPrice)}</p>
             <p className="mt-2 text-sm text-white/90">Cohort starts {formatDate(cohort.startDate)}. {cohort.capacityReason}</p>
           </div>
-          <ButtonLink href={`/register?track=${track.slug}`} variant="inverse" arrow>Choose This Track</ButtonLink>
+          <ButtonLink href={track.available ? `/register?track=${track.slug}` : "/tracks/project-manager"} variant="inverse" arrow>
+            {track.available ? "Choose This Track" : "See the open track"}
+          </ButtonLink>
         </div>
       </section>
     </>

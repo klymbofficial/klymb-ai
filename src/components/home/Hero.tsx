@@ -58,7 +58,10 @@ export function Hero() {
                 <Link href={`/tracks/${t.slug}`} className="group flex items-center gap-4 px-4 py-4 hover:bg-white/5 sm:px-6">
                   <span className="display w-8 text-xl text-red">{String(i + 1).padStart(2, "0")}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-lg font-extrabold">{t.name}</span>
+                    <span className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="text-lg font-extrabold">{t.name}</span>
+                      {!t.available && <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">Opening later</span>}
+                    </span>
                     <span className="block truncate text-sm text-white/65">→ {t.becomes}</span>
                   </span>
                   <svg className="shrink-0 transition-transform group-hover:translate-x-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>

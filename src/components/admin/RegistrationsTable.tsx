@@ -4,13 +4,17 @@ import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { tracks } from "@/data/tracks";
+import { enrollRegistration } from "@/app/admin/enroll";
 import type { Registration } from "@/lib/admin/data";
 
 const trackName = (slug: string) => tracks.find((t) => t.slug === slug)?.name ?? slug;
 
 const csvCell = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
-export function RegistrationsTable({ rows }: { rows: Registration[] }) {
+export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; enrolled: string[] }) {
+  const [justEnrolled, setJustEnrolled] = useState<string[]>([]);
+  const [enrolling, setEnrolling] = useState("");
+  const [enrolError, setEnrolError] = useState("");
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -84,11 +88,13 @@ export function RegistrationsTable({ rows }: { rows: Registration[] }) {
         </p>
       </div>
 
+      {enrolError && <p role="alert" className="border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{enrolError}</p>}
+
       <div className="overflow-x-auto border-2 border-line bg-paper">
-        <table className="w-full min-w-[820px] text-left text-sm">
+        <table className="w-full min-w-[940px] text-left text-sm">
           <thead className="sticky top-0 z-10 bg-ink text-paper">
             <tr>
-              {["Registered", "Name", "Contact", "Track", "Background", "LinkedIn"].map((h) => (
+              {["Registered", "Name", "Contact", "Track", "Background", "LinkedIn", "Cohort"].map((h) => (
                 <th key={h} scope="col" className="p-3 text-[11px] font-extrabold uppercase tracking-[0.1em]">{h}</th>
               ))}
             </tr>
@@ -110,6 +116,27 @@ export function RegistrationsTable({ rows }: { rows: Registration[] }) {
                   {r.linkedin ? (
                     <a href={r.linkedin} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-red-deep">Profile</a>
                   ) : <span className="text-muted">—</span>}
+                </td>
+                <td className="p-3 text-xs">
+                  {enrolled.includes(r.email.toLowerCase()) || justEnrolled.includes(r.email.toLowerCase()) ? (
+                    <span className="border border-ink px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">Enrolled</span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={enrolling === r.id}
+                      onClick={async () => {
+                        setEnrolError("");
+                        setEnrolling(r.id);
+                        const result = await enrollRegistration({ name: r.name, email: r.email, track: r.track, cohort_start: r.cohort_start });
+                        setEnrolling("");
+                        if (result.ok) setJustEnrolled((prev) => [...prev, r.email.toLowerCase()]);
+                        else setEnrolError(result.message);
+                      }}
+                      className="border-2 border-ink px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider hover:bg-ink hover:text-paper disabled:opacity-50"
+                    >
+                      {enrolling === r.id ? "Enrolling…" : "Enrol"}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

@@ -1,10 +1,11 @@
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { RegistrationsTable } from "@/components/admin/RegistrationsTable";
-import { getRegistrations } from "@/lib/admin/data";
+import { getLearnerProgress, getRegistrations } from "@/lib/admin/data";
 
 export default async function AdminRegistrationsPage() {
-  const registrations = await getRegistrations();
+  const [registrations, learners] = await Promise.all([getRegistrations(), getLearnerProgress()]);
+  const enrolled = learners.map((l) => l.email.toLowerCase());
 
   return (
     <>
@@ -16,7 +17,7 @@ export default async function AdminRegistrationsPage() {
       {registrations.length === 0 ? (
         <EmptyState title="Nothing here yet" body="Registrations from the public form land here instantly, newest first." />
       ) : (
-        <RegistrationsTable rows={registrations} />
+        <RegistrationsTable rows={registrations} enrolled={enrolled} />
       )}
     </>
   );

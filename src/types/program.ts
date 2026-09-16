@@ -40,6 +40,8 @@ export interface InterviewQuestion {
 export interface Track {
   slug: TrackSlug;
   name: string;
+  /** Open for enrolment now. Tracks still in development read false. */
+  available: boolean;
   /** Where the role is heading in AI-native teams */
   becomes: string;
   description: string;
