@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { currentEmail } from "@/auth";
+import { createServiceClient } from "@/lib/supabase/admin";
 
 export interface AdminSession {
   email: string;
@@ -9,20 +10,22 @@ export interface AdminSession {
 
 /**
  * Data Access Layer: every admin read goes through here.
- * Returns null when the visitor is not a signed-in admin.
+ *
+ * Admin status is read from admin_users on each request — never from an env
+ * list and never cached in the session token, so revoking a row takes effect
+ * immediately and there is only one authority.
  */
 export async function getAdmin(): Promise<AdminSession | null> {
-  const supabase = await createClient();
+  const email = await currentEmail();
+  if (!email) return null;
+
+  const supabase = createServiceClient();
   if (!supabase) return null;
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) return null;
-
-  // RLS on admin_users only returns a row when is_admin() passes.
   const { data } = await supabase
     .from("admin_users")
     .select("email, name")
-    .ilike("email", user.email)
+    .ilike("email", email)
     .maybeSingle();
 
   return data ? { email: data.email, name: data.name } : null;

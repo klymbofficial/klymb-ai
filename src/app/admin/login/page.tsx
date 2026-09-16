@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/LoginForm";
+import { SignOutButton } from "@/components/admin/SignOutButton";
 import { Wordmark } from "@/components/layout/Wordmark";
+import { currentEmail } from "@/auth";
 import { getAdmin } from "@/lib/admin/auth";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin sign-in", robots: { index: false, follow: false } };
 
@@ -12,8 +13,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
   if (await getAdmin()) redirect("/admin");
 
   // Signed in, but not on the allowlist: say so plainly instead of looping.
-  const supabase = await createClient();
-  const signedInAs = supabase ? (await supabase.auth.getUser()).data.user?.email ?? null : null;
+  const signedInAs = await currentEmail();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
@@ -30,13 +30,13 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
                 You are signed in as <strong className="text-ink">{signedInAs}</strong>, which is not on the admin list.
                 Ask an existing admin to add this email, or sign out and use a different account.
               </p>
-              <LoginForm signedInAs={signedInAs} />
+              <SignOutButton />
             </div>
           ) : (
             <>
               <h1 className="display text-2xl">Sign in</h1>
               <p className="mt-2 text-sm text-muted">Access is limited to approved Klymb.ai email addresses.</p>
-              <LoginForm error={error === "sign-in-failed" ? "Google sign-in did not complete. Please try again." : undefined} />
+              <LoginForm error={error ? "Google sign-in did not complete. Please try again." : undefined} />
             </>
           )}
         </div>

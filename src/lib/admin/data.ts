@@ -1,5 +1,6 @@
 import "server-only";
-import { createClient } from "@/lib/supabase/server";
+import { getAdmin } from "@/lib/admin/auth";
+import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
 
 export interface Registration {
@@ -31,7 +32,9 @@ export interface LearnerProgress {
 }
 
 export async function getRegistrations(): Promise<Registration[]> {
-  const supabase = await createClient();
+  // The service client bypasses RLS, so authorisation is checked here.
+  if (!(await getAdmin())) return [];
+  const supabase = createServiceClient();
   if (!supabase) return [];
   const { data } = await supabase
     .from("registrations")
@@ -42,7 +45,8 @@ export async function getRegistrations(): Promise<Registration[]> {
 }
 
 export async function getLearnerProgress(): Promise<LearnerProgress[]> {
-  const supabase = await createClient();
+  if (!(await getAdmin())) return [];
+  const supabase = createServiceClient();
   if (!supabase) return [];
 
   const { data: learners } = await supabase

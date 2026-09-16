@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { signIn, signOut } from "@/auth";
 import { getLearnerState } from "@/lib/learner/data";
+import { createServiceClient } from "@/lib/supabase/admin";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string };
 
@@ -15,10 +15,11 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   if (url && !/^https?:\/\/.+\..+/i.test(url)) return { ok: false, message: "Enter a full link starting with https://, or leave it blank." };
   if (!url && note.length < 20) return { ok: false, message: "Add a link to your work, or at least 20 characters describing what you did." };
 
+  // Authorisation: the submission is written for the signed-in learner only.
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled in a cohort." };
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Submissions are unavailable right now." };
 
   const { error } = await supabase
@@ -38,22 +39,10 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   return { ok: true };
 }
 
-export async function signOutLearner() {
-  const supabase = await createClient();
-  await supabase?.auth.signOut();
-  redirect("/learn/login");
+export async function signInLearner() {
+  await signIn("google", { redirectTo: "/learn" });
 }
 
-export async function signInLearner(_: unknown, formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Enter your email and password." };
-
-  const supabase = await createClient();
-  if (!supabase) return { error: "Sign-in is unavailable right now." };
-
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: "That email and password combination did not work." };
-
-  redirect("/learn");
+export async function signOutLearner() {
+  await signOut({ redirectTo: "/learn/login" });
 }

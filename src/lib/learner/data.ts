@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { currentEmail } from "@/auth";
+import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
 
 export interface Learner {
@@ -28,36 +29,29 @@ export type LearnerState =
   | { state: "not-enrolled"; email: string }
   | { state: "enrolled"; learner: Learner; submissions: Submission[] };
 
+const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url, linkedin_url";
+
 /**
- * Resolves the signed-in user to their learner record.
- * First sign-in links the auth user to the enrolment created by an admin.
+ * Resolves the signed-in user to their cohort place.
+ *
+ * Identity is the Google-verified email on the session; the learner row is
+ * matched on that email, so an enrolment created before their first sign-in
+ * still finds them.
  */
 export async function getLearnerState(): Promise<LearnerState> {
-  const supabase = await createClient();
+  const email = await currentEmail();
+  if (!email) return { state: "signed-out" };
+
+  const supabase = createServiceClient();
   if (!supabase) return { state: "signed-out" };
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email) return { state: "signed-out" };
-
-  let { data: learner } = await supabase
+  const { data: learner } = await supabase
     .from("learners")
-    .select("id, name, email, track, cohort_start, status, github_url, linkedin_url")
-    .eq("user_id", user.id)
+    .select(LEARNER_FIELDS)
+    .ilike("email", email)
     .maybeSingle();
 
-  if (!learner) {
-    // Enrolled by email but never signed in before: claim the row.
-    const { data: claimed } = await supabase
-      .from("learners")
-      .update({ user_id: user.id })
-      .ilike("email", user.email)
-      .is("user_id", null)
-      .select("id, name, email, track, cohort_start, status, github_url, linkedin_url")
-      .maybeSingle();
-    learner = claimed ?? null;
-  }
-
-  if (!learner) return { state: "not-enrolled", email: user.email };
+  if (!learner) return { state: "not-enrolled", email };
 
   const { data: submissions } = await supabase
     .from("day_submissions")

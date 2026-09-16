@@ -36,7 +36,7 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
               </p>
             </>
           )}
-          <LearnerLoginForm error={error === "sign-in-failed" ? "Google sign-in did not complete. Please try again." : undefined} />
+          <LearnerLoginForm error={error ? "Google sign-in did not complete. Please try again." : undefined} />
         </div>
       </div>
     </div>

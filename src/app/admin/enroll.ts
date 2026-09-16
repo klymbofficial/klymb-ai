@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
 
 export type EnrollResult = { ok: true } | { ok: false; message: string };
@@ -13,7 +13,7 @@ export async function enrollRegistration(input: {
 }): Promise<EnrollResult> {
   if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Unavailable right now." };
 
   const { error } = await supabase.from("learners").insert({
