@@ -1,4 +1,5 @@
 import { CareerTracks } from "@/components/home/CareerTracks";
+import { Designers } from "@/components/home/Designers";
 import { Evidence } from "@/components/home/Evidence";
 import { Faq } from "@/components/home/Faq";
 import { FourWeekJourney } from "@/components/home/FourWeekJourney";
@@ -21,6 +22,7 @@ export default function HomePage() {
       <CareerTracks />
       <HowItWorks />
       <FourWeekJourney />
+      <Designers />
       <Outcomes />
       <Pricing />
       <Faq />
