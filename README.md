@@ -55,7 +55,7 @@ No environment variables are needed yet. When integrations are added, copy `.env
 - [ ] `enrollmentDeadline` and `cohortCapacity` are **placeholders** — replace them and set the `...IsPlaceholder` flags to `false`.
 - [ ] Re-check every statistic and its source link in `program.ts` (`evidence`).
 - [ ] Final FAQ answers for track changes and refunds.
-- [ ] Privacy Policy, Terms and Refund Policy pages.
+- [ ] Privacy Policy, Terms and Refund Policy pages..
 
 Ethical guardrails used throughout: no fake testimonials, learner counts, seat counters or countdowns, and no guaranteed-job claims.
 
