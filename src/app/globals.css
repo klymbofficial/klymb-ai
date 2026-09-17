@@ -66,3 +66,12 @@ body {
   .day-tick { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }
+
+/* Legal pages: readable long-form prose without a plugin. */
+.legal { display: flex; flex-direction: column; gap: 2.5rem; }
+.legal p { line-height: 1.7; }
+.legal h3 { font-family: var(--font-heading); font-weight: 800; font-size: 1.05rem; margin-top: .5rem; }
+.legal ul { display: flex; flex-direction: column; gap: .5rem; padding-left: 1.1rem; list-style: disc; }
+.legal li { line-height: 1.6; }
+.legal a { text-decoration: underline; text-underline-offset: 3px; }
+.legal a:hover { color: var(--color-red-deep); }

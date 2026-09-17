@@ -181,6 +181,7 @@ export const footerLinks = {
   company: [
     { label: "Contact", href: "/contact" },
     { label: "Privacy Policy", href: "/privacy" },
+    { label: "Cookie Policy", href: "/cookies" },
     { label: "Terms", href: "/terms" },
     { label: "Refund Policy", href: "/refund-policy" },
   ],
