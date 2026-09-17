@@ -38,3 +38,8 @@ export const cohort = {
 export const contact = {
   email: "klymbofficial@gmail.com",
 };
+
+export const socials = [
+  { label: "Instagram", handle: "@klymb.ai", href: "https://www.instagram.com/klymb.ai/" },
+  { label: "X", handle: "@KlymbAI", href: "https://x.com/KlymbAI" },
+];

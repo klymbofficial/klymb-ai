@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { contact } from "@/data/config";
+import { contact, socials } from "@/data/config";
 import { brand, footerLinks } from "@/data/program";
 import { tracks } from "@/data/tracks";
 import { Wordmark } from "./Wordmark";
@@ -23,6 +23,21 @@ export function Footer() {
           <Wordmark />
           <p className="mt-3 max-w-xs text-sm text-muted">{brand.tagline}</p>
           <a href={`mailto:${contact.email}`} className="mt-4 inline-block text-sm font-semibold underline underline-offset-4">{contact.email}</a>
+          <ul className="mt-4 flex flex-wrap gap-3">
+            {socials.map((s) => (
+              <li key={s.href}>
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 border-2 border-line px-2.5 py-1.5 text-xs font-bold transition-colors hover:border-ink"
+                >
+                  {s.label}
+                  <span className="text-muted">{s.handle}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
         <Column title="Career Tracks" links={tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` }))} />
         <Column title="Program" links={footerLinks.program} />

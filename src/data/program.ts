@@ -1,5 +1,4 @@
 import type { Evidence, Faq, Source, WeekPhase } from "@/types/program";
-import { contact } from "./config";
 
 export const brand = {
   name: "Klymb.ai",
@@ -135,7 +134,7 @@ export const faqs: Faq[] = [
   {
     question: "Can I change my track?",
     answer:
-      "Placeholder: track changes may be allowed before the cohort starts or within the first few days. The final policy will be published before enrolment opens.",
+      "Not after you enrol. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
   },
   {
     question: "What happens every day?",
@@ -163,7 +162,8 @@ export const faqs: Faq[] = [
   },
   {
     question: "What is the refund policy?",
-    answer: `Placeholder: the refund policy is being finalised and will be published before payments open. For questions, write to ${contact.email}.`,
+    answer:
+      "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both mock interviews attended — the full conditions are on the Refund Policy page.",
   },
 ];
 
