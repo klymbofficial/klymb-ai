@@ -13,17 +13,17 @@ export default function CookiePolicyPage() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="Two cookies keep you signed in and remember your choice. Everything else is optional, and off until you say otherwise."
+      intro="Two cookies keep you signed in. We also measure aggregate usage with Google Analytics, which runs by default — you can turn it off on this page at any time."
     >
-      <Section n="1." title="Your choice" plain="Accept all, or necessary only. Nothing reaches Google unless you accept.">
+      <Section n="1." title="Your choice" plain="Analytics is on by default. Turn it off here and it stops immediately.">
         <p>
-          On your first visit we ask. Choose <strong>Necessary only</strong> and the Google Analytics script is never
-          loaded — no request is made to any Google analytics endpoint at all. Choose <strong>Accept all</strong> and we
-          measure aggregate usage.
+          We do not interrupt you with a cookie pop-up. Google Analytics runs by default so we can see, in aggregate,
+          which pages people read and where they arrive from. If you would rather we did not, switch it off below — the
+          script stops loading immediately, on this and every later page.
         </p>
         <p>
-          Choosing Necessary only costs you nothing: every part of the programme, every submission and every page works
-          exactly the same.
+          Turning it off costs you nothing: every part of the programme, every submission and every page works exactly
+          the same.
         </p>
         <CookiePreferences />
       </Section>
@@ -32,12 +32,12 @@ export default function CookiePolicyPage() {
         <Facts
           rows={[
             ["Auth.js session cookie", "Keeps you signed in to your learner or admin account. Set only after you sign in, and not readable by page scripts."],
-            ["klymb_consent", "Remembers the choice you made here, and the policy version it applied to. Lasts 180 days."],
+            ["klymb_consent", "Set only if you turn analytics off, so we remember that on later visits. Lasts 180 days."],
           ]}
         />
       </Section>
 
-      <Section n="3." title="Optional: analytics" plain="Google Analytics 4, aggregate only, and only if you allow it.">
+      <Section n="3." title="Analytics" plain="Google Analytics 4, aggregate only, on by default, off whenever you want.">
         <Facts
           rows={[
             ["Google Analytics 4", "Measures page views and aggregate usage — which pages people read, which track pages they open, how many registrations complete."],
@@ -46,8 +46,8 @@ export default function CookiePolicyPage() {
           ]}
         />
         <p>
-          If you change your mind and choose Necessary only, we stop loading the script immediately for the rest of your
-          visit and on every page afterwards.
+          If you turn analytics off, we stop loading the script immediately for the rest of your visit and on every page
+          afterwards. Events Google has already recorded stay until they age out of its 14-month retention window.
         </p>
       </Section>
 

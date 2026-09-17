@@ -66,7 +66,7 @@ export default function PrivacyPage() {
           <li>Checking that submitted GitHub and LinkedIn links belong to the account you declared</li>
           <li>Emailing or calling you about your registration, your cohort and your results</li>
           <li>Keeping the service secure, and preventing abuse of the registration form</li>
-          <li>Understanding, in aggregate, how the site is used — only with your analytics consent</li>
+          <li>Understanding, in aggregate, how the site is used, unless you have turned analytics off</li>
         </ul>
       </Section>
 
@@ -77,9 +77,13 @@ export default function PrivacyPage() {
           Without this processing we cannot run the cohort.
         </p>
         <p>
-          <strong>Consent:</strong> the contact permission you give on the registration form, and optional analytics
-          cookies. You can withdraw either at any time — see section 8. Withdrawal does not undo processing already
-          lawfully carried out.
+          <strong>Consent:</strong> the contact permission you give on the registration form. You can withdraw it at any
+          time — see section 8. Withdrawal does not undo processing already lawfully carried out.
+        </p>
+        <p>
+          <strong>Analytics:</strong> aggregate measurement runs by default and is not tied to your identity — we never
+          send your name, email, phone or submissions to Google. You can switch it off at any time at{" "}
+          <Link href="/cookies">/cookies</Link>.
         </p>
       </Section>
 
@@ -141,9 +145,10 @@ export default function PrivacyPage() {
         <p>Klymb.ai is for adults. We do not knowingly collect data from anyone under 18. If you believe a minor has registered, contact us and we will delete the account.</p>
       </Section>
 
-      <Section n="11." title="Cookies" plain="Only what is needed to sign you in, plus optional analytics you control.">
+      <Section n="11." title="Cookies" plain="What is needed to sign you in, plus analytics you can switch off.">
         <p>
-          See the <Link href="/cookies">Cookie Policy</Link> for what each cookie does and how to change your choice.
+          See the <Link href="/cookies">Cookie Policy</Link> for what each cookie does, and for the switch that turns
+          analytics off.
         </p>
       </Section>
 

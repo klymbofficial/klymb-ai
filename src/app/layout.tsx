@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
-import { CookieBanner } from "@/components/legal/CookieBanner";
 import { Archivo } from "next/font/google";
 import "./globals.css";
 
@@ -20,10 +19,7 @@ export const viewport: Viewport = { themeColor: "#f3f2f2" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} antialiased`}>
-      <body className="min-h-screen">
-        {children}
-        <CookieBanner />
-      </body>
+      <body className="min-h-screen">{children}</body>
       {gaId && <Analytics gaId={gaId} />}
     </html>
   );
