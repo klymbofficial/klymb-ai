@@ -7,6 +7,7 @@ import { tracks } from "@/data/tracks";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/FormField";
 import { registerInterest } from "@/app/(site)/register/actions";
+import { track } from "@/lib/analytics";
 import { emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
@@ -53,6 +54,7 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
       }
       setDuplicate(!!result.duplicate);
       setEnrolled(!!result.enrolled);
+      track("register_submit", { track_slug: data.track || "none", enrolled: !!result.enrolled, repeat: !!result.duplicate });
     } catch {
       setServerError("Network error. Please check your connection and try again.");
       return;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { submitDay } from "@/app/(learn)/learn/actions";
+import { track } from "@/lib/analytics";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import type { Submission } from "@/lib/learner/data";
 
@@ -20,7 +21,10 @@ export function DaySubmission({
     setPending(true);
     const result = await submitDay(day, formData);
     setPending(false);
-    if (result.ok) setSaved(true);
+    if (result.ok) {
+      setSaved(true);
+      track("day_submit", { day, updated: !!submission });
+    }
     else setError(result.message);
   }
 

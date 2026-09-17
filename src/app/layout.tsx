@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Archivo } from "next/font/google";
 import "./globals.css";
+
+/** Set NEXT_PUBLIC_GA_ID to switch analytics on; unset means no tracking script at all. */
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
@@ -16,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${archivo.variable} antialiased`}>
       <body className="min-h-screen">{children}</body>
+      {gaId && <GoogleAnalytics gaId={gaId} />}
     </html>
   );
 }
