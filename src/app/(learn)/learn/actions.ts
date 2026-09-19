@@ -5,23 +5,27 @@ import { signIn, signOut } from "@/auth";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { clamp, LIMITS, safeUrl } from "@/lib/validation";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string };
 
 export async function submitDay(day: number, formData: FormData): Promise<SubmitResult> {
-  const url = String(formData.get("deliverable_url") ?? "").trim();
-  const note = String(formData.get("note") ?? "").trim();
+  const rawUrl = String(formData.get("deliverable_url") ?? "").trim();
+  const url = rawUrl ? safeUrl(rawUrl) : null;
+  const note = clamp(formData.get("note"), LIMITS.note);
   const quizRaw = formData.get("quiz");
-  const linkedinPost = String(formData.get("linkedin_post_url") ?? "").trim();
+  const linkedinPost = clamp(formData.get("linkedin_post_url"), LIMITS.url);
 
   if (!Number.isInteger(day) || day < 1 || day > 30) return { ok: false, message: "That is not a valid day." };
-  if (url && !/^https?:\/\/.+\..+/i.test(url)) return { ok: false, message: "Enter a full link starting with https://, or leave it blank." };
+  if (rawUrl && !url) {
+    return { ok: false, message: "Enter a full link starting with https://, under 500 characters — or leave it blank." };
+  }
   // A quiz-only submit is valid: the answers are the work for that step.
   let quizAnswers: string[] | null = null;
   if (typeof quizRaw === "string" && quizRaw) {
     try {
       const parsed: unknown = JSON.parse(quizRaw);
-      if (Array.isArray(parsed)) quizAnswers = parsed.slice(0, 10).map((a) => String(a).slice(0, 2000));
+      if (Array.isArray(parsed)) quizAnswers = parsed.slice(0, 10).map((a) => clamp(a, LIMITS.quizAnswer));
     } catch {
       return { ok: false, message: "Your answers could not be read. Please try again." };
     }
@@ -38,7 +42,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
 
   // Evidence has to be the learner's own.
   const ownershipError =
-    checkGithubUrl(url, state.learner.github_username) ??
+    checkGithubUrl(url ?? "", state.learner.github_username) ??
     checkLinkedinPostUrl(linkedinPost, state.learner.linkedin_slug);
   if (ownershipError) return { ok: false, message: ownershipError };
 
@@ -55,7 +59,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
       {
         learner_id: state.learner.id,
         day,
-        deliverable_url: url || null,
+        deliverable_url: url,
         note: note || null,
         ...(quizAnswers ? { quiz_answers: quizAnswers } : {}),
         ...(linkedinPost ? { linkedin_post_url: linkedinPost } : {}),

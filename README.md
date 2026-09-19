@@ -18,6 +18,26 @@ npm run lint
 
 No environment variables are needed yet. When integrations are added, copy `.env.example` to `.env.local` (git-ignored) and set the same values in Vercel → Project Settings → Environment Variables. Never commit secrets.
 
+## Security
+
+| Control | Where |
+| --- | --- |
+| Identity is a Google-verified email, compared with exact equality | `src/auth.ts`, `src/lib/email.ts` |
+| Admin status read from `admin_users` on every request, never from env or a token | `src/lib/admin/auth.ts` |
+| All database writes run server-side under the service-role key; the anon role has no write privileges | `src/lib/supabase/admin.ts`, migration `20260922000000` |
+| Registration throttle, keyed by a salted hash of the caller's IP | `src/lib/rate-limit.ts`, `src/lib/fingerprint.ts` |
+| Server-side allowlists and length caps on every submitted field | `src/lib/validation.ts` |
+| CSP, nosniff, Referrer-Policy, Permissions-Policy, frame-ancestors | `next.config.ts` |
+
+**Content Security Policy.** These hosts must stay allowlisted or something breaks:
+`www.googletagmanager.com` (analytics script), `www.google-analytics.com` and `*.analytics.google.com`
+(measurement), `accounts.google.com` (sign-in redirect and form post), `*.supabase.co` (database),
+`i.ytimg.com` (day-page thumbnails), `*.googleusercontent.com` (Google profile images).
+`script-src` keeps `'unsafe-inline'` because Next.js inlines its bootstrap; `'unsafe-eval'` is added in
+development only, for React Refresh.
+
+**Verify everything:** `npm run verify` (types, lint, tests, production build).
+
 ## Deploy to Vercel
 
 1. Push this repo to GitHub.

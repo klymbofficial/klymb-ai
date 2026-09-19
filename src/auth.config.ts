@@ -10,7 +10,14 @@ import Google from "next-auth/providers/google";
  * classic way this goes wrong.
  */
 export default {
-  trustHost: true,
+  /**
+   * Host trust is explicit. Auth.js otherwise believes the Host header, which
+   * lets a spoofed host redirect an OAuth callback elsewhere. Set
+   * AUTH_TRUST_HOST=true only where the platform terminates TLS and sets the
+   * host itself (Vercel). Absent, the safer behaviour applies and AUTH_URL is
+   * the canonical origin.
+   */
+  trustHost: process.env.AUTH_TRUST_HOST === "true",
   pages: { signIn: "/admin/login", error: "/admin/login" },
   providers: [
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
@@ -25,12 +32,15 @@ export default {
   ],
   callbacks: {
     jwt({ token, profile }) {
-      // Only trust an email Google has verified.
-      if (profile) token.emailVerified = profile.email_verified === true;
+      // Only an email Google has verified counts as an identity here.
+      if (profile) token.emailIsVerified = profile.email_verified === true;
       return token;
     },
     session({ session, token }) {
-      if (session.user) session.user.id = token.sub ?? "";
+      if (session.user) {
+        session.user.id = token.sub ?? "";
+        session.user.emailIsVerified = token.emailIsVerified === true;
+      }
       return session;
     },
   },

@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { currentEmail } from "@/auth";
+import { normaliseEmail } from "@/lib/email";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export interface AdminSession {
@@ -16,16 +17,17 @@ export interface AdminSession {
  * immediately and there is only one authority.
  */
 export async function getAdmin(): Promise<AdminSession | null> {
-  const email = await currentEmail();
+  const email = normaliseEmail(await currentEmail());
   if (!email) return null;
 
   const supabase = createServiceClient();
   if (!supabase) return null;
 
+  // Exact match only: ILIKE would treat % and _ in a stored row as wildcards.
   const { data } = await supabase
     .from("admin_users")
     .select("email, name")
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle();
 
   return data ? { email: data.email, name: data.name } : null;

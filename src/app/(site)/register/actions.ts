@@ -2,35 +2,51 @@
 
 import { cohort } from "@/data/config";
 import { getTrack } from "@/data/tracks";
-import { getSupabase } from "@/lib/supabase";
-import { validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
+import { normaliseEmail } from "@/lib/email";
+import { ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient } from "@/lib/learner/enrolment";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { createServiceClient } from "@/lib/supabase/admin";
+import { clamp, LIMITS, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 
 export type RegisterResult =
   | { ok: true; duplicate?: boolean; enrolled?: boolean }
   | { ok: false; errors?: RegistrationErrors; message?: string };
 
-/** Postgres unique-violation: this email already registered for this cohort. */
-const UNIQUE_VIOLATION = "23505";
-
+/**
+ * Public registration, written entirely in trusted server code.
+ *
+ * The browser holds no database credential: this runs with the service-role
+ * client, which never leaves the server, and the anon role has no write access
+ * to registrations at all.
+ */
 export async function registerInterest(input: RegistrationData, honeypot?: string): Promise<RegisterResult> {
   // Bots fill every field, including the hidden one. Humans never see it.
   if (honeypot) return { ok: true };
 
-  // Never trust the client: validate again on the server.
+  const email = normaliseEmail(input.email);
+
+  // Never trust the client: rebuild the record from clamped, canonical values.
   const data: RegistrationData = {
-    name: String(input.name ?? "").trim(),
-    email: String(input.email ?? "").trim().toLowerCase(),
-    phone: String(input.phone ?? "").replace(/[\s()-]/g, ""),
+    name: clamp(input.name, LIMITS.name),
+    email: email ?? "",
+    phone: clamp(input.phone, LIMITS.phone).replace(/[\s()-]/g, ""),
     track: input.track,
-    currentRole: String(input.currentRole ?? ""),
-    experience: String(input.experience ?? ""),
-    linkedin: String(input.linkedin ?? "").trim(),
+    currentRole: clamp(input.currentRole, 60),
+    experience: clamp(input.experience, 40),
+    linkedin: clamp(input.linkedin, LIMITS.linkedin),
     consent: input.consent === true,
   };
+
   const errors = validateRegistration(data);
   if (Object.keys(errors).length) return { ok: false, errors };
 
-  const supabase = getSupabase();
+  // Throttle before touching anything else, so a flood costs one cheap count.
+  const limit = await checkRateLimit("register", { limit: 5, windowMinutes: 60 });
+  if (!limit.allowed) {
+    return { ok: false, message: "Too many registrations from this connection. Please try again later, or email us." };
+  }
+
+  const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Registration is not available right now. Please email us instead." };
 
   const { error } = await supabase.from("registrations").insert({
@@ -59,7 +75,7 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
         experience: data.experience,
         linkedin: data.linkedin || null,
       })
-      .ilike("email", data.email)
+      .eq("email", data.email)
       .eq("cohort_start", cohort.startDate);
   }
 
@@ -71,10 +87,14 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   // Open tracks enrol straight away, so the learner can start Day 1 now.
   let enrolled = false;
   if (getTrack(data.track)?.available) {
-    const { data: placed, error: enrolError } = await supabase.rpc("enrol_open_track", { p_email: data.email });
-    if (enrolError) console.error("enrolment failed:", enrolError.code, enrolError.message);
-    // The function returns true only when a place actually exists.
-    enrolled = placed === true;
+    // The client satisfies the narrow shape ensureLearner needs; Supabase's own
+    // generics are too deep for TypeScript to prove it.
+    enrolled = await ensureLearner(supabase as unknown as EnrolmentClient, {
+      email: data.email,
+      name: data.name,
+      track: data.track,
+      cohortStart: cohort.startDate,
+    });
   }
 
   return { ok: true, duplicate, enrolled };

@@ -1,6 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { currentEmail } from "@/auth";
+import { normaliseEmail } from "@/lib/email";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
 
@@ -43,16 +44,17 @@ const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url
  * still finds them.
  */
 export async function getLearnerState(): Promise<LearnerState> {
-  const email = await currentEmail();
+  const email = normaliseEmail(await currentEmail());
   if (!email) return { state: "signed-out" };
 
   const supabase = createServiceClient();
   if (!supabase) return { state: "signed-out" };
 
+  // Exact match only — ownership of a cohort place must not be fuzzy.
   const { data: learner } = await supabase
     .from("learners")
     .select(LEARNER_FIELDS)
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle();
 
   if (!learner) return { state: "not-enrolled", email };
