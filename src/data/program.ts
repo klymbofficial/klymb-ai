@@ -24,6 +24,25 @@ export const hero = {
 /** The story beat under the hero. */
 export const statement = "Your title is the liability. Your domain knowledge is the asset.";
 
+export const statementSupport =
+  "The traditional resume describes who you claimed to be in the past. Real-world capability proves what problems you are ready to resolve today.";
+
+/** Section intros used by the landing page. */
+export const sectionCopy = {
+  evidence: {
+    eyebrow: "Why it's time",
+    title: "The work is changing. The evidence is public.",
+    intro: "Companies no longer hire for general potential. They recruit specifically to solve immediate execution gaps.",
+  },
+  howItWorks: { eyebrow: "How it works", title: "30 days, 1 problem at a time" },
+  tracks: {
+    eyebrow: "Career paths",
+    title: "Five roles. Pick the one you want next.",
+    intro: "Choose your target program. Every path is tuned exactly to present industry standards.",
+  },
+  faq: { eyebrow: "FAQ", title: "Straight answers.", intro: "Everything you need to know before enrolling." },
+} as const;
+
 export const inclusions = [
   { figure: "1", label: "Selected career track", detail: "Everything you do is specific to the role you want." },
   { figure: "30", label: "Practical daily challenges", detail: "One real workplace problem a day." },
@@ -169,6 +188,7 @@ export const faqs: Faq[] = [
 
 export const urgency = {
   headline: "The next cohort closes before your role does.",
+  support: "Secure your place and build the capability your next company is actively seeking.",
 };
 
 export const footerLinks = {

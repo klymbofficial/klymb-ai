@@ -29,6 +29,24 @@ test("email constraints are added NOT VALID so the migration cannot fail on lega
 
 test("earlier migrations are untouched additions, not rewrites", () => {
   const files = readdirSync(dir).sort();
-  assert.equal(files.at(-1), "20260922000000_security_hardening.sql", "hardening must be the newest migration");
-  assert.ok(files.length >= 9);
+
+  // Every migration that has already been applied must still be present and
+  // still be named the same. New work is a new file; nothing here is edited.
+  const applied = [
+    "20260915000000_create_registrations.sql",
+    "20260916000000_registrations_prod_hardening.sql",
+    "20260917000000_admin_and_progress.sql",
+    "20260918000000_self_serve_enrolment.sql",
+    "20260919000000_enrolment_fix.sql",
+    "20260919010000_learner_claim_policy.sql",
+    "20260920000000_quiz_answers.sql",
+    "20260921000000_evidence_identity.sql",
+    "20260922000000_security_hardening.sql",
+  ];
+  for (const name of applied) assert.ok(files.includes(name), `${name} is missing`);
+
+  // Timestamps order the run, so they must be unique and sorted.
+  const stamps = files.map((f) => f.slice(0, 14));
+  assert.equal(new Set(stamps).size, stamps.length, "two migrations share a timestamp");
+  assert.deepEqual([...stamps].sort(), stamps);
 });

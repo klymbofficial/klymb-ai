@@ -8,8 +8,8 @@ export function ModuleSidebar({ currentDay, submitted }: { currentDay: number; s
   const current = pmCurriculum.find((d) => d.day === currentDay);
 
   return (
-    <nav aria-label="Course modules" className="border-2 border-line bg-paper">
-      <div className="border-b-2 border-line px-5 py-4">
+    <nav aria-label="Course modules" className="rounded-card bg-card shadow-card">
+      <div className="border-b border-line/25 px-5 py-5">
         <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-muted">Modules</p>
         <p className="mt-1 text-sm font-bold">
           Week {current?.week} · {pmModules.find((m) => m.week === current?.week)?.name}
@@ -20,7 +20,7 @@ export function ModuleSidebar({ currentDay, submitted }: { currentDay: number; s
       <div className="max-h-[70vh] overflow-y-auto">
         {pmModules.map((module) => (
           <section key={module.week}>
-            <h2 className="sticky top-0 bg-paper px-5 pt-4 pb-2">
+            <h2 className="sticky top-0 bg-card px-5 pt-4 pb-2">
               <span className="block text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-deep">Week {module.week}</span>
               <span className="block text-sm font-bold">{module.name}</span>
             </h2>
@@ -34,7 +34,7 @@ export function ModuleSidebar({ currentDay, submitted }: { currentDay: number; s
                       aria-current={isCurrent ? "page" : undefined}
                       className={clsx(
                         "flex items-baseline gap-2 px-5 py-2 text-sm transition-colors",
-                        isCurrent ? "bg-surface font-bold" : "hover:bg-surface/60",
+                        isCurrent ? "bg-red-tint font-bold" : "hover:bg-surface/60",
                       )}
                     >
                       <span className={clsx("w-14 shrink-0 font-bold", done.has(d.day) ? "text-red-deep" : "text-muted")}>

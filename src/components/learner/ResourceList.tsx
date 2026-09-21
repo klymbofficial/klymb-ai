@@ -17,7 +17,7 @@ export function ResourceList({ resources }: { resources: DayResource[] }) {
   if (!resources.length) return null;
 
   return (
-    <ul className="grid gap-4 sm:grid-cols-2">
+    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {resources.map((r) => {
         const id = youTubeId(r.url);
         return (
@@ -26,22 +26,23 @@ export function ResourceList({ resources }: { resources: DayResource[] }) {
               href={r.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex h-full flex-col gap-2 border-2 border-line bg-paper p-4 transition-colors hover:border-ink"
+              className="group flex h-full flex-col gap-2 rounded-xl border border-line/35 bg-card p-4 transition-colors hover:border-red-strong"
             >
-              <span className="flex items-baseline gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-red-deep">{KIND_LABEL[r.kind]}</span>
-                <span className="text-sm font-bold group-hover:underline">{r.label}</span>
-              </span>
+              <span className="block text-[10px] font-extrabold uppercase tracking-[0.14em] text-red-deep">{KIND_LABEL[r.kind]}</span>
+              <span className="block text-sm font-bold group-hover:underline">{r.label}</span>
               {id && (
                 <Image
                   src={`https://i.ytimg.com/vi/${id}/mqdefault.jpg`}
                   alt=""
                   width={320}
                   height={180}
-                  className="h-auto w-full border border-line object-cover"
+                  className="h-auto w-full rounded-lg border border-line/30 object-cover"
                 />
               )}
-              <span className="mt-auto truncate text-xs text-muted">{new URL(r.url).hostname.replace("www.", "")}</span>
+              <span className="mt-auto flex items-center justify-between gap-2 pt-2 text-xs text-muted">
+                <span className="truncate">{new URL(r.url).hostname.replace("www.", "")}</span>
+                <span aria-hidden="true" className="shrink-0">↗</span>
+              </span>
             </a>
           </li>
         );

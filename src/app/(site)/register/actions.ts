@@ -34,6 +34,7 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     currentRole: clamp(input.currentRole, 60),
     experience: clamp(input.experience, 40),
     linkedin: clamp(input.linkedin, LIMITS.linkedin),
+    github: clamp(input.github, LIMITS.github),
     consent: input.consent === true,
   };
 
@@ -57,6 +58,7 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     job_role: data.currentRole,
     experience: data.experience,
     linkedin: data.linkedin || null,
+    github: data.github || null,
     consent: data.consent,
     cohort_start: cohort.startDate,
   });
@@ -74,6 +76,7 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
         job_role: data.currentRole,
         experience: data.experience,
         linkedin: data.linkedin || null,
+        github: data.github || null,
       })
       .eq("email", data.email)
       .eq("cohort_start", cohort.startDate);

@@ -1,7 +1,7 @@
 import clsx from "clsx";
 
 const control =
-  "mt-2 block w-full border-2 bg-white px-3 py-3 text-base text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none focus-visible:outline-red";
+  "mt-2 block w-full rounded-lg border bg-surface/45 px-3.5 py-3 text-[15px] text-ink placeholder:text-muted/70 focus:border-ink focus:bg-white focus:outline-none focus-visible:outline-red";
 
 function describedBy(id: string, error?: string) {
   return error ? `${id}-error` : undefined;
@@ -9,7 +9,7 @@ function describedBy(id: string, error?: string) {
 
 function Label({ id, label, optional }: { id: string; label: string; optional?: boolean }) {
   return (
-    <label htmlFor={id} className="block text-sm font-bold">
+    <label htmlFor={id} className="block text-[13px] font-bold">
       {label} {optional ? <span className="font-normal text-muted">(optional)</span> : <span aria-hidden="true" className="text-red-deep">*</span>}
     </label>
   );
@@ -27,7 +27,7 @@ export function TextField({ id, label, error, optional, ...props }: Base & React
       <Label id={id} label={label} optional={optional} />
       <input id={id} name={id} aria-invalid={!!error} aria-describedby={describedBy(id, error)} required={!optional}
         spellCheck={props.type === "email" || props.type === "tel" || props.type === "url" ? false : undefined}
-        className={clsx(control, error ? "border-red-deep" : "border-line")} {...props} />
+        className={clsx(control, error ? "border-red-deep" : "border-line/50")} {...props} />
       <ErrorText id={id} error={error} />
     </div>
   );
@@ -39,7 +39,7 @@ export function SelectField({ id, label, error, optional, options, placeholder, 
     <div>
       <Label id={id} label={label} optional={optional} />
       <select id={id} name={id} aria-invalid={!!error} aria-describedby={describedBy(id, error)} required={!optional}
-        className={clsx(control, error ? "border-red-deep" : "border-line")} {...props}>
+        className={clsx(control, error ? "border-red-deep" : "border-line/50")} {...props}>
         <option value="">{placeholder}</option>
         {options.map((o) => <option key={o.value} value={o.value} disabled={o.disabled}>{o.label}</option>)}
       </select>

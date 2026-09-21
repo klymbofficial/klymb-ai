@@ -4,8 +4,10 @@ import { useRef, useState } from "react";
 import { contact } from "@/data/config";
 import { experienceOptions, roleOptions } from "@/data/program";
 import { tracks } from "@/data/tracks";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { SelectField, TextField } from "@/components/ui/FormField";
+import { RegistrationSuccess, type SuccessState } from "./RegistrationSuccess";
 import { registerInterest } from "@/app/(site)/register/actions";
 import { track } from "@/lib/analytics";
 import { emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
@@ -13,13 +15,13 @@ import type { TrackSlug } from "@/types/program";
 
 const toOptions = (list: string[]) => list.map((v) => ({ value: v, label: v }));
 
-export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug }) {
+/** `bare` drops the framing so the form can sit inside a card of its own. */
+export function RegistrationForm({ defaultTrack, bare }: { defaultTrack?: TrackSlug; bare?: boolean }) {
   const [data, setData] = useState<RegistrationData>({ ...emptyRegistration, track: defaultTrack ?? "" });
   const [errors, setErrors] = useState<RegistrationErrors>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [result, setResult] = useState<SuccessState | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [pending, setPending] = useState(false);
-  const [duplicate, setDuplicate] = useState(false);
-  const [enrolled, setEnrolled] = useState(false);
   const [honeypot, setHoneypot] = useState("");
   const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,63 +48,46 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
 
     setPending(true);
     try {
-      const result = await registerInterest(data, honeypot);
-      if (!result.ok) {
-        if (result.errors) { setErrors(result.errors); focusFirst(result.errors); }
-        setServerError(result.message ?? "");
+      const response = await registerInterest(data, honeypot);
+      if (!response.ok) {
+        if (response.errors) { setErrors(response.errors); focusFirst(response.errors); }
+        setServerError(response.message ?? "");
         return;
       }
-      setDuplicate(!!result.duplicate);
-      setEnrolled(!!result.enrolled);
-      track("register_submit", { track_slug: data.track || "none", enrolled: !!result.enrolled, repeat: !!result.duplicate });
+      setResult({
+        enrolled: !!response.enrolled,
+        duplicate: !!response.duplicate,
+        email: data.email.trim(),
+        track: tracks.find((t) => t.slug === data.track),
+      });
+      track("register_submit", { track_slug: data.track || "none", enrolled: !!response.enrolled, repeat: !!response.duplicate });
     } catch {
       setServerError("Network error. Please check your connection and try again.");
       return;
     } finally {
       setPending(false);
     }
-    setSubmitted(true);
-    requestAnimationFrame(() => successRef.current?.focus());
+    setModalOpen(true);
   }
 
-  if (submitted) {
-    const track = tracks.find((t) => t.slug === data.track);
+  if (result && !modalOpen) {
     return (
-      <div ref={successRef} tabIndex={-1} role="status" className="border-2 border-ink bg-ink p-8 text-paper focus:outline-none">
-        <p className="display text-4xl">{enrolled ? "You're in." : "Interest registered."}</p>
-        <p className="mt-4 text-white/80">
-          {duplicate ? "You had already registered with this email — nothing was duplicated. " : `Thanks, ${data.name.trim().split(" ")[0]}. `}
-          {enrolled ? (
-            <>
-              Your place on the <strong className="text-paper">{track?.name}</strong> track is reserved.
-              Sign in with <strong className="text-paper">{data.email.trim()}</strong> to open Day 1 and start today.
-              No payment has been taken.
-            </>
-          ) : track?.available ? (
-            <>
-              You chose the <strong className="text-paper">{track.name}</strong> track. We will confirm your place
-              at {data.email.trim()} shortly, and you will be able to start Day 1 from there. No payment has been taken.
-            </>
-          ) : (
-            <>
-              You chose the <strong className="text-paper">{track?.name}</strong> track, which opens in a later cohort.
-              We will email {data.email.trim()} the moment it does. No payment has been taken.
-            </>
-          )}
-        </p>
-        {enrolled && (
-          <div className="mt-6">
-            <ButtonLink href="/learn/login?welcome=1" variant="inverse" arrow>Start Day 1</ButtonLink>
-          </div>
-        )}
+      <div ref={successRef} tabIndex={-1} role="status" className="rounded-card bg-night text-paper focus:outline-none">
+        <RegistrationSuccess {...result} />
       </div>
     );
   }
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="grid gap-5 border-2 border-line bg-paper p-6 sm:grid-cols-2 sm:p-8">
-      <div className="sm:col-span-2"><TextField id="name" label="Full name" autoComplete="name" value={data.name} onChange={(e) => set("name", e.target.value)} error={errors.name} /></div>
-      <TextField id="email" label="Email" type="email" autoComplete="email" value={data.email} onChange={(e) => set("email", e.target.value)} error={errors.email} />
+    <>
+      <form
+        ref={formRef}
+        onSubmit={onSubmit}
+        noValidate
+        className={bare ? "grid gap-4 sm:grid-cols-2" : "grid gap-5 rounded-card bg-card p-6 shadow-card sm:grid-cols-2 sm:p-8"}
+      >
+      <div className="sm:col-span-2"><TextField id="name" label="Full name" autoComplete="name" placeholder="e.g. John Doe" value={data.name} onChange={(e) => set("name", e.target.value)} error={errors.name} /></div>
+      <TextField id="email" label="Email" type="email" autoComplete="email" placeholder="e.g. john@example.com" value={data.email} onChange={(e) => set("email", e.target.value)} error={errors.email} />
       <TextField id="phone" label="Phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={data.phone} onChange={(e) => set("phone", e.target.value)} error={errors.phone} />
       <div className="sm:col-span-2">
         <SelectField id="track" label="Career track" placeholder="Choose a track" options={tracks.map((t) => ({ value: t.slug, label: t.available ? t.name : `${t.name} — opening later`, disabled: !t.available }))}
@@ -114,11 +99,14 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
         <TextField id="linkedin" label="LinkedIn URL" optional type="url" placeholder="https://linkedin.com/in/yourname" value={data.linkedin} onChange={(e) => set("linkedin", e.target.value)} error={errors.linkedin} />
       </div>
       <div className="sm:col-span-2">
+        <TextField id="github" label="GitHub URL" optional type="url" placeholder="https://github.com/yourname" value={data.github} onChange={(e) => set("github", e.target.value)} error={errors.github} />
+      </div>
+      <div className="sm:col-span-2">
         <div className="flex items-start gap-3">
           <input id="consent" type="checkbox" checked={data.consent} onChange={(e) => set("consent", e.target.checked)}
             aria-invalid={!!errors.consent} aria-describedby={errors.consent ? "consent-error" : undefined}
             className="mt-1 size-5 shrink-0 accent-red-strong" />
-          <label htmlFor="consent" className="text-sm">
+          <label htmlFor="consent" className="text-[13px] leading-relaxed">
             I agree to be contacted by Klymb.ai about this program by email or phone, and I have read the{" "}
             <a href="/privacy" className="font-semibold underline">Privacy Policy</a>. Questions: {contact.email}
           </label>
@@ -132,10 +120,22 @@ export function RegistrationForm({ defaultTrack }: { defaultTrack?: TrackSlug })
           value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
       </div>
       <div className="sm:col-span-2">
-        {serverError && <p role="alert" className="mb-3 border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{serverError}</p>}
-        <Button type="submit" arrow disabled={pending} aria-busy={pending} className="w-full sm:w-auto">{pending ? "Saving…" : "Register my interest"}</Button>
-        <p className="mt-3 text-xs text-muted">Registration does not take payment. Payment opens once the cohort is confirmed.</p>
+        {serverError && <p role="alert" className="mb-3 rounded-lg border border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{serverError}</p>}
+        <Button type="submit" arrow disabled={pending} aria-busy={pending} className="w-full rounded-full py-4">{pending ? "Saving…" : "Register"}</Button>
+        <p className="mt-3 text-center text-[11px] text-muted">Registration does not take payment. Payment opens once the cohort is confirmed.</p>
       </div>
-    </form>
+      </form>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          requestAnimationFrame(() => successRef.current?.focus());
+        }}
+        labelledBy="register-success-title"
+      >
+        {result && <RegistrationSuccess {...result} />}
+      </Modal>
+    </>
   );
 }

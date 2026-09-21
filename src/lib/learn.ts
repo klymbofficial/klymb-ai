@@ -20,3 +20,16 @@ export function thirtyDays(track: Track): DayEntry[] {
   days.push({ kind: "interview", day: 29 }, { kind: "interview", day: 30 });
   return days;
 }
+
+/**
+ * The calendar date a cohort day falls on.
+ *
+ * Day 1 is the cohort's start date and each day that follows is the next
+ * calendar day, so the 30 days run start → start + 29. Dates are handled in
+ * UTC and only ever formatted, never compared against "now".
+ */
+export function cohortDayDate(cohortStart: string, day: number): string {
+  const date = new Date(`${cohortStart}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + (day - 1));
+  return date.toISOString().slice(0, 10);
+}

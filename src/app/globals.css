@@ -11,6 +11,16 @@
   --color-red-strong: #cf2a10; /* white text passes AA on this */
   --color-red-deep: #ae1800; /* red text on paper passes AA */
   --color-red-tint: #fff2ef;
+  --color-card: #ffffff;
+  /* The dark ground used by the footer and the career-track detail card. */
+  --color-night: #141312;
+
+  /* Cards float on the ground rather than being ruled off from it. */
+  --shadow-card: 0 1px 2px rgba(32, 30, 29, 0.04), 0 14px 34px -14px rgba(32, 30, 29, 0.16);
+  --shadow-float: 0 2px 6px rgba(32, 30, 29, 0.06), 0 26px 60px -22px rgba(32, 30, 29, 0.22);
+
+  --radius-card: 1.25rem;
+  --radius-slab: 2rem;
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
@@ -75,3 +85,45 @@ body {
 .legal li { line-height: 1.6; }
 .legal a { text-decoration: underline; text-underline-offset: 3px; }
 .legal a:hover { color: var(--color-red-deep); }
+
+/* ─────────────────────────────────────────────────────────────
+   Landing page surfaces.
+   The marketing pages sit on the warm grey ground with white
+   cards floating on it; the interior pages keep the ruled look.
+   ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/*
+ * The airy field behind the statistics. The design shows a photographed
+ * relief globe; this is a lighting-only stand-in that costs no bytes and
+ * degrades cleanly. Drop a real image in behind it whenever one exists.
+ */
+.field {
+  background:
+    radial-gradient(60rem 30rem at 50% 38%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(40rem 26rem at 12% 70%, rgba(32, 30, 29, 0.05), transparent 70%),
+    radial-gradient(40rem 26rem at 88% 24%, rgba(32, 30, 29, 0.05), transparent 70%);
+}
+
+/* Frosted statistic tiles, so the field stays faintly visible through them. */
+.frost {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.7));
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* Modal entrance. The dialog is already usable without it. */
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(12px) scale(.97) }
+  to   { opacity: 1; transform: none }
+}
+.modal-pop[open] { animation: modal-pop .24s cubic-bezier(.2, .7, .3, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-pop[open] { animation: none; }
+}

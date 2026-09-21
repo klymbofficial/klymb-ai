@@ -1,74 +1,49 @@
-import Link from "next/link";
+import Image from "next/image";
 import { hero } from "@/data/program";
-import { tracks } from "@/data/tracks";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-
-/** The shape of the program: 30 ticks, four assessment days, two mock rounds. */
-function DayStrip() {
-  return (
-    <div className="mt-10 max-w-xl">
-      <div className="flex items-end gap-[3px]" aria-hidden="true">
-        {Array.from({ length: 30 }, (_, i) => {
-          const day = i + 1;
-          const isGate = day % 7 === 0 && day <= 28;
-          const isMock = day > 28;
-          return (
-            <span
-              key={day}
-              className={`day-tick flex-1 ${isGate ? "h-7 bg-red" : isMock ? "h-7 bg-ink" : "h-4 bg-ink/25"}`}
-              style={{ animationDelay: `${i * 22}ms` }}
-            />
-          );
-        })}
-      </div>
-      <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-bold uppercase tracking-wider text-muted">
-        <div className="flex items-center gap-1.5"><span className="size-2 bg-ink/25" aria-hidden="true" /><dt>26 build days</dt></div>
-        <div className="flex items-center gap-1.5"><span className="size-2 bg-red" aria-hidden="true" /><dt>4 assessments</dt></div>
-        <div className="flex items-center gap-1.5"><span className="size-2 bg-ink" aria-hidden="true" /><dt>2 mock interviews</dt></div>
-      </dl>
-    </div>
-  );
-}
+import cohortPhoto from "@/assets/hero-cohort.png";
 
 export function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="border-b-2 border-line">
-      <div className="mx-auto grid max-w-7xl lg:grid-cols-[1.25fr_1fr]">
-        <div className="px-4 py-14 sm:px-6 sm:py-20 lg:py-24">
-          <Eyebrow>{hero.eyebrow}</Eyebrow>
-          <h1 id="hero-title" className="display mt-5 text-[clamp(3rem,8vw,6.25rem)] text-balance">
-            Become Job-Ready in <span className="text-red">30&nbsp;Days</span>
-          </h1>
-          <p className="mt-6 max-w-xl text-lg text-muted sm:text-xl text-pretty">{hero.subheadline}</p>
-          <DayStrip />
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href={hero.primaryCta.href} arrow>{hero.primaryCta.label}</ButtonLink>
-            <ButtonLink href={hero.secondaryCta.href} variant="secondary">{hero.secondaryCta.label}</ButtonLink>
+    <section aria-labelledby="hero-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+      <div className="card overflow-hidden rounded-slab shadow-float">
+        <div className="grid gap-10 p-8 pb-0 sm:p-12 sm:pb-0 lg:grid-cols-[1.05fr_1fr] lg:items-end lg:gap-6 lg:p-16 lg:pb-0">
+          <div className="lg:pb-16">
+            <Eyebrow>{hero.eyebrow}</Eyebrow>
+            <h1 id="hero-title" className="display mt-6 text-[clamp(2.75rem,6.5vw,4.75rem)]">
+              Become<br />
+              <span className="text-red-strong">Job-Ready</span><br />
+              in 30 Days
+            </h1>
+            <p className="mt-7 max-w-lg text-[15px] leading-relaxed text-muted sm:text-base">{hero.subheadline}</p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <ButtonLink href={hero.primaryCta.href} soft>{hero.primaryCta.label}</ButtonLink>
+              <ButtonLink href={hero.secondaryCta.href} variant="secondary" soft className="border-line hover:bg-ink">
+                {hero.secondaryCta.label}
+              </ButtonLink>
+            </div>
           </div>
-        </div>
 
-        <div className="border-t-2 border-line bg-ink text-paper lg:border-t-0 lg:border-l-2">
-          <div className="px-4 py-8 sm:px-6">
-            <Eyebrow tone="light">Where your role is heading</Eyebrow>
+          <div className="relative flex items-end justify-center">
+            {/* Hand-drawn rings behind the group, as in the design. */}
+            <div aria-hidden="true" className="absolute inset-x-0 bottom-8 flex items-center justify-center">
+              {[1, 0.86, 0.72].map((scale) => (
+                <span
+                  key={scale}
+                  className="absolute aspect-square w-[min(88%,24rem)] rounded-full border-2 border-red/25"
+                  style={{ transform: `scale(${scale})` }}
+                />
+              ))}
+            </div>
+            <Image
+              src={cohortPhoto}
+              alt="Four Klymb.ai learners standing together"
+              priority
+              sizes="(min-width: 1024px) 40vw, 90vw"
+              className="relative h-auto w-full max-w-md lg:max-w-none"
+            />
           </div>
-          <ol className="border-t border-white/20">
-            {tracks.map((t, i) => (
-              <li key={t.slug} className="border-b border-white/20">
-                <Link href={`/tracks/${t.slug}`} className="group flex items-center gap-4 px-4 py-4 hover:bg-white/5 sm:px-6">
-                  <span className="display w-8 text-xl text-red">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="text-lg font-extrabold">{t.name}</span>
-                      {!t.available && <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">Opening later</span>}
-                    </span>
-                    <span className="block truncate text-sm text-white/65">→ {t.becomes}</span>
-                  </span>
-                  <svg className="shrink-0 transition-transform group-hover:translate-x-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                </Link>
-              </li>
-            ))}
-          </ol>
         </div>
       </div>
     </section>

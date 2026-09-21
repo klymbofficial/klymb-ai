@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { signOutLearner } from "./actions";
+import { auth } from "@/auth";
 import { Appear } from "@/components/motion/Appear";
-import { Counter } from "@/components/motion/Counter";
-import { DayGrid } from "@/components/learner/DayGrid";
+import { CohortBoard, type BoardDay } from "@/components/learner/CohortBoard";
 import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
+import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { requireLearner } from "@/lib/learner/data";
-import { thirtyDays } from "@/lib/learn";
+import { cohortDayDate } from "@/lib/learn";
+import { pmCurriculum, pmModules } from "@/data/pm-curriculum";
 
 export const metadata: Metadata = { title: "My cohort", robots: { index: false, follow: false } };
 
@@ -42,82 +43,80 @@ export default async function LearnHomePage() {
 
   const { learner, submissions } = state;
   const track = getTrack(learner.track)!;
-  const days = thirtyDays(track);
+  const session = await auth();
   const doneDays = new Set(submissions.map((s) => s.day));
-  const nextDay = days.find((d) => !doneDays.has(d.day)) ?? days[days.length - 1];
+
+  const days: BoardDay[] = pmCurriculum.map((d) => ({
+    day: d.day,
+    week: d.week,
+    weekName: pmModules.find((m) => m.week === d.week)?.name ?? "",
+    title: d.title,
+    points: d.points,
+    estimateMinutes: d.estimateMinutes,
+    kind: d.kind,
+    date: cohortDayDate(learner.cohort_start, d.day),
+    submitted: doneDays.has(d.day),
+  }));
+
+  const nextDay = days.find((d) => !d.submitted) ?? days[days.length - 1];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-line pb-5">
-        <div>
-          <Wordmark className="text-xl" />
-          <p className="mt-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-muted">
-            {track.name} · cohort {formatDate(learner.cohort_start)}
-          </p>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="hidden text-muted sm:inline">{learner.name}</span>
-          <form action={signOutLearner}>
-            <button type="submit" className="border border-line px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:border-ink">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
+    <>
+      <LearnerTopBar name={learner.name} image={session?.user?.image} />
 
-      <Appear className="mt-8">
-        <Eyebrow>Where you are</Eyebrow>
-        <h1 className="display mt-3 text-5xl">
-          <Counter value={submissions.length} /> of 30 days submitted
-        </h1>
-        <p className="mt-3 max-w-2xl text-muted">
-          Every day you ship one deliverable into your portfolio. Assessments fall on days 7, 14, 21 and 28;
-          mock interviews on 29 and 30.
-        </p>
-      </Appear>
-
-      <Appear delay={0.05} className="mt-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-2 border-ink bg-ink p-6 text-paper">
-          <div className="min-w-0">
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/55">Up next · Day {nextDay.day}</p>
-            <p className="display mt-1 truncate text-2xl">
-              {nextDay.kind === "challenge" ? nextDay.challenge.title : nextDay.kind === "assessment" ? nextDay.title : "Mock interview"}
+      <div className="bg-gradient-to-r from-red to-red-strong text-white">
+        <div className="mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-6 px-4 py-10 sm:px-8 sm:py-14">
+          <div>
+            <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} cohort</h1>
+            <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/85">
+              {formatDate(learner.cohort_start)}
             </p>
           </div>
-          <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow>Open Day {nextDay.day}</ButtonLink>
+
+          <div className="flex flex-wrap items-center gap-5 rounded-card bg-night px-6 py-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/55">
+                Up next · Day {nextDay.day}
+              </p>
+              <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
+            </div>
+            <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-[11px]">
+              Open Day {nextDay.day}
+            </ButtonLink>
+          </div>
         </div>
-      </Appear>
+      </div>
 
-      <section aria-labelledby="all-days" className="mt-10">
-        <h2 id="all-days" className="display text-2xl">Your 30 days</h2>
-        <p className="mt-1 mb-4 text-sm text-muted">Submitted days are filled. Assessment days are marked in red.</p>
-        <DayGrid days={days} submitted={[...doneDays]} />
-      </section>
+      <div className="mx-auto max-w-[96rem] px-4 py-10 sm:px-8">
+        <Appear>
+          <CohortBoard days={days} initialDay={nextDay.day} />
+        </Appear>
 
-      <section aria-labelledby="evidence" className="mt-10">
-        <EvidenceProfile githubUsername={learner.github_username} linkedinSlug={learner.linkedin_slug} />
-      </section>
+        <section aria-labelledby="evidence" className="mt-10">
+          <EvidenceProfile githubUsername={learner.github_username} linkedinSlug={learner.linkedin_slug} />
+        </section>
 
-      <section aria-labelledby="evidence-links" className="mt-10 border-t-2 border-line pt-6">
-        <h2 id="evidence-links" className="display text-2xl">Your evidence</h2>
-        <ul className="mt-3 flex flex-wrap gap-6 text-sm">
-          <li>
-            <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">GitHub</span>
-            {learner.github_url
-              ? <a href={learner.github_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">{learner.github_url.replace(/^https?:\/\//, "")}</a>
-              : <span className="text-muted">Add it on Day 1 — it is where every artifact lands.</span>}
-          </li>
-          <li>
-            <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">LinkedIn</span>
-            {learner.linkedin_url
-              ? <a href={learner.linkedin_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">Profile</a>
-              : <span className="text-muted">Update your headline this week.</span>}
-          </li>
-        </ul>
-        <p className="mt-6 text-xs text-muted">
-          Questions about the cohort? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2">{contact.email}</Link>
-        </p>
-      </section>
-    </div>
+        <section aria-labelledby="evidence-links" className="card mt-8 rounded-card p-6 sm:p-8">
+          <h2 id="evidence-links" className="display text-2xl">Your evidence</h2>
+          <ul className="mt-4 flex flex-wrap gap-8 text-sm">
+            <li>
+              <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">GitHub</span>
+              {learner.github_url
+                ? <a href={learner.github_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">{learner.github_url.replace(/^https?:\/\//, "")}</a>
+                : <span className="text-muted">Add it on Day 1 — it is where every artifact lands.</span>}
+            </li>
+            <li>
+              <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">LinkedIn</span>
+              {learner.linkedin_url
+                ? <a href={learner.linkedin_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">Profile</a>
+                : <span className="text-muted">Update your headline this week.</span>}
+            </li>
+          </ul>
+          <p className="mt-6 text-xs text-muted">
+            Questions about the cohort? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2">{contact.email}</Link>
+          </p>
+        </section>
+      </div>
+    </>
   );
 }

@@ -19,7 +19,7 @@ export function BuildSteps({ steps }: { steps: string[] }) {
               onClick={() => setActive(i)}
               aria-current={i === active ? "step" : undefined}
               className={clsx(
-                "flex size-8 shrink-0 items-center justify-center border-2 text-xs font-extrabold transition-colors",
+                "flex size-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-extrabold transition-colors",
                 i === active ? "border-red-strong bg-red-strong text-white" : i < active ? "border-ink bg-ink text-paper" : "border-line text-muted hover:border-ink",
               )}
             >
@@ -31,7 +31,7 @@ export function BuildSteps({ steps }: { steps: string[] }) {
         ))}
       </ol>
 
-      <div className="mt-5 border-2 border-line bg-surface/60 p-5">
+      <div className="mt-5 rounded-xl border border-line/30 bg-surface/50 p-5">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={active}
@@ -40,7 +40,7 @@ export function BuildSteps({ steps }: { steps: string[] }) {
             exit={reduced ? { opacity: 1 } : { opacity: 0, x: -8 }}
             transition={{ duration: 0.2, ease: [0.2, 0.7, 0.3, 1] }}
           >
-            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Step {active + 1} of {steps.length}</p>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-red-deep">Step {active + 1} of {steps.length}</p>
             <p
               className="mt-2 text-lg [&_code]:bg-paper [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.85em]"
               dangerouslySetInnerHTML={{ __html: steps[active] }}
@@ -52,15 +52,15 @@ export function BuildSteps({ steps }: { steps: string[] }) {
       <div className="mt-4 flex justify-between gap-3">
         <button
           type="button" onClick={() => setActive((i) => Math.max(0, i - 1))} disabled={active === 0}
-          className="border-2 border-line px-4 py-2 text-sm font-bold uppercase tracking-wider disabled:opacity-40"
+          className="rounded-md px-4 py-2 text-sm font-bold text-muted transition-colors hover:text-ink disabled:opacity-40 disabled:hover:text-muted"
         >
-          ← Back
+          ‹ Back
         </button>
         <button
           type="button" onClick={() => setActive((i) => Math.min(steps.length - 1, i + 1))} disabled={active === steps.length - 1}
-          className="border-2 border-ink bg-ink px-4 py-2 text-sm font-bold uppercase tracking-wider text-paper disabled:opacity-40"
+          className="rounded-md bg-red-strong px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-red-deep disabled:opacity-40 disabled:hover:bg-red-strong"
         >
-          Next →
+          Next ›
         </button>
       </div>
     </div>

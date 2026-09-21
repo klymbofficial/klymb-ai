@@ -11,13 +11,14 @@ export interface RegistrationData {
   currentRole: string;
   experience: string;
   linkedin: string;
+  github: string;
   consent: boolean;
 }
 
 export type RegistrationErrors = Partial<Record<keyof RegistrationData, string>>;
 
 export const emptyRegistration: RegistrationData = {
-  name: "", email: "", phone: "", track: "", currentRole: "", experience: "", linkedin: "", consent: false,
+  name: "", email: "", phone: "", track: "", currentRole: "", experience: "", linkedin: "", github: "", consent: false,
 };
 
 /** Server-side ceilings. The form cannot be trusted to enforce any of them. */
@@ -25,6 +26,7 @@ export const LIMITS = {
   name: 120,
   phone: 20,
   linkedin: 200,
+  github: 200,
   note: 5000,
   url: 500,
   quizAnswer: 2000,
@@ -62,6 +64,12 @@ export function validateRegistration(d: RegistrationData): RegistrationErrors {
   if (li) {
     if (li.length > LIMITS.linkedin) e.linkedin = `Keep the LinkedIn URL under ${LIMITS.linkedin} characters.`;
     else if (!/^(https?:\/\/)?([\w-]+\.)?linkedin\.com\/.+/i.test(li)) e.linkedin = "Enter a LinkedIn URL, or leave this blank.";
+  }
+
+  const gh = d.github.trim();
+  if (gh) {
+    if (gh.length > LIMITS.github) e.github = `Keep the GitHub URL under ${LIMITS.github} characters.`;
+    else if (!/^(https?:\/\/)?([\w-]+\.)?github\.com\/.+/i.test(gh)) e.github = "Enter a GitHub URL, or leave this blank.";
   }
 
   if (!d.consent) e.consent = "Please agree to be contacted about the program.";

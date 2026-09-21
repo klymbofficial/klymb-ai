@@ -10,6 +10,7 @@ const valid: RegistrationData = {
   currentRole: "Coordinator / PM",
   experience: "3–5 years",
   linkedin: "",
+  github: "",
   consent: true,
 };
 
@@ -42,4 +43,10 @@ test("safeUrl allows only http(s) and enforces a ceiling", () => {
 
 test("requires consent", () => {
   assert.ok(validateRegistration({ ...valid, consent: false }).consent);
+});
+
+test("accepts a GitHub URL and rejects a non-GitHub one", () => {
+  assert.deepEqual(validateRegistration({ ...valid, github: "https://github.com/sarthak" }), {});
+  assert.ok(validateRegistration({ ...valid, github: "https://gitlab.com/sarthak" }).github);
+  assert.ok(validateRegistration({ ...valid, github: `https://github.com/${"a".repeat(LIMITS.github)}` }).github);
 });

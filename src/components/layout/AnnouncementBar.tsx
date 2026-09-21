@@ -1,20 +1,20 @@
-import Link from "next/link";
 import { cohort } from "@/data/config";
 import { formatDate } from "@/lib/format";
 
 export function AnnouncementBar() {
   return (
     <div className="bg-red-strong text-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 text-xs font-bold uppercase tracking-wider sm:px-6 sm:text-sm">
-        <span className="tick size-2 bg-white" aria-hidden="true" />
+      <p className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] sm:px-6 sm:text-xs">
+        <span className="tick" aria-hidden="true">✦</span>
         <span>Next cohort starts {formatDate(cohort.startDate)}</span>
-        <span className="hidden opacity-70 sm:inline" aria-hidden="true">/</span>
+        <span aria-hidden="true" className="opacity-60">•</span>
         <span>
           Enrolment closes {formatDate(cohort.enrollmentDeadline)}
-          {cohort.enrollmentDeadlineIsPlaceholder && <span className="normal-case opacity-80"> (date TBC)</span>}
+          {cohort.enrollmentDeadlineIsPlaceholder && <span className="font-semibold normal-case opacity-75"> (date to be confirmed)</span>}
         </span>
-        <Link href="/register" className="ml-auto underline underline-offset-4 hover:no-underline">Reserve a seat</Link>
-      </div>
+        <span aria-hidden="true" className="opacity-60">•</span>
+        <span>Limited seats</span>
+      </p>
     </div>
   );
 }
