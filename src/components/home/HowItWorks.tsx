@@ -1,14 +1,13 @@
 "use client";
 
 import clsx from "clsx";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { howItWorks, sectionCopy } from "@/data/program";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
 const EASE = [0.2, 0.7, 0.3, 1] as const;
-const STEP_MS = 2600;
 
 /**
  * A descending staircase of steps. Each step is indented one --step further
@@ -16,35 +15,50 @@ const STEP_MS = 2600;
  * On small screens --step is 0, which collapses the L into a plain vertical
  * line and the staircase into an ordinary list.
  *
- * Once it scrolls into view it walks itself from 1 to 6: completed steps tick
- * off, and the rule to each new step draws in red. Any click, hover or focus
- * hands control to the reader and the walk stops for good.
+ * Scroll drives it. On large screens the card pins while the section scrolls
+ * past, and the reader's position through that runway picks the step: tick
+ * off, draw the rule, light the next. On small screens nothing pins; the
+ * steps advance as the list itself moves up the screen.
  */
 export function HowItWorks() {
   const [active, setActive] = useState(0);
-  const [auto, setAuto] = useState(true);
-  const ref = useRef<HTMLOListElement>(null);
-  const inView = useInView(ref, { margin: "-120px" });
+  const [pinned, setPinned] = useState(false);
+  const runway = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (!auto || !inView || reduced) return;
-    const id = setInterval(() => setActive((i) => (i + 1) % howItWorks.length), STEP_MS);
-    return () => clearInterval(id);
-  }, [auto, inView, reduced]);
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setPinned(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
-  const takeOver = () => setAuto(false);
+  const { scrollYProgress } = useScroll({
+    target: runway,
+    offset: pinned ? ["start start", "end end"] : ["start 70%", "end 55%"],
+  });
+
+  const count = howItWorks.length;
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    setActive(Math.min(count - 1, Math.max(0, Math.floor(v * count))));
+  });
+
+  /** Clicking a step scrolls to where that step lives, so scroll and state never disagree. */
+  function goTo(i: number) {
+    const el = runway.current;
+    if (!el || !pinned) return setActive(i);
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const travel = el.offsetHeight - window.innerHeight;
+    window.scrollTo({ top: top + travel * ((i + 0.5) / count), behavior: reduced ? "auto" : "smooth" });
+  }
 
   return (
     <section id="how-it-works" aria-labelledby="how-title" className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="card rounded-slab p-8 sm:p-12 lg:p-16">
+      <div ref={runway} className="lg:h-[300vh]">
+      <div className="card rounded-slab p-8 sm:p-12 lg:sticky lg:top-24 lg:p-14">
         <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr] lg:items-center">
-          <ol
-            ref={ref}
-            onMouseEnter={takeOver}
-            onFocus={takeOver}
-            className="flex flex-col gap-6 [--step:0px] sm:[--step:2.75rem]"
-          >
+          <ol className="flex flex-col gap-6 [--step:0px] sm:[--step:2.75rem]">
             {howItWorks.map((step, i) => {
               const isActive = i === active;
               const isDone = i < active;
@@ -79,7 +93,7 @@ export function HowItWorks() {
 
                   <button
                     type="button"
-                    onClick={() => { takeOver(); setActive(i); }}
+                    onClick={() => goTo(i)}
                     aria-current={isActive ? "step" : undefined}
                     className="group flex w-full items-start gap-5 rounded-card p-2 text-left transition-colors hover:bg-surface/50"
                   >
@@ -157,22 +171,25 @@ export function HowItWorks() {
             <h2 id="how-title" className="display mt-4 text-[clamp(2rem,4.5vw,3.25rem)] text-balance">
               {sectionCopy.howItWorks.title}
             </h2>
-            {/* Progress through the walk, so the auto-advance is legible rather than mysterious. */}
+            {/* Fills continuously with scroll, so the reader can see how far is left. */}
             <div aria-hidden="true" className="mt-6 flex gap-1.5 lg:justify-end">
               {howItWorks.map((_, i) => (
-                <span key={i} className="h-1.5 w-8 overflow-hidden rounded-full bg-surface">
-                  <motion.span
-                    className="block h-full rounded-full bg-red-strong"
-                    initial={false}
-                    animate={{ width: i <= active ? "100%" : "0%" }}
-                    transition={{ duration: reduced ? 0 : 0.4, ease: EASE }}
-                  />
-                </span>
+                <Segment key={i} index={i} count={count} progress={scrollYProgress} />
               ))}
             </div>
           </motion.div>
         </div>
       </div>
+      </div>
     </section>
+  );
+}
+
+function Segment({ index, count, progress }: { index: number; count: number; progress: MotionValue<number> }) {
+  const fill = useTransform(progress, (v) => `${Math.min(1, Math.max(0, v * count - index)) * 100}%`);
+  return (
+    <span className="h-1.5 w-8 overflow-hidden rounded-full bg-surface">
+      <motion.span className="block h-full rounded-full bg-red-strong" style={{ width: fill }} />
+    </span>
   );
 }
