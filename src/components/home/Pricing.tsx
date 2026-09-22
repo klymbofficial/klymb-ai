@@ -3,6 +3,7 @@ import { valueBreakdown } from "@/data/program";
 import { formatDate, formatINR } from "@/lib/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { Appear } from "@/components/motion/Appear";
 
 function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -17,7 +18,7 @@ function Fact({ label, value, note }: { label: string; value: string; note?: str
 export function Pricing() {
   return (
     <section id="pricing" aria-labelledby="pricing-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-      <div className="card grid overflow-hidden rounded-slab lg:grid-cols-2">
+      <Appear className="card grid overflow-hidden rounded-slab lg:grid-cols-2">
         <div className="p-8 sm:p-12">
           <Eyebrow>Pricing</Eyebrow>
           <h2 id="pricing-title" className="display mt-3 text-[clamp(1.75rem,3.4vw,2.5rem)] text-balance">{pricing.programName}</h2>
@@ -61,7 +62,7 @@ export function Pricing() {
           <p className="mt-6 border-t border-white/25 pt-6 text-xs leading-relaxed text-white/80">{cohort.capacityReason}</p>
           <ButtonLink href="#register" variant="inverse" soft arrow className="mt-7">Start learning today</ButtonLink>
         </div>
-      </div>
+      </Appear>
     </section>
   );
 }

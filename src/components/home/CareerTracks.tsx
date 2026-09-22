@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { mockInterviewPhase, sectionCopy, weekPhases } from "@/data/program";
 import { tracks } from "@/data/tracks";
@@ -20,6 +21,7 @@ function Check() {
 
 export function CareerTracks() {
   const [active, setActive] = useState(0);
+  const reduced = useReducedMotion();
   const track = tracks[active];
   const { eyebrow, title, intro } = sectionCopy.tracks;
 
@@ -53,10 +55,18 @@ export function CareerTracks() {
                       aria-controls="track-panel"
                       onClick={() => setActive(i)}
                       className={clsx(
-                        "flex w-full items-center gap-3 border-b-2 px-5 py-4 text-left transition-colors lg:border-b-0 lg:border-l-4",
-                        isActive ? "border-red-strong bg-white" : "border-transparent text-muted hover:text-ink",
+                        "relative flex w-full items-center gap-3 px-5 py-4 text-left transition-colors",
+                        isActive ? "bg-white" : "text-muted hover:bg-surface/40 hover:text-ink",
                       )}
                     >
+                      {isActive && (
+                        <motion.span
+                          layoutId="track-tab-indicator"
+                          aria-hidden="true"
+                          className="absolute inset-x-0 bottom-0 h-0.5 bg-red-strong lg:inset-x-auto lg:inset-y-0 lg:left-0 lg:h-auto lg:w-1"
+                          transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }}
+                        />
+                      )}
                       <span className={clsx("text-sm font-extrabold nums", isActive ? "text-red-strong" : "text-muted/70")}>
                         {String(i + 1).padStart(2, "0")}
                       </span>
@@ -77,6 +87,14 @@ export function CareerTracks() {
 
         {/* Track detail */}
         <div id="track-panel" role="tabpanel" aria-labelledby={`track-tab-${track.slug}`} className="order-2 card min-w-0 overflow-hidden lg:order-none lg:rounded-l-none">
+          <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={track.slug}
+            initial={reduced ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.28, ease: [0.2, 0.7, 0.3, 1] }}
+          >
           <div className="relative overflow-hidden bg-night px-8 py-10 text-paper sm:px-10 sm:py-12">
             <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/3 lg:block">
               <Image src={trackAccent} alt="" sizes="33vw" className="size-full object-cover" />
@@ -100,8 +118,16 @@ export function CareerTracks() {
           <div className="bg-night px-8 pb-10 text-paper sm:px-10">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/45">What you learn:</p>
             <ul className="mt-4 flex flex-wrap gap-2">
-              {track.skills.slice(0, 6).map((s) => (
-                <li key={s} className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/85">{s}</li>
+              {track.skills.slice(0, 6).map((skill, si) => (
+                <motion.li
+                  key={skill}
+                  className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/85"
+                  initial={reduced ? false : { opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.22, delay: 0.08 + si * 0.035 }}
+                >
+                  {skill}
+                </motion.li>
               ))}
             </ul>
             <ul className="mt-8 space-y-3 border-t border-white/12 pt-7 text-sm text-white/85">
@@ -112,10 +138,16 @@ export function CareerTracks() {
           </div>
 
           <div className="grid gap-px bg-line/25 sm:grid-cols-2 xl:grid-cols-4">
-            {track.weeks.map((w) => {
+            {track.weeks.map((w, wi) => {
               const phase = weekPhases[w.week - 1];
               return (
-                <div key={w.week} className="bg-card p-6">
+                <motion.div
+                  key={w.week}
+                  className="bg-card p-6"
+                  initial={reduced ? false : { opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.1 + wi * 0.06, ease: [0.2, 0.7, 0.3, 1] }}
+                >
                   <p className="display text-2xl text-red-strong">Week {w.week}</p>
                   <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted">
                     {phase.days} • {phase.name}
@@ -132,7 +164,7 @@ export function CareerTracks() {
                   <p className="mt-5 border-t border-line/25 pt-4 text-xs leading-relaxed text-muted">
                     <strong className="font-extrabold text-ink">Day {w.assessment.afterDay} assessment:</strong> {w.assessment.task}
                   </p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -151,6 +183,8 @@ export function CareerTracks() {
               {track.available ? "Enrol now" : "Join the waitlist"}
             </ButtonLink>
           </div>
+          </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </section>
