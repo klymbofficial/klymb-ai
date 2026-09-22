@@ -13,18 +13,21 @@ export function StatFigure({ value, className }: { value: string; className?: st
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
   const reduced = useReducedMotion();
+  const hasNumber = match !== null;
   const target = match ? Number(match[2]) : 0;
-  const [shown, setShown] = useState(reduced || !match ? target : 0);
+  const [shown, setShown] = useState(reduced || !hasNumber ? target : 0);
 
+  // Depend on primitives only. `match` is a fresh array every render, and
+  // listing it here restarted the count from zero on every animation frame.
   useEffect(() => {
-    if (!match || !inView || reduced) return;
+    if (!hasNumber || !inView || reduced) return;
     const controls = animate(0, target, {
       duration: 1.2,
       ease: [0.16, 1, 0.3, 1],
       onUpdate: (v) => setShown(Math.round(v)),
     });
     return () => controls.stop();
-  }, [inView, reduced, target, match]);
+  }, [inView, reduced, target, hasNumber]);
 
   if (!match) return <span className={className}>{value}</span>;
   return (
