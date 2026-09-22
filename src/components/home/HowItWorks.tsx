@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { AnimatePresence, animate, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { howItWorks, sectionCopy } from "@/data/program";
 import { ButtonLink } from "@/components/ui/Button";
@@ -44,18 +44,32 @@ export function HowItWorks() {
     setActive(Math.min(count - 1, Math.max(0, Math.floor(v * count))));
   });
 
-  /** Clicking a step scrolls to where that step lives, so scroll and state never disagree. */
+  /**
+   * Clicking a step scrolls to where that step lives, so scroll and state
+   * never disagree. The scroll is driven here rather than with
+   * `behavior: "smooth"`: the step content changes height as it activates,
+   * and the browser's own smooth scroll was being cancelled part-way by
+   * that layout shift, leaving the wrong step lit.
+   */
+  const scrolling = useRef<ReturnType<typeof animate> | null>(null);
   function goTo(i: number) {
     const el = runway.current;
     if (!el || !pinned) return setActive(i);
     const top = el.getBoundingClientRect().top + window.scrollY;
     const travel = el.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: top + travel * ((i + 0.5) / count), behavior: reduced ? "auto" : "smooth" });
+    const target = top + travel * ((i + 0.5) / count);
+    scrolling.current?.stop();
+    if (reduced) return window.scrollTo({ top: target, behavior: "instant" });
+    scrolling.current = animate(window.scrollY, target, {
+      duration: 0.7,
+      ease: [0.2, 0.7, 0.3, 1],
+      onUpdate: (y) => window.scrollTo({ top: y, behavior: "instant" }),
+    });
   }
 
   return (
     <section id="how-it-works" aria-labelledby="how-title" className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div ref={runway} className="lg:h-[300vh]">
+      <div ref={runway} className="[overflow-anchor:none] lg:h-[300vh]">
       <div className="card rounded-slab p-8 sm:p-12 lg:sticky lg:top-24 lg:p-14">
         <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr] lg:items-center">
           <ol className="flex flex-col gap-6 [--step:0px] sm:[--step:2.75rem]">
