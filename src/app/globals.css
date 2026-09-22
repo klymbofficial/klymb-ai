@@ -127,3 +127,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .modal-pop[open] { animation: none; }
 }
+
+/* Hero rings: a slow breath, barely there. */
+@keyframes ring-breathe { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
+.ring-breathe { animation: ring-breathe 5s ease-in-out infinite; }
+.ring-breathe:nth-child(2) { animation-delay: .8s; }
+.ring-breathe:nth-child(3) { animation-delay: 1.6s; }
+@media (prefers-reduced-motion: reduce) { .ring-breathe { animation: none; } }

@@ -3,6 +3,7 @@ import { evidence, sectionCopy } from "@/data/program";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Reveal } from "@/components/ui/Reveal";
 import { SourceLink } from "@/components/ui/SourceLink";
+import { StatFigure } from "@/components/motion/StatFigure";
 import worldRelief from "@/assets/world-relief.jpg";
 
 export function Evidence() {
@@ -33,7 +34,7 @@ export function Evidence() {
           {evidence.map((item, i) => (
             <li key={item.figure} className="h-full">
               <Reveal delay={i * 90} className="frost flex h-full flex-col p-7 sm:p-8">
-                <p className="display text-5xl text-red-strong nums">{item.figure}</p>
+                <p className="display text-5xl text-red-strong nums"><StatFigure value={item.figure} /></p>
                 <p className="mt-5 flex-1 text-sm leading-relaxed text-muted">{item.claim}</p>
                 <p className="mt-5"><SourceLink source={item.source} /></p>
               </Reveal>
