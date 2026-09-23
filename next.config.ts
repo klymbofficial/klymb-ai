@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { site } from "./src/data/config";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -65,6 +66,22 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  /**
+   * One address for the site. The Vercel alias still served everything, so a
+   * visitor could be signed in on one host and not the other, and search
+   * engines saw two copies. Matching the exact alias leaves preview
+   * deployments (which have their own hostnames) alone.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: site.vercelAlias }],
+        destination: `${site.url}/:path*`,
+        permanent: true,
+      },
+    ];
   },
 };
 
