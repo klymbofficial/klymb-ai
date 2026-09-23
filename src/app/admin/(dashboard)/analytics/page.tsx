@@ -1,6 +1,7 @@
 import {
   Activity, BarChart3, Clock, FileText, MousePointerClick, Radio, Sparkles, TrendingDown, UserPlus, Users,
 } from "lucide-react";
+import { Suspense } from "react";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { RangeTabs } from "@/components/admin/RangeTabs";
@@ -28,10 +29,40 @@ const ICONS = {
   "Bounce rate": TrendingDown,
 } as const;
 
-export default async function AdminAnalyticsPage({
-  searchParams,
-}: { searchParams: Promise<{ range?: string; country?: string; device?: string; tab?: string }> }) {
+type Params = { range?: string; country?: string; device?: string; tab?: string };
+
+export default async function AdminAnalyticsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
+  return (
+    <>
+      <PageTitle
+        eyebrow="Google Analytics"
+        title="Traffic & audience"
+        intro="Live GA4 data, refreshed every five minutes. Tiles compare this window with the one before it; the filters re-cut every panel."
+        actions={<RangeTabs param="range" current={params.range ?? "30d"} options={RANGES.map((r) => ({ key: r.key, label: r.label }))} />}
+      />
+      {/* The header answers instantly; GA streams in beneath it. Keyed on the
+          query so a new range or filter shows the skeleton instead of stale data. */}
+      <Suspense key={`${params.range}|${params.country}|${params.device}`} fallback={<AnalyticsSkeleton />}>
+        <AnalyticsBody params={params} />
+      </Suspense>
+    </>
+  );
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div aria-busy="true" aria-label="Loading analytics" className="flex flex-col gap-6">
+      <div className="h-12 w-80 animate-pulse rounded-card bg-surface" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 8 }, (_, i) => <div key={i} className="h-40 animate-pulse rounded-card bg-surface/70" />)}
+      </div>
+      <div className="h-72 animate-pulse rounded-card bg-surface/70" />
+    </div>
+  );
+}
+
+async function AnalyticsBody({ params }: { params: Params }) {
   const days = rangeDays(params.range);
   const filters = readFilters(params);
 
@@ -47,13 +78,6 @@ export default async function AdminAnalyticsPage({
 
   return (
     <>
-      <PageTitle
-        eyebrow="Google Analytics"
-        title="Traffic & audience"
-        intro="Live GA4 data, refreshed every five minutes. Tiles compare this window with the one before it; the filters re-cut every panel."
-        actions={<RangeTabs param="range" current={params.range ?? "30d"} options={RANGES.map((r) => ({ key: r.key, label: r.label }))} />}
-      />
-
       {!analytics.configured ? (
         <EmptyState
           title="Analytics is not connected yet"

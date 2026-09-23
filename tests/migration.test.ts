@@ -50,3 +50,15 @@ test("earlier migrations are untouched additions, not rewrites", () => {
   assert.equal(new Set(stamps).size, stamps.length, "two migrations share a timestamp");
   assert.deepEqual([...stamps].sort(), stamps);
 });
+
+test("the rate limiter counts and records atomically, and only the server may call it", () => {
+  const sql = readFileSync(`${dir}/20260924000000_atomic_rate_limit.sql`, "utf8");
+  // Without the lock, simultaneous requests all count the same number and all pass.
+  assert.match(sql, /pg_advisory_xact_lock\(/);
+  assert.ok(sql.indexOf("pg_advisory_xact_lock") < sql.indexOf("select count(*)"), "lock must be taken before counting");
+  assert.ok(sql.indexOf("select count(*)") < sql.indexOf("insert into public.rate_limit_events"), "count, then record, inside the lock");
+  for (const role of ["public", "anon", "authenticated"]) {
+    assert.match(sql, new RegExp(`revoke all on function public\\.rate_limit_hit\\([^)]*\\) from ${role};`));
+  }
+  assert.match(sql, /grant execute on function public\.rate_limit_hit\([^)]*\) to service_role;/);
+});

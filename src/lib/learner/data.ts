@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -43,7 +44,7 @@ const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url
  * matched on that email, so an enrolment created before their first sign-in
  * still finds them.
  */
-export async function getLearnerState(): Promise<LearnerState> {
+export const getLearnerState = cache(async (): Promise<LearnerState> => {
   const email = normaliseEmail(await currentEmail());
   if (!email) return { state: "signed-out" };
 
@@ -66,7 +67,7 @@ export async function getLearnerState(): Promise<LearnerState> {
     .order("day");
 
   return { state: "enrolled", learner: learner as Learner, submissions: (submissions as Submission[]) ?? [] };
-}
+});
 
 export async function requireLearner() {
   const result = await getLearnerState();

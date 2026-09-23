@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { signIn, signOut } from "@/auth";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { clamp, LIMITS, safeUrl } from "@/lib/validation";
 
@@ -39,6 +40,11 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   // Authorisation: the submission is written for the signed-in learner only.
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled in a cohort." };
+
+  // Generous for a person re-saving drafts, tight for a script. Keyed to the
+  // account, so learners sharing an office network never throttle each other.
+  const limit = await checkRateLimit("day_submit", { limit: 60, windowMinutes: 60, identity: state.learner.id });
+  if (!limit.allowed) return { ok: false, message: "You have saved a lot in the last hour. Wait a few minutes and try again." };
 
   // Evidence has to be the learner's own.
   const ownershipError =
@@ -93,6 +99,9 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
 
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { error: "You are not enrolled in a cohort." };
+
+  const limit = await checkRateLimit("evidence_profile", { limit: 20, windowMinutes: 60, identity: state.learner.id });
+  if (!limit.allowed) return { error: "Too many changes in the last hour. Try again shortly." };
 
   const supabase = createServiceClient();
   if (!supabase) return { error: "That could not be saved right now." };

@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -15,8 +16,12 @@ export interface AdminSession {
  * Admin status is read from admin_users on each request — never from an env
  * list and never cached in the session token, so revoking a row takes effect
  * immediately and there is only one authority.
+ *
+ * `cache` memoises it for the length of one request only: the layout and
+ * every data function on the page all ask, and without it each one paid a
+ * separate database round trip. Nothing is shared across requests.
  */
-export async function getAdmin(): Promise<AdminSession | null> {
+export const getAdmin = cache(async (): Promise<AdminSession | null> => {
   const email = normaliseEmail(await currentEmail());
   if (!email) return null;
 
@@ -31,7 +36,7 @@ export async function getAdmin(): Promise<AdminSession | null> {
     .maybeSingle();
 
   return data ? { email: data.email, name: data.name } : null;
-}
+});
 
 /** Use at the top of every admin page. Redirects instead of rendering. */
 export async function requireAdmin(): Promise<AdminSession> {
