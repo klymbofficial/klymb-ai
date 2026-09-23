@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
 import { Archivo } from "next/font/google";
+import { site } from "@/data/config";
 import "./globals.css";
 
 /** Set NEXT_PUBLIC_GA_ID to switch analytics on; unset means no tracking script at all. */
@@ -8,10 +9,28 @@ const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
 
+const description =
+  "A 30-day job-readiness program with five career tracks: QA Engineer, L1/L2 Support, Project Manager, Junior Developer and Reporting Analyst.";
+
 export const metadata: Metadata = {
+  // Makes every relative URL in metadata — the preview image above all — absolute on the real domain.
+  metadataBase: new URL(site.url),
   title: { default: "Klymb.ai — Become Job-Ready in 30 Days", template: "%s — Klymb.ai" },
-  description:
-    "A 30-day job-readiness program with five career tracks: QA Engineer, L1/L2 Support, Project Manager, Junior Developer and Reporting Analyst.",
+  description,
+  applicationName: "Klymb.ai",
+  openGraph: {
+    type: "website",
+    siteName: "Klymb.ai",
+    locale: "en_IN",
+    title: "Klymb.ai — Become Job-Ready in 30 Days",
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@KlymbAI",
+    title: "Klymb.ai — Become Job-Ready in 30 Days",
+    description,
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#f3f2f2" };
