@@ -20,8 +20,8 @@ export function BarList({
             {r.value.toLocaleString("en-IN")}
             <span className="ml-1 text-xs font-normal text-muted">{unit}</span>
           </span>
-          <span className="col-span-2 h-2 bg-surface">
-            <span className={clsx("block h-2 bg-red-strong")} style={{ width: `${(r.value / max) * 100}%` }} />
+          <span className="col-span-2 h-2 overflow-hidden rounded-full bg-surface">
+            <span className={clsx("block h-2 rounded-full bg-red-strong")} style={{ width: `${(r.value / max) * 100}%` }} />
           </span>
         </li>
       ))}

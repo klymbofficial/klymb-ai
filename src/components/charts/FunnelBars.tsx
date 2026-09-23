@@ -14,12 +14,16 @@ export function FunnelBars({ steps }: { steps: { label: string; value: number }[
               <span className="nums text-sm font-extrabold">
                 {s.value}
                 {fromPrevious !== null && (
-                  <span className="ml-2 text-xs font-normal text-muted">{fromPrevious.toFixed(0)}% of previous</span>
+                  <span className="ml-2 text-xs font-normal text-muted">
+                    {/* Tracked stages can overlap imperfectly (an autofilled form never
+                        fires form_start), so a later stage can exceed an earlier one. */}
+                    {fromPrevious > 100 ? "more than the step before" : `${fromPrevious.toFixed(0)}% of previous`}
+                  </span>
                 )}
               </span>
             </div>
-            <span className="mt-1.5 block h-6 bg-surface">
-              <span className="block h-6 bg-ink" style={{ width: `${share}%` }} />
+            <span className="mt-1.5 block h-6 overflow-hidden rounded-md bg-surface">
+              <span className="block h-6 rounded-md bg-ink" style={{ width: `${share}%` }} />
             </span>
           </li>
         );
