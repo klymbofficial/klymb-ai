@@ -9,7 +9,7 @@
  * - `referenceValue` may only be shown if it reflects a genuine, documented
  *   value breakdown of what is included. Do not use it as a fake price anchor.
  *   Set `showReferenceValue` to false if it cannot be justified.
- * - `enrollmentDeadline` and `cohortCapacity` are PLACEHOLDERS. Replace them
+ * - `cohortCapacity` is a PLACEHOLDER. Replace it
  *   with real values. Never show a countdown or seat counter that is not
  *   driven by real data.
  */
@@ -25,9 +25,9 @@ export const pricing = {
 export const cohort = {
   /** ISO date. Confirmed by the business. */
   startDate: "2026-09-25",
-  /** PLACEHOLDER — replace with the real enrollment deadline. */
-  enrollmentDeadline: "2026-09-22",
-  enrollmentDeadlineIsPlaceholder: true,
+  /** Confirmed by the business, 23 September 2026. */
+  enrollmentDeadline: "2026-10-01",
+  enrollmentDeadlineIsPlaceholder: false,
   /** PLACEHOLDER — replace with the real seat cap per track. */
   cohortCapacity: 40,
   cohortCapacityIsPlaceholder: true,

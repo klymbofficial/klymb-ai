@@ -87,9 +87,10 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     return { ok: false, message: "Something went wrong saving your registration. Please try again, or email us." };
   }
 
-  // Open tracks enrol straight away, so the learner can start Day 1 now.
+  // Only tracks whose course is built enrol straight into Day 1. The others
+  // hold a reserved place until their content opens.
   let enrolled = false;
-  if (getTrack(data.track)?.available) {
+  if (getTrack(data.track)?.contentLive) {
     // The client satisfies the narrow shape ensureLearner needs; Supabase's own
     // generics are too deep for TypeScript to prove it.
     enrolled = await ensureLearner(supabase as unknown as EnrolmentClient, {
