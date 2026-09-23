@@ -40,8 +40,15 @@ export interface InterviewQuestion {
 export interface Track {
   slug: TrackSlug;
   name: string;
-  /** Open for enrolment now. Tracks still in development read false. */
+  /** Open for registration now. */
   available: boolean;
+  /**
+   * Its day-by-day course is built into the learner app. Only these tracks
+   * enrol straight into Day 1; the rest reserve a place and are emailed when
+   * their course opens. Kept separate from `available` so registration can
+   * open before the content is ready.
+   */
+  contentLive: boolean;
   /** Where the role is heading in AI-native teams */
   becomes: string;
   description: string;

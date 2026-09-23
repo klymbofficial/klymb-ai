@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { BuildSteps } from "@/components/learner/BuildSteps";
@@ -12,6 +12,7 @@ import { ResourceList } from "@/components/learner/ResourceList";
 import { Appear } from "@/components/motion/Appear";
 import { getPmDay, pmCurriculum } from "@/data/pm-curriculum";
 import { contact } from "@/data/config";
+import { getTrack } from "@/data/tracks";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
 import { requireLearner } from "@/lib/learner/data";
 import deskImage from "@/assets/day-desk.png";
@@ -39,6 +40,8 @@ function Card({
 export default async function LearnDayPage({ params }: { params: Promise<{ day: string }> }) {
   const state = await requireLearner();
   if (state.state === "not-enrolled") notFound();
+  // Day pages are the Project Manager course; other tracks wait on the dashboard.
+  if (!getTrack(state.learner.track)?.contentLive) redirect("/learn");
   const session = await auth();
 
   const dayNumber = Number((await params).day);

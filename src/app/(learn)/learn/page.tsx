@@ -44,6 +44,28 @@ export default async function LearnHomePage() {
   const { learner, submissions } = state;
   const track = getTrack(learner.track)!;
   const session = await auth();
+
+  // The course below is the Project Manager one. A learner on a track whose
+  // course is not built yet gets a holding page, never someone else's days.
+  if (!track.contentLive) {
+    return (
+      <>
+        <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
+          <h1 className="display mt-4 text-4xl text-balance">Your place is reserved. Day 1 opens soon.</h1>
+          <p className="mt-4 text-muted">
+            The {track.name} course is being finished for this cohort. We will email{" "}
+            <strong className="text-ink">{learner.email}</strong> the moment Day 1 is ready — nothing is lost by waiting,
+            and your 30 days start from that day.
+          </p>
+          <p className="mt-6 text-sm text-muted">
+            Questions? <Link href={`mailto:${contact.email}`} className="font-semibold underline underline-offset-2">{contact.email}</Link>
+          </p>
+        </div>
+      </>
+    );
+  }
   const doneDays = new Set(submissions.map((s) => s.day));
 
   const days: BoardDay[] = pmCurriculum.map((d) => ({

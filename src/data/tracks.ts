@@ -31,7 +31,8 @@ function week(
 export const tracks: Track[] = [
   {
     slug: "qa-engineer",
-    available: false,
+    available: true,
+    contentLive: false,
     name: "QA Engineer",
     becomes: "AI Test Architect",
     description: "Testing, automation, defect analysis, API testing and AI-assisted QA.",
@@ -87,7 +88,8 @@ export const tracks: Track[] = [
   },
   {
     slug: "l1-l2-support",
-    available: false,
+    available: true,
+    contentLive: false,
     name: "L1/L2 Support",
     becomes: "Conversational AI Operations Specialist",
     description: "Troubleshooting, ticket handling, incident response, escalation and customer communication.",
@@ -144,6 +146,7 @@ export const tracks: Track[] = [
   {
     slug: "project-manager",
     available: true,
+    contentLive: true,
     name: "Project Manager",
     becomes: "AI Delivery Lead",
     description: "Planning, requirements, execution, risk management, stakeholder communication and reporting.",
@@ -199,7 +202,8 @@ export const tracks: Track[] = [
   },
   {
     slug: "junior-developer",
-    available: false,
+    available: true,
+    contentLive: false,
     name: "Junior Developer",
     becomes: "AI Engineering Associate",
     description: "Programming fundamentals, debugging, APIs, Git, frontend/backend basics and code quality.",
@@ -255,7 +259,8 @@ export const tracks: Track[] = [
   },
   {
     slug: "reporting-analyst",
-    available: false,
+    available: true,
+    contentLive: false,
     name: "Reporting Analyst",
     becomes: "Analytics Automation Lead",
     description: "Excel or spreadsheet analysis, SQL basics, dashboards, data interpretation and business reporting.",
@@ -319,3 +324,4 @@ export const trackSlugs: TrackSlug[] = tracks.map((t) => t.slug);
 
 /** Tracks open for enrolment right now. */
 export const availableTracks = tracks.filter((t) => t.available);
+export const liveContentTracks = tracks.filter((t) => t.contentLive);

@@ -56,7 +56,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track }: Succe
     <div className="flex flex-col items-center px-8 py-10 text-center sm:px-12 sm:py-12">
       <Seal />
 
-      <p id="register-success-title" className="display mt-7 text-[2.6rem] text-white">{enrolled ? "You're in." : "Interest registered."}</p>
+      <p id="register-success-title" className="display mt-7 text-[2.6rem] text-white">{enrolled || track?.available ? "You're in." : "Interest registered."}</p>
 
       <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-white/80">
         {duplicate && <p>You had already registered with this email — nothing was duplicated.</p>}
@@ -69,6 +69,13 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track }: Succe
             <p>
               Sign in with <strong className="font-bold text-white">{email}</strong> to open Day 1 and start today.
             </p>
+          </>
+        ) : track?.available && !track.contentLive ? (
+          <>
+            <p>
+              Your place on the <strong className="font-bold text-white">{track.name}</strong> track is reserved.
+            </p>
+            <p>Day 1 opens soon. We will email {email} the moment it does, and your 30 days start from that day.</p>
           </>
         ) : track?.available ? (
           <p>
