@@ -2,12 +2,11 @@
 
 import clsx from "clsx";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import type { DayEntry } from "@/lib/learn";
 
 export function DayGrid({ days, submitted }: { days: DayEntry[]; submitted: number[] }) {
   const done = new Set(submitted);
-  const reduced = useReducedMotion();
 
   return (
     <ol className="grid grid-cols-5 gap-1 sm:grid-cols-10">
@@ -18,7 +17,7 @@ export function DayGrid({ days, submitted }: { days: DayEntry[]; submitted: numb
         return (
           <motion.li
             key={d.day}
-            initial={reduced ? false : { opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.25, delay: Math.min(i * 0.012, 0.36), ease: [0.2, 0.7, 0.3, 1] }}
           >

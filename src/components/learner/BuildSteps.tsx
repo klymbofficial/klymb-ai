@@ -35,7 +35,7 @@ export function BuildSteps({ steps }: { steps: string[] }) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={active}
-            initial={reduced ? false : { opacity: 0, x: 8 }}
+            initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
             exit={reduced ? { opacity: 1 } : { opacity: 0, x: -8 }}
             transition={{ duration: 0.2, ease: [0.2, 0.7, 0.3, 1] }}

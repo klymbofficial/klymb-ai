@@ -90,7 +90,7 @@ export function CareerTracks() {
           <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={track.slug}
-            initial={reduced ? false : { opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
             transition={{ duration: 0.28, ease: [0.2, 0.7, 0.3, 1] }}
@@ -122,7 +122,7 @@ export function CareerTracks() {
                 <motion.li
                   key={skill}
                   className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/85"
-                  initial={reduced ? false : { opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.22, delay: 0.08 + si * 0.035 }}
                 >
@@ -144,7 +144,7 @@ export function CareerTracks() {
                 <motion.div
                   key={w.week}
                   className="bg-card p-6"
-                  initial={reduced ? false : { opacity: 0, y: 14 }}
+                  initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: 0.1 + wi * 0.06, ease: [0.2, 0.7, 0.3, 1] }}
                 >

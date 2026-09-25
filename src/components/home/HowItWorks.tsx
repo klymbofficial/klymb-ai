@@ -81,7 +81,7 @@ export function HowItWorks() {
                   key={step.title}
                   className="relative"
                   style={{ marginLeft: `calc(var(--step) * ${i})` }}
-                  initial={reduced ? false : { opacity: 0, x: -16 }}
+                  initial={{ opacity: 0, x: -16 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.5, delay: i * 0.09, ease: EASE }}
@@ -112,7 +112,7 @@ export function HowItWorks() {
                     className="group flex w-full items-start gap-5 rounded-card p-2 text-left transition-colors hover:bg-surface/50"
                   >
                     <span className="relative grid size-12 shrink-0 place-items-center">
-                      {isActive && !reduced && (
+                      {isActive && (
                         <motion.span
                           key={`pulse-${active}`}
                           aria-hidden="true"
@@ -133,7 +133,7 @@ export function HowItWorks() {
                         <AnimatePresence mode="wait" initial={false}>
                           <motion.span
                             key={isDone ? "done" : "num"}
-                            initial={reduced ? false : { opacity: 0, scale: 0.6 }}
+                            initial={{ opacity: 0, scale: 0.6 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.6 }}
                             transition={{ duration: 0.18 }}
@@ -176,7 +176,7 @@ export function HowItWorks() {
 
           <motion.div
             className="lg:text-right"
-            initial={reduced ? false : { opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.6, delay: 0.2, ease: EASE }}

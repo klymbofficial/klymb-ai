@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { submitDay } from "@/app/(learn)/learn/actions";
 import { track } from "@/lib/analytics";
 import { Button, ButtonLink } from "@/components/ui/Button";
@@ -14,7 +14,6 @@ export function DaySubmission({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [checked, setChecked] = useState<boolean[]>(() => (checklist ?? []).map(() => false));
-  const reduced = useReducedMotion();
 
   async function onSubmit(formData: FormData) {
     setError("");
@@ -91,7 +90,7 @@ export function DaySubmission({
           <AnimatePresence>
             {saved && !pending && (
               <motion.div
-                initial={reduced ? false : { opacity: 0, x: -8 }}
+                initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
                 className="flex flex-wrap items-center gap-4"
