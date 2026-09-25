@@ -47,7 +47,7 @@ export function RegisterSection({ defaultTrack }: { defaultTrack?: TrackSlug }) 
     <section id="register" aria-labelledby="register-title" className="mx-auto max-w-[96rem] px-4 py-8 sm:px-6">
       <div className="card grid gap-8 rounded-slab p-4 shadow-float sm:p-6 lg:grid-cols-[1.35fr_1fr] lg:gap-10 lg:p-8">
         {/* ── The panel ─────────────────────────────────────────── */}
-        <div className="relative flex min-h-[26rem] flex-col justify-end overflow-hidden rounded-card bg-[#d86251] p-7 sm:p-10 lg:min-h-[41rem]">
+        <div className="relative flex min-h-[26rem] flex-col justify-end overflow-hidden rounded-card bg-red p-7 sm:p-10 lg:min-h-[41rem]">
           <div className="absolute top-6 left-6 sm:top-9 sm:left-9">
             <RingCluster rows={[4, 3, 2, 1]} align="left" />
           </div>
@@ -57,7 +57,7 @@ export function RegisterSection({ defaultTrack }: { defaultTrack?: TrackSlug }) 
 
           {/* The arch and the portraits are the composition's centrepiece; on a
               narrow screen they would sit on top of the headline, so they go. */}
-          <div aria-hidden="true" className="absolute top-[10%] left-[35%] hidden aspect-[380/426] w-[35%] rounded-t-full bg-[#a73323] sm:block" />
+          <div aria-hidden="true" className="absolute top-[10%] left-[35%] hidden aspect-[380/426] w-[35%] rounded-t-full bg-red-press sm:block" />
           <div className="absolute inset-0 hidden sm:block">
             <Portrait
               src={avatarAmber}

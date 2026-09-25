@@ -36,7 +36,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
           <form action={signOutLearner}>
             <button
               type="submit"
-              className="rounded-md bg-red-strong px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-deep"
+              className="rounded-md bg-red-strong px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-press"
             >
               Sign out
             </button>

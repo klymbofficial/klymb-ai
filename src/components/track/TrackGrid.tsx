@@ -17,7 +17,7 @@ export function TrackGrid({ compareHref = "#compare" }: { compareHref?: string }
           <p className="text-[15px] leading-relaxed text-white/70">
             Pick the role closest to the work you already do — your experience carries over. See all five side by side.
           </p>
-          <a href={compareHref} className="mt-2 inline-flex items-center gap-2 self-start rounded-lg bg-red-strong px-5 py-3 text-sm font-bold text-white hover:bg-red-deep">
+          <a href={compareHref} className="mt-2 inline-flex items-center gap-2 self-start rounded-lg bg-red-strong px-5 py-3 text-sm font-bold text-white hover:bg-red-press">
             Compare the tracks <span aria-hidden="true">↓</span>
           </a>
         </Appear>
