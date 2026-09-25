@@ -7,7 +7,7 @@ import { Appear } from "@/components/motion/Appear";
 import { Pricing } from "@/components/home/Pricing";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import trackAccent from "@/assets/track-accent.jpg";
+import { trackImages } from "@/data/track-images";
 import { TrackCurriculum } from "./TrackCurriculum";
 
 function Check({ className = "text-red-strong" }: { className?: string }) {
@@ -32,6 +32,7 @@ function Heading({ id, eyebrow, title, intro, light }: { id?: string; eyebrow: s
 export function TrackDetail({ track }: { track: Track }) {
   const number = String(tracks.findIndex((t) => t.slug === track.slug) + 1).padStart(2, "0");
   const enrolHref = `/register?track=${track.slug}`;
+  const image = trackImages[track.slug];
 
   return (
     <>
@@ -67,9 +68,9 @@ export function TrackDetail({ track }: { track: Track }) {
               )}
             </div>
 
-            {/* The same facade photograph as the landing page's track card. */}
+            {/* This track's own photograph — the same one as its card. */}
             <div className="relative min-h-[18rem] overflow-hidden bg-night lg:min-h-full">
-              <Image src={trackAccent} alt="" aria-hidden="true" fill sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover opacity-90" priority />
+              <Image src={image.src} alt={image.alt} fill sizes="(min-width: 1024px) 45vw, 100vw" placeholder="blur" className="object-cover" priority />
               <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-night via-night/40 to-transparent" />
               <Appear delay={0.35} className="absolute inset-x-6 bottom-6 sm:inset-x-8 sm:bottom-8">
                 <dl className="grid grid-cols-3 gap-3 rounded-card bg-white/95 p-4 text-center shadow-float backdrop-blur">
