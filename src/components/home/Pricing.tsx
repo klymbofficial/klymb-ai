@@ -15,14 +15,17 @@ function Fact({ label, value, note }: { label: string; value: string; note?: str
   );
 }
 
-export function Pricing() {
+/** The pricing pair. Track pages pass their own call to action and a subtitle naming the track. */
+export function Pricing({
+  ctaHref = "#register", ctaLabel = "Start learning today", subtitle = "One career track. Everything below is included.",
+}: { ctaHref?: string; ctaLabel?: string; subtitle?: string } = {}) {
   return (
     <section id="pricing" aria-labelledby="pricing-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
       <Appear className="card grid overflow-hidden rounded-slab lg:grid-cols-2">
         <div className="p-8 sm:p-12">
           <Eyebrow>Pricing</Eyebrow>
           <h2 id="pricing-title" className="display mt-3 text-[clamp(1.75rem,3.4vw,2.5rem)] text-balance">{pricing.programName}</h2>
-          <p className="mt-3 text-sm text-muted">One career track. Everything below is included.</p>
+          <p className="mt-3 text-sm text-muted">{subtitle}</p>
           <ul className="mt-8 divide-y divide-line/25 border-t border-line/25">
             {valueBreakdown.map((item) => (
               <li key={item} className="flex items-center gap-3 py-3.5 text-[15px]">
@@ -60,7 +63,7 @@ export function Pricing() {
           </dl>
 
           <p className="mt-6 border-t border-white/25 pt-6 text-xs leading-relaxed text-white/80">{cohort.capacityReason}</p>
-          <ButtonLink href="#register" variant="inverse" soft arrow className="mt-7">Start learning today</ButtonLink>
+          <ButtonLink href={ctaHref} variant="inverse" soft arrow className="mt-7">{ctaLabel}</ButtonLink>
         </div>
       </Appear>
     </section>

@@ -17,7 +17,7 @@ export function LightLines({ count = 7 }: { count?: number }) {
           key={i}
           className="absolute top-[-30%] h-[160%] w-px bg-white/25"
           style={{ left: `${(i + 0.5) * (100 / count)}%`, rotate: "12deg" }}
-          initial={reduced ? false : { opacity: 0.1, scaleY: 0.6 }}
+          initial={{ opacity: 0.1, scaleY: 0.6 }}
           animate={reduced ? undefined : { opacity: [0.1, 0.4, 0.1], scaleY: [0.6, 1, 0.6] }}
           transition={{ duration: 6 + i * 0.7, repeat: Infinity, ease: "easeInOut", delay: i * 0.35 }}
         />

@@ -15,14 +15,17 @@ export function StatFigure({ value, className }: { value: string; className?: st
   const reduced = useReducedMotion();
   const hasNumber = match !== null;
   const target = match ? Number(match[2]) : 0;
-  const [shown, setShown] = useState(reduced || !hasNumber ? target : 0);
+  // Server and first client render must agree, and the server cannot know
+  // the motion preference — so everyone starts at 0 and the effect settles it.
+  const [shown, setShown] = useState(hasNumber ? 0 : target);
 
   // Depend on primitives only. `match` is a fresh array every render, and
   // listing it here restarted the count from zero on every animation frame.
   useEffect(() => {
-    if (!hasNumber || !inView || reduced) return;
+    if (!hasNumber || !inView) return;
+    // Reduced motion lands on the final value at once, through the same path.
     const controls = animate(0, target, {
-      duration: 1.2,
+      duration: reduced ? 0 : 1.2,
       ease: [0.16, 1, 0.3, 1],
       onUpdate: (v) => setShown(Math.round(v)),
     });
