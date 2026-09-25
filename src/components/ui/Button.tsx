@@ -4,7 +4,7 @@ import Link from "next/link";
 type Variant = "primary" | "secondary" | "inverse";
 
 const styles: Record<Variant, string> = {
-  primary: "bg-red-strong text-white border-red-strong hover:bg-red-deep hover:border-red-deep",
+  primary: "bg-red-strong text-white border-red-strong hover:bg-red-press hover:border-red-press",
   secondary: "bg-transparent text-ink border-ink hover:bg-ink hover:text-paper",
   inverse: "bg-paper text-red-deep border-paper hover:bg-white",
 };

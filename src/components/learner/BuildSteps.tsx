@@ -58,7 +58,7 @@ export function BuildSteps({ steps }: { steps: string[] }) {
         </button>
         <button
           type="button" onClick={() => setActive((i) => Math.min(steps.length - 1, i + 1))} disabled={active === steps.length - 1}
-          className="rounded-md bg-red-strong px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-red-deep disabled:opacity-40 disabled:hover:bg-red-strong"
+          className="rounded-md bg-red-strong px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-red-press disabled:opacity-40 disabled:hover:bg-red-strong"
         >
           Next ›
         </button>

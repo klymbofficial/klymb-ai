@@ -7,9 +7,16 @@
   --color-ink: #201e1d;
   --color-muted: #5a5757;
   --color-line: #8f8c8b;
-  --color-red: #ec3013;
-  --color-red-strong: #cf2a10; /* white text passes AA on this */
-  --color-red-deep: #ae1800; /* red text on paper passes AA */
+  /*
+   * One brand red, everywhere: #E22E1B. `red`, `red-strong` and `red-deep`
+   * were three different reds; they are kept as names so nothing breaks, but
+   * all three are now the same colour. White text on it is 4.53:1 (AA).
+   */
+  --color-red: #e22e1b;
+  --color-red-strong: #e22e1b;
+  --color-red-deep: #e22e1b;
+  /* The same hue, 8% darker — only for hover and press on filled red. */
+  --color-red-press: #be2717;
   --color-red-tint: #fff2ef;
   --color-card: #ffffff;
   /* The dark ground used by the footer and the career-track detail card. */
