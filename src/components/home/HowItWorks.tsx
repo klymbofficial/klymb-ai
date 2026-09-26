@@ -154,21 +154,22 @@ export function HowItWorks() {
                     </motion.span>
                   </button>
 
-                  <AnimatePresence initial={false}>
-                    {isActive && i === 0 && (
-                      <motion.div
-                        className="overflow-hidden pl-[4.25rem]"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: EASE }}
-                      >
-                        <div className="pt-3">
-                          <ButtonLink href="/tracks" soft arrow className="px-4 py-2 text-xs">Choose Track</ButtonLink>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* Space for the button is always reserved; only its opacity changes.
+                      Collapsing it changed the page's height mid-scroll, and Chrome
+                      cancels a smooth scroll when content above the target moves,
+                      so /#pricing stopped a section short. */}
+                  {i === 0 && (
+                    <motion.div
+                      className="pt-3 pl-[4.25rem]"
+                      initial={false}
+                      animate={{ opacity: isActive ? 1 : 0 }}
+                      transition={{ duration: 0.25, ease: EASE }}
+                      inert={!isActive}
+                      aria-hidden={!isActive}
+                    >
+                      <ButtonLink href="/tracks" soft arrow className="px-4 py-2 text-xs">Choose Track</ButtonLink>
+                    </motion.div>
+                  )}
                 </motion.li>
               );
             })}

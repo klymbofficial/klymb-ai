@@ -29,7 +29,7 @@ export interface EnrolmentClient {
   };
 }
 
-/** Postgres unique violation — the row already exists, which is success here. */
+/** Postgres unique violation: the row already exists, which is success here. */
 export const UNIQUE_VIOLATION = "23505";
 
 /**

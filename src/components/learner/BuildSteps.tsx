@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-/** Build steps, walked one at a time — the same shape as the day's task list. */
+/** Build steps, walked one at a time: the same shape as the day's task list. */
 export function BuildSteps({ steps }: { steps: string[] }) {
   const [active, setActive] = useState(0);
   const reduced = useReducedMotion();

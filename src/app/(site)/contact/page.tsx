@@ -17,7 +17,7 @@ export default function ContactPage() {
     >
       <Section n="1." title="Talk to us" plain="One address for questions about the cohort, your place or your data.">
         <p>
-          Email <a href={`mailto:${contact.email}`}>{contact.email}</a> — about tracks, the cohort, your enrolment or
+          Email <a href={`mailto:${contact.email}`}>{contact.email}</a>: about tracks, the cohort, your enrolment or
           anything on this site.
         </p>
         <ul>
@@ -53,7 +53,7 @@ export default function ContactPage() {
 
       <Section n="4." title="Data rights requests" plain="Ask for a copy of your data, a correction, or deletion.">
         <p>
-          Email <a href={`mailto:${grievance.email}`}>{grievance.email}</a> with what you want — access, correction,
+          Email <a href={`mailto:${grievance.email}`}>{grievance.email}</a> with what you want: access, correction,
           erasure, withdrawal of consent, or to nominate someone to act for you. We respond within 30 days and may need
           to verify your identity first. What we hold and why is set out in the{" "}
           <Link href="/privacy">Privacy Policy</Link>.

@@ -3,7 +3,7 @@
  *
  * Every identity lookup compares exact, lowercase values. The previous code
  * used Postgres ILIKE, where a stored value containing % or _ acts as a
- * wildcard — "a_min@klymb.ai" would match "admin@klymb.ai". Identity must be
+ * wildcard: "a_min@klymb.ai" would match "admin@klymb.ai". Identity must be
  * equality, never pattern matching.
  */
 

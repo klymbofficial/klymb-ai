@@ -1,5 +1,8 @@
 import { cohort, pricing } from "@/data/config";
 import { valueBreakdown } from "@/data/program";
+import { priceFrom, tracksByPrice } from "@/data/tracks";
+import type { Track } from "@/types/program";
+import Link from "next/link";
 import { formatDate, formatINR } from "@/lib/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -15,10 +18,33 @@ function Fact({ label, value, note }: { label: string; value: string; note?: str
   );
 }
 
-/** The pricing pair. Track pages pass their own call to action and a subtitle naming the track. */
-export function Pricing({
-  ctaHref = "#register", ctaLabel = "Start learning today", subtitle = "One career track. Everything below is included.",
-}: { ctaHref?: string; ctaLabel?: string; subtitle?: string } = {}) {
+/** The promise that decides the price, said the same way everywhere it appears. */
+function RefundPromise({ onRed }: { onRed?: boolean }) {
+  return (
+    <div className={`flex gap-3 rounded-card p-4 ${onRed ? "bg-white/12" : "bg-red-tint"}`}>
+      <svg className={`mt-0.5 size-5 shrink-0 ${onRed ? "text-white" : "text-red-strong"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+        <path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" /><path d="m8.5 12 2.5 2.5 4.5-5" />
+      </svg>
+      <p className={`text-sm leading-relaxed ${onRed ? "text-white" : "text-ink"}`}>
+        <strong className="font-extrabold">Complete all 30 days and get 100% of your fee back.</strong>{" "}
+        <Link href="/refund-policy" className={`underline underline-offset-2 ${onRed ? "text-white/85 hover:text-white" : "text-muted hover:text-ink"}`}>
+          How the refund works
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The pricing pair. On the landing page it lists every track's price; on a
+ * track's page, pass `track` to show that track's price and call to action.
+ */
+export function Pricing({ track }: { track?: Track } = {}) {
+  const ctaHref = track ? `/register?track=${track.slug}` : "#register";
+  const ctaLabel = track ? `Choose ${track.name}` : "Start learning today";
+  const subtitle = track
+    ? `${track.name} track. Everything below is included.`
+    : "One career track. Everything below is included, whichever you choose.";
   return (
     <section id="pricing" aria-labelledby="pricing-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
       <Appear className="card grid overflow-hidden rounded-slab lg:grid-cols-2">
@@ -36,16 +62,36 @@ export function Pricing({
               </li>
             ))}
           </ul>
+          <div className="mt-8"><RefundPromise /></div>
         </div>
 
         <div className="bg-red-strong p-8 text-white sm:p-12">
-          {pricing.showReferenceValue && (
-            <p className="text-lg font-semibold text-white/85">
-              Reference value <s className="font-extrabold">{formatINR(pricing.referenceValue)}</s>
-            </p>
+          {track ? (
+            <>
+              {pricing.showReferenceValue && (
+                <p className="text-lg font-semibold text-white/85">
+                  Reference value <s className="font-extrabold">{formatINR(pricing.referenceValue)}</s>
+                </p>
+              )}
+              <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
+              <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(track.price)}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price by track</p>
+              <p className="display mt-1 text-[clamp(2.25rem,5vw,3.25rem)] nums">From {formatINR(priceFrom)}</p>
+              <ul className="mt-5 divide-y divide-white/20 border-y border-white/20">
+                {tracksByPrice.map((t) => (
+                  <li key={t.slug}>
+                    <Link href={`/tracks/${t.slug}`} className="flex items-baseline justify-between gap-4 py-3 transition-colors hover:text-white/80">
+                      <span className="text-[15px] font-semibold">{t.name}</span>
+                      <span className="display text-xl nums">{formatINR(t.price)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
-          <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price</p>
-          <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(pricing.launchPrice)}</p>
           <p className="mt-5 border-t border-white/25 pt-5 text-xs text-white/80">{pricing.taxNote}</p>
 
           <dl className="mt-6 grid grid-cols-2 gap-6 border-t border-white/25 pt-6 sm:grid-cols-3">
@@ -53,12 +99,12 @@ export function Pricing({
             <Fact
               label="Enrolment closes"
               value={formatDate(cohort.enrollmentDeadline)}
-              note={cohort.enrollmentDeadlineIsPlaceholder ? "Placeholder — to be confirmed" : undefined}
+              note={cohort.enrollmentDeadlineIsPlaceholder ? "Placeholder: to be confirmed" : undefined}
             />
             <Fact
               label="Seats per track"
               value={String(cohort.cohortCapacity)}
-              note={cohort.cohortCapacityIsPlaceholder ? "Placeholder — to be confirmed" : undefined}
+              note={cohort.cohortCapacityIsPlaceholder ? "Placeholder: to be confirmed" : undefined}
             />
           </dl>
 

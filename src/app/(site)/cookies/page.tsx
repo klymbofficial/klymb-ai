@@ -13,12 +13,12 @@ export default function CookiePolicyPage() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="Two cookies keep you signed in. We also measure aggregate usage with Google Analytics, which runs by default — you can turn it off on this page at any time."
+      intro="Two cookies keep you signed in. We also measure aggregate usage with Google Analytics, which runs by default: you can turn it off on this page at any time."
     >
       <Section n="1." title="Your choice" plain="Analytics is on by default. Turn it off here and it stops immediately.">
         <p>
           We do not interrupt you with a cookie pop-up. Google Analytics runs by default so we can see, in aggregate,
-          which pages people read and where they arrive from. If you would rather we did not, switch it off below — the
+          which pages people read and where they arrive from. If you would rather we did not, switch it off below: the
           script stops loading immediately, on this and every later page.
         </p>
         <p>
@@ -40,7 +40,7 @@ export default function CookiePolicyPage() {
       <Section n="3." title="Analytics" plain="Google Analytics 4, aggregate only, on by default, off whenever you want.">
         <Facts
           rows={[
-            ["Google Analytics 4", "Measures page views and aggregate usage — which pages people read, which track pages they open, how many registrations complete."],
+            ["Google Analytics 4", "Measures page views and aggregate usage: which pages people read, which track pages they open, how many registrations complete."],
             ["What we never send", "Your name, email, phone number, GitHub or LinkedIn identity, submissions or answers. None of it is sent to Google."],
             ["Retention", "Google retains this data for 14 months."],
           ]}
@@ -59,7 +59,7 @@ export default function CookiePolicyPage() {
         </p>
         <p>
           <strong>Do Not Track:</strong> browsers vary in how they send this signal, so we do not rely on it. Use the
-          choice above — it is the control we honour.
+          choice above: it is the control we honour.
         </p>
       </Section>
 

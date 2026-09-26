@@ -90,7 +90,7 @@ export function RegistrationForm({ defaultTrack, bare }: { defaultTrack?: TrackS
       <TextField id="email" label="Email" type="email" autoComplete="email" placeholder="e.g. john@example.com" value={data.email} onChange={(e) => set("email", e.target.value)} error={errors.email} />
       <TextField id="phone" label="Phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={data.phone} onChange={(e) => set("phone", e.target.value)} error={errors.phone} />
       <div className="sm:col-span-2">
-        <SelectField id="track" label="Career track" placeholder="Choose a track" options={tracks.map((t) => ({ value: t.slug, label: t.available ? t.name : `${t.name} — opening later`, disabled: !t.available }))}
+        <SelectField id="track" label="Career track" placeholder="Choose a track" options={tracks.map((t) => ({ value: t.slug, label: t.available ? t.name : `${t.name}: opening later`, disabled: !t.available }))}
           value={data.track} onChange={(e) => set("track", e.target.value as TrackSlug | "")} error={errors.track} />
       </div>
       <SelectField id="currentRole" label="Current role" placeholder="Select role" options={toOptions(roleOptions)} value={data.currentRole} onChange={(e) => set("currentRole", e.target.value)} error={errors.currentRole} />

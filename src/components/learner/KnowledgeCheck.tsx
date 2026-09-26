@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 
 /**
  * Questions answerable only by someone who did the work. Answers are stored
- * with the day's submission for the reviewer — nothing is auto-graded, because
+ * with the day's submission for the reviewer: nothing is auto-graded, because
  * a marking script cannot tell a good judgement call from a plausible sentence.
  */
 export function KnowledgeCheck({
@@ -37,7 +37,7 @@ export function KnowledgeCheck({
   return (
     <form action={onSubmit} className="flex flex-col gap-5">
       <p className="text-sm text-muted">
-        Answer these in order — they prove you actually did the work. Your reviewer reads them alongside your deliverable.
+        Answer these in order: they prove you actually did the work. Your reviewer reads them alongside your deliverable.
       </p>
 
       <ol className="flex flex-col gap-5">
@@ -70,7 +70,7 @@ export function KnowledgeCheck({
           {status === "saving" ? "Saving…" : "Submit answers"}
         </Button>
         <p role="status" aria-live="polite" className="text-sm font-semibold text-muted">
-          {status === "saved" ? "Saved — you can change these any time." : `${answered} of ${questions.length} answered`}
+          {status === "saved" ? "Saved: you can change these any time." : `${answered} of ${questions.length} answered`}
         </p>
       </div>
     </form>

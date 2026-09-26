@@ -33,6 +33,7 @@ export const tracks: Track[] = [
     slug: "qa-engineer",
     available: true,
     contentLive: false,
+    price: 8999,
     name: "QA Engineer",
     becomes: "AI Test Architect",
     description: "Testing, automation, defect analysis, API testing and AI-assisted QA.",
@@ -50,7 +51,7 @@ export const tracks: Track[] = [
         ["API testing basics", "Validate status codes, schemas and error responses for a REST API."],
         ["What should an agent own?", "Mark which tests in a suite should be automated, agent-generated or kept manual."],
       ], { title: "Suite audit", task: "Audit a real regression suite and mark what an agent should own, with reasoning." }),
-      week(2, "Directing test agents", "Specs as prompts and acceptance criteria as contracts — generating the suites you used to hand-write.", [
+      week(2, "Directing test agents", "Specs as prompts and acceptance criteria as contracts: generating the suites you used to hand-write.", [
         ["Acceptance criteria as contracts", "Rewrite ambiguous criteria so an agent can generate tests from them."],
         ["Generating a suite from a ticket", "Generate Playwright tests from a raw ticket and fix the failures."],
         ["Reviewing AI-written tests", "Find flaky locators, missing assertions and false passes."],
@@ -90,13 +91,14 @@ export const tracks: Track[] = [
     slug: "l1-l2-support",
     available: true,
     contentLive: false,
+    price: 6999,
     name: "L1/L2 Support",
     becomes: "Conversational AI Operations Specialist",
     description: "Troubleshooting, ticket handling, incident response, escalation and customer communication.",
     whoItsFor: ["Customer support and helpdesk executives", "Graduates targeting IT support roles", "Support staff moving from L1 to L2"],
     skills: ["Troubleshooting", "Ticket handling", "Incident response", "Escalation", "Customer communication", "Knowledge base writing", "AI assistant operations"],
     whatsChanging:
-      "Tier-one tickets are increasingly answered by AI assistants. The people who run those assistants — their knowledge, escalation rules and failure cases — come from support.",
+      "Tier-one tickets are increasingly answered by AI assistants. The people who run those assistants, their knowledge, escalation rules and failure cases, come from support.",
     carryOver: ["How customers really describe problems", "Product knowledge that isn't documented", "De-escalation instinct"],
     weeks: [
       week(1, "The automated queue", "How ticket deflection works and which tiers still need people.", [
@@ -147,6 +149,7 @@ export const tracks: Track[] = [
     slug: "project-manager",
     available: true,
     contentLive: true,
+    price: 14999,
     name: "Project Manager",
     becomes: "AI Delivery Lead",
     description: "Planning, requirements, execution, risk management, stakeholder communication and reporting.",
@@ -204,6 +207,7 @@ export const tracks: Track[] = [
     slug: "junior-developer",
     available: true,
     contentLive: false,
+    price: 12999,
     name: "Junior Developer",
     becomes: "AI Engineering Associate",
     description: "Programming fundamentals, debugging, APIs, Git, frontend/backend basics and code quality.",
@@ -261,6 +265,7 @@ export const tracks: Track[] = [
     slug: "reporting-analyst",
     available: true,
     contentLive: false,
+    price: 10999,
     name: "Reporting Analyst",
     becomes: "Analytics Automation Lead",
     description: "Excel or spreadsheet analysis, SQL basics, dashboards, data interpretation and business reporting.",
@@ -325,3 +330,10 @@ export const trackSlugs: TrackSlug[] = tracks.map((t) => t.slug);
 /** Tracks open for enrolment right now. */
 export const availableTracks = tracks.filter((t) => t.available);
 export const liveContentTracks = tracks.filter((t) => t.contentLive);
+
+/** The cheapest and dearest tracks, for "from ₹…" copy. */
+export const priceFrom = Math.min(...tracks.map((t) => t.price));
+export const priceTo = Math.max(...tracks.map((t) => t.price));
+
+/** Tracks cheapest first, the order prices are listed in. */
+export const tracksByPrice = [...tracks].sort((a, b) => a.price - b.price);

@@ -34,7 +34,7 @@ export default async function AdminEngagementPage({
       <PageTitle
         eyebrow="Your own data"
         title="Platform engagement"
-        intro="Registrations, submissions, track split and where learners stop — measured from the database, not from Google."
+        intro="Registrations, submissions, track split and where learners stop: measured from the database, not from Google."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <RangeTabs param="range" current={range ?? "30d"} options={RANGES.map((r) => ({ key: r.key, label: r.label }))} />

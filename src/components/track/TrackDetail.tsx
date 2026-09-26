@@ -1,7 +1,5 @@
 import Image from "next/image";
-import { cohort } from "@/data/config";
 import { tracks } from "@/data/tracks";
-import { formatDate } from "@/lib/format";
 import type { Track } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
 import { Pricing } from "@/components/home/Pricing";
@@ -61,14 +59,14 @@ export function TrackDetail({ track }: { track: Track }) {
               {!track.contentLive && (
                 <Appear delay={0.3}>
                   <p className="mt-6 max-w-xl rounded-card bg-surface/70 px-4 py-3 text-sm text-muted">
-                    Registration is open now. The {track.name} course is being finished for this cohort — your place is
+                    Registration is open now. The {track.name} course is being finished for this cohort: your place is
                     reserved the moment you register, and we email you when Day 1 opens.
                   </p>
                 </Appear>
               )}
             </div>
 
-            {/* This track's own photograph — the same one as its card. */}
+            {/* This track's own photograph: the same one as its card. */}
             <div className="relative min-h-[18rem] overflow-hidden bg-night lg:min-h-full">
               <Image src={image.src} alt={image.alt} fill sizes="(min-width: 1024px) 45vw, 100vw" placeholder="blur" className="object-cover" priority />
               <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-night via-night/40 to-transparent" />
@@ -154,7 +152,7 @@ export function TrackDetail({ track }: { track: Track }) {
 
       {/* ── Checkpoints ─────────────────────────────────────── */}
       <section aria-labelledby="assess-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
-        <Heading id="assess-title" eyebrow="Weekly checkpoints" title="Four checkpoints. Real feedback." intro="Each one is marked on your reasoning, not just the output — and you defend it." />
+        <Heading id="assess-title" eyebrow="Weekly checkpoints" title="Four checkpoints. Real feedback." intro="Each one is marked on your reasoning, not just the output: and you defend it." />
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {track.weeks.map((w, i) => (
             <li key={w.week}>
@@ -225,11 +223,7 @@ export function TrackDetail({ track }: { track: Track }) {
       </section>
 
       {/* ── Pricing: the same pair as the landing page ──────── */}
-      <Pricing
-        ctaHref={enrolHref}
-        ctaLabel={`Choose ${track.name}`}
-        subtitle={`${track.name} track · cohort starts ${formatDate(cohort.startDate)}. Everything below is included.`}
-      />
+      <Pricing track={track} />
     </>
   );
 }

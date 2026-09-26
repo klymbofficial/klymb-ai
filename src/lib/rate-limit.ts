@@ -14,7 +14,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 
 export interface RateLimitResult {
   allowed: boolean;
-  /** Present when the limiter could not run — callers decide whether to fail open. */
+  /** Present when the limiter could not run: callers decide whether to fail open. */
   degraded?: boolean;
 }
 

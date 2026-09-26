@@ -51,7 +51,7 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
   const supabase = createServiceClient();
   if (!supabase) return { state: "signed-out" };
 
-  // Exact match only — ownership of a cohort place must not be fuzzy.
+  // Exact match only: ownership of a cohort place must not be fuzzy.
   const { data: learner } = await supabase
     .from("learners")
     .select(LEARNER_FIELDS)

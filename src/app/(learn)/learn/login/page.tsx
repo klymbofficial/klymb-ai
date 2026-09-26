@@ -23,8 +23,8 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
             <>
               <h1 className="display text-2xl">One step to Day 1</h1>
               <p className="mt-2 text-sm text-muted">
-                Your place is reserved. Create your sign-in with the <strong className="text-ink">same email you registered with</strong> —
-                Google is quickest — and Day 1 opens straight away.
+                Your place is reserved. Create your sign-in with the <strong className="text-ink">same email you registered with</strong>:
+                Google is quickest: and Day 1 opens straight away.
               </p>
             </>
           ) : (

@@ -13,7 +13,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      intro="How we collect, use, share and protect your personal data — written around what this product actually does, and India's Digital Personal Data Protection Act, 2023."
+      intro="How we collect, use, share and protect your personal data: written around what this product actually does, and India's Digital Personal Data Protection Act, 2023."
     >
       <Section n="1." title="Who we are" plain="Klymb.ai is run by Creators Enterprises Private Limited. We decide why and how your data is used, which makes us the Data Fiduciary. Our Grievance Officer, below, is the person to contact.">
         <Facts
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and — only if you allow cookies — aggregate analytics.">
+      <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and, only if you allow cookies, aggregate analytics.">
         <Facts rows={dataPoints.collected} />
         <p>
           We do not collect payment card details. Payments are not yet live on this service; when they are, they will be
@@ -66,17 +66,17 @@ export default function PrivacyPage() {
         </p>
         <p>
           <strong>Consent:</strong> the contact permission you give on the registration form. You can withdraw it at any
-          time — see section 8. Withdrawal does not undo processing already lawfully carried out.
+          time: see section 8. Withdrawal does not undo processing already lawfully carried out.
         </p>
         <p>
-          <strong>Analytics:</strong> aggregate measurement runs by default and is not tied to your identity — we never
+          <strong>Analytics:</strong> aggregate measurement runs by default and is not tied to your identity: we never
           send your name, email, phone or submissions to Google. You can switch it off at any time at{" "}
           <Link href="/cookies">/cookies</Link>.
         </p>
       </Section>
 
       <Section n="5." title="Who we share it with" plain="Only the services that run the product. We do not sell your data.">
-        <Facts rows={dataPoints.processors.map(([a, b, c]) => [a, `${b} — ${c}`] as const)} />
+        <Facts rows={dataPoints.processors.map(([a, b, c]) => [a, `${b}: ${c}`] as const)} />
         <p>
           Reviewers and administrators of Klymb.ai see your submissions and evidence links in order to score your work.
           Nobody else can see another learner&apos;s submissions: access is enforced in the database itself, not only in the interface.
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
         <p><strong>We do not sell personal data, and we do not use advertising or cross-site tracking networks.</strong></p>
       </Section>
 
-      <Section n="6." title="International transfers" plain="Some of our providers store data outside India — mainly the United States and Japan.">
+      <Section n="6." title="International transfers" plain="Some of our providers store data outside India: mainly the United States and Japan.">
         <p>
           Our database is hosted in Tokyo, Japan, and our hosting and sign-in providers operate globally, including in the
           United States. By using the service you understand that your data may be processed in those countries. We use

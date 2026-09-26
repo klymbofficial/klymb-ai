@@ -115,7 +115,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
                 <td className="p-3 text-xs">
                   {r.linkedin ? (
                     <a href={r.linkedin} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-red-deep">Profile</a>
-                  ) : <span className="text-muted">—</span>}
+                  ) : <span className="text-muted">-</span>}
                 </td>
                 <td className="p-3 text-xs">
                   {enrolled.includes(r.email.toLowerCase()) || justEnrolled.includes(r.email.toLowerCase()) ? (

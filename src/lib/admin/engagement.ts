@@ -21,7 +21,7 @@ export interface Slice {
 export interface EngagementSummary {
   series: TimePoint[];
   byTrack: Slice[];
-  /** How many learners are still going at each milestone — the honest retention picture. */
+  /** How many learners are still going at each milestone: the honest retention picture. */
   milestones: Slice[];
   totals: { registrations: number; learners: number; submissions: number; completed: number };
 }

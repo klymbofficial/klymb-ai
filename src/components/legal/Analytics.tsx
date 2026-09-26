@@ -6,7 +6,7 @@ import { readConsent } from "@/lib/consent";
 
 /**
  * Google Analytics runs by default; it stops for anyone who opts out at
- * /cookies. The Cookie Policy states this plainly — the product and the policy
+ * /cookies. The Cookie Policy states this plainly: the product and the policy
  * have to say the same thing.
  */
 export function Analytics({ gaId }: { gaId: string }) {

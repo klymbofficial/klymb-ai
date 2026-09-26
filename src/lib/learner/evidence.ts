@@ -1,7 +1,7 @@
 /**
  * Checks that submitted evidence belongs to the learner.
  *
- * This proves the URL sits under the handle they declared — it does not prove
+ * This proves the URL sits under the handle they declared: it does not prove
  * they own that handle. Reviewers confirm ownership at the first assessment by
  * checking the commit history against the work; GitHub sign-in would make it
  * automatic if we ever need it.

@@ -1,4 +1,4 @@
-/** A tiny trend line with a soft fill — shape only, no axes. */
+/** A tiny trend line with a soft fill: shape only, no axes. */
 export function Sparkline({ values, className = "" }: { values: number[]; className?: string }) {
   if (values.length < 2) return null;
   const W = 160, H = 40, pad = 2;

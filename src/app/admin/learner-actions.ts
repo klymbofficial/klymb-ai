@@ -29,7 +29,7 @@ export async function setLearnerStatus(id: string, status: LearnerStatus): Promi
 
 /**
  * Permanent: deletes the learner and, by cascade, every submission and
- * assessment they have. Prefer withdrawing — this cannot be undone.
+ * assessment they have. Prefer withdrawing: this cannot be undone.
  */
 export async function removeLearner(id: string, confirmEmail: string): Promise<LearnerActionResult> {
   if (!(await getAdmin())) return { ok: false, message: "Not authorised." };

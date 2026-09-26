@@ -24,6 +24,14 @@ export function Hero() {
                 {hero.secondaryCta.label}
               </ButtonLink>
             </Appear>
+            <Appear delay={0.58}>
+              <p className="mt-5 flex items-center gap-2 text-sm font-semibold text-ink">
+                <svg className="size-4 shrink-0 text-red-strong" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden="true">
+                  <path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" /><path d="m8.5 12 2.5 2.5 4.5-5" />
+                </svg>
+                Complete all 30 days, get 100% of your fee back.
+              </p>
+            </Appear>
           </div>
 
           <div className="relative flex items-end justify-center">

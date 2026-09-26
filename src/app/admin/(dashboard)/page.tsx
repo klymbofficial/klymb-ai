@@ -41,18 +41,18 @@ async function PlatformActivity() {
         <h2 id="platform-activity" className="display text-xl">Platform activity</h2>
         <p className="flex items-center gap-2 text-xs text-muted">
           <Radio size={13} aria-hidden="true" className="text-green-600" />
-          <strong className="nums text-ink">{live?.active ?? "—"}</strong> on the site now · traffic is the last 7 days
+          <strong className="nums text-ink">{live?.active ?? "-"}</strong> on the site now · traffic is the last 7 days
         </p>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <ActivityTile label="Sessions" value={formatCompact(kpi("Sessions"))} sub={`${formatCompact(kpi("Active users"))} active users`} icon={BarChart3} />
         <ActivityTile label="New users" value={formatCompact(kpi("New users"))} sub="First-time visitors" icon={UserPlus} />
-        <ActivityTile label="Page views" value={formatCompact(kpi("Page views"))} sub={ga.pages[0] ? `${ga.pages[0].views} on ${ga.pages[0].path}` : "—"} icon={MousePointerClick} />
+        <ActivityTile label="Page views" value={formatCompact(kpi("Page views"))} sub={ga.pages[0] ? `${ga.pages[0].views} on ${ga.pages[0].path}` : "-"} icon={MousePointerClick} />
         <ActivityTile label="Avg. session" value={formatDuration(kpi("Avg. session"))} sub="Time on site" icon={Clock} />
         <ActivityTile label="Engagement rate" value={`${kpi("Engagement rate").toFixed(1)}%`} sub="Sessions with real interaction" icon={Sparkles} />
         <ActivityTile label="Registrations" value={String(ga.conversions.registrations)} sub="register_submit · last 7 days" icon={Send} />
-        <ActivityTile label="Top country" value={topCountry?.country ?? "—"} sub={topCountry ? `${topCountry.users} users` : "No data"} icon={Globe2} />
-        <ActivityTile label="Top source" value={topSource?.label ?? "—"} sub={topSource ? `${topSource.value} sessions` : "No data"} icon={Globe2} />
+        <ActivityTile label="Top country" value={topCountry?.country ?? "-"} sub={topCountry ? `${topCountry.users} users` : "No data"} icon={Globe2} />
+        <ActivityTile label="Top source" value={topSource?.label ?? "-"} sub={topSource ? `${topSource.value} sessions` : "No data"} icon={Globe2} />
       </div>
       <Link href="/admin/analytics?range=7d" className="mt-5 inline-block text-sm font-bold text-red-deep underline-offset-4 hover:underline">
         Open full analytics →
@@ -93,7 +93,7 @@ export default async function AdminOverviewPage() {
         <StatTile
           label="Seats remaining"
           value={seatsLeft}
-          hint={cohort.cohortCapacityIsPlaceholder ? `of ${cohort.cohortCapacity} — placeholder cap` : `of ${cohort.cohortCapacity}`}
+          hint={cohort.cohortCapacityIsPlaceholder ? `of ${cohort.cohortCapacity} (placeholder cap)` : `of ${cohort.cohortCapacity}`}
           tone={seatsLeft === 0 ? "red" : "ink"}
         />
       </div>

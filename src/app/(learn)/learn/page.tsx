@@ -27,7 +27,7 @@ export default async function LearnHomePage() {
         <h1 className="display mt-8 text-3xl">You are signed in, but not enrolled yet</h1>
         <p className="mt-3 text-muted">
           We could not find a cohort place for <strong className="text-ink">{state.email}</strong>. If you registered with a
-          different email, sign in with that one — otherwise write to {contact.email} and we will sort it out.
+          different email, sign in with that one: otherwise write to {contact.email} and we will sort it out.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ButtonLink href="/register?track=project-manager" arrow>Register for the cohort</ButtonLink>
@@ -56,7 +56,7 @@ export default async function LearnHomePage() {
           <h1 className="display mt-4 text-4xl text-balance">Your place is reserved. Day 1 opens soon.</h1>
           <p className="mt-4 text-muted">
             The {track.name} course is being finished for this cohort. We will email{" "}
-            <strong className="text-ink">{learner.email}</strong> the moment Day 1 is ready — nothing is lost by waiting,
+            <strong className="text-ink">{learner.email}</strong> the moment Day 1 is ready: nothing is lost by waiting,
             and your 30 days start from that day.
           </p>
           <p className="mt-6 text-sm text-muted">
@@ -125,7 +125,7 @@ export default async function LearnHomePage() {
               <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">GitHub</span>
               {learner.github_url
                 ? <a href={learner.github_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">{learner.github_url.replace(/^https?:\/\//, "")}</a>
-                : <span className="text-muted">Add it on Day 1 — it is where every artifact lands.</span>}
+                : <span className="text-muted">Add it on Day 1: it is where every artifact lands.</span>}
             </li>
             <li>
               <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">LinkedIn</span>

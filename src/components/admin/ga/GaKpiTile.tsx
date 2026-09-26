@@ -15,7 +15,7 @@ export function GaKpiTile({
   kpi, icon: Icon, spark, sub,
 }: { kpi: Kpi; icon?: LucideIcon; spark?: number[]; sub?: string }) {
   const rising = (kpi.delta ?? 0) > 0;
-  // For bounce rate, up is bad — the colour follows meaning, not direction.
+  // For bounce rate, up is bad: the colour follows meaning, not direction.
   const good = kpi.inverse ? !rising : rising;
   const showDelta = kpi.delta !== null && Number.isFinite(kpi.delta);
 

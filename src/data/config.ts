@@ -16,8 +16,8 @@
 export const pricing = {
   currency: "INR",
   programName: "30-Day Job Readiness Program",
-  launchPrice: 14999, // TODO: verify before launch
-  referenceValue: 50000, // TODO: verify before launch — must match a real value breakdown
+  // Each track has its own launch price, see `price` in src/data/tracks.ts.
+  referenceValue: 50000, // TODO: verify before launch: must match a real value breakdown
   showReferenceValue: true,
   taxNote: "Price shown is per learner, for one career track. Tax treatment to be confirmed.",
 };
@@ -28,14 +28,14 @@ export const cohort = {
   /** Confirmed by the business, 23 September 2026. */
   enrollmentDeadline: "2026-10-01",
   enrollmentDeadlineIsPlaceholder: false,
-  /** PLACEHOLDER — replace with the real seat cap per track. */
+  /** PLACEHOLDER: replace with the real seat cap per track. */
   cohortCapacity: 40,
   cohortCapacityIsPlaceholder: true,
   capacityReason:
     "Cohort size is limited because every weekly assessment and mock interview gets individual feedback.",
 };
 
-/** The canonical public address. Everything absolute — links in previews, the sitemap — is built from this. */
+/** The canonical public address. Everything absolute, links in previews, the sitemap, is built from this. */
 export const site = {
   url: "https://www.klymb.ai",
   /** The production alias Vercel gives the project; permanently redirected to `url`. */

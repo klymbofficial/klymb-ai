@@ -3,7 +3,7 @@
  *
  * Generated from the same source as the .docx programme document, so the site
  * and the document cannot drift apart. Resources were link-checked on
- * 16 September 2026 — re-check annually, links rot.
+ * 16 September 2026: re-check annually, links rot.
  */
 import type { PmDay } from "@/types/curriculum";
 
@@ -25,7 +25,7 @@ export const pmCurriculum: PmDay[] = [
     ],
     concepts: [
       "What a delivery lead actually owns: decisions, sequence, and the truth about status",
-      "Artifacts versus theatre — which meetings and documents create value",
+      "Artifacts versus theatre: which meetings and documents create value",
       "Why PM work is invisible to hiring managers, and what makes it visible",
       "Repo-as-portfolio: structure, README as index, commit history as proof",
     ],
@@ -38,8 +38,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "README.md committed, repo public, LinkedIn profile updated",
     reviewerChecks: "Repo is public and renders; at least 4 contradictions logged; commit is dated Day 1.",
     resources: [
-        { kind: "read", label: "Atlassian Team Playbook — Project Poster play", url: "https://www.atlassian.com/team-playbook/plays/project-poster" },
-        { kind: "read", label: "GitHub — basic writing and formatting syntax", url: "https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax" },
+        { kind: "read", label: "Atlassian Team Playbook: Project Poster play", url: "https://www.atlassian.com/team-playbook/plays/project-poster" },
+        { kind: "read", label: "GitHub: basic writing and formatting syntax", url: "https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax" },
         { kind: "use", label: "GitHub Pages quickstart (you will publish with this on Day 25)", url: "https://docs.github.com/en/pages/quickstart" },
     ],
     quiz: [
@@ -69,7 +69,7 @@ export const pmCurriculum: PmDay[] = [
       "Assumption surfacing, with confidence levels and owners",
     ],
     steps: [
-      "Run three stakeholder interviews using the supplied AI personas — sponsor, support lead, engineering lead. Ask at least five questions each.",
+      "Run three stakeholder interviews using the supplied AI personas: sponsor, support lead, engineering lead. Ask at least five questions each.",
       "Log every answer that contradicts another stakeholder's answer.",
       "Build the stakeholder map with a named strategy for each quadrant.",
       "Write the assumptions log: assumption, confidence, owner, and how it gets tested.",
@@ -79,7 +79,7 @@ export const pmCurriculum: PmDay[] = [
     resources: [
         { kind: "watch", label: "Stakeholder Influence and Interest Matrix Explained (Engineeringly)", url: "https://www.youtube.com/watch?v=oXwh0ynknck" },
         { kind: "watch", label: "Stakeholder Analysis: How to Use the Power/Interest Grid (AssistKD)", url: "https://www.youtube.com/watch?v=G3R4TO1l6LY" },
-        { kind: "read", label: "Atlassian Team Playbook — Roles and Responsibilities play", url: "https://www.atlassian.com/team-playbook/plays/roles-and-responsibilities" },
+        { kind: "read", label: "Atlassian Team Playbook: Roles and Responsibilities play", url: "https://www.atlassian.com/team-playbook/plays/roles-and-responsibilities" },
     ],
     quiz: [
       "Which quadrant did you put the support lead in, and what is your strategy for them?",
@@ -92,7 +92,7 @@ export const pmCurriculum: PmDay[] = [
     week: 1,
     kind: "build",
     title: "Charter and the scope boundary",
-    mission: "Write the one document everything else in the project is measured against — including the list of what you are deliberately not doing.",
+    mission: "Write the one document everything else in the project is measured against: including the list of what you are deliberately not doing.",
     points: 12,
     estimateMinutes: 105,
     tags: ["Charter", "Metrics", "Scope"],
@@ -111,14 +111,14 @@ export const pmCurriculum: PmDay[] = [
       "Draft the charter: problem statement, three outcome metrics with baselines, milestones, constraints, decision rights.",
       "For each metric, name the baseline, the target, and where the number actually comes from.",
       "Write the out-of-scope list: at least eight items, each with the reason.",
-      "Get it challenged — run it past the sponsor persona and revise whatever breaks.",
+      "Get it challenged: run it past the sponsor persona and revise whatever breaks.",
     ],
     deliverable: "01-charter/charter.md",
     reviewerChecks: "Every metric has baseline, target and source; out-of-scope has 8+ items with reasons; decision rights name one decider.",
     resources: [
         { kind: "watch", label: "How to Create a Project Charter? (Invensis Learning)", url: "https://www.youtube.com/watch?v=J4QYPeP7-os" },
         { kind: "watch", label: "What is a Project Charter? Step-by-Step Guide (projectcubicle)", url: "https://www.youtube.com/watch?v=DARaaODGVl8" },
-        { kind: "read", label: "Asana — how to write a project charter", url: "https://asana.com/resources/project-charter" },
+        { kind: "read", label: "Asana: how to write a project charter", url: "https://asana.com/resources/project-charter" },
     ],
     quiz: [
       "What is your first outcome metric, its baseline, and where the number comes from?",
@@ -157,8 +157,8 @@ export const pmCurriculum: PmDay[] = [
     resources: [
         { kind: "watch", label: "User Stories & Acceptance Criteria, with examples (Management Bliss)", url: "https://www.youtube.com/watch?v=NLkcduSPHoI" },
         { kind: "watch", label: "INVEST Criteria for User Stories (QBI)", url: "https://www.youtube.com/watch?v=kyqu_YhfLWc" },
-        { kind: "read", label: "Atlassian — user stories with examples and a template", url: "https://www.atlassian.com/agile/project-management/user-stories" },
-        { kind: "read", label: "Atlassian — epics, stories, themes and initiatives", url: "https://www.atlassian.com/agile/project-management/epics-stories-themes" },
+        { kind: "read", label: "Atlassian: user stories with examples and a template", url: "https://www.atlassian.com/agile/project-management/user-stories" },
+        { kind: "read", label: "Atlassian: epics, stories, themes and initiatives", url: "https://www.atlassian.com/agile/project-management/epics-stories-themes" },
     ],
     quiz: [
       "Paste one acceptance criterion you rewrote, before and after.",
@@ -183,7 +183,7 @@ export const pmCurriculum: PmDay[] = [
     concepts: [
       "Work breakdown to three levels without turning into a task list",
       "Dependency types, lag and lead",
-      "Calculating the critical path by hand — and why the tool's version lies when inputs are wrong",
+      "Calculating the critical path by hand: and why the tool's version lies when inputs are wrong",
       "Milestone design, and the difference between a date and a commitment",
     ],
     steps: [
@@ -195,10 +195,10 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "03-plan/wbs.md and gantt.mmd",
     reviewerChecks: "Critical path is calculated and justified, not asserted; the Mermaid Gantt renders on GitHub.",
     resources: [
-        { kind: "watch", label: "WBS, Gantt Chart and Critical Path — Explained (Dr. Richard J. Sands)", url: "https://www.youtube.com/watch?v=YDxAKKVdMVM" },
+        { kind: "watch", label: "WBS, Gantt Chart and Critical Path: Explained (Dr. Richard J. Sands)", url: "https://www.youtube.com/watch?v=YDxAKKVdMVM" },
         { kind: "watch", label: "Critical Path Method Explained: 5-Minute Guide (TeamGantt)", url: "https://www.youtube.com/watch?v=t8FxeZgi2V0" },
-        { kind: "read", label: "Asana — work breakdown structure", url: "https://asana.com/resources/work-breakdown-structure" },
-        { kind: "use", label: "Mermaid Gantt syntax — renders natively in your GitHub repo", url: "https://mermaid.js.org/syntax/gantt.html" },
+        { kind: "read", label: "Asana: work breakdown structure", url: "https://asana.com/resources/work-breakdown-structure" },
+        { kind: "use", label: "Mermaid Gantt syntax: renders natively in your GitHub repo", url: "https://mermaid.js.org/syntax/gantt.html" },
     ],
     quiz: [
       "How long is your critical path, and which activities sit on it?",
@@ -211,7 +211,7 @@ export const pmCurriculum: PmDay[] = [
     week: 1,
     kind: "build",
     title: "Choosing the delivery model and the cadence",
-    mission: "Pick how this team will work — and cost the ceremonies in person-hours so you can defend them.",
+    mission: "Pick how this team will work: and cost the ceremonies in person-hours so you can defend them.",
     points: 12,
     estimateMinutes: 105,
     tags: ["Delivery model", "Cadence", "DACI"],
@@ -238,7 +238,7 @@ export const pmCurriculum: PmDay[] = [
         { kind: "watch", label: "Waterfall vs Agile vs Hybrid Approaches Explained in 10 Minutes (Alvin the PM)", url: "https://www.youtube.com/watch?v=qf0Yzrzr_i4" },
         { kind: "watch", label: "Hybrid Project Management: 3 Real-World Scenarios (PM Expert)", url: "https://www.youtube.com/watch?v=tsBspbcvOVQ" },
         { kind: "read", label: "The Scrum Guide (the actual 13-page source, not a summary of it)", url: "https://scrumguides.org/scrum-guide.html" },
-        { kind: "use", label: "Atlassian Team Playbook — DACI decision-making framework", url: "https://www.atlassian.com/team-playbook/plays/daci" },
+        { kind: "use", label: "Atlassian Team Playbook: DACI decision-making framework", url: "https://www.atlassian.com/team-playbook/plays/daci" },
     ],
     quiz: [
       "What does your weekly cadence cost in person-hours, before and after the cut?",
@@ -266,8 +266,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Submitted artifacts plus your defence recording",
     reviewerChecks: "Charters that read well and cannot be defended. The most common failure is a metric with no source.",
     resources: [
-        { kind: "prep", label: "Asana — project charter guide, to check your own against before you defend it", url: "https://asana.com/resources/project-charter" },
-        { kind: "prep", label: "Atlassian — project poster play, for the one-page framing test", url: "https://www.atlassian.com/team-playbook/plays/project-poster" },
+        { kind: "prep", label: "Asana: project charter guide, to check your own against before you defend it", url: "https://asana.com/resources/project-charter" },
+        { kind: "prep", label: "Atlassian: project poster play, for the one-page framing test", url: "https://www.atlassian.com/team-playbook/plays/project-poster" },
     ],
     quiz: [
       "Your sponsor says the out-of-scope list is 'negotiable'. What do you say next?",
@@ -293,7 +293,7 @@ export const pmCurriculum: PmDay[] = [
       "Reference class forecasting: finding comparable work outside your own optimism",
       "Three-point and PERT estimation",
       "P50 versus P80, and which one you give a sponsor",
-      "Padding versus buffering — one hides, the other is managed",
+      "Padding versus buffering: one hides, the other is managed",
     ],
     steps: [
       "Estimate all twelve stories using three-point estimation.",
@@ -304,10 +304,10 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "04-estimates/estimate-memo.md",
     reviewerChecks: "Reference class is cited with links; P50 and P80 both present; the memo names the single biggest assumption.",
     resources: [
-        { kind: "watch", label: "Dan Vacanti — 'When will it be done?' An introduction to probabilistic forecasting (agile100)", url: "https://www.youtube.com/watch?v=aG5Eet6BJTc" },
-        { kind: "read", label: "Reference class forecasting — the outside view, and why it beats your estimate", url: "https://en.wikipedia.org/wiki/Reference_class_forecasting" },
-        { kind: "read", label: "Atlassian — agile estimation", url: "https://www.atlassian.com/agile/project-management/estimation" },
-        { kind: "read", label: "Mountain Goat Software — what are story points?", url: "https://www.mountaingoatsoftware.com/blog/what-are-story-points" },
+        { kind: "watch", label: "Dan Vacanti: 'When will it be done?' An introduction to probabilistic forecasting (agile100)", url: "https://www.youtube.com/watch?v=aG5Eet6BJTc" },
+        { kind: "read", label: "Reference class forecasting: the outside view, and why it beats your estimate", url: "https://en.wikipedia.org/wiki/Reference_class_forecasting" },
+        { kind: "read", label: "Atlassian: agile estimation", url: "https://www.atlassian.com/agile/project-management/estimation" },
+        { kind: "read", label: "Mountain Goat Software: what are story points?", url: "https://www.mountaingoatsoftware.com/blog/what-are-story-points" },
     ],
     quiz: [
       "What are your P50 and P80 dates, and which would you tell the sponsor?",
@@ -320,7 +320,7 @@ export const pmCurriculum: PmDay[] = [
     week: 2,
     kind: "build",
     title: "Capacity, the backlog, and sprint one",
-    mission: "Convert an estimate into a plan a real team — with holidays, meetings and two open roles — can actually hit.",
+    mission: "Convert an estimate into a plan a real team, with holidays, meetings and two open roles, can actually hit.",
     points: 12,
     estimateMinutes: 105,
     tags: ["Capacity", "Sprint planning", "WIP"],
@@ -344,9 +344,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "04-estimates/sprint-1-plan.md",
     reviewerChecks: "Capacity maths is visible and includes support load; the sprint goal is an outcome; DoD includes review.",
     resources: [
-        { kind: "read", label: "Atlassian — sprint planning", url: "https://www.atlassian.com/agile/scrum/sprint-planning" },
-        { kind: "read", label: "The Scrum Guide — the sprint planning and commitment sections", url: "https://scrumguides.org/scrum-guide.html" },
-        { kind: "use", label: "Linear docs — cycles, estimates and workflow setup", url: "https://linear.app/docs" },
+        { kind: "read", label: "Atlassian: sprint planning", url: "https://www.atlassian.com/agile/scrum/sprint-planning" },
+        { kind: "read", label: "The Scrum Guide: the sprint planning and commitment sections", url: "https://scrumguides.org/scrum-guide.html" },
+        { kind: "use", label: "Linear docs: cycles, estimates and workflow setup", url: "https://linear.app/docs" },
     ],
     quiz: [
       "What is your team's two-week capacity, and what did you deduct to get there?",
@@ -369,13 +369,13 @@ export const pmCurriculum: PmDay[] = [
       "Add expected rework back into the plan",
     ],
     concepts: [
-      "Where AI compresses delivery — drafting, boilerplate, first-pass documentation",
-      "Where it does not — integration, review, decisions, and the meeting after the demo",
+      "Where AI compresses delivery: drafting, boilerplate, first-pass documentation",
+      "Where it does not: integration, review, decisions, and the meeting after the demo",
       "Theory of constraints: when drafting speeds up, review becomes the bottleneck",
       "Rework rate: the hidden cost of accepting fast output",
     ],
     steps: [
-      "Re-estimate the same twelve stories assuming AI-assisted delivery — per story, not as a blanket percentage.",
+      "Re-estimate the same twelve stories assuming AI-assisted delivery: per story, not as a blanket percentage.",
       "Model review capacity explicitly. Identify the new bottleneck and prove it with numbers.",
       "Estimate rework rate from the review gates you expect, and add it back into the plan.",
       "Write the delta table: original, adjusted, reason, confidence.",
@@ -383,9 +383,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "04-estimates/ai-adjusted-estimates.md",
     reviewerChecks: "Names the new bottleneck with arithmetic; no blanket percentage cuts; at least two stories got slower, with reasons.",
     resources: [
-        { kind: "read", label: "Theory of constraints — the idea behind 'speeding up drafting moves the bottleneck'", url: "https://en.wikipedia.org/wiki/Theory_of_constraints" },
-        { kind: "read", label: "Anthropic — building effective agents (what agents do well, and where they need a human)", url: "https://www.anthropic.com/engineering/building-effective-agents" },
-        { kind: "read", label: "Pragmatic Engineer — developer productivity with Dr. Nicole Forsgren", url: "https://newsletter.pragmaticengineer.com/p/developer-productivity-with-dr-nicole" },
+        { kind: "read", label: "Theory of constraints: the idea behind 'speeding up drafting moves the bottleneck'", url: "https://en.wikipedia.org/wiki/Theory_of_constraints" },
+        { kind: "read", label: "Anthropic: building effective agents (what agents do well, and where they need a human)", url: "https://www.anthropic.com/engineering/building-effective-agents" },
+        { kind: "read", label: "Pragmatic Engineer: developer productivity with Dr. Nicole Forsgren", url: "https://newsletter.pragmaticengineer.com/p/developer-productivity-with-dr-nicole" },
     ],
     quiz: [
       "What is the new bottleneck in your plan, and what number proves it?",
@@ -422,9 +422,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "03-plan/schedule.md",
     reviewerChecks: "Buffer is sized by a stated method; both dates carry confidence; the scenario changes the plan, not just the prose.",
     resources: [
-        { kind: "read", label: "Critical chain project management — buffers, and why padding each task fails", url: "https://en.wikipedia.org/wiki/Critical_chain_project_management" },
-        { kind: "read", label: "Black Swan Farming — cost of delay", url: "https://blackswanfarming.com/cost-of-delay/" },
-        { kind: "read", label: "Asana — critical path method", url: "https://asana.com/resources/critical-path-method" },
+        { kind: "read", label: "Critical chain project management: buffers, and why padding each task fails", url: "https://en.wikipedia.org/wiki/Critical_chain_project_management" },
+        { kind: "read", label: "Black Swan Farming: cost of delay", url: "https://blackswanfarming.com/cost-of-delay/" },
+        { kind: "read", label: "Asana: critical path method", url: "https://asana.com/resources/critical-path-method" },
     ],
     quiz: [
       "How big is your project buffer, and what method sized it?",
@@ -463,7 +463,7 @@ export const pmCurriculum: PmDay[] = [
     resources: [
         { kind: "watch", label: "What to Include in a Weekly Project Status Report (Max Dalton)", url: "https://www.youtube.com/watch?v=VhGFwTjB094" },
         { kind: "watch", label: "What Makes a Great Project Status Report? (projectcubicle)", url: "https://www.youtube.com/watch?v=dLVe8valGc8" },
-        { kind: "read", label: "Will Larson — writing weekly updates that people actually read", url: "https://lethain.com/weekly-updates/" },
+        { kind: "read", label: "Will Larson: writing weekly updates that people actually read", url: "https://lethain.com/weekly-updates/" },
     ],
     quiz: [
       "What is the ask in your amber report, and by when do you need it?",
@@ -500,9 +500,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "06-tooling/board.md plus screenshots",
     reviewerChecks: "Board is real and shown; automations documented; never-automate list has reasons, not just items.",
     resources: [
-        { kind: "use", label: "Linear docs — workflows, labels, automations", url: "https://linear.app/docs" },
-        { kind: "read", label: "Atlassian — agile metrics, and which ones your board must support", url: "https://www.atlassian.com/agile/project-management/metrics" },
-        { kind: "read", label: "GitLab handbook — how a large company documents its own working agreements", url: "https://about.gitlab.com/handbook/" },
+        { kind: "use", label: "Linear docs: workflows, labels, automations", url: "https://linear.app/docs" },
+        { kind: "read", label: "Atlassian: agile metrics, and which ones your board must support", url: "https://www.atlassian.com/agile/project-management/metrics" },
+        { kind: "read", label: "GitLab handbook: how a large company documents its own working agreements", url: "https://about.gitlab.com/handbook/" },
     ],
     quiz: [
       "Which two automations did you build, and what do they save?",
@@ -530,8 +530,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Submitted artifacts plus your defence recording",
     reviewerChecks: "Learners who hold the date by silently assuming heroics. The rubric rewards transparency about what was sacrificed.",
     resources: [
-        { kind: "prep", label: "Atlassian — agile estimation, to re-read before you re-estimate live", url: "https://www.atlassian.com/agile/project-management/estimation" },
-        { kind: "prep", label: "Black Swan Farming — cost of delay, the number that defends your cut", url: "https://blackswanfarming.com/cost-of-delay/" },
+        { kind: "prep", label: "Atlassian: agile estimation, to re-read before you re-estimate live", url: "https://www.atlassian.com/agile/project-management/estimation" },
+        { kind: "prep", label: "Black Swan Farming: cost of delay, the number that defends your cut", url: "https://blackswanfarming.com/cost-of-delay/" },
     ],
     quiz: [
       "Which scope did you cut, and whose permission did you need to cut it?",
@@ -554,7 +554,7 @@ export const pmCurriculum: PmDay[] = [
       "Fund the top three mitigations from your buffer",
     ],
     concepts: [
-      "Risk, issue and assumption — and why conflating them delays action",
+      "Risk, issue and assumption: and why conflating them delays action",
       "Probability times impact, and expected monetary value",
       "The pre-mortem: writing the failure report from six months in the future",
       "Triggers and owners: the two fields that make a register real",
@@ -568,10 +568,10 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "07-risk/risk-register.csv and premortem.md",
     reviewerChecks: "Every risk has a trigger and an owner; EMV is computed; mitigation costs are deducted from the buffer.",
     resources: [
-        { kind: "watch", label: "Probability and Impact Matrix — key concepts (David McLachlan)", url: "https://www.youtube.com/watch?v=VnVtebvwDdY" },
-        { kind: "read", label: "Gary Klein, HBR — Performing a Project Premortem (the original 2007 article)", url: "https://hbr.org/2007/09/performing-a-project-premortem" },
-        { kind: "read", label: "Gary Klein — the pre-mortem method, in his own words", url: "https://www.gary-klein.com/premortem" },
-        { kind: "use", label: "Asana — project risk management process and register template", url: "https://asana.com/resources/project-risk-management-process" },
+        { kind: "watch", label: "Probability and Impact Matrix: key concepts (David McLachlan)", url: "https://www.youtube.com/watch?v=VnVtebvwDdY" },
+        { kind: "read", label: "Gary Klein, HBR: Performing a Project Premortem (the original 2007 article)", url: "https://hbr.org/2007/09/performing-a-project-premortem" },
+        { kind: "read", label: "Gary Klein: the pre-mortem method, in his own words", url: "https://www.gary-klein.com/premortem" },
+        { kind: "use", label: "Asana: project risk management process and register template", url: "https://asana.com/resources/project-risk-management-process" },
     ],
     quiz: [
       "What is your highest-EMV risk, and what is the number?",
@@ -596,7 +596,7 @@ export const pmCurriculum: PmDay[] = [
     concepts: [
       "Anatomy of a change request, and what makes one refusable",
       "Impact analysis in days, not adjectives",
-      "The scope, time, cost, quality menu — and presenting a recommendation with it",
+      "The scope, time, cost, quality menu: and presenting a recommendation with it",
       "Decision records: what was decided, by whom, and what was traded away",
     ],
     steps: [
@@ -608,9 +608,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "08-change/change-log.md",
     reviewerChecks: "Impact is quantified in days; each response has options plus a recommendation; the decision record names the decider.",
     resources: [
-        { kind: "read", label: "Atlassian — scope creep, and how to make change visible", url: "https://www.atlassian.com/work-management/project-management/scope-creep" },
-        { kind: "read", label: "Asana — what is scope creep, with examples", url: "https://asana.com/resources/what-is-scope-creep" },
-        { kind: "use", label: "Asana — change management process template", url: "https://asana.com/resources/change-management-process" },
+        { kind: "read", label: "Atlassian: scope creep, and how to make change visible", url: "https://www.atlassian.com/work-management/project-management/scope-creep" },
+        { kind: "read", label: "Asana: what is scope creep, with examples", url: "https://asana.com/resources/what-is-scope-creep" },
+        { kind: "use", label: "Asana: change management process template", url: "https://asana.com/resources/change-management-process" },
     ],
     quiz: [
       "Which change did you accept, and what did it cost in days?",
@@ -647,9 +647,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "09-stakeholders/escalation-memo.md plus transcripts",
     reviewerChecks: "Memo is one page and names a decision, a deadline and a cost of delay; transcripts show you changed approach mid-conversation.",
     resources: [
-        { kind: "watch", label: "Stakeholder Analysis: How to Use the Power/Interest Grid (AssistKD) — rewatch with your own map open", url: "https://www.youtube.com/watch?v=G3R4TO1l6LY" },
-        { kind: "use", label: "Atlassian Team Playbook — DACI, to name the decider before you escalate", url: "https://www.atlassian.com/team-playbook/plays/daci" },
-        { kind: "read", label: "Atlassian Team Playbook — roles and responsibilities", url: "https://www.atlassian.com/team-playbook/plays/roles-and-responsibilities" },
+        { kind: "watch", label: "Stakeholder Analysis: How to Use the Power/Interest Grid (AssistKD): rewatch with your own map open", url: "https://www.youtube.com/watch?v=G3R4TO1l6LY" },
+        { kind: "use", label: "Atlassian Team Playbook: DACI, to name the decider before you escalate", url: "https://www.atlassian.com/team-playbook/plays/daci" },
+        { kind: "read", label: "Atlassian Team Playbook: roles and responsibilities", url: "https://www.atlassian.com/team-playbook/plays/roles-and-responsibilities" },
     ],
     quiz: [
       "What did the difficult stakeholder actually want, underneath what they asked for?",
@@ -688,8 +688,8 @@ export const pmCurriculum: PmDay[] = [
     resources: [
         { kind: "watch", label: "Project recovery: fixing troubled projects (RMC Learning Solutions)", url: "https://www.youtube.com/watch?v=z6XHfVzB6Fk" },
         { kind: "watch", label: "Four Ways to Recover a Failing Project (David McLachlan)", url: "https://www.youtube.com/watch?v=RZ4eBKF-aC0" },
-        { kind: "read", label: "Brooks's law — why adding people to a late project makes it later", url: "https://en.wikipedia.org/wiki/Brooks%27s_law" },
-        { kind: "read", label: "Black Swan Farming — cost of delay, for costing each recovery option", url: "https://blackswanfarming.com/cost-of-delay/" },
+        { kind: "read", label: "Brooks's law: why adding people to a late project makes it later", url: "https://en.wikipedia.org/wiki/Brooks%27s_law" },
+        { kind: "read", label: "Black Swan Farming: cost of delay, for costing each recovery option", url: "https://blackswanfarming.com/cost-of-delay/" },
     ],
     quiz: [
       "What is the root cause of the slip, and what rules out the other candidates?",
@@ -702,7 +702,7 @@ export const pmCurriculum: PmDay[] = [
     week: 3,
     kind: "build",
     title: "Designing review gates for AI-assisted work",
-    mission: "Decide exactly where a human must look at machine output before it reaches a customer — and what evidence you keep.",
+    mission: "Decide exactly where a human must look at machine output before it reaches a customer: and what evidence you keep.",
     points: 12,
     estimateMinutes: 105,
     tags: ["AI governance", "Review gates", "Accountability"],
@@ -726,9 +726,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "11-ai-governance/review-gates.md and ai-use-policy.md",
     reviewerChecks: "Gates specify sample rates and retained evidence; the policy covers customer data; the incident path names who speaks to customers.",
     resources: [
-        { kind: "read", label: "NIST AI Risk Management Framework — the reference every enterprise governance team cites", url: "https://www.nist.gov/itl/ai-risk-management-framework" },
-        { kind: "read", label: "Anthropic — building effective agents, on where human review belongs", url: "https://www.anthropic.com/engineering/building-effective-agents" },
-        { kind: "read", label: "Google SRE Workbook — incident response", url: "https://sre.google/workbook/incident-response/" },
+        { kind: "read", label: "NIST AI Risk Management Framework: the reference every enterprise governance team cites", url: "https://www.nist.gov/itl/ai-risk-management-framework" },
+        { kind: "read", label: "Anthropic: building effective agents, on where human review belongs", url: "https://www.anthropic.com/engineering/building-effective-agents" },
+        { kind: "read", label: "Google SRE Workbook: incident response", url: "https://sre.google/workbook/incident-response/" },
     ],
     quiz: [
       "Which AI touchpoint gets 100% review, and which gets sampling? Why the difference?",
@@ -765,10 +765,10 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "12-incident/incident-comms.md",
     reviewerChecks: "Every update states the time of the next one; no speculation survives; actions are owned and dated.",
     resources: [
-        { kind: "read", label: "Atlassian — incident management handbook (read the communication chapter in full)", url: "https://www.atlassian.com/incident-management/handbook" },
-        { kind: "read", label: "Atlassian — incident communication best practices and templates", url: "https://www.atlassian.com/incident-management/incident-communication" },
-        { kind: "read", label: "Google SRE Book — managing incidents", url: "https://sre.google/sre-book/managing-incidents/" },
-        { kind: "read", label: "Google SRE Book — postmortem culture: learning from failure", url: "https://sre.google/sre-book/postmortem-culture/" },
+        { kind: "read", label: "Atlassian: incident management handbook (read the communication chapter in full)", url: "https://www.atlassian.com/incident-management/handbook" },
+        { kind: "read", label: "Atlassian: incident communication best practices and templates", url: "https://www.atlassian.com/incident-management/incident-communication" },
+        { kind: "read", label: "Google SRE Book: managing incidents", url: "https://sre.google/sre-book/managing-incidents/" },
+        { kind: "read", label: "Google SRE Book: postmortem culture: learning from failure", url: "https://sre.google/sre-book/postmortem-culture/" },
     ],
     quiz: [
       "What did you say at T+15 when you still had no cause?",
@@ -796,8 +796,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Submitted artifacts plus your defence recording",
     reviewerChecks: "This is the checkpoint most likely to fail someone, by design. Prepared answers do not survive an inject that contradicts them.",
     resources: [
-        { kind: "prep", label: "Atlassian — incident communication templates, open in a tab before the clock starts", url: "https://www.atlassian.com/incident-management/incident-communication" },
-        { kind: "prep", label: "Google SRE Book — managing incidents, for the roles you will have to play alone", url: "https://sre.google/sre-book/managing-incidents/" },
+        { kind: "prep", label: "Atlassian: incident communication templates, open in a tab before the clock starts", url: "https://www.atlassian.com/incident-management/incident-communication" },
+        { kind: "prep", label: "Google SRE Book: managing incidents, for the roles you will have to play alone", url: "https://sre.google/sre-book/managing-incidents/" },
     ],
     quiz: [
       "You escalated at T+40. Why not at T+5?",
@@ -810,7 +810,7 @@ export const pmCurriculum: PmDay[] = [
     week: 4,
     kind: "build",
     title: "Metrics that change decisions",
-    mission: "Define the small set of numbers you would actually run a delivery on — and kill the ones you would not.",
+    mission: "Define the small set of numbers you would actually run a delivery on: and kill the ones you would not.",
     points: 12,
     estimateMinutes: 105,
     tags: ["Metrics", "Measurement", "Decisions"],
@@ -834,9 +834,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "13-metrics/measurement-plan.md",
     reviewerChecks: "Each metric names the decision it informs; two are explicitly deleted; uncomputable metrics are admitted.",
     resources: [
-        { kind: "read", label: "DORA — the four key metrics, defined by the research team that found them", url: "https://dora.dev/guides/dora-metrics-four-keys/" },
-        { kind: "read", label: "Google Cloud — using the Four Keys to measure delivery performance", url: "https://cloud.google.com/blog/products/devops-sre/using-the-four-keys-to-measure-your-devops-performance" },
-        { kind: "read", label: "Atlassian — agile metrics", url: "https://www.atlassian.com/agile/project-management/metrics" },
+        { kind: "read", label: "DORA: the four key metrics, defined by the research team that found them", url: "https://dora.dev/guides/dora-metrics-four-keys/" },
+        { kind: "read", label: "Google Cloud: using the Four Keys to measure delivery performance", url: "https://cloud.google.com/blog/products/devops-sre/using-the-four-keys-to-measure-your-devops-performance" },
+        { kind: "read", label: "Atlassian: agile metrics", url: "https://www.atlassian.com/agile/project-management/metrics" },
     ],
     quiz: [
       "Which two metrics did you delete, and why?",
@@ -873,8 +873,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "13-metrics/impact.md plus chart",
     reviewerChecks: "Confounders are named; no unsupported percentage claims; the chart's scale starts where it should.",
     resources: [
-        { kind: "read", label: "DORA — software delivery performance metrics, including their caveats", url: "https://dora.dev/guides/dora-metrics/" },
-        { kind: "read", label: "Pragmatic Engineer — Dr. Nicole Forsgren on measuring productivity honestly", url: "https://newsletter.pragmaticengineer.com/p/developer-productivity-with-dr-nicole" },
+        { kind: "read", label: "DORA: software delivery performance metrics, including their caveats", url: "https://dora.dev/guides/dora-metrics/" },
+        { kind: "read", label: "Pragmatic Engineer: Dr. Nicole Forsgren on measuring productivity honestly", url: "https://newsletter.pragmaticengineer.com/p/developer-productivity-with-dr-nicole" },
     ],
     quiz: [
       "What improved, by how much, and over what period?",
@@ -911,8 +911,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "14-retro/retro.md",
     reviewerChecks: "Actions are owned and dated; the experiment has a number attached to success; peer names are recorded.",
     resources: [
-        { kind: "use", label: "Atlassian Team Playbook — retrospective play, run it exactly as written", url: "https://www.atlassian.com/team-playbook/plays/retrospective" },
-        { kind: "use", label: "Retromat — retrospective formats, for choosing one that fits the week you had", url: "https://retromat.org/en/" },
+        { kind: "use", label: "Atlassian Team Playbook: retrospective play, run it exactly as written", url: "https://www.atlassian.com/team-playbook/plays/retrospective" },
+        { kind: "use", label: "Retromat: retrospective formats, for choosing one that fits the week you had", url: "https://retromat.org/en/" },
     ],
     quiz: [
       "What is your improvement experiment, and what number means it worked?",
@@ -936,7 +936,7 @@ export const pmCurriculum: PmDay[] = [
     ],
     concepts: [
       "Case study structure: context, constraint, decision, outcome, learning",
-      "How recruiters actually scan — the first 15 seconds",
+      "How recruiters actually scan: the first 15 seconds",
       "Evidence density: linking every claim to an artifact",
       "Publishing the repo as a readable site, and artifact hygiene",
     ],
@@ -949,9 +949,9 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Live portfolio URL and case-study.md",
     reviewerChecks: "Site is live; every quantitative claim links to an artifact; no employer-identifying data anywhere.",
     resources: [
-        { kind: "read", label: "GitHub — README guides, for an index recruiters can scan", url: "https://github.com/readme/guides" },
-        { kind: "use", label: "GitHub Pages quickstart — publish the portfolio today", url: "https://docs.github.com/en/pages/quickstart" },
-        { kind: "use", label: "LinkedIn Help — editing your profile headline and About section", url: "https://www.linkedin.com/help/linkedin/answer/a507508" },
+        { kind: "read", label: "GitHub: README guides, for an index recruiters can scan", url: "https://github.com/readme/guides" },
+        { kind: "use", label: "GitHub Pages quickstart: publish the portfolio today", url: "https://docs.github.com/en/pages/quickstart" },
+        { kind: "use", label: "LinkedIn Help: editing your profile headline and About section", url: "https://www.linkedin.com/help/linkedin/answer/a507508" },
     ],
     quiz: [
       "Paste your live portfolio URL.",
@@ -990,7 +990,7 @@ export const pmCurriculum: PmDay[] = [
     resources: [
         { kind: "watch", label: "STAR Method Interview Questions & Answers (CareerVidz)", url: "https://www.youtube.com/watch?v=sduvSv-yFFQ" },
         { kind: "watch", label: "Top 10 Behavioural Interview Questions & Answers (CareerVidz)", url: "https://www.youtube.com/watch?v=05FLJ8JBhBI" },
-        { kind: "read", label: "The Muse — the STAR interview method, with worked examples", url: "https://www.themuse.com/advice/star-interview-method" },
+        { kind: "read", label: "The Muse: the STAR interview method, with worked examples", url: "https://www.themuse.com/advice/star-interview-method" },
     ],
     quiz: [
       "Which failure story did you write, and what did you change afterwards?",
@@ -1028,7 +1028,7 @@ export const pmCurriculum: PmDay[] = [
     reviewerChecks: "Timings are logged; self-scores are honest against the rubric; rewrites show a structural change, not new adjectives.",
     resources: [
         { kind: "watch", label: "17+ Project Manager Interview Questions and Answers (CareersTalk, 2026)", url: "https://www.youtube.com/watch?v=zWRO1wKt2lA" },
-        { kind: "read", label: "Indeed — 41 project manager interview questions with sample answers", url: "https://www.indeed.com/career-advice/interviewing/project-manager-interview-questions" },
+        { kind: "read", label: "Indeed: 41 project manager interview questions with sample answers", url: "https://www.indeed.com/career-advice/interviewing/project-manager-interview-questions" },
     ],
     quiz: [
       "Which question scored lowest, and what was missing?",
@@ -1056,12 +1056,12 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Submitted artifacts plus your defence recording",
     reviewerChecks: "Presentations that describe activity rather than decisions. The panel asks 'what did you decide?' until it gets an answer.",
     resources: [
-        { kind: "prep", label: "GitHub — README guides, because the panel opens your repo first", url: "https://github.com/readme/guides" },
-        { kind: "prep", label: "Indeed — project manager interview questions, for the Q&A half", url: "https://www.indeed.com/career-advice/interviewing/project-manager-interview-questions" },
+        { kind: "prep", label: "GitHub: README guides, because the panel opens your repo first", url: "https://github.com/readme/guides" },
+        { kind: "prep", label: "Indeed: project manager interview questions, for the Q&A half", url: "https://www.indeed.com/career-advice/interviewing/project-manager-interview-questions" },
     ],
     quiz: [
       "Show me the risk you got wrong, and what it cost.",
-      "This number is an estimate — where does the measured version come from?",
+      "This number is an estimate: where does the measured version come from?",
       "If we removed AI from this process entirely, how much of your improvement remains?",
     ],
   },
@@ -1085,8 +1085,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Interview recording and written feedback",
     reviewerChecks: "Scored on the same five-criterion rubric as the assessments.",
     resources: [
-        { kind: "prep", label: "Indeed — 41 project manager interview questions with sample answers", url: "https://www.indeed.com/career-advice/interviewing/project-manager-interview-questions" },
-        { kind: "prep", label: "Atlassian — agile estimation, the most common method question", url: "https://www.atlassian.com/agile/project-management/estimation" },
+        { kind: "prep", label: "Indeed: 41 project manager interview questions with sample answers", url: "https://www.indeed.com/career-advice/interviewing/project-manager-interview-questions" },
+        { kind: "prep", label: "Atlassian: agile estimation, the most common method question", url: "https://www.atlassian.com/agile/project-management/estimation" },
     ],
     quiz: [],
   },
@@ -1110,8 +1110,8 @@ export const pmCurriculum: PmDay[] = [
     deliverable: "Interview recording and written feedback",
     reviewerChecks: "Scored on the same five-criterion rubric as the assessments.",
     resources: [
-        { kind: "prep", label: "The Muse — STAR method, for the behavioural half", url: "https://www.themuse.com/advice/star-interview-method" },
-        { kind: "prep", label: "CareerVidz — behavioural questions and answers", url: "https://www.youtube.com/watch?v=05FLJ8JBhBI" },
+        { kind: "prep", label: "The Muse: STAR method, for the behavioural half", url: "https://www.themuse.com/advice/star-interview-method" },
+        { kind: "prep", label: "CareerVidz: behavioural questions and answers", url: "https://www.youtube.com/watch?v=05FLJ8JBhBI" },
     ],
     quiz: [],
   },
