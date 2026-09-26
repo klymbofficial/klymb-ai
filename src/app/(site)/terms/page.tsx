@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { pricing } from "@/data/config";
-import { entity, grievance } from "@/data/legal";
+import { entity, grievance, entityRows } from "@/data/legal";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -18,15 +18,7 @@ export default function TermsPage() {
     >
       <Section n="1." title="Who you are contracting with">
         <Facts
-          rows={[
-            ["Brand", entity.brand],
-            ["Registered entity", entity.registeredName],
-            ["Entity type", entity.entityType],
-            ["Proprietor", entity.proprietor],
-            ["Udyam registration", entity.udyamNumber],
-            ["Registered address", entity.address],
-            ["Contact", grievance.email],
-          ]}
+          rows={entityRows}
         />
       </Section>
 

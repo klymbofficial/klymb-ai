@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { contact, socials } from "@/data/config";
-import { entity, grievance } from "@/data/legal";
+import { entity, grievance, entityRows } from "@/data/legal";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Entity details and grievance contact for Klymb.ai, operated by BIGBETS.AI.",
+  description: "Entity details and grievance contact for Klymb.ai, a brand of Creators Enterprises Private Limited.",
 };
 
 export default function ContactPage() {
@@ -31,19 +31,7 @@ export default function ContactPage() {
 
       <Section n="2." title="Entity details">
         <Facts
-          rows={[
-            ["Brand", entity.brand],
-            ["Registered entity", entity.registeredName],
-            ["Entity type", entity.entityType],
-            ["Enterprise scale", entity.enterpriseScale],
-            ["Major activity", entity.majorActivity],
-            ["Industry (NIC)", entity.nic],
-            ["Proprietor", entity.proprietor],
-            ["Udyam registration number", entity.udyamNumber],
-            ["Udyam registration date", entity.udyamDate],
-            ["Date of incorporation", entity.incorporationDate],
-            ["Registered address", entity.address],
-          ]}
+          rows={entityRows}
         />
       </Section>
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { cohort } from "@/data/config";
-import { dataPoints, entity, grievance } from "@/data/legal";
+import { dataPoints, entity, grievance, entityRows } from "@/data/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -15,21 +15,9 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       intro="How we collect, use, share and protect your personal data — written around what this product actually does, and India's Digital Personal Data Protection Act, 2023."
     >
-      <Section n="1." title="Who we are" plain="Klymb.ai is run by BIGBETS.AI, a sole proprietorship. We decide why and how your data is used, which makes us the Data Fiduciary. Suman Shukla is the person to contact.">
+      <Section n="1." title="Who we are" plain="Klymb.ai is run by Creators Enterprises Private Limited. We decide why and how your data is used, which makes us the Data Fiduciary. Our Grievance Officer, below, is the person to contact.">
         <Facts
-          rows={[
-            ["Brand", entity.brand],
-            ["Registered entity", entity.registeredName],
-            ["Entity type", entity.entityType],
-            ["Enterprise scale", entity.enterpriseScale],
-            ["Major activity", entity.majorActivity],
-            ["Industry (NIC)", entity.nic],
-            ["Proprietor", entity.proprietor],
-            ["Udyam registration", `${entity.udyamNumber} (registered ${entity.udyamDate})`],
-            ["Date of incorporation", entity.incorporationDate],
-            ["Registered address", entity.address],
-            ["Contact", grievance.email],
-          ]}
+          rows={entityRows}
         />
         <h3>Grievance Officer</h3>
         <Facts
