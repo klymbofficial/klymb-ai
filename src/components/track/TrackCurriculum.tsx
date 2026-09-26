@@ -33,7 +33,7 @@ export function TrackCurriculum({ track, compact = false }: { track: Track; comp
               {week.challenges.map((c) => (
                 <li key={c.day} className="grid gap-1 rounded-lg px-3 py-3 odd:bg-surface/40 sm:grid-cols-[5.5rem_1fr]">
                   <span className="text-sm font-extrabold text-muted nums">Day {c.day}</span>
-                  <span className="text-sm"><span className="font-bold">{c.title}</span><span className="text-muted"> — {c.problem}</span></span>
+                  <span className="text-sm"><span className="font-bold">{c.title}</span><span className="text-muted">: {c.problem}</span></span>
                 </li>
               ))}
               <li className="mt-2 grid gap-1 rounded-xl bg-red-tint px-3 py-4 sm:grid-cols-[5.5rem_1fr]">

@@ -1,5 +1,5 @@
 /**
- * Rows with a count and a proportional share bar — the "countries in detail"
+ * Rows with a count and a proportional share bar: the "countries in detail"
  * shape, reused for any breakdown where the share matters more than the rank.
  */
 export function ShareTable({

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
-import { pricing } from "@/data/config";
 import { entity, grievance, entityRows } from "@/data/legal";
+import { priceFrom, priceTo } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -51,8 +51,9 @@ export default function TermsPage() {
 
       <Section n="5." title="Fees and refunds" plain="One fee per track. Finish everything and you get all of it back.">
         <p>
-          The current fee is {formatINR(pricing.launchPrice)} for one track, one cohort. Complete the programme and we
-          refund it in full — the conditions are in the <Link href="/refund-policy">Refund Policy</Link>, which forms part
+          The fee is for one track and one cohort, and depends on the track: from {formatINR(priceFrom)} to{" "}
+          {formatINR(priceTo)}, shown on each track&apos;s page and before you pay. Complete the programme and we
+          refund it in full. The conditions are in the <Link href="/refund-policy">Refund Policy</Link>, which forms part
           of these terms.
         </p>
       </Section>
@@ -63,14 +64,14 @@ export default function TermsPage() {
           programme: reviewing and scoring, giving feedback, and showing it to your reviewer and administrators.
         </p>
         <p>
-          Links you submit must be your own — your GitHub account, your LinkedIn posts. Submitting someone else&apos;s work
+          Links you submit must be your own: your GitHub account, your LinkedIn posts. Submitting someone else&apos;s work
           as yours ends your place without refund.
         </p>
       </Section>
 
       <Section n="7." title="Honest work and AI use" plain="Use AI. Say so. Be able to defend everything you submit.">
         <p>
-          You may use AI tools throughout the programme — that is part of what is taught. You must disclose that use in
+          You may use AI tools throughout the programme: that is part of what is taught. You must disclose that use in
           your log, and you must be able to explain any submission in your own words. Undisclosed AI use, fabricated
           evidence and invented numbers presented as measured are treated as dishonesty.
         </p>
@@ -105,7 +106,7 @@ export default function TermsPage() {
       <Section n="11." title="Service availability" plain="We aim to keep it running; we cannot promise perfection.">
         <p>
           The service is provided as is. We do not warrant uninterrupted or error-free operation. We will restore service
-          as quickly as we reasonably can, and if an outage costs you a submission deadline, tell your reviewer — nobody
+          as quickly as we reasonably can, and if an outage costs you a submission deadline, tell your reviewer: nobody
           loses a refund because our site was down.
         </p>
       </Section>

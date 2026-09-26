@@ -36,7 +36,7 @@ export const LIMITS = {
  * Validates a registration.
  *
  * Free-text fields are length-capped and the choice fields are checked against
- * the same allowlists the form offers — a hand-crafted POST cannot invent a
+ * the same allowlists the form offers: a hand-crafted POST cannot invent a
  * track or a role.
  */
 export function validateRegistration(d: RegistrationData): RegistrationErrors {

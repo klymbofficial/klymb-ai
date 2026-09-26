@@ -101,7 +101,7 @@ export const evidence: Evidence[] = [
 export const howItWorks = [
   { title: "Choose a track", body: "Pick one of five roles. Everything after this is specific to it." },
   { title: "Solve a daily workplace problem", body: "One realistic problem a day, the kind the role actually faces." },
-  { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28 — scored, with feedback." },
+  { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28: scored, with feedback." },
   { title: "Build role-specific evidence", body: "Your work becomes a portfolio piece you can walk through." },
   { title: "Prepare for interviews", body: "Role-specific questions, frameworks and practice answers." },
   { title: "Complete mock interviews", body: "Days 29 and 30: realistic interviews with feedback." },
@@ -172,7 +172,7 @@ export const faqs: Faq[] = [
   {
     question: "Is employment guaranteed?",
     answer:
-      "No. Klymb.ai does not guarantee a job, placement or salary. The program is designed to build practical ability, evidence and interview readiness — outcomes depend on you and the job market.",
+      "No. Klymb.ai does not guarantee a job, placement or salary. The program is designed to build practical ability, evidence and interview readiness: outcomes depend on you and the job market.",
   },
   {
     question: "What is included in the price?",
@@ -182,7 +182,7 @@ export const faqs: Faq[] = [
   {
     question: "What is the refund policy?",
     answer:
-      "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both mock interviews attended — the full conditions are on the Refund Policy page.",
+      "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both mock interviews attended: the full conditions are on the Refund Policy page.",
   },
 ];
 

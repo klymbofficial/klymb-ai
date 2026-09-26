@@ -96,7 +96,7 @@ async function AnalyticsBody({ params }: { params: Params }) {
               </span>
               <Radio size={15} aria-hidden="true" className="text-muted" />
               <p className="text-sm">
-                <strong className="nums text-lg">{realtime?.active ?? "—"}</strong>{" "}
+                <strong className="nums text-lg">{realtime?.active ?? "-"}</strong>{" "}
                 <span className="text-muted">on the site in the last 30 minutes</span>
                 {realtime && realtime.byCountry.length > 0 && (
                   <span className="text-muted"> · {realtime.byCountry.slice(0, 3).map((c) => `${c.label} ${c.value}`).join(", ")}</span>
@@ -123,7 +123,7 @@ async function AnalyticsBody({ params }: { params: Params }) {
             <ConversionTile label="Registrations (GA)" value={analytics.conversions.registrations} hint="register_submit events in range" />
             <ConversionTile
               label="Visitor → registration"
-              value={visitors ? `${((analytics.conversions.registrations / visitors) * 100).toFixed(1)}%` : "—"}
+              value={visitors ? `${((analytics.conversions.registrations / visitors) * 100).toFixed(1)}%` : "-"}
               hint={`${analytics.conversions.registrations} of ${visitors.toLocaleString("en-IN")} visitors`}
               accent
             />
@@ -172,13 +172,13 @@ async function AnalyticsBody({ params }: { params: Params }) {
                 label: "Acquisition",
                 content: (
                   <div className="grid gap-6 lg:grid-cols-2">
-                    <Panel title="Channels" note="The channel behind each visit — search, social, direct or referral.">
+                    <Panel title="Channels" note="The channel behind each visit: search, social, direct or referral.">
                       <BarList rows={analytics.channels} unit="sessions" />
                     </Panel>
                     <Panel title="Source / medium" note="Exactly where a visit came from. UTM-tagged links show up here by name.">
                       <BarList rows={analytics.sourceMedium} unit="sessions" />
                     </Panel>
-                    <Panel title="Landing pages" note="The first page of each visit — what brought people in." className="lg:col-span-2">
+                    <Panel title="Landing pages" note="The first page of each visit: what brought people in." className="lg:col-span-2">
                       <ShareTable columns={["Landing page", "Sessions"]} shareOf={0} rows={analytics.landingPages.map((r) => ({ label: r.label, values: [r.value] }))} />
                     </Panel>
                   </div>
@@ -251,7 +251,7 @@ async function AnalyticsBody({ params }: { params: Params }) {
           />
 
           <p className="text-xs text-muted">
-            GA counts only visitors whose browser ran the script, so it undercounts anyone using a blocker — which is why
+            GA counts only visitors whose browser ran the script, so it undercounts anyone using a blocker: which is why
             registrations are shown both from GA and from your own database. The database number is exact.
           </p>
         </div>

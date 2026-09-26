@@ -20,8 +20,8 @@ export default function TracksPage() {
           </Appear>
           <Appear delay={0.16}>
             <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-muted sm:text-base">
-              Every track follows the same 30-day structure — a real workplace problem each day, four defended checkpoints and
-              two mock interviews — with problems, projects and interview questions specific to that role.
+              Every track follows the same 30-day structure: a real workplace problem each day, four defended checkpoints and
+              two mock interviews: with problems, projects and interview questions specific to that role.
             </p>
           </Appear>
         </div>

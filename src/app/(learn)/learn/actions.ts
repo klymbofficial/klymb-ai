@@ -19,7 +19,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
 
   if (!Number.isInteger(day) || day < 1 || day > 30) return { ok: false, message: "That is not a valid day." };
   if (rawUrl && !url) {
-    return { ok: false, message: "Enter a full link starting with https://, under 500 characters — or leave it blank." };
+    return { ok: false, message: "Enter a full link starting with https://, under 500 characters: or leave it blank." };
   }
   // A quiz-only submit is valid: the answers are the work for that step.
   let quizAnswers: string[] | null = null;
@@ -53,7 +53,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   if (ownershipError) return { ok: false, message: ownershipError };
 
   if (LINKEDIN_POST_DAYS.includes(day) && !linkedinPost && !submissionExists(state.submissions, day)) {
-    return { ok: false, message: "This checkpoint needs your LinkedIn post link as well — it is part of the evidence." };
+    return { ok: false, message: "This checkpoint needs your LinkedIn post link as well: it is part of the evidence." };
   }
 
   const supabase = createServiceClient();

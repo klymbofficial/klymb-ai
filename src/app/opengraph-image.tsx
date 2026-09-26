@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { cohort, pricing } from "@/data/config";
+import { cohort } from "@/data/config";
+import { priceFrom } from "@/data/tracks";
 import { formatDate, formatINR } from "@/lib/format";
 
 /**
@@ -9,7 +10,7 @@ import { formatDate, formatINR } from "@/lib/format";
  * Rendered once at build time; the date and price come from config, so the
  * card cannot drift from the site.
  */
-export const alt = "Klymb.ai — Become Job-Ready in 30 Days";
+export const alt = "Klymb.ai | Become Job-Ready in 30 Days";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -44,7 +45,7 @@ export default async function Image() {
           <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 24, fontWeight: 500, color: MUTED }}>
             <span>Next cohort {formatDate(cohort.startDate)}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
-            <span>{formatINR(pricing.launchPrice)}</span>
+            <span>From {formatINR(priceFrom)}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
             <span>www.klymb.ai</span>
           </div>

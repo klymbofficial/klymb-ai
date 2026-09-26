@@ -15,7 +15,7 @@
   --color-red: #e22e1b;
   --color-red-strong: #e22e1b;
   --color-red-deep: #e22e1b;
-  /* The same hue, 8% darker — only for hover and press on filled red. */
+  /* The same hue, 8% darker: only for hover and press on filled red. */
   --color-red-press: #be2717;
   --color-red-tint: #fff2ef;
   --color-card: #ffffff;

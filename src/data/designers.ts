@@ -1,13 +1,13 @@
 /**
  * ─────────────────────────────────────────────────────────────
- *  WHO DESIGNED THIS — real people only
+ *  WHO DESIGNED THIS: real people only
  * ─────────────────────────────────────────────────────────────
  *
  * Every entry is a public claim about a named person and their employer.
  * Before adding anyone, you need all four of these:
  *   1. their name and exact title
  *   2. what they actually did on THIS program (designed / reviewed /
- *      advises / runs mock interviews) — say the true one, not the biggest one
+ *      advises / runs mock interviews): say the true one, not the biggest one
  *   3. their explicit consent to be named publicly alongside their employer
  *   4. `current: false` if the role is past ("ex-Google", not "at Google")
  *
@@ -29,7 +29,7 @@ export interface Designer {
 }
 
 export const designers: Designer[] = [
-  // Example of the shape — delete this comment block and add real, consented entries:
+  // Example of the shape: delete this comment block and add real, consented entries:
   // {
   //   name: "Priya Nair",
   //   title: "Senior Engineering Program Manager",

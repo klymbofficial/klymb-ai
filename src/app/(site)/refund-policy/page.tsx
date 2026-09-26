@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, Section } from "@/components/legal/LegalPage";
-import { pricing } from "@/data/config";
 import { grievance, refund } from "@/data/legal";
+import { priceFrom, priceTo } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -16,10 +16,10 @@ export default function RefundPolicyPage() {
       title="Refund Policy"
       intro={refund.headline}
     >
-      <Section n="1." title="The guarantee" plain="Finish the programme and your fee comes back in full. Not most of it — all of it.">
+      <Section n="1." title="The guarantee" plain="Finish the programme and your fee comes back in full. Not most of it: all of it.">
         <p>
-          If you complete the 30-day cohort, we refund <strong>100% of the fee you paid</strong> — currently{" "}
-          {formatINR(pricing.launchPrice)}. The guarantee exists because the programme only works if you do the work, and
+          If you complete the 30-day cohort, we refund <strong>100% of the fee you paid</strong>: currently{" "}
+          are priced from {formatINR(priceFrom)} to {formatINR(priceTo)}). The guarantee exists because the programme only works if you do the work, and
           we would rather be paid by people who did not finish than keep money from people who did.
         </p>
         <p>
@@ -54,8 +54,8 @@ export default function RefundPolicyPage() {
 
       <Section n="6." title="If we cancel" plain="If we postpone or cancel your cohort, you choose: move to the next one, or take a full refund.">
         <p>
-          If we do not run a cohort you have paid for — because it is postponed, cancelled, or does not reach the minimum
-          size — you may move your place to the next cohort or take a full refund, whichever you prefer. Tell us which and
+          If we do not run a cohort you have paid for: because it is postponed, cancelled, or does not reach the minimum
+          size: you may move your place to the next cohort or take a full refund, whichever you prefer. Tell us which and
           we will process it within 14 working days.
         </p>
       </Section>
@@ -73,7 +73,7 @@ export default function RefundPolicyPage() {
         </p>
       </Section>
 
-      <Section n="8." title="What this is not" plain="A job guarantee. Finishing gets your money back — it does not get you hired.">
+      <Section n="8." title="What this is not" plain="A job guarantee. Finishing gets your money back: it does not get you hired.">
         <p>
           This refund is tied to your completion of the programme and nothing else. Klymb.ai does not guarantee
           employment, interviews, placement or any salary outcome, and no refund is owed on the basis of a job search result.

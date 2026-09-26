@@ -4,7 +4,7 @@ export interface SeriesDef<T> {
   label: string;
   color: string;
   fill?: string;
-  /** Reads this series' value out of a point — typed, so no key lookups. */
+  /** Reads this series' value out of a point: typed, so no key lookups. */
   get: (point: T) => number;
 }
 
@@ -21,7 +21,7 @@ export function AreaLineChart<T extends { date: string }>({
   caption: string;
 }) {
   if (points.length < 2) {
-    return <p className="py-10 text-center text-sm text-muted">Not enough data yet — this fills in as days pass.</p>;
+    return <p className="py-10 text-center text-sm text-muted">Not enough data yet: this fills in as days pass.</p>;
   }
 
   const W = 800;

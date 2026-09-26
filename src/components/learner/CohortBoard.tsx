@@ -34,7 +34,7 @@ function formatLong(iso: string) {
  * The learner's whole cohort on one surface: a calendar of the 30 days, the
  * day list, and the detail of whichever day is selected.
  *
- * Selecting a day is local state — nothing is saved until they open the day
+ * Selecting a day is local state: nothing is saved until they open the day
  * itself, so a learner can look ahead without changing anything.
  */
 export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay: number }) {
@@ -208,7 +208,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
           <Fact
             icon="◎"
             label="Status"
-            value={active.submitted ? "Submitted" : active.kind === "assessment" ? "Assessment — not yet submitted" : "Not yet submitted"}
+            value={active.submitted ? "Submitted" : active.kind === "assessment" ? "Assessment: not yet submitted" : "Not yet submitted"}
           />
         </dl>
 

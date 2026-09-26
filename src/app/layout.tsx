@@ -14,22 +14,22 @@ const description =
   "A 30-day job-readiness program with five career tracks: QA Engineer, L1/L2 Support, Project Manager, Junior Developer and Reporting Analyst.";
 
 export const metadata: Metadata = {
-  // Makes every relative URL in metadata — the preview image above all — absolute on the real domain.
+  // Makes every relative URL in metadata, the preview image above all, absolute on the real domain.
   metadataBase: new URL(site.url),
-  title: { default: "Klymb.ai — Become Job-Ready in 30 Days", template: "%s — Klymb.ai" },
+  title: { default: "Klymb.ai | Become Job-Ready in 30 Days", template: "%s | Klymb.ai" },
   description,
   applicationName: "Klymb.ai",
   openGraph: {
     type: "website",
     siteName: "Klymb.ai",
     locale: "en_IN",
-    title: "Klymb.ai — Become Job-Ready in 30 Days",
+    title: "Klymb.ai | Become Job-Ready in 30 Days",
     description,
   },
   twitter: {
     card: "summary_large_image",
     site: "@KlymbAI",
-    title: "Klymb.ai — Become Job-Ready in 30 Days",
+    title: "Klymb.ai | Become Job-Ready in 30 Days",
     description,
   },
 };

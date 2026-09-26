@@ -51,7 +51,7 @@ export interface Kpi {
   delta: number | null;
   hint: string;
   format: "number" | "duration" | "percent";
-  /** Lower is better — a rise shows red rather than green. */
+  /** Lower is better: a rise shows red rather than green. */
   inverse?: boolean;
   /** Which daily series draws this tile's sparkline, if any. */
   spark?: SparkKey;
@@ -253,7 +253,7 @@ const fetchDashboard = unstable_cache(
           ...scoped,
         }),
         breakdown("eventName", "eventCount", 15),
-        // People, not events, per event — a funnel has to count the same unit at every step.
+        // People, not events, per event: a funnel has to count the same unit at every step.
         breakdown("eventName", "totalUsers", 25),
         breakdown("country", "totalUsers", 50, true),
         breakdown("deviceCategory", "sessions", 5, true),
@@ -375,7 +375,7 @@ export async function getAnalyticsDashboard(days = 30, filters: Filters = {}): P
 
 /**
  * Visitors on the site right now (GA's realtime window is the last 30
- * minutes). Cached for a minute — realtime has its own, tighter quota.
+ * minutes). Cached for a minute: realtime has its own, tighter quota.
  */
 const fetchRealtime = unstable_cache(
   async (): Promise<{ active: number; byCountry: Breakdown[] } | null> => {

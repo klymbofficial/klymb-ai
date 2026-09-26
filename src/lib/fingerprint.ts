@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 /**
  * A stable, salted hash of the caller's IP.
  *
- * Throttling needs to recognise a repeat caller, not identify a person — so the
+ * Throttling needs to recognise a repeat caller, not identify a person: so the
  * raw address is never stored. With a secret salt the stored value cannot be
  * reversed by hashing candidate addresses.
  */

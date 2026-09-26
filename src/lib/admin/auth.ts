@@ -13,7 +13,7 @@ export interface AdminSession {
 /**
  * Data Access Layer: every admin read goes through here.
  *
- * Admin status is read from admin_users on each request — never from an env
+ * Admin status is read from admin_users on each request: never from an env
  * list and never cached in the session token, so revoking a row takes effect
  * immediately and there is only one authority.
  *

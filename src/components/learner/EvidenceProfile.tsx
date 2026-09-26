@@ -17,7 +17,7 @@ export function EvidenceProfile({
       <p className="mt-2 text-sm text-muted">
         {complete
           ? "Every link you submit is checked against these, so nothing in your portfolio can belong to someone else."
-          : "Add these before your first submission. Paste the full profile links — we read the account name from them."}
+          : "Add these before your first submission. Paste the full profile links: we read the account name from them."}
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">

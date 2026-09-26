@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-/** Ranked horizontal bars — the clearest form for "which of these is biggest". */
+/** Ranked horizontal bars: the clearest form for "which of these is biggest". */
 export function BarList({
   rows, unit, emptyLabel = "No data yet.",
 }: {

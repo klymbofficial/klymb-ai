@@ -8,7 +8,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
  * The identity the whole app authorises against.
  *
  * Returns null unless the provider verified the address. An unverified claim
- * is an assertion by whoever controls the account, not proof of the mailbox —
+ * is an assertion by whoever controls the account, not proof of the mailbox:
  * and admin access is granted by email, so an unverified one would be enough
  * to walk in.
  */

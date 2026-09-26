@@ -24,7 +24,7 @@ export function DayGrid({ days, submitted }: { days: DayEntry[]; submitted: numb
             <Link
               href={`/learn/day/${d.day}`}
               title={label}
-              aria-label={`Day ${d.day}: ${label}${isDone ? " — submitted" : ""}`}
+              aria-label={`Day ${d.day}: ${label}${isDone ? ": submitted" : ""}`}
               className={clsx(
                 "flex aspect-square flex-col items-center justify-center border-2 text-sm font-extrabold transition-colors",
                 isDone

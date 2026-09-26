@@ -96,7 +96,7 @@ export default async function LearnerDetailPage({ params }: { params: Promise<{ 
                             {s.quiz_answers.map((a, i) => (
                               <li key={i}>
                                 <span className="block text-xs font-semibold text-muted">{day?.quiz[i] ?? `Question ${i + 1}`}</span>
-                                <span className="whitespace-pre-wrap">{a || "—"}</span>
+                                <span className="whitespace-pre-wrap">{a || "-"}</span>
                               </li>
                             ))}
                           </ol>

@@ -59,7 +59,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track }: Succe
       <p id="register-success-title" className="display mt-7 text-[2.6rem] text-white">{enrolled || track?.available ? "You're in." : "Interest registered."}</p>
 
       <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-white/80">
-        {duplicate && <p>You had already registered with this email — nothing was duplicated.</p>}
+        {duplicate && <p>You had already registered with this email: nothing was duplicated.</p>}
 
         {enrolled ? (
           <>

@@ -49,6 +49,8 @@ export interface Track {
    * open before the content is ready.
    */
   contentLive: boolean;
+  /** Launch price in rupees for this track. Tracks are priced ₹2,000 apart. */
+  price: number;
   /** Where the role is heading in AI-native teams */
   becomes: string;
   description: string;

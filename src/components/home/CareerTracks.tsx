@@ -4,7 +4,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { TrackGrid } from "@/components/track/TrackGrid";
 
 /**
- * All five tracks at once, as cards — the same grid as /tracks. Each card
+ * All five tracks at once, as cards: the same grid as /tracks. Each card
  * leads to the track's own page, which carries the full 30 days.
  */
 export function CareerTracks() {

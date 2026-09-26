@@ -6,7 +6,7 @@ import Google from "next-auth/providers/google";
  *
  * Deliberately NOT here: any notion of "is this an admin". Admin status is
  * read from the database at request time (see src/lib/admin/auth.ts) so there
- * is exactly one authority — a token that outlives a revoked grant is the
+ * is exactly one authority: a token that outlives a revoked grant is the
  * classic way this goes wrong.
  */
 export default {

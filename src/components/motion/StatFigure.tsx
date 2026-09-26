@@ -16,7 +16,7 @@ export function StatFigure({ value, className }: { value: string; className?: st
   const hasNumber = match !== null;
   const target = match ? Number(match[2]) : 0;
   // Server and first client render must agree, and the server cannot know
-  // the motion preference — so everyone starts at 0 and the effect settles it.
+  // the motion preference: so everyone starts at 0 and the effect settles it.
   const [shown, setShown] = useState(hasNumber ? 0 : target);
 
   // Depend on primitives only. `match` is a fresh array every render, and

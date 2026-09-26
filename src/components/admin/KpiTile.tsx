@@ -11,7 +11,7 @@ function value(kpi: Kpi) {
 /** Figure, what it means, and how it moved against the previous window. */
 export function KpiTile({ kpi }: { kpi: Kpi }) {
   const rising = (kpi.delta ?? 0) > 0;
-  // For bounce rate, up is bad — the colour has to follow meaning, not direction.
+  // For bounce rate, up is bad: the colour has to follow meaning, not direction.
   const good = kpi.inverse ? !rising : rising;
 
   return (
