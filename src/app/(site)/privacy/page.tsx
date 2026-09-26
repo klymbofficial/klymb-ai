@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { cohort } from "@/data/config";
-import { dataPoints, entity, grievance, entityRows } from "@/data/legal";
+import { dataPoints, entityRows, grievance } from "@/data/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
