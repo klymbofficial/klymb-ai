@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { contact, socials } from "@/data/config";
-import { entity, grievance, entityRows } from "@/data/legal";
+import { entityRows, grievance } from "@/data/legal";
 
 export const metadata: Metadata = {
   title: "Contact",
