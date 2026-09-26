@@ -3,41 +3,59 @@
  *  ENTITY, GRIEVANCE AND POLICY DETAILS
  * ─────────────────────────────────────────────────────────────
  *
- * These are published legal identifications under India's Digital Personal
- * Data Protection Act 2023, the IT Rules 2021 and the Consumer Protection
- * (E-Commerce) Rules 2020. Taken from the Udyam Registration Certificate for
- * BIGBETS.AI (verified 17 September 2026).
+ * The legal identification India's Digital Personal Data Protection Act 2023,
+ * the IT Rules 2021 and the Consumer Protection (E-Commerce) Rules 2020 require
+ * a seller to publish. Klymb.ai is a brand of Creators Enterprises Private
+ * Limited, which also holds the account payments settle to — the seller named
+ * here must be the entity that receives the money.
  *
- * ⚠️ Anything marked `confirm` below is my best reading of what you told me —
- * check each one before you take a single payment.
+ * CIN, incorporation date, registered office and directors are from the
+ * company's public MCA record (looked up 26 September 2026).
+ *
+ * ⚠️ `confirm` marks what should be checked against the Certificate of
+ * Incorporation, or decided by the company, before the first payment.
  */
 
 export const entity = {
   brand: "Klymb.ai",
-  registeredName: "BIGBETS.AI",
-  entityType: "Sole Proprietorship (Proprietary)",
-  enterpriseScale: "Micro (Udyam)",
-  majorActivity: "Services",
-  nic: "62099 — Other information technology and computer service activities n.e.c.",
-  proprietor: "Suman Shukla",
-  udyamNumber: "UDYAM-UP-29-0250625",
-  udyamDate: "01 August 2026",
-  incorporationDate: "25 July 2026",
-  address: "Flat No. 803-A, Tower 2A, Panchsheel Wellington, Crossing Republic, Ghaziabad, Uttar Pradesh 201016, India",
+  registeredName: "Creators Enterprises Private Limited",
+  entityType: "Private Limited Company",
+  cin: "U72900UP2016PTC086187",
+  incorporationDate: "06 September 2016",
+  registrar: "Registrar of Companies, Kanpur",
+  directors: ["Tarun Kumar Singh", "Gayatri Singh"],
+  /** confirm: exactly as printed on the Certificate of Incorporation. */
+  address: "1605, Tower 3, Panchsheel Wellington, Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India",
+  /** confirm: add the GSTIN here once registered; it is shown wherever it is set. */
+  gstin: null as string | null,
 } as const;
 
+/** The same facts on every legal page, in one order, so they cannot drift apart. */
+export const entityRows: [string, string][] = [
+  ["Brand", entity.brand],
+  ["Registered entity", entity.registeredName],
+  ["Entity type", entity.entityType],
+  ["Corporate Identification Number (CIN)", entity.cin],
+  ["Date of incorporation", entity.incorporationDate],
+  ["Registered with", entity.registrar],
+  ["Directors", entity.directors.join(", ")],
+  ...(entity.gstin ? ([["GSTIN", entity.gstin]] as [string, string][]) : []),
+  ["Registered office", entity.address],
+];
+
 export const grievance = {
-  name: "Suman Shukla",
-  designation: "Proprietor and Grievance Officer",
-  email: "klymbofficial@gmail.com", // confirm: or team@abtalks.in / contact.bigbetsai@gmail.com
+  /** confirm: the company's choice of Grievance Officer — a director by default. */
+  name: "Tarun Kumar Singh",
+  designation: "Director and Grievance Officer",
+  email: "klymbofficial@gmail.com",
   address: entity.address,
   acknowledgeWithin: "24 hours",
   resolveWithin: "15 days",
 } as const;
 
 export const policyVersion = {
-  version: "2026-09-17",
-  effective: "17 September 2026",
+  version: "2026-09-26",
+  effective: "26 September 2026",
 } as const;
 
 /**
