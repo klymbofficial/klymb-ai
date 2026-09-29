@@ -8,7 +8,7 @@ export function TrackGrid({ compareHref = "#compare" }: { compareHref?: string }
     <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
       {tracks.map((t, i) => (
         <li key={t.slug}>
-          <Appear delay={(i % 3) * 0.06} className="h-full"><TrackCard track={t} index={i} /></Appear>
+          <Appear delay={(i % 3) * 0.06} className="h-full"><TrackCard track={t} /></Appear>
         </li>
       ))}
       <li>
@@ -17,7 +17,7 @@ export function TrackGrid({ compareHref = "#compare" }: { compareHref?: string }
           <p className="text-[15px] leading-relaxed text-white/70">
             Pick the role closest to the work you already do: your experience carries over. See all five side by side.
           </p>
-          <a href={compareHref} className="mt-2 inline-flex items-center gap-2 self-start rounded-lg bg-red-strong px-5 py-3 text-sm font-bold text-white hover:bg-red-press">
+          <a href={compareHref} className="mt-2 inline-flex items-center gap-2 self-start rounded-lg border-2 border-white/70 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-white hover:text-ink">
             Compare the tracks <span aria-hidden="true">↓</span>
           </a>
         </Appear>

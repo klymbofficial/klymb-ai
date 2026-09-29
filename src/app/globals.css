@@ -55,7 +55,7 @@ body {
   font-family: var(--font-heading);
   font-weight: 900;
   letter-spacing: -0.035em;
-  line-height: 0.95;
+  line-height: 1.02;
   font-feature-settings: "ss01";
 }
 
@@ -141,3 +141,21 @@ body {
 .ring-breathe:nth-child(2) { animation-delay: .8s; }
 .ring-breathe:nth-child(3) { animation-delay: 1.6s; }
 @media (prefers-reduced-motion: reduce) { .ring-breathe { animation: none; } }
+
+/* AI foundations glyphs: a slow flowing dash along the "data" lines. */
+@media (prefers-reduced-motion: no-preference) {
+  .ai-flow { stroke-dasharray: 5 5; animation: ai-flow 1.6s linear infinite; }
+  @keyframes ai-flow { to { stroke-dashoffset: -20; } }
+}
+
+/* Pointer spotlight (components/effects/Spotlight): a soft glow under the cursor. */
+.spotlight { position: relative; isolation: isolate; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .spotlight::after {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(226 46 27 / 0.1), transparent 45%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .spotlight-white::after { background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.09), transparent 45%); }
+  .spotlight:hover::after { opacity: 1; }
+}

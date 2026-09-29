@@ -3,13 +3,16 @@ import { hero } from "@/data/program";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Appear } from "@/components/motion/Appear";
+import { LightCanvas } from "@/components/effects/LightCanvas";
 import cohortPhoto from "@/assets/hero-cohort.png";
 
 export function Hero() {
   return (
     <section aria-labelledby="hero-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
-      <div className="card overflow-hidden rounded-slab shadow-float">
-        <div className="grid gap-10 p-8 pb-0 sm:p-12 sm:pb-0 lg:grid-cols-[1.05fr_1fr] lg:items-end lg:gap-6 lg:p-16 lg:pb-0">
+      <div className="card relative overflow-hidden rounded-slab shadow-float">
+        {/* A red light that leans towards the pointer; desktop only. */}
+        <LightCanvas mode="beam" />
+        <div className="relative grid gap-10 p-8 pb-0 sm:p-12 sm:pb-0 lg:grid-cols-[1.05fr_1fr] lg:items-end lg:gap-6 lg:p-16 lg:pb-0">
           <div className="lg:pb-16">
             <Appear><Eyebrow>{hero.eyebrow}</Eyebrow></Appear>
             <h1 id="hero-title" className="display mt-6 text-[clamp(2.75rem,6.5vw,4.75rem)]">

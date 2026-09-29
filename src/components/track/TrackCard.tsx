@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Spotlight } from "@/components/effects/Spotlight";
 import { trackImages } from "@/data/track-images";
 import { formatINR } from "@/lib/format";
 import type { Track } from "@/types/program";
 
-export function TrackCard({ track, index }: { track: Track; index: number }) {
+export function TrackCard({ track }: { track: Track }) {
   const image = trackImages[track.slug];
 
   return (
+    <Spotlight className="h-full rounded-card">
     <article className="card group flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-float">
       <div className="relative aspect-[16/9] overflow-hidden bg-surface">
         <Image
@@ -19,8 +21,7 @@ export function TrackCard({ track, index }: { track: Track; index: number }) {
           className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-        <span className="display absolute bottom-3 left-5 text-4xl text-white nums drop-shadow-sm">{String(index + 1).padStart(2, "0")}</span>
-        <span className="absolute top-4 right-4 rounded-full bg-white/95 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-red-deep shadow-card">
+        <span className="absolute top-4 right-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep shadow-card">
           {track.contentLive ? "Day 1 open now" : "Enrolling now"}
         </span>
       </div>
@@ -31,24 +32,23 @@ export function TrackCard({ track, index }: { track: Track; index: number }) {
         <p className="mt-3 text-[15px] leading-relaxed text-muted">{track.description}</p>
       </div>
       <ul className="flex flex-wrap gap-1.5">
-        {track.skills.slice(0, 5).map((s) => (
+        {track.skills.slice(0, 3).map((s) => (
           <li key={s} className="rounded-md border border-line/40 px-2.5 py-1 text-xs font-semibold">{s}</li>
         ))}
       </ul>
-      <div className="mt-auto flex items-center justify-between gap-3">
+      <p className="mt-auto flex items-baseline gap-2 border-t border-line/25 pt-4">
+        <span className="text-lg font-extrabold nums">{formatINR(track.price)}</span>
+        <span className="text-xs font-semibold text-muted">100% back when you complete</span>
+      </p>
       <Link
         href={`/tracks/${track.slug}`}
-        className="inline-flex items-center gap-2 self-start rounded-lg bg-ink px-5 py-3 text-sm font-bold text-paper transition-colors group-hover:bg-red-strong"
+        className="-mt-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-strong px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-red-press"
       >
         Explore this track<span className="sr-only">: {track.name}</span>
         <svg className="transition-transform group-hover:translate-x-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
       </Link>
-        <p className="text-right leading-tight">
-          <span className="display block text-xl nums">{formatINR(track.price)}</span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted">100% back on completion</span>
-        </p>
-      </div>
       </div>
     </article>
+    </Spotlight>
   );
 }

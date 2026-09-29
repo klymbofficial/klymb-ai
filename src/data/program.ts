@@ -180,6 +180,11 @@ export const faqs: Faq[] = [
       "One career track with 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation and mock interviews.",
   },
   {
+    question: "Will you try to sell me another course?",
+    answer:
+      "No. There is no advanced program or mastermind to upsell. The track you pick is the whole product, and if you complete it the fee comes back.",
+  },
+  {
     question: "What is the refund policy?",
     answer:
       "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both mock interviews attended: the full conditions are on the Refund Policy page.",
@@ -209,3 +214,22 @@ export const footerLinks = {
 
 export const roleOptions = ["Student / graduate", "Manual tester", "Support executive", "Coordinator / PM", "Developer", "Analyst", "Career switcher", "Other"];
 export const experienceOptions = ["0–1 years", "1–3 years", "3–5 years", "5–8 years", "8+ years"];
+
+/** Why the fee comes back, said plainly. */
+export const whyRefund = {
+  title: "Why we give your money back.",
+  intro:
+    "Most online courses are paid for and never finished. We price the program so that finishing is the whole point.",
+  points: [
+    { title: "You pay to commit", body: "A fee makes you show up on Day 12 when motivation is low. Free programs are easy to abandon." },
+    { title: "You finish, you get it back", body: "Submit all 30 days, take the four assessments and attend both mock interviews. We refund 100% of the fee." },
+    { title: "We only win if you finish", body: "Your completion is what we show the next cohort. That is why every assessment gets individual feedback." },
+  ],
+  promises: [
+    "No upsell. There is no advanced course to pitch you at the end.",
+    "No hidden fees. The price on the track is the price you pay.",
+    "No invented seat counters or countdown timers.",
+    "Real people review your work, not only an automated grader.",
+  ],
+};
+

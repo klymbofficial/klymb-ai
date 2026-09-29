@@ -41,7 +41,7 @@ export function Accordion({ items, variant = "rule" }: { items: AccordionItem[];
                   transition={reduced ? { duration: 0 } : { duration: 0.25, ease: [0.2, 0.7, 0.3, 1] }}
                   className={
                     card
-                      ? "grid size-7 shrink-0 place-items-center rounded-full bg-red-strong text-lg leading-none font-black text-white"
+                      ? "grid size-7 shrink-0 place-items-center rounded-full bg-surface text-lg leading-none font-black text-ink"
                       : "shrink-0 text-2xl leading-none font-black text-red"
                   }
                 >
