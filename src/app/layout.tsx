@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
 import { MotionProvider } from "@/components/motion/MotionProvider";
-import { Archivo } from "next/font/google";
+import { Archivo, Inter } from "next/font/google";
 import { site } from "@/data/config";
 import "./globals.css";
 
@@ -9,6 +9,7 @@ import "./globals.css";
 const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 const description =
   "A 30-day job-readiness program with five career tracks: QA Engineer, L1/L2 Support, Project Manager, Junior Developer and Reporting Analyst.";
@@ -38,7 +39,7 @@ export const viewport: Viewport = { themeColor: "#f3f2f2" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${archivo.variable} antialiased`}>
+    <html lang="en" className={`${archivo.variable} ${inter.variable} antialiased`}>
       <body className="min-h-screen"><MotionProvider>{children}</MotionProvider></body>
       {gaId && <Analytics gaId={gaId} />}
     </html>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import * as motion from "motion/react-client";
 import { tracks } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
@@ -6,6 +7,10 @@ import { Pricing } from "@/components/home/Pricing";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { trackImages } from "@/data/track-images";
+// Photographs used only on the track pages; sources in src/assets/track-page/CREDITS.md.
+import teamPhoto from "@/assets/track-page/team-laptop.jpg";
+import presentingPhoto from "@/assets/track-page/presenting.jpg";
+import { InterviewPrep } from "./InterviewPrep";
 import { TrackCurriculum } from "./TrackCurriculum";
 
 function Check({ className = "text-red-strong" }: { className?: string }) {
@@ -21,7 +26,7 @@ function Heading({ id, eyebrow, title, intro, light }: { id?: string; eyebrow: s
   return (
     <div className="max-w-2xl">
       <Eyebrow tone={light ? "light" : "red"}>{eyebrow}</Eyebrow>
-      <h2 id={id} className="display mt-3 text-[clamp(1.75rem,3.6vw,2.6rem)] text-balance">{title}</h2>
+      <h2 id={id} className="display display-soft mt-3 text-[clamp(1.75rem,3.6vw,2.6rem)] text-balance">{title}</h2>
       {intro && <p className={`mt-3 text-[15px] leading-relaxed ${light ? "text-white/70" : "text-muted"}`}>{intro}</p>}
     </div>
   );
@@ -46,10 +51,10 @@ export function TrackDetail({ track }: { track: Track }) {
                 </div>
               </Appear>
               <Appear delay={0.08} y={24}>
-                <h1 id="track-title" className="display mt-5 text-[clamp(2.5rem,6vw,4.25rem)] text-balance">{track.name}</h1>
+                <h1 id="track-title" className="display display-soft mt-5 text-[clamp(2.5rem,6vw,4.25rem)] text-balance">{track.name}</h1>
               </Appear>
               <Appear delay={0.16}>
-                <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.14em] text-red-strong">→ {track.becomes}</p>
+                <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.14em] text-red-deep">→ {track.becomes}</p>
                 <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted sm:text-base">{track.description}</p>
               </Appear>
               <Appear delay={0.24} className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -80,7 +85,7 @@ export function TrackDetail({ track }: { track: Track }) {
                     <div key={label}>
                       <dt className="sr-only">{label}</dt>
                       <dd>
-                        <span className="display block text-3xl text-red-strong nums">{n}</span>
+                        <span className="display display-soft block text-3xl text-red-strong nums">{n}</span>
                         <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted">{label}</span>
                       </dd>
                     </div>
@@ -93,133 +98,149 @@ export function TrackDetail({ track }: { track: Track }) {
       </section>
 
       {/* ── What is changing: the red statement band ────────── */}
-      <section aria-labelledby="changing-title" className="bg-gradient-to-b from-red to-red-strong text-white">
+      <section aria-labelledby="changing-title" className="bg-linear-to-b from-red to-red-press text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-[1.4fr_1fr] lg:items-end">
           <Appear>
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/80">What&apos;s changing in this role</p>
-            <h2 id="changing-title" className="display mt-3 text-[clamp(1.35rem,2.6vw,2rem)] leading-snug">{track.whatsChanging}</h2>
+            <h2 id="changing-title" className="mt-3 text-[clamp(1.15rem,2vw,1.5rem)] leading-snug font-semibold tracking-tight">{track.whatsChanging}</h2>
           </Appear>
           <Appear delay={0.1}>
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/80">What you carry over</p>
             <ul className="mt-3 flex flex-wrap gap-2">
               {track.carryOver.map((c) => (
-                <li key={c} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold backdrop-blur">+ {c}</li>
+                <li key={c} className="rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium backdrop-blur">+ {c}</li>
               ))}
             </ul>
           </Appear>
         </div>
       </section>
 
-      {/* ── Who it is for · skills ──────────────────────────── */}
-      <section aria-labelledby="who-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Appear className="card h-full p-8 sm:p-10">
-            <Heading id="who-title" eyebrow="Who it is for" title="Built for people like you." />
-            <ul className="mt-7 space-y-3">
-              {track.whoItsFor.map((w) => (
-                <li key={w} className="flex gap-3 rounded-xl bg-surface/60 px-4 py-3 text-[15px] font-semibold">
-                  <span aria-hidden="true" className="text-red-strong">→</span>{w}
+      {/* ── Who it is for · skills: on the page ground, beside the cohort ── */}
+      <section aria-labelledby="who-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <Appear><Heading id="who-title" eyebrow="Who it is for" title="Built for people like you." /></Appear>
+            <ul className="mt-7 divide-y divide-line/25 border-y border-line/25">
+              {track.whoItsFor.map((w, i) => (
+                <li key={w}>
+                  <Appear delay={0.06 * i} y={8} className="flex items-center gap-3 py-3.5 text-[15px] font-medium">
+                    <span aria-hidden="true" className="text-red-strong">→</span>{w}
+                  </Appear>
                 </li>
               ))}
             </ul>
-          </Appear>
-          <Appear delay={0.08} className="card h-full p-8 sm:p-10">
-            <Heading eyebrow="Skills covered" title="What you will practise." />
-            <ul className="mt-7 flex flex-wrap gap-2">
-              {track.skills.map((s) => (
-                <li key={s} className="rounded-lg border border-line/40 bg-card px-3.5 py-2 text-sm font-bold shadow-card">{s}</li>
-              ))}
-            </ul>
+
+            <Appear delay={0.1} className="mt-10">
+              <Eyebrow>Skills covered</Eyebrow>
+              <h3 className="mt-2 text-xl font-bold">What you will practise.</h3>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {track.skills.map((sk) => (
+                  <li key={sk} className="rounded-full border border-line/40 bg-card/70 px-3.5 py-1.5 text-sm font-medium transition-colors hover:border-red-strong/50">{sk}</li>
+                ))}
+              </ul>
+            </Appear>
+          </div>
+
+          <Appear delay={0.15} y={24} className="relative">
+            <span aria-hidden="true" className="absolute -right-3 -bottom-3 hidden h-full w-full rounded-slab bg-red-tint lg:block" />
+            <Image
+              src={teamPhoto}
+              alt="A team gathered around a laptop, talking through a piece of work"
+              sizes="(min-width: 1024px) 40vw, 90vw"
+              className="relative aspect-[4/3] w-full rounded-slab object-cover shadow-float"
+            />
           </Appear>
         </div>
       </section>
 
       {/* ── The 30 days ─────────────────────────────────────── */}
       <section id="curriculum" aria-labelledby="curriculum-title" className="mx-auto max-w-7xl scroll-mt-24 px-4 pb-16 sm:px-6 sm:pb-20">
-        <div className="card rounded-slab p-6 sm:p-10 lg:p-14">
-          <div className="flex flex-wrap items-end justify-between gap-6">
+        {/* No backing card: the week cards sit straight on the page. */}
+        <div>
+          <Appear className="flex flex-wrap items-end justify-between gap-6">
             <Heading
               id="curriculum-title"
               eyebrow="30-day overview"
               title="Every day, planned."
               intro="Four weekly phases of daily problems, an assessment after each week, and mock interviews on Days 29–30. Open a week to see every day."
             />
-            <ButtonLink href={enrolHref} soft arrow className="px-5 py-2.5 text-xs">Enrol now</ButtonLink>
-          </div>
+            <ButtonLink href={enrolHref} soft arrow className="px-5 py-2.5 text-xs">Enroll now</ButtonLink>
+          </Appear>
           <div className="mt-10"><TrackCurriculum track={track} /></div>
         </div>
       </section>
 
-      {/* ── Checkpoints ─────────────────────────────────────── */}
-      <section aria-labelledby="assess-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
-        <Heading id="assess-title" eyebrow="Weekly checkpoints" title="Four checkpoints. Real feedback." intro="Each one is marked on your reasoning, not just the output: and you defend it." />
-        <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* ── Checkpoints: a timeline on the page, no boxes ───── */}
+      <section aria-labelledby="assess-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <Appear>
+          <Heading id="assess-title" eyebrow="Weekly checkpoints" title="Four checkpoints. Real feedback." intro="Each one is marked on your reasoning, not just the output: and you defend it." />
+        </Appear>
+        <ol className="relative mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {/* The rail the four checkpoints sit on; it draws itself across once in view. */}
+          <motion.span
+            aria-hidden="true"
+            className="absolute top-[1.375rem] right-[12.5%] left-[12.5%] hidden h-0.5 origin-left bg-red/20 lg:block"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 1.1, ease: [0.2, 0.7, 0.3, 1] }}
+          />
           {track.weeks.map((w, i) => (
-            <li key={w.week}>
-              <Appear delay={i * 0.06} className="card flex h-full flex-col p-6">
-                <span className="grid size-11 place-items-center rounded-full bg-red-strong text-sm font-extrabold text-white nums">{w.assessment.afterDay}</span>
-                <span className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">After Day {w.assessment.afterDay}</span>
-                <span className="display mt-1 text-xl leading-tight">{w.assessment.title}</span>
-                <span className="mt-2 text-sm leading-relaxed text-muted">{w.assessment.task}</span>
+            <li key={w.week} className="relative flex flex-col lg:items-center lg:text-center">
+              <Appear delay={0.2 + i * 0.15} y={10} className="flex flex-col lg:items-center">
+                <span className="grid size-11 place-items-center rounded-full bg-red-strong text-sm font-bold text-white ring-8 ring-paper nums">{w.assessment.afterDay}</span>
+                <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">After Day {w.assessment.afterDay}</span>
+                <span className="mt-1 text-lg font-bold leading-tight">{w.assessment.title}</span>
+                <span className="mt-2 max-w-xs text-sm leading-relaxed text-muted">{w.assessment.task}</span>
               </Appear>
             </li>
           ))}
         </ol>
       </section>
 
-      {/* ── Outcomes · projects ─────────────────────────────── */}
-      <section aria-labelledby="outcomes-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Appear className="card h-full p-8 sm:p-10">
-            <Heading id="outcomes-title" eyebrow="Expected outcomes" title="What you will be able to do." />
-            <ul className="mt-7 divide-y divide-line/25 border-t border-line/25">
-              {track.outcomes.map((o) => (
-                <li key={o} className="flex gap-3 py-3.5 text-[15px]"><Check />{o}</li>
-              ))}
-            </ul>
+      {/* ── Outcomes · projects: on the page, beside the desk ── */}
+      <section aria-labelledby="outcomes-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+          <Appear y={24} className="order-last lg:order-first">
+            <div className="relative">
+              <span aria-hidden="true" className="absolute -bottom-3 -left-3 hidden h-full w-full rounded-slab bg-red-tint lg:block" />
+              <Image
+                src={presentingPhoto}
+                alt="A woman presenting her work to colleagues in a meeting room"
+                sizes="(min-width: 1024px) 40vw, 90vw"
+                className="relative aspect-[4/3] w-full rounded-slab object-cover object-[70%_50%] shadow-float"
+              />
+            </div>
           </Appear>
-          <Appear delay={0.08} className="card h-full p-8 sm:p-10">
-            <Heading eyebrow="Role-specific projects" title="Evidence you can show." />
-            <ol className="mt-7 space-y-3">
-              {track.projects.map((p, i) => (
-                <li key={p} className="flex gap-4 rounded-xl bg-surface/60 px-4 py-3.5">
-                  <span className="display text-lg text-red-strong nums">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="text-[15px] font-semibold">{p}</span>
+          <div>
+            <Appear><Heading id="outcomes-title" eyebrow="Expected outcomes" title="What you will be able to do." /></Appear>
+            <ul className="mt-6 divide-y divide-line/25 border-y border-line/25">
+              {track.outcomes.map((o, i) => (
+                <li key={o}>
+                  <Appear delay={0.05 * i} y={8} className="flex gap-3 py-3 text-[15px]"><Check />{o}</Appear>
                 </li>
               ))}
-            </ol>
-          </Appear>
+            </ul>
+
+            <Appear delay={0.1} className="mt-10">
+              <Eyebrow>Role-specific projects</Eyebrow>
+              <h3 className="mt-2 text-xl font-bold">Evidence you can show.</h3>
+              <ol className="mt-4 space-y-3">
+                {track.projects.map((pr, i) => (
+                  <li key={pr} className="flex items-baseline gap-4">
+                    <span className="text-sm font-bold text-red-strong nums">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="text-[15px] font-medium">{pr}</span>
+                  </li>
+                ))}
+              </ol>
+            </Appear>
+          </div>
         </div>
       </section>
 
-      {/* ── Interviews: the dark card ───────────────────────── */}
-      <section aria-labelledby="interview-title" className="mx-auto max-w-7xl px-4 pb-4 sm:px-6">
-        <Appear className="overflow-hidden rounded-slab bg-night text-paper shadow-float">
-          <div className="grid gap-10 p-8 sm:p-12 lg:grid-cols-[1fr_1.4fr] lg:p-14">
-            <div>
-              <Heading
-                id="interview-title"
-                eyebrow="Interview preparation & mock interviews"
-                title={`Practise the questions ${track.name} interviews actually ask.`}
-                intro="Preparation runs through Week 4. Mock interviews happen on Days 29 and 30, with written feedback."
-                light
-              />
-              <ul className="mt-6 flex flex-wrap gap-2">
-                {track.interviewTopics.map((t) => (
-                  <li key={t} className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/85">{t}</li>
-                ))}
-              </ul>
-            </div>
-            <ul className="space-y-3">
-              {track.interviewQuestions.slice(0, 4).map((q) => (
-                <li key={q.question} className="rounded-card bg-white/[0.06] p-5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red">{q.category}</span>
-                  <p className="mt-1.5 text-base font-bold leading-snug">{q.question}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Appear>
+      {/* ── Interviews: questions to practise, and what good looks like ── */}
+      <section aria-labelledby="interview-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
+        <InterviewPrep track={track} enrolHref={enrolHref} />
       </section>
 
       {/* ── Pricing: the same pair as the landing page ──────── */}

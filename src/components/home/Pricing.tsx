@@ -7,6 +7,7 @@ import { formatDate, formatINR } from "@/lib/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Appear } from "@/components/motion/Appear";
+import { PriceDrop } from "@/components/motion/PriceDrop";
 
 function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -68,13 +69,21 @@ export function Pricing({ track }: { track?: Track } = {}) {
         <div className="bg-red-strong p-8 text-white sm:p-12">
           {track ? (
             <>
-              {pricing.showReferenceValue && (
-                <p className="text-lg font-semibold text-white/85">
-                  Reference value <s className="font-extrabold">{formatINR(pricing.referenceValue)}</s>
-                </p>
+              {/* The price falls from the reference value, but only while that
+                  value is shown: it must be a genuine, documented figure. */}
+              {pricing.showReferenceValue ? (
+                <PriceDrop
+                  from={pricing.referenceValue}
+                  to={track.price}
+                  label={`Launch price · ${track.name}`}
+                  className="display text-[clamp(2.75rem,6vw,4rem)] nums"
+                />
+              ) : (
+                <>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
+                  <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(track.price)}</p>
+                </>
               )}
-              <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
-              <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(track.price)}</p>
             </>
           ) : (
             <>
@@ -97,7 +106,7 @@ export function Pricing({ track }: { track?: Track } = {}) {
           <dl className="mt-6 grid grid-cols-2 gap-6 border-t border-white/25 pt-6 sm:grid-cols-3">
             <Fact label="Cohort starts" value={formatDate(cohort.startDate)} />
             <Fact
-              label="Enrolment closes"
+              label="Enrollment closes"
               value={formatDate(cohort.enrollmentDeadline)}
               note={cohort.enrollmentDeadlineIsPlaceholder ? "Placeholder: to be confirmed" : undefined}
             />

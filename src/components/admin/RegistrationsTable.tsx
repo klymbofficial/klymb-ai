@@ -88,7 +88,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
         </p>
       </div>
 
-      {enrolError && <p role="alert" className="border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{enrolError}</p>}
+      {enrolError && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{enrolError}</p>}
 
       <div className="overflow-x-auto border-2 border-line bg-paper">
         <table className="w-full min-w-[940px] text-left text-sm">
@@ -134,7 +134,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
                       }}
                       className="border-2 border-ink px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider hover:bg-ink hover:text-paper disabled:opacity-50"
                     >
-                      {enrolling === r.id ? "Enrolling…" : "Enrol"}
+                      {enrolling === r.id ? "Enrolling…" : "Enroll"}
                     </button>
                   )}
                 </td>

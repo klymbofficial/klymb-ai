@@ -7,7 +7,7 @@ import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "The terms governing your use of Klymb.ai and enrolment in a 30-day cohort.",
+  description: "The terms governing your use of Klymb.ai and enrollment in a 30-day cohort.",
 };
 
 export default function TermsPage() {
@@ -44,7 +44,7 @@ export default function TermsPage() {
           career track. Content, schedule and reviewers may change; we will not reduce the substance of what you paid for.
         </p>
         <p>
-          <strong>You cannot change track after you enrol.</strong> Each track has its own project, assessments and
+          <strong>You cannot change track after you enroll.</strong> Each track has its own project, assessments and
           reviewer. If circumstances change, write to us and we will discuss options.
         </p>
       </Section>

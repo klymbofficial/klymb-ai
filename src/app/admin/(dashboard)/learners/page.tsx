@@ -16,7 +16,7 @@ export default async function AdminLearnersPage() {
       {learners.length === 0 ? (
         <EmptyState
           title="No learners enrolled yet"
-          body="This fills in once learners have accounts and start submitting daily deliverables. The database tables, access rules and this view are already built and waiting: enrolment is the next piece to add."
+          body="This fills in once learners have accounts and start submitting daily deliverables. The database tables, access rules and this view are already built and waiting: enrollment is the next piece to add."
         />
       ) : (
         <ProgressTable rows={learners} />

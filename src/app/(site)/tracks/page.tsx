@@ -51,7 +51,7 @@ export default function TracksPage() {
                     <th scope="row" className="px-5 py-4">
                       <Link href={`/tracks/${t.slug}`} className="text-base font-extrabold underline-offset-4 hover:text-red-deep hover:underline">{t.name}</Link>
                     </th>
-                    <td className="px-5 py-4 font-semibold text-red-strong">{t.becomes}</td>
+                    <td className="px-5 py-4 font-semibold text-red-deep">{t.becomes}</td>
                     <td className="px-5 py-4">{t.weeks[0].title}</td>
                     <td className="px-5 py-4 text-muted">{t.projects.join("; ")}</td>
                   </tr>

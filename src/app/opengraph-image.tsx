@@ -15,7 +15,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const INK = "#201e1d";
-const RED = "#e22e1b";
+const RED = "#83050b";
 const PAPER = "#f3f2f2";
 const MUTED = "#5a5757";
 

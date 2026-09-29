@@ -134,7 +134,7 @@ function RowActions({ learner }: { learner: LearnerProgress }) {
         </button>
       )}
 
-      {error && <span role="alert" className="max-w-[12rem] text-[11px] font-semibold text-red-deep">{error}</span>}
+      {error && <span role="alert" className="max-w-[12rem] text-[11px] font-semibold text-error">{error}</span>}
     </span>
   );
 }

@@ -153,7 +153,7 @@ export const faqs: Faq[] = [
   {
     question: "Can I change my track?",
     answer:
-      "Not after you enrol. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
+      "Not after you enroll. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
   },
   {
     question: "What happens every day?",
@@ -173,16 +173,6 @@ export const faqs: Faq[] = [
     question: "Is employment guaranteed?",
     answer:
       "No. Klymb.ai does not guarantee a job, placement or salary. The program is designed to build practical ability, evidence and interview readiness: outcomes depend on you and the job market.",
-  },
-  {
-    question: "What is included in the price?",
-    answer:
-      "One career track with 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation and mock interviews.",
-  },
-  {
-    question: "What is the refund policy?",
-    answer:
-      "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both mock interviews attended: the full conditions are on the Refund Policy page.",
   },
 ];
 

@@ -55,7 +55,7 @@ export function FourWeekJourney() {
           })}
         </ol>
         <div className="flex flex-wrap items-center justify-between gap-3 border-2 border-t-0 border-line bg-ink px-6 py-5 text-paper">
-          <p><span className="display text-2xl text-red">{mockInterviewPhase.days}</span> <span className="ml-2 font-extrabold">{mockInterviewPhase.name}</span></p>
+          <p><span className="display text-2xl text-red-soft">{mockInterviewPhase.days}</span> <span className="ml-2 font-extrabold">{mockInterviewPhase.name}</span></p>
           <p className="text-sm text-white/75">{mockInterviewPhase.summary}</p>
         </div>
       </div>

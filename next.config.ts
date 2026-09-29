@@ -61,8 +61,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
-    // YouTube thumbnails for the day pages' reference resources.
-    remotePatterns: [{ protocol: "https", hostname: "i.ytimg.com" }],
+    remotePatterns: [
+      // YouTube thumbnails for the day pages' reference resources.
+      { protocol: "https", hostname: "i.ytimg.com" },
+      // Google profile images for signed-in learners.
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+    ],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

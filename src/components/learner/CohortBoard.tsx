@@ -76,7 +76,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
   }
 
   return (
-    <div className="card grid gap-8 rounded-slab p-6 sm:p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.55fr)_minmax(0,1fr)] lg:gap-6 lg:p-10">
+    <div className="card grid gap-8 rounded-slab p-6 sm:p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10 lg:p-10">
       {/* ── Calendar ─────────────────────────────────────────── */}
       <section aria-labelledby="your-30-days" className="min-w-0">
         <h2 id="your-30-days" className="display text-3xl">Your 30 days</h2>
@@ -167,29 +167,6 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
             ))}
           </tbody>
         </table>
-      </section>
-
-      {/* ── Day picker ───────────────────────────────────────── */}
-      <section aria-labelledby="pick-a-day" className="min-w-0 lg:border-x lg:border-line/25 lg:px-6">
-        <h2 id="pick-a-day" className="text-center text-lg font-semibold text-muted">Pick a day</h2>
-        <ul className="mt-6 flex gap-2 overflow-x-auto pb-2 lg:max-h-[26rem] lg:flex-col lg:overflow-x-visible lg:overflow-y-auto">
-          {days.map((d) => (
-            <li key={d.day} className="shrink-0 lg:shrink">
-              <button
-                type="button"
-                onClick={() => pick(d)}
-                aria-pressed={d.day === selected}
-                className={clsx(
-                  "w-full rounded-xl px-5 py-3 text-base font-semibold whitespace-nowrap transition-colors",
-                  d.day === selected ? "bg-red-strong text-white" : "bg-card text-ink shadow-card hover:bg-surface/60",
-                )}
-              >
-                Day {d.day}
-                {d.submitted && <span aria-label=", submitted" className="ml-2 text-xs">✓</span>}
-              </button>
-            </li>
-          ))}
-        </ul>
       </section>
 
       {/* ── Detail ───────────────────────────────────────────── */}

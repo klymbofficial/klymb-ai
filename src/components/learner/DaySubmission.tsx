@@ -28,7 +28,7 @@ export function DaySubmission({
   }
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       {checklist && (
         <fieldset className="mb-6">
           <legend className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Before you submit</legend>
@@ -47,19 +47,19 @@ export function DaySubmission({
         </fieldset>
       )}
 
-      <form action={onSubmit} className="flex flex-col gap-4">
+      <form action={onSubmit} className="flex flex-1 flex-col gap-5">
         <div>
-          <label htmlFor={`url-${day}`} className="block text-sm font-bold">Link to your work</label>
+          <label htmlFor={`url-${day}`} className="block text-[15px] font-semibold">Link to your work</label>
           <input
             id={`url-${day}`} name="deliverable_url" type="url" inputMode="url" spellCheck={false}
             defaultValue={submission?.deliverable_url ?? ""}
-            placeholder="https://github.com/you/pm-delivery-portfolio/…"
-            className="mt-2 block w-full border-2 border-line bg-white px-3 py-3 focus:border-ink focus:outline-none"
+            placeholder="https://github.com/your/pm-delivery-portfolio/..."
+            className="mt-2 block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
           />
         </div>
         {needsLinkedinPost && (
           <div>
-            <label htmlFor={`li-${day}`} className="block text-sm font-bold">Your LinkedIn post</label>
+            <label htmlFor={`li-${day}`} className="block text-[15px] font-semibold">Your LinkedIn post</label>
             <p className="mt-1 text-xs text-muted">
               Post about a decision you made this week and what you would do differently. Open the post, choose
               “Copy link to post”, and paste it here. It must be from your own profile.
@@ -68,23 +68,23 @@ export function DaySubmission({
               id={`li-${day}`} name="linkedin_post_url" type="url" inputMode="url" spellCheck={false}
               defaultValue={submission?.linkedin_post_url ?? ""}
               placeholder="https://www.linkedin.com/posts/yourname_…"
-              className="mt-2 block w-full border-2 border-line bg-white px-3 py-3 focus:border-ink focus:outline-none"
+              className="mt-2 block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
             />
           </div>
         )}
         <div>
-          <label htmlFor={`note-${day}`} className="block text-sm font-bold">What you did, and why</label>
+          <label htmlFor={`note-${day}`} className="block text-[15px] font-semibold">What you did, and why</label>
           <textarea
-            id={`note-${day}`} name="note" rows={5} defaultValue={submission?.note ?? ""}
-            placeholder="Your approach, the call you made, and what you would change…"
-            className="mt-2 block w-full border-2 border-line bg-white p-3 focus:border-ink focus:outline-none"
+            id={`note-${day}`} name="note" rows={3} defaultValue={submission?.note ?? ""}
+            placeholder="Your approach, the call you made, and what you would change..."
+            className="mt-2 block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
           />
         </div>
 
-        {error && <p role="alert" className="border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{error}</p>}
+        {error && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{error}</p>}
 
-        <div className="flex flex-wrap items-center gap-4">
-          <Button type="submit" disabled={pending} aria-busy={pending}>
+        <div className="mt-auto flex flex-wrap items-center gap-4">
+          <Button type="submit" className="rounded-md px-4! py-2! text-xs!" disabled={pending} aria-busy={pending}>
             {pending ? "Saving…" : submission ? "Update submission" : `Submit Day ${day}`}
           </Button>
           <AnimatePresence>
