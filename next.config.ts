@@ -14,6 +14,7 @@ const isDev = process.env.NODE_ENV === "development";
  *   *.supabase.co               database reads and writes from the server
  *   i.ytimg.com                 YouTube thumbnails on learner day pages
  *   *.googleusercontent.com     Google profile images on signed-in accounts
+ *   *.razorpay.com              Razorpay Checkout: its script, its payment frame and its API
  *
  * 'unsafe-inline' on script-src is required by Next.js, which inlines a small
  * bootstrap and the flight payload; a nonce would mean giving up static
@@ -22,9 +23,9 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://i.ytimg.com https://*.googleusercontent.com https://www.googletagmanager.com https://www.google-analytics.com",
+  "img-src 'self' data: blob: https://i.ytimg.com https://*.googleusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://*.razorpay.com",
   "font-src 'self' data:",
   [
     "connect-src 'self'",
@@ -33,11 +34,12 @@ const csp = [
     "https://*.analytics.google.com",
     "https://*.googletagmanager.com",
     "https://stats.g.doubleclick.net",
+    "https://*.razorpay.com",
     isDev ? "ws: http://localhost:*" : "",
   ]
     .filter(Boolean)
     .join(" "),
-  "frame-src 'self' https://accounts.google.com",
+  "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com",
   // Clickjacking: nothing may embed this site.
   "frame-ancestors 'none'",
   "base-uri 'self'",

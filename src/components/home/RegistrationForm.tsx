@@ -122,7 +122,7 @@ export function RegistrationForm({ defaultTrack, bare }: { defaultTrack?: TrackS
       <div className="sm:col-span-2">
         {serverError && <p role="alert" className="mb-3 rounded-lg border border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{serverError}</p>}
         <Button type="submit" arrow disabled={pending} aria-busy={pending} className="w-full rounded-full py-4">{pending ? "Saving…" : "Register"}</Button>
-        <p className="mt-3 text-center text-[11px] text-muted">Registration does not take payment. Payment opens once the cohort is confirmed.</p>
+        <p className="mt-3 text-center text-[11px] text-muted">You pay on the next screen, after registering.</p>
       </div>
       </form>
 

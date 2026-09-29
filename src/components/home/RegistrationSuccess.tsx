@@ -1,4 +1,5 @@
 import { ButtonLink } from "@/components/ui/Button";
+import { PayButton } from "./PayButton";
 import type { Track } from "@/types/program";
 
 /**
@@ -91,6 +92,8 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track }: Succe
 
         <p>No payment has been taken.</p>
       </div>
+
+      {track?.available && <PayButton email={email} price={track.price} />}
 
       {enrolled && (
         <ButtonLink href="/learn/login?welcome=1" arrow className="mt-8 rounded-full px-7">
