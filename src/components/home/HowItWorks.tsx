@@ -201,7 +201,7 @@ export function HowItWorks() {
 }
 
 function Segment({ index, count, progress }: { index: number; count: number; progress: MotionValue<number> }) {
-  const fill = useTransform(progress, (v) => `${Math.min(1, Math.max(0, v * count - index)) * 100}%`);
+  const fill = useTransform(progress, (v) => `${Math.min(1, Math.max(0, v * (count - 1) - index + 1)) * 100}%`);
   return (
     <span className="h-1.5 w-8 overflow-hidden rounded-full bg-surface">
       <motion.span className="block h-full rounded-full bg-red-strong" style={{ width: fill }} />

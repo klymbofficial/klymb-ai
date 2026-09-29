@@ -1,6 +1,9 @@
+import { AiFoundations } from "@/components/home/AiFoundations";
 import { CareerTracks } from "@/components/home/CareerTracks";
 import { Evidence } from "@/components/home/Evidence";
 import { FaqJoin } from "@/components/home/FaqJoin";
+import { StickyEnrolBar } from "@/components/home/StickyEnrolBar";
+import { WhyRefund } from "@/components/home/WhyRefund";
 import { Hero } from "@/components/home/Hero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { Pricing } from "@/components/home/Pricing";
@@ -18,11 +21,14 @@ export default async function HomePage() {
     <>
       <Hero />
       <StatementBand>{statement}</StatementBand>
+      <AiFoundations />
       <Evidence />
       <HowItWorks />
       <CareerTracks />
       <Pricing />
+      <WhyRefund />
       <FaqJoin />
+      <StickyEnrolBar />
     </>
   );
 }

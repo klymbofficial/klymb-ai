@@ -11,9 +11,9 @@ import { Appear } from "@/components/motion/Appear";
 function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div>
-      <dt className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-white/60">{label}</dt>
+      <dt className="text-xs font-extrabold uppercase tracking-[0.12em] text-white/60">{label}</dt>
       <dd className="mt-1 text-base font-extrabold">{value}</dd>
-      {note && <p className="mt-0.5 text-[11px] text-white/60">{note}</p>}
+      {note && <p className="mt-0.5 text-xs text-white/60">{note}</p>}
     </div>
   );
 }
@@ -73,12 +73,12 @@ export function Pricing({ track }: { track?: Track } = {}) {
                   Reference value <s className="font-extrabold">{formatINR(pricing.referenceValue)}</s>
                 </p>
               )}
-              <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
+              <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
               <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(track.price)}</p>
             </>
           ) : (
             <>
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price by track</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price by track</p>
               <p className="display mt-1 text-[clamp(2.25rem,5vw,3.25rem)] nums">From {formatINR(priceFrom)}</p>
               <ul className="mt-5 divide-y divide-white/20 border-y border-white/20">
                 {tracksByPrice.map((t) => (

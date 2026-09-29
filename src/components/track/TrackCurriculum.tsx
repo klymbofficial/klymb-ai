@@ -16,7 +16,7 @@ export function TrackCurriculum({ track, compact = false }: { track: Track; comp
             <summary className="grid cursor-pointer list-none gap-3 p-5 sm:grid-cols-[9rem_1fr_auto] sm:items-center sm:p-6 [&::-webkit-details-marker]:hidden">
               <span>
                 <span className="display block text-3xl text-red-strong">Week {week.week}</span>
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">{phase.days} · {phase.name}</span>
+                <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{phase.days} · {phase.name}</span>
               </span>
               <span>
                 <span className="block text-lg font-extrabold leading-snug">{week.title}</span>

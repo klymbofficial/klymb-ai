@@ -1,10 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 import { tracks } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
 import { Pricing } from "@/components/home/Pricing";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { aiConcepts } from "@/data/ai-foundations";
 import { trackImages } from "@/data/track-images";
 import { TrackCurriculum } from "./TrackCurriculum";
 
@@ -42,7 +44,7 @@ export function TrackDetail({ track }: { track: Track }) {
               <Appear>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">Career track {number}</span>
-                  <span className="rounded-full bg-red-tint px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-red-deep">Enrolling now</span>
+                  <span className="rounded-full bg-red-tint px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">Enrolling now</span>
                 </div>
               </Appear>
               <Appear delay={0.08} y={24}>
@@ -55,6 +57,16 @@ export function TrackDetail({ track }: { track: Track }) {
               <Appear delay={0.24} className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <ButtonLink href={enrolHref} soft arrow>Choose this track</ButtonLink>
                 <ButtonLink href="#curriculum" variant="secondary" soft className="border-line hover:bg-ink">See the 30 days</ButtonLink>
+              </Appear>
+              <Appear delay={0.28}>
+                <div className="mt-6 flex flex-wrap items-center gap-1.5">
+                  <span className="mr-1 text-xs font-extrabold uppercase tracking-[0.14em] text-muted">AI skills</span>
+                  {aiConcepts.map((c) => (
+                    <Link key={c.name} href="/#ai-foundations" className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold transition-colors hover:bg-red-tint hover:text-red-deep">
+                      {c.name}
+                    </Link>
+                  ))}
+                </div>
               </Appear>
               {!track.contentLive && (
                 <Appear delay={0.3}>
@@ -81,7 +93,7 @@ export function TrackDetail({ track }: { track: Track }) {
                       <dt className="sr-only">{label}</dt>
                       <dd>
                         <span className="display block text-3xl text-red-strong nums">{n}</span>
-                        <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-muted">{label}</span>
+                        <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-muted">{label}</span>
                       </dd>
                     </div>
                   ))}
@@ -158,7 +170,7 @@ export function TrackDetail({ track }: { track: Track }) {
             <li key={w.week}>
               <Appear delay={i * 0.06} className="card flex h-full flex-col p-6">
                 <span className="grid size-11 place-items-center rounded-full bg-red-strong text-sm font-extrabold text-white nums">{w.assessment.afterDay}</span>
-                <span className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">After Day {w.assessment.afterDay}</span>
+                <span className="mt-4 text-xs font-extrabold uppercase tracking-[0.14em] text-muted">After Day {w.assessment.afterDay}</span>
                 <span className="display mt-1 text-xl leading-tight">{w.assessment.title}</span>
                 <span className="mt-2 text-sm leading-relaxed text-muted">{w.assessment.task}</span>
               </Appear>
@@ -213,7 +225,7 @@ export function TrackDetail({ track }: { track: Track }) {
             <ul className="space-y-3">
               {track.interviewQuestions.slice(0, 4).map((q) => (
                 <li key={q.question} className="rounded-card bg-white/[0.06] p-5">
-                  <span className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red">{q.category}</span>
+                  <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-red">{q.category}</span>
                   <p className="mt-1.5 text-base font-bold leading-snug">{q.question}</p>
                 </li>
               ))}
