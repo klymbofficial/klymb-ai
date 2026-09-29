@@ -1,5 +1,7 @@
+import { signInLearner } from "@/app/(learn)/learn/actions";
 import { ButtonLink } from "@/components/ui/Button";
 import { PayButton } from "./PayButton";
+import { GoogleMark } from "@/components/ui/GoogleMark";
 import type { Track } from "@/types/program";
 
 /**
@@ -49,10 +51,12 @@ export interface SuccessState {
   duplicate: boolean;
   email: string;
   track?: Track;
+  /** Registered while signed in with Google: the course can open directly. */
+  signedIn?: boolean;
 }
 
 /** The message shown once a registration has been saved. */
-export function RegistrationSuccess({ enrolled, duplicate, email, track }: SuccessState) {
+export function RegistrationSuccess({ enrolled, duplicate, email, track, signedIn }: SuccessState) {
   return (
     <div className="flex flex-col items-center px-8 py-10 text-center sm:px-12 sm:py-12">
       <Seal />
@@ -68,7 +72,9 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track }: Succe
               Your place on the <strong className="font-bold text-white">{track?.name}</strong> track is reserved.
             </p>
             <p>
-              Sign in with <strong className="font-bold text-white">{email}</strong> to open Day 1 and start today.
+              {signedIn
+                ? "Day 1 is open. Start whenever you are ready."
+                : <>Continue with the Google account for <strong className="font-bold text-white">{email}</strong> to open Day 1 and start today.</>}
             </p>
           </>
         ) : track?.available && !track.contentLive ? (
@@ -95,10 +101,23 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track }: Succe
 
       {track?.available && <PayButton email={email} price={track.price} />}
 
-      {enrolled && (
-        <ButtonLink href="/learn/login?welcome=1" arrow className="mt-8 rounded-full px-7">
+      {/* Straight into the course: already signed in, or one Google step that
+          lands on Day 1, never a separate sign-in page. */}
+      {enrolled && signedIn && (
+        <ButtonLink href="/learn" arrow className="mt-8 rounded-full px-7">
           Start Day 1
         </ButtonLink>
+      )}
+      {enrolled && !signedIn && (
+        <form action={signInLearner} className="mt-8">
+          <button
+            type="submit"
+            className="inline-flex items-center gap-3 rounded-full bg-white px-7 py-3 text-sm font-bold text-ink transition-colors hover:bg-paper"
+          >
+            <GoogleMark />
+            Continue with Google to start Day 1
+          </button>
+        </form>
       )}
     </div>
   );

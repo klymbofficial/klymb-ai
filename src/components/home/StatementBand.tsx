@@ -3,7 +3,7 @@ import { statementSupport } from "@/data/program";
 
 export function StatementBand({ children }: { children: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-red to-red-strong text-white">
+    <section className="relative overflow-hidden bg-gradient-to-b from-red to-red-press text-white">
       {/* Move the pointer across the band to draw light. */}
       <LightCanvas mode="paint" />
       <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">

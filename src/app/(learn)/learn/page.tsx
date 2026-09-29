@@ -86,26 +86,35 @@ export default async function LearnHomePage() {
     <>
       <LearnerTopBar name={learner.name} image={session?.user?.image} />
 
-      <div className="bg-gradient-to-r from-red to-red-strong text-white">
-        <div className="mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-6 px-4 py-10 sm:px-8 sm:py-14">
+      {/* Deep red, lit from the top left and falling to near-black on the
+          right; one soft glow drifts slowly behind the text. */}
+      <div className="relative overflow-hidden bg-linear-to-br from-red via-red-press to-[#2a0204] text-white">
+        <span aria-hidden="true" className="glow-drift pointer-events-none absolute -top-40 -left-24 size-[32rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.14),transparent)]" />
+        <div className="relative mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-6 px-4 py-10 sm:px-8 sm:py-14">
           <div>
-            <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} cohort</h1>
-            <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/85">
-              {formatDate(learner.cohort_start)}
-            </p>
+            <Appear y={14}>
+              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} cohort</h1>
+            </Appear>
+            <Appear y={14} delay={0.08}>
+              <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/80">
+                {formatDate(learner.cohort_start)}
+              </p>
+            </Appear>
           </div>
 
-          <div className="flex flex-wrap items-center gap-5 rounded-card bg-night px-6 py-4">
-            <div className="min-w-0">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/55">
-                Up next · Day {nextDay.day}
-              </p>
-              <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
+          <Appear y={14} delay={0.16}>
+            <div className="flex flex-wrap items-center gap-5 rounded-card bg-black/25 px-6 py-4 ring-1 ring-white/10 backdrop-blur-sm transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-black/30">
+              <div className="min-w-0">
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/60">
+                  Up next · Day {nextDay.day}
+                </p>
+                <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
+              </div>
+              <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-[11px]">
+                Open Day {nextDay.day}
+              </ButtonLink>
             </div>
-            <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-[11px]">
-              Open Day {nextDay.day}
-            </ButtonLink>
-          </div>
+          </Appear>
         </div>
       </div>
 
@@ -114,30 +123,19 @@ export default async function LearnHomePage() {
           <CohortBoard days={days} initialDay={nextDay.day} />
         </Appear>
 
-        <section aria-labelledby="evidence" className="mt-10">
-          <EvidenceProfile githubUsername={learner.github_username} linkedinSlug={learner.linkedin_slug} />
-        </section>
-
-        <section aria-labelledby="evidence-links" className="card mt-8 rounded-card p-6 sm:p-8">
-          <h2 id="evidence-links" className="display text-2xl">Your evidence</h2>
-          <ul className="mt-4 flex flex-wrap gap-8 text-sm">
-            <li>
-              <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">GitHub</span>
-              {learner.github_url
-                ? <a href={learner.github_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">{learner.github_url.replace(/^https?:\/\//, "")}</a>
-                : <span className="text-muted">Add it on Day 1: it is where every artifact lands.</span>}
-            </li>
-            <li>
-              <span className="block text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">LinkedIn</span>
-              {learner.linkedin_url
-                ? <a href={learner.linkedin_url} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">Profile</a>
-                : <span className="text-muted">Update your headline this week.</span>}
-            </li>
-          </ul>
-          <p className="mt-6 text-xs text-muted">
-            Questions about the cohort? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2">{contact.email}</Link>
+        <Appear className="mt-14">
+          <section aria-labelledby="evidence">
+            <EvidenceProfile
+              githubUsername={learner.github_username}
+              linkedinSlug={learner.linkedin_slug}
+              githubUrl={learner.github_url}
+              linkedinUrl={learner.linkedin_url}
+            />
+          </section>
+          <p className="mt-8 text-xs text-muted">
+            Questions about the cohort? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>
           </p>
-        </section>
+        </Appear>
       </div>
     </>
   );

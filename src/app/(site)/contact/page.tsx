@@ -17,7 +17,7 @@ export default function ContactPage() {
     >
       <Section n="1." title="Talk to us" plain="One address for questions about the cohort, your place or your data.">
         <p>
-          Email <a href={`mailto:${contact.email}`}>{contact.email}</a>: about tracks, the cohort, your enrolment or
+          Email <a href={`mailto:${contact.email}`}>{contact.email}</a>: about tracks, the cohort, your enrollment or
           anything on this site.
         </p>
         <ul>

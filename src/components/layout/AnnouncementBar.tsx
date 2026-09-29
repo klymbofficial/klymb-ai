@@ -9,7 +9,7 @@ export function AnnouncementBar() {
         <span>Next cohort starts {formatDate(cohort.startDate)}</span>
         <span aria-hidden="true" className="opacity-60">•</span>
         <span>
-          Enrolment closes {formatDate(cohort.enrollmentDeadline)}
+          Enrollment closes {formatDate(cohort.enrollmentDeadline)}
           {cohort.enrollmentDeadlineIsPlaceholder && <span className="font-semibold normal-case opacity-75"> (date to be confirmed)</span>}
         </span>
         <span aria-hidden="true" className="opacity-60">•</span>

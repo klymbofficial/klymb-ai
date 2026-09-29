@@ -79,7 +79,7 @@ export function DayExplorer({ tracks }: { tracks: ExplorerTrack[] }) {
                 ))}
                 <li>
                   <article className="flex h-full flex-col gap-2 rounded-card bg-night p-5 text-paper shadow-card">
-                    <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-red nums">Day {w.assessment.afterDay} · Checkpoint</span>
+                    <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-soft nums">Day {w.assessment.afterDay} · Checkpoint</span>
                     <h3 className="font-extrabold leading-snug">{w.assessment.title}</h3>
                     <p className="line-clamp-3 text-[13px] leading-relaxed text-white/70">{w.assessment.task}</p>
                   </article>

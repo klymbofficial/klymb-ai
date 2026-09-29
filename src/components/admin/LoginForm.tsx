@@ -14,7 +14,7 @@ export function LoginForm({ error }: { error?: string }) {
           Continue with Google
         </button>
       </form>
-      {error && <p role="alert" className="border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{error}</p>}
+      {error && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{error}</p>}
       <p className="text-xs text-muted">
         Only approved Klymb.ai addresses can open the admin. Ask an existing admin to add yours.
       </p>

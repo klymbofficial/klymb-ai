@@ -35,20 +35,20 @@ export function KnowledgeCheck({
   const answered = answers.filter((a) => a.trim().length > 2).length;
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-5">
-      <p className="text-sm text-muted">
-        Answer these in order: they prove you actually did the work. Your reviewer reads them alongside your deliverable.
+    <form action={onSubmit} className="flex flex-1 flex-col gap-6">
+      <p className="text-sm leading-relaxed text-muted">
+        Answer these in order — they prove you actually did the work. Your reviewer reads them alongside your deliverable.
       </p>
 
       <ol className="flex flex-col gap-5">
         {questions.map((q, i) => (
           <li key={q}>
-            <label htmlFor={`q-${day}-${i}`} className="block text-sm font-bold">
-              Q{i + 1}) {q}
+            <label htmlFor={`q-${day}-${i}`} className="block text-[15px] leading-snug font-semibold">
+              <span className="text-red-deep">Q{i + 1}.</span> {q}
             </label>
-            <textarea
+            <input
               id={`q-${day}-${i}`}
-              rows={2}
+              type="text"
               value={answers[i]}
               onChange={(e) => {
                 const next = [...answers];
@@ -56,20 +56,20 @@ export function KnowledgeCheck({
                 setAnswers(next);
                 setStatus("idle");
               }}
-              placeholder="Type your answer…"
-              className="mt-2 block w-full border-2 border-line bg-white p-3 focus:border-ink focus:outline-none"
+              placeholder="Type your answer..."
+              className="mt-2 block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
             />
           </li>
         ))}
       </ol>
 
-      {error && <p role="alert" className="border-2 border-red-deep bg-red-tint p-3 text-sm font-semibold text-red-deep">{error}</p>}
+      {error && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{error}</p>}
 
-      <div className="flex flex-wrap items-center gap-4">
-        <Button type="submit" disabled={status === "saving" || answered === 0} aria-busy={status === "saving"}>
+      <div className="mt-auto flex flex-wrap items-center gap-4">
+        <Button type="submit" className="rounded-md px-4! py-2! text-xs!" disabled={status === "saving" || answered === 0} aria-busy={status === "saving"}>
           {status === "saving" ? "Saving…" : "Submit answers"}
         </Button>
-        <p role="status" aria-live="polite" className="text-sm font-semibold text-muted">
+        <p role="status" aria-live="polite" className="text-sm text-muted">
           {status === "saved" ? "Saved: you can change these any time." : `${answered} of ${questions.length} answered`}
         </p>
       </div>

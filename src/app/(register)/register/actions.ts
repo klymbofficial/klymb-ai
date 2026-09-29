@@ -1,15 +1,17 @@
 "use server";
 
+import { currentEmail, signIn, signOut } from "@/auth";
 import { cohort } from "@/data/config";
-import { getTrack } from "@/data/tracks";
+import { getTrack, trackSlugs } from "@/data/tracks";
 import { normaliseEmail } from "@/lib/email";
 import { ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient } from "@/lib/learner/enrolment";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { clamp, LIMITS, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
+import type { TrackSlug } from "@/types/program";
 
 export type RegisterResult =
-  | { ok: true; duplicate?: boolean; enrolled?: boolean }
+  | { ok: true; duplicate?: boolean; enrolled?: boolean; signedIn?: boolean }
   | { ok: false; errors?: RegistrationErrors; message?: string };
 
 /**
@@ -23,7 +25,10 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   // Bots fill every field, including the hidden one. Humans never see it.
   if (honeypot) return { ok: true };
 
-  const email = normaliseEmail(input.email);
+  // Registering with Google: the verified account is the identity, whatever
+  // the browser sent, so the enrolment matches the sign-in exactly.
+  const sessionEmail = await currentEmail();
+  const email = sessionEmail ?? normaliseEmail(input.email);
 
   // Never trust the client: rebuild the record from clamped, canonical values.
   const data: RegistrationData = {
@@ -101,5 +106,21 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     });
   }
 
-  return { ok: true, duplicate, enrolled };
+  return { ok: true, duplicate, enrolled, signedIn: !!sessionEmail };
+}
+
+/** Where a Google round trip from the form comes back to, track kept. */
+function registerPath(formData: FormData) {
+  const track = String(formData.get("track") ?? "");
+  return trackSlugs.includes(track as TrackSlug) ? `/register?track=${track}` : "/register";
+}
+
+/** "Register with Google": sign in, then return to the form with the account filled in. */
+export async function startGoogleRegistration(formData: FormData) {
+  await signIn("google", { redirectTo: registerPath(formData) });
+}
+
+/** "Use a different account": drop the Google session and return to the form. */
+export async function switchGoogleAccount(formData: FormData) {
+  await signOut({ redirectTo: registerPath(formData) });
 }

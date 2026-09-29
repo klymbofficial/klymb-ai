@@ -26,7 +26,7 @@ export async function enrollRegistration(input: {
   // 23505 = already enrolled, which is not an error worth showing.
   if (error && error.code !== "23505") {
     console.error("enrol failed:", error.code, error.message);
-    return { ok: false, message: "Could not enrol that person. Please try again." };
+    return { ok: false, message: "Could not enroll that person. Please try again." };
   }
 
   revalidatePath("/admin/learners");

@@ -10,6 +10,17 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 const EASE = [0.2, 0.7, 0.3, 1] as const;
 
 /**
+ * The L joining a step's marker to the one above. It starts in the gap
+ * between items (--gap) and ends level with this marker's centre (6px padding
+ * + half the 40px marker). Step 1 also reserves 44px under itself for its
+ * button, so the line into step 2 reaches up through that space too.
+ */
+function connector(i: number): React.CSSProperties {
+  const reach = `calc(var(--gap) + ${i === 1 ? 44 : 0}px)`;
+  return { top: `calc(-1 * ${reach})`, height: `calc(${reach} + 26px)`, left: "calc(25px - var(--step))", width: "var(--step)" };
+}
+
+/**
  * A descending staircase of steps. Each step is indented one --step further
  * than the one above it, and an L-shaped dashed rule joins the two markers.
  * On small screens --step is 0, which collapses the L into a plain vertical
@@ -68,11 +79,15 @@ export function HowItWorks() {
   }
 
   return (
-    <section id="how-it-works" aria-labelledby="how-title" className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <section id="how-it-works" aria-labelledby="how-title" className="mx-auto max-w-[92rem] px-4 py-8 sm:px-6 lg:px-8 lg:py-0">
       <div ref={runway} className="[overflow-anchor:none] lg:h-[300vh]">
-      <div className="card rounded-slab p-8 sm:p-12 lg:sticky lg:top-24 lg:p-14">
+      {/* While pinned, the card fills the screen with a 1rem gap all round,
+          its contents centred inside; they are compact enough to fit a small
+          laptop, so nothing runs off the bottom. */}
+      <div className="lg:sticky lg:top-0 lg:flex lg:h-dvh lg:py-4">
+      <div className="card flex w-full flex-col justify-center rounded-slab p-8 sm:p-10 lg:px-16 lg:py-9">
         <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr] lg:items-center">
-          <ol className="flex flex-col gap-6 [--step:0px] sm:[--step:2.75rem]">
+          <ol className="flex flex-col gap-(--gap) [--gap:12px] [--step:0px] sm:[--step:2.5rem] lg:[--gap:clamp(16px,3.6vh,48px)] lg:[--step:clamp(2.5rem,3.4vw,4rem)]">
             {howItWorks.map((step, i) => {
               const isActive = i === active;
               const isDone = i < active;
@@ -90,14 +105,14 @@ export function HowItWorks() {
                     <>
                       <span
                         aria-hidden="true"
-                        className="absolute -top-6 h-12 rounded-bl-xl border-b-2 border-l-2 border-dashed border-line/45"
-                        style={{ left: "calc(23px - var(--step))", width: "var(--step)" }}
+                        className="absolute rounded-bl-xl border-b-2 border-l-2 border-dashed border-line/45"
+                        style={connector(i)}
                       />
                       {/* The same L in solid red, revealed top-left to bottom-right so it reads as drawn. */}
                       <motion.span
                         aria-hidden="true"
-                        className="absolute -top-6 h-12 rounded-bl-xl border-b-2 border-l-2 border-red-strong"
-                        style={{ left: "calc(23px - var(--step))", width: "var(--step)" }}
+                        className="absolute rounded-bl-xl border-b-2 border-l-2 border-red-strong"
+                        style={connector(i)}
                         initial={false}
                         animate={{ clipPath: i <= active ? "inset(0% 0% 0% 0%)" : "inset(0% 100% 100% 0%)" }}
                         transition={{ duration: reduced ? 0 : 0.55, ease: EASE }}
@@ -109,9 +124,9 @@ export function HowItWorks() {
                     type="button"
                     onClick={() => goTo(i)}
                     aria-current={isActive ? "step" : undefined}
-                    className="group flex w-full items-start gap-5 rounded-card p-2 text-left transition-colors hover:bg-surface/50"
+                    className="group flex w-full items-start gap-4 rounded-card p-1.5 text-left transition-colors hover:bg-surface/50"
                   >
-                    <span className="relative grid size-12 shrink-0 place-items-center">
+                    <span className="relative grid size-10 shrink-0 place-items-center">
                       {isActive && (
                         <motion.span
                           key={`pulse-${active}`}
@@ -124,7 +139,7 @@ export function HowItWorks() {
                       )}
                       <motion.span
                         className={clsx(
-                          "relative grid size-12 place-items-center rounded-full text-lg font-extrabold transition-colors duration-300",
+                          "relative grid size-10 place-items-center rounded-full text-base font-extrabold transition-colors duration-300",
                           isActive ? "bg-red-strong text-white" : isDone ? "bg-ink text-paper" : "bg-surface text-ink/70",
                         )}
                         animate={{ scale: isActive ? 1.08 : 1 }}
@@ -145,30 +160,21 @@ export function HowItWorks() {
                     </span>
 
                     <motion.span
-                      className="min-w-0 pt-1"
+                      className="min-w-0 pt-0.5"
                       animate={{ opacity: isActive ? 1 : isDone ? 0.7 : 0.45, x: isActive ? 4 : 0 }}
                       transition={{ duration: 0.35, ease: EASE }}
                     >
-                      <span className="block text-lg font-extrabold">{step.title}</span>
-                      <span className="mt-1 block text-sm text-muted">{step.body}</span>
+                      <span className="block text-base font-extrabold lg:text-[clamp(1rem,2.05vh,1.4rem)]">{step.title}</span>
+                      <span className="mt-0.5 block text-[13px] text-muted lg:text-[clamp(0.8125rem,1.6vh,1.0625rem)]">{step.body}</span>
                     </motion.span>
                   </button>
 
-                  {/* Space for the button is always reserved; only its opacity changes.
-                      Collapsing it changed the page's height mid-scroll, and Chrome
-                      cancels a smooth scroll when content above the target moves,
-                      so /#pricing stopped a section short. */}
+                  {/* Always shown, whichever step is lit: choosing a track is the
+                      one action on this card, so it never scrolls out of reach. */}
                   {i === 0 && (
-                    <motion.div
-                      className="pt-3 pl-[4.25rem]"
-                      initial={false}
-                      animate={{ opacity: isActive ? 1 : 0 }}
-                      transition={{ duration: 0.25, ease: EASE }}
-                      inert={!isActive}
-                      aria-hidden={!isActive}
-                    >
+                    <div className="pt-2 pl-[3.875rem]">
                       <ButtonLink href="/tracks" soft arrow className="px-4 py-2 text-xs">Choose Track</ButtonLink>
-                    </motion.div>
+                    </div>
                   )}
                 </motion.li>
               );
@@ -183,7 +189,7 @@ export function HowItWorks() {
             transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
           >
             <Eyebrow>{sectionCopy.howItWorks.eyebrow}</Eyebrow>
-            <h2 id="how-title" className="display mt-4 text-[clamp(2rem,4.5vw,3.25rem)] text-balance">
+            <h2 id="how-title" className="display mt-4 text-[clamp(2rem,min(4.4vw,7.2vh),5.25rem)] text-balance">
               {sectionCopy.howItWorks.title}
             </h2>
             {/* Fills continuously with scroll, so the reader can see how far is left. */}
@@ -192,8 +198,47 @@ export function HowItWorks() {
                 <Segment key={i} index={i} count={count} progress={scrollYProgress} />
               ))}
             </div>
+
+            {/* The step in focus, large: fills the right half and swaps as the
+                reader scrolls. Desktop only; on a phone the list says it all. */}
+            <div className="relative mt-[clamp(1.5rem,3.5vh,3rem)] hidden overflow-hidden rounded-card bg-paper/70 p-[clamp(1.5rem,3.2vh,2.75rem)] text-left ring-1 ring-line/15 lg:block">
+              {/* The numeral sits outside the sliding block: a transformed
+                  element becomes the containing block for absolute children,
+                  so inside it the numeral measured from the wrong box mid-slide
+                  and jumped back when the slide ended. It only cross-fades. */}
+              <AnimatePresence initial={false}>
+                <motion.span
+                  key={active}
+                  aria-hidden="true"
+                  className="display pointer-events-none absolute -top-3 right-5 text-[clamp(6rem,14vh,10rem)] leading-none text-red/[0.07] nums"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                >
+                  {String(active + 1).padStart(2, "0")}
+                </motion.span>
+              </AnimatePresence>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={active}
+                  className="relative"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                >
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-red-deep">
+                    Step {active + 1} of {count}
+                  </p>
+                  <p className="mt-2 font-heading text-[clamp(1.5rem,3vh,2.25rem)] leading-tight font-bold">{howItWorks[active].title}</p>
+                  <p className="mt-3 max-w-md text-[clamp(0.9375rem,1.8vh,1.1875rem)] leading-relaxed text-muted">{howItWorks[active].body}</p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </motion.div>
         </div>
+      </div>
       </div>
       </div>
     </section>
