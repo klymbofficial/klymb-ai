@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import {
+  ArrowLeft, ArrowRight, BookOpen, ChevronRight, CircleHelp, CloudUpload, Pencil, SquareCheck, Target, Toolbox,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { auth } from "@/auth";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { BuildSteps } from "@/components/learner/BuildSteps";
@@ -10,7 +14,7 @@ import { KnowledgeCheck } from "@/components/learner/KnowledgeCheck";
 import { ModuleSidebar } from "@/components/learner/ModuleSidebar";
 import { ResourceList } from "@/components/learner/ResourceList";
 import { Appear } from "@/components/motion/Appear";
-import { getPmDay, pmCurriculum } from "@/data/pm-curriculum";
+import { getPmDay, pmCurriculum, pmModules } from "@/data/pm-curriculum";
 import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
@@ -20,22 +24,28 @@ import deskImage from "@/assets/day-desk.png";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * A titled block. `plain` drops the card so a section can sit directly on the
- * page, the way the design alternates between framed and unframed blocks.
+ * A titled block: red line icon, heading, then its content. It rises into
+ * place as it scrolls into view; `delay` staggers the right-hand column a
+ * beat behind the left so each row settles left to right.
  */
-function Card({
-  title, icon, plain, children, className = "",
-}: { title: string; icon: string; plain?: boolean; children: React.ReactNode; className?: string }) {
+function Section({
+  title, icon: Icon, children, delay = 0,
+}: { title: string; icon: LucideIcon; children: React.ReactNode; delay?: number }) {
   return (
-    <section className={`${plain ? "" : "rounded-card bg-card p-6 shadow-card"} ${className}`}>
-      <h2 className="flex items-center gap-2.5 text-xl font-extrabold">
-        <span aria-hidden="true" className="text-red">{icon}</span>
-        {title}
-      </h2>
-      <div className={plain ? "mt-4" : "mt-5"}>{children}</div>
-    </section>
+    <Appear delay={delay} y={12} className="flex flex-col">
+      <section className="flex flex-1 flex-col">
+        <h2 className="flex items-center gap-2.5 text-lg font-bold">
+          <Icon aria-hidden="true" className="size-5 shrink-0 text-red" strokeWidth={2} />
+          {title}
+        </h2>
+        {/* Fills the row, so the forms can pin their buttons to one shared baseline. */}
+        <div className="mt-5 flex flex-1 flex-col">{children}</div>
+      </section>
+    </Appear>
   );
 }
+
+const RIGHT = 0.08;
 
 export default async function LearnDayPage({ params }: { params: Promise<{ day: string }> }) {
   const state = await requireLearner();
@@ -50,137 +60,155 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
 
   const submission = state.submissions.find((s) => s.day === dayNumber) ?? null;
   const submittedDays = state.submissions.map((s) => s.day);
-  const prev = pmCurriculum.find((d) => d.day === dayNumber - 1);
   const next = pmCurriculum.find((d) => d.day === dayNumber + 1);
+  const percent = Math.round((submittedDays.length / pmCurriculum.length) * 100);
+
+  const modules = pmModules.map((m) => ({
+    week: m.week,
+    name: m.name,
+    days: pmCurriculum.filter((d) => d.week === m.week).map((d) => ({ day: d.day, title: d.title })),
+  }));
 
   const kindLabel = entry.kind === "build" ? "Required" : entry.kind === "assessment" ? "Assessment" : "Mock interview";
 
   return (
-    <>
+    <div className="bg-card">
       <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
 
-      <div className="mx-auto max-w-[96rem] px-4 py-6 sm:px-8">
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
-        <aside className="flex flex-col gap-5 lg:sticky lg:top-6">
-          <div>
-            <Link href="/learn" className="text-sm font-semibold text-muted hover:text-red-deep">← Back to dashboard</Link>
-            <p className="display mt-3 text-2xl">Project Manager</p>
-            <p className="mt-1 text-xs text-muted">
-              Week {entry.week} · {Math.round((submittedDays.length / pmCurriculum.length) * 100)}% complete
-            </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface">
-              <div
-                className="h-full rounded-full bg-red-strong"
-                style={{ width: `${Math.max(2, Math.round((submittedDays.length / pmCurriculum.length) * 100))}%` }}
-              />
+      <div className="grid lg:grid-cols-[322px_1fr]">
+        <aside className="border-line/25 bg-paper px-6 pt-4 pb-8 lg:border-r">
+          <div className="lg:sticky lg:top-4">
+            <Link href="/learn" className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink/80 underline underline-offset-4 transition-colors hover:text-red-deep">
+              <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to Dashboard
+            </Link>
+            <p className="mt-5 font-heading text-2xl font-bold">Project Manager</p>
+            <p className="mt-1 text-sm text-muted">Week {entry.week} - {percent}% complete</p>
+            <div className="mt-2 mb-6 h-1 overflow-hidden rounded-full bg-line/20">
+              <div className="grow-x h-full rounded-full bg-red-strong" style={{ width: `${Math.max(2, percent)}%` }} />
             </div>
-          </div>
 
-          <ModuleSidebar currentDay={dayNumber} submitted={submittedDays} />
+            <ModuleSidebar modules={modules} currentDay={dayNumber} submitted={submittedDays} />
 
-          <div className="rounded-card bg-card p-5 shadow-card">
-            <p className="text-sm font-extrabold">Need help?</p>
-            <p className="mt-1 text-xs text-muted">Reach out to our team any time.</p>
-            <a href={`mailto:${contact.email}`} className="mt-3 inline-block rounded-md border border-line/50 px-3 py-2 text-xs font-bold hover:border-ink">
-              Contact support →
-            </a>
+            <div className="mt-6 rounded-lg border border-line/25 bg-card p-4">
+              <div className="flex gap-3">
+                <CircleHelp aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red" />
+                <div>
+                  <p className="font-bold">Need help?</p>
+                  <p className="text-sm text-muted">Reach out to our team anytime.</p>
+                </div>
+              </div>
+              <a
+                href={`mailto:${contact.email}`}
+                className="group mt-3 flex items-center justify-center gap-1.5 rounded-md border border-line/40 py-2 text-[15px] font-bold transition-colors duration-200 hover:border-ink hover:bg-paper"
+              >
+                Contact Support <ArrowRight aria-hidden="true" className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </a>
+            </div>
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-6">
-          <Appear>
-            <div className="grid items-center gap-6 xl:grid-cols-[1.15fr_1fr]">
-              <div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="display text-2xl text-red-strong">Day {entry.day}</p>
-                  <span className="rounded-md bg-surface px-2.5 py-1 text-xs font-semibold text-muted">~{entry.estimateMinutes} min</span>
+        <main className="min-w-0 px-4 py-10 sm:px-10 xl:px-16">
+          <div className="grid items-center gap-8 xl:grid-cols-[1.15fr_1fr]">
+              <div className="relative z-10">
+                <Appear y={8} className="flex flex-wrap items-center gap-3">
+                  <p className="mr-8 font-heading text-4xl font-semibold tracking-tight text-red-strong">Day {entry.day}</p>
+                  <span className="rounded-md bg-surface px-2.5 py-1 text-xs font-semibold text-ink/80">~{entry.estimateMinutes} min</span>
                   <span className="rounded-md border border-red-strong px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">
                     {kindLabel}
                   </span>
-                  <span className="rounded-md bg-surface px-2.5 py-1 text-xs font-semibold text-muted">{entry.points} pts</span>
                   {submission && (
                     <span className="rounded-md bg-ink px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-paper">Submitted</span>
                   )}
-                </div>
-                <h1 className="display mt-4 text-4xl text-balance sm:text-5xl">{entry.title}</h1>
+                </Appear>
+                <Appear delay={0.08} y={18}>
+                  <h1 className="display mt-10 text-4xl text-balance sm:text-5xl">{entry.title}</h1>
+                </Appear>
               </div>
-              <Image src={deskImage} alt="" aria-hidden="true" sizes="(min-width: 1280px) 34vw, 90vw" priority className="h-auto w-full" />
-            </div>
-          </Appear>
-
-          {/* Two reading columns: what to do on the left, what to hand in on
-              the right, as the design lays them out. */}
-          <div className="grid gap-10 xl:grid-cols-2 xl:gap-12">
-            <div className="flex min-w-0 flex-col gap-10">
-              <Card title="Mission" icon="◎" plain>
-                <p className="text-[15px] leading-relaxed">{entry.mission}</p>
-                {entry.concepts.length > 0 && (
-                  <>
-                    <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Concepts to learn</p>
-                    <ul className="mt-3 flex flex-col gap-2 text-sm">
-                      {entry.concepts.map((c) => (
-                        <li key={c} className="flex gap-2"><span aria-hidden="true" className="text-red">•</span>{c}</li>
-                      ))}
-                    </ul>
-                  </>
+              <Appear delay={0.16} y={0} className="relative">
+                {/* A slow drift, a few pixels, so the still life feels lit rather than pasted. */}
+                <div className="float-soft">
+                  <Image src={deskImage} alt="" aria-hidden="true" sizes="(min-width: 1280px) 40vw, 90vw" priority className="h-auto w-full xl:origin-right xl:scale-[1.18]" />
+                </div>
+                {next && (
+                  <Link
+                    href={`/learn/day/${next.day}`}
+                    className="group absolute top-2 right-0 inline-flex items-center gap-1.5 rounded-md bg-red-strong px-4 py-2 text-sm font-bold text-white shadow-sm transition-[background-color,box-shadow] duration-200 hover:bg-red-press hover:shadow-card"
+                  >
+                    Day {next.day} <ChevronRight aria-hidden="true" className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </Link>
                 )}
-              </Card>
-
-              {entry.steps.length > 0 && (
-                <Card title="Build steps" icon="⚒">
-                  <BuildSteps steps={entry.steps} />
-                </Card>
-              )}
-
-              {entry.quiz.length > 0 && (
-                <Card title={entry.kind === "build" ? "Let's test your work" : "Challenge questions"} icon="✎" plain>
-                  <KnowledgeCheck day={entry.day} questions={entry.quiz} saved={submission?.quiz_answers ?? null} />
-                </Card>
-              )}
+              </Appear>
             </div>
 
-            <div className="flex min-w-0 flex-col gap-10">
-              <Card title="Objectives" icon="☑" plain>
-                <ul className="flex flex-col gap-2 text-sm">
-                  {entry.objectives.map((o) => (
-                    <li key={o} className="flex gap-2"><span aria-hidden="true" className="text-muted">•</span>{o}</li>
-                  ))}
-                </ul>
-                <ul className="mt-5 flex flex-wrap gap-2">
-                  {entry.tags.map((t) => (
-                    <li key={t} className="rounded-md bg-surface px-2.5 py-1 text-[11px] font-bold">{t}</li>
-                  ))}
-                </ul>
-              </Card>
-
-              {entry.resources.length > 0 && (
-                <Card title="Reference resources" icon="▤" plain>
-                  <ResourceList resources={entry.resources} />
-                </Card>
+          {/* Six blocks in three rows, so each pair lines up across the two
+              columns as the design lays them out. */}
+          <div className="mt-12 grid gap-x-16 gap-y-16 xl:grid-cols-2">
+            <Section title="Mission" icon={Target}>
+              <p className="text-base leading-relaxed text-muted">{entry.mission}</p>
+              {entry.concepts.length > 0 && (
+                <>
+                  <p className="mt-6 text-sm font-semibold uppercase tracking-[0.02em] text-muted/80">Concepts to learn</p>
+                  <ul className="mt-3 flex flex-col gap-2.5 text-[15px]">
+                    {entry.concepts.map((c) => <li key={c}>• {c}</li>)}
+                  </ul>
+                </>
               )}
+            </Section>
 
-              <Card title="Your deliverable" icon="↥" plain>
-                <p className="mb-5 text-sm">
-                  <strong>Expected:</strong> <span dangerouslySetInnerHTML={{ __html: entry.deliverable }} />
-                  <span className="mt-1.5 block text-muted"><strong className="text-ink">Reviewer checks:</strong> {entry.reviewerChecks}</span>
-                </p>
-                <DaySubmission
-                  day={entry.day}
-                  submission={submission}
-                  needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)}
-                  nextDay={next?.day}
-                />
-              </Card>
-            </div>
+            <Section title="Objectives" icon={SquareCheck} delay={RIGHT}>
+              <ul className="flex flex-col gap-2.5 text-[15px]">
+                {entry.objectives.map((o) => <li key={o}>• {o}</li>)}
+              </ul>
+              <ul className="mt-6 flex flex-wrap gap-2">
+                {entry.tags.map((t) => (
+                  <li key={t} className="rounded-md bg-surface/70 px-3 py-1.5 text-[15px] font-medium text-ink/80">{t}</li>
+                ))}
+              </ul>
+            </Section>
+
+            {entry.steps.length > 0 ? (
+              <Appear y={12} className="flex flex-col"><section className="flex flex-1 flex-col rounded-2xl border border-line/20 bg-linear-to-b from-red-tint/60 to-card to-40% p-7 shadow-card transition-shadow duration-300 hover:shadow-float">
+                <h2 className="flex items-center gap-2.5 text-lg font-bold">
+                  <Toolbox aria-hidden="true" className="size-5 shrink-0 text-red" strokeWidth={2} />
+                  Build steps
+                </h2>
+                <div className="mt-6 flex flex-1 flex-col"><BuildSteps steps={entry.steps} /></div>
+              </section></Appear>
+            ) : <div className="hidden xl:block" />}
+
+            {entry.resources.length > 0 ? (
+              <Section title="Reference resources" icon={BookOpen} delay={RIGHT}>
+                <ResourceList resources={entry.resources} />
+              </Section>
+            ) : <div className="hidden xl:block" />}
+
+            {entry.quiz.length > 0 ? (
+              <Section title={entry.kind === "build" ? "Let's test your work" : "Challenge questions"} icon={Pencil}>
+                <KnowledgeCheck day={entry.day} questions={entry.quiz} saved={submission?.quiz_answers ?? null} />
+              </Section>
+            ) : <div className="hidden xl:block" />}
+
+            <Section title="Your deliverable" icon={CloudUpload} delay={RIGHT}>
+              <dl className="mb-8 flex flex-col gap-4 rounded-lg bg-surface/50 p-4 text-[15px] leading-relaxed">
+                <div>
+                  <dt className="text-xs font-bold uppercase tracking-widest text-muted">Expected</dt>
+                  <dd className="mt-1" dangerouslySetInnerHTML={{ __html: entry.deliverable }} />
+                </div>
+                <div>
+                  <dt className="text-xs font-bold uppercase tracking-widest text-muted">Reviewer checks</dt>
+                  <dd className="mt-1">{entry.reviewerChecks}</dd>
+                </div>
+              </dl>
+              <DaySubmission
+                day={entry.day}
+                submission={submission}
+                needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)}
+                nextDay={next?.day}
+              />
+            </Section>
           </div>
-
-          <nav aria-label="Other days" className="flex justify-between gap-4 border-t border-line/30 pt-5 font-bold">
-            {prev ? <Link href={`/learn/day/${prev.day}`} className="hover:text-red-deep">← Day {prev.day}</Link> : <span />}
-            {next ? <Link href={`/learn/day/${next.day}`} className="hover:text-red-deep">Day {next.day} →</Link> : <span />}
-          </nav>
-        </div>
+        </main>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

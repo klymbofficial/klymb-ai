@@ -8,16 +8,23 @@
   --color-muted: #5a5757;
   --color-line: #8f8c8b;
   /*
-   * One brand red, everywhere: #E22E1B. `red`, `red-strong` and `red-deep`
-   * were three different reds; they are kept as names so nothing breaks, but
-   * all three are now the same colour. White text on it is 4.53:1 (AA).
+   * One brand red, everywhere: #83050B. `red`, `red-strong`, `red-deep` and
+   * `red-soft` are kept as names so nothing breaks, but all are now the same
+   * colour. White text on it is 10.5:1 (AAA).
    */
-  --color-red: #e22e1b;
-  --color-red-strong: #e22e1b;
-  --color-red-deep: #e22e1b;
-  /* The same hue, 8% darker: only for hover and press on filled red. */
-  --color-red-press: #be2717;
+  --color-red: #83050b;
+  --color-red-strong: #83050b;
+  --color-red-deep: #83050b;
+  --color-red-soft: #f0868b; /* the brand red lifted for dark surfaces, where #83050b is unreadable */
+  /* The same hue, darker: only for hover and press on filled red. */
+  --color-red-press: #690409;
   --color-red-tint: #fff2ef;
+  /* The brand red with the saturation taken down, for large calm areas. */
+  --color-red-muted: #6e2c30;
+  --color-red-muted-deep: #5a2226;
+  /* Errors: the brand red, on its tint. */
+  --color-error: #83050b;
+  --color-error-tint: #fff2ef;
   --color-card: #ffffff;
   /* The dark ground used by the footer and the career-track detail card. */
   --color-night: #141312;
@@ -28,7 +35,8 @@
 
   --radius-card: 1.25rem;
   --radius-slab: 2rem;
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  /* Inter for body and paragraph text; Archivo stays on headings. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -49,7 +57,15 @@ body {
   font-family: var(--font-sans);
 }
 
-:focus-visible { outline: 3px solid var(--color-red); outline-offset: 2px; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+
+/*
+ * In the base layer so a component can replace it: unlayered CSS beats every
+ * Tailwind utility, which is how form fields ended up with two focus strokes.
+ */
+@layer base {
+  :focus-visible { outline: 3px solid var(--color-red); outline-offset: 2px; }
+}
 
 .display {
   font-family: var(--font-heading);
@@ -62,6 +78,9 @@ body {
 /* Optical correction: the bigger the type, the tighter it should track. */
 .display.text-6xl, .display.text-7xl { letter-spacing: -0.045em; }
 
+/* A lighter display for text-heavy pages: bold rather than black. */
+.display.display-soft { font-weight: 700; letter-spacing: -0.025em; }
+
 .nums { font-variant-numeric: tabular-nums; }
 
 /* Long tables stay cheap to scroll. */
@@ -69,6 +88,40 @@ body {
 
 @keyframes tick { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
 .tick { animation: tick 1.2s infinite; }
+
+/*
+ * News-style ticker, left to right. The left padding is the bar's full width;
+ * shifted back by the track's own width, the text starts just off the left
+ * edge, and at rest it sits just off the right edge, where the loop restarts.
+ */
+@keyframes ticker { from { transform: translateX(-100%) } to { transform: translateX(0) } }
+.ticker { overflow: hidden; white-space: nowrap; }
+.ticker-track { display: inline-block; padding-left: 100%; animation: ticker 22s linear infinite; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+
+/* Progress bars fill from the left once, on load. */
+@keyframes grow-x { from { transform: scaleX(0) } }
+.grow-x { transform-origin: left; animation: grow-x .9s cubic-bezier(.2, .7, .3, 1) .25s backwards; }
+
+/* A few pixels of slow drift, for still-life imagery. */
+@keyframes float-soft { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+.float-soft { animation: float-soft 7s ease-in-out infinite; }
+
+/* Brush strokes that paint themselves in once (paths use pathLength="1"). */
+@keyframes paint-draw { to { stroke-dashoffset: 0 } }
+.paint-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: paint-draw 1.6s cubic-bezier(.45, 0, .2, 1) forwards; }
+
+/* Glints that twinkle beside the goal in the registration illustration. */
+@keyframes sparkle { 0%, 100% { opacity: .35; transform: scale(.8) } 50% { opacity: 1; transform: scale(1) } }
+.sparkle { transform-box: fill-box; transform-origin: center; animation: sparkle 2.4s ease-in-out infinite; }
+.sparkle-late { animation-delay: 1.2s; }
+
+/* A soft light that wanders slowly across a coloured band. */
+@keyframes glow-drift {
+  0%, 100% { transform: translate(0, 0) }
+  50% { transform: translate(18rem, 4rem) }
+}
+.glow-drift { animation: glow-drift 18s ease-in-out infinite; }
 
 /* Hero day-strip: fills once on load, then rests. */
 @keyframes fill-in { from { transform: scaleY(.25); opacity: .35 } to { transform: scaleY(1); opacity: 1 } }
@@ -80,6 +133,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .tick { animation: none; }
+  .ticker { text-align: center; }
+  .ticker-track { animation: none; padding-left: 0; }
+  .grow-x, .float-soft, .glow-drift, .sparkle { animation: none; }
+  .paint-draw { animation: none; stroke-dashoffset: 0; }
   .day-tick { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
 }
@@ -118,10 +175,18 @@ body {
 
 /* Frosted statistic tiles, so the field stays faintly visible through them. */
 .frost {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.7));
-  backdrop-filter: blur(6px);
+  /* Glass: mostly clear, heavily blurred and slightly saturated, lit from the
+     top edge by a bright hairline and an inner highlight. */
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.22));
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(32, 30, 29, 0.04),
+    0 1px 2px rgba(32, 30, 29, 0.04),
+    0 18px 40px -18px rgba(32, 30, 29, 0.22);
 }
 
 /* Modal entrance. The dialog is already usable without it. */
@@ -153,7 +218,7 @@ body {
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .spotlight::after {
     content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit;
-    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(226 46 27 / 0.1), transparent 45%);
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(131 5 11 / 0.08), transparent 45%);
     opacity: 0; transition: opacity 0.3s;
   }
   .spotlight-white::after { background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.09), transparent 45%); }

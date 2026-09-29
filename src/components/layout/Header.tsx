@@ -15,6 +15,9 @@ import { Wordmark } from "./Wordmark";
 export function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  // On the home page the links live in the hero's folder tab instead, so the
+  // bar cannot stick: a tab left behind on scroll would float over content.
+  const home = pathname === "/";
 
   useEffect(() => {
     if (!open) return;
@@ -24,11 +27,11 @@ export function Header() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 bg-paper">
+    <header className={home ? "relative bg-paper" : "sticky top-0 z-50 bg-paper"}>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <span onClick={() => setOpen(false)}><Wordmark className="text-xl" /></span>
 
-        <nav aria-label="Primary" className="hidden lg:block">
+        <nav aria-label="Primary" className={home ? "hidden" : "hidden lg:block"}>
           <ul className="flex items-center gap-9 rounded-full bg-card px-8 py-3 text-[15px] font-semibold shadow-card">
             {navLinks.map((l) => (
               <li key={l.href}>

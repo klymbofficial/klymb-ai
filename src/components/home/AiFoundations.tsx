@@ -18,13 +18,13 @@ function Glyph({ kind }: { kind: ConceptGlyph }) {
         <g {...stroke}>
           {[0, 1, 2].map((i) => <rect key={i} x={22 + i * 7} y={30 - i * 7} width="34" height="42" rx="3" opacity={0.35 + i * 0.3} />)}
           <path d="M70 50h30" className="ai-flow" />
-          <circle cx="112" cy="50" r="10" className="text-red" />
+          <circle cx="112" cy="50" r="10" className="text-red-soft" />
         </g>
       );
     case "agents":
       return (
         <g {...stroke}>
-          <circle cx="70" cy="50" r="11" className="text-red" />
+          <circle cx="70" cy="50" r="11" className="text-red-soft" />
           {[[30, 24], [110, 24], [30, 76], [110, 76]].map(([x, y]) => (
             <g key={`${x}${y}`}>
               <path d={`M70 50L${x} ${y}`} className="ai-flow" opacity="0.6" />
@@ -37,7 +37,7 @@ function Glyph({ kind }: { kind: ConceptGlyph }) {
       return (
         <g {...stroke}>
           <path d="M18 78h104M18 78V22" opacity="0.4" />
-          <path d="M22 66l18-10 16 6 18-22 16 8 18-18 12 4" className="ai-flow text-red" />
+          <path d="M22 66l18-10 16 6 18-22 16 8 18-18 12 4" className="ai-flow text-red-soft" />
           {[40, 56, 74, 90, 108].map((x, i) => <circle key={x} cx={x} cy={[56, 62, 40, 48, 30][i]} r="2.4" fill="currentColor" />)}
         </g>
       );
@@ -50,7 +50,7 @@ function Glyph({ kind }: { kind: ConceptGlyph }) {
               <path d={`M48 ${30 + i * 20}h${[62, 48, 56][i]}`} opacity="0.5" />
             </g>
           ))}
-          <path d="M28 30l3 3 5-6M28 50l3 3 5-6" className="text-red" />
+          <path d="M28 30l3 3 5-6M28 50l3 3 5-6" className="text-red-soft" />
           <path d="M28 66l8 8M36 66l-8 8" />
         </g>
       );
@@ -58,14 +58,14 @@ function Glyph({ kind }: { kind: ConceptGlyph }) {
       return (
         <g {...stroke}>
           <path d="M70 18l30 11v19c0 18-13 29-30 35-17-6-30-17-30-35V29z" />
-          <path d="M58 50l8 8 16-17" className="ai-flow text-red" />
+          <path d="M58 50l8 8 16-17" className="ai-flow text-red-soft" />
         </g>
       );
     case "guardrails":
       return (
         <g {...stroke}>
           <path d="M16 50h108" className="ai-flow" strokeDasharray="4 6" />
-          <path d="M16 30h108M16 70h108" className="text-red" />
+          <path d="M16 30h108M16 70h108" className="text-red-soft" />
           {[34, 70, 106].map((x) => <path key={x} d={`M${x} 30v40`} opacity="0.45" />)}
         </g>
       );
@@ -95,7 +95,7 @@ export function AiFoundations() {
               <Spotlight className="h-full rounded-card">
               <article className="card group flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-float">
                 <div className="relative grid aspect-[16/8] place-items-center overflow-hidden bg-night text-white/85">
-                  <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_60%,rgb(226_46_27/0.28),transparent_70%)] opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
+                  <span aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(60%_70%_at_50%_60%,rgb(131_5_11/0.55),transparent_70%)] opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
                   <svg viewBox="0 0 140 100" className="relative h-[62%] w-auto" aria-hidden="true"><Glyph kind={c.glyph} /></svg>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 p-6">
@@ -129,7 +129,7 @@ export function AiFoundations() {
           <ol className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {evalMetrics.map((m, i) => (
               <li key={m.name} className="rounded-card bg-white/[0.06] p-4 transition-colors hover:bg-white/[0.1]">
-                <span className="text-xs font-extrabold tracking-[0.16em] text-red nums">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-xs font-extrabold tracking-[0.16em] text-red-soft nums">{String(i + 1).padStart(2, "0")}</span>
                 <p className="mt-1 font-extrabold">{m.name}</p>
                 <p className="mt-1 text-[13px] leading-snug text-white/65">{m.question}</p>
               </li>

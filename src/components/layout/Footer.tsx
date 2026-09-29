@@ -24,7 +24,7 @@ export function Footer() {
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" aria-label="Klymb.ai home" className="display inline-flex items-baseline text-xl text-white">
-              KLYMB<span className="text-red">.AI</span>
+              KLYMB<span className="text-red-soft">.AI</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">{brand.tagline}</p>
             <a href={`mailto:${contact.email}`} className="mt-5 inline-block text-sm font-semibold text-white underline underline-offset-4">

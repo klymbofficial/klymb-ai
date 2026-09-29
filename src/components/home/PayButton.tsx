@@ -81,7 +81,7 @@ export function PayButton({ email, price }: { email: string; price: number }) {
       name: "Klymb.ai",
       description: `${order.track_name} · 30-day cohort`,
       prefill: order.prefill,
-      theme: { color: "#E22E1B" },
+      theme: { color: "#83050B" },
       handler: async (r: RazorpaySuccess) => {
         const v = await fetch("/api/verify-payment", {
           method: "POST",

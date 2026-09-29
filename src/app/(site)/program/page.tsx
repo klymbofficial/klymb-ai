@@ -36,7 +36,7 @@ export default function ProgramPage() {
             </li>
           ))}
           <li className="bg-ink px-4 py-8 text-paper sm:px-6">
-            <p className="display text-4xl text-red">MI</p>
+            <p className="display text-4xl text-red-soft">MI</p>
             <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.14em] text-white/70">{mockInterviewPhase.days}</p>
             <p className="mt-1 text-lg font-extrabold">{mockInterviewPhase.name}</p>
             <p className="mt-2 text-sm text-white/75">{mockInterviewPhase.summary}</p>

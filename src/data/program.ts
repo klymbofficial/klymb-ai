@@ -153,7 +153,7 @@ export const faqs: Faq[] = [
   {
     question: "Can I change my track?",
     answer:
-      "Not after you enrol. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
+      "Not after you enroll. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
   },
   {
     question: "What happens every day?",

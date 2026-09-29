@@ -74,9 +74,9 @@ export function LightCanvas({ mode, className }: { mode: "beam" | "paint"; class
         ctx.translate(src.x, src.y);
         ctx.rotate(ang);
         const g = ctx.createLinearGradient(0, 0, len, 0);
-        g.addColorStop(0, "rgba(226,46,27,0.00)");
-        g.addColorStop(0.35, "rgba(226,46,27,0.10)");
-        g.addColorStop(1, "rgba(226,46,27,0.00)");
+        g.addColorStop(0, "rgba(131,5,11,0.00)");
+        g.addColorStop(0.35, "rgba(131,5,11,0.10)");
+        g.addColorStop(1, "rgba(131,5,11,0.00)");
         ctx.fillStyle = g;
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -86,8 +86,8 @@ export function LightCanvas({ mode, className }: { mode: "beam" | "paint"; class
         ctx.fill();
         ctx.restore();
         const glow = ctx.createRadialGradient(x, y, 0, x, y, Math.max(w, h) * 0.28);
-        glow.addColorStop(0, "rgba(226,46,27,0.16)");
-        glow.addColorStop(1, "rgba(226,46,27,0)");
+        glow.addColorStop(0, "rgba(131,5,11,0.16)");
+        glow.addColorStop(1, "rgba(131,5,11,0)");
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, w, h);
       } else {
