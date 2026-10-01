@@ -6,6 +6,7 @@ import { Appear } from "@/components/motion/Appear";
 import { CohortBoard, type BoardDay } from "@/components/learner/CohortBoard";
 import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
+import { PaymentNotice } from "@/components/learner/PaymentNotice";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
@@ -51,6 +52,7 @@ export default async function LearnHomePage() {
     return (
       <>
         <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <PaymentNotice email={learner.email} track={track} />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
           <h1 className="display mt-4 text-4xl text-balance">Your place is reserved. Day 1 opens soon.</h1>
@@ -85,6 +87,7 @@ export default async function LearnHomePage() {
   return (
     <>
       <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <PaymentNotice email={learner.email} track={track} />
 
       {/* Deep red, lit from the top left and falling to near-black on the
           right; one soft glow drifts slowly behind the text. */}
