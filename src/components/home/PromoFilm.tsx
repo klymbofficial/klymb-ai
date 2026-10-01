@@ -7,13 +7,15 @@ import { cohort } from "@/data/config";
 import { priceFrom, tracks } from "@/data/tracks";
 import { formatDate, formatINR } from "@/lib/format";
 import { FilmAudio } from "./filmAudio";
+import { FilmVoice } from "./filmVoice";
 
 /*
  * A 30-second motion-graphics film with a synthesised soundtrack, drawn in the
  * page rather than shipped as an MP4: sharp at any size, nothing to download,
  * and its last frame is a real, clickable call to action. It plays silently
  * when it scrolls into view (browsers forbid sound before a tap); "Sound on"
- * turns the soundtrack on. Pause, replay, and reduced motion (end card only)
+ * turns the soundtrack and the narration on (the browser's own voice, see
+ * filmVoice.ts). Pause, replay, and reduced motion (end card only)
  * are all supported.
  *
  * Script:
@@ -65,6 +67,7 @@ export function PromoFilm() {
   const [soundOn, setSoundOn] = useState(false);
   const elapsed = useRef(0);
   const audio = useRef<FilmAudio | null>(null);
+  const voice = useRef<FilmVoice | null>(null);
 
   // Play while on screen, unless the viewer paused it.
   useEffect(() => {
@@ -87,6 +90,14 @@ export function PromoFilm() {
       elapsed.current = Math.min(LENGTH, before + dt);
       if (soundOn && audio.current) {
         for (const c of CUES) if (c.at > before && c.at <= elapsed.current) c.play(audio.current);
+        // The narrator reads each scene's line just after it appears.
+        for (const sc of SCENES) {
+          const at = sc.from + 0.15;
+          if (at > before && at <= elapsed.current) {
+            const a = audio.current;
+            voice.current?.say(sc.line, { onStart: () => a.duck(true), onEnd: () => a.duck(false) });
+          }
+        }
       }
       setT(elapsed.current);
       if (elapsed.current >= LENGTH) setPlaying(false);
@@ -95,25 +106,34 @@ export function PromoFilm() {
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      if (soundOn) audio.current?.pause();
+      if (soundOn) {
+        audio.current?.pause();
+        voice.current?.stop();
+      }
     };
   }, [playing, soundOn]);
 
-  useEffect(() => () => audio.current?.close(), []);
+  useEffect(() => () => {
+    audio.current?.close();
+    voice.current?.stop();
+  }, []);
 
   function toggleSound() {
     if (!audio.current) audio.current = new FilmAudio();
+    if (!voice.current) voice.current = FilmVoice.create();
     const next = !soundOn;
     setSoundOn(next);
     if (next) {
       // Turning sound on also starts the film from the top, so the music lands with the story.
       void audio.current.resume();
+      voice.current?.prime();
       elapsed.current = 0;
       setT(0);
       setUserPaused(false);
       setPlaying(true);
     } else {
       audio.current.pause();
+      voice.current?.stop();
     }
   }
 
