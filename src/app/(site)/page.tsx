@@ -1,4 +1,6 @@
 import { AiFoundations } from "@/components/home/AiFoundations";
+import { Certificate } from "@/components/home/Certificate";
+import { ForYouIf } from "@/components/home/ForYouIf";
 import { CareerTracks } from "@/components/home/CareerTracks";
 import { Evidence } from "@/components/home/Evidence";
 import { FaqJoin } from "@/components/home/FaqJoin";
@@ -21,11 +23,13 @@ export default async function HomePage() {
     <>
       <Hero />
       <StatementBand>{statement}</StatementBand>
+      <ForYouIf />
       <AiFoundations />
       <Evidence />
       <HowItWorks />
       <CareerTracks />
       <Pricing />
+      <Certificate />
       <WhyRefund />
       <FaqJoin />
       <StickyEnrolBar />

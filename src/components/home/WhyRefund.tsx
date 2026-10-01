@@ -21,7 +21,7 @@ export function WhyRefund() {
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {whyRefund.promises.map((line) => (
             <li key={line} className="flex gap-3">
-              <svg className="mt-1 size-4 shrink-0 text-red-strong" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+              <svg className="mt-1 size-4 shrink-0 text-red-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
               {line}
             </li>
           ))}
