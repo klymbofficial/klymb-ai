@@ -7,33 +7,31 @@ import { cohort } from "@/data/config";
 import { priceFrom, tracks } from "@/data/tracks";
 import { formatDate, formatINR } from "@/lib/format";
 import { FilmAudio } from "./filmAudio";
-import { FilmVoice } from "./filmVoice";
 
 /*
  * A 30-second motion-graphics film with a synthesised soundtrack, drawn in the
  * page rather than shipped as an MP4: sharp at any size, nothing to download,
  * and its last frame is a real, clickable call to action. It plays silently
  * when it scrolls into view (browsers forbid sound before a tap); "Sound on"
- * turns the soundtrack and the narration on (the browser's own voice, see
- * filmVoice.ts). Pause, replay, and reduced motion (end card only)
+ * turns the soundtrack on. Pause, replay, and reduced motion (end card only)
  * are all supported.
  *
- * Script:
- *   0–5s   "Your job title is on a list."             titles drop in, a pluck each
- *   5–10s  "AI now does the routine part."             each title slashed through, a blade swipe each
- *   10–16s "The work isn't ending. The title is."      old title → new role, one by one, a rising sweep each
- *   16–21s "30 days. One real problem a day."           giant day counter, ticks; checkpoints ring
- *   21–26s "Proof you can show."                        three proof points, a chime each
- *   26–30s "Finish all 30 days. Get 100% of your fee back."  CTA, a swelling chord
+ * Script (28s):
+ *   0–3s   "Your job title is on a list."             titles drop in, a pluck each
+ *   3–8s   "AI now does the routine part."             each title slashed through, a blade swipe each
+ *   8–14s  "The work isn't ending. The title is."      old title → new role, one by one, a rising sweep each
+ *   14–19s "30 days. One real problem a day."           giant day counter, ticks; checkpoints ring
+ *   19–24s "Proof you can show."                        three proof points, a chime each
+ *   24–28s "Finish all 30 days. Get 100% of your fee back."  CTA, a swelling chord
  */
-const LENGTH = 30;
+const LENGTH = 28;
 const SCENES = [
   { from: 0, line: "Your job title is on a list." },
-  { from: 5, line: "AI now does the routine part." },
-  { from: 10, line: "The work isn't ending. The title is." },
-  { from: 16, line: "30 days. One real problem a day." },
-  { from: 21, line: "Proof you can show." },
-  { from: 26, line: "Finish all 30 days. Get 100% of your fee back." },
+  { from: 3, line: "AI now does the routine part." },
+  { from: 8, line: "The work isn't ending. The title is." },
+  { from: 14, line: "30 days. One real problem a day." },
+  { from: 19, line: "Proof you can show." },
+  { from: 24, line: "Finish all 30 days. Get 100% of your fee back." },
 ];
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 const ROLE_EVERY = 1.15; // seconds per old-title → new-role swap in scene 3
@@ -50,12 +48,12 @@ type Cue = { at: number; play: (a: FilmAudio) => void };
 /** Every sound, at the second it belongs to. */
 const CUES: Cue[] = [
   ...SCENES.slice(1).map((s) => ({ at: s.from, play: (a: FilmAudio) => a.whoosh() })),
-  ...tracks.map((_, i) => ({ at: 0.35 + i * 0.25, play: (a: FilmAudio) => a.pluck(i * 2) })),
-  ...tracks.map((_, i) => ({ at: 5.3 + i * 0.6, play: (a: FilmAudio) => a.slash() })),
-  ...tracks.map((_, i) => ({ at: 10.25 + i * ROLE_EVERY, play: (a: FilmAudio) => a.rise() })),
-  ...Array.from({ length: 30 }, (_, i) => ({ at: 16.3 + (i / 30) * COUNT_FOR, play: (a: FilmAudio) => a.tick((i + 1) % 7 === 0 && i < 28) })),
-  ...[0, 1, 2].map((i) => ({ at: 21.4 + i * 0.55, play: (a: FilmAudio) => a.chime(i) })),
-  { at: 26.2, play: (a: FilmAudio) => a.swell() },
+  ...tracks.map((_, i) => ({ at: 0.15 + i * 0.18, play: (a: FilmAudio) => a.pluck(i * 2) })),
+  ...tracks.map((_, i) => ({ at: 3.3 + i * 0.6, play: (a: FilmAudio) => a.slash() })),
+  ...tracks.map((_, i) => ({ at: 8.25 + i * ROLE_EVERY, play: (a: FilmAudio) => a.rise() })),
+  ...Array.from({ length: 30 }, (_, i) => ({ at: 14.3 + (i / 30) * COUNT_FOR, play: (a: FilmAudio) => a.tick((i + 1) % 7 === 0 && i < 28) })),
+  ...[0, 1, 2].map((i) => ({ at: 19.4 + i * 0.55, play: (a: FilmAudio) => a.chime(i) })),
+  { at: 24.2, play: (a: FilmAudio) => a.swell() },
 ];
 
 export function PromoFilm() {
@@ -67,7 +65,6 @@ export function PromoFilm() {
   const [soundOn, setSoundOn] = useState(false);
   const elapsed = useRef(0);
   const audio = useRef<FilmAudio | null>(null);
-  const voice = useRef<FilmVoice | null>(null);
 
   // Play while on screen, unless the viewer paused it.
   useEffect(() => {
@@ -90,14 +87,6 @@ export function PromoFilm() {
       elapsed.current = Math.min(LENGTH, before + dt);
       if (soundOn && audio.current) {
         for (const c of CUES) if (c.at > before && c.at <= elapsed.current) c.play(audio.current);
-        // The narrator reads each scene's line just after it appears.
-        for (const sc of SCENES) {
-          const at = sc.from + 0.15;
-          if (at > before && at <= elapsed.current) {
-            const a = audio.current;
-            voice.current?.say(sc.line, { onStart: () => a.duck(true), onEnd: () => a.duck(false) });
-          }
-        }
       }
       setT(elapsed.current);
       if (elapsed.current >= LENGTH) setPlaying(false);
@@ -106,34 +95,25 @@ export function PromoFilm() {
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      if (soundOn) {
-        audio.current?.pause();
-        voice.current?.stop();
-      }
+      if (soundOn) audio.current?.pause();
     };
   }, [playing, soundOn]);
 
-  useEffect(() => () => {
-    audio.current?.close();
-    voice.current?.stop();
-  }, []);
+  useEffect(() => () => audio.current?.close(), []);
 
   function toggleSound() {
     if (!audio.current) audio.current = new FilmAudio();
-    if (!voice.current) voice.current = FilmVoice.create();
     const next = !soundOn;
     setSoundOn(next);
     if (next) {
       // Turning sound on also starts the film from the top, so the music lands with the story.
       void audio.current.resume();
-      voice.current?.prime();
       elapsed.current = 0;
       setT(0);
       setUserPaused(false);
       setPlaying(true);
     } else {
       audio.current.pause();
-      voice.current?.stop();
     }
   }
 
@@ -143,7 +123,7 @@ export function PromoFilm() {
 
   return (
     <section aria-labelledby="film-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-      <h2 id="film-title" className="sr-only">Klymb.ai in 30 seconds</h2>
+      <h2 id="film-title" className="sr-only">Klymb.ai in 28 seconds</h2>
       <div ref={ref} className="relative aspect-[4/5] overflow-hidden rounded-slab bg-[#0d0b0b] text-paper shadow-float sm:aspect-video">
         {/* Two slow red glows and a film-grain layer, with a gentle camera drift per scene. */}
         <motion.div
@@ -201,7 +181,7 @@ export function PromoFilm() {
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
             <div className="h-full rounded-full bg-red-soft" style={{ width: `${(t / LENGTH) * 100}%` }} />
           </div>
-          <span className="hidden text-xs font-semibold text-white/60 nums sm:inline" aria-hidden="true">0:{String(Math.floor(t)).padStart(2, "0")} / 0:30</span>
+          <span className="hidden text-xs font-semibold text-white/60 nums sm:inline" aria-hidden="true">0:{String(Math.floor(t)).padStart(2, "0")} / 0:28</span>
           {!reduced && (
             <button
               type="button"
@@ -263,7 +243,7 @@ function Visual({ scene, local }: { scene: number; local: number }) {
               className="relative rounded-xl border border-white/15 bg-white/[0.06] px-[clamp(0.6rem,1.6vw,1.2rem)] py-[clamp(0.35rem,0.9vw,0.7rem)] text-[clamp(0.85rem,1.9vw,1.4rem)] font-extrabold backdrop-blur-sm"
               initial={scene === 0 ? { opacity: 0, y: -30, rotate: i % 2 ? 4 : -4 } : false}
               animate={{ opacity: struck ? 0.4 : 1, y: 0, rotate: 0, x: struck ? [0, -4, 3, 0] : 0 }}
-              transition={{ delay: scene === 0 ? 0.3 + i * 0.25 : 0, duration: struck ? 0.25 : 0.5, ease: EASE }}
+              transition={{ delay: scene === 0 ? 0.1 + i * 0.18 : 0, duration: struck ? 0.25 : 0.5, ease: EASE }}
             >
               {tr.name}
               {scene === 1 && (
