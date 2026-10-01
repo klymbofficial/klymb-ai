@@ -26,3 +26,13 @@ export interface PmDay {
   /** Knowledge checks answerable only by someone who did the work. */
   quiz: string[];
 }
+
+/** Every track's day uses the same shape; PmDay is the original name. */
+export type CurriculumDay = PmDay;
+
+export interface CurriculumModule {
+  week: number;
+  name: string;
+  days: string;
+  summary: string;
+}

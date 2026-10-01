@@ -14,7 +14,7 @@ import { KnowledgeCheck } from "@/components/learner/KnowledgeCheck";
 import { ModuleSidebar } from "@/components/learner/ModuleSidebar";
 import { ResourceList } from "@/components/learner/ResourceList";
 import { Appear } from "@/components/motion/Appear";
-import { getPmDay, pmCurriculum, pmModules } from "@/data/pm-curriculum";
+import { getCurriculum } from "@/data/curricula";
 import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
@@ -50,23 +50,25 @@ const RIGHT = 0.08;
 export default async function LearnDayPage({ params }: { params: Promise<{ day: string }> }) {
   const state = await requireLearner();
   if (state.state === "not-enrolled") notFound();
-  // Day pages are the Project Manager course; other tracks wait on the dashboard.
-  if (!getTrack(state.learner.track)?.contentLive) redirect("/learn");
+  // Each track's own 30 days; a track without a built course waits on the dashboard.
+  const curriculum = getCurriculum(state.learner.track);
+  if (!getTrack(state.learner.track)?.contentLive || !curriculum) redirect("/learn");
+  const { days: courseDays, modules: courseModules } = curriculum;
   const session = await auth();
 
   const dayNumber = Number((await params).day);
-  const entry = getPmDay(dayNumber);
+  const entry = courseDays.find((d) => d.day === dayNumber);
   if (!entry) notFound();
 
   const submission = state.submissions.find((s) => s.day === dayNumber) ?? null;
   const submittedDays = state.submissions.map((s) => s.day);
-  const next = pmCurriculum.find((d) => d.day === dayNumber + 1);
-  const percent = Math.round((submittedDays.length / pmCurriculum.length) * 100);
+  const next = courseDays.find((d) => d.day === dayNumber + 1);
+  const percent = Math.round((submittedDays.length / courseDays.length) * 100);
 
-  const modules = pmModules.map((m) => ({
+  const modules = courseModules.map((m) => ({
     week: m.week,
     name: m.name,
-    days: pmCurriculum.filter((d) => d.week === m.week).map((d) => ({ day: d.day, title: d.title })),
+    days: courseDays.filter((d) => d.week === m.week).map((d) => ({ day: d.day, title: d.title })),
   }));
 
   const kindLabel = entry.kind === "build" ? "Required" : entry.kind === "assessment" ? "Assessment" : "Mock interview";
@@ -81,7 +83,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
             <Link href="/learn" className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink/80 underline underline-offset-4 transition-colors hover:text-red-deep">
               <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to Dashboard
             </Link>
-            <p className="mt-5 font-heading text-2xl font-bold">Project Manager</p>
+            <p className="mt-5 font-heading text-2xl font-bold">{getTrack(state.learner.track)?.name}</p>
             <p className="mt-1 text-sm text-muted">Week {entry.week} - {percent}% complete</p>
             <div className="mt-2 mb-6 h-1 overflow-hidden rounded-full bg-line/20">
               <div className="grow-x h-full rounded-full bg-red-strong" style={{ width: `${Math.max(2, percent)}%` }} />
