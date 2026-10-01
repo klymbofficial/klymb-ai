@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { razorpayKeys, signatureValid } from "@/lib/razorpay";
+import { sendReceiptOnce } from "@/lib/receipt";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 const field = (v: unknown) => (typeof v === "string" && v.length > 0 && v.length <= 200 ? v : null);
@@ -32,6 +33,9 @@ export async function POST(req: Request) {
     console.error("payments update failed:", orderId, error?.code, error?.message);
     return NextResponse.json({ error: "Payment received but not recorded. Email us with your payment ID." }, { status: 500 });
   }
+
+  // The thank-you email goes after the response, so the learner is not kept waiting on it.
+  after(() => sendReceiptOnce(orderId));
 
   return NextResponse.json({ ok: true });
 }
