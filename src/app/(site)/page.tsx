@@ -1,5 +1,6 @@
 import { AiFoundations } from "@/components/home/AiFoundations";
 import { ForYouIf } from "@/components/home/ForYouIf";
+import { PromoFilm } from "@/components/home/PromoFilm";
 import { CareerTracks } from "@/components/home/CareerTracks";
 import { Evidence } from "@/components/home/Evidence";
 import { FaqJoin } from "@/components/home/FaqJoin";
@@ -22,6 +23,7 @@ export default async function HomePage() {
     <>
       <Hero />
       <StatementBand>{statement}</StatementBand>
+      <PromoFilm />
       <ForYouIf />
       <AiFoundations />
       <Evidence />
