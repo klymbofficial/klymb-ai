@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Appear } from "@/components/motion/Appear";
+import { EndingTitles } from "@/components/track/EndingTitles";
 import { TrackGrid } from "@/components/track/TrackGrid";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { tracks } from "@/data/tracks";
@@ -12,12 +13,13 @@ export default function TracksPage() {
     <>
       <section aria-labelledby="tracks-title" className="mx-auto max-w-7xl px-4 pb-6 sm:px-6">
         <div className="card rounded-slab p-8 shadow-float sm:p-12 lg:p-16">
-          <Appear><Eyebrow>Career tracks</Eyebrow></Appear>
+          <Appear><Eyebrow>Career tracks · what AI is absorbing</Eyebrow></Appear>
           <Appear delay={0.08} y={24}>
             <h1 id="tracks-title" className="display mt-5 max-w-3xl text-[clamp(2.4rem,6vw,4.25rem)] text-balance">
-              Choose the role you want <span className="text-red-strong">next.</span>
+              These job titles are ending. <span className="text-red-strong">Choose what comes next.</span>
             </h1>
           </Appear>
+          <EndingTitles />
           <Appear delay={0.16}>
             <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-muted sm:text-base">
               Every track follows the same 30-day structure: a real workplace problem each day, four defended checkpoints and
