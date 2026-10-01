@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { StrikeReveal } from "@/components/motion/StrikeReveal";
 import { ScrollDrift } from "@/components/motion/ScrollDrift";
 import { Spotlight } from "@/components/effects/Spotlight";
 import { trackImages } from "@/data/track-images";
@@ -31,8 +32,8 @@ export function TrackCard({ track }: { track: Track }) {
       </div>
       <div className="flex flex-1 flex-col gap-5 p-7 pt-6">
       <div>
-        <h3 className="display text-2xl">{track.name}</h3>
-        <p className="mt-1 text-xs font-extrabold uppercase tracking-[0.12em] text-red-deep">→ {track.becomes}</p>
+        <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.14em] text-muted">This job is changing</p>
+        <StrikeReveal from={track.name} to={track.becomes} fromClassName="display text-2xl" toClassName="mt-1 text-sm font-extrabold uppercase tracking-[0.08em] text-ink" />
         <p className="mt-3 text-[15px] leading-relaxed text-muted">{track.description}</p>
       </div>
       <ul className="flex flex-wrap gap-1.5">

@@ -4,6 +4,7 @@ import * as motion from "motion/react-client";
 import { tracks } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
+import { StrikeReveal } from "@/components/motion/StrikeReveal";
 import { Pricing } from "@/components/home/Pricing";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -49,14 +50,13 @@ export function TrackDetail({ track }: { track: Track }) {
               <Appear>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">Career track {number}</span>
-                  <span className="rounded-full bg-red-tint px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">Enrolling now</span>
+                  <span className="rounded-full bg-red-tint px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">This job is changing</span>
                 </div>
               </Appear>
               <Appear delay={0.08} y={24}>
-                <h1 id="track-title" className="display display-soft mt-5 text-[clamp(2.5rem,6vw,4.25rem)] text-balance">{track.name}</h1>
+                <StrikeReveal as="h1" id="track-title" from={track.name} to={track.becomes} delay={0.2} className="mt-5" fromClassName="display display-soft text-[clamp(2.5rem,6vw,4.25rem)]" toClassName="mt-2 text-[clamp(1.1rem,2.2vw,1.5rem)] font-extrabold text-ink" />
               </Appear>
               <Appear delay={0.16}>
-                <p className="mt-3 text-sm font-extrabold uppercase tracking-[0.14em] text-red-deep">→ {track.becomes}</p>
                 <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted sm:text-base">{track.description}</p>
               </Appear>
               <Appear delay={0.24} className="mt-8 flex flex-col gap-3 sm:flex-row">
