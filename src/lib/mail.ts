@@ -59,7 +59,7 @@ export function thankYouEmail(p: { name: string; trackName: string; amount: stri
   const html = `<!doctype html><html><body style="margin:0;background:#f3f2f2;font-family:Arial,Helvetica,sans-serif;color:#201e1d">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#83050b;padding:22px 28px;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px">KLYMB.AI</td></tr>
+<tr><td style="background:#83050b;padding:18px 28px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="padding-right:12px;vertical-align:middle"><img src="${esc(p.siteUrl)}/email/klymb-icon.png" width="36" height="36" alt="Klymb.ai" style="display:block;border:0;border-radius:8px"></td><td style="vertical-align:middle;color:#ffffff;font-size:20px;font-weight:900;letter-spacing:-0.5px">KLYMB.AI</td></tr></table></td></tr>
 <tr><td style="padding:28px">
 <p style="margin:0 0 6px;font-size:24px;font-weight:900">You're in, ${esc(p.name)}.</p>
 <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4a4745">Thank you for joining the <strong>${esc(p.trackName)}</strong> cohort. Your payment is confirmed and your seat is reserved.</p>

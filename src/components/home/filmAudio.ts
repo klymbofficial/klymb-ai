@@ -43,11 +43,6 @@ export class FilmAudio {
     this.bed.gain.setTargetAtTime(0.11, this.now, 0.8);
   }
 
-  /** Lowers the music while the narrator speaks, and brings it back after. */
-  duck(on: boolean) {
-    this.bed.gain.setTargetAtTime(on ? 0.04 : 0.11, this.now, 0.25);
-  }
-
   pause() {
     this.bed.gain.setTargetAtTime(0, this.now, 0.2);
     window.setTimeout(() => void this.ctx.suspend(), 400);
