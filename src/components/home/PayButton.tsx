@@ -54,7 +54,9 @@ function setShared(email: string, next: State | ((s: State) => State)) {
 }
 
 /** Razorpay Standard Checkout for a registered learner. */
-export function PayButton({ email, price }: { email: string; price: number }) {
+/** `light` sits on a pale surface (dashboard, /pay); the default sits on the dark success card. */
+export function PayButton({ email, price, tone = "dark" }: { email: string; price?: number; tone?: "dark" | "light" }) {
+  const light = tone === "light";
   const state = useSyncExternalStore(subscribe, () => states.get(email) ?? IDLE, () => IDLE);
   const setState = (next: State | ((s: State) => State)) => setShared(email, next);
 
@@ -99,15 +101,15 @@ export function PayButton({ email, price }: { email: string; price: number }) {
   }
 
   if (state.kind === "paid") {
-    return <p className="mt-8 rounded-card bg-white/10 px-5 py-4 text-[15px] font-bold text-white">Payment received. Your seat is confirmed.</p>;
+    return <p role="status" className={light ? "rounded-card bg-card px-5 py-3 text-[15px] font-bold text-ink shadow-card" : "mt-8 rounded-card bg-white/10 px-5 py-4 text-[15px] font-bold text-white"}>Payment received. Your seat is confirmed.</p>;
   }
 
   return (
-    <div className="mt-8 flex flex-col items-center gap-3">
-      <Button onClick={pay} disabled={state.kind === "busy"} arrow className="rounded-full px-7">
-        {state.kind === "busy" ? "Opening payment…" : `Pay ${formatINR(price)} to confirm your seat`}
+    <div className={light ? "flex flex-col items-start gap-2" : "mt-8 flex flex-col items-center gap-3"}>
+      <Button onClick={pay} disabled={state.kind === "busy" || !email} arrow className="rounded-full px-7">
+        {state.kind === "busy" ? "Opening payment…" : price ? `Pay ${formatINR(price)} to confirm your seat` : "Continue to payment"}
       </Button>
-      {state.kind === "error" && <p role="alert" className="text-sm text-white/85">{state.message}</p>}
+      {state.kind === "error" && <p role="alert" className={light ? "text-sm font-semibold text-red-deep" : "text-sm text-white/85"}>{state.message}</p>}
     </div>
   );
 }

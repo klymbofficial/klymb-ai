@@ -24,13 +24,23 @@ export async function POST(req: Request) {
   const supabase = createServiceClient();
   if (!keys || !supabase) return NextResponse.json({ error: "Payments are not available right now." }, { status: 500 });
 
-  const { data: reg } = await supabase
+  // A registration, or failing that a learner enrolled directly by an admin.
+  let { data: reg } = await supabase
     .from("registrations")
     .select("name, phone, track")
     .eq("email", email)
     .eq("cohort_start", cohort.startDate)
     .maybeSingle();
-  if (!reg) return NextResponse.json({ error: "Register first, then pay." }, { status: 400 });
+  if (!reg) {
+    const { data: learner } = await supabase
+      .from("learners")
+      .select("name, track")
+      .eq("email", email)
+      .eq("cohort_start", cohort.startDate)
+      .maybeSingle();
+    if (learner) reg = { name: learner.name, phone: "", track: learner.track };
+  }
+  if (!reg) return NextResponse.json({ error: "We could not find a registration for this email. Register first, then pay." }, { status: 400 });
 
   const track = getTrack(reg.track);
   if (!track) return NextResponse.json({ error: "Unknown track." }, { status: 400 });
@@ -74,6 +84,6 @@ export async function POST(req: Request) {
     currency: order.currency,
     key_id: keys.keyId,
     track_name: track.name,
-    prefill: { name: reg.name, email, contact: reg.phone },
+    prefill: { name: reg.name, email, ...(reg.phone ? { contact: reg.phone } : {}) },
   });
 }
