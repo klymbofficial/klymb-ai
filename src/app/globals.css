@@ -224,3 +224,13 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .spotlight-white::after { background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.09), transparent 45%); }
   .spotlight:hover::after { opacity: 1; }
 }
+
+/* Announcement ticker: two copies of the row slide left by exactly one copy. */
+.marquee-track { animation: marquee 40s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+  .marquee-track > ul + ul { display: none; }
+  .marquee-track, .marquee-track > ul { width: 100%; justify-content: center; flex-wrap: wrap; }
+}

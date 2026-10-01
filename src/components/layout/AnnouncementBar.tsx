@@ -1,20 +1,38 @@
 import { cohort } from "@/data/config";
-import { formatDate } from "@/lib/format";
+import { priceFrom } from "@/data/tracks";
+import { formatDate, formatINR } from "@/lib/format";
 
+/**
+ * A single-line ticker instead of a block that wraps to three lines on a
+ * phone. The items are rendered twice so the loop is seamless; the copy is
+ * hidden from screen readers. Hover pauses it, and reduced motion stops it.
+ */
 export function AnnouncementBar() {
+  const items = [
+    `Next cohort starts ${formatDate(cohort.startDate)}`,
+    `Enrollment closes ${formatDate(cohort.enrollmentDeadline)}${cohort.enrollmentDeadlineIsPlaceholder ? " (date to be confirmed)" : ""}`,
+    `Tracks from ${formatINR(priceFrom)}`,
+    "100% fee back when you complete",
+    "Limited seats",
+  ];
+
+  const row = (hidden: boolean) => (
+    <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-center">
+      {items.map((item) => (
+        <li key={item} className="flex items-center gap-4 pr-4 whitespace-nowrap">
+          <span className="tick" aria-hidden="true">✦</span>
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
-    <div className="bg-red-strong text-white">
-      <p className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] sm:px-6 sm:text-xs">
-        <span className="tick" aria-hidden="true">✦</span>
-        <span>Next cohort starts {formatDate(cohort.startDate)}</span>
-        <span aria-hidden="true" className="opacity-60">•</span>
-        <span>
-          Enrollment closes {formatDate(cohort.enrollmentDeadline)}
-          {cohort.enrollmentDeadlineIsPlaceholder && <span className="font-semibold normal-case opacity-75"> (date to be confirmed)</span>}
-        </span>
-        <span aria-hidden="true" className="opacity-60">•</span>
-        <span>Limited seats</span>
-      </p>
+    <div className="marquee overflow-hidden bg-red-strong py-2 text-xs font-bold uppercase tracking-[0.08em] text-white">
+      <div className="marquee-track flex w-max">
+        {row(false)}
+        {row(true)}
+      </div>
     </div>
   );
 }

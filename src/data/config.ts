@@ -24,9 +24,9 @@ export const pricing = {
 
 export const cohort = {
   /** ISO date. Confirmed by the business. */
-  startDate: "2026-09-25",
-  /** Confirmed by the business, 23 September 2026. */
-  enrollmentDeadline: "2026-10-01",
+  startDate: "2026-10-05",
+  /** Confirmed by the business, 1 October 2026: the day before the cohort starts. */
+  enrollmentDeadline: "2026-10-04",
   enrollmentDeadlineIsPlaceholder: false,
   /** PLACEHOLDER: replace with the real seat cap per track. */
   cohortCapacity: 40,
