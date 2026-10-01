@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ScrollDrift } from "@/components/motion/ScrollDrift";
 import { Spotlight } from "@/components/effects/Spotlight";
 import { trackImages } from "@/data/track-images";
 import { formatINR } from "@/lib/format";
@@ -12,6 +13,8 @@ export function TrackCard({ track }: { track: Track }) {
     <Spotlight className="h-full rounded-card">
     <article className="card group flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-float">
       <div className="relative aspect-[16/9] overflow-hidden bg-surface">
+        {/* The photo drifts slightly as the card crosses the screen. */}
+        <ScrollDrift className="absolute inset-0">
         <Image
           src={image.src}
           alt={image.alt}
@@ -20,6 +23,7 @@ export function TrackCard({ track }: { track: Track }) {
           placeholder="blur"
           className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
+        </ScrollDrift>
         <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
         <span className="absolute top-4 right-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep shadow-card">
           {track.contentLive ? "Day 1 open now" : "Enrolling now"}
