@@ -1,5 +1,4 @@
 import { AiFoundations } from "@/components/home/AiFoundations";
-import { Certificate } from "@/components/home/Certificate";
 import { ForYouIf } from "@/components/home/ForYouIf";
 import { CareerTracks } from "@/components/home/CareerTracks";
 import { Evidence } from "@/components/home/Evidence";
@@ -29,7 +28,6 @@ export default async function HomePage() {
       <HowItWorks />
       <CareerTracks />
       <Pricing />
-      <Certificate />
       <WhyRefund />
       <FaqJoin />
       <StickyEnrolBar />

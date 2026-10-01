@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
-import { getPmDay } from "@/data/pm-curriculum";
+import { getCurriculumDay } from "@/data/curricula";
 import { tracks } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { getLearnerDetail } from "@/lib/admin/data";
@@ -54,7 +54,7 @@ export default async function LearnerDetailPage({ params }: { params: Promise<{ 
         ) : (
           <ul className="mt-4 flex flex-col gap-4">
             {learner.submissions.map((s) => {
-              const day = getPmDay(s.day);
+              const day = getCurriculumDay(learner.track, s.day);
               return (
                 <li key={s.day} className="border-2 border-line bg-paper p-5">
                   <div className="flex flex-wrap items-baseline justify-between gap-3 border-b-2 border-line pb-3">

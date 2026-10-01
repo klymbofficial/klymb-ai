@@ -14,7 +14,7 @@ import { getTrack } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { requireLearner } from "@/lib/learner/data";
 import { cohortDayDate } from "@/lib/learn";
-import { pmCurriculum, pmModules } from "@/data/pm-curriculum";
+import { getCurriculum } from "@/data/curricula";
 
 export const metadata: Metadata = { title: "My cohort", robots: { index: false, follow: false } };
 
@@ -46,9 +46,10 @@ export default async function LearnHomePage() {
   const track = getTrack(learner.track)!;
   const session = await auth();
 
-  // The course below is the Project Manager one. A learner on a track whose
-  // course is not built yet gets a holding page, never someone else's days.
-  if (!track.contentLive) {
+  // Each track has its own 30 days. A track whose course is not built yet
+  // gets a holding page, never someone else's days.
+  const curriculum = getCurriculum(learner.track);
+  if (!track.contentLive || !curriculum) {
     return (
       <>
         <LearnerTopBar name={learner.name} image={session?.user?.image} />
@@ -70,10 +71,10 @@ export default async function LearnHomePage() {
   }
   const doneDays = new Set(submissions.map((s) => s.day));
 
-  const days: BoardDay[] = pmCurriculum.map((d) => ({
+  const days: BoardDay[] = curriculum.days.map((d) => ({
     day: d.day,
     week: d.week,
-    weekName: pmModules.find((m) => m.week === d.week)?.name ?? "",
+    weekName: curriculum.modules.find((m) => m.week === d.week)?.name ?? "",
     title: d.title,
     points: d.points,
     estimateMinutes: d.estimateMinutes,

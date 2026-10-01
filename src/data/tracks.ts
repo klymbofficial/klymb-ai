@@ -32,7 +32,7 @@ export const tracks: Track[] = [
   {
     slug: "qa-engineer",
     available: true,
-    contentLive: false,
+    contentLive: true,
     price: 6999,
     name: "QA Engineer",
     becomes: "AI Test Architect",
@@ -90,7 +90,7 @@ export const tracks: Track[] = [
   {
     slug: "l1-l2-support",
     available: true,
-    contentLive: false,
+    contentLive: true,
     price: 4999,
     name: "L1/L2 Support",
     becomes: "Conversational AI Operations Specialist",
@@ -206,7 +206,7 @@ export const tracks: Track[] = [
   {
     slug: "junior-developer",
     available: true,
-    contentLive: false,
+    contentLive: true,
     price: 10999,
     name: "Junior Developer",
     becomes: "AI Engineering Associate",
@@ -264,7 +264,7 @@ export const tracks: Track[] = [
   {
     slug: "reporting-analyst",
     available: true,
-    contentLive: false,
+    contentLive: true,
     price: 8999,
     name: "Reporting Analyst",
     becomes: "Analytics Automation Lead",
