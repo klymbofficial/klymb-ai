@@ -27,8 +27,9 @@ export function DayExplorer({ tracks }: { tracks: ExplorerTrack[] }) {
       <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">Day by day</p>
       <h2 id="journey-title" className="display mt-3 text-[clamp(1.75rem,3.6vw,2.6rem)]">Explore all 30 days.</h2>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-[15rem_1fr]">
-        <nav aria-label="Tracks and weeks" className="lg:sticky lg:top-24 lg:self-start">
+      {/* minmax(0,1fr): the scrolling track row must not widen the page on phones. */}
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <nav aria-label="Tracks and weeks" className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <ul className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
             {tracks.map((t) => (
               <li key={t.slug} className="shrink-0">
@@ -41,7 +42,7 @@ export function DayExplorer({ tracks }: { tracks: ExplorerTrack[] }) {
                     t.slug === slug ? "bg-card font-extrabold shadow-card" : "text-muted hover:bg-card/70 hover:text-ink",
                   )}
                 >
-                  <Image src={t.image} alt="" width={28} height={28} className="size-7 rounded-md object-cover" />
+                  <Image src={t.image} alt="" width={28} height={28} className="size-7 rounded-md bg-surface object-cover" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
                   <span className="whitespace-nowrap">{t.name}</span>
                 </button>
               </li>
