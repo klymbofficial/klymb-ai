@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
-import { MotionProvider } from "@/components/motion/MotionProvider";
 import { Archivo, Inter } from "next/font/google";
 import { site } from "@/data/config";
 import "./globals.css";
@@ -40,7 +39,7 @@ export const viewport: Viewport = { themeColor: "#f3f2f2" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${inter.variable} antialiased`}>
-      <body className="min-h-screen"><MotionProvider>{children}</MotionProvider></body>
+      <body className="min-h-screen">{children}</body>
       {gaId && <Analytics gaId={gaId} />}
     </html>
   );

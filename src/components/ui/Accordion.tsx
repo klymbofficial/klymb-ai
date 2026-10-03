@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import clsx from "clsx";
 import { useId, useState } from "react";
 
 export interface AccordionItem {
@@ -11,12 +11,12 @@ export interface AccordionItem {
 /**
  * Animated accordion: one panel open at a time, height animated.
  * Adapted from the "FAQ Accordion" pattern in Vengeance UI (MIT), rebuilt on
- * motion/react with real button semantics and reduced-motion support.
+ * CSS (grid-rows transition) with real button semantics; reduced motion is
+ * handled by the global rule in globals.css.
  */
 export function Accordion({ items, variant = "rule" }: { items: AccordionItem[]; variant?: "rule" | "card" }) {
   const [open, setOpen] = useState<number | null>(0);
   const card = variant === "card";
-  const reduced = useReducedMotion();
   const base = useId();
 
   return (
@@ -35,36 +35,29 @@ export function Accordion({ items, variant = "rule" }: { items: AccordionItem[];
                 className={`flex w-full items-center justify-between gap-4 py-5 text-left font-extrabold ${card ? "text-base" : "text-lg"}`}
               >
                 {item.question}
-                <motion.span
+                <span
                   aria-hidden="true"
-                  animate={{ rotate: isOpen ? 45 : 0 }}
-                  transition={reduced ? { duration: 0 } : { duration: 0.25, ease: [0.2, 0.7, 0.3, 1] }}
-                  className={
+                  className={clsx("transition-transform duration-250 ease-[cubic-bezier(0.2,0.7,0.3,1)]", isOpen && "rotate-45",
                     card
                       ? "grid size-7 shrink-0 place-items-center rounded-full bg-surface text-lg leading-none font-black text-ink"
-                      : "shrink-0 text-2xl leading-none font-black text-red"
-                  }
+                      : "shrink-0 text-2xl leading-none font-black text-red",
+                  )}
                 >
                   +
-                </motion.span>
+                </span>
               </button>
             </h3>
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  id={`${base}-p-${i}`}
-                  role="region"
-                  aria-labelledby={`${base}-t-${i}`}
-                  initial={reduced ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={reduced ? { height: "auto", opacity: 1 } : { height: 0, opacity: 0 }}
-                  transition={{ duration: 0.28, ease: [0.2, 0.7, 0.3, 1] }}
-                  className="overflow-hidden"
-                >
-                  <p className={`pb-5 text-muted ${card ? "text-sm leading-relaxed" : ""}`}>{item.answer}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div
+              id={`${base}-p-${i}`}
+              role="region"
+              aria-labelledby={`${base}-t-${i}`}
+              hidden={!isOpen}
+              className="grid grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.2,0.7,0.3,1)] starting:grid-rows-[0fr] starting:opacity-0"
+            >
+              <div className="overflow-hidden">
+                <p className={`pb-5 text-muted ${card ? "text-sm leading-relaxed" : ""}`}>{item.answer}</p>
+              </div>
+            </div>
           </div>
         );
       })}
