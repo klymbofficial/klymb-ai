@@ -48,11 +48,18 @@ export function buildReminder(r: ReminderInput): Reminder | null {
 
   if (r.slot === "morning") {
     if (r.behind) {
-      return { url, tag, title: `Day ${r.day} is open, ${n}`, body: `Day ${r.day - 1} is still waiting too. Start there; ${mins} minutes gets you back on track.` };
+      return pick<Reminder>([
+        { url, tag, title: `Day ${r.day} is open, ${n}`, body: `Day ${r.day - 1} is still waiting too. Start there; ${mins} minutes gets you back on track.` },
+        { url, tag, title: `Let's catch up, ${n}`, body: `Day ${r.day - 1} first, then Day ${r.day}. One at a time, you've got this.` },
+        { url, tag, title: `Yesterday's still open 👀`, body: `Finish Day ${r.day - 1} this morning and you're right back on schedule.` },
+        { url, tag, title: `Fresh start, ${n}`, body: `Day ${r.day - 1} is waiting for you. ${mins} minutes and you're caught up.` },
+      ], r.seed);
     }
     return pick<Reminder>([
       { url, tag, title: `Day ${r.day} is open: ${r.title}`, body: `Morning ${n}. About ${mins} minutes. ${kindLine}${fire ? ` ${fire}, keep it going.` : ""}` },
       { url, tag, title: `☀️ Day ${r.day}: ${r.title}`, body: `Good morning ${n}. ${kindLine} About ${mins} minutes.${fire ? ` ${fire}.` : ""}` },
+      { url, tag, title: fire ? `${fire}. Day ${r.day} is ready` : `New day, new problem, ${n}`, body: `"${r.title}" is open. About ${mins} minutes. Coffee first, then this.` },
+      { url, tag, title: `Day ${r.day} of 30 🚀`, body: `${n}, today is "${r.title}". ${kindLine} Do it before the day gets busy.` },
     ], r.seed);
   }
 
@@ -61,6 +68,7 @@ export function buildReminder(r: ReminderInput): Reminder | null {
       { url, tag, title: fire ? `${fire}. Don't break it now` : `Day ${r.day} is waiting, ${n}`, body: `A lunch-break start on "${r.title}" makes tonight easy.` },
       { url, tag, title: `Quick one, ${n}?`, body: `Day ${r.day} takes about ${mins} minutes. Even 15 now counts.` },
       { url, tag, title: `Halfway through the day`, body: `Day ${r.day} is still open. Future you, in the interview, will thank you.` },
+      { url, tag, title: `Lunch break plan? 🍱`, body: `Eat, then 20 minutes on "${r.title}". The rest tonight will fly.` },
     ], r.seed);
   }
 
@@ -69,6 +77,7 @@ export function buildReminder(r: ReminderInput): Reminder | null {
       { url, tag, title: fire ? `Your ${r.streak}-day streak is on the line 🔥` : `Still time for Day ${r.day}`, body: `${n}, about ${mins} minutes left between you and done.` },
       { url, tag, title: `Day ${r.day} misses you`, body: `"${r.title}" is ready when you are. Open it now, finish before dinner.` },
       { url, tag, title: `Evening check-in`, body: `Day ${r.day} isn't submitted yet, ${n}. Start it now; it's the best part of the day to do it.` },
+      { url, tag, title: `${n}, 5 minutes?`, body: `Just open Day ${r.day} and read the brief. Starting is the hard part.` },
     ], r.seed);
   }
 
@@ -76,6 +85,8 @@ export function buildReminder(r: ReminderInput): Reminder | null {
   return pick<Reminder>([
     { url, tag, title: fire ? `Last call: save your ${r.streak}-day streak 🔥` : `Last call for Day ${r.day}`, body: `${n}, it closes at midnight. Submit what you have; you can improve it tomorrow.` },
     { url, tag, title: `Before you sleep, ${n}`, body: `Day ${r.day} is still open. A rough submission beats none, and it keeps your refund on track.` },
+    { url, tag, title: `3 hours left ⏳`, body: `Day ${r.day} is still unsubmitted, ${n}. Done is better than perfect.` },
+    { url, tag, title: fire ? `Don't let ${r.streak} days go to waste` : `One last nudge tonight`, body: `Open Day ${r.day}, submit a draft, sleep easy. You can polish it tomorrow.` },
   ], r.seed);
 }
 

@@ -16,7 +16,7 @@ test("once today is done, only the morning message ever goes", () => {
 test("behind on yesterday: points to yesterday's day", () => {
   const r = buildReminder({ ...base, behind: true })!;
   assert.equal(r.url, "/learn/day/3");
-  assert.match(r.body, /Day 3 is still waiting/);
+  assert.match(r.body, /Day 3/);
 });
 
 test("streak shows up in the copy, and the night one is a last call", () => {
@@ -33,4 +33,14 @@ test("same day shares a tag so reminders replace, not stack", () => {
 test("streakEnding counts back from a day", () => {
   assert.equal(streakEnding(new Set([1, 2, 3, 5]), 3), 3);
   assert.equal(streakEnding(new Set([1, 2, 3, 5]), 4), 0);
+});
+
+test("every slot has four distinct versions, and each one reads cleanly", () => {
+  for (const slot of ["morning", "midday", "evening", "night"] as const) {
+    for (const behind of slot === "morning" ? [false, true] : [false]) {
+      const out = [0, 1, 2, 3].map((seed) => buildReminder({ ...base, slot, behind, seed })!);
+      assert.equal(new Set(out.map((r) => r.title + r.body)).size, 4, `${slot}${behind ? " behind" : ""}`);
+      for (const r of out) assert.doesNotMatch(r.title + r.body, /undefined|null|NaN/);
+    }
+  }
 });
