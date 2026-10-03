@@ -3,7 +3,9 @@
 import { currentEmail, signIn, signOut } from "@/auth";
 import { cohort } from "@/data/config";
 import { getTrack, trackSlugs } from "@/data/tracks";
+import { after } from "next/server";
 import { normaliseEmail } from "@/lib/email";
+import { sendWelcome } from "@/lib/welcome";
 import { ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient } from "@/lib/learner/enrolment";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -105,6 +107,9 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
       cohortStart: cohort.startDate,
     });
   }
+
+  // A first registration gets the welcome email, after the response so the form never waits on it.
+  if (!duplicate) after(() => sendWelcome({ email: data.email, name: data.name, track: data.track }));
 
   return { ok: true, duplicate, enrolled, signedIn: !!sessionEmail };
 }
