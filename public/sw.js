@@ -10,7 +10,7 @@
  *  - Admin, APIs and sign-in are never cached.
  *  - Learner pages live in their own cache, cleared on sign-out.
  */
-const VERSION = "v1"; // caches only; push handlers below need no bump
+const VERSION = "v2"; // bump to replace cached pages and assets
 const STATIC = `klymb-static-${VERSION}`;
 const PAGES = `klymb-pages-${VERSION}`;
 const LEARN = `klymb-learn-${VERSION}`;
@@ -80,7 +80,7 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(msg.title, {
       body: msg.body,
       icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      badge: "/icons/badge-96.png", // white K on transparent: Android draws badges as a silhouette
       tag: msg.tag,
       data: { url: msg.url },
     }),
