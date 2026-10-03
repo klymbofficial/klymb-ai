@@ -126,6 +126,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
     "Week 1-4: one real workplace problem a day, about 90 to 120 minutes.",
     "Days 7, 14, 21, 28: a checkpoint you defend on camera.",
     "Days 29-30: two mock interviews with written feedback.", "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders and feedback out of your spam folder.", "",
     `Sign in any time with this email: ${p.siteUrl}/learn`, "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
@@ -142,6 +143,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
         ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera and get written feedback.")}
         ${step(3, "Two mock interviews", "Days 29 and 30, with practising professionals, so you walk into the real one ready.")}
       </table>
+      <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders, checkpoint feedback and receipt never land in spam.</div>
       <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">Sign in any time at <a href="${site}/learn" style="color:${C.maroon};font-weight:600">klymb.ai/learn</a> with this email, using Continue with Google.</div>`,
     ],
   });
