@@ -82,6 +82,7 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/badge-96.png", // white K on transparent: Android draws badges as a silhouette
       tag: msg.tag,
+      renotify: Boolean(msg.tag), // a newer reminder for the same day still buzzes
       data: { url: msg.url },
     }),
   );

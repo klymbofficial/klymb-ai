@@ -1,0 +1,18 @@
+# Learner reminders at 09:00, 13:00, 17:00 and 21:00 IST (03:30, 07:30, 11:30,
+# 15:30 UTC). Vercel's free plan allows one cron a day, so GitHub runs these.
+# The endpoint decides who gets what; CRON_SECRET is a repository secret.
+name: Learner reminders
+on:
+  schedule:
+    - cron: "30 3,7,11,15 * * *"
+  workflow_dispatch: {}
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send reminders
+        run: |
+          curl -fsS --max-time 120 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://www.klymb.ai/api/cron/reminders
