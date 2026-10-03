@@ -279,3 +279,14 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .strike-old { transition: opacity 0.4s; }
 }
 @media (prefers-reduced-motion: reduce) { .strike-old { opacity: 0.38; } }
+
+/* ProgramTimeline: the line draws and the nodes light as the band scrolls through. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .timeline { view-timeline-name: --arc; }
+    .timeline-fill { animation: timeline-fill linear both; animation-timeline: --arc; animation-range: entry 60% cover 55%; }
+    .timeline-node { animation: timeline-node linear both; animation-timeline: --arc; animation-range: entry calc(60% + var(--i) * 12%) entry calc(70% + var(--i) * 12%); }
+  }
+}
+@keyframes timeline-fill { from { transform: scaleX(0); } }
+@keyframes timeline-node { from { box-shadow: none; opacity: 0.35; } to { box-shadow: 0 0 22px rgb(240 134 139 / 0.8); opacity: 1; } }
