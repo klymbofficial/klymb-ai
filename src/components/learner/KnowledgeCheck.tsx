@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { submitDay } from "@/app/(learn)/learn/actions";
+import { submitOrQueue } from "@/lib/offlineQueue";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 
@@ -21,7 +22,7 @@ export function KnowledgeCheck({
     setError("");
     setStatus("saving");
     formData.set("quiz", JSON.stringify(answers));
-    const result = await submitDay(day, formData);
+    const result = await submitOrQueue(day, formData, submitDay);
     if (result.ok) {
       setStatus("saved");
       track("knowledge_check_submit", { day, answered });

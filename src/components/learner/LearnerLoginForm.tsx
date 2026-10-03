@@ -1,7 +1,14 @@
+"use client";
+
 import { signInLearner } from "@/app/(learn)/learn/actions";
+import { useEffect } from "react";
 import { GoogleMark } from "@/components/ui/GoogleMark";
 
 export function LearnerLoginForm({ error }: { error?: string }) {
+  // Reaching sign-in means no one is signed in here: drop any saved course pages.
+  useEffect(() => {
+    navigator.serviceWorker?.controller?.postMessage({ type: "clear-learner" });
+  }, []);
   return (
     <div className="mt-6 flex flex-col gap-4">
       <form action={signInLearner}>

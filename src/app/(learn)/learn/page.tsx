@@ -8,6 +8,7 @@ import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
 import { ProgressRing } from "@/components/learner/ProgressRing";
+import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
@@ -130,6 +131,7 @@ export default async function LearnHomePage() {
         </div>
       </div>
 
+      <CourseOfflineCache days={days.length} />
       <div className="mx-auto max-w-[96rem] px-4 py-10 sm:px-8">
         <Appear>
           <CohortBoard days={days} initialDay={nextDay.day} />
