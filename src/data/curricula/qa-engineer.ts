@@ -1581,7 +1581,7 @@ export const qaModules: CurriculumModule[] = [
   {
     "week": 4,
     "name": "Quality strategy and interview readiness",
-    "days": "Days 22–28",
+    "days": "Days 22–30",
     "summary": ""
   }
 ];

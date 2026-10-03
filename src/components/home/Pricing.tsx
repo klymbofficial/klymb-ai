@@ -108,13 +108,10 @@ export function Pricing({ track }: { track?: Track } = {}) {
             <Fact
               label="Enrollment closes"
               value={formatDate(cohort.enrollmentDeadline)}
-              note={cohort.enrollmentDeadlineIsPlaceholder ? "Placeholder: to be confirmed" : undefined}
+              note={cohort.enrollmentDeadlineIsPlaceholder ? "Date to be confirmed" : undefined}
             />
-            <Fact
-              label="Seats per track"
-              value={String(cohort.cohortCapacity)}
-              note={cohort.cohortCapacityIsPlaceholder ? "Placeholder: to be confirmed" : undefined}
-            />
+            {/* The seat cap is shown only once the business confirms it. */}
+            {!cohort.cohortCapacityIsPlaceholder && <Fact label="Seats per track" value={String(cohort.cohortCapacity)} />}
           </dl>
 
           <p className="mt-6 border-t border-white/25 pt-6 text-xs leading-relaxed text-white/80">{cohort.capacityReason}</p>

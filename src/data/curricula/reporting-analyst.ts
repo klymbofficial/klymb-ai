@@ -1543,7 +1543,7 @@ export const reportingAnalystModules: CurriculumModule[] = [
   {
     "week": 4,
     "name": "Communication, recommendation and interview readiness",
-    "days": "Days 22–28",
+    "days": "Days 22–30",
     "summary": "You can take a finding to a decision-maker and defend it"
   }
 ];

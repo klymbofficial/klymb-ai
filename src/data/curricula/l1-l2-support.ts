@@ -625,7 +625,7 @@ export const l1l2Curriculum: CurriculumDay[] = [
       {
         "kind": "read",
         "label": "Atlassian: Statuspage best practice",
-        "url": "https://www.atlassian.com/software/statuspage/resources"
+        "url": "https://www.atlassian.com/software/statuspage"
       },
       {
         "kind": "read",
@@ -1546,7 +1546,7 @@ export const l1l2Modules: CurriculumModule[] = [
   {
     "week": 4,
     "name": "Support strategy and interview readiness",
-    "days": "Days 22–28",
+    "days": "Days 22–30",
     "summary": "You can argue staffing, deflection and CSAT trade-offs with numbers"
   }
 ];

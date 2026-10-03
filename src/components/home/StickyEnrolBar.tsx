@@ -36,7 +36,7 @@ export function StickyEnrolBar() {
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-base font-extrabold nums">From {formatINR(priceFrom)}</p>
-          <p className="truncate text-xs text-muted">Enrolment closes {formatDate(cohort.enrollmentDeadline)} · Refunded if you finish</p>
+          <p className="truncate text-xs text-muted">Enrollment closes {formatDate(cohort.enrollmentDeadline)} · Refunded if you finish</p>
         </div>
         <ButtonLink href="#pricing" className="shrink-0" soft>Reserve seat</ButtonLink>
       </div>
