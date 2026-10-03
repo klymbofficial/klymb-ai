@@ -10,7 +10,7 @@
  *  - Admin, APIs and sign-in are never cached.
  *  - Learner pages live in their own cache, cleared on sign-out.
  */
-const VERSION = "v1";
+const VERSION = "v1"; // caches only; push handlers below need no bump
 const STATIC = `klymb-static-${VERSION}`;
 const PAGES = `klymb-pages-${VERSION}`;
 const LEARN = `klymb-learn-${VERSION}`;
@@ -71,3 +71,29 @@ async function networkFirstPage(req, url) {
     return hit || (await caches.match("/offline")) || Response.error();
   }
 }
+
+// Reminders: show the notification, and open (or focus) the right day when tapped.
+self.addEventListener("push", (event) => {
+  let msg = { title: "Klymb.ai", body: "Your next day is open.", url: "/learn" };
+  try { msg = { ...msg, ...event.data.json() }; } catch { /* plain text or empty */ }
+  event.waitUntil(
+    self.registration.showNotification(msg.title, {
+      body: msg.body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: msg.tag,
+      data: { url: msg.url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url || "/learn", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      const open = wins.find((w) => w.url.startsWith(self.location.origin));
+      return open ? open.navigate(url).then((w) => w && w.focus()) : self.clients.openWindow(url);
+    }),
+  );
+});
