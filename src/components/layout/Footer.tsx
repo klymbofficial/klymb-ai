@@ -23,11 +23,11 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" aria-label="Klymb.ai home" className="display inline-flex items-baseline text-xl text-white">
+            <Link href="/" aria-label="Klymb.ai home" className="display inline-flex min-h-6 items-baseline py-1 text-xl text-white">
               KLYMB<span className="text-red-soft">.AI</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">{brand.tagline}</p>
-            <a href={`mailto:${contact.email}`} className="mt-5 inline-block text-sm font-semibold text-white underline underline-offset-4">
+            <a href={`mailto:${contact.email}`} className="mt-5 inline-block py-1 text-sm font-semibold text-white underline underline-offset-4">
               {contact.email}
             </a>
             <ul className="mt-5 flex flex-wrap gap-2">

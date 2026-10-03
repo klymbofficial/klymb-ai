@@ -1543,7 +1543,7 @@ export const juniorDevModules: CurriculumModule[] = [
   {
     "week": 4,
     "name": "Production ownership and interview readiness",
-    "days": "Days 22–28",
+    "days": "Days 22–30",
     "summary": "You can debug live, measure performance, and argue an engineering trade-off with numbers"
   }
 ];

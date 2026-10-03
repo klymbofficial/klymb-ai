@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Wordmark({ className = "text-2xl" }: { className?: string }) {
   return (
-    <Link href="/" aria-label="Klymb.ai home" className={`display inline-flex items-baseline ${className}`}>
+    <Link href="/" aria-label="Klymb.ai home" className={`display inline-flex min-h-6 items-baseline py-1 ${className}`}>
       KLYMB<span className="text-red">.AI</span>
     </Link>
   );
