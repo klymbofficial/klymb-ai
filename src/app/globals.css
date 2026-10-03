@@ -244,3 +244,11 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 .cta-pulse { animation: cta-pulse 1.8s ease-out infinite; }
 @keyframes cta-pulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.35, 1.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .film-grain, .cta-pulse { animation: none; } }
+
+/* Appear (components/motion/Appear). Plays on load; follows scroll where supported. */
+@keyframes appear { from { opacity: 0; transform: translateY(var(--appear-y, 16px)); } }
+.appear { animation: appear 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) var(--appear-delay, 0s) both; }
+@supports (animation-timeline: view()) {
+  .appear { animation-timeline: view(); animation-range: entry 0% entry 35%; animation-delay: 0s; animation-duration: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .appear { animation: none; } }

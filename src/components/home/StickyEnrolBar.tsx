@@ -27,7 +27,7 @@ export function StickyEnrolBar() {
 
   return (
     <div
-      aria-hidden={!show}
+      inert={!show}
       className={clsx(
         "fixed inset-x-0 bottom-0 z-40 border-t border-line/30 bg-paper/95 px-4 py-3 backdrop-blur transition-transform duration-300 lg:hidden",
         show ? "translate-y-0" : "pointer-events-none translate-y-full",

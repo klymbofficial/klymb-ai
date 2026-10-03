@@ -149,7 +149,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
               <p className="text-base leading-relaxed text-muted">{entry.mission}</p>
               {entry.concepts.length > 0 && (
                 <>
-                  <p className="mt-6 text-sm font-semibold uppercase tracking-[0.02em] text-muted/80">Concepts to learn</p>
+                  <p className="mt-6 text-sm font-semibold uppercase tracking-[0.02em] text-muted">Concepts to learn</p>
                   <ul className="mt-3 flex flex-col gap-2.5 text-[15px]">
                     {entry.concepts.map((c) => <li key={c}>• {c}</li>)}
                   </ul>

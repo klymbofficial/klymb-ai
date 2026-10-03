@@ -34,7 +34,8 @@ export function StatFigure({ value, className }: { value: string; className?: st
 
   if (!match) return <span className={className}>{value}</span>;
   return (
-    <span ref={ref} className={className} aria-label={value}>
+    <span ref={ref} className={className}>
+      <span className="sr-only">{value}</span>
       <span aria-hidden="true">{match[1]}{shown}{match[3]}</span>
     </span>
   );

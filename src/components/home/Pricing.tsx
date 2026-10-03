@@ -14,7 +14,7 @@ function Fact({ label, value, note }: { label: string; value: string; note?: str
     <div>
       <dt className="text-xs font-extrabold uppercase tracking-[0.12em] text-white/60">{label}</dt>
       <dd className="mt-1 text-base font-extrabold">{value}</dd>
-      {note && <p className="mt-0.5 text-xs text-white/60">{note}</p>}
+      {note && <dd className="mt-0.5 text-xs text-white/60">{note}</dd>}
     </div>
   );
 }
