@@ -7,6 +7,7 @@ import { track } from "@/lib/analytics";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import type { Submission } from "@/lib/learner/data";
 import { Celebrate } from "./Celebrate";
+import { submitOrQueue } from "@/lib/offlineQueue";
 
 export function DaySubmission({
   day, checklist, submission, needsLinkedinPost, nextDay,
@@ -15,12 +16,14 @@ export function DaySubmission({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [burst, setBurst] = useState(0);
+  const [queued, setQueued] = useState(false);
   const [checked, setChecked] = useState<boolean[]>(() => (checklist ?? []).map(() => false));
 
   async function onSubmit(formData: FormData) {
     setError("");
     setPending(true);
-    const result = await submitDay(day, formData);
+    const result = await submitOrQueue(day, formData, submitDay);
+    setQueued("queued" in result && !!result.queued);
     setPending(false);
     if (result.ok) {
       setSaved(true);
@@ -99,7 +102,7 @@ export function DaySubmission({
                 className="relative flex flex-wrap items-center gap-4"
               >
                 <Celebrate burstKey={burst} />
-                <p role="status" className="text-sm font-bold text-red-deep">{burst ? `Day ${day} done. Nice work.` : "Saved. You can update it any time."}</p>
+                <p role="status" className="text-sm font-bold text-red-deep">{queued ? "Saved on this device. It sends when you are back online." : burst ? `Day ${day} done. Nice work.` : "Saved. You can update it any time."}</p>
                 {nextDay && <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>}
               </motion.div>
             )}

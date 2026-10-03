@@ -1,3 +1,4 @@
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
 import { Archivo, Inter } from "next/font/google";
@@ -39,7 +40,7 @@ export const viewport: Viewport = { themeColor: "#f3f2f2" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${inter.variable} antialiased`}>
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">{children}<ServiceWorkerRegister /></body>
       {gaId && <Analytics gaId={gaId} />}
     </html>
   );
