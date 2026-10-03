@@ -35,11 +35,11 @@ test("streakEnding counts back from a day", () => {
   assert.equal(streakEnding(new Set([1, 2, 3, 5]), 4), 0);
 });
 
-test("every slot has four distinct versions, and each one reads cleanly", () => {
+test("every slot has eight distinct versions (English and Hinglish), each reads cleanly", () => {
   for (const slot of ["morning", "midday", "evening", "night"] as const) {
     for (const behind of slot === "morning" ? [false, true] : [false]) {
-      const out = [0, 1, 2, 3].map((seed) => buildReminder({ ...base, slot, behind, seed })!);
-      assert.equal(new Set(out.map((r) => r.title + r.body)).size, 4, `${slot}${behind ? " behind" : ""}`);
+      const out = [0, 1, 2, 3, 4, 5, 6, 7].map((seed) => buildReminder({ ...base, slot, behind, seed })!);
+      assert.equal(new Set(out.map((r) => r.title + r.body)).size, 8, `${slot}${behind ? " behind" : ""}`);
       for (const r of out) assert.doesNotMatch(r.title + r.body, /undefined|null|NaN/);
     }
   }

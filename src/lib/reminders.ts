@@ -53,6 +53,10 @@ export function buildReminder(r: ReminderInput): Reminder | null {
         { url, tag, title: `Let's catch up, ${n}`, body: `Day ${r.day - 1} first, then Day ${r.day}. One at a time, you've got this.` },
         { url, tag, title: `Yesterday's still open 👀`, body: `Finish Day ${r.day - 1} this morning and you're right back on schedule.` },
         { url, tag, title: `Fresh start, ${n}`, body: `Day ${r.day - 1} is waiting for you. ${mins} minutes and you're caught up.` },
+        { url, tag, title: `Koi baat nahi, ${n} 🙂`, body: `Kal ka Day ${r.day - 1} pending hai. Pehle woh, phir Day ${r.day}. Aaram se, ek ek karke.` },
+        { url, tag, title: `Chalo, catch up karte hain`, body: `Day ${r.day - 1} abhi khatam karo, ${mins} minute mein wapas track pe.` },
+        { url, tag, title: `${n}, kal miss ho gaya?`, body: `Tension nahi. Day ${r.day - 1} aaj subah kar lo, sab set ho jayega.` },
+        { url, tag, title: `Back on track mission 🎯`, body: `Pehle Day ${r.day - 1}, phir Day ${r.day}. Tum kar loge, ${n}.` },
       ], r.seed);
     }
     return pick<Reminder>([
@@ -60,6 +64,10 @@ export function buildReminder(r: ReminderInput): Reminder | null {
       { url, tag, title: `☀️ Day ${r.day}: ${r.title}`, body: `Good morning ${n}. ${kindLine} About ${mins} minutes.${fire ? ` ${fire}.` : ""}` },
       { url, tag, title: fire ? `${fire}. Day ${r.day} is ready` : `New day, new problem, ${n}`, body: `"${r.title}" is open. About ${mins} minutes. Coffee first, then this.` },
       { url, tag, title: `Day ${r.day} of 30 🚀`, body: `${n}, today is "${r.title}". ${kindLine} Do it before the day gets busy.` },
+      { url, tag, title: `Chalo ${n}, Day ${r.day} time! 🔥`, body: `Aaj ka problem: "${r.title}". Bas ${mins} minute${fire ? `, aur ${fire} chal rahi hai` : ""}.` },
+      { url, tag, title: `Good morning ${n} ☀️`, body: `Chai ready? Day ${r.day} bhi ready hai: "${r.title}".` },
+      { url, tag, title: fire ? `${fire}! Aaj bhi rukna nahi` : `Naya din, naya problem`, body: `Day ${r.day} khul gaya hai, ${n}. Din busy hone se pehle kar lo.` },
+      { url, tag, title: `Day ${r.day} unlock ho gaya 🔓`, body: `${n}, "${r.title}" wait kar raha hai. ${kindLine}` },
     ], r.seed);
   }
 
@@ -69,6 +77,10 @@ export function buildReminder(r: ReminderInput): Reminder | null {
       { url, tag, title: `Quick one, ${n}?`, body: `Day ${r.day} takes about ${mins} minutes. Even 15 now counts.` },
       { url, tag, title: `Halfway through the day`, body: `Day ${r.day} is still open. Future you, in the interview, will thank you.` },
       { url, tag, title: `Lunch break plan? 🍱`, body: `Eat, then 20 minutes on "${r.title}". The rest tonight will fly.` },
+      { url, tag, title: `Lunch ke baad 15 minute? 🍱`, body: `${n}, Day ${r.day} shuru kar do. Raat ko aadha kaam already done hoga.` },
+      { url, tag, title: fire ? `${fire}, tootne mat dena` : `${n}, Day ${r.day} yaad hai na?`, body: `"${r.title}" abhi bhi open hai. Thoda sa abhi, baaki shaam ko.` },
+      { url, tag, title: `Aadha din nikal gaya ⏰`, body: `Day ${r.day} abhi pending hai, ${n}. Interview wale din tum khud ko thank you bologe.` },
+      { url, tag, title: `Bas ek shuruaat, ${n}`, body: `Day ${r.day} ka brief padh lo. Start karna hi sabse mushkil hota hai.` },
     ], r.seed);
   }
 
@@ -78,6 +90,10 @@ export function buildReminder(r: ReminderInput): Reminder | null {
       { url, tag, title: `Day ${r.day} misses you`, body: `"${r.title}" is ready when you are. Open it now, finish before dinner.` },
       { url, tag, title: `Evening check-in`, body: `Day ${r.day} isn't submitted yet, ${n}. Start it now; it's the best part of the day to do it.` },
       { url, tag, title: `${n}, 5 minutes?`, body: `Just open Day ${r.day} and read the brief. Starting is the hard part.` },
+      { url, tag, title: fire ? `${fire} khatre mein hai! 😬` : `Abhi bhi time hai, ${n}`, body: `Day ${r.day} ke liye bas ${mins} minute chahiye. Dinner se pehle nipta do.` },
+      { url, tag, title: `Day ${r.day} tumhe yaad kar raha hai 🥺`, body: `"${r.title}" ready hai, ${n}. Abhi kholo, jaldi ho jayega.` },
+      { url, tag, title: `Shaam ka check-in`, body: `${n}, Day ${r.day} abhi submit nahi hua. Ab shuru karo, sabse best time hai.` },
+      { url, tag, title: `Chalo ${n}, ab ya kabhi nahi 💪`, body: `Day ${r.day} kholo, brief padho, kaam shuru. Baaki apne aap ho jayega.` },
     ], r.seed);
   }
 
@@ -87,6 +103,10 @@ export function buildReminder(r: ReminderInput): Reminder | null {
     { url, tag, title: `Before you sleep, ${n}`, body: `Day ${r.day} is still open. A rough submission beats none, and it keeps your refund on track.` },
     { url, tag, title: `3 hours left ⏳`, body: `Day ${r.day} is still unsubmitted, ${n}. Done is better than perfect.` },
     { url, tag, title: fire ? `Don't let ${r.streak} days go to waste` : `One last nudge tonight`, body: `Open Day ${r.day}, submit a draft, sleep easy. You can polish it tomorrow.` },
+    { url, tag, title: fire ? `Last call! ${fire} bacha lo` : `Last call, ${n}! 🌙`, body: `Day ${r.day} midnight tak open hai. Jo bhi ho, submit kar do. Kal improve kar lena.` },
+    { url, tag, title: `Sone se pehle, ${n}…`, body: `Day ${r.day} abhi baaki hai. Rough submission bhi chalega, aur refund track pe rahega.` },
+    { url, tag, title: `Sirf 3 ghante bache ⏳`, body: `Day ${r.day} pending hai, ${n}. Perfect nahi, bas done chahiye.` },
+    { url, tag, title: fire ? `${r.streak} din ki mehnat, aise mat jaane do` : `Aaj ka last reminder 🙏`, body: `Day ${r.day} kholo, draft submit karo, aaram se so jao.` },
   ], r.seed);
 }
 
