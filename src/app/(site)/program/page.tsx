@@ -22,7 +22,7 @@ export default function ProgramPage() {
   return (
     <>
       <PageHeader eyebrow="The program" title="A structured 30-day career transformation." intro="Not a video course. A daily rhythm of workplace problems, weekly checkpoints and interview practice for one chosen role.">
-        <ButtonLink href="/tracks" arrow>Choose My Career Track</ButtonLink>
+        <ButtonLink href="/tracks" soft arrow>Choose my career track</ButtonLink>
       </PageHeader>
       <ProgramTimeline />
       <Inclusions />

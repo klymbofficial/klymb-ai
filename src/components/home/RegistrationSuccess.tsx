@@ -104,7 +104,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
       {/* Straight into the course: already signed in, or one Google step that
           lands on Day 1, never a separate sign-in page. */}
       {enrolled && signedIn && (
-        <ButtonLink href="/learn" arrow className="mt-8 rounded-full px-7">
+        <ButtonLink href="/learn" soft arrow className="mt-8 rounded-full px-7">
           Start Day 1
         </ButtonLink>
       )}

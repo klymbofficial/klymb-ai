@@ -190,7 +190,7 @@ export function RegistrationForm({
               Register with Google
             </button>
           )}
-          <Button type="submit" arrow disabled={pending} aria-busy={pending} className="rounded-full px-8! py-3!">{pending ? "Saving…" : "Register"}</Button>
+          <Button type="submit" soft arrow disabled={pending} aria-busy={pending} className="rounded-full px-8! py-3!">{pending ? "Saving…" : "Register"}</Button>
         </div>
         <p className="mt-3 text-center text-xs text-muted">You pay on the next screen, after registering.</p>
       </div>
