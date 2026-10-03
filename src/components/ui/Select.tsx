@@ -2,7 +2,6 @@
 
 import clsx from "clsx";
 import { useEffect, useId, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronDown } from "lucide-react";
 
 export interface SelectOption { value: string; label: string; disabled?: boolean; hint?: string }
@@ -132,19 +131,14 @@ export function SelectField({
         />
       </button>
 
-      <AnimatePresence>
         {open && (
-          <motion.ul
+          <ul
             ref={listRef}
             id={listId}
             role="listbox"
             aria-labelledby={id}
-            initial={{ opacity: 0, y: upward ? 6 : -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: upward ? 4 : -4, scale: 0.98 }}
-            transition={{ duration: 0.16, ease: [0.2, 0.7, 0.3, 1] }}
             className={clsx(
-              "absolute inset-x-0 z-30 max-h-64 overflow-y-auto rounded-xl bg-card p-1.5 shadow-float ring-1 ring-line/20",
+              "absolute inset-x-0 z-30 max-h-64 transition-[opacity,transform] duration-150 starting:scale-[0.98] starting:opacity-0 overflow-y-auto rounded-xl bg-card p-1.5 shadow-float ring-1 ring-line/20",
               upward ? "bottom-full mb-1.5 origin-bottom" : "top-full mt-1.5 origin-top",
             )}
           >
@@ -175,9 +169,8 @@ export function SelectField({
                 </li>
               );
             })}
-          </motion.ul>
+          </ul>
         )}
-      </AnimatePresence>
 
       {error && <p id={`${id}-error`} className="mt-1.5 text-xs font-medium text-error">{error}</p>}
     </div>

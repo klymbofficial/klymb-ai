@@ -1,13 +1,13 @@
 import { AiFoundations } from "@/components/home/AiFoundations";
 import { ForYouIf } from "@/components/home/ForYouIf";
-import { PromoFilm } from "@/components/home/PromoFilm";
+import { LazyHowItWorks, LazyPromoFilm } from "@/components/lazy/LazyHome";
 import { CareerTracks } from "@/components/home/CareerTracks";
 import { Evidence } from "@/components/home/Evidence";
 import { FaqJoin } from "@/components/home/FaqJoin";
 import { StickyEnrolBar } from "@/components/home/StickyEnrolBar";
 import { WhyRefund } from "@/components/home/WhyRefund";
 import { Hero } from "@/components/home/Hero";
-import { HowItWorks } from "@/components/home/HowItWorks";
+import { HowItWorksStatic } from "@/components/home/HowItWorksStatic";
 import { Pricing } from "@/components/home/Pricing";
 import { StatementBand } from "@/components/home/StatementBand";
 import { redirect } from "next/navigation";
@@ -23,11 +23,11 @@ export default async function HomePage() {
     <>
       <Hero />
       <StatementBand>{statement}</StatementBand>
-      <PromoFilm />
+      <LazyPromoFilm />
       <ForYouIf />
       <AiFoundations />
       <Evidence />
-      <HowItWorks />
+      <LazyHowItWorks fallback={<HowItWorksStatic />} />
       <CareerTracks />
       <Pricing />
       <WhyRefund />

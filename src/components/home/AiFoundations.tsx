@@ -1,6 +1,6 @@
 import { Appear } from "@/components/motion/Appear";
 import { Spotlight } from "@/components/effects/Spotlight";
-import { EvalDemo } from "./EvalDemo";
+import { LazyEvalDemo } from "@/components/lazy/LazyHome";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { aiConcepts, evalMetrics, type ConceptGlyph } from "@/data/ai-foundations";
 
@@ -139,7 +139,7 @@ export function AiFoundations() {
         </Spotlight>
       </Appear>
 
-      <Appear><EvalDemo /></Appear>
+      <LazyEvalDemo />
     </section>
   );
 }

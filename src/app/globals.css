@@ -252,3 +252,30 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .appear { animation-timeline: view(); animation-range: entry 0% entry 35%; animation-delay: 0s; animation-duration: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .appear { animation: none; } }
+
+/* ScrubText and ScrollDrift: scroll-driven, no JavaScript. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scrub { view-timeline-name: --scrub; }
+    .scrub-word {
+      animation: scrub-word linear both;
+      animation-timeline: --scrub;
+      animation-range: cover calc(8% + 40% * var(--i) / var(--n)) cover calc(8% + 40% * (var(--i) + 1) / var(--n));
+    }
+    .scroll-drift { animation: scroll-drift linear both; animation-timeline: view(); animation-range: cover; }
+  }
+}
+@keyframes scrub-word { from { opacity: 0.18; } to { opacity: 1; } }
+@keyframes scroll-drift { from { transform: translateY(-5%) scale(1.12); } to { transform: translateY(5%) scale(1.12); } }
+
+/* StrikeReveal: hidden only once script has marked the page, so no-JS shows the end state. */
+.strike-line { transform: scaleX(1); }
+@media (prefers-reduced-motion: no-preference) {
+  .strike[data-armed]:not(.is-shown) .strike-line { transform: scaleX(0); }
+  .strike[data-armed]:not(.is-shown) .strike-char { transform: translateY(110%); opacity: 0; }
+  .strike.is-shown .strike-old { opacity: 0.38; }
+  .strike-line { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .strike-char { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.5s; }
+  .strike-old { transition: opacity 0.4s; }
+}
+@media (prefers-reduced-motion: reduce) { .strike-old { opacity: 0.38; } }

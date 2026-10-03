@@ -1,36 +1,42 @@
 "use client";
 
-import { animate, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 /**
  * Counts a display figure like "92M", "56%" or "3x" up from zero the first
  * time it scrolls into view. The prefix and suffix stay put; only the number
- * moves. Figures with no leading number render as-is.
+ * moves. Figures with no leading number render as-is. Plain rAF, so the
+ * animation library is not needed on first load.
  */
 export function StatFigure({ value, className }: { value: string; className?: string }) {
   const match = value.match(/^(\D*)(\d+(?:\.\d+)?)(.*)$/);
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  const reduced = useReducedMotion();
   const hasNumber = match !== null;
   const target = match ? Number(match[2]) : 0;
-  // Server and first client render must agree, and the server cannot know
-  // the motion preference: so everyone starts at 0 and the effect settles it.
-  const [shown, setShown] = useState(hasNumber ? 0 : target);
+  const [shown, setShown] = useState(0);
 
-  // Depend on primitives only. `match` is a fresh array every render, and
-  // listing it here restarted the count from zero on every animation frame.
   useEffect(() => {
-    if (!hasNumber || !inView) return;
-    // Reduced motion lands on the final value at once, through the same path.
-    const controls = animate(0, target, {
-      duration: reduced ? 0 : 1.2,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (v) => setShown(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [inView, reduced, target, hasNumber]);
+    const el = ref.current;
+    if (!hasNumber || !el) return;
+    let raf = 0;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(target);
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const p = Math.min(1, (now - t0) / 1200);
+        setShown(Math.round(target * (1 - Math.pow(1 - p, 4))));
+        if (p < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }, { rootMargin: "-60px" });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [target, hasNumber]);
 
   if (!match) return <span className={className}>{value}</span>;
   return (
