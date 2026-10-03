@@ -12,8 +12,8 @@ export function TrackCard({ track }: { track: Track }) {
 
   return (
     <Spotlight className="h-full rounded-card">
-    <article className="card group flex h-full flex-col overflow-hidden transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-float">
-      <div className="relative aspect-[16/9] overflow-hidden bg-surface">
+    <article className="card group flex h-full flex-col overflow-clip transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-float">
+      <div className="relative aspect-[16/9] overflow-clip bg-surface">
         {/* The photo drifts slightly as the card crosses the screen. */}
         <ScrollDrift className="absolute inset-0">
         <Image
