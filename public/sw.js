@@ -84,6 +84,8 @@ self.addEventListener("push", (event) => {
       tag: msg.tag,
       renotify: Boolean(msg.tag), // a newer reminder for the same day still buzzes
       data: { url: msg.url },
+      // Chrome adds its own Unsubscribe; this sits beside it and opens the day.
+      actions: [{ action: "open", title: "Do it now" }],
     }),
   );
 });
