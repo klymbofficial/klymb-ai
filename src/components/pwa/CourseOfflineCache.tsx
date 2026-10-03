@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 
-const LEARN = "klymb-learn-v1";
-const STATIC = "klymb-static-v1";
+const LEARN = "klymb-learn-v2";
+const STATIC = "klymb-static-v2";
 
 /**
  * On the dashboard, once per session and when the browser is idle: saves every
