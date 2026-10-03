@@ -5,7 +5,7 @@ import { policyVersion } from "@/data/legal";
 export function LegalPage({ title, intro, children }: { title: string; intro: string; children: React.ReactNode }) {
   return (
     <>
-      <header className="border-b-2 border-line">
+      <header className="border-b border-line/25">
         <Container className="py-12 sm:py-16">
           <Eyebrow>Klymb.ai · legal</Eyebrow>
           <h1 className="display mt-4 max-w-3xl text-5xl text-balance sm:text-6xl">{title}</h1>
@@ -24,7 +24,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro: st
 
 export function Section({ n, title, plain, children }: { n: string; title: string; plain?: string; children: React.ReactNode }) {
   return (
-    <section className="border-t-2 border-line pt-8 first:border-t-0 first:pt-0">
+    <section className="border-t border-line/25 pt-8 first:border-t-0 first:pt-0">
       <h2 className="display text-2xl">
         <span className="mr-2 text-red">{n}</span>{title}
       </h2>
@@ -40,7 +40,7 @@ export function Section({ n, title, plain, children }: { n: string; title: strin
 
 export function Facts({ rows }: { rows: readonly (readonly [string, string])[] }) {
   return (
-    <div className="overflow-x-auto border-2 border-line">
+    <div className="card overflow-x-auto">
       <table className="w-full min-w-[420px] text-left text-sm">
         <tbody>
           {rows.map(([k, v]) => (

@@ -20,9 +20,9 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Wordmark className="text-2xl" />
-          <p className="mt-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-muted">Admin access</p>
+          <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Admin access</p>
         </div>
-        <div className="border-2 border-line bg-paper p-6 sm:p-8">
+        <div className="card p-6 sm:p-8">
           {signedInAs ? (
             <div className="flex flex-col gap-4">
               <h1 className="display text-2xl">Not an admin account</h1>

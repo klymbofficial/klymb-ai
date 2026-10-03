@@ -23,7 +23,7 @@ export function ExportCsv<T extends object>({
       type="button"
       onClick={download}
       disabled={!rows.length}
-      className="border-2 border-ink px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-ink hover:text-paper disabled:opacity-40"
+      className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper disabled:opacity-40"
     >
       Export CSV
     </button>

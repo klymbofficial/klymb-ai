@@ -10,7 +10,7 @@ import { rangeDays, RANGES } from "@/lib/admin/analytics";
 
 function Panel({ title, note, children }: { title: string; note: string; children: React.ReactNode }) {
   return (
-    <section className="border-2 border-line bg-paper p-5">
+    <section className="card p-5">
       <h2 className="display text-xl">{title}</h2>
       <p className="mt-1 mb-4 text-xs text-muted">{note}</p>
       {children}
@@ -52,7 +52,7 @@ export default async function AdminEngagementPage({
         }
       />
 
-      <div className="grid gap-0.5 border-2 border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Registrations" value={data.totals.registrations} hint={`Last ${days} days`} />
         <StatTile label="Enrolled learners" value={data.totals.learners} hint="All time" />
         <StatTile label="Submissions" value={data.totals.submissions} hint={`Last ${days} days`} tone="red" />

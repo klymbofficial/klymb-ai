@@ -16,7 +16,7 @@ export function CookiePreferences() {
   }, []);
 
   return (
-    <div className="border-2 border-line bg-paper p-5">
+    <div className="card p-5">
       <p className="text-sm">
         <strong>Your current choice:</strong>{" "}
         {choice === "necessary" ? "Analytics off: nothing is sent to Google" : "Analytics on (the default)"}

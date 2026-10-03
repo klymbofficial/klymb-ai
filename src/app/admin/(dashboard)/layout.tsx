@@ -20,7 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="flex items-center justify-between gap-4">
           <div>
             <Wordmark className="text-xl text-paper" />
-            <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/50">Admin</p>
+            <p className="mt-1 text-xs font-extrabold uppercase tracking-[0.18em] text-white/50">Admin</p>
           </div>
           <Link href="/" className="text-xs font-semibold text-white/60 underline underline-offset-4 hover:text-white lg:hidden">
             View site
@@ -46,7 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <main id="admin-main" className="min-w-0 flex-1 bg-surface">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10"><MotionProvider>{children}</MotionProvider></div>
         <form action={signOut} className="px-4 pb-8 lg:hidden">
-          <button type="submit" className="border-2 border-ink px-3 py-2 text-xs font-bold uppercase tracking-wider">Sign out</button>
+          <button type="submit" className="rounded-lg border border-line/50 px-3 py-2 text-xs font-bold">Sign out</button>
         </form>
       </main>
     </div>

@@ -6,6 +6,7 @@ import { submitDay } from "@/app/(learn)/learn/actions";
 import { track } from "@/lib/analytics";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import type { Submission } from "@/lib/learner/data";
+import { Celebrate } from "./Celebrate";
 
 export function DaySubmission({
   day, checklist, submission, needsLinkedinPost, nextDay,
@@ -13,6 +14,7 @@ export function DaySubmission({
   const [saved, setSaved] = useState(!!submission);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [burst, setBurst] = useState(0);
   const [checked, setChecked] = useState<boolean[]>(() => (checklist ?? []).map(() => false));
 
   async function onSubmit(formData: FormData) {
@@ -22,6 +24,7 @@ export function DaySubmission({
     setPending(false);
     if (result.ok) {
       setSaved(true);
+      setBurst((b) => b + 1);
       track("day_submit", { day, updated: !!submission });
     }
     else setError(result.message);
@@ -31,7 +34,7 @@ export function DaySubmission({
     <div className="flex flex-1 flex-col">
       {checklist && (
         <fieldset className="mb-6">
-          <legend className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Before you submit</legend>
+          <legend className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Before you submit</legend>
           <ul className="mt-3 space-y-2">
             {checklist.map((c, i) => (
               <li key={c} className="flex items-start gap-3">
@@ -93,9 +96,10 @@ export function DaySubmission({
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-wrap items-center gap-4"
+                className="relative flex flex-wrap items-center gap-4"
               >
-                <p role="status" className="text-sm font-bold text-red-deep">Saved. You can update it any time.</p>
+                <Celebrate burstKey={burst} />
+                <p role="status" className="text-sm font-bold text-red-deep">{burst ? `Day ${day} done. Nice work.` : "Saved. You can update it any time."}</p>
                 {nextDay && <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>}
               </motion.div>
             )}
@@ -105,7 +109,7 @@ export function DaySubmission({
 
       {submission?.reviewer_note && (
         <div className="mt-6 border-l-2 border-red-strong bg-red-tint p-4">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-red-deep">Reviewer feedback</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">Reviewer feedback</p>
           <p className="mt-1 text-sm">{submission.reviewer_note}</p>
         </div>
       )}

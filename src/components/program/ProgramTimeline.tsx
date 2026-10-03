@@ -13,7 +13,7 @@ export function ProgramTimeline() {
     { key: "MI", week: 5, ...mockInterviewPhase },
   ];
   return (
-    <section aria-labelledby="timeline-title" className="timeline relative overflow-hidden bg-[#0d0b0b] text-paper">
+    <section aria-labelledby="timeline-title" className="timeline relative overflow-hidden bg-night text-paper">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_60%_at_20%_0%,rgb(131_5_11/0.45),transparent_70%),radial-gradient(40%_50%_at_90%_100%,rgb(240_134_139/0.12),transparent_70%)]" />
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
         <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-soft">The arc</p>
@@ -27,7 +27,7 @@ export function ProgramTimeline() {
             <li key={p.key} className="relative">
               <span
                 aria-hidden="true"
-                className="timeline-node relative z-10 mx-auto mb-6 hidden size-10 place-items-center rounded-full border-2 border-red-soft bg-[#0d0b0b] text-xs font-black text-red-soft md:grid"
+                className="timeline-node relative z-10 mx-auto mb-6 hidden size-10 place-items-center rounded-full border-2 border-red-soft bg-night text-xs font-black text-red-soft md:grid"
                 style={{ "--i": i } as React.CSSProperties}
               >
                 {p.key}

@@ -172,7 +172,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
       {/* ── Detail ───────────────────────────────────────────── */}
       <section aria-live="polite" className="min-w-0 rounded-slab bg-[#2a0f0a] p-4 text-paper sm:p-5">
         <div className="rounded-card bg-card p-6 text-ink">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">
             Week {active.week} · {active.weekName}
           </p>
           <p className="display mt-3 text-2xl leading-tight text-balance">{active.title}</p>

@@ -8,7 +8,7 @@ export function LoginForm({ error }: { error?: string }) {
       <form action={async () => { "use server"; await signInWithGoogle(); }}>
         <button
           type="submit"
-          className="inline-flex w-full items-center justify-center gap-3 border-2 border-ink bg-white px-4 py-3 text-sm font-bold text-ink transition-colors hover:bg-surface"
+          className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-line/50 bg-white px-4 py-3 shadow-card text-sm font-bold text-ink transition-colors hover:bg-surface"
         >
           <GoogleMark />
           Continue with Google

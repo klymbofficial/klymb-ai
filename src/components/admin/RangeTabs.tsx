@@ -16,7 +16,7 @@ export function RangeTabs({
   const params = useSearchParams();
 
   return (
-    <div role="group" aria-label={param} className="inline-flex border-2 border-line bg-paper">
+    <div role="group" aria-label={param} className="inline-flex overflow-hidden rounded-lg border border-line/40 bg-card">
       {options.map((o) => (
         <button
           key={o.key}
