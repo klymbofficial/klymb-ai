@@ -124,7 +124,7 @@ export function PromoFilm() {
   return (
     <section aria-labelledby="film-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
       <h2 id="film-title" className="sr-only">Klymb.ai in 28 seconds</h2>
-      <div ref={ref} className="relative aspect-[4/5] overflow-hidden rounded-slab bg-[#0d0b0b] text-paper shadow-float sm:aspect-video">
+      <div ref={ref} className="relative aspect-[4/5] overflow-hidden rounded-slab bg-night text-paper shadow-float sm:aspect-video">
         {/* Two slow red glows and a film-grain layer, with a gentle camera drift per scene. */}
         <motion.div
           aria-hidden="true"

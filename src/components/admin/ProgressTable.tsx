@@ -87,14 +87,14 @@ function RowActions({ learner }: { learner: LearnerProgress }) {
             setError(result.message);
           }
         }}
-        className="border-2 border-line bg-paper px-2 py-1 text-[11px] font-bold uppercase tracking-wider focus:border-ink focus:outline-none"
+        className="rounded-md border border-line/40 bg-card px-2 py-1 text-xs font-bold focus:border-ink focus:outline-none"
       >
         {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
 
       {confirming ? (
         <span className="flex flex-col gap-1">
-          <label htmlFor={`confirm-${learner.id}`} className="text-[11px] font-bold text-red-deep">
+          <label htmlFor={`confirm-${learner.id}`} className="text-xs font-bold text-red-deep">
             Type {learner.email} to delete permanently
           </label>
           <input
@@ -113,13 +113,13 @@ function RowActions({ learner }: { learner: LearnerProgress }) {
                 if (result.ok) setRemoved(true);
                 else setError(result.message);
               }}
-              className="border-2 border-red-deep bg-red-deep px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-white disabled:opacity-50"
+              className="border-2 border-red-deep bg-red-deep px-2 py-1 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
             >
               {busy ? "Deleting…" : "Delete"}
             </button>
             <button
               type="button" onClick={() => { setConfirming(false); setTyped(""); setError(""); }}
-              className="border-2 border-line px-2 py-1 text-[11px] font-bold uppercase tracking-wider"
+              className="rounded-md border border-line/50 px-2 py-1 text-xs font-bold"
             >
               Cancel
             </button>
@@ -128,25 +128,25 @@ function RowActions({ learner }: { learner: LearnerProgress }) {
       ) : (
         <button
           type="button" onClick={() => setConfirming(true)}
-          className="text-[11px] font-bold uppercase tracking-wider text-muted underline underline-offset-2 hover:text-red-deep"
+          className="text-xs font-bold uppercase tracking-wider text-muted underline underline-offset-2 hover:text-red-deep"
         >
           Remove…
         </button>
       )}
 
-      {error && <span role="alert" className="max-w-[12rem] text-[11px] font-semibold text-error">{error}</span>}
+      {error && <span role="alert" className="max-w-[12rem] text-xs font-semibold text-error">{error}</span>}
     </span>
   );
 }
 
 export function ProgressTable({ rows }: { rows: LearnerProgress[] }) {
   return (
-    <div className="overflow-x-auto border-2 border-line bg-paper">
+    <div className="card overflow-x-auto">
       <table className="w-full min-w-[1080px] text-left text-sm">
         <thead className="sticky top-0 z-10 bg-ink text-paper">
           <tr>
             {["Learner", "Track", "Progress", "Days", "Assessments", "Evidence", "Status & removal"].map((h) => (
-              <th key={h} scope="col" className="p-3 text-[11px] font-extrabold uppercase tracking-[0.1em]">{h}</th>
+              <th key={h} scope="col" className="p-3 text-xs font-extrabold uppercase tracking-[0.1em]">{h}</th>
             ))}
           </tr>
         </thead>
@@ -162,14 +162,14 @@ export function ProgressTable({ rows }: { rows: LearnerProgress[] }) {
               <td className="p-3 nums font-extrabold">
                 {l.days_submitted}<span className="text-muted">/30</span>
                 {l.last_submission_at && (
-                  <span className="block text-[11px] font-normal text-muted">
+                  <span className="block text-xs font-normal text-muted">
                     last {new Date(l.last_submission_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                   </span>
                 )}
               </td>
               <td className="p-3 nums">
                 {l.assessments_scored}<span className="text-muted">/4</span>
-                {l.latest_band && <span className="mt-0.5 block text-[11px] font-bold text-red-deep">{bandLabel[l.latest_band] ?? l.latest_band}</span>}
+                {l.latest_band && <span className="mt-0.5 block text-xs font-bold text-red-deep">{bandLabel[l.latest_band] ?? l.latest_band}</span>}
               </td>
               <td className="p-3"><EvidenceCell learner={l} /></td>
               <td className="p-3"><RowActions learner={l} /></td>

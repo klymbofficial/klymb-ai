@@ -228,7 +228,7 @@ export function HowItWorks() {
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.3, ease: EASE }}
                 >
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-red-deep">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">
                     Step {active + 1} of {count}
                   </p>
                   <p className="mt-2 font-heading text-[clamp(1.5rem,3vh,2.25rem)] leading-tight font-bold">{howItWorks[active].title}</p>

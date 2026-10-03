@@ -263,7 +263,7 @@ async function AnalyticsBody({ params }: { params: Params }) {
 function ConversionTile({ label, value, hint, accent }: { label: string; value: number | string; hint: string; accent?: boolean }) {
   return (
     <div className={`rounded-card p-5 shadow-card ${accent ? "bg-red-strong text-white" : "bg-card"}`}>
-      <p className={`text-[11px] font-extrabold uppercase tracking-[0.14em] ${accent ? "text-white/80" : "text-muted"}`}>{label}</p>
+      <p className={`text-xs font-extrabold uppercase tracking-[0.14em] ${accent ? "text-white/80" : "text-muted"}`}>{label}</p>
       <p className="display nums mt-2 text-[2rem] leading-none">{typeof value === "number" ? value.toLocaleString("en-IN") : value}</p>
       <p className={`mt-2 text-xs ${accent ? "text-white/80" : "text-muted"}`}>{hint}</p>
     </div>

@@ -163,7 +163,7 @@ export function SelectField({
                 >
                   <span className="truncate">{o.label}</span>
                   {o.hint && (
-                    <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">{o.hint}</span>
+                    <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-muted">{o.hint}</span>
                   )}
                   {isSelected && <Check aria-hidden="true" className="size-4 shrink-0 text-red-deep" strokeWidth={2.5} />}
                 </li>

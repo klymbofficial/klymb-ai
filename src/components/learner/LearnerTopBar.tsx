@@ -16,7 +16,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
 
   return (
     <>
-      <div className="ticker bg-red-strong py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white sm:text-[11px]">
+      <div className="ticker bg-red-strong py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-white sm:text-xs">
         <p className="ticker-track">
           Next cohort starts {formatDate(cohort.startDate)} / Enrollment closes {formatDate(cohort.enrollmentDeadline)}
           {cohort.enrollmentDeadlineIsPlaceholder && " (date TBC)"}
@@ -45,7 +45,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
             {image ? (
               <Image src={image} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
             ) : (
-              <span aria-hidden="true" className="grid size-7 place-items-center rounded-full bg-surface text-[10px] font-extrabold">
+              <span aria-hidden="true" className="grid size-7 place-items-center rounded-full bg-surface text-xs font-extrabold">
                 {initials || "?"}
               </span>
             )}
@@ -53,7 +53,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
             <form action={signOutLearner}>
               <button
                 type="submit"
-                className="ml-2 rounded-md bg-red-strong px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-press"
+                className="ml-2 rounded-md bg-red-strong px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-press"
               >
                 Sign out
               </button>

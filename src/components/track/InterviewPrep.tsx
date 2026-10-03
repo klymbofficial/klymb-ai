@@ -59,13 +59,13 @@ export function InterviewPrep({ track, enrolHref }: { track: Track; enrolHref: s
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-bold text-red-deep nums">{String(i + 1).padStart(2, "0")}</span>
-                <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+                <span className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-muted">
                   {q.category}
                 </span>
               </div>
               <p className="mt-4 text-lg leading-snug font-semibold text-balance">“{q.question}”</p>
               <div className="mt-5 border-t border-line/20 pt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">A strong answer shows</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">A strong answer shows</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-ink/80">{q.whatGoodLooksLike}</p>
               </div>
             </Appear>
@@ -74,7 +74,7 @@ export function InterviewPrep({ track, enrolHref }: { track: Track; enrolHref: s
 
         <li>
           <Appear delay={0.06 * track.interviewQuestions.length} y={14} className="flex h-full flex-col rounded-card bg-red-tint p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-red-deep">Topics covered</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-deep">Topics covered</p>
             <ul className="mt-4 flex flex-wrap gap-2">
               {track.interviewTopics.map((t) => (
                 <li key={t} className="rounded-full bg-card/80 px-3 py-1.5 text-sm">{t}</li>

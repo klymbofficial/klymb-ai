@@ -7,6 +7,7 @@ import { CohortBoard, type BoardDay } from "@/components/learner/CohortBoard";
 import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
+import { ProgressRing } from "@/components/learner/ProgressRing";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
@@ -33,7 +34,7 @@ export default async function LearnHomePage() {
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ButtonLink href="/register?track=project-manager" arrow>Register for the cohort</ButtonLink>
           <form action={signOutLearner}>
-            <button type="submit" className="border-2 border-ink px-5 py-3 text-sm font-bold uppercase tracking-wider hover:bg-ink hover:text-paper">
+            <button type="submit" className="rounded-lg border border-line/50 px-5 py-3 text-sm font-bold hover:bg-ink hover:text-paper">
               Sign out
             </button>
           </form>
@@ -55,7 +56,7 @@ export default async function LearnHomePage() {
         <LearnerTopBar name={learner.name} image={session?.user?.image} />
         <PaymentNotice email={learner.email} track={track} />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
           <h1 className="display mt-4 text-4xl text-balance">Your place is reserved. Day 1 opens soon.</h1>
           <p className="mt-4 text-muted">
             The {track.name} course is being finished for this cohort. We will email{" "}
@@ -84,6 +85,9 @@ export default async function LearnHomePage() {
   }));
 
   const nextDay = days.find((d) => !d.submitted) ?? days[days.length - 1];
+  // Streak: consecutive submitted days counting back from the latest one done.
+  let streak = 0;
+  for (let d = Math.max(0, ...doneDays); d >= 1 && doneDays.has(d); d--) streak++;
 
   return (
     <>
@@ -106,15 +110,19 @@ export default async function LearnHomePage() {
             </Appear>
           </div>
 
+          <Appear y={14} delay={0.12}>
+            <ProgressRing done={doneDays.size} total={days.length} streak={streak} />
+          </Appear>
+
           <Appear y={14} delay={0.16}>
             <div className="flex flex-wrap items-center gap-5 rounded-card bg-black/25 px-6 py-4 ring-1 ring-white/10 backdrop-blur-sm transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-black/30">
               <div className="min-w-0">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/60">
+                <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">
                   Up next · Day {nextDay.day}
                 </p>
                 <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
               </div>
-              <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-[11px]">
+              <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
                 Open Day {nextDay.day}
               </ButtonLink>
             </div>

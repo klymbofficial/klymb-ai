@@ -17,7 +17,7 @@ export default function CookiePolicyPage() {
     >
       <Section n="1." title="Your choice" plain="Analytics is on by default. Turn it off here and it stops immediately.">
         <p>
-          We do not interrupt you with a cookie pop-up. Google Analytics runs by default so we can see, in aggregate,
+          On your first visit a small notice tells you about analytics, with a one-tap way to turn it off. Google Analytics runs by default so we can see, in aggregate,
           which pages people read and where they arrive from. If you would rather we did not, switch it off below: the
           script stops loading immediately, on this and every later page.
         </p>

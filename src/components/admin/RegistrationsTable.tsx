@@ -59,19 +59,19 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[220px] flex-1">
-          <label htmlFor="q" className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Search</label>
+          <label htmlFor="q" className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Search</label>
           <input
             id="q" type="search" value={query} autoComplete="off" spellCheck={false}
             onChange={(e) => { setQuery(e.target.value); sync({ q: e.target.value }); }}
             placeholder="Name, email, phone or role…"
-            className="mt-1.5 w-full border-2 border-line bg-paper px-3 py-2 text-sm focus:border-ink focus:outline-none"
+            className="mt-1.5 w-full rounded-lg border border-line/40 bg-card px-3 py-2 text-sm focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
           />
         </div>
         <div>
-          <label htmlFor="track" className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">Track</label>
+          <label htmlFor="track" className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Track</label>
           <select
             id="track" value={track} onChange={(e) => { setTrack(e.target.value); sync({ track: e.target.value }); }}
-            className="mt-1.5 border-2 border-line bg-paper px-3 py-2 text-sm focus:border-ink focus:outline-none"
+            className="mt-1.5 rounded-lg border border-line/40 bg-card px-3 py-2 text-sm focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
           >
             <option value="">All tracks</option>
             {tracks.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
@@ -79,7 +79,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
         </div>
         <button
           type="button" onClick={exportCsv}
-          className="border-2 border-ink px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-ink hover:text-paper"
+          className="rounded-lg border border-line/50 px-4 py-2 text-xs font-bold hover:bg-ink hover:text-paper"
         >
           Export CSV
         </button>
@@ -90,12 +90,12 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
 
       {enrolError && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{enrolError}</p>}
 
-      <div className="overflow-x-auto border-2 border-line bg-paper">
+      <div className="card overflow-x-auto">
         <table className="w-full min-w-[940px] text-left text-sm">
           <thead className="sticky top-0 z-10 bg-ink text-paper">
             <tr>
               {["Registered", "Name", "Contact", "Track", "Background", "LinkedIn", "Cohort"].map((h) => (
-                <th key={h} scope="col" className="p-3 text-[11px] font-extrabold uppercase tracking-[0.1em]">{h}</th>
+                <th key={h} scope="col" className="p-3 text-xs font-extrabold uppercase tracking-[0.1em]">{h}</th>
               ))}
             </tr>
           </thead>
@@ -119,7 +119,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
                 </td>
                 <td className="p-3 text-xs">
                   {enrolled.includes(r.email.toLowerCase()) || justEnrolled.includes(r.email.toLowerCase()) ? (
-                    <span className="border border-ink px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">Enrolled</span>
+                    <span className="border border-ink px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Enrolled</span>
                   ) : (
                     <button
                       type="button"
@@ -132,7 +132,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
                         if (result.ok) setJustEnrolled((prev) => [...prev, r.email.toLowerCase()]);
                         else setEnrolError(result.message);
                       }}
-                      className="border-2 border-ink px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider hover:bg-ink hover:text-paper disabled:opacity-50"
+                      className="rounded-lg border border-line/50 px-2.5 py-1 text-xs font-bold hover:bg-ink hover:text-paper disabled:opacity-50"
                     >
                       {enrolling === r.id ? "Enrolling…" : "Enroll"}
                     </button>

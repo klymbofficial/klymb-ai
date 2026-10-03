@@ -17,7 +17,7 @@ function ActivityTile({ label, value, sub, icon: Icon }: { label: string; value:
   return (
     <div className="rounded-xl border border-line/25 bg-card p-4">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">{label}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{label}</p>
         <span className="grid size-7 place-items-center rounded-lg bg-surface text-ink/70" aria-hidden="true"><Icon size={14} /></span>
       </div>
       <p className="display nums mt-2 truncate text-2xl" title={value}>{value}</p>
@@ -86,7 +86,7 @@ export default async function AdminOverviewPage() {
         intro="Live numbers from the registration form and the learner progress tables."
       />
 
-      <div className="grid gap-0.5 border-2 border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Registrations" value={stats.total} hint="All time" />
         <StatTile label="Last 7 days" value={stats.last7d} hint={`${stats.last24h} in the last 24 hours`} tone="red" />
         <StatTile label="Active learners" value={learners.filter((l) => l.status === "active").length} hint="Enrolled and in progress" />
@@ -104,14 +104,14 @@ export default async function AdminOverviewPage() {
       </Suspense>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <section aria-labelledby="by-track" className="border-2 border-line bg-paper p-5">
+        <section aria-labelledby="by-track" className="card p-5">
           <h2 id="by-track" className="display text-xl">Interest by track</h2>
           <p className="mt-1 mb-4 text-xs text-muted">Which roles people are actually registering for.</p>
           <TrackBars counts={stats.byTrack} />
         </section>
 
-        <section aria-labelledby="recent" className="border-2 border-line bg-paper">
-          <div className="flex items-baseline justify-between gap-4 border-b-2 border-line p-5">
+        <section aria-labelledby="recent" className="card overflow-hidden">
+          <div className="flex items-baseline justify-between gap-4 border-b border-line/25 p-5">
             <h2 id="recent" className="display text-xl">Latest registrations</h2>
             <Link href="/admin/registrations" className="text-xs font-bold uppercase tracking-wider underline underline-offset-4 hover:text-red-deep">
               See all

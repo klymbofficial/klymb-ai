@@ -80,7 +80,7 @@ export function Pricing({ track }: { track?: Track } = {}) {
                 />
               ) : (
                 <>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
                   <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(track.price)}</p>
                 </>
               )}

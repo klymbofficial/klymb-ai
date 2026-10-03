@@ -22,7 +22,7 @@ export function GaKpiTile({
   return (
     <div className="card flex flex-col p-5">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">{kpi.label}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{kpi.label}</p>
         {Icon && (
           <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface text-ink/70" aria-hidden="true">
             <Icon size={16} strokeWidth={2} />
@@ -32,7 +32,7 @@ export function GaKpiTile({
       <div className="mt-2 flex items-baseline gap-2">
         <p className="display nums text-[2rem] leading-none">{display(kpi)}</p>
         {showDelta && (
-          <span className={clsx("nums rounded-md px-1.5 py-0.5 text-[11px] font-bold", good ? "bg-green-50 text-green-700" : "bg-red-tint text-red-deep")}>
+          <span className={clsx("nums rounded-md px-1.5 py-0.5 text-xs font-bold", good ? "bg-green-50 text-green-700" : "bg-red-tint text-red-deep")}>
             {rising ? "▲" : "▼"} {Math.abs(kpi.delta!).toFixed(0)}%
           </span>
         )}

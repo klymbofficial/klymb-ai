@@ -17,11 +17,11 @@ export function KpiTile({ kpi }: { kpi: Kpi }) {
   return (
     <div className="flex flex-col gap-1 bg-paper p-5">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">{kpi.label}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{kpi.label}</p>
         {kpi.delta !== null && Number.isFinite(kpi.delta) && (
           <span
             className={clsx(
-              "border px-1.5 py-0.5 text-[11px] font-bold nums",
+              "border px-1.5 py-0.5 text-xs font-bold nums",
               good ? "border-green-700 text-green-700" : "border-red-deep text-red-deep",
             )}
           >

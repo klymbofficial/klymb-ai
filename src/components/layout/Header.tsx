@@ -48,7 +48,7 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:block">
-          <ButtonLink href="/tracks" className="rounded-full px-6 py-2.5 text-[11px]">Choose Your Track</ButtonLink>
+          <ButtonLink href="/tracks" className="rounded-full px-6 py-2.5 text-xs">Choose Your Track</ButtonLink>
         </div>
 
         <button

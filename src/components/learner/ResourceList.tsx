@@ -29,7 +29,7 @@ export function ResourceList({ resources }: { resources: DayResource[] }) {
               rel="noopener noreferrer"
               className="group flex h-full min-h-37 flex-col gap-1.5 rounded-lg border border-line/30 bg-card p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-red-strong/60 hover:shadow-card"
             >
-              <span className="block text-[11px] font-bold uppercase tracking-[0.04em] text-red-deep">{KIND_LABEL[r.kind]}</span>
+              <span className="block text-xs font-bold uppercase tracking-[0.04em] text-red-deep">{KIND_LABEL[r.kind]}</span>
               <span className="block font-heading text-[15px] leading-tight font-bold group-hover:underline">{r.label}</span>
               {id && (
                 <Image

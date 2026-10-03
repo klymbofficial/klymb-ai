@@ -20,11 +20,11 @@ export function Accordion({ items, variant = "rule" }: { items: AccordionItem[];
   const base = useId();
 
   return (
-    <div className={card ? "flex flex-col gap-3" : "border-t-2 border-line"}>
+    <div className={card ? "flex flex-col gap-3" : "border-t border-line/25"}>
       {items.map((item, i) => {
         const isOpen = open === i;
         return (
-          <div key={item.question} className={card ? "card px-6" : "border-b-2 border-line"}>
+          <div key={item.question} className={card ? "card px-6" : "border-b border-line/25"}>
             <h3>
               <button
                 type="button"

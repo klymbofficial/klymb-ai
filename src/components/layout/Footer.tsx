@@ -7,7 +7,7 @@ import { tracks } from "@/data/tracks";
 function Column({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <nav aria-label={title}>
-      <h2 className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-white">{title}</h2>
+      <h2 className="text-xs font-extrabold uppercase tracking-[0.16em] text-white">{title}</h2>
       <ul className="mt-5 space-y-3 text-sm text-white/60">
         {links.map((l) => (
           <li key={l.href}><Link href={l.href} className="transition-colors hover:text-white">{l.label}</Link></li>

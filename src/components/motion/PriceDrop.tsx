@@ -59,7 +59,7 @@ export function PriceDrop({ from, to, label, className }: { from: number; to: nu
         </span>
       </p>
 
-      <p className="mt-5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/70">{label}</p>
+      <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">{label}</p>
       <div className="mt-1 flex flex-wrap items-end gap-x-4 gap-y-2">
         <motion.p
           aria-hidden="true"
