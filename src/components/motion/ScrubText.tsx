@@ -20,7 +20,8 @@ export function ScrubText({ text, className }: { text: string; className?: strin
   if (reduced) return <p className={className}>{text}</p>;
 
   return (
-    <p ref={ref} className={className} aria-label={text}>
+    <p ref={ref} className={className}>
+      <span className="sr-only">{text}</span>
       {words.map((w, i) => (
         <Word key={i} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]}>
           {w}

@@ -1,20 +1,18 @@
-"use client";
+import clsx from "clsx";
 
-import { motion } from "motion/react";
-
-/** Fades and lifts content into place the first time it scrolls into view. */
+/**
+ * Fades and lifts content into place. Pure CSS (`.appear` in globals.css), so
+ * text is painted with the HTML instead of waiting for JavaScript: the hero
+ * copy is the page's largest paint, and hiding it until hydration cost
+ * seconds. Where the browser supports scroll-driven animation the reveal
+ * follows the element into view; elsewhere it plays once on load.
+ */
 export function Appear({
   children, delay = 0, y = 16, className,
 }: { children: React.ReactNode; delay?: number; y?: number; className?: string }) {
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.45, delay, ease: [0.2, 0.7, 0.3, 1] }}
-    >
+    <div className={clsx("appear", className)} style={{ "--appear-delay": `${delay}s`, "--appear-y": `${y}px` } as React.CSSProperties}>
       {children}
-    </motion.div>
+    </div>
   );
 }

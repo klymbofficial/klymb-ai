@@ -125,7 +125,7 @@ export function SelectField({
         onKeyDown={onKeyDown}
         className={clsx(trigger, error ? invalid : normal, open && "border-ink/50 bg-white ring-4 ring-ink/5")}
       >
-        <span className={clsx("truncate", selected ? "text-ink" : "text-muted/80")}>{selected?.label ?? placeholder}</span>
+        <span className={clsx("truncate", selected ? "text-ink" : "text-muted")}>{selected?.label ?? placeholder}</span>
         <ChevronDown
           aria-hidden="true"
           className={clsx("size-4 shrink-0 text-muted transition-transform duration-200", open && "rotate-180 text-ink")}

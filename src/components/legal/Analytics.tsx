@@ -11,6 +11,20 @@ import { readConsent } from "@/lib/consent";
  */
 export function Analytics({ gaId }: { gaId: string }) {
   const [allowed, setAllowed] = useState(false);
+  // Load GA only once the visitor interacts (or after a few seconds), so its
+  // 175 KB of script never competes with the first paint.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const go = () => setReady(true);
+    const events = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+    events.forEach((e) => window.addEventListener(e, go, { once: true, passive: true }));
+    const timer = window.setTimeout(go, 8000);
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, go));
+    };
+  }, []);
 
   useEffect(() => {
     // Opt-out model: the only state that disables analytics is an explicit "necessary".
@@ -20,6 +34,6 @@ export function Analytics({ gaId }: { gaId: string }) {
     return () => window.removeEventListener("klymb:consent", sync);
   }, []);
 
-  if (!allowed) return null;
+  if (!allowed || !ready) return null;
   return <GoogleAnalytics gaId={gaId} />;
 }
