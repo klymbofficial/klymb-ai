@@ -4,14 +4,15 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
 const ClimbHelix = dynamic(() => import("./ClimbHelix").then((m) => m.ClimbHelix), { ssr: false });
+const PrismScene = dynamic(() => import("./PrismScene").then((m) => m.PrismScene), { ssr: false });
 
 /**
- * Mounts the 3D staircase only where it belongs: a large screen with a mouse,
+ * Mounts a 3D scene (the staircase or the prism) only where it belongs: a large screen with a mouse,
  * WebGL available, motion allowed. And only after the page has painted and the
  * visitor has moved or scrolled (or 4s have passed), so Three.js never
  * competes with the first load. Phones never download it.
  */
-export function LazyHelix({ className }: { className?: string }) {
+export function LazyHelix({ className, scene = "helix" }: { className?: string; scene?: "helix" | "prism" }) {
   const [on, setOn] = useState(false);
 
   useEffect(() => {
@@ -30,5 +31,6 @@ export function LazyHelix({ className }: { className?: string }) {
     };
   }, []);
 
-  return on ? <ClimbHelix className={className} /> : null;
+  if (!on) return null;
+  return scene === "prism" ? <PrismScene className={className} /> : <ClimbHelix className={className} />;
 }

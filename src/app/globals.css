@@ -253,14 +253,16 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 }
 @media (prefers-reduced-motion: reduce) { .appear { animation: none; } }
 
-/* ScrubText and ScrollDrift: scroll-driven, no JavaScript. */
+/* ScrubText and ScrollDrift: scroll-driven, no JavaScript. Their containers must
+   use overflow: clip, not hidden: overflow: hidden makes a scroll container that
+   never scrolls, and the view timeline then never moves. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .scrub { view-timeline-name: --scrub; }
     .scrub-word {
       animation: scrub-word linear both;
       animation-timeline: --scrub;
-      animation-range: cover calc(8% + 40% * var(--i) / var(--n)) cover calc(8% + 40% * (var(--i) + 1) / var(--n));
+      animation-range: cover calc(10% + 58% * var(--i) / var(--n)) cover calc(10% + 58% * (var(--i) + 1) / var(--n));
     }
     .scroll-drift { animation: scroll-drift linear both; animation-timeline: view(); animation-range: cover; }
   }
