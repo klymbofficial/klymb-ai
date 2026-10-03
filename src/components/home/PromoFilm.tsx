@@ -160,7 +160,7 @@ export function PromoFilm() {
         {/* Chapter dots. */}
         <ol aria-hidden="true" className="absolute top-4 left-1/2 flex -translate-x-1/2 gap-1.5">
           {SCENES.map((s, i) => (
-            <li key={s.from} className={`h-1 rounded-full transition-all duration-500 ${i === scene ? "w-6 bg-red-soft" : i < scene ? "w-2 bg-white/60" : "w-2 bg-white/20"}`} />
+            <li key={s.from} className={`h-1 rounded-full transition-[width,background-color] duration-500 ${i === scene ? "w-6 bg-red-soft" : i < scene ? "w-2 bg-white/60" : "w-2 bg-white/20"}`} />
           ))}
         </ol>
 
@@ -311,7 +311,7 @@ function Visual({ scene, local }: { scene: number; local: number }) {
             return (
               <span
                 key={n}
-                className={`aspect-square rounded-[4px] transition-all duration-200 ${
+                className={`aspect-square rounded-[4px] transition-[transform,background-color,box-shadow] duration-200 ${
                   lit ? (checkpoint ? "scale-110 bg-red-soft shadow-[0_0_14px_rgb(240_134_139/0.7)]" : "bg-white") : "bg-white/10"
                 }`}
               />

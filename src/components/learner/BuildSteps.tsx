@@ -110,7 +110,7 @@ export function BuildSteps({ steps }: { steps: string[] }) {
         </button>
         <button
           type="button" onClick={() => go(active + 1)} disabled={active === last}
-          className="group inline-flex items-center gap-1 rounded-md bg-red-strong px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-[background-color,transform] hover:bg-red-press active:translate-y-px disabled:opacity-40 disabled:hover:bg-red-strong"
+          className="group inline-flex items-center gap-1 rounded-md bg-red-strong px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-[background-color,transform] hover:bg-red-press active:scale-[0.97] disabled:opacity-40 disabled:hover:bg-red-strong"
         >
           {active === last ? "All steps done" : "Next"}
           {active !== last && <ChevronRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />}

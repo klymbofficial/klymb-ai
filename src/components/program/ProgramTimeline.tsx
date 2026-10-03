@@ -1,4 +1,6 @@
 import { Spotlight } from "@/components/effects/Spotlight";
+import { LazyMount } from "@/components/lazy/LazyMount";
+import { LazyHelix } from "@/components/three/LazyHelix";
 import { mockInterviewPhase, weekPhases } from "@/data/program";
 
 /**
@@ -16,8 +18,19 @@ export function ProgramTimeline() {
     <section aria-labelledby="timeline-title" className="timeline relative overflow-hidden bg-night text-paper">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_60%_at_20%_0%,rgb(131_5_11/0.45),transparent_70%),radial-gradient(40%_50%_at_90%_100%,rgb(240_134_139/0.12),transparent_70%)]" />
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-        <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-soft">The arc</p>
-        <h2 id="timeline-title" className="display mt-3 max-w-2xl text-[clamp(1.9rem,4vw,3rem)] text-balance">Four weeks, four proofs, then two interviews.</h2>
+        <div className="grid items-center gap-8 lg:grid-cols-[1fr_1fr]">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-soft">The arc</p>
+            <h2 id="timeline-title" className="display mt-3 max-w-2xl text-[clamp(1.9rem,4vw,3rem)] text-balance">Four weeks, four proofs, then two interviews.</h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/60">
+              Thirty steps, one a day. The red ones are the weekly checkpoints you defend; the one at the top is the interview.
+            </p>
+          </div>
+          {/* The 30 days as a 3D staircase: large screens with a mouse only, loaded on approach. */}
+          <LazyMount margin="300px" className="hidden h-72 lg:block">
+            <LazyHelix className="h-72 w-full" />
+          </LazyMount>
+        </div>
 
         <ol className="relative mt-14 grid gap-5 md:grid-cols-5 md:gap-4">
           {/* The rail behind the nodes, and the red line that fills it. */}

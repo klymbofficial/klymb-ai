@@ -10,7 +10,7 @@ const styles: Record<Variant, string> = {
 };
 
 const base =
-  "group inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-sm font-bold transition-[background-color,color,border-color,transform] duration-150 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 disabled:active:translate-y-0";
+  "group inline-flex items-center justify-center gap-2 border-2 px-5 py-3 text-sm font-bold transition-[background-color,color,border-color,transform] duration-160 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100";
 
 /**
  * The marketing pages use rounded, sentence-case buttons; the interior

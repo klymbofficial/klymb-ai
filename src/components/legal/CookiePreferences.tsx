@@ -23,9 +23,9 @@ export function CookiePreferences() {
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         {choice === "necessary" ? (
-          <Button type="button" onClick={() => writeConsent("all")}>Turn analytics back on</Button>
+          <Button type="button" soft onClick={() => writeConsent("all")}>Turn analytics back on</Button>
         ) : (
-          <Button type="button" onClick={() => writeConsent("necessary")}>Turn analytics off</Button>
+          <Button type="button" soft onClick={() => writeConsent("necessary")}>Turn analytics off</Button>
         )}
       </div>
       <p className="mt-3 text-xs text-muted">
