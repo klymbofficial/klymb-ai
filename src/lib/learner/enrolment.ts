@@ -12,6 +12,9 @@ export interface EnrolInput {
   name: string;
   track: string;
   cohortStart: string;
+  /** From the registration's course repository, so submissions are checked against it from Day 1. */
+  githubUsername?: string;
+  githubUrl?: string;
 }
 
 /**
@@ -45,6 +48,7 @@ export async function ensureLearner(client: EnrolmentClient, input: EnrolInput):
     name: input.name,
     track: input.track,
     cohort_start: input.cohortStart,
+    ...(input.githubUsername ? { github_username: input.githubUsername, github_url: input.githubUrl ?? null } : {}),
   });
 
   if (!error) return true;
