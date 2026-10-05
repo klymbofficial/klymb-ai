@@ -44,3 +44,12 @@ test("every slot has eight distinct versions (English and Hinglish), each reads 
     }
   }
 });
+
+test("behind: later nudges name the same day the button opens", () => {
+  for (const slot of ["midday", "evening", "night"] as const)
+    for (const seed of [0, 1, 2, 3, 4, 5, 6, 7]) {
+      const r = buildReminder({ ...base, slot, behind: true, behindTitle: "Triage basics", seed })!;
+      assert.equal(r.url, "/learn/day/3");
+      assert.doesNotMatch(r.title + r.body, /Day 4/, `${slot} ${seed}: ${r.title} ${r.body}`);
+    }
+});

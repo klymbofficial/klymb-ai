@@ -27,6 +27,9 @@ export interface ReminderInput {
   doneToday: boolean;
   /** Yesterday's day is still unsubmitted. */
   behind: boolean;
+  /** Yesterday's title and time, used by the later nudges when behind. */
+  behindTitle?: string;
+  behindMinutes?: number;
   /** Picks the wording variant; the date keeps it stable within one send. */
   seed: number;
 }
@@ -70,6 +73,9 @@ export function buildReminder(r: ReminderInput): Reminder | null {
       { url, tag, title: `Day ${r.day} unlock ho gaya 🔓`, body: `${n}, "${r.title}" wait kar raha hai. ${kindLine}` },
     ], r.seed);
   }
+
+  // Behind on yesterday: after the morning, every nudge is about the day they should open.
+  if (r.behind) r = { ...r, day: r.day - 1, title: r.behindTitle ?? `Day ${r.day - 1}`, minutes: r.behindMinutes ?? r.minutes, streak: 0 };
 
   if (r.slot === "midday") {
     return pick<Reminder>([
