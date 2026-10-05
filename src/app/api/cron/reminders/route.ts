@@ -50,6 +50,8 @@ export async function GET(req: Request) {
       streak: streakEnding(submitted, day.day - 1),
       doneToday: submitted.has(day.day),
       behind: day.day > 1 && !submitted.has(day.day - 1),
+      behindTitle: course.days.find((d) => d.day === day.day - 1)?.title,
+      behindMinutes: course.days.find((d) => d.day === day.day - 1)?.estimateMinutes,
       seed: Number(today.replaceAll("-", "")) + day.day,
     });
     if (!msg) { skippedDone++; continue; }
