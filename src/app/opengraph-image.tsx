@@ -47,7 +47,7 @@ export default async function Image() {
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
             <span>From {formatINR(priceFrom)}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
-            <span>www.klymb.ai</span>
+            <span>learn.klymb.ai</span>
           </div>
         </div>
         <div style={{ height: 14, background: RED }} />

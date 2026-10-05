@@ -144,7 +144,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
         ${step(3, "Two mock interviews", "Days 29 and 30, with practising professionals, so you walk into the real one ready.")}
       </table>
       <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders, checkpoint feedback and receipt never land in spam.</div>
-      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">Sign in any time at <a href="${site}/learn" style="color:${C.maroon};font-weight:600">klymb.ai/learn</a> with this email, using Continue with Google.</div>`,
+      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">Sign in any time at <a href="${site}/learn" style="color:${C.maroon};font-weight:600">learn.klymb.ai/learn</a> with this email, using Continue with Google.</div>`,
     ],
   });
   return { subject, html, text };

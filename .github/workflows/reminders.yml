@@ -15,4 +15,4 @@ jobs:
         run: |
           curl -fsS --max-time 120 \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://www.klymb.ai/api/cron/reminders
+            https://learn.klymb.ai/api/cron/reminders

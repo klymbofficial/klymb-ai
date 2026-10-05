@@ -37,7 +37,7 @@ export const cohort = {
 
 /** The canonical public address. Everything absolute, links in previews, the sitemap, is built from this. */
 export const site = {
-  url: "https://www.klymb.ai",
+  url: "https://learn.klymb.ai",
   /** The production alias Vercel gives the project; permanently redirected to `url`. */
   vercelAlias: "klymb-ai.vercel.app",
 };

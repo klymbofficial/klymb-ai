@@ -91,6 +91,13 @@ const nextConfig: NextConfig = {
         destination: `${site.url}/:path*`,
         permanent: true,
       },
+      // The site moved to learn.klymb.ai: old links, emails and bookmarks follow it.
+      ...["www.klymb.ai", "klymb.ai"].map((host) => ({
+        source: "/:path*",
+        has: [{ type: "host" as const, value: host }],
+        destination: `${site.url}/:path*`,
+        permanent: true,
+      })),
     ];
   },
 };
