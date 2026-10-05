@@ -11,14 +11,17 @@ export interface RegistrationData {
   currentRole: string;
   experience: string;
   linkedin: string;
+  /** The cohort repository, https://github.com/<user>/<repo>. Required. */
   github: string;
+  /** Confirms the repository URL is correct: it is used for verification all cohort. */
+  repoConfirm: boolean;
   consent: boolean;
 }
 
 export type RegistrationErrors = Partial<Record<keyof RegistrationData, string>>;
 
 export const emptyRegistration: RegistrationData = {
-  name: "", email: "", phone: "", track: "", currentRole: "", experience: "", linkedin: "", github: "", consent: false,
+  name: "", email: "", phone: "", track: "", currentRole: "", experience: "", linkedin: "", github: "", repoConfirm: false, consent: false,
 };
 
 /** Server-side ceilings. The form cannot be trusted to enforce any of them. */
@@ -67,14 +70,34 @@ export function validateRegistration(d: RegistrationData): RegistrationErrors {
   }
 
   const gh = d.github.trim();
-  if (gh) {
-    if (gh.length > LIMITS.github) e.github = `Keep the GitHub URL under ${LIMITS.github} characters.`;
-    else if (!/^(https?:\/\/)?([\w-]+\.)?github\.com\/.+/i.test(gh)) e.github = "Enter a GitHub URL, or leave this blank.";
-  }
+  if (!gh) e.github = "Add your course repository URL.";
+  else if (gh.length > LIMITS.github) e.github = `Keep the repository URL under ${LIMITS.github} characters.`;
+  else if (!parseRepoUrl(gh)) e.github = "Enter a repository link like https://github.com/your-username/your-repo.";
+
+  if (!d.repoConfirm) e.repoConfirm = "Please confirm your repository URL is correct.";
 
   if (!d.consent) e.consent = "Please agree to be contacted about the program.";
 
   return e;
+}
+
+/** The repository each track's Day 1 builds in, used to prefill GitHub's "new repository" page. */
+export const COURSE_REPO_NAMES: Record<TrackSlug, string> = {
+  "qa-engineer": "qa-evidence-portfolio",
+  "l1-l2-support": "support-evidence-portfolio",
+  "project-manager": "pm-delivery-portfolio",
+  "junior-developer": "dev-evidence-portfolio",
+  "reporting-analyst": "analytics-evidence-portfolio",
+};
+
+/**
+ * A GitHub repository link, reduced to its owner and name, or null.
+ * Accepts a trailing slash, ".git" and a missing scheme; rejects profiles and deeper paths.
+ */
+export function parseRepoUrl(input: string): { owner: string; repo: string; url: string } | null {
+  const m = input.trim().match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))\/([A-Za-z0-9._-]{1,100}?)(?:\.git)?\/?$/i);
+  if (!m || m[2] === "." || m[2] === "..") return null;
+  return { owner: m[1], repo: m[2], url: `https://github.com/${m[1]}/${m[2]}` };
 }
 
 /** Trims to a hard ceiling. Used wherever free text reaches the database. */

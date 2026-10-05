@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { clamp, LIMITS, safeUrl, validateRegistration, type RegistrationData } from "../src/lib/validation";
+import { clamp, LIMITS, parseRepoUrl, safeUrl, validateRegistration, type RegistrationData } from "../src/lib/validation";
 
 const valid: RegistrationData = {
   name: "Sarthak Gupta",
@@ -10,7 +10,8 @@ const valid: RegistrationData = {
   currentRole: "Coordinator / PM",
   experience: "3–5 years",
   linkedin: "",
-  github: "",
+  github: "https://github.com/sarthak/pm-delivery-portfolio",
+  repoConfirm: true,
   consent: true,
 };
 
@@ -45,8 +46,23 @@ test("requires consent", () => {
   assert.ok(validateRegistration({ ...valid, consent: false }).consent);
 });
 
-test("accepts a GitHub URL and rejects a non-GitHub one", () => {
-  assert.deepEqual(validateRegistration({ ...valid, github: "https://github.com/sarthak" }), {});
-  assert.ok(validateRegistration({ ...valid, github: "https://gitlab.com/sarthak" }).github);
+test("requires a GitHub repository URL, not a profile or another host", () => {
+  assert.ok(validateRegistration({ ...valid, github: "" }).github);
+  assert.ok(validateRegistration({ ...valid, github: "https://github.com/sarthak" }).github);
+  assert.ok(validateRegistration({ ...valid, github: "https://gitlab.com/sarthak/repo" }).github);
+  assert.ok(validateRegistration({ ...valid, github: "https://github.com/sarthak/repo/tree/main" }).github);
   assert.ok(validateRegistration({ ...valid, github: `https://github.com/${"a".repeat(LIMITS.github)}` }).github);
+});
+
+test("requires the repository confirmation", () => {
+  assert.ok(validateRegistration({ ...valid, repoConfirm: false }).repoConfirm);
+});
+
+test("parses repository links to a canonical URL", () => {
+  assert.deepEqual(parseRepoUrl("github.com/Sarthak/qa-evidence-portfolio.git/"), {
+    owner: "Sarthak", repo: "qa-evidence-portfolio", url: "https://github.com/Sarthak/qa-evidence-portfolio",
+  });
+  assert.equal(parseRepoUrl("https://www.github.com/a/b")?.url, "https://github.com/a/b");
+  assert.equal(parseRepoUrl("https://github.com/a/.."), null);
+  assert.equal(parseRepoUrl("https://github.com/-bad/repo"), null);
 });

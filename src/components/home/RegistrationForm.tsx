@@ -12,7 +12,7 @@ import { RegistrationSuccess, type SuccessState } from "./RegistrationSuccess";
 import { registerInterest, startGoogleRegistration, switchGoogleAccount } from "@/app/(register)/register/actions";
 import { GoogleMark } from "@/components/ui/GoogleMark";
 import { track } from "@/lib/analytics";
-import { emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
+import { COURSE_REPO_NAMES, emptyRegistration, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
 const toOptions = (list: string[]) => list.map((v) => ({ value: v, label: v }));
@@ -48,6 +48,9 @@ export function RegistrationForm({
   const chosenTrack = tracks.find((t) => t.slug === data.track);
   const googleFormId = `google-register-${useId().replace(/:/g, "")}`;
   const successRef = useRef<HTMLDivElement>(null);
+
+  const repoName = data.track ? COURSE_REPO_NAMES[data.track] : "your-course-portfolio";
+
 
   function set<K extends keyof RegistrationData>(key: K, value: RegistrationData[K]) {
     setData((d) => ({ ...d, [key]: value }));
@@ -155,7 +158,27 @@ export function RegistrationForm({
         <TextField id="linkedin" label="LinkedIn URL" optional type="url" placeholder="https://linkedin.com/in/yourname" value={data.linkedin} onChange={(e) => set("linkedin", e.target.value)} error={errors.linkedin} />
       </div>
       <div className="sm:col-span-2">
-        <TextField id="github" label="GitHub URL" optional type="url" placeholder="https://github.com/yourname" value={data.github} onChange={(e) => set("github", e.target.value)} error={errors.github} />
+        <TextField id="github" label="Course repository URL" type="url" inputMode="url" autoCapitalize="off" spellCheck={false}
+          placeholder={`https://github.com/your-username/${repoName}`} value={data.github} onChange={(e) => set("github", e.target.value)} error={errors.github} />
+        <p className="mt-2 text-xs leading-relaxed text-ink/70">
+          No repository yet?{" "}
+          <a href={`https://github.com/new?name=${repoName}&visibility=public`} target="_blank" rel="noopener noreferrer" className="font-semibold text-red-strong underline underline-offset-2">
+            Create {repoName} on GitHub
+          </a>{" "}
+          (public, about 30 seconds), then paste its link here.
+        </p>
+        <p className="mt-3 rounded-lg border border-red-strong/25 bg-red-strong/5 px-3 py-2.5 text-xs leading-relaxed text-ink/85">
+          <strong className="font-bold text-red-strong">Important:</strong> this repository will be used throughout the cohort for verification. Make sure you type it correctly.
+        </p>
+        <div className="mt-3 flex items-start gap-3">
+          <input id="repoConfirm" type="checkbox" checked={data.repoConfirm} onChange={(e) => set("repoConfirm", e.target.checked)}
+            aria-invalid={!!errors.repoConfirm} aria-describedby={errors.repoConfirm ? "repoConfirm-error" : undefined}
+            className="mt-0.5 size-4 shrink-0 accent-red-strong" />
+          <label htmlFor="repoConfirm" className="text-xs leading-relaxed text-ink/80">
+            I have provided the correct GitHub repository URL, which will be used throughout the cohort for verification.
+          </label>
+        </div>
+        {errors.repoConfirm && <p id="repoConfirm-error" className="mt-1.5 text-xs font-medium text-error">{errors.repoConfirm}</p>}
       </div>
       <div className="sm:col-span-2">
         <div className="flex items-start gap-3">

@@ -9,7 +9,7 @@ import { sendWelcome } from "@/lib/welcome";
 import { ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient } from "@/lib/learner/enrolment";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { clamp, LIMITS, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
+import { clamp, LIMITS, parseRepoUrl, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
 export type RegisterResult =
@@ -42,11 +42,18 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     experience: clamp(input.experience, 40),
     linkedin: clamp(input.linkedin, LIMITS.linkedin),
     github: clamp(input.github, LIMITS.github),
+    repoConfirm: input.repoConfirm === true,
     consent: input.consent === true,
   };
 
   const errors = validateRegistration(data);
   if (Object.keys(errors).length) return { ok: false, errors };
+
+  // Stored in one canonical form, so reviewers and the submission check see the same link.
+  const repo = parseRepoUrl(data.github)!;
+  data.github = repo.url;
+  const repoError = await checkRepoExists(repo.owner, repo.repo);
+  if (repoError) return { ok: false, errors: { github: repoError } };
 
   // Throttle before touching anything else, so a flood costs one cheap count.
   const limit = await checkRateLimit("register", { limit: 5, windowMinutes: 60 });
@@ -105,6 +112,8 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
       name: data.name,
       track: data.track,
       cohortStart: cohort.startDate,
+      githubUsername: repo.owner,
+      githubUrl: repo.url,
     });
   }
 
@@ -112,6 +121,30 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   if (!duplicate) after(() => sendWelcome({ email: data.email, name: data.name, track: data.track }));
 
   return { ok: true, duplicate, enrolled, signedIn: !!sessionEmail };
+}
+
+/**
+ * The repository must exist and be public: reviewers open it all cohort.
+ * GitHub being slow, down or rate-limiting us never blocks a registration.
+ */
+async function checkRepoExists(owner: string, repo: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+      headers: { Accept: "application/vnd.github+json", "User-Agent": "klymb.ai" },
+      signal: AbortSignal.timeout(4000),
+      cache: "no-store",
+    });
+    if (res.status === 404) {
+      return "We couldn't find that repository. Check the spelling, and make sure it is public.";
+    }
+    if (res.ok) {
+      const body = (await res.json()) as { private?: boolean };
+      if (body.private) return "That repository is private. Make it public so reviewers can see your work.";
+    }
+  } catch {
+    // Network trouble: accept it, a reviewer checks the repository on Day 1.
+  }
+  return null;
 }
 
 /** Where a Google round trip from the form comes back to, track kept. */
