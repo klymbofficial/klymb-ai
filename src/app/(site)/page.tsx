@@ -7,6 +7,7 @@ import { FaqJoin } from "@/components/home/FaqJoin";
 import { StickyEnrolBar } from "@/components/home/StickyEnrolBar";
 import { WhyRefund } from "@/components/home/WhyRefund";
 import { Hero } from "@/components/home/Hero";
+import { ExpertsStrip } from "@/components/home/ExpertsStrip";
 import { HowItWorksStatic } from "@/components/home/HowItWorksStatic";
 import { Pricing } from "@/components/home/Pricing";
 import { StatementBand } from "@/components/home/StatementBand";
@@ -22,6 +23,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+      <ExpertsStrip className="bg-paper py-10 sm:py-12" />
       <StatementBand>{statement}</StatementBand>
       <LazyPromoFilm />
       <ForYouIf />
