@@ -43,6 +43,23 @@ export async function createOrder(
   return { ok: true, id: order.id, amount: order.amount, currency: order.currency };
 }
 
+/** POST /v1/payments/:id/refund, the full amount. Razorpay refuses a second full refund itself. */
+export async function refundPayment(keys: { keyId: string; keySecret: string }, paymentId: string) {
+  const res = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(paymentId)}/refund`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${Buffer.from(`${keys.keyId}:${keys.keySecret}`).toString("base64")}`,
+    },
+    body: JSON.stringify({ speed: "normal" }),
+    cache: "no-store",
+  }).catch(() => null);
+  if (!res) return { ok: false as const, message: "Razorpay could not be reached. Try again." };
+  if (res.ok) return { ok: true as const };
+  const body = (await res.json().catch(() => null)) as { error?: { description?: string } } | null;
+  return { ok: false as const, message: body?.error?.description ?? `Razorpay error ${res.status}` };
+}
+
 /** HMAC-SHA256(order_id + "|" + payment_id, key_secret), compared in constant time. */
 export function signatureValid(orderId: string, paymentId: string, signature: string, keySecret: string) {
   const expected = createHmac("sha256", keySecret).update(`${orderId}|${paymentId}`).digest("hex");

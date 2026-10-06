@@ -151,3 +151,27 @@ export async function getLearnerDetail(id: string): Promise<LearnerDetail | null
     submissions: rows,
   };
 }
+
+export interface PaymentRow {
+  id: string;
+  created_at: string;
+  email: string;
+  track: TrackSlug;
+  amount: number;
+  status: "paid" | "refunded";
+  razorpay_payment_id: string | null;
+}
+
+/** Completed payments only: unpaid orders are abandoned checkouts, not money. */
+export async function getPayments(): Promise<PaymentRow[]> {
+  if (!(await getAdmin())) return [];
+  const supabase = createServiceClient();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from("payments")
+    .select("id, created_at, email, track, amount, status, razorpay_payment_id")
+    .in("status", ["paid", "refunded"])
+    .order("created_at", { ascending: false })
+    .limit(1000);
+  return (data as PaymentRow[]) ?? [];
+}
