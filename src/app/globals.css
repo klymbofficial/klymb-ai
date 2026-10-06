@@ -292,3 +292,9 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 }
 @keyframes timeline-fill { from { transform: scaleX(0); } }
 @keyframes timeline-node { from { box-shadow: none; opacity: 0.35; } to { box-shadow: 0 0 22px rgb(240 134 139 / 0.8); opacity: 1; } }
+
+/* The registration panel's photo cross-fades when the track changes. */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
