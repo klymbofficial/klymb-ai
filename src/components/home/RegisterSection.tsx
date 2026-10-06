@@ -13,6 +13,7 @@ import type { TrackSlug } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { RegistrationForm, type GoogleUser } from "./RegistrationForm";
+import { ExpertsStrip } from "./ExpertsStrip";
 
 /** What every track includes. Kept to what the course actually delivers. */
 const INCLUDED = [
@@ -114,6 +115,8 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
             </ul>
           </Appear>
         )}
+
+        <ExpertsStrip tone="dark" className="relative" />
 
         <p className="relative mt-auto hidden items-center sm:flex gap-2 text-xs text-white/55">
           <ShieldCheck aria-hidden="true" className="size-4" />
