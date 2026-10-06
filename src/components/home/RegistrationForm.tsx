@@ -30,8 +30,8 @@ export interface GoogleUser {
  * email is the verified one, so there is no email field to get wrong.
  */
 export function RegistrationForm({
-  defaultTrack, bare, googleUser, titled,
-}: { defaultTrack?: TrackSlug; bare?: boolean; googleUser?: GoogleUser; titled?: boolean }) {
+  defaultTrack, bare, googleUser, titled, onTrackChange,
+}: { defaultTrack?: TrackSlug; bare?: boolean; googleUser?: GoogleUser; titled?: boolean; onTrackChange?: (track: TrackSlug | "") => void }) {
   const [data, setData] = useState<RegistrationData>({
     ...emptyRegistration,
     track: defaultTrack ?? "",
@@ -54,6 +54,7 @@ export function RegistrationForm({
 
   function set<K extends keyof RegistrationData>(key: K, value: RegistrationData[K]) {
     setData((d) => ({ ...d, [key]: value }));
+    if (key === "track") onTrackChange?.(value as TrackSlug | "");
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
