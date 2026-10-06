@@ -23,7 +23,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
-      <ExpertsStrip className="bg-paper py-10 sm:py-12" />
+      <ExpertsStrip className="border-y border-line/30 bg-white py-8 sm:py-9" />
       <StatementBand>{statement}</StatementBand>
       <LazyPromoFilm />
       <ForYouIf />
