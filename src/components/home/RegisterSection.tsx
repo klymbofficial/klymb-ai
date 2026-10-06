@@ -1,11 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, BadgeIndianRupee, BriefcaseBusiness, CalendarDays, Check, FolderGit2, MessagesSquare, ShieldCheck, Target } from "lucide-react";
 import { cohort } from "@/data/config";
 import { getTrack, priceFrom } from "@/data/tracks";
 import { formatDate, formatINR } from "@/lib/format";
+import { trackImages } from "@/data/track-images";
+import teamLaptop from "@/assets/track-page/team-laptop.jpg";
 import type { TrackSlug } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
@@ -25,11 +28,18 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
   const price = track?.price ?? priceFrom;
 
   return (
-    <section id="register" aria-labelledby="register-title" className="grid lg:h-dvh lg:grid-cols-2">
+    <section id="register" aria-labelledby="register-title" className="grid lg:h-dvh lg:grid-cols-[2fr_3fr]">
       {/* ── The value: what they get, what it costs, and that it comes back ── */}
-      <div className="relative flex flex-col gap-6 overflow-hidden bg-red-muted p-6 text-white sm:p-10 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:py-8">
-        {/* A soft glow so the panel has depth without competing with the type. */}
-        <div aria-hidden="true" className="pointer-events-none absolute -top-40 -right-40 size-[28rem] rounded-full bg-red-soft/20 blur-3xl" />
+      {/* Children never shrink: squeezed to the screen height, the cards clipped their own text. */}
+      <div className="relative isolate flex flex-col gap-5 overflow-hidden bg-red-muted p-6 text-white sm:p-10 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:px-10 lg:py-8 [&>*]:shrink-0">
+        {/* The track's photograph behind everything, tinted brand maroon so the type stays readable. */}
+        <Image
+          key={track?.slug ?? "default"}
+          src={track ? trackImages[track.slug].src : teamLaptop}
+          alt="" aria-hidden="true" fill priority placeholder="blur" sizes="(min-width: 1024px) 40vw, 100vw"
+          className="pointer-events-none -z-20 animate-[fade-in_600ms_cubic-bezier(0.23,1,0.32,1)] object-cover"
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/85 via-red-muted/92 to-red-muted-deep/97" />
 
         <div className="relative flex items-center justify-between gap-3">
           <Link
@@ -49,23 +59,23 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">
             {track ? `${track.name} cohort` : "30-day cohort"}
           </p>
-          <h1 id="register-title" className="display display-soft mt-3 max-w-2xl text-[clamp(1.9rem,2.9vw,3rem)] text-white">
+          <h1 id="register-title" className="display display-soft mt-3 max-w-2xl text-[clamp(1.8rem,2.3vw,2.6rem)] text-white">
             {track ? <>From {track.name} to <span className="text-red-soft">{track.becomes}</span>, in 30 days.</> : "30 days. Real work. A portfolio that gets you hired."}
           </h1>
         </Appear>
 
         {/* The offer: price and the refund, side by side, so the refund is read as part of the price. */}
         <Appear delay={0.1} className="relative grid gap-px overflow-hidden rounded-card bg-white/15 ring-1 ring-white/15 sm:grid-cols-2">
-          <div className="bg-red-muted-deep/80 p-5">
+          <div className="bg-red-muted-deep/90 p-4 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-white/60">{track ? "Your fee" : "Fees from"}</p>
-            <p className="display mt-1 text-4xl text-white tabular-nums">{formatINR(price)}</p>
+            <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] text-white tabular-nums">{formatINR(price)}</p>
             <p className="mt-1 text-xs text-white/60">One payment. UPI, cards or net banking.</p>
           </div>
-          <div className="bg-white p-5 text-ink">
+          <div className="bg-white p-4 text-ink sm:p-5">
             <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-deep">
               <BadgeIndianRupee aria-hidden="true" className="size-4" /> 100% back
             </p>
-            <p className="display mt-1 text-4xl tabular-nums">₹0</p>
+            <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] tabular-nums">₹0</p>
             <p className="mt-1 text-xs text-ink/70">
               if you finish all 30 days. <Link href="/refund-policy" className="font-semibold underline underline-offset-2">How it works</Link>
             </p>
@@ -74,9 +84,9 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
 
         <Appear delay={0.2} className="relative hidden sm:block">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">What you get</p>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+          <ul className="mt-3 grid gap-2.5">
             {INCLUDED.map(({ icon: Icon, title, body }) => (
-              <li key={title} className="flex gap-3 rounded-xl bg-white/[0.07] p-3.5 ring-1 ring-white/10">
+              <li key={title} className="flex items-center gap-3 rounded-xl bg-black/15 px-3.5 py-3 ring-1 ring-white/10 backdrop-blur-sm">
                 <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/10">
                   <Icon aria-hidden="true" className="size-4.5 text-red-soft" />
                 </span>
@@ -95,7 +105,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
               <BriefcaseBusiness aria-hidden="true" className="size-3.5" /> You leave able to
             </p>
             <ul className="mt-3 space-y-2">
-              {track.outcomes.slice(0, 4).map((o) => (
+              {track.outcomes.slice(0, 3).map((o) => (
                 <li key={o} className="flex items-start gap-2.5 text-sm text-white/85">
                   <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-soft" />
                   {o}
