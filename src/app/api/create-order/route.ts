@@ -54,8 +54,7 @@ export async function POST(req: Request) {
     .limit(1);
   if (paid?.length) return NextResponse.json({ error: "You have already paid for this cohort." }, { status: 409 });
 
-  // TEMPORARY: a ₹1 live test for the owner's account only. Remove after the test.
-  const amount = email === "sarthakgupta.ksj@gmail.com" ? 100 : track.price * 100;
+  const amount = track.price * 100;
   const order = await createOrder(keys, {
     amount,
     receipt: `klymb-${Date.now().toString(36)}`,
