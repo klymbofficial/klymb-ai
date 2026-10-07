@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   const { data: learners } = await supabase.from("learners").select("id, name, track, cohort_start").in("id", ids);
   const { data: done } = await supabase.from("day_submissions").select("learner_id, day").in("learner_id", ids);
 
-  // Now in India: the date, and which of the four slots this run is.
+  // Now in India: the date, and which of the three slots this run is.
   const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
   const today = ist.toISOString().slice(0, 10);
   const slot = slotForIstHour(ist.getUTCHours());

@@ -5,11 +5,11 @@ import { buildReminder, slotForIstHour, streakEnding, type ReminderInput } from 
 const base: ReminderInput = { slot: "morning", name: "Divya", day: 4, title: "API testing", minutes: 105, kind: "build", streak: 3, doneToday: false, behind: false, seed: 1 };
 
 test("slots map to IST hours, nothing before 8am", () => {
-  assert.deepEqual([7, 9, 13, 17, 21].map(slotForIstHour), [null, "morning", "midday", "evening", "night"]);
+  assert.deepEqual([7, 9, 14, 20].map(slotForIstHour), [null, "morning", "midday", "night"]);
 });
 
 test("once today is done, only the morning message ever goes", () => {
-  for (const slot of ["midday", "evening", "night"] as const) assert.equal(buildReminder({ ...base, slot, doneToday: true }), null);
+  for (const slot of ["midday", "night"] as const) assert.equal(buildReminder({ ...base, slot, doneToday: true }), null);
   assert.ok(buildReminder({ ...base, doneToday: true }));
 });
 
@@ -19,14 +19,25 @@ test("behind on yesterday: points to yesterday's day", () => {
   assert.match(r.body, /Day 3/);
 });
 
-test("streak shows up in the copy, and the night one is a last call", () => {
-  const night = [0, 1].map((seed) => buildReminder({ ...base, slot: "night", seed })!);
-  assert.ok(night.some((r) => /Last call/.test(r.title)));
-  assert.match(buildReminder({ ...base, slot: "evening", seed: 0 })!.title, /3-day streak/);
+test("streak shows up in the copy", () => {
+  assert.match(buildReminder({ ...base, slot: "midday", seed: 0 })!.title, /3-day streak/);
+});
+
+test("only the morning reminder makes a sound", () => {
+  assert.deepEqual((["morning", "midday", "night"] as const).map((slot) => buildReminder({ ...base, slot })!.loud), [true, false, false]);
+});
+
+test("no spam-trigger wording in any version", () => {
+  for (const slot of ["morning", "midday", "night"] as const)
+    for (const behind of [false, true])
+      for (const seed of [0, 1, 2, 3, 4, 5, 6, 7]) {
+        const r = buildReminder({ ...base, slot, behind, seed })!;
+        assert.doesNotMatch(r.title + r.body, /last call|hours left|khatre|ab ya kabhi|[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/iu, `${slot} ${seed}`);
+      }
 });
 
 test("same day shares a tag so reminders replace, not stack", () => {
-  const tags = (["morning", "midday", "evening", "night"] as const).map((slot) => buildReminder({ ...base, slot })!.tag);
+  const tags = (["morning", "midday", "night"] as const).map((slot) => buildReminder({ ...base, slot })!.tag);
   assert.equal(new Set(tags).size, 1);
 });
 
@@ -36,7 +47,7 @@ test("streakEnding counts back from a day", () => {
 });
 
 test("every slot has eight distinct versions (English and Hinglish), each reads cleanly", () => {
-  for (const slot of ["morning", "midday", "evening", "night"] as const) {
+  for (const slot of ["morning", "midday", "night"] as const) {
     for (const behind of slot === "morning" ? [false, true] : [false]) {
       const out = [0, 1, 2, 3, 4, 5, 6, 7].map((seed) => buildReminder({ ...base, slot, behind, seed })!);
       assert.equal(new Set(out.map((r) => r.title + r.body)).size, 8, `${slot}${behind ? " behind" : ""}`);
@@ -46,7 +57,7 @@ test("every slot has eight distinct versions (English and Hinglish), each reads 
 });
 
 test("behind: later nudges name the same day the button opens", () => {
-  for (const slot of ["midday", "evening", "night"] as const)
+  for (const slot of ["midday", "night"] as const)
     for (const seed of [0, 1, 2, 3, 4, 5, 6, 7]) {
       const r = buildReminder({ ...base, slot, behind: true, behindTitle: "Triage basics", seed })!;
       assert.equal(r.url, "/learn/day/3");
