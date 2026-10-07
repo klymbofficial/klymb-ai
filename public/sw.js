@@ -82,7 +82,10 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/badge-96.png", // white K on transparent: Android draws badges as a silhouette
       tag: msg.tag,
-      renotify: Boolean(msg.tag), // a newer reminder for the same day still buzzes
+      // Only the morning reminder sounds. Later ones replace it quietly: repeated
+      // alerts from one site are what Chrome's spam detection flags.
+      renotify: Boolean(msg.tag && msg.loud),
+      silent: !msg.loud,
       data: { url: msg.url },
       // Chrome adds its own Unsubscribe; this sits beside it and opens the day.
       actions: [{ action: "open", title: "Do it now" }],

@@ -11,12 +11,13 @@ export function pushReady() {
 }
 
 export interface PushTarget { endpoint: string; p256dh: string; auth: string }
-export interface PushMessage { title: string; body: string; url: string; tag?: string }
+export interface PushMessage { title: string; body: string; url: string; tag?: string; loud?: boolean }
 
+/** Sends one notification. Undelivered after 3 hours, it is dropped: a midday nudge arriving at night reads as spam. */
 /** Sends one notification. Returns "gone" when the device has unsubscribed, so the row can be deleted. */
 export async function sendPush(t: PushTarget, msg: PushMessage): Promise<"ok" | "gone" | "failed"> {
   try {
-    await webpush.sendNotification({ endpoint: t.endpoint, keys: { p256dh: t.p256dh, auth: t.auth } }, JSON.stringify(msg), { TTL: 60 * 60 * 12, urgency: "normal" });
+    await webpush.sendNotification({ endpoint: t.endpoint, keys: { p256dh: t.p256dh, auth: t.auth } }, JSON.stringify(msg), { TTL: 60 * 60 * 3, urgency: "normal" });
     return "ok";
   } catch (e) {
     const code = (e as { statusCode?: number }).statusCode;

@@ -1,10 +1,9 @@
-# Learner reminders at 09:00, 13:00, 17:00 and 21:00 IST (03:30, 07:30, 11:30,
-# 15:30 UTC). Vercel's free plan allows one cron a day, so GitHub runs these.
+# Learner reminders at 09:00, 14:00 and 20:00 IST (03:30, 08:30 and 14:30 UTC). Vercel's free plan allows one cron a day, so GitHub runs these.
 # The endpoint decides who gets what; CRON_SECRET is a repository secret.
 name: Learner reminders
 on:
   schedule:
-    - cron: "30 3,7,11,15 * * *"
+    - cron: "30 3,8,14 * * *"
   workflow_dispatch: {}
 jobs:
   remind:
