@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, BadgeIndianRupee, BriefcaseBusiness, CalendarDays, Check, FolderGit2, MessagesSquare, ShieldCheck, Target } from "lucide-react";
-import { cohort } from "@/data/config";
 import { getTrack, priceFrom } from "@/data/tracks";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { trackImages } from "@/data/track-images";
 import teamLaptop from "@/assets/track-page/team-laptop.jpg";
 import type { TrackSlug } from "@/types/program";
@@ -52,7 +51,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
           </Link>
           <span className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-semibold text-ink">
             <CalendarDays aria-hidden="true" className="size-3.5 text-red-deep" />
-            Starts {formatDate(cohort.startDate)}
+            Start any day
           </span>
         </div>
 

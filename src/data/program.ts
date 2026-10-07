@@ -17,6 +17,8 @@ export const hero = {
   headline: "Become Job-Ready in 30 Days",
   subheadline:
     "Choose your target role, solve real workplace problems every day, complete weekly assessments and prepare for mock interviews with a structured career track.",
+  /** The working professional's first question, answered in the hero. */
+  timeLine: "1–2 hrs a day, in your own time. Start any day.",
   primaryCta: { label: "Choose My Career Track", href: "/tracks" },
   secondaryCta: { label: "See How the 30 Days Work", href: "/#how-it-works" },
 };
@@ -38,7 +40,7 @@ export const sectionCopy = {
   tracks: {
     eyebrow: "Career paths",
     title: "Five roles. Pick the one you want next.",
-    intro: "Choose your target program. Every path is tuned exactly to present industry standards.",
+    intro: "Each track has its own 30 daily problems, four assessments and two mock interviews, written for that one role.",
   },
   faq: { eyebrow: "FAQ", title: "Straight answers.", intro: "Everything you need to know before enrolling." },
 } as const;
@@ -73,6 +75,10 @@ export const sources = {
     label: "Futurense, AI Engineer Salary in India",
     url: "https://futurense.com/blog/ai-engineer-salary-in-india",
   },
+  linkedinReadiness: {
+    label: "LinkedIn survey, January 2026 (via Careers360)",
+    url: "https://news.careers360.com/ai-reshapes-hiring-84-indian-professionals-feel-unprepared-in-2026-top-hiring-job-roles-linkedin-survey",
+  },
 } satisfies Record<string, Source>;
 
 /**
@@ -91,10 +97,9 @@ export const evidence: Evidence[] = [
     source: sources.pwc,
   },
   {
-    figure: "3x",
-    claim:
-      "Entry pay for AI engineers in India (₹15–30 LPA, 2–5 yrs) starts at roughly 3x a manual tester's band (₹5–9 LPA, 1–3 yrs). Market ranges, not a promise of any individual salary.",
-    source: sources.aiSalary,
+    figure: "84%",
+    claim: "Of Indian professionals feel unprepared to find a new job in 2026, as AI reshapes how companies hire.",
+    source: sources.linkedinReadiness,
   },
 ];
 
@@ -135,8 +140,22 @@ export const valueBreakdown = [
   "Role-specific projects",
   "Progress tracking",
   "Interview preparation",
-  "Mock interview preparation",
+  "2 mock interviews with written feedback",
 ];
+
+/**
+ * What "complete" means for the refund, in full, shown next to the price so
+ * nobody meets a condition for the first time on the legal page. Must match
+ * section 2 of the Refund Policy.
+ */
+export const refundConditions = [
+  "All 30 days submitted by Day 30",
+  "All 4 weekly assessments submitted and defended",
+  "Both mock interviews attended (Days 29–30)",
+  "4 checkpoint posts published on your LinkedIn",
+  "A public portfolio repo with commits on 20+ days",
+];
+export const refundTiming = "Paid to your original payment method within 14 working days of your Day 30. Cancel before Day 1 for a full refund, no conditions.";
 
 /** Placeholder answers are marked. Replace once policies are final. */
 export const faqs: Faq[] = [

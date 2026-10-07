@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
+import { todayInIndia } from "@/lib/learn";
 
 export type EnrollResult = { ok: true } | { ok: false; message: string };
 
@@ -20,7 +21,9 @@ export async function enrollRegistration(input: {
     name: input.name,
     email: input.email.toLowerCase(),
     track: input.track,
-    cohort_start: input.cohort_start,
+    // Rolling enrolment: Day 1 is the day they are enrolled. The
+    // registration's cohort_start is only its intake key.
+    cohort_start: todayInIndia(),
   });
 
   // 23505 = already enrolled, which is not an error worth showing.

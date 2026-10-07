@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { cohort } from "@/data/config";
-import { formatDate } from "@/lib/format";
 import { PayForm } from "./PayForm";
 
 export const metadata: Metadata = {
@@ -18,7 +16,7 @@ export default function PayPage() {
       <PageHeader
         eyebrow="Confirm your seat"
         title="Pay for your cohort seat."
-        intro={`Enter the email you registered with. The cohort starts ${formatDate(cohort.startDate)}, and you get 100% of your fee back when you complete all 30 days.`}
+        intro={`Enter the email you registered with. Day 1 opens as soon as you are enrolled, and you get 100% of your fee back when you complete all 30 days.`}
       />
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <PayForm />

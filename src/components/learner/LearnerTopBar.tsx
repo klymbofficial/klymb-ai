@@ -1,9 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { signOutLearner } from "@/app/(learn)/learn/actions";
-import { cohort } from "@/data/config";
 import { navLinks } from "@/data/program";
-import { formatDate } from "@/lib/format";
 
 /** The signed-in bar shared by the dashboard and the day pages. */
 export function LearnerTopBar({ name, image }: { name: string; image?: string | null }) {
@@ -18,8 +16,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
     <>
       <div className="ticker bg-red-strong py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-white sm:text-xs">
         <p className="ticker-track">
-          Next cohort starts {formatDate(cohort.startDate)} / Enrollment closes {formatDate(cohort.enrollmentDeadline)}
-          {cohort.enrollmentDeadlineIsPlaceholder && " (date TBC)"}
+          One problem a day / Weekly checkpoints / 100% fee back when you finish
         </p>
       </div>
 

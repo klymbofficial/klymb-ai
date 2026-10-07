@@ -1,9 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { cohort } from "@/data/config";
 import { priceFrom } from "@/data/tracks";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 
 /**
  * The card shown when a Klymb link is shared on WhatsApp, LinkedIn or X.
@@ -43,7 +42,7 @@ export default async function Image() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 24, fontWeight: 500, color: MUTED }}>
-            <span>Next cohort {formatDate(cohort.startDate)}</span>
+            <span>Start any day</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
             <span>From {formatINR(priceFrom)}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />

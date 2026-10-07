@@ -18,7 +18,7 @@ export default function RefundPolicyPage() {
     >
       <Section n="1." title="The guarantee" plain="Finish the programme and your fee comes back in full. Not most of it: all of it.">
         <p>
-          If you complete the 30-day cohort, we refund <strong>100% of the fee you paid</strong>: currently{" "}
+          If you complete the 30-day program, we refund <strong>100% of the fee you paid</strong>: currently{" "}
           are priced from {formatINR(priceFrom)} to {formatINR(priceTo)}). The guarantee exists because the programme only works if you do the work, and
           we would rather be paid by people who did not finish than keep money from people who did.
         </p>
@@ -35,7 +35,7 @@ export default function RefundPolicyPage() {
         <p>{refund.window}</p>
       </Section>
 
-      <Section n="3." title="How and when you are paid" plain="Original payment method, within 14 working days of the cohort ending.">
+      <Section n="3." title="How and when you are paid" plain="Original payment method, within 14 working days of your Day 30.">
         <p>{refund.payout}</p>
         <p>
           You do not need to apply. Your reviewer confirms completion after Day 30 and we start the refund. If we think
@@ -48,7 +48,7 @@ export default function RefundPolicyPage() {
         <p>{refund.forfeit}</p>
       </Section>
 
-      <Section n="5." title="Cancelling before the cohort starts" plain="Change your mind before Day 1 and you get everything back, no questions.">
+      <Section n="5." title="Cancelling before you start" plain="Change your mind before Day 1 and you get everything back, no questions.">
         <p>{refund.cancellation}</p>
       </Section>
 

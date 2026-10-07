@@ -28,6 +28,11 @@ export function thirtyDays(track: Track): DayEntry[] {
  * calendar day, so the 30 days run start → start + 29. Dates are handled in
  * UTC and only ever formatted, never compared against "now".
  */
+/** Today's date in India, YYYY-MM-DD: a rolling learner's Day 1. */
+export function todayInIndia(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+}
+
 export function cohortDayDate(cohortStart: string, day: number): string {
   const date = new Date(`${cohortStart}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + (day - 1));

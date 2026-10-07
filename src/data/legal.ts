@@ -54,8 +54,8 @@ export const grievance = {
 } as const;
 
 export const policyVersion = {
-  version: "2026-09-26",
-  effective: "26 September 2026",
+  version: "2026-10-07",
+  effective: "7 October 2026",
 } as const;
 
 /**
@@ -74,13 +74,13 @@ export const refund = {
     "Your portfolio repository public, with commits on at least 20 separate days",
   ],
   /** confirm: must work be done during the cohort, or can days be caught up afterwards? */
-  window: "Every submission must be made during the cohort: by the end of Day 30. Work backfilled after the cohort ends does not count towards completion.",
+  window: "Every submission must be made by the end of your Day 30. Work backfilled after your 30 days end does not count towards completion.",
   /** confirm: 14 working days, and to the original payment method? */
-  payout: "Refunds are paid to the original payment method within 14 working days of the cohort ending, once completion has been verified by your reviewer.",
+  payout: "Refunds are paid to the original payment method within 14 working days of your Day 30, once completion has been verified by your reviewer.",
   partial: "There is no partial refund. Completing 29 of 30 days does not qualify: the point of the guarantee is finishing.",
   /** confirm: is this right? A learner who is removed for cheating presumably forfeits. */
   forfeit: "A place ended for plagiarism, fabricated evidence or undisclosed AI use does not qualify for the refund.",
-  cancellation: "Cancel before the cohort starts and you are refunded in full, no conditions. After the cohort starts, the completion guarantee above is the route to a refund.",
+  cancellation: "Cancel before your Day 1 opens and you are refunded in full, no conditions. After that, the completion guarantee above is the route to a refund.",
 } as const;
 
 export const dataPoints = {

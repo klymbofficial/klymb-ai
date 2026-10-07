@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
-import { cohort } from "@/data/config";
 import { dataPoints, entityRows, grievance } from "@/data/legal";
 
 export const metadata: Metadata = {
@@ -144,7 +143,7 @@ export default function PrivacyPage() {
         <p>
           The version and effective date are at the top of this page. Material changes to what we collect or how we use
           it will be signalled with a new version, and where we reasonably can we will email the address on your account.
-          The cohort starting {cohort.startDate} is governed by the version in force when you registered, unless you accept a newer one.
+          Your enrolment is governed by the version in force when you registered, unless you accept a newer one.
         </p>
       </Section>
 

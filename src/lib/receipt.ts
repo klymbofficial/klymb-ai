@@ -1,8 +1,8 @@
 import "server-only";
-import { cohort, site } from "@/data/config";
+import { site } from "@/data/config";
 import { grievance } from "@/data/legal";
 import { getTrack } from "@/data/tracks";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { sendMail, thankYouEmail } from "@/lib/mail";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -40,7 +40,6 @@ export async function sendReceiptOnce(orderId: string) {
     trackName: getTrack(pay.track)?.name ?? pay.track,
     amount: formatINR(pay.amount / 100),
     paymentId: pay.razorpay_payment_id ?? orderId,
-    startDate: formatDate(pay.cohort_start ?? cohort.startDate),
     siteUrl: site.url,
     supportEmail: grievance.email,
   });
