@@ -2,13 +2,13 @@
 
 import clsx from "clsx";
 import { useEffect, useState } from "react";
-import { cohort } from "@/data/config";
+import { enrolment } from "@/data/config";
 import { priceFrom } from "@/data/tracks";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { ButtonLink } from "@/components/ui/Button";
 
 /**
- * On phones, keeps the price, the real enrolment deadline and the call to
+ * On phones, keeps the price, the time it takes and the call to
  * action one tap away once the hero has scrolled past. Hidden again near the
  * registration form so it never covers it.
  */
@@ -36,7 +36,7 @@ export function StickyEnrolBar() {
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-base font-extrabold nums">From {formatINR(priceFrom)}</p>
-          <p className="truncate text-xs text-muted">Enrollment closes {formatDate(cohort.enrollmentDeadline)} · Refunded if you finish</p>
+          <p className="truncate text-xs text-muted">Start any day · {enrolment.dailyTime} · Refunded if you finish</p>
         </div>
         <ButtonLink href="#pricing" className="shrink-0" soft>Reserve seat</ButtonLink>
       </div>

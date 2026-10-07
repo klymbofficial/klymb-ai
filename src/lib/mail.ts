@@ -82,30 +82,30 @@ ${body}
 }
 
 /** The receipt and welcome sent once a payment verifies. */
-export function thankYouEmail(p: { name: string; trackName: string; amount: string; paymentId: string; startDate: string; siteUrl: string; supportEmail: string }) {
+export function thankYouEmail(p: { name: string; trackName: string; amount: string; paymentId: string; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
   const subject = `You're in: ${p.trackName} cohort`;
   const text = [
     `Hi ${p.name},`, "",
     `Thank you for joining the Klymb.ai ${p.trackName} cohort. Your payment is confirmed and your seat is reserved.`, "",
-    `Amount paid: ${p.amount}`, `Payment ID: ${p.paymentId}`, `Cohort starts: ${p.startDate}`, "",
+    `Amount paid: ${p.amount}`, `Payment ID: ${p.paymentId}`, "",
     "What happens next",
     `1. Sign in with this email at ${p.siteUrl}/learn`,
-    `2. Day 1 opens on ${p.startDate}. One real workplace problem a day, about 90 to 120 minutes.`,
+    `2. Day 1 opens as soon as you are enrolled. One real workplace problem a day, about 90 to 120 minutes.`,
     "3. Finish all 30 days and we refund 100% of your fee.", "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
-    preview: `Payment confirmed. Your ${p.trackName} cohort starts ${p.startDate}.`,
+    preview: `Payment confirmed. Your ${p.trackName} track is ready when you are.`,
     eyebrow: "Payment confirmed",
     title: `You're in, ${esc(p.name)}.`,
     intro: `Your seat on the <strong style="color:#fff">${esc(p.trackName)}</strong> cohort is reserved.`,
     sections: [
-      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Amount paid", p.amount)}${row("Payment ID", p.paymentId)}${row("Cohort starts", p.startDate)}</table>${button(`${site}/learn`, "Open my dashboard")}`,
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Amount paid", p.amount)}${row("Payment ID", p.paymentId)}</table>${button(`${site}/learn`, "Open my dashboard")}`,
       `${sectionTitle("What happens next")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "Sign in with this email", "Use Continue with Google on the sign-in page, with the same email you paid with.")}
-        ${step(2, `Day 1 opens on ${esc(p.startDate)}`, "One real workplace problem a day, about 90 to 120 minutes. Your course also works offline.")}
+        ${step(2, "Day 1 opens as soon as you are enrolled", "One real workplace problem a day, about 90 to 120 minutes. Your course also works offline.")}
         ${step(3, "Finish all 30 days, get 100% back", `Submit every day, defend the four checkpoints and attend both mock interviews. <a href="${site}/refund-policy" style="color:${C.maroon}">How the refund works</a>`)}
       </table>`,
     ],
@@ -114,14 +114,14 @@ export function thankYouEmail(p: { name: string; trackName: string; amount: stri
 }
 
 /** Sent once, on a new registration: a welcome, what the 30 days hold, and how to confirm the seat. */
-export function welcomeEmail(p: { name: string; trackName: string; becomes: string; price: string; startDate: string; deadline: string; siteUrl: string; supportEmail: string }) {
+export function welcomeEmail(p: { name: string; trackName: string; becomes: string; price: string; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
   const subject = `Welcome to Klymb.ai, ${p.name}`;
   const text = [
     `Hi ${p.name},`, "",
     `Welcome to Klymb.ai. Your place on the ${p.trackName} track (heading to ${p.becomes}) is reserved.`, "",
     `Confirm your seat (${p.price}, 100% back when you complete all 30 days): ${p.siteUrl}/pay`,
-    `Enrollment closes ${p.deadline}. The cohort starts ${p.startDate}.`, "",
+    "Start any day: Day 1 opens as soon as you are enrolled.", "",
     "Your 30 days",
     "Week 1-4: one real workplace problem a day, about 90 to 120 minutes.",
     "Days 7, 14, 21, 28: a checkpoint you defend on camera.",
@@ -132,12 +132,12 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
-    preview: `Your ${p.trackName} place is reserved. Confirm your seat before ${p.deadline}.`,
+    preview: `Your ${p.trackName} place is reserved. Confirm your seat to start Day 1.`,
     eyebrow: "Welcome to Klymb.ai",
     title: `Glad you're here, ${esc(p.name)}.`,
     intro: `Your place on the <strong style="color:#fff">${esc(p.trackName)}</strong> track is reserved. Thirty days from now, you'll have the work to prove you're ready for <strong style="color:#fff">${esc(p.becomes)}</strong>.`,
     sections: [
-      `${sectionTitle("Confirm your seat")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Fee", `${p.price} · 100% back when you complete`)}${row("Cohort starts", p.startDate)}${row("Enrollment closes", p.deadline)}</table>${button(`${site}/pay`, "Confirm my seat")}`,
+      `${sectionTitle("Confirm your seat")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Fee", `${p.price} · 100% back when you complete`)}${row("Starts", "Any day you choose")}</table>${button(`${site}/pay`, "Confirm my seat")}`,
       `${sectionTitle("Your 30 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "One real problem a day", "About 90 to 120 minutes, built around the work this role actually does. Works offline too.")}
         ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera and get written feedback.")}

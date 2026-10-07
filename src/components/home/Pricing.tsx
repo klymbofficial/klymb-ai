@@ -1,9 +1,9 @@
-import { cohort, pricing } from "@/data/config";
-import { valueBreakdown } from "@/data/program";
+import { enrolment, pricing } from "@/data/config";
+import { refundConditions, refundTiming, valueBreakdown } from "@/data/program";
 import { priceFrom, tracksByPrice } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import Link from "next/link";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Appear } from "@/components/motion/Appear";
@@ -26,12 +26,33 @@ function RefundPromise({ onRed }: { onRed?: boolean }) {
       <svg className={`mt-0.5 size-5 shrink-0 ${onRed ? "text-white" : "text-red-strong"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
         <path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z" /><path d="m8.5 12 2.5 2.5 4.5-5" />
       </svg>
+      <div className="min-w-0">
       <p className={`text-sm leading-relaxed ${onRed ? "text-white" : "text-ink"}`}>
         <strong className="font-extrabold">Complete all 30 days and get 100% of your fee back.</strong>{" "}
-        <Link href="/refund-policy" className={`underline underline-offset-2 ${onRed ? "text-white/85 hover:text-white" : "text-muted hover:text-ink"}`}>
-          How the refund works
-        </Link>
+        {onRed && (
+          <Link href="/refund-policy" className="underline underline-offset-2 text-white/85 hover:text-white">
+            How the refund works
+          </Link>
+        )}
       </p>
+      {!onRed && (
+        <div className="mt-3 text-sm">
+          <p className="font-bold">Complete means all of these:</p>
+          <ul className="mt-2 space-y-1.5">
+            {refundConditions.map((c) => (
+              <li key={c} className="flex gap-2">
+                <span aria-hidden="true" className="text-red-strong">•</span>
+                {c}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-muted">
+            {refundTiming}{" "}
+            <Link href="/refund-policy" className="underline underline-offset-2 hover:text-ink">Full refund policy</Link>
+          </p>
+        </div>
+      )}
+      </div>
     </div>
   );
 }
@@ -42,7 +63,7 @@ function RefundPromise({ onRed }: { onRed?: boolean }) {
  */
 export function Pricing({ track }: { track?: Track } = {}) {
   const ctaHref = track ? `/register?track=${track.slug}` : "#register";
-  const ctaLabel = track ? `Choose ${track.name}` : "Start learning today";
+  const ctaLabel = track ? `Choose ${track.name}` : "Pick a track and start";
   const subtitle = track
     ? `${track.name} track. Everything below is included.`
     : "One career track. Everything below is included, whichever you choose.";
@@ -104,17 +125,10 @@ export function Pricing({ track }: { track?: Track } = {}) {
           <p className="mt-5 border-t border-white/25 pt-5 text-xs text-white/80">{pricing.taxNote}</p>
 
           <dl className="mt-6 grid grid-cols-2 gap-6 border-t border-white/25 pt-6 sm:grid-cols-3">
-            <Fact label="Cohort starts" value={formatDate(cohort.startDate)} />
-            <Fact
-              label="Enrollment closes"
-              value={formatDate(cohort.enrollmentDeadline)}
-              note={cohort.enrollmentDeadlineIsPlaceholder ? "Date to be confirmed" : undefined}
-            />
-            {/* The seat cap is shown only once the business confirms it. */}
-            {!cohort.cohortCapacityIsPlaceholder && <Fact label="Seats per track" value={String(cohort.cohortCapacity)} />}
+            <Fact label="Starts" value="Any day" note="Day 1 opens when you enrol" />
+            <Fact label="Time" value={enrolment.dailyTime} note="Whenever suits you" />
+            <Fact label="Mock interviews" value="Days 29–30" note="Scheduled with you in Week 4" />
           </dl>
-
-          <p className="mt-6 border-t border-white/25 pt-6 text-xs leading-relaxed text-white/80">{cohort.capacityReason}</p>
           <ButtonLink href={ctaHref} variant="inverse" soft arrow className="mt-7">{ctaLabel}</ButtonLink>
         </div>
       </Appear>

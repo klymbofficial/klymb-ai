@@ -2,6 +2,7 @@
 
 import { currentEmail, signIn, signOut } from "@/auth";
 import { cohort } from "@/data/config";
+import { todayInIndia } from "@/lib/learn";
 import { getTrack, trackSlugs } from "@/data/tracks";
 import { after } from "next/server";
 import { normaliseEmail } from "@/lib/email";
@@ -111,7 +112,8 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
       email: data.email,
       name: data.name,
       track: data.track,
-      cohortStart: cohort.startDate,
+      // Rolling enrolment: Day 1 is the day they join, not a shared date.
+      cohortStart: todayInIndia(),
       githubUsername: repo.owner,
       githubUrl: repo.url,
     });

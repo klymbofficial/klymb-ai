@@ -18,12 +18,25 @@ export const pricing = {
   programName: "30-Day Job Readiness Program",
   // Each track has its own launch price, see `price` in src/data/tracks.ts.
   referenceValue: 50000, // TODO: verify before launch: must match a real value breakdown
-  showReferenceValue: true,
-  taxNote: "Price shown is per learner, for one career track. Tax treatment to be confirmed.",
+  // Off until the figure is backed by a documented value breakdown: a
+  // reference price that cannot be shown to be real is a dark pattern.
+  showReferenceValue: false,
+  taxNote: "Per learner, for one career track. Prices include GST.",
+};
+
+/**
+ * Enrolment is rolling: each learner's Day 1 is the day they are enrolled,
+ * not a shared date. `startDate` is kept only as the intake key that ties a
+ * registration to its payment in the database; it is never shown to buyers.
+ */
+export const enrolment = {
+  rolling: true,
+  dailyTime: "1–2 hrs a day",
+  dailyTimeLong: "1–2 hours a day, whenever suits you",
 };
 
 export const cohort = {
-  /** ISO date. Confirmed by the business. */
+  /** Intake key for registrations and payments. Not a public start date: see `enrolment`. */
   startDate: "2026-10-05",
   /** Confirmed by the business, 1 October 2026: the day before the cohort starts. */
   enrollmentDeadline: "2026-10-04",

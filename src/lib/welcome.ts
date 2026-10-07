@@ -1,8 +1,8 @@
 import "server-only";
-import { cohort, site } from "@/data/config";
+import { site } from "@/data/config";
 import { grievance } from "@/data/legal";
 import { getTrack } from "@/data/tracks";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 import { sendMail, welcomeEmail } from "@/lib/mail";
 
 /**
@@ -18,8 +18,6 @@ export async function sendWelcome({ email, name, track }: { email: string; name:
     trackName: t.name,
     becomes: t.becomes,
     price: formatINR(t.price),
-    startDate: formatDate(cohort.startDate),
-    deadline: formatDate(cohort.enrollmentDeadline),
     siteUrl: site.url,
     supportEmail: grievance.email,
   });

@@ -1,6 +1,6 @@
-import { cohort } from "@/data/config";
+import { enrolment } from "@/data/config";
 import { priceFrom } from "@/data/tracks";
-import { formatDate, formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/format";
 
 /**
  * A single-line ticker instead of a block that wraps to three lines on a
@@ -9,11 +9,11 @@ import { formatDate, formatINR } from "@/lib/format";
  */
 export function AnnouncementBar() {
   const items = [
-    `Next cohort starts ${formatDate(cohort.startDate)}`,
-    `Enrollment closes ${formatDate(cohort.enrollmentDeadline)}${cohort.enrollmentDeadlineIsPlaceholder ? " (date to be confirmed)" : ""}`,
+    "Start any day: Day 1 opens when you enrol",
+    `${enrolment.dailyTime}, in your own time`,
     `Tracks from ${formatINR(priceFrom)}`,
     "100% fee back when you complete",
-    "Limited seats",
+    "Individual feedback every week",
   ];
 
   const row = (hidden: boolean) => (
