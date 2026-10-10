@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
+import { Spatial404 } from "@/components/motion/Spatial404";
 import { tracks } from "@/data/tracks";
 
 export const metadata: Metadata = { title: "Page not found", robots: { index: false, follow: true } };
@@ -9,10 +10,11 @@ export const metadata: Metadata = { title: "Page not found", robots: { index: fa
 /** Any unknown URL: say so plainly, then offer the places people were most likely looking for. */
 export default function NotFound() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-4 py-16 sm:px-6">
-      <Link href="/" aria-label="Klymb.ai home"><Wordmark className="text-xl" /></Link>
-      <p className="mt-12 text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">404</p>
-      <h1 className="display mt-3 text-[clamp(2.25rem,6vw,4rem)] text-balance">
+    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center overflow-x-clip px-4 py-12 sm:px-6">
+      <Link href="/" aria-label="Klymb.ai home" className="self-start"><Wordmark className="text-xl" /></Link>
+      <Spatial404 className="mt-8 py-4" />
+      <p className="sr-only">Error 404</p>
+      <h1 className="display mt-6 text-[clamp(2rem,5vw,3.5rem)] text-balance">
         This page doesn&apos;t exist. <span className="text-red-strong">Your next role still does.</span>
       </h1>
       <p className="mt-4 text-muted">The link may be old or mistyped. Try one of these instead.</p>

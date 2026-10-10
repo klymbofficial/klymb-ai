@@ -271,16 +271,24 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 @keyframes scroll-drift { from { transform: translateY(-5%) scale(1.12); } to { transform: translateY(5%) scale(1.12); } }
 
 /* StrikeReveal: hidden only once script has marked the page, so no-JS shows the end state. */
-.strike-line { transform: scaleX(1); }
-@media (prefers-reduced-motion: no-preference) {
-  .strike[data-armed]:not(.is-shown) .strike-line { transform: scaleX(0); }
-  .strike[data-armed]:not(.is-shown) .strike-char { transform: translateY(110%); opacity: 0; }
-  .strike.is-shown .strike-old { opacity: 0.38; }
-  .strike-line { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
-  .strike-char { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.5s; }
-  .strike-old { transition: opacity 0.4s; }
+/* The strike is a background line on the inline text, cloned onto every
+   wrapped line. The text fades by colour, not opacity, so the line stays solid. */
+.strike-old {
+  background-image: linear-gradient(var(--color-red-strong), var(--color-red-strong));
+  background-repeat: no-repeat;
+  background-position: 0 56%;
+  background-size: 100% 0.09em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
-@media (prefers-reduced-motion: reduce) { .strike-old { opacity: 0.38; } }
+.strike.is-shown .strike-old { color: color-mix(in srgb, currentColor 38%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .strike[data-armed]:not(.is-shown) .strike-old { background-size: 0% 0.09em; }
+  .strike[data-armed]:not(.is-shown) .strike-char { transform: translateY(110%); opacity: 0; }
+  .strike-old { transition: background-size 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.4s; }
+  .strike-char { transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.5s; }
+}
+@media (prefers-reduced-motion: reduce) { .strike-old { color: color-mix(in srgb, currentColor 38%, transparent); } }
 
 /* ProgramTimeline: the line draws and the nodes light as the band scrolls through. */
 @supports (animation-timeline: view()) {
