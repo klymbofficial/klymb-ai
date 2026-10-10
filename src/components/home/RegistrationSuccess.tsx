@@ -96,10 +96,10 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
           </p>
         )}
 
-        <p>No payment has been taken.</p>
+        <p>{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken."}</p>
       </div>
 
-      {track?.available && <PayButton email={email} price={track.price} />}
+      {track?.available && track.price > 0 && <PayButton email={email} price={track.price} />}
 
       {/* Straight into the course: already signed in, or one Google step that
           lands on Day 1, never a separate sign-in page. */}

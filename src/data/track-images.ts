@@ -5,6 +5,7 @@ import l1l2Support from "@/assets/tracks/l1-l2-support.jpg";
 import projectManager from "@/assets/tracks/project-manager.jpg";
 import qaEngineer from "@/assets/tracks/qa-engineer.jpg";
 import reportingAnalyst from "@/assets/tracks/reporting-analyst.jpg";
+import aiProductManager from "@/assets/track-page/presenting.jpg";
 
 /**
  * One photograph per track, used on its card and its page. Sources and the
@@ -17,4 +18,5 @@ export const trackImages: Record<TrackSlug, { src: StaticImageData; alt: string 
   "project-manager": { src: projectManager, alt: "A hand arranging cards on a project planning board" },
   "junior-developer": { src: juniorDeveloper, alt: "Colour-highlighted source code on a screen" },
   "reporting-analyst": { src: reportingAnalyst, alt: "An analytics dashboard of charts on a laptop" },
+  "ai-product-manager": { src: aiProductManager, alt: "A product lead presenting to a team" },
 };

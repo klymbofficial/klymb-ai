@@ -3,7 +3,8 @@ export type TrackSlug =
   | "l1-l2-support"
   | "project-manager"
   | "junior-developer"
-  | "reporting-analyst";
+  | "reporting-analyst"
+  | "ai-product-manager";
 
 export type WeekNumber = 1 | 2 | 3 | 4;
 
@@ -49,7 +50,7 @@ export interface Track {
    * open before the content is ready.
    */
   contentLive: boolean;
-  /** Launch price in rupees for this track. Tracks are priced ₹2,000 apart. */
+  /** Launch price in rupees; 0 means free (no payment, no refund promise). */
   price: number;
   /** Where the role is heading in AI-native teams */
   becomes: string;

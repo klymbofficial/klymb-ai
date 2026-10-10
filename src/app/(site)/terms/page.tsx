@@ -52,7 +52,8 @@ export default function TermsPage() {
       <Section n="5." title="Fees and refunds" plain="One fee per track. Finish everything and you get all of it back.">
         <p>
           The fee is for one track and one cohort, and depends on the track: from {formatINR(priceFrom)} to{" "}
-          {formatINR(priceTo)}, shown on each track&apos;s page and before you pay. Complete the programme and we
+          {formatINR(priceTo)}, shown on each track&apos;s page and before you pay. Free tracks, marked Free on their page, take no
+          payment and so carry no refund. Complete a paid programme and we
           refund it in full. The conditions are in the <Link href="/refund-policy">Refund Policy</Link>, which forms part
           of these terms.
         </p>

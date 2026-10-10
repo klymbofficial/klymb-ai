@@ -26,6 +26,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
   const [slug, setSlug] = useState<TrackSlug | "">(defaultTrack ?? "");
   const track = slug ? getTrack(slug) : undefined;
   const price = track?.price ?? priceFrom;
+  const free = track?.price === 0;
 
   return (
     <section id="register" aria-labelledby="register-title" className="grid lg:h-dvh lg:grid-cols-[2fr_3fr]">
@@ -68,18 +69,28 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
         <Appear delay={0.1} className="relative grid gap-px overflow-hidden rounded-card bg-white/15 ring-1 ring-white/15 sm:grid-cols-2">
           <div className="bg-red-muted-deep/90 p-4 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-white/60">{track ? "Your fee" : "Fees from"}</p>
-            <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] text-white tabular-nums">{formatINR(price)}</p>
-            <p className="mt-1 text-xs text-white/60">One payment. UPI, cards or net banking.</p>
+            <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] text-white tabular-nums">{free ? "Free" : formatINR(price)}</p>
+            <p className="mt-1 text-xs text-white/60">{free ? "No card, no payment step." : "One payment. UPI, cards or net banking."}</p>
           </div>
-          <div className="bg-white p-4 text-ink sm:p-5">
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-deep">
-              <BadgeIndianRupee aria-hidden="true" className="size-4" /> 100% back
-            </p>
-            <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] tabular-nums">₹0</p>
-            <p className="mt-1 text-xs text-ink/70">
-              if you finish all 30 days. <Link href="/refund-policy" className="font-semibold underline underline-offset-2">How it works</Link>
-            </p>
-          </div>
+          {free ? (
+            <div className="bg-white p-4 text-ink sm:p-5">
+              <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-deep">
+                <BadgeIndianRupee aria-hidden="true" className="size-4" /> Day 1
+              </p>
+              <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)]">Today</p>
+              <p className="mt-1 text-xs text-ink/70">Register and start straight away.</p>
+            </div>
+          ) : (
+            <div className="bg-white p-4 text-ink sm:p-5">
+              <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-deep">
+                <BadgeIndianRupee aria-hidden="true" className="size-4" /> 100% back
+              </p>
+              <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] tabular-nums">₹0</p>
+              <p className="mt-1 text-xs text-ink/70">
+                if you finish all 30 days. <Link href="/refund-policy" className="font-semibold underline underline-offset-2">How it works</Link>
+              </p>
+            </div>
+          )}
         </Appear>
 
         <Appear delay={0.2} className="relative hidden sm:block">
@@ -117,10 +128,12 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
 
         <ExpertsStrip tone="dark" className="relative" />
 
-        <p className="relative mt-auto hidden items-center sm:flex gap-2 text-xs text-white/55">
-          <ShieldCheck aria-hidden="true" className="size-4" />
-          Payments secured by Razorpay. Your seat is confirmed the moment you pay.
-        </p>
+        {!free && (
+          <p className="relative mt-auto hidden items-center sm:flex gap-2 text-xs text-white/55">
+            <ShieldCheck aria-hidden="true" className="size-4" />
+            Payments secured by Razorpay. Your seat is confirmed the moment you pay.
+          </p>
+        )}
       </div>
 
       {/* ── The form ──────────────────────────────────────────── */}

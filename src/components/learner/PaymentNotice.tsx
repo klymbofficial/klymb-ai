@@ -10,6 +10,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
  * Hidden entirely if the payment lookup is unavailable: never nag in error.
  */
 export async function PaymentNotice({ email, track }: { email: string; track: Track }) {
+  if (track.price === 0) return null; // free track: nothing to confirm
   const supabase = createServiceClient();
   if (!supabase || !process.env.RAZORPAY_KEY_ID) return null;
 

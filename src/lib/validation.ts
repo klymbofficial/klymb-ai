@@ -88,6 +88,7 @@ export const COURSE_REPO_NAMES: Record<TrackSlug, string> = {
   "project-manager": "pm-delivery-portfolio",
   "junior-developer": "dev-evidence-portfolio",
   "reporting-analyst": "analytics-evidence-portfolio",
+  "ai-product-manager": "ai-pm-portfolio",
 };
 
 /**

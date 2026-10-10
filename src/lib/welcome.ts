@@ -18,6 +18,7 @@ export async function sendWelcome({ email, name, track }: { email: string; name:
     trackName: t.name,
     becomes: t.becomes,
     price: formatINR(t.price),
+    free: t.price === 0,
     siteUrl: site.url,
     supportEmail: grievance.email,
   });
