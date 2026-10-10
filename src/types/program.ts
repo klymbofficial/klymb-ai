@@ -50,6 +50,12 @@ export interface Track {
    * open before the content is ready.
    */
   contentLive: boolean;
+  /**
+   * Shown in public lists (home, tracks page, footer, sitemap, the form's
+   * dropdown). False makes the track invite-only: it works for anyone with its
+   * link, but nothing on the site points to it. Defaults to true.
+   */
+  listed?: boolean;
   /** Launch price in rupees; 0 means free (no payment, no refund promise). */
   price: number;
   /** Where the role is heading in AI-native teams */

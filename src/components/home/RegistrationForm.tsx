@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useId, useRef, useState } from "react";
 import { experienceOptions, roleOptions } from "@/data/program";
-import { tracks } from "@/data/tracks";
+import { getTrack, tracks } from "@/data/tracks";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/FormField";
@@ -45,7 +45,10 @@ export function RegistrationForm({
   const [honeypot, setHoneypot] = useState("");
   const [serverError, setServerError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  const chosenTrack = tracks.find((t) => t.slug === data.track);
+  const chosenTrack = getTrack(data.track);
+  // Invite-only tracks are offered only to someone who arrived on their link.
+  const invited = defaultTrack ? getTrack(defaultTrack) : undefined;
+  const trackOptions = invited && invited.listed === false ? [...tracks, invited] : tracks;
   const googleFormId = `google-register-${useId().replace(/:/g, "")}`;
   const successRef = useRef<HTMLDivElement>(null);
 
@@ -84,7 +87,7 @@ export function RegistrationForm({
         enrolled: !!response.enrolled,
         duplicate: !!response.duplicate,
         email: data.email.trim(),
-        track: tracks.find((t) => t.slug === data.track),
+        track: getTrack(data.track),
         signedIn: !!response.signedIn,
       });
       track("register_submit", { track_slug: data.track || "none", enrolled: !!response.enrolled, repeat: !!response.duplicate });
@@ -150,7 +153,7 @@ export function RegistrationForm({
       <TextField id="phone" label="Phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+91 98765 43210" value={data.phone} onChange={(e) => set("phone", e.target.value)} error={errors.phone} />
       </div>
       <div className="sm:col-span-2">
-        <SelectField id="track" label="Career track" placeholder="Choose a track" options={tracks.map((t) => ({ value: t.slug, label: t.name, disabled: !t.available, hint: t.available ? undefined : "Opening later" }))}
+        <SelectField id="track" label="Career track" placeholder="Choose a track" options={trackOptions.map((t) => ({ value: t.slug, label: t.name, disabled: !t.available, hint: t.available ? undefined : "Opening later" }))}
           value={data.track} onValueChange={(v) => set("track", v as TrackSlug | "")} error={errors.track} />
       </div>
       <SelectField id="currentRole" label="Current role" placeholder="Select role" options={toOptions(roleOptions)} value={data.currentRole} onValueChange={(v) => set("currentRole", v)} error={errors.currentRole} />

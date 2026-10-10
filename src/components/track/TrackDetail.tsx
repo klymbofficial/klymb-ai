@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import * as motion from "motion/react-client";
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
 import { StrikeReveal } from "@/components/motion/StrikeReveal";

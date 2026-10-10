@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 import { enrollRegistration } from "@/app/admin/enroll";
 import type { Registration } from "@/lib/admin/data";
 

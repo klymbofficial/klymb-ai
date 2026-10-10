@@ -1,4 +1,4 @@
-import { getTrack, tracks } from "@/data/tracks";
+import { allTracks as tracks, getTrack } from "@/data/tracks";
 import type { DailyChallenge, Track } from "@/types/program";
 
 export function resolveTrack(slug?: string): Track {

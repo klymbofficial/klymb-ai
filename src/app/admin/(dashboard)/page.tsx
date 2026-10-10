@@ -5,7 +5,7 @@ import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { TrackBars } from "@/components/admin/TrackBars";
 import { cohort } from "@/data/config";
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { getLearnerProgress, getRegistrations, summariseRegistrations } from "@/lib/admin/data";
 import { BarChart3, Clock, Globe2, MousePointerClick, Radio, Send, Sparkles, UserPlus } from "lucide-react";

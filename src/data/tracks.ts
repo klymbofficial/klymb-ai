@@ -28,7 +28,8 @@ function week(
   };
 }
 
-export const tracks: Track[] = [
+/** Every track, including invite-only ones. Use for lookups, enrolment and admin. */
+export const allTracks: Track[] = [
   {
     slug: "qa-engineer",
     available: true,
@@ -321,6 +322,7 @@ export const tracks: Track[] = [
   },
   {
     slug: "ai-product-manager",
+    listed: false, // invite-only for now: shared by link, not shown on the site
     available: true,
     contentLive: true,
     price: 0,
@@ -379,11 +381,15 @@ export const tracks: Track[] = [
   },
 ];
 
+/** The tracks the public site lists. Invite-only tracks are left out. */
+export const tracks: Track[] = allTracks.filter((t) => t.listed !== false);
+
 export function getTrack(slug: string): Track | undefined {
-  return tracks.find((t) => t.slug === slug);
+  return allTracks.find((t) => t.slug === slug);
 }
 
-export const trackSlugs: TrackSlug[] = tracks.map((t) => t.slug);
+/** Every valid slug, including invite-only tracks, so their links still register. */
+export const trackSlugs: TrackSlug[] = allTracks.map((t) => t.slug);
 
 /** Tracks open for enrolment right now. */
 export const availableTracks = tracks.filter((t) => t.available);
