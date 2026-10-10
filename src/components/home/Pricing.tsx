@@ -62,6 +62,7 @@ function RefundPromise({ onRed }: { onRed?: boolean }) {
  * track's page, pass `track` to show that track's price and call to action.
  */
 export function Pricing({ track }: { track?: Track } = {}) {
+  const free = track?.price === 0;
   const ctaHref = track ? `/register?track=${track.slug}` : "#register";
   const ctaLabel = track ? `Choose ${track.name}` : "Pick a track and start";
   const subtitle = track
@@ -84,7 +85,7 @@ export function Pricing({ track }: { track?: Track } = {}) {
               </li>
             ))}
           </ul>
-          <div className="mt-8"><RefundPromise /></div>
+          {!free && <div className="mt-8"><RefundPromise /></div>}
         </div>
 
         <div className="bg-red-strong p-8 text-white sm:p-12">
@@ -92,7 +93,13 @@ export function Pricing({ track }: { track?: Track } = {}) {
             <>
               {/* The price falls from the reference value, but only while that
                   value is shown: it must be a genuine, documented figure. */}
-              {pricing.showReferenceValue ? (
+              {free ? (
+                <>
+                  <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">{track.name}</p>
+                  <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)]">Free</p>
+                  <p className="mt-2 text-sm text-white/80">No card and no payment step. Register and Day 1 opens straight away.</p>
+                </>
+              ) : pricing.showReferenceValue ? (
                 <PriceDrop
                   from={pricing.referenceValue}
                   to={track.price}
@@ -122,7 +129,7 @@ export function Pricing({ track }: { track?: Track } = {}) {
               </ul>
             </>
           )}
-          <p className="mt-5 border-t border-white/25 pt-5 text-xs text-white/80">{pricing.taxNote}</p>
+          {!free && <p className="mt-5 border-t border-white/25 pt-5 text-xs text-white/80">{pricing.taxNote}</p>}
 
           <dl className="mt-6 grid grid-cols-2 gap-6 border-t border-white/25 pt-6 sm:grid-cols-3">
             <Fact label="Starts" value="Any day" note="Day 1 opens when you enrol" />

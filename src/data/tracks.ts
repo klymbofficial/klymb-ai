@@ -319,6 +319,64 @@ export const tracks: Track[] = [
       { category: "Behavioural", question: "Tell me about an insight that changed a decision.", whatGoodLooksLike: "Clear context, analysis and business impact." },
     ],
   },
+  {
+    slug: "ai-product-manager",
+    available: true,
+    contentLive: true,
+    price: 0,
+    name: "AI Product Manager",
+    becomes: "AI Product Lead",
+    description: "Own AI products end to end: opportunity, retrieval and agents, evaluation, safety, economics and the executive case.",
+    whoItsFor: ["Product Managers with 4 to 6 years' experience", "PMs moving onto AI features or platforms", "Technical leads stepping into product ownership"],
+    skills: ["AI opportunity framing", "Product contracts and context design", "Model selection", "RAG and agents", "AI evaluation", "Threat modelling", "AI economics", "Executive communication"],
+    whatsChanging:
+      "Teams can now ship AI features in days. What they lack is someone who can decide when AI earns its cost and risk, diagnose failures across the system, and defend the investment with evidence.",
+    carryOver: ["User and buyer discovery", "Prioritisation under constraints", "Stakeholder and launch leadership"],
+    weeks: [
+      week(1, "Opportunity, contract and first prototype", "Frame a real user job against a non-AI baseline, write an auditable product contract and validate a bounded prototype.", [
+        ["Diagnose competence and choose an opportunity", "The user job, non-AI comparator, evidence strength and an investment reversal condition"],
+        ["Discover the job and buyer constraint", "Observation, reported pain, demand and payment are different evidence"],
+        ["Specify an auditable product contract", "Instructions, output schemas, evidence contracts and program-enforced limits"],
+        ["Design context and authority", "Context relevance, freshness, authority, permission, compression and token budgets"],
+        ["Select a model against product constraints", "Eligibility precedes preference; quality, privacy, availability, latency and cost interact"],
+        ["Validate the first prototype and repair evidence", "A useful draft must fit actual work and remain inspectable"],
+      ], { title: "Opportunity and baseline", task: "Transition passes with a testable non-AI comparator, supported scope and appropriate restrictions" }),
+      week(2, "Retrieval, agents and system reliability", "Audit sources, test retrieval and chunking, compare workflow and agent designs, and repair reliability.", [
+        ["Audit sources and define procurement gates", "Ownership, lineage, parsing, access, retention and contractual use rights"],
+        ["Test ingestion and chunking", "Parsing, tables, exceptions, versions and chunk boundaries can change evidence"],
+        ["Compare retrieval and outcome value", "Dense, sparse, hybrid and reranked retrieval have distinct failure and cost profiles"],
+        ["Test UX and buying assumptions", "Preview, source inspection, edit, recovery and responsibility must fit the job"],
+        ["Compare workflow and agent value", "Typed tools, state, deterministic control, permissions and side effects"],
+        ["Repair reliability and negotiate ownership", "Retries, budgets, termination and reviewer responsibilities shape reliable delivery"],
+      ], { title: "Architecture and transfer", task: "Transition passes with demonstrable access denial and useful failure recovery" }),
+      week(3, "Evaluation, safety and adoption evidence", "Build a consequential evaluation pack, threat-model the product and measure useful outcomes, not engagement.", [
+        ["Create a consequential evaluation pack", "Task distribution, severity, denominators, gold evidence and leakage govern an evaluation"],
+        ["Calibrate evaluation and quantify disagreement", "Exact checks, human judgments, model judges and disagreement measure different things"],
+        ["Threat model the usable product", "Untrusted inputs, tool boundaries, leakage, poisoning and excessive agency"],
+        ["Design memory and the operating policy", "Session and persistent memory need provenance, scope, correction and deletion"],
+        ["Measure adoption and useful outcomes", "Exposure, acceptance, edit effort, useful completion, return behavior and downstream quality"],
+        ["Repair the causal pilot and catch up", "Assignment, interference, sample adequacy, guardrails and stopping rules"],
+      ], { title: "Quality versus economics", task: "Transition passes with a defensible gate and tested restriction" }),
+      week(4, "Economics, leadership and the executive case", "Build the CFO case, allocate a portfolio, lead rollout and incident recovery, and defend it to an executive panel.", [
+        ["Build the CFO case and price value test", "Outcome cost includes failed tasks, retries, tools, fixed spend and human operations; price depends on value and buying behavior"],
+        ["Allocate the portfolio and negotiate procurement", "Opportunity cost, distribution, build/buy, differentiation, rights and switching costs"],
+        ["Stress capacity and the human operating model", "Queues, caches, p95 latency, freshness, outages and reviewer throughput"],
+        ["Diagnose an ambiguous failure and transfer the lesson", "Ablation and targeted intervention isolate causes better than changing every component"],
+        ["Lead adoption rollout and incident recovery", "Enablement, review incentives, launch authority, incident ownership and rollback"],
+        ["Reproduce repair and prepare the executive case", "A decision is credible when another person can trace and reproduce its supporting evidence"],
+      ], { title: "Executive capstone panel", task: "Transition passes the core capstone and its scope gates" }),
+    ],
+    projects: ["Opportunity and buyer brief with a non-AI baseline", "Product and system decision pack for an AI support copilot", "Evaluation and risk dossier with held-out results and a threat model", "Executive investment memo defended to a panel"],
+    outcomes: ["Decide when AI earns its cost and risk", "Specify, evaluate and debug an AI product system", "Model cost per useful outcome", "Run safe rollouts and incident recovery", "Defend an AI investment to executives"],
+    interviewTopics: ["AI opportunity framing", "RAG and agent architecture", "AI evaluation", "AI safety and authorization", "AI economics", "Leadership and commercial decisions"],
+    interviewQuestions: [
+      { category: "Technical", question: "Users say the AI answers are unreliable even though the right documents are retrieved. How do you diagnose it?", whatGoodLooksLike: "Traces what reached the model, separates retrieval, context and generation, and tests competing explanations before naming a fix." },
+      { category: "Technical", question: "How would you decide between a workflow and an agent for this feature?", whatGoodLooksLike: "Starts from the task, authority and error cost; prefers the simplest design that passes evaluation." },
+      { category: "Scenario", question: "Leadership wants the most expensive model for every request. What do you do?", whatGoodLooksLike: "Shows cost per useful outcome on identical cases, with sensitivity ranges and a budget-based reversal condition." },
+      { category: "Scenario", question: "A dashboard shows completion went up after launch. Sales wants to announce it. Is it supportable?", whatGoodLooksLike: "Checks assignment and measurement units, the denominator and an interval before any claim." },
+      { category: "Behavioural", question: "Tell me about a time you stopped or narrowed a project because the evidence did not support it.", whatGoodLooksLike: "Clear evidence, the decision, the rejected alternative and what would have reversed it." },
+    ],
+  },
 ];
 
 export function getTrack(slug: string): Track | undefined {
@@ -331,9 +389,14 @@ export const trackSlugs: TrackSlug[] = tracks.map((t) => t.slug);
 export const availableTracks = tracks.filter((t) => t.available);
 export const liveContentTracks = tracks.filter((t) => t.contentLive);
 
-/** The cheapest and dearest tracks, for "from ₹…" copy. */
-export const priceFrom = Math.min(...tracks.map((t) => t.price));
-export const priceTo = Math.max(...tracks.map((t) => t.price));
+/** Free tracks take no payment and carry no refund promise. */
+export const isFree = (t: Pick<Track, "price">) => t.price === 0;
+export const paidTracks = tracks.filter((t) => !isFree(t));
+export const freeTracks = tracks.filter(isFree);
 
-/** Tracks cheapest first, the order prices are listed in. */
-export const tracksByPrice = [...tracks].sort((a, b) => a.price - b.price);
+/** The cheapest and dearest paid tracks, for "from ₹…" copy. */
+export const priceFrom = Math.min(...paidTracks.map((t) => t.price));
+export const priceTo = Math.max(...paidTracks.map((t) => t.price));
+
+/** Paid tracks cheapest first, the order prices are listed in. */
+export const tracksByPrice = [...paidTracks].sort((a, b) => a.price - b.price);

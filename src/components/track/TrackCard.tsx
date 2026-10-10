@@ -42,8 +42,8 @@ export function TrackCard({ track }: { track: Track }) {
         ))}
       </ul>
       <p className="mt-auto flex items-baseline gap-2 border-t border-line/25 pt-4">
-        <span className="text-lg font-extrabold nums">{formatINR(track.price)}</span>
-        <span className="text-xs font-semibold text-muted">100% back when you complete</span>
+        <span className="text-lg font-extrabold nums">{track.price === 0 ? "Free" : formatINR(track.price)}</span>
+        <span className="text-xs font-semibold text-muted">{track.price === 0 ? "No payment needed" : "100% back when you complete"}</span>
       </p>
       <Link
         href={`/tracks/${track.slug}`}
