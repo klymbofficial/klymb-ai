@@ -1,7 +1,7 @@
 import "server-only";
 import { getAdmin } from "@/lib/admin/auth";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 
 /** Platform engagement, computed from our own tables rather than Google's. */
 

@@ -4,7 +4,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { useState } from "react";
 import { removeLearner, setLearnerStatus, type LearnerStatus } from "@/app/admin/learner-actions";
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 import type { LearnerProgress } from "@/lib/admin/data";
 
 const trackName = (slug: string) => tracks.find((t) => t.slug === slug)?.name ?? slug;

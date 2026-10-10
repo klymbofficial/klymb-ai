@@ -1,4 +1,4 @@
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 
 /** Registrations per track, as a share of the largest track. */
 export function TrackBars({ counts }: { counts: Record<string, number> }) {

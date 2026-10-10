@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { getCurriculumDay } from "@/data/curricula";
-import { tracks } from "@/data/tracks";
+import { allTracks as tracks } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { getLearnerDetail } from "@/lib/admin/data";
 
