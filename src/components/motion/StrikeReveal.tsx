@@ -51,13 +51,10 @@ export function StrikeReveal({
   return (
     <Tag ref={ref} id={id} className={clsx("strike flex flex-col", shown && "is-shown", className)}>
       <span className="sr-only">{`${from}, becoming ${to}`}</span>
-      {/* The job as it was: struck, then faded. */}
-      <span aria-hidden="true" className={clsx("relative w-fit", fromClassName)}>
-        <span className="strike-old inline-block" style={{ transitionDelay: `${strikeAt + 0.4}s` }}>{from}</span>
-        <span
-          className="strike-line absolute top-[54%] left-[-2%] h-[0.09em] min-h-[2px] w-[104%] origin-left rounded-full bg-red-strong"
-          style={{ transitionDelay: `${strikeAt}s` }}
-        />
+      {/* The job as it was: struck, then faded. The strike is the text's own
+          background, cloned per line, so a title that wraps is struck on every line. */}
+      <span aria-hidden="true" className={clsx("block", fromClassName)}>
+        <span className="strike-old" style={{ transitionDelay: `${strikeAt}s, ${strikeAt + 0.4}s` }}>{from}</span>
       </span>
 
       {/* The role it becomes: each letter rises out of a clipped line; words never break. */}
