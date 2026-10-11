@@ -1,6 +1,8 @@
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Archivo, Inter } from "next/font/google";
 import { site } from "@/data/config";
 import "./globals.css";
@@ -40,7 +42,13 @@ export const viewport: Viewport = { themeColor: "#f3f2f2" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${inter.variable} antialiased`}>
-      <body className="min-h-screen">{children}<ServiceWorkerRegister /></body>
+      <body className="min-h-screen">
+        {children}
+        <ServiceWorkerRegister />
+        {/* Cookieless, first-party (/_vercel/*): live visitors and real-user page speed in the Vercel dashboard. */}
+        <VercelAnalytics />
+        <SpeedInsights />
+      </body>
       {gaId && <Analytics gaId={gaId} />}
     </html>
   );

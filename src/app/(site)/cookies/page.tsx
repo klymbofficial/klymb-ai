@@ -41,6 +41,7 @@ export default function CookiePolicyPage() {
         <Facts
           rows={[
             ["Google Analytics 4", "Measures page views and aggregate usage: which pages people read, which track pages they open, how many registrations complete."],
+            ["Vercel Web Analytics and Speed Insights", "Cookieless page-view counts and page-load timings from our hosting provider. They set no cookies and identify no one, so they keep running when Google Analytics is off."],
             ["What we never send", "Your name, email, phone number, GitHub or LinkedIn identity, submissions or answers. None of it is sent to Google."],
             ["Retention", "Google retains this data for 14 months."],
           ]}
