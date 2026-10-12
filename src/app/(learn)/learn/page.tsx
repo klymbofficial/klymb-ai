@@ -7,6 +7,7 @@ import { CohortBoard, type BoardDay } from "@/components/learner/CohortBoard";
 import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { ProgressRing } from "@/components/learner/ProgressRing";
 import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
 import { ReminderPrompt } from "@/components/pwa/ReminderPrompt";
@@ -90,6 +91,12 @@ export default async function LearnHomePage() {
   // Streak: consecutive submitted days counting back from the latest one done.
   let streak = 0;
   for (let d = Math.max(0, ...doneDays); d >= 1 && doneDays.has(d); d--) streak++;
+  const firstName = learner.name.split(" ")[0] || "there";
+  const buddyMessage =
+    doneDays.size === days.length ? `All 30 days done, ${firstName}. Proud of you.`
+    : doneDays.size === 0 ? `Hi ${firstName}, I'm Kamran. Day 1 is ready when you are.`
+    : streak >= 3 ? `${streak} days in a row! Day ${nextDay.day} next.`
+    : `Welcome back, ${firstName}. Day ${nextDay.day} is waiting.`;
 
   return (
     <>
@@ -102,6 +109,9 @@ export default async function LearnHomePage() {
         <span aria-hidden="true" className="glow-drift pointer-events-none absolute -top-40 -left-24 size-[32rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.14),transparent)]" />
         <div className="relative mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-6 px-4 py-10 sm:px-8 sm:py-14">
           <div>
+            <Appear y={10} className="mb-5">
+              <StudyBuddy message={buddyMessage} />
+            </Appear>
             <Appear y={14}>
               <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} cohort</h1>
             </Appear>
