@@ -10,14 +10,21 @@
  *  - Admin, APIs and sign-in are never cached.
  *  - Learner pages live in their own cache, cleared on sign-out.
  */
-const VERSION = "v2"; // bump to replace cached pages and assets
+const VERSION = "v3"; // bump to replace cached pages and assets
 const STATIC = `klymb-static-${VERSION}`;
 const PAGES = `klymb-pages-${VERSION}`;
 const LEARN = `klymb-learn-${VERSION}`;
 const PRECACHE = ["/offline", "/", "/tracks", "/program", "/icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(PAGES).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+  // Each page is cached on its own and a failure is ignored: with addAll, one
+  // failed fetch (a firewall challenge, a flaky network) rejected the whole
+  // install, and phones silently stayed on the old worker.
+  event.waitUntil(
+    caches.open(PAGES)
+      .then((c) => Promise.allSettled(PRECACHE.map((url) => c.add(url))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
