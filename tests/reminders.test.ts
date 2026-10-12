@@ -67,8 +67,8 @@ test("behind: later nudges name the same day the button opens", () => {
 
 test("Kamran's face matches the moment", () => {
   const at = (slot: "morning" | "midday" | "night", behind = false) => buildReminder({ ...base, slot, behind })!.icon;
-  assert.equal(at("morning"), "/mascots/kamran-excited-192.png");
-  assert.equal(at("midday"), "/mascots/kamran-surprised-192.png");
-  assert.equal(at("night"), "/mascots/kamran-sleepy-192.png");
-  assert.equal(at("night", true), "/mascots/kamran-missing-192.png");
+  assert.equal(at("morning"), "/mascots/kamran-excited-v2.png");
+  assert.equal(at("midday"), "/mascots/kamran-surprised-v2.png");
+  assert.equal(at("night"), "/mascots/kamran-sleepy-v2.png");
+  assert.equal(at("night", true), "/mascots/kamran-missing-v2.png");
 });

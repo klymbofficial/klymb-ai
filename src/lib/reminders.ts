@@ -48,7 +48,7 @@ export interface Reminder {
   icon: string;
 }
 
-const face = (mood: "excited" | "surprised" | "sleepy" | "missing") => `/mascots/kamran-${mood}-192.png`;
+const face = (mood: "excited" | "surprised" | "sleepy" | "missing") => `/mascots/kamran-${mood}-v2.png`;
 
 type Copy = Pick<Reminder, "title" | "body">;
 const pick = <T,>(list: T[], seed: number) => list[Math.abs(seed) % list.length];
