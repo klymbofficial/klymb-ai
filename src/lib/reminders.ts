@@ -44,7 +44,11 @@ export interface Reminder {
   tag: string;
   /** Only the morning reminder sounds; later ones replace it quietly. */
   loud: boolean;
+  /** Kamran's face for the moment: excited, surprised, sleepy, or worried when behind. */
+  icon: string;
 }
+
+const face = (mood: "excited" | "surprised" | "sleepy" | "worried") => `/mascots/kamran-${mood}-192.png`;
 
 type Copy = Pick<Reminder, "title" | "body">;
 const pick = <T,>(list: T[], seed: number) => list[Math.abs(seed) % list.length];
@@ -55,7 +59,8 @@ export function buildReminder(r: ReminderInput): Reminder | null {
 
   const url = `/learn/day/${r.behind ? r.day - 1 : r.day}`;
   const tag = `day-${r.day}`; // later reminders replace earlier ones, never pile up
-  const done = (c: Copy): Reminder => ({ ...c, url, tag, loud: r.slot === "morning" });
+  const icon = face(r.behind ? "worried" : r.slot === "morning" ? "excited" : r.slot === "midday" ? "surprised" : "sleepy");
+  const done = (c: Copy): Reminder => ({ ...c, url, tag, loud: r.slot === "morning", icon });
 
   const n = r.name;
   const mins = Math.max(15, Math.round(r.minutes / 15) * 15);
