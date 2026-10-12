@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { signOutLearner } from "@/app/(learn)/learn/actions";
 import { navLinks } from "@/data/program";
+import { ReminderBell } from "@/components/pwa/ReminderBell";
 
 /** The signed-in bar shared by the dashboard and the day pages. */
 export function LearnerTopBar({ name, image }: { name: string; image?: string | null }) {
@@ -39,6 +40,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
           </nav>
 
           <div className="flex items-center gap-3 justify-self-end">
+            <ReminderBell />
             {image ? (
               <Image src={image} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
             ) : (
