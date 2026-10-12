@@ -189,3 +189,25 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
   });
   return { subject, html, text };
 }
+
+/** A short branded note: a heading, an intro, numbered points and an optional button. */
+export function noteEmail(p: { subject: string; preview: string; eyebrow: string; title: string; intro: string; heading: string; points: { title: string; body: string }[]; cta?: { href: string; label: string }; closing?: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const text = [
+    p.intro, "", p.heading,
+    ...p.points.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
+    ...(p.cta ? [`${p.cta.label}: ${p.cta.href}`, ""] : []),
+    ...(p.closing ? [p.closing, ""] : []),
+    "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail, preview: esc(p.preview), eyebrow: esc(p.eyebrow), title: esc(p.title), intro: esc(p.intro),
+    sections: [
+      `${sectionTitle(esc(p.heading))}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${p.points.map((s, i) => step(i + 1, esc(s.title), esc(s.body))).join("")}
+      </table>${p.cta ? button(esc(p.cta.href), esc(p.cta.label)) : ""}`,
+      ...(p.closing ? [`<div style="font-size:14px;line-height:1.7;color:${C.ink};margin:4px 0 12px">${esc(p.closing)}</div>`] : []),
+    ],
+  });
+  return { subject: p.subject, html, text };
+}
