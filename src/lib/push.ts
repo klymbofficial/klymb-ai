@@ -11,7 +11,7 @@ export function pushReady() {
 }
 
 export interface PushTarget { endpoint: string; p256dh: string; auth: string }
-export interface PushMessage { title: string; body: string; url: string; tag?: string; loud?: boolean }
+export interface PushMessage { title: string; body: string; url: string; tag?: string; loud?: boolean; icon?: string }
 
 /** Sends one notification. Undelivered after 3 hours, it is dropped: a midday nudge arriving at night reads as spam. */
 /** Sends one notification. Returns "gone" when the device has unsubscribed, so the row can be deleted. */

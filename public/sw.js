@@ -79,7 +79,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(msg.title, {
       body: msg.body,
-      icon: "/icons/icon-192.png",
+      icon: msg.icon || "/icons/icon-192.png", // Kamran's face for the moment, else the app icon
       badge: "/icons/badge-96.png", // white K on transparent: Android draws badges as a silhouette
       tag: msg.tag,
       // Only the morning reminder sounds. Later ones replace it quietly: repeated
