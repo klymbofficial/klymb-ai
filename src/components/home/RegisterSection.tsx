@@ -13,6 +13,7 @@ import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { RegistrationForm, type GoogleUser } from "./RegistrationForm";
 import { ExpertsStrip } from "./ExpertsStrip";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
 
 /** What every track includes. Kept to what the course actually delivers. */
 const INCLUDED = [
@@ -140,6 +141,13 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
       <div className="flex flex-col px-5 py-8 sm:px-10 lg:h-full lg:overflow-y-auto lg:px-16 lg:py-8">
         <Wordmark className="self-start text-lg" />
         <div className="my-auto w-full max-w-2xl pt-8 lg:pt-6">
+          <div className="mb-6">
+            <StudyBuddy
+              tone="light"
+              size={88}
+              message={googleUser?.name ? `Hi ${googleUser.name.split(" ")[0]}, I'm Kamran. One minute here, then I'll see you on Day 1.` : "Hi, I'm Kamran, your study buddy for the next 30 days. This takes about a minute."}
+            />
+          </div>
           <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} bare titled onTrackChange={setSlug} />
         </div>
       </div>
