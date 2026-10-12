@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
 import { Spatial404 } from "@/components/motion/Spatial404";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { tracks } from "@/data/tracks";
 
 export const metadata: Metadata = { title: "Page not found", robots: { index: false, follow: true } };
@@ -14,6 +15,9 @@ export default function NotFound() {
       <Link href="/" aria-label="Klymb.ai home" className="self-start"><Wordmark className="text-xl" /></Link>
       <Spatial404 className="mt-8 py-4" />
       <p className="sr-only">Error 404</p>
+      <div className="mt-2">
+        <StudyBuddy tone="light" size={88} message="I looked everywhere. This page isn't here, but your next role is. Let's get you back on track." />
+      </div>
       <h1 className="display mt-6 text-[clamp(2rem,5vw,3.5rem)] text-balance">
         This page doesn&apos;t exist. <span className="text-red-strong">Your next role still does.</span>
       </h1>
