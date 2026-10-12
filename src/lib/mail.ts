@@ -151,3 +151,41 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
   });
   return { subject, html, text };
 }
+
+/**
+ * For someone enrolled directly (invite-only or free tracks): no form, no
+ * payment. Says how to sign in and set up, with track-specific steps.
+ */
+export function inviteEmail(p: { name: string; email: string; trackName: string; repoName: string; setup: { title: string; body: string }[]; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = `You're in: ${p.trackName} on Klymb.ai`;
+  const steps = [
+    { title: "Sign in", body: `Open ${p.siteUrl}/learn and choose Continue with Google using ${p.email}. It must be this exact account.` },
+    { title: "Create your course repository", body: `On GitHub, create a public repository named ${p.repoName}. Every artifact you produce goes here, and reviewers check your work against it.` },
+    { title: "Add GitHub and LinkedIn to your dashboard", body: "Both are needed before you can submit Day 1: submitted links are checked to be yours." },
+    ...p.setup,
+  ];
+  const text = [
+    `Hi ${p.name},`, "",
+    `You now have access to the ${p.trackName} course on Klymb.ai. It's free: no payment step.`, "",
+    "Getting set up",
+    ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
+    `Start here: ${p.siteUrl}/learn`, "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders and feedback out of your spam folder.", "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: `Your ${p.trackName} access is ready. Here's how to set up in 10 minutes.`,
+    eyebrow: "Access granted",
+    title: `You're in, ${esc(p.name)}.`,
+    intro: `You now have access to the <strong style="color:#fff">${esc(p.trackName)}</strong> course on Klymb.ai. It's free, and Day 1 is open today.`,
+    sections: [
+      `${sectionTitle("Getting set up")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body))).join("")}
+      </table>${button(`${site}/learn`, "Start Day 1")}`,
+      `<div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders and feedback never land in spam.</div>`,
+    ],
+  });
+  return { subject, html, text };
+}
