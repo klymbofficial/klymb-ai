@@ -70,5 +70,5 @@ test("Kamran's face matches the moment", () => {
   assert.equal(at("morning"), "/mascots/kamran-excited-192.png");
   assert.equal(at("midday"), "/mascots/kamran-surprised-192.png");
   assert.equal(at("night"), "/mascots/kamran-sleepy-192.png");
-  assert.equal(at("night", true), "/mascots/kamran-worried-192.png");
+  assert.equal(at("night", true), "/mascots/kamran-missing-192.png");
 });
