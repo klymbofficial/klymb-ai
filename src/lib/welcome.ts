@@ -3,6 +3,7 @@ import { site } from "@/data/config";
 import { grievance } from "@/data/legal";
 import { getTrack } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
+import { offerOpen, priceNow } from "@/lib/offer";
 import { sendMail, welcomeEmail } from "@/lib/mail";
 
 /**
@@ -17,7 +18,8 @@ export async function sendWelcome({ email, name, track }: { email: string; name:
     name: name.split(" ")[0] || "there",
     trackName: t.name,
     becomes: t.becomes,
-    price: formatINR(t.price),
+    // The date-limited offer; the server applies the seat limit when the order is created.
+    price: offerOpen() ? `${formatINR(priceNow(t.price))} (launch offer, was ${formatINR(t.price)})` : formatINR(t.price),
     free: t.price === 0,
     siteUrl: site.url,
     supportEmail: grievance.email,

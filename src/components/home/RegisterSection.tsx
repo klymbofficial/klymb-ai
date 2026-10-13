@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, BadgeIndianRupee, BriefcaseBusiness, CalendarDays, Check, FolderGit2, MessagesSquare, ShieldCheck, Target } from "lucide-react";
 import { getTrack, priceFrom } from "@/data/tracks";
-import { formatINR } from "@/lib/format";
 import { trackImages } from "@/data/track-images";
 import teamLaptop from "@/assets/track-page/team-laptop.jpg";
 import type { TrackSlug } from "@/types/program";
@@ -13,6 +12,7 @@ import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { RegistrationForm, type GoogleUser } from "./RegistrationForm";
 import { ExpertsStrip } from "./ExpertsStrip";
+import { OfferBadge, OfferPrice } from "@/components/ui/OfferPrice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
 
 /** What every track includes. Kept to what the course actually delivers. */
@@ -70,7 +70,8 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
         <Appear delay={0.1} className="relative grid gap-px overflow-hidden rounded-card bg-white/15 ring-1 ring-white/15 sm:grid-cols-2">
           <div className="bg-red-muted-deep/90 p-4 sm:p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-white/60">{track ? "Your fee" : "Fees from"}</p>
-            <p className="display mt-1 text-[clamp(1.6rem,2.4vw,2.25rem)] text-white tabular-nums">{free ? "Free" : formatINR(price)}</p>
+            <p className="mt-1 flex flex-wrap items-baseline gap-x-2"><OfferPrice listPrice={price} className="display text-[clamp(1.6rem,2.4vw,2.25rem)] text-white tabular-nums" strikeClassName="text-sm text-white tabular-nums" /></p>
+            {!free && <OfferBadge className="mt-1 block text-[11px] font-bold text-red-soft" />}
             <p className="mt-1 text-xs text-white/60">{free ? "No card, no payment step." : "One payment. UPI, cards or net banking."}</p>
           </div>
           {free ? (

@@ -19,6 +19,8 @@ import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
 import { requireLearner } from "@/lib/learner/data";
+import { canOpenDay, launchSeatsTaken } from "@/lib/access";
+import { DayPaywall } from "@/components/learner/DayPaywall";
 import deskImage from "@/assets/day-desk.png";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -59,6 +61,16 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
   const dayNumber = Number((await params).day);
   const entry = courseDays.find((d) => d.day === dayNumber);
   if (!entry) notFound();
+
+  const track = getTrack(state.learner.track)!;
+  if (!(await canOpenDay({ email: state.learner.email, price: track.price, day: dayNumber }))) {
+    return (
+      <div className="min-h-screen bg-card">
+        <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
+        <DayPaywall email={state.learner.email} track={track} day={dayNumber} title={entry.title} seatsTaken={await launchSeatsTaken()} />
+      </div>
+    );
+  }
 
   const submission = state.submissions.find((s) => s.day === dayNumber) ?? null;
   const submittedDays = state.submissions.map((s) => s.day);

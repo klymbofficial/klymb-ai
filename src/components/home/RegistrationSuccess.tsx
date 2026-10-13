@@ -1,6 +1,7 @@
 import { signInLearner } from "@/app/(learn)/learn/actions";
 import { ButtonLink } from "@/components/ui/Button";
 import { PayButton } from "./PayButton";
+import { priceNow } from "@/lib/offer";
 import { GoogleMark } from "@/components/ui/GoogleMark";
 import type { Track } from "@/types/program";
 
@@ -96,10 +97,15 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
           </p>
         )}
 
-        <p>{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken."}</p>
+        <p>{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>
       </div>
 
-      {track?.available && track.price > 0 && <PayButton email={email} price={track.price} />}
+      {track?.available && track.price > 0 && (
+        <>
+          <p className="mt-6 text-sm text-white/75">Day 1 is free. Pay when you&apos;re ready to unlock Days 2 to 30.</p>
+          <PayButton email={email} price={priceNow(track.price)} />
+        </>
+      )}
 
       {/* Straight into the course: already signed in, or one Google step that
           lands on Day 1, never a separate sign-in page. */}

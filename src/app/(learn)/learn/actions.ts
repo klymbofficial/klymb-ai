@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { signIn, signOut } from "@/auth";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
+import { canOpenDay } from "@/lib/access";
+import { getTrack } from "@/data/tracks";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { clamp, LIMITS, safeUrl } from "@/lib/validation";
@@ -40,6 +42,10 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   // Authorisation: the submission is written for the signed-in learner only.
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled in a cohort." };
+  // Day 1 is free; later days need a paid seat (checked here too, not just on the page).
+  if (!(await canOpenDay({ email: state.learner.email, price: getTrack(state.learner.track)?.price ?? 0, day }))) {
+    return { ok: false, message: "Unlock the full course to submit this day." };
+  }
 
   // Generous for a person re-saving drafts, tight for a script. Keyed to the
   // account, so learners sharing an office network never throttle each other.

@@ -107,7 +107,7 @@ export function PayButton({ email, price, tone = "dark" }: { email: string; pric
   return (
     <div className={light ? "flex flex-col items-start gap-2" : "mt-8 flex flex-col items-center gap-3"}>
       <Button onClick={pay} disabled={state.kind === "busy" || !email} soft arrow className="rounded-full px-7">
-        {state.kind === "busy" ? "Opening payment…" : price ? `Pay ${formatINR(price)} to confirm your seat` : "Continue to payment"}
+        {state.kind === "busy" ? "Opening payment…" : price ? `Pay ${formatINR(price)} to unlock all 30 days` : "Continue to payment"}
       </Button>
       {state.kind === "error" && <p role="alert" className={light ? "text-sm font-semibold text-red-deep" : "text-sm text-white/85"}>{state.message}</p>}
     </div>

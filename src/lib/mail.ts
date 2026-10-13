@@ -120,7 +120,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
   const text = [
     `Hi ${p.name},`, "",
     `Welcome to Klymb.ai. Your place on the ${p.trackName} track (heading to ${p.becomes}) is reserved.`, "",
-    p.free ? `This track is free. Start Day 1: ${p.siteUrl}/learn` : `Confirm your seat (${p.price}, 100% back when you complete all 30 days): ${p.siteUrl}/pay`,
+    p.free ? `This track is free. Start Day 1: ${p.siteUrl}/learn` : `Day 1 is free: start now at ${p.siteUrl}/learn. Unlock Days 2 to 30 for ${p.price}, 100% back when you complete all 30 days: ${p.siteUrl}/pay`,
     "Start any day: Day 1 opens as soon as you are enrolled.", "",
     "Your 30 days",
     "Week 1-4: one real workplace problem a day, about 90 to 120 minutes.",
@@ -132,14 +132,14 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
-    preview: p.free ? `Your ${p.trackName} place is ready. Day 1 is open.` : `Your ${p.trackName} place is reserved. Confirm your seat to start Day 1.`,
+    preview: p.free ? `Your ${p.trackName} place is ready. Day 1 is open.` : `Your ${p.trackName} place is ready. Day 1 is free: start today.`,
     eyebrow: "Welcome to Klymb.ai",
     title: `Glad you're here, ${esc(p.name)}.`,
     intro: `Your place on the <strong style="color:#fff">${esc(p.trackName)}</strong> track is reserved. Thirty days from now, you'll have the work to prove you're ready for <strong style="color:#fff">${esc(p.becomes)}</strong>.`,
     sections: [
       p.free
         ? `${sectionTitle("Start when you're ready")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Fee", "Free")}${row("Starts", "Any day you choose")}</table>${button(`${site}/learn`, "Start Day 1")}`
-        : `${sectionTitle("Confirm your seat")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Fee", `${p.price} · 100% back when you complete`)}${row("Starts", "Any day you choose")}</table>${button(`${site}/pay`, "Confirm my seat")}`,
+        : `${sectionTitle("Day 1 is free")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Day 1", "Free, open now")}${row("Days 2 to 30", `${p.price} · 100% back when you complete`)}</table>${button(`${site}/learn`, "Start Day 1 free")}`,
       `${sectionTitle("Your 30 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "One real problem a day", "About 90 to 120 minutes, built around the work this role actually does. Works offline too.")}
         ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera and get written feedback.")}
