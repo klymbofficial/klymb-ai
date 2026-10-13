@@ -84,12 +84,15 @@ function TabSide({ flip }: { flip?: boolean }) {
 
 export function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="relative mx-auto max-w-[92rem] px-4 pb-16 sm:px-6 lg:-mt-16 lg:px-8">
+    <section aria-labelledby="hero-title" className="pointer-events-none relative mx-auto max-w-[92rem] px-4 pb-16 sm:px-6 lg:-mt-16 lg:px-8">
+      {/* The section is raised into the header (lg:-mt-16), so its empty space
+          would swallow clicks meant for the logo and the header button: only
+          the tab and the card below take pointer events. */}
       {/* The folder: a tab carrying the site links rises out of the card's top
           edge. One drop-shadow on the wrapper follows the combined outline, so
           tab and card read as a single sheet with no seam between them. */}
       <div className="drop-shadow-[0_18px_36px_rgba(32,30,29,0.13)]">
-      <nav aria-label="Primary" className="mx-auto hidden h-16 w-fit lg:flex">
+      <nav aria-label="Primary" className="pointer-events-auto mx-auto hidden h-16 w-fit lg:flex">
         {/* Slanted sides: each is an S-curve, a concave shoulder at the card
             easing into a leaning edge that rounds over into the top. */}
         <TabSide />
@@ -104,7 +107,7 @@ export function Hero() {
       </nav>
       {/* Sized by its content, and never taller than the screen left below
           the banner and header, so the whole folder is always in view. */}
-      <div className="relative overflow-hidden rounded-slab bg-card lg:max-h-[calc(100dvh-8.75rem)]">
+      <div className="pointer-events-auto relative overflow-hidden rounded-slab bg-card lg:max-h-[calc(100dvh-8.75rem)]">
         {/* A red light that leans towards the pointer; desktop only. */}
         <LightCanvas mode="beam" />
         <div className="relative grid gap-10 p-8 pb-0 sm:p-12 sm:pb-0 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:py-0 lg:pr-0 lg:pl-16">
