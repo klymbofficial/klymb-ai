@@ -1,6 +1,7 @@
 import { enrolment } from "@/data/config";
 import { priceFrom } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
+import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
 
 /**
  * A single-line ticker instead of a block that wraps to three lines on a
@@ -9,6 +10,8 @@ import { formatINR } from "@/lib/format";
  */
 export function AnnouncementBar() {
   const items = [
+    ...(offerOpen() ? [`Launch offer: ${formatINR(LAUNCH_OFFER.discount)} off, first ${LAUNCH_OFFER.seats} learners, ends ${LAUNCH_OFFER.endsLabel}`] : []),
+    "Day 1 free on every track",
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,
     `Tracks from ${formatINR(priceFrom)}`,

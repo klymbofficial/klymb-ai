@@ -1,0 +1,17 @@
+# Follow-up emails to registered-but-unpaid learners, every hour.
+# The endpoint decides who is due; CRON_SECRET is a repository secret.
+name: Unpaid follow-ups
+on:
+  schedule:
+    - cron: "10 * * * *"
+  workflow_dispatch: {}
+jobs:
+  followups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send follow-ups
+        run: |
+          curl -fsS --max-time 120 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://www.klymb.ai/api/cron/followups

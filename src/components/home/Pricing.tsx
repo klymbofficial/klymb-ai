@@ -3,11 +3,11 @@ import { refundConditions, refundTiming, valueBreakdown } from "@/data/program";
 import { priceFrom, tracksByPrice } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import Link from "next/link";
-import { formatINR } from "@/lib/format";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Appear } from "@/components/motion/Appear";
 import { PriceDrop } from "@/components/motion/PriceDrop";
+import { OfferBadge, OfferPrice } from "@/components/ui/OfferPrice";
 
 function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
@@ -109,20 +109,22 @@ export function Pricing({ track }: { track?: Track } = {}) {
               ) : (
                 <>
                   <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price · {track.name}</p>
-                  <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)] nums">{formatINR(track.price)}</p>
+                  <p className="mt-1 flex flex-wrap items-baseline gap-x-3"><OfferPrice listPrice={track.price} className="display text-[clamp(2.75rem,6vw,4rem)] nums" strikeClassName="text-xl nums" /></p>
+                  <OfferBadge className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold" />
                 </>
               )}
             </>
           ) : (
             <>
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Launch price by track</p>
-              <p className="display mt-1 text-[clamp(2.25rem,5vw,3.25rem)] nums">From {formatINR(priceFrom)}</p>
+              <p className="display mt-1 text-[clamp(2.25rem,5vw,3.25rem)] nums">From <OfferPrice listPrice={priceFrom} strikeClassName="ml-2 text-xl" /></p>
+              <OfferBadge className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold" />
               <ul className="mt-5 divide-y divide-white/20 border-y border-white/20">
                 {tracksByPrice.map((t) => (
                   <li key={t.slug}>
                     <Link href={`/tracks/${t.slug}`} className="flex items-baseline justify-between gap-4 py-3 transition-colors hover:text-white/80">
                       <span className="text-[15px] font-semibold">{t.name}</span>
-                      <span className="display text-xl nums">{formatINR(t.price)}</span>
+                      <span className="flex items-baseline gap-2"><OfferPrice listPrice={t.price} className="display text-xl nums" strikeClassName="text-sm nums" /></span>
                     </Link>
                   </li>
                 ))}
