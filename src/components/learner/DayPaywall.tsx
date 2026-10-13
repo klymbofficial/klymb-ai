@@ -52,3 +52,25 @@ export function DayPaywall({
     </div>
   );
 }
+
+/** A day whose previous day isn't submitted yet: days unlock in order. */
+export function DayLocked({ day, title, previousDay, previousTitle }: { day: number; title: string; previousDay: number; previousTitle: string }) {
+  return (
+    <div className="mx-auto max-w-xl px-4 py-16 text-center sm:py-24">
+      <span className="mx-auto grid size-14 place-items-center rounded-full bg-surface text-muted">
+        <Lock aria-hidden="true" className="size-6" />
+      </span>
+      <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.16em] text-muted">Day {day} · opens next</p>
+      <h1 className="display mt-3 text-[clamp(1.8rem,4vw,2.6rem)] text-balance">{title}</h1>
+      <p className="mt-4 text-muted">
+        Days unlock in order, so each one builds on the last. Submit Day {previousDay} and this day opens straight away.
+      </p>
+      <Link
+        href={`/learn/day/${previousDay}`}
+        className="mt-8 inline-flex items-center gap-2 rounded-full bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]"
+      >
+        Go to Day {previousDay}{previousTitle ? `: ${previousTitle}` : ""}
+      </Link>
+    </div>
+  );
+}

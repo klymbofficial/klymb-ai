@@ -15,6 +15,8 @@ export interface BoardDay {
   /** ISO date this day falls on. */
   date: string;
   submitted: boolean;
+  /** Why this day can't be opened yet: the previous day isn't submitted, or it needs payment. */
+  lock?: "previous" | "pay";
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -185,15 +187,23 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
           <Fact
             icon="◎"
             label="Status"
-            value={active.submitted ? "Submitted" : active.kind === "assessment" ? "Assessment: not yet submitted" : "Not yet submitted"}
+            value={
+              active.submitted ? "Submitted"
+              : active.lock === "previous" ? `Locked: submit Day ${active.day - 1} first`
+              : active.lock === "pay" ? "Locked: unlock the full course"
+              : active.kind === "assessment" ? "Assessment: not yet submitted" : "Not yet submitted"
+            }
           />
         </dl>
 
         <Link
-          href={`/learn/day/${active.day}`}
+          href={`/learn/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
           className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-card px-6 py-3.5 font-bold text-ink transition-colors hover:bg-white"
         >
-          {active.submitted ? "Review this day" : "Start learning"} <span aria-hidden="true">›</span>
+          {active.submitted ? "Review this day"
+            : active.lock === "previous" ? `Go to Day ${active.day - 1}`
+            : active.lock === "pay" ? "Unlock the full course"
+            : "Start learning"} <span aria-hidden="true">›</span>
         </Link>
       </section>
     </div>

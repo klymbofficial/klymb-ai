@@ -8,6 +8,8 @@ import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
+import { hasPaid } from "@/lib/access";
+import { dayLockFor } from "@/lib/day-lock";
 import { ProgressRing } from "@/components/learner/ProgressRing";
 import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
 import { Wordmark } from "@/components/layout/Wordmark";
@@ -73,6 +75,7 @@ export default async function LearnHomePage() {
     );
   }
   const doneDays = new Set(submissions.map((s) => s.day));
+  const paid = track.price > 0 ? await hasPaid(learner.email) : true;
 
   const days: BoardDay[] = curriculum.days.map((d) => ({
     day: d.day,
@@ -84,6 +87,8 @@ export default async function LearnHomePage() {
     kind: d.kind,
     date: cohortDayDate(learner.cohort_start, d.day),
     submitted: doneDays.has(d.day),
+    // Same rules as the day page: in order, and Days 2+ need a paid seat on a paid track.
+    lock: ((l) => (l === "open" ? undefined : l))(dayLockFor({ day: d.day, price: track.price, paid, submittedDays: doneDays })),
   }));
 
   const nextDay = days.find((d) => !d.submitted) ?? days[days.length - 1];
