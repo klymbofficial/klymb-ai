@@ -1,5 +1,6 @@
 import "server-only";
 import { LAUNCH_OFFER } from "@/lib/offer";
+import { dayLockFor } from "@/lib/day-lock";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 /**
@@ -15,9 +16,12 @@ export async function hasPaid(email: string) {
   return !!data?.length;
 }
 
-export async function canOpenDay({ email, price, day }: { email: string; price: number; day: number }) {
-  if (price <= 0 || day <= 1) return true;
-  return hasPaid(email);
+export type { DayLock } from "@/lib/day-lock";
+
+/** The day lock for a learner, with their payment looked up only when it matters. */
+export async function dayLock({ email, price, day, submittedDays }: { email: string; price: number; day: number; submittedDays: number[] }) {
+  const needsPayment = price > 0 && day > 1 && !submittedDays.includes(day);
+  return dayLockFor({ day, price, paid: needsPayment ? await hasPaid(email) : true, submittedDays });
 }
 
 /** Paid seats taken since the launch offer began. */

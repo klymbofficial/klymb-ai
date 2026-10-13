@@ -19,8 +19,8 @@ import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
 import { requireLearner } from "@/lib/learner/data";
-import { canOpenDay, launchSeatsTaken } from "@/lib/access";
-import { DayPaywall } from "@/components/learner/DayPaywall";
+import { dayLock, launchSeatsTaken } from "@/lib/access";
+import { DayLocked, DayPaywall } from "@/components/learner/DayPaywall";
 import deskImage from "@/assets/day-desk.png";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -63,7 +63,17 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
   if (!entry) notFound();
 
   const track = getTrack(state.learner.track)!;
-  if (!(await canOpenDay({ email: state.learner.email, price: track.price, day: dayNumber }))) {
+  const lock = await dayLock({ email: state.learner.email, price: track.price, day: dayNumber, submittedDays: state.submissions.map((x) => x.day) });
+  if (lock === "previous") {
+    const prev = courseDays.find((d) => d.day === dayNumber - 1);
+    return (
+      <div className="min-h-screen bg-card">
+        <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
+        <DayLocked day={dayNumber} title={entry.title} previousDay={dayNumber - 1} previousTitle={prev?.title ?? ""} />
+      </div>
+    );
+  }
+  if (lock === "pay") {
     return (
       <div className="min-h-screen bg-card">
         <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
