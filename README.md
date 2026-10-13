@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/brand/klymb-logo-white.svg">
+    <img src="public/brand/klymb-logo.svg" alt="Klymb.ai" width="360">
+  </picture>
+</p>
+
 # Klymb.ai — 30-Day Job Readiness Program
 
 Frontend for Klymb.ai: a 30-day job-readiness program with five career tracks (QA Engineer, L1/L2 Support, Project Manager, Junior Developer, Reporting Analyst). Each track has daily practical problems, weekly assessments after Days 7/14/21/28, role-specific projects, interview preparation and mock interviews on Days 29–30.
@@ -105,3 +112,17 @@ src/
 - [ ] **Assessment scoring** — reviewer workflow, rubric scores and feedback
 - [ ] **Email or WhatsApp notifications** — registration confirmation, daily challenge reminders, assessment feedback
 - [ ] **Admin dashboard** — manage cohorts, tracks, content, learners and reviews..
+
+## Brand assets
+
+Logo files live in [`public/brand/`](public/brand) and are served from the site too (`https://www.klymb.ai/brand/<file>`):
+
+| File | Use |
+| --- | --- |
+| `klymb-logo.svg` / `.png` | Wordmark on light backgrounds |
+| `klymb-logo-white.svg` / `.png` | Wordmark on dark backgrounds |
+| `klymb-logo-on-maroon.png` | Wordmark on the brand maroon, ready for social banners |
+| `public/icons/icon-512.png` | Square app icon (K) |
+| `profile-*.png` | Profile pictures for email and social accounts |
+
+Wordmark: Archivo Black (900), letter-spacing −0.035em; "KLYMB" in ink `#201E1D`, ".AI" in brand red `#83050B` (`#F0868B` on dark).
