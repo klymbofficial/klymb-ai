@@ -27,7 +27,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
   const [slug, setSlug] = useState<TrackSlug | "">(defaultTrack ?? "");
   const track = slug ? getTrack(slug) : undefined;
   const price = track?.price ?? priceFrom;
-  const free = track?.price === 0;
+  const free = price === 0;
 
   return (
     <section id="register" aria-labelledby="register-title" className="grid lg:h-dvh lg:grid-cols-[2fr_3fr]">

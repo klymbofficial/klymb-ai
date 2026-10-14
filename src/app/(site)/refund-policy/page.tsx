@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, Section } from "@/components/legal/LegalPage";
 import { grievance, refund } from "@/data/legal";
-import { priceFrom, priceTo } from "@/data/tracks";
+import { allFree, priceFrom, priceTo } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -16,10 +16,16 @@ export default function RefundPolicyPage() {
       title="Refund Policy"
       intro={refund.headline}
     >
+      {allFree && (
+        <p className="mb-8 rounded-card bg-red-tint p-4 text-sm font-semibold text-ink">
+          Every Klymb.ai course is free right now: no payment is taken, so there is nothing to refund. This policy applies to paid courses
+          and to any payment made before courses became free.
+        </p>
+      )}
       <Section n="1." title="The guarantee" plain="Finish the programme and your fee comes back in full. Not most of it: all of it.">
         <p>
-          If you complete the 30-day program, we refund <strong>100% of the fee you paid</strong>: currently{" "}
-          are priced from {formatINR(priceFrom)} to {formatINR(priceTo)}). The guarantee exists because the programme only works if you do the work, and
+          If you complete the 30-day program, we refund <strong>100% of the fee you paid</strong>
+          {allFree ? "." : <> (paid tracks are priced from {formatINR(priceFrom)} to {formatINR(priceTo)}).</>} The guarantee exists because the programme only works if you do the work, and
           we would rather be paid by people who did not finish than keep money from people who did.
         </p>
         <p>

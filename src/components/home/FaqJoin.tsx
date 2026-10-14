@@ -1,11 +1,25 @@
 import Image from "next/image";
 import { faqs, sectionCopy, urgency } from "@/data/program";
 import { refund } from "@/data/legal";
+import { allFree } from "@/data/tracks";
 import { Accordion } from "@/components/ui/Accordion";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import type { TrackSlug } from "@/types/program";
 import { RegistrationForm } from "./RegistrationForm";
 import pointing from "@/assets/join-pointing.png";
+
+/** While every track is free, the price and refund answers say so instead. */
+function freeFaqs(list: typeof faqs) {
+  return list
+    .filter((f) => f.question !== "What is the refund policy?")
+    .map((f) =>
+      f.question === "What is included in the price?"
+        ? { question: "How much does it cost?", answer: "Nothing, right now: every track is free. You get 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation and mock interviews, with no card and no payment step." }
+        : f.question === "Will you try to sell me another course?"
+          ? { ...f, answer: "No. There is no advanced program or mastermind to upsell. The track you pick is the whole product." }
+          : f,
+    );
+}
 
 /**
  * The closing section: every remaining question on the left, and the thing
@@ -19,7 +33,7 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
           <Eyebrow>{sectionCopy.faq.eyebrow}</Eyebrow>
           <h2 id="faq-title" className="display mt-3 text-[clamp(1.85rem,4vw,2.75rem)]">{sectionCopy.faq.title}</h2>
           <p className="mt-3 text-sm text-muted">{sectionCopy.faq.intro}</p>
-          <div className="mt-8"><Accordion items={faqs} variant="card" /></div>
+          <div className="mt-8"><Accordion items={allFree ? freeFaqs(faqs) : faqs} variant="card" /></div>
         </div>
 
         <div id="register" className="scroll-mt-28">
@@ -43,7 +57,7 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
 
           <div className="card p-6 sm:p-8">
             <h3 className="text-xl font-extrabold">Reserve your seat</h3>
-            <p className="mt-1 text-sm text-muted">{refund.headline}</p>
+            <p className="mt-1 text-sm text-muted">{allFree ? "Every track is free right now. Register and start Day 1 today." : refund.headline}</p>
             <div className="mt-6"><RegistrationForm defaultTrack={defaultTrack} bare /></div>
           </div>
         </div>

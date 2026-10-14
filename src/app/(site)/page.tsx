@@ -6,6 +6,7 @@ import { Evidence } from "@/components/home/Evidence";
 import { FaqJoin } from "@/components/home/FaqJoin";
 import { StickyEnrolBar } from "@/components/home/StickyEnrolBar";
 import { WhyRefund } from "@/components/home/WhyRefund";
+import { allFree } from "@/data/tracks";
 import { Hero } from "@/components/home/Hero";
 import { ExpertsStrip } from "@/components/home/ExpertsStrip";
 import { HowItWorksStatic } from "@/components/home/HowItWorksStatic";
@@ -34,7 +35,7 @@ export default async function HomePage() {
       <CareerTracks />
       <TwoWays />
       <Pricing />
-      <WhyRefund />
+      {!allFree && <WhyRefund />}
       <FaqJoin />
       <StickyEnrolBar />
     </>

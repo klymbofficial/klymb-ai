@@ -1,6 +1,6 @@
 import { enrolment, pricing } from "@/data/config";
 import { refundConditions, refundTiming, valueBreakdown } from "@/data/program";
-import { priceFrom, tracksByPrice } from "@/data/tracks";
+import { allFree, priceFrom, tracks, tracksByPrice } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
@@ -62,7 +62,7 @@ function RefundPromise({ onRed }: { onRed?: boolean }) {
  * track's page, pass `track` to show that track's price and call to action.
  */
 export function Pricing({ track }: { track?: Track } = {}) {
-  const free = track?.price === 0;
+  const free = allFree || track?.price === 0;
   const ctaHref = track ? `/register?track=${track.slug}` : "#register";
   const ctaLabel = track ? `Choose ${track.name}` : "Pick a track and start";
   const subtitle = track
@@ -113,6 +113,22 @@ export function Pricing({ track }: { track?: Track } = {}) {
                   <OfferBadge className="mt-2 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-bold" />
                 </>
               )}
+            </>
+          ) : allFree ? (
+            <>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Every track</p>
+              <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)]">Free</p>
+              <p className="mt-2 text-sm text-white/80">All 30 days, reviewed work and mock interviews. No card and no payment step.</p>
+              <ul className="mt-5 divide-y divide-white/20 border-y border-white/20">
+                {tracks.map((t) => (
+                  <li key={t.slug}>
+                    <Link href={`/tracks/${t.slug}`} className="flex items-baseline justify-between gap-4 py-3 transition-colors hover:text-white/80">
+                      <span className="text-[15px] font-semibold">{t.name}</span>
+                      <span className="display text-xl">Free</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </>
           ) : (
             <>

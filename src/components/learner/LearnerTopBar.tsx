@@ -1,3 +1,4 @@
+import { allFree } from "@/data/tracks";
 import Image from "next/image";
 import Link from "next/link";
 import { signOutLearner } from "@/app/(learn)/learn/actions";
@@ -17,7 +18,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
     <>
       <div className="ticker bg-red-strong py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-white sm:text-xs">
         <p className="ticker-track">
-          One problem a day / Weekly checkpoints / 100% fee back when you finish
+          {allFree ? "One problem a day / Weekly checkpoints / Two mock interviews" : "One problem a day / Weekly checkpoints / 100% fee back when you finish"}
         </p>
       </div>
 

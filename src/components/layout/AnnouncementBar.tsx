@@ -1,5 +1,5 @@
 import { enrolment } from "@/data/config";
-import { priceFrom } from "@/data/tracks";
+import { allFree, priceFrom } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
 
@@ -9,7 +9,13 @@ import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
  * hidden from screen readers. Hover pauses it, and reduced motion stops it.
  */
 export function AnnouncementBar() {
-  const items = [
+  const items = allFree ? [
+    "Every course is free right now",
+    "Start any day: Day 1 opens when you enrol",
+    `${enrolment.dailyTime}, in your own time`,
+    "Reviewed work and two mock interviews",
+    "Individual feedback every week",
+  ] : [
     ...(offerOpen() ? [`Launch price: every track ${formatINR(LAUNCH_OFFER.price)} until ${LAUNCH_OFFER.endsLabel}`] : []),
     "Day 1 free on every track",
     "Start any day: Day 1 opens when you enrol",
