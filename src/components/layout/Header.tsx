@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { navLinks } from "@/data/program";
 import { ButtonLink } from "@/components/ui/Button";
 import { Wordmark } from "./Wordmark";
+import { APP_URL } from "@/components/home/TwoWays";
 
 /**
  * The wordmark and the call to action sit on the page ground; the links
@@ -47,7 +48,12 @@ export function Header() {
           </ul>
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-5 lg:flex">
+          {/* On the home page this link sits in the hero's folder tab instead, where there is room for it. */}
+          <a href={APP_URL} target="_blank" rel="noopener" className={`${home ? "hidden" : "inline-flex"} items-center gap-1.5 text-sm font-bold text-ink transition-colors hover:text-red-deep`}>
+            <span className="rounded-full bg-[#dcfce7] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#166534]">Free</span>
+            app.klymb.ai <span aria-hidden="true">↗</span>
+          </a>
           <ButtonLink href="/tracks" className="rounded-full px-6 py-2.5 text-xs">Choose Your Track</ButtonLink>
         </div>
 
@@ -74,8 +80,12 @@ export function Header() {
               </li>
             ))}
           </ul>
-          <div className="p-3">
+          <div className="flex flex-col gap-2 p-3">
             <ButtonLink href="/tracks" className="w-full rounded-lg" arrow>Choose Your Track</ButtonLink>
+            <a href={APP_URL} target="_blank" rel="noopener" className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-ink px-5 py-3 text-sm font-bold">
+              <span className="rounded-full bg-[#dcfce7] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#166534]">Free</span>
+              Try app.klymb.ai <span aria-hidden="true">↗</span>
+            </a>
           </div>
         </nav>
       )}

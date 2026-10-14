@@ -5,12 +5,11 @@ import { Appear } from "@/components/motion/Appear";
 import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
 import { formatINR } from "@/lib/format";
 
-/** The free platform, formerly ABTalks. Tagged so its analytics can tell visits from here apart. */
+/** The free platform. Tagged so its analytics can tell visits from here apart. */
 export const APP_URL = "https://app.klymb.ai/?utm_source=klymb.ai&utm_medium=referral&utm_campaign=two-ways";
 
 /**
- * Klymb's two products side by side: the free platform (app.klymb.ai, formerly
- * ABTalks) to build in public and get discovered, and the 30-day course to get
+ * Klymb's two products side by side: the free platform (app.klymb.ai) to build in public and get discovered, and the 30-day course to get
  * job-ready. Gives a visitor who isn't ready to pay somewhere to go, and shows
  * free users the next step up.
  */
@@ -29,7 +28,7 @@ export function TwoWays() {
         <Appear delay={0.05} className="flex">
           <article className="card flex flex-1 flex-col p-7 sm:p-9">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-muted">app.klymb.ai · formerly ABTalks</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-muted">app.klymb.ai · free platform</p>
               <span className="rounded-full bg-[#dcfce7] px-3 py-1 text-xs font-bold text-[#166534]">Free</span>
             </div>
             <h3 className="display mt-4 text-3xl">Build in public. Get discovered.</h3>
