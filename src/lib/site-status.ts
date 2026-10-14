@@ -3,7 +3,7 @@
  * app (/learn), shows the "back soon" page (HTTP 503, so search engines keep
  * the listing). Only admin and the APIs stay open. Set to false to reopen.
  */
-export const SITE_CLOSED = false;
+export const SITE_CLOSED = true;
 
 /** Paths that stay open while the site is closed. */
 const OPEN_PREFIXES = ["/admin", "/api", "/closed", "/_next", "/_vercel"];
