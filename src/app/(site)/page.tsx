@@ -10,6 +10,7 @@ import { Hero } from "@/components/home/Hero";
 import { ExpertsStrip } from "@/components/home/ExpertsStrip";
 import { HowItWorksStatic } from "@/components/home/HowItWorksStatic";
 import { Pricing } from "@/components/home/Pricing";
+import { TwoWays } from "@/components/home/TwoWays";
 import { StatementBand } from "@/components/home/StatementBand";
 import { redirect } from "next/navigation";
 import { statement } from "@/data/program";
@@ -31,6 +32,7 @@ export default async function HomePage() {
       <Evidence />
       <LazyHowItWorks fallback={<HowItWorksStatic />} />
       <CareerTracks />
+      <TwoWays />
       <Pricing />
       <WhyRefund />
       <FaqJoin />
