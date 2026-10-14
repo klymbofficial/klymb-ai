@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_URL } from "@/components/home/TwoWays";
 import { contact, socials } from "@/data/config";
 import { brand, footerLinks } from "@/data/program";
 import { entity } from "@/data/legal";
@@ -46,7 +47,7 @@ export function Footer() {
               ))}
             </ul>
           </div>
-          <Column title="Programs" links={tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` }))} />
+          <Column title="Programs" links={[...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })), { label: "app.klymb.ai: free platform ↗", href: APP_URL }]} />
           <Column title="Resources" links={footerLinks.program} />
           <Column title="Legal" links={footerLinks.company} />
         </div>
