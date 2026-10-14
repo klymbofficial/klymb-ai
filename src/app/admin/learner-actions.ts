@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { resetDevice } from "@/lib/learner/device";
 
 export type LearnerActionResult = { ok: true } | { ok: false; message: string };
 
@@ -53,4 +54,10 @@ export async function removeLearner(id: string, confirmEmail: string): Promise<L
   revalidatePath("/admin/learners");
   revalidatePath("/admin/registrations");
   return { ok: true };
+}
+
+/** Frees a learner's one-device lock, e.g. after they lose or change their phone. */
+export async function resetLearnerDevice(id: string): Promise<LearnerActionResult> {
+  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  return (await resetDevice(id)) ? { ok: true } : { ok: false, message: "That could not be reset." };
 }

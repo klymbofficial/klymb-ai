@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
+import { priceNow } from "@/lib/offer";
 import { priceFrom, tracks } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 import { FilmAudio } from "./filmAudio";
@@ -354,7 +355,7 @@ function Visual({ scene, local }: { scene: number; local: number }) {
       transition={{ delay: 0.5, duration: 0.5, ease: EASE }}
     >
       <p className="text-[clamp(0.85rem,1.8vw,1.1rem)] text-white/70">
-        From {formatINR(priceFrom)} · Start any day
+        From {formatINR(priceNow(priceFrom))} · Start any day
       </p>
       <div className="relative">
         <span aria-hidden="true" className="cta-pulse absolute inset-0 rounded-lg bg-red-soft/40" />

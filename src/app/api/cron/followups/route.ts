@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { site } from "@/data/config";
 import { grievance } from "@/data/legal";
 import { getTrack } from "@/data/tracks";
-import { hasPaid, launchSeatsTaken } from "@/lib/access";
+import { hasPaid } from "@/lib/access";
 import { formatINR } from "@/lib/format";
 import { dueFollowup, FOLLOWUP_DONE } from "@/lib/followups";
 import { noteEmail, sendMail } from "@/lib/mail";
@@ -36,7 +36,6 @@ export async function GET(req: Request) {
     .limit(BATCH);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const seatsTaken = await launchSeatsTaken();
   let sent = 0, closed = 0;
 
   for (const r of rows ?? []) {
@@ -64,10 +63,9 @@ export async function GET(req: Request) {
       name: String(r.name ?? "").split(" ")[0] || "there",
       trackName: track.name,
       becomes: track.becomes,
-      price: priceNow(track.price, now, seatsTaken),
+      price: priceNow(track.price, now),
       listPrice: track.price,
-      offer: offerOpen(now, seatsTaken),
-      seatsLeft: Math.max(0, LAUNCH_OFFER.seats - seatsTaken),
+      offer: offerOpen(now),
     });
     const result = await sendMail({ to: { email: r.email, name: r.name ?? undefined }, ...mail });
     if (result.ok) sent++;
@@ -83,11 +81,11 @@ export async function GET(req: Request) {
 
 function followupEmail(
   step: 1 | 2 | 3,
-  p: { name: string; trackName: string; becomes: string; price: number; listPrice: number; offer: boolean; seatsLeft: number },
+  p: { name: string; trackName: string; becomes: string; price: number; listPrice: number; offer: boolean },
 ) {
   const price = p.offer ? `${formatINR(p.price)} (launch offer, was ${formatINR(p.listPrice)})` : formatINR(p.price);
   const offerLine = p.offer
-    ? `Launch offer: ${formatINR(LAUNCH_OFFER.discount)} off for the first ${LAUNCH_OFFER.seats} learners, ${p.seatsLeft} seats left, ends ${LAUNCH_OFFER.endsLabel}.`
+    ? `Launch price: ${formatINR(LAUNCH_OFFER.price)} instead of ${formatINR(p.listPrice)}, until ${LAUNCH_OFFER.endsLabel}.`
     : "";
   const common = { siteUrl: site.url, supportEmail: grievance.email, eyebrow: p.trackName };
   const unlock = { title: "Unlock Days 2 to 30", body: `${price}. 100% back when you complete all 30 days.` };
@@ -103,7 +101,7 @@ function followupEmail(
       points: [
         { title: "Start Day 1 free", body: "Sign in with Google using the email you registered with." },
         unlock,
-        ...(offerLine ? [{ title: "Launch offer", body: offerLine }] : []),
+        ...(offerLine ? [{ title: "Launch price", body: offerLine }] : []),
       ],
       cta: { href: `${site.url}/learn`, label: "Start Day 1 free" },
       closing: "Questions? Just reply to this email.",
@@ -129,7 +127,7 @@ function followupEmail(
   }
   return noteEmail({
     ...common,
-    subject: p.offer ? `Last nudge: ${formatINR(LAUNCH_OFFER.discount)} off ends ${LAUNCH_OFFER.endsLabel}` : `Still thinking about the ${p.trackName} track?`,
+    subject: p.offer ? `Last nudge: the ${formatINR(LAUNCH_OFFER.price)} launch price ends ${LAUNCH_OFFER.endsLabel}` : `Still thinking about the ${p.trackName} track?`,
     preview: "This is the last email we'll send about it.",
     title: "One last nudge.",
     intro: `This is the last email we'll send about it, ${p.name}. If the ${p.trackName} track isn't right for you now, no problem. If it is, the fastest way to decide is Day 1: it's free.`,
@@ -137,7 +135,7 @@ function followupEmail(
     points: [
       { title: "Try Day 1 free", body: "See the work before you pay anything." },
       unlock,
-      ...(offerLine ? [{ title: "Launch offer", body: offerLine }] : []),
+      ...(offerLine ? [{ title: "Launch price", body: offerLine }] : []),
     ],
     cta: { href: `${site.url}/learn`, label: "Try Day 1 free" },
     closing: "Got a question before you decide? Reply and a real person will answer.",

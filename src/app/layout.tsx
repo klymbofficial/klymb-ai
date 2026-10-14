@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SupportBot } from "@/components/support/SupportBot";
 import { Archivo, Inter } from "next/font/google";
 import { site } from "@/data/config";
 import "./globals.css";
@@ -45,6 +46,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         {children}
         <ServiceWorkerRegister />
+        {/* Kamran's help, on the public site and the learner app (hidden in admin). */}
+        <SupportBot />
         {/* Cookieless, first-party (/_vercel/*): live visitors and real-user page speed in the Vercel dashboard. */}
         <VercelAnalytics />
         <SpeedInsights />

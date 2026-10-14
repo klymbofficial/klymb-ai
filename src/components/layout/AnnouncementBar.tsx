@@ -10,11 +10,11 @@ import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
  */
 export function AnnouncementBar() {
   const items = [
-    ...(offerOpen() ? [`Launch offer: ${formatINR(LAUNCH_OFFER.discount)} off, first ${LAUNCH_OFFER.seats} learners, ends ${LAUNCH_OFFER.endsLabel}`] : []),
+    ...(offerOpen() ? [`Launch price: every track ${formatINR(LAUNCH_OFFER.price)} until ${LAUNCH_OFFER.endsLabel}`] : []),
     "Day 1 free on every track",
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,
-    `Tracks from ${formatINR(priceFrom)}`,
+    ...(offerOpen() ? [] : [`Tracks from ${formatINR(priceFrom)}`]),
     "100% fee back when you complete",
     "Individual feedback every week",
   ];

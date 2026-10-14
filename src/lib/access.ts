@@ -1,5 +1,4 @@
 import "server-only";
-import { LAUNCH_OFFER } from "@/lib/offer";
 import { dayLockFor } from "@/lib/day-lock";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -22,16 +21,4 @@ export type { DayLock } from "@/lib/day-lock";
 export async function dayLock({ email, price, day, submittedDays }: { email: string; price: number; day: number; submittedDays: number[] }) {
   const needsPayment = price > 0 && day > 1 && !submittedDays.includes(day);
   return dayLockFor({ day, price, paid: needsPayment ? await hasPaid(email) : true, submittedDays });
-}
-
-/** Paid seats taken since the launch offer began. */
-export async function launchSeatsTaken() {
-  const supabase = createServiceClient();
-  if (!supabase) return 0;
-  const { count } = await supabase
-    .from("payments")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "paid")
-    .gte("created_at", LAUNCH_OFFER.startsAt);
-  return count ?? 0;
 }

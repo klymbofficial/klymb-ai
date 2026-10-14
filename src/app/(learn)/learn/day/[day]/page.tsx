@@ -19,7 +19,7 @@ import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
 import { requireLearner } from "@/lib/learner/data";
-import { dayLock, launchSeatsTaken } from "@/lib/access";
+import { dayLock } from "@/lib/access";
 import { DayLocked, DayPaywall } from "@/components/learner/DayPaywall";
 import deskImage from "@/assets/day-desk.png";
 
@@ -77,7 +77,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
     return (
       <div className="min-h-screen bg-card">
         <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
-        <DayPaywall email={state.learner.email} track={track} day={dayNumber} title={entry.title} seatsTaken={await launchSeatsTaken()} />
+        <DayPaywall email={state.learner.email} track={track} day={dayNumber} title={entry.title} />
       </div>
     );
   }

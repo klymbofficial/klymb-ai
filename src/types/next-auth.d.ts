@@ -8,6 +8,8 @@ declare module "next-auth" {
   interface Session {
     user: {
       emailIsVerified: boolean;
+      /** This sign-in's id, matched against the learner's one device slot. */
+      sid?: string;
     } & DefaultSession["user"];
   }
 }
@@ -15,6 +17,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     emailIsVerified?: boolean;
+    sid?: string;
   }
 }
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ResetDeviceButton } from "@/components/admin/ResetDeviceButton";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
@@ -19,7 +20,12 @@ export default async function LearnerDetailPage({ params }: { params: Promise<{ 
         eyebrow={`${trackName} · cohort ${formatDate(learner.cohort_start)}`}
         title={learner.name}
         intro={learner.email}
-        actions={<Link href="/admin/learners" className="text-xs font-bold uppercase tracking-wider underline underline-offset-4 hover:text-red-deep">← All learners</Link>}
+        actions={
+          <span className="flex flex-wrap items-center gap-4">
+            <ResetDeviceButton id={learner.id} />
+            <Link href="/admin/learners" className="text-xs font-bold uppercase tracking-wider underline underline-offset-4 hover:text-red-deep">← All learners</Link>
+          </span>
+        }
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
