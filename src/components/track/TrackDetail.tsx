@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import Image from "next/image";
 import Link from "next/link";
 import * as motion from "motion/react-client";
@@ -256,7 +257,7 @@ export function TrackDetail({ track }: { track: Track }) {
       </section>
 
       {/* ── Pricing: the same pair as the landing page ──────── */}
-      <Pricing track={track} />
+      {!HIDE_MONEY && <Pricing track={track} />}
     </>
   );
 }

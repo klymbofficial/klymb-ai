@@ -13,7 +13,7 @@ const toKey = (b64: string) => {
 
 const COPY: Record<Exclude<State, "hidden" | "busy">, { title: string; body: string }> = {
   on: { title: "Daily reminders are on", body: "We nudge you at 9 am, 2 pm and 8 pm, only until that day is submitted." },
-  ask: { title: "Turn on daily reminders", body: "A nudge when your next day opens, and only until it's done. Free, and you can turn it off any time." },
+  ask: { title: "Turn on daily reminders", body: "A nudge when your next day opens, and only until it's done. You can turn it off any time." },
   "ios-install": { title: "Reminders on iPhone", body: "Tap Share, then Add to Home Screen. Open Klymb from there to turn reminders on." },
   blocked: { title: "Notifications are blocked", body: "Allow notifications for klymb.ai in your browser settings to get reminders." },
   error: { title: "That didn't work", body: "Check your connection and try again." },

@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
@@ -33,7 +34,7 @@ export default async function Image() {
             <div style={{ display: "flex", fontSize: 34, fontWeight: 900, color: INK, letterSpacing: -1 }}>
               <span>KLYMB</span><span style={{ color: RED, marginLeft: -4 }}>.AI</span>
             </div>
-            <div style={{ display: "flex", fontSize: 20, fontWeight: 500, color: RED, letterSpacing: 3 }}>30-DAY JOB READINESS PROGRAM</div>
+            <div style={{ display: "flex", fontSize: 20, fontWeight: 500, color: RED, letterSpacing: 3 }}>GET READY FOR THE AI ERA IN 30 DAYS</div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", fontSize: 92, fontWeight: 900, lineHeight: 0.98, letterSpacing: -4, color: INK }}>
@@ -45,7 +46,7 @@ export default async function Image() {
           <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 24, fontWeight: 500, color: MUTED }}>
             <span>Start any day</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
-            <span>{allFree ? "Free" : `From ${formatINR(priceNow(priceFrom))}`}</span>
+            <span>{HIDE_MONEY ? "30 days" : allFree ? "Free" : `From ${formatINR(priceNow(priceFrom))}`}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
             <span>www.klymb.ai</span>
           </div>

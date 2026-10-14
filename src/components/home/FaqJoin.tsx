@@ -1,12 +1,20 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import Image from "next/image";
 import { faqs, sectionCopy, urgency } from "@/data/program";
 import { refund } from "@/data/legal";
-import { allFree } from "@/data/tracks";
 import { Accordion } from "@/components/ui/Accordion";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import type { TrackSlug } from "@/types/program";
-import { RegistrationForm } from "./RegistrationForm";
+import Link from "next/link";
+import { allFree, tracks } from "@/data/tracks";
 import pointing from "@/assets/join-pointing.png";
+
+/** With money hidden: no price, cost or refund questions. */
+function noMoneyFaqs(list: typeof faqs) {
+  return list
+    .filter((f) => !["What is the refund policy?", "What is included in the price?"].includes(f.question))
+    .map((f) => (f.question === "Will you try to sell me another course?" ? { ...f, answer: "No. There is no advanced program or mastermind to upsell. The track you pick is the whole product." } : f));
+}
 
 /** While every track is free, the price and refund answers say so instead. */
 function freeFaqs(list: typeof faqs) {
@@ -33,7 +41,7 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
           <Eyebrow>{sectionCopy.faq.eyebrow}</Eyebrow>
           <h2 id="faq-title" className="display mt-3 text-[clamp(1.85rem,4vw,2.75rem)]">{sectionCopy.faq.title}</h2>
           <p className="mt-3 text-sm text-muted">{sectionCopy.faq.intro}</p>
-          <div className="mt-8"><Accordion items={allFree ? freeFaqs(faqs) : faqs} variant="card" /></div>
+          <div className="mt-8"><Accordion items={HIDE_MONEY ? noMoneyFaqs(faqs) : allFree ? freeFaqs(faqs) : faqs} variant="card" /></div>
         </div>
 
         <div id="register" className="scroll-mt-28">
@@ -55,10 +63,31 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
             </div>
           </div>
 
-          <div className="card p-6 sm:p-8">
+          {/* A short "start here" card instead of the full form: pick a track, then
+              the registration page opens with it chosen. Sticks beside the FAQ. */}
+          <div className="card p-6 sm:p-8 lg:sticky lg:top-24">
             <h3 className="text-xl font-extrabold">Reserve your seat</h3>
-            <p className="mt-1 text-sm text-muted">{allFree ? "Every track is free right now. Register and start Day 1 today." : refund.headline}</p>
-            <div className="mt-6"><RegistrationForm defaultTrack={defaultTrack} bare /></div>
+            <p className="mt-1 text-sm text-muted">{HIDE_MONEY ? "Pick your track. It takes a minute, and Day 1 opens straight away." : allFree ? "Every track is free right now. Register and start Day 1 today." : refund.headline}</p>
+            <ul className="mt-6 grid gap-2.5">
+              {tracks.map((t) => (
+                <li key={t.slug}>
+                  <Link
+                    href={`/register?track=${t.slug}`}
+                    className={`group flex items-center gap-4 rounded-xl border px-4 py-3.5 transition-[border-color,background-color,transform] duration-150 hover:border-red-strong hover:bg-red-tint active:scale-[0.99] ${t.slug === defaultTrack ? "border-red-strong bg-red-tint" : "border-line/50"}`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-extrabold">{t.name}</span>
+                      <span className="mt-0.5 block truncate text-xs text-muted">Becomes {t.becomes}</span>
+                    </span>
+                    <span aria-hidden="true" className="text-lg text-red-strong transition-transform duration-150 group-hover:translate-x-0.5">→</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line/30 pt-5 text-sm">
+              <Link href="/tracks" className="font-semibold underline underline-offset-4 hover:text-red-deep">Not sure? Compare the tracks</Link>
+              <Link href="/learn/login" className="text-muted underline underline-offset-4 hover:text-ink">Already registered? Sign in</Link>
+            </div>
           </div>
         </div>
       </div>

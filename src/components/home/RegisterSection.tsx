@@ -1,5 +1,6 @@
 "use client";
 
+import { HIDE_MONEY } from "@/lib/site-status";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -66,6 +67,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
           </h1>
         </Appear>
 
+        {!HIDE_MONEY && (<>
         {/* The offer: price and the refund, side by side, so the refund is read as part of the price. */}
         <Appear delay={0.1} className="relative grid gap-px overflow-hidden rounded-card bg-white/15 ring-1 ring-white/15 sm:grid-cols-2">
           <div className="bg-red-muted-deep/90 p-4 sm:p-5">
@@ -94,6 +96,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
             </div>
           )}
         </Appear>
+        </>)}
 
         <Appear delay={0.2} className="relative hidden sm:block">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">What you get</p>

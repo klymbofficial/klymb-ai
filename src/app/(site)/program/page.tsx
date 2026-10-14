@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import type { Metadata } from "next";
 import { Inclusions } from "@/components/home/Inclusions";
 import { Pricing } from "@/components/home/Pricing";
@@ -27,7 +28,7 @@ export default function ProgramPage() {
       <ProgramTimeline />
       <Inclusions />
       <DayExplorer tracks={explorer} />
-      <Pricing />
+      {!HIDE_MONEY && <Pricing />}
     </>
   );
 }

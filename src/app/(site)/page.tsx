@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import { AiFoundations } from "@/components/home/AiFoundations";
 import { ForYouIf } from "@/components/home/ForYouIf";
 import { LazyHowItWorks, LazyPromoFilm } from "@/components/lazy/LazyHome";
@@ -34,7 +35,7 @@ export default async function HomePage() {
       <LazyHowItWorks fallback={<HowItWorksStatic />} />
       <CareerTracks />
       <TwoWays />
-      <Pricing />
+      {!HIDE_MONEY && <Pricing />}
       {!allFree && <WhyRefund />}
       <FaqJoin />
       <StickyEnrolBar />

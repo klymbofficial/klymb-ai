@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import { OfferPrice } from "@/components/ui/OfferPrice";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,8 +43,14 @@ export function TrackCard({ track }: { track: Track }) {
         ))}
       </ul>
       <p className="mt-auto flex items-baseline gap-2 border-t border-line/25 pt-4">
-        <OfferPrice listPrice={track.price} className="text-lg font-extrabold nums" strikeClassName="text-sm font-semibold nums" />
-        <span className="text-xs font-semibold text-muted">{track.price === 0 ? "All 30 days · no card needed" : "Day 1 free · 100% back"}</span>
+        {HIDE_MONEY ? (
+          <span className="text-sm font-extrabold">30 days · 4 checkpoints · 2 mock interviews</span>
+        ) : (
+          <>
+            <OfferPrice listPrice={track.price} className="text-lg font-extrabold nums" strikeClassName="text-sm font-semibold nums" />
+            <span className="text-xs font-semibold text-muted">{track.price === 0 ? "All 30 days · no card needed" : "Day 1 free · 100% back"}</span>
+          </>
+        )}
       </p>
       <Link
         href={`/tracks/${track.slug}`}

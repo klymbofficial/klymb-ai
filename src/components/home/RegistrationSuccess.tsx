@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import { signInLearner } from "@/app/(learn)/learn/actions";
 import { ButtonLink } from "@/components/ui/Button";
 import { PayButton } from "./PayButton";
@@ -97,7 +98,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
           </p>
         )}
 
-        <p>{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>
+        {!HIDE_MONEY && <p>{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>}
       </div>
 
       {track?.available && track.price > 0 && (

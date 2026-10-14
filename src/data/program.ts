@@ -1,19 +1,21 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import type { Evidence, Faq, Source, WeekPhase } from "@/types/program";
 
 export const brand = {
   name: "Klymb.ai",
-  tagline: "30-day job readiness for the AI era.",
+  tagline: "Get ready for the AI era in 30 days.",
 };
 
-export const navLinks = [
+const allNavLinks = [
   { label: "Program", href: "/program" },
   { label: "Career Tracks", href: "/tracks" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Pricing", href: "/#pricing" },
 ];
+export const navLinks = HIDE_MONEY ? allNavLinks.filter((l) => l.href !== "/#pricing") : allNavLinks;
 
 export const hero = {
-  eyebrow: "30-Day Job Readiness Program",
+  eyebrow: "Get ready for the AI era in 30 days",
   headline: "Become Job-Ready in 30 Days",
   subheadline:
     "Choose your target role, solve real workplace problems every day, complete weekly assessments and prepare for mock interviews with a structured career track.",
@@ -108,7 +110,7 @@ export const howItWorks = [
   { title: "Solve a daily workplace problem", body: "One realistic problem a day, the kind the role actually faces." },
   { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28: scored, with feedback." },
   { title: "Build role-specific evidence", body: "Your work becomes a portfolio piece you can walk through." },
-  { title: "Prepare for interviews", body: "Role-specific questions, frameworks and practice answers." },
+  { title: "Practice for interviews", body: "Role-specific questions, frameworks and practice answers." },
   { title: "Complete mock interviews", body: "Days 29 and 30: realistic interviews with feedback." },
 ];
 
@@ -130,7 +132,7 @@ export const outcomes = [
   "Build evidence of practical ability",
   "Complete weekly assessments",
   "Improve communication and decision-making",
-  "Prepare for common interview questions",
+  "Practice for the most-asked interview questions",
   "Practice with mock interviews",
 ];
 
@@ -227,7 +229,7 @@ export const footerLinks = {
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Cookie Policy", href: "/cookies" },
     { label: "Terms", href: "/terms" },
-    { label: "Refund Policy", href: "/refund-policy" },
+    ...(HIDE_MONEY ? [] : [{ label: "Refund Policy", href: "/refund-policy" }]),
   ],
 };
 

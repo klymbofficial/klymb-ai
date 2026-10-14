@@ -1,5 +1,6 @@
 "use client";
 
+import { HIDE_MONEY } from "@/lib/site-status";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
@@ -31,7 +32,7 @@ const SCENES = [
   { from: 8, line: "The work isn't ending. The title is." },
   { from: 14, line: "30 days. One real problem a day." },
   { from: 19, line: "Proof you can show." },
-  { from: 24, line: allFree ? "Every track. All 30 days. Free." : "Finish all 30 days. Get 100% of your fee back." },
+  { from: 24, line: HIDE_MONEY ? "Every track. 30 days. Job-ready." : allFree ? "Every track. All 30 days. Free." : "Finish all 30 days. Get 100% of your fee back." },
 ];
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 const ROLE_EVERY = 1.15; // seconds per old-title → new-role swap in scene 3
@@ -117,6 +118,41 @@ export function PromoFilm() {
     }
   }
 
+  /** Jumps to a time without replaying the sound cues it skips over. */
+  function seek(to: number) {
+    elapsed.current = Math.max(0, Math.min(LENGTH, to));
+    setT(elapsed.current);
+    if (elapsed.current >= LENGTH) setPlaying(false);
+  }
+
+  function togglePlay() {
+    if (t >= LENGTH) { seek(0); setUserPaused(false); setPlaying(true); return; }
+    setUserPaused(playing);
+    setPlaying(!playing);
+  }
+
+  const [fullscreen, setFullscreen] = useState(false);
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === ref.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  function toggleFullscreen() {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void ref.current?.requestFullscreen?.();
+  }
+
+  // Keyboard, while focus is inside the film: k/space play-pause, arrows ±5s, m sound, f full screen.
+  function onKey(e: React.KeyboardEvent) {
+    if ((e.target as HTMLElement).tagName === "INPUT" && e.key.startsWith("Arrow")) return; // the slider handles its own arrows
+    const k = e.key.toLowerCase();
+    if (k === " " || k === "k") { e.preventDefault(); togglePlay(); }
+    else if (k === "arrowleft") { e.preventDefault(); seek(t - 5); }
+    else if (k === "arrowright") { e.preventDefault(); seek(t + 5); }
+    else if (k === "m" && !reduced) toggleSound();
+    else if (k === "f") toggleFullscreen();
+  }
+
   const scene = sceneAt(t);
   const local = t - SCENES[scene].from;
   const ended = t >= LENGTH;
@@ -124,7 +160,7 @@ export function PromoFilm() {
   return (
     <section aria-labelledby="film-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
       <h2 id="film-title" className="sr-only">Klymb.ai in 28 seconds</h2>
-      <div ref={ref} className="relative aspect-[4/5] overflow-hidden rounded-slab bg-night text-paper shadow-float sm:aspect-video">
+      <div ref={ref} onKeyDown={onKey} className="relative aspect-[4/5] overflow-hidden rounded-slab bg-night text-paper shadow-float sm:aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:rounded-none">
         {/* Two slow red glows and a film-grain layer, with a gentle camera drift per scene. */}
         <motion.div
           aria-hidden="true"
@@ -164,41 +200,81 @@ export function PromoFilm() {
           ))}
         </ol>
 
-        {/* Controls. */}
-        <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 px-4 pb-3 sm:px-6 sm:pb-4">
-          <button
-            type="button"
-            onClick={() => {
-              if (ended) { elapsed.current = 0; setT(0); setUserPaused(false); setPlaying(true); return; }
-              setUserPaused(playing);
-              setPlaying(!playing);
-            }}
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-sm font-bold backdrop-blur transition-colors hover:bg-white/20"
-            aria-label={ended ? "Replay" : playing ? "Pause" : "Play"}
-          >
-            {ended ? "↺" : playing ? "❚❚" : "▶"}
-          </button>
-          <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
-            <div className="h-full rounded-full bg-red-soft" style={{ width: `${(t / LENGTH) * 100}%` }} />
+        {/* Media controls: play/pause, chapters, seekable timeline, time, restart, sound, fullscreen. */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 pt-8 pb-2.5 sm:px-5 sm:pb-3.5">
+          <input
+            type="range"
+            min={0}
+            max={LENGTH}
+            step={0.1}
+            value={t}
+            onChange={(e) => seek(Number(e.target.value))}
+            aria-label="Seek"
+            aria-valuetext={`${fmt(t)} of ${fmt(LENGTH)}`}
+            className="film-seek block w-full cursor-pointer"
+            style={{ ["--film-progress" as string]: `${(t / LENGTH) * 100}%` }}
+          />
+          <div className="mt-2 flex items-center gap-1 sm:gap-1.5">
+            <CtrlButton label={ended ? "Replay" : playing ? "Pause (k)" : "Play (k)"} onClick={togglePlay}>
+              {ended ? <ReplayIcon /> : playing ? <PauseIcon /> : <PlayIcon />}
+            </CtrlButton>
+            <CtrlButton label="Previous chapter" onClick={() => seek(scene > 0 && local < 1 ? SCENES[scene - 1].from : SCENES[scene].from)}><PrevIcon /></CtrlButton>
+            <CtrlButton label="Next chapter" onClick={() => seek(scene < SCENES.length - 1 ? SCENES[scene + 1].from : LENGTH)}><NextIcon /></CtrlButton>
+            {!reduced && (
+              <CtrlButton label={soundOn ? "Mute (m)" : "Unmute (m)"} pressed={soundOn} onClick={toggleSound}>
+                <SpeakerIcon on={soundOn} />
+              </CtrlButton>
+            )}
+            <span className="ml-1 text-xs font-semibold text-white/75 nums" aria-hidden="true">{fmt(t)} / {fmt(LENGTH)}</span>
+            <span className="ml-auto" />
+            <CtrlButton label="Restart" onClick={() => { seek(0); setUserPaused(false); setPlaying(true); }}><RestartIcon /></CtrlButton>
+            <CtrlButton label={fullscreen ? "Exit full screen (f)" : "Full screen (f)"} onClick={toggleFullscreen}>
+              <FullscreenIcon exit={fullscreen} />
+            </CtrlButton>
           </div>
-          <span className="hidden text-xs font-semibold text-white/60 nums sm:inline" aria-hidden="true">0:{String(Math.floor(t)).padStart(2, "0")} / 0:28</span>
-          {!reduced && (
+          {!soundOn && !reduced && (
             <button
               type="button"
               onClick={toggleSound}
-              aria-pressed={soundOn}
-              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-bold backdrop-blur transition-colors ${
-                soundOn ? "bg-white/10 hover:bg-white/20" : "bg-white text-ink hover:bg-paper"
-              }`}
+              className="absolute top-[-2.6rem] right-3 inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-ink shadow-card transition-[background-color,transform] duration-150 hover:bg-paper active:scale-[0.97] sm:right-5"
             >
-              <SpeakerIcon on={soundOn} />
-              {soundOn ? "Sound off" : "Sound on"}
+              <SpeakerIcon on={false} /> Sound on
             </button>
           )}
         </div>
       </div>
     </section>
   );
+}
+
+const fmt = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, "0")}`;
+
+function CtrlButton({ label, onClick, pressed, children }: { label: string; onClick: () => void; pressed?: boolean; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      aria-pressed={pressed}
+      className="grid size-9 shrink-0 place-items-center rounded-full text-white transition-[background-color,transform] duration-150 hover:bg-white/15 active:scale-95 focus-visible:outline-2 focus-visible:outline-white"
+    >
+      {children}
+    </button>
+  );
+}
+
+const icon = "size-[18px]";
+function PlayIcon() { return <svg viewBox="0 0 24 24" className={icon} fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z" /></svg>; }
+function PauseIcon() { return <svg viewBox="0 0 24 24" className={icon} fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>; }
+function ReplayIcon() { return <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>; }
+function RestartIcon() { return <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>; }
+function PrevIcon() { return <svg viewBox="0 0 24 24" className={icon} fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 5.5v13a1 1 0 0 1-1.55.83l-9.3-6.5a1 1 0 0 1 0-1.66l9.3-6.5A1 1 0 0 1 20 5.5Z" /></svg>; }
+function NextIcon() { return <svg viewBox="0 0 24 24" className={icon} fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5.5v13a1 1 0 0 0 1.55.83l9.3-6.5a1 1 0 0 0 0-1.66l-9.3-6.5A1 1 0 0 0 4 5.5Z" /></svg>; }
+function FullscreenIcon({ exit }: { exit: boolean }) {
+  return exit
+    ? <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 3v4a2 2 0 0 1-2 2H3M21 9h-4a2 2 0 0 1-2-2V3M15 21v-4a2 2 0 0 1 2-2h4M3 15h4a2 2 0 0 1 2 2v4" /></svg>
+    : <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3" /></svg>;
 }
 
 function SpeakerIcon({ on }: { on: boolean }) {
@@ -355,7 +431,7 @@ function Visual({ scene, local }: { scene: number; local: number }) {
       transition={{ delay: 0.5, duration: 0.5, ease: EASE }}
     >
       <p className="text-[clamp(0.85rem,1.8vw,1.1rem)] text-white/70">
-        {allFree ? "Free" : `From ${formatINR(priceNow(priceFrom))}`} · Start any day
+        {HIDE_MONEY ? "30 days" : allFree ? "Free" : `From ${formatINR(priceNow(priceFrom))}`} · Start any day
       </p>
       <div className="relative">
         <span aria-hidden="true" className="cta-pulse absolute inset-0 rounded-lg bg-red-soft/40" />

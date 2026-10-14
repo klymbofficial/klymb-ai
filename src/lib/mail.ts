@@ -120,7 +120,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
   const text = [
     `Hi ${p.name},`, "",
     `Welcome to Klymb.ai. Your place on the ${p.trackName} track (heading to ${p.becomes}) is reserved.`, "",
-    p.free ? `This track is free. Start Day 1: ${p.siteUrl}/learn` : `Day 1 is free: start now at ${p.siteUrl}/learn. Unlock Days 2 to 30 for ${p.price}, 100% back when you complete all 30 days: ${p.siteUrl}/pay`,
+    p.free ? `Start Day 1: ${p.siteUrl}/learn` : `Day 1 is free: start now at ${p.siteUrl}/learn. Unlock Days 2 to 30 for ${p.price}, 100% back when you complete all 30 days: ${p.siteUrl}/pay`,
     "Start any day: Day 1 opens as soon as you are enrolled.", "",
     "Your 30 days",
     "Week 1-4: one real workplace problem a day, about 90 to 120 minutes.",
@@ -138,7 +138,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
     intro: `Your place on the <strong style="color:#fff">${esc(p.trackName)}</strong> track is reserved. Thirty days from now, you'll have the work to prove you're ready for <strong style="color:#fff">${esc(p.becomes)}</strong>.`,
     sections: [
       p.free
-        ? `${sectionTitle("Start when you're ready")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Fee", "Free")}${row("Starts", "Any day you choose")}</table>${button(`${site}/learn`, "Start Day 1")}`
+        ? `${sectionTitle("Start when you're ready")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Starts", "Any day you choose")}</table>${button(`${site}/learn`, "Start Day 1")}`
         : `${sectionTitle("Day 1 is free")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Day 1", "Free, open now")}${row("Days 2 to 30", `${p.price} · 100% back when you complete`)}</table>${button(`${site}/learn`, "Start Day 1 free")}`,
       `${sectionTitle("Your 30 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "One real problem a day", "About 90 to 120 minutes, built around the work this role actually does. Works offline too.")}
@@ -167,7 +167,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
   ];
   const text = [
     `Hi ${p.name},`, "",
-    `You now have access to the ${p.trackName} course on Klymb.ai. It's free: no payment step.`, "",
+    `You now have access to the ${p.trackName} course on Klymb.ai.`, "",
     "Getting set up",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
     `Start here: ${p.siteUrl}/learn`, "",
@@ -179,7 +179,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
     preview: `Your ${p.trackName} access is ready. Here's how to set up in 10 minutes.`,
     eyebrow: "Access granted",
     title: `You're in, ${esc(p.name)}.`,
-    intro: `You now have access to the <strong style="color:#fff">${esc(p.trackName)}</strong> course on Klymb.ai. It's free, and Day 1 is open today.`,
+    intro: `You now have access to the <strong style="color:#fff">${esc(p.trackName)}</strong> course on Klymb.ai. Day 1 is open today.`,
     sections: [
       `${sectionTitle("Getting set up")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body))).join("")}

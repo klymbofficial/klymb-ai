@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { HIDE_MONEY } from "@/lib/site-status";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, Section } from "@/components/legal/LegalPage";
@@ -11,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function RefundPolicyPage() {
+  if (HIDE_MONEY) notFound();
   return (
     <LegalPage
       title="Refund Policy"

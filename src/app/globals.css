@@ -306,3 +306,18 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Promo film timeline: a thin red-filled track that thickens on hover, with a dot to drag. */
+.film-seek { appearance: none; height: 16px; background: transparent; }
+.film-seek::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 999px;
+  background: linear-gradient(to right, var(--color-red-soft) var(--film-progress), rgb(255 255 255 / 0.25) var(--film-progress));
+  transition: height 150ms ease;
+}
+.film-seek:hover::-webkit-slider-runnable-track { height: 6px; }
+.film-seek::-webkit-slider-thumb { appearance: none; margin-top: -4px; width: 12px; height: 12px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 3px rgb(240 134 139 / 0.5); }
+.film-seek:hover::-webkit-slider-thumb { margin-top: -3px; }
+.film-seek::-moz-range-track { height: 4px; border-radius: 999px; background: rgb(255 255 255 / 0.25); }
+.film-seek::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--color-red-soft); }
+.film-seek::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 999px; background: #fff; box-shadow: 0 0 0 3px rgb(240 134 139 / 0.5); }
+.film-seek:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 999px; }
