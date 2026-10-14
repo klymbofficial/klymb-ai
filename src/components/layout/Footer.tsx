@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { APP_URL } from "@/components/home/TwoWays";
+import { APP_URL } from "@/data/products";
 import { contact, socials } from "@/data/config";
 import { brand, footerLinks } from "@/data/program";
 import { entity } from "@/data/legal";

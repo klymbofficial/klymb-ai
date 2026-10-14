@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { hero, navLinks } from "@/data/program";
-import { APP_URL } from "./TwoWays";
+import { ProductsMenu } from "@/components/layout/ProductsMenu";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Appear } from "@/components/motion/Appear";
@@ -103,13 +103,7 @@ export function Hero() {
               <Link href={l.href} className="transition-colors hover:text-red-deep">{l.label}</Link>
             </li>
           ))}
-          {/* Only where the tab has room beside the logo and the header button. */}
-          <li className="hidden xl:list-item">
-            <a href={APP_URL} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 transition-colors hover:text-red-deep">
-              <span className="rounded-full bg-[#dcfce7] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#166534]">Free</span>
-              app.klymb.ai <span aria-hidden="true">↗</span>
-            </a>
-          </li>
+          <li><ProductsMenu /></li>
         </ul>
         <TabSide flip />
       </nav>
