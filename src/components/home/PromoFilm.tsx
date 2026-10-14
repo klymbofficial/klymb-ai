@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { priceNow } from "@/lib/offer";
-import { priceFrom, tracks } from "@/data/tracks";
+import { allFree, priceFrom, tracks } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 import { FilmAudio } from "./filmAudio";
 
@@ -31,7 +31,7 @@ const SCENES = [
   { from: 8, line: "The work isn't ending. The title is." },
   { from: 14, line: "30 days. One real problem a day." },
   { from: 19, line: "Proof you can show." },
-  { from: 24, line: "Finish all 30 days. Get 100% of your fee back." },
+  { from: 24, line: allFree ? "Every track. All 30 days. Free." : "Finish all 30 days. Get 100% of your fee back." },
 ];
 const EASE = [0.2, 0.7, 0.2, 1] as const;
 const ROLE_EVERY = 1.15; // seconds per old-title → new-role swap in scene 3
@@ -355,7 +355,7 @@ function Visual({ scene, local }: { scene: number; local: number }) {
       transition={{ delay: 0.5, duration: 0.5, ease: EASE }}
     >
       <p className="text-[clamp(0.85rem,1.8vw,1.1rem)] text-white/70">
-        From {formatINR(priceNow(priceFrom))} · Start any day
+        {allFree ? "Free" : `From ${formatINR(priceNow(priceFrom))}`} · Start any day
       </p>
       <div className="relative">
         <span aria-hidden="true" className="cta-pulse absolute inset-0 rounded-lg bg-red-soft/40" />

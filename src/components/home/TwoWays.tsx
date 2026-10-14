@@ -5,6 +5,7 @@ import { Appear } from "@/components/motion/Appear";
 import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
 import { formatINR } from "@/lib/format";
 import { APP_URL } from "@/data/products";
+import { allFree } from "@/data/tracks";
 
 
 /**
@@ -13,7 +14,7 @@ import { APP_URL } from "@/data/products";
  * free users the next step up.
  */
 export function TwoWays() {
-  const price = offerOpen() ? `${formatINR(LAUNCH_OFFER.price)} launch price` : "Priced per track";
+  const price = allFree ? "Free" : offerOpen() ? `${formatINR(LAUNCH_OFFER.price)} launch price` : "Priced per track";
   return (
     <section aria-labelledby="two-ways-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
       <Appear className="max-w-2xl">
@@ -59,10 +60,10 @@ export function TwoWays() {
             </div>
             <h3 className="display mt-4 text-3xl">Get job-ready in 30 days.</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-white/80">
-              A structured course for one role, with a reviewer checking your work and a refund when you finish.
+              A structured course for one role, with a reviewer checking your work{allFree ? ", free for now." : " and a refund when you finish."}
             </p>
             <ul className="mt-6 space-y-2.5 text-[15px]">
-              {["One real workplace problem a day", "4 graded checkpoints and 2 mock interviews", "A portfolio a recruiter can open", "Day 1 free, 100% back when you complete"].map((t) => (
+              {["One real workplace problem a day", "4 graded checkpoints and 2 mock interviews", "A portfolio a recruiter can open", allFree ? "Free: all 30 days, no card needed" : "Day 1 free, 100% back when you complete"].map((t) => (
                 <li key={t} className="flex gap-2.5"><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-soft" />{t}</li>
               ))}
             </ul>

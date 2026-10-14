@@ -73,7 +73,7 @@ export function SupportBot() {
         <div ref={panel} className="flex-1 space-y-3 overflow-y-auto bg-surface/60 px-4 py-4">
           <Bubble from="kamran">
             {view.kind === "home"
-              ? learner ? "Hi! Stuck on something? Pick a topic and I'll help." : "Hi, I'm Kamran. Ask me anything about Klymb: price, refund or how the 30 days work."
+              ? learner ? "Hi! Stuck on something? Pick a topic and I'll help." : "Hi, I'm Kamran. Ask me anything about Klymb and how the 30 days work."
               : view.kind === "topic" ? `Sure, ${view.topic.title.toLowerCase()}. What would you like to know?` : null}
           </Bubble>
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { entity, grievance, entityRows } from "@/data/legal";
-import { priceFrom, priceTo } from "@/data/tracks";
+import { allFree, priceFrom, priceTo } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -51,8 +51,12 @@ export default function TermsPage() {
 
       <Section n="5." title="Fees and refunds" plain="One fee per track. Finish everything and you get all of it back.">
         <p>
-          The fee is for one track and one cohort, and depends on the track: from {formatINR(priceFrom)} to{" "}
-          {formatINR(priceTo)}, shown on each track&apos;s page and before you pay. Free tracks, marked Free on their page, take no
+          {allFree ? (
+            <>Every course is currently free and no fee is taken. If fees return, they apply to one track and one cohort and are shown on each track&apos;s page and before you pay. </>
+          ) : (
+            <>The fee is for one track and one cohort, and depends on the track: from {formatINR(priceFrom)} to{" "}
+          {formatINR(priceTo)}, shown on each track&apos;s page and before you pay. </>
+          )}Free tracks, marked Free on their page, take no
           payment and so carry no refund. Complete a paid programme and we
           refund it in full. The conditions are in the <Link href="/refund-policy">Refund Policy</Link>, which forms part
           of these terms.

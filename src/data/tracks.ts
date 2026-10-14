@@ -34,7 +34,7 @@ export const allTracks: Track[] = [
     slug: "qa-engineer",
     available: true,
     contentLive: true,
-    price: 6999,
+    price: 0, // free for now; was 6999
     name: "QA Engineer",
     becomes: "AI Test Architect",
     description: "Testing, automation, defect analysis, API testing and AI-assisted QA.",
@@ -92,7 +92,7 @@ export const allTracks: Track[] = [
     slug: "l1-l2-support",
     available: true,
     contentLive: true,
-    price: 4999,
+    price: 0, // free for now; was 4999
     name: "L1/L2 Support",
     becomes: "Conversational AI Operations Specialist",
     description: "Troubleshooting, ticket handling, incident response, escalation and customer communication.",
@@ -150,7 +150,7 @@ export const allTracks: Track[] = [
     slug: "project-manager",
     available: true,
     contentLive: true,
-    price: 12999,
+    price: 0, // free for now; was 12999
     name: "Project Manager",
     becomes: "AI Delivery Lead",
     description: "Planning, requirements, execution, risk management, stakeholder communication and reporting.",
@@ -208,7 +208,7 @@ export const allTracks: Track[] = [
     slug: "junior-developer",
     available: true,
     contentLive: true,
-    price: 10999,
+    price: 0, // free for now; was 10999
     name: "Junior Developer",
     becomes: "AI Engineering Associate",
     description: "Programming fundamentals, debugging, APIs, Git, frontend/backend basics and code quality.",
@@ -266,7 +266,7 @@ export const allTracks: Track[] = [
     slug: "reporting-analyst",
     available: true,
     contentLive: true,
-    price: 8999,
+    price: 0, // free for now; was 8999
     name: "Reporting Analyst",
     becomes: "Analytics Automation Lead",
     description: "Excel or spreadsheet analysis, SQL basics, dashboards, data interpretation and business reporting.",
@@ -400,9 +400,12 @@ export const isFree = (t: Pick<Track, "price">) => t.price === 0;
 export const paidTracks = tracks.filter((t) => !isFree(t));
 export const freeTracks = tracks.filter(isFree);
 
-/** The cheapest and dearest paid tracks, for "from ₹…" copy. */
-export const priceFrom = Math.min(...paidTracks.map((t) => t.price));
-export const priceTo = Math.max(...paidTracks.map((t) => t.price));
+/** Every track is free right now: the paid copy (prices, refund) switches off. */
+export const allFree = paidTracks.length === 0;
+
+/** The cheapest and dearest paid tracks, for "from ₹…" copy (0 while everything is free). */
+export const priceFrom = allFree ? 0 : Math.min(...paidTracks.map((t) => t.price));
+export const priceTo = allFree ? 0 : Math.max(...paidTracks.map((t) => t.price));
 
 /** Paid tracks cheapest first, the order prices are listed in. */
 export const tracksByPrice = [...paidTracks].sort((a, b) => a.price - b.price);
