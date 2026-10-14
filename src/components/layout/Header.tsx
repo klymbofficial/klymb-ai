@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { navLinks } from "@/data/program";
 import { ButtonLink } from "@/components/ui/Button";
 import { Wordmark } from "./Wordmark";
-import { APP_URL } from "@/components/home/TwoWays";
+import { products } from "@/data/products";
+import { ProductsMenu } from "./ProductsMenu";
 
 /**
  * The wordmark and the call to action sit on the page ground; the links
@@ -45,15 +46,11 @@ export function Header() {
                 </Link>
               </li>
             ))}
+            <li><ProductsMenu /></li>
           </ul>
         </nav>
 
-        <div className="hidden items-center gap-5 lg:flex">
-          {/* On the home page this link sits in the hero's folder tab instead, where there is room for it. */}
-          <a href={APP_URL} target="_blank" rel="noopener" className={`${home ? "hidden" : "inline-flex"} items-center gap-1.5 text-sm font-bold text-ink transition-colors hover:text-red-deep`}>
-            <span className="rounded-full bg-[#dcfce7] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#166534]">Free</span>
-            app.klymb.ai <span aria-hidden="true">↗</span>
-          </a>
+        <div className="hidden lg:block">
           <ButtonLink href="/tracks" className="rounded-full px-6 py-2.5 text-xs">Choose Your Track</ButtonLink>
         </div>
 
@@ -80,12 +77,23 @@ export function Header() {
               </li>
             ))}
           </ul>
-          <div className="flex flex-col gap-2 p-3">
+          <div className="px-3 pt-2">
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Products</p>
+            <ul className="mt-1">
+              {products.map((p) => (
+                <li key={p.name} className="flex items-center justify-between gap-3 border-b border-line/25 py-3 last:border-0">
+                  {p.href ? (
+                    <a href={p.href} {...(p.external ? { target: "_blank", rel: "noopener" } : {})} onClick={() => setOpen(false)} className="font-bold">{p.name}{p.external ? " ↗" : ""}</a>
+                  ) : (
+                    <span className="font-bold text-muted">{p.name}</span>
+                  )}
+                  {p.badge && <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-muted">{p.badge}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="p-3">
             <ButtonLink href="/tracks" className="w-full rounded-lg" arrow>Choose Your Track</ButtonLink>
-            <a href={APP_URL} target="_blank" rel="noopener" className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-ink px-5 py-3 text-sm font-bold">
-              <span className="rounded-full bg-[#dcfce7] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#166534]">Free</span>
-              Try app.klymb.ai <span aria-hidden="true">↗</span>
-            </a>
           </div>
         </nav>
       )}

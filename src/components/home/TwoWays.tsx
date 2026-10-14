@@ -4,9 +4,8 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Appear } from "@/components/motion/Appear";
 import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
 import { formatINR } from "@/lib/format";
+import { APP_URL } from "@/data/products";
 
-/** The free platform. Tagged so its analytics can tell visits from here apart. */
-export const APP_URL = "https://app.klymb.ai/?utm_source=klymb.ai&utm_medium=referral&utm_campaign=two-ways";
 
 /**
  * Klymb's two products side by side: the free platform (app.klymb.ai) to build in public and get discovered, and the 30-day course to get
