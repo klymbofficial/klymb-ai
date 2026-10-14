@@ -1,7 +1,8 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { currentEmail } from "@/auth";
+import { auth, verifiedEmailFrom } from "@/auth";
+import { checkDevice } from "@/lib/learner/device";
 import { normaliseEmail } from "@/lib/email";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
@@ -32,6 +33,8 @@ export interface Submission {
 
 export type LearnerState =
   | { state: "signed-out" }
+  /** Signed in, but another device holds this learner's one device slot. */
+  | { state: "other-device" }
   | { state: "not-enrolled"; email: string }
   | { state: "enrolled"; learner: Learner; submissions: Submission[] };
 
@@ -45,7 +48,8 @@ const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url
  * still finds them.
  */
 export const getLearnerState = cache(async (): Promise<LearnerState> => {
-  const email = normaliseEmail(await currentEmail());
+  const session = await auth();
+  const email = normaliseEmail(verifiedEmailFrom(session));
   if (!email) return { state: "signed-out" };
 
   const supabase = createServiceClient();
@@ -54,11 +58,12 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
   // Exact match only: ownership of a cohort place must not be fuzzy.
   const { data: learner } = await supabase
     .from("learners")
-    .select(LEARNER_FIELDS)
+    .select(`${LEARNER_FIELDS}, device_session, device_seen_at`)
     .eq("email", email)
     .maybeSingle();
 
   if (!learner) return { state: "not-enrolled", email };
+  if (!(await checkDevice(learner, session?.user?.sid))) return { state: "other-device" };
 
   const { data: submissions } = await supabase
     .from("day_submissions")
@@ -72,5 +77,6 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
 export async function requireLearner() {
   const result = await getLearnerState();
   if (result.state === "signed-out") redirect("/learn/login");
+  if (result.state === "other-device") redirect("/learn/login?error=device");
   return result;
 }

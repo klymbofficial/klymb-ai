@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { priceNow } from "@/lib/offer";
 import { priceFrom } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 
@@ -44,7 +45,7 @@ export default async function Image() {
           <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 24, fontWeight: 500, color: MUTED }}>
             <span>Start any day</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
-            <span>From {formatINR(priceFrom)}</span>
+            <span>From {formatINR(priceNow(priceFrom))}</span>
             <span style={{ width: 6, height: 6, borderRadius: 3, background: MUTED }} />
             <span>www.klymb.ai</span>
           </div>

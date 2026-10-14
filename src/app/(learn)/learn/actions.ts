@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
+import { normaliseEmail } from "@/lib/email";
+import { releaseDevice } from "@/lib/learner/device";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
@@ -141,5 +143,9 @@ export async function signInLearner() {
 }
 
 export async function signOutLearner() {
+  // Free this device's slot so the learner can sign in somewhere else.
+  const session = await auth();
+  const email = normaliseEmail(session?.user?.email);
+  if (email) await releaseDevice(email, session?.user?.sid);
   await signOut({ redirectTo: "/learn/login" });
 }

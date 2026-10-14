@@ -11,12 +11,10 @@ import type { Track } from "@/types/program";
  * pay after seeing the work, not before.
  */
 export function DayPaywall({
-  email, track, day, title, seatsTaken,
-}: { email: string; track: Track; day: number; title: string; seatsTaken: number }) {
-  const now = new Date();
-  const offer = offerOpen(now, seatsTaken);
-  const price = priceNow(track.price, now, seatsTaken);
-  const seatsLeft = Math.max(0, LAUNCH_OFFER.seats - seatsTaken);
+  email, track, day, title,
+}: { email: string; track: Track; day: number; title: string }) {
+  const offer = offerOpen();
+  const price = priceNow(track.price);
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center sm:py-24">
@@ -32,7 +30,7 @@ export function DayPaywall({
       <div className="mt-8 rounded-card bg-surface p-6 text-left ring-1 ring-line/30">
         {offer && (
           <p className="mb-2 inline-flex rounded-full bg-red-strong px-3 py-1 text-xs font-bold text-white">
-            Launch offer: {formatINR(LAUNCH_OFFER.discount)} off · {seatsLeft} of {LAUNCH_OFFER.seats} seats left · ends {LAUNCH_OFFER.endsLabel}
+            Launch price: {formatINR(LAUNCH_OFFER.price)} until {LAUNCH_OFFER.endsLabel}
           </p>
         )}
         <p className="flex items-baseline gap-3">

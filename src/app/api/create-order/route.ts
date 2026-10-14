@@ -3,7 +3,6 @@ import { cohort } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { normaliseEmail } from "@/lib/email";
 import { createOrder, razorpayKeys } from "@/lib/razorpay";
-import { launchSeatsTaken } from "@/lib/access";
 import { priceNow } from "@/lib/offer";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -58,8 +57,8 @@ export async function POST(req: Request) {
 
   if (track.price === 0) return NextResponse.json({ error: "This track is free: no payment needed." }, { status: 400 });
 
-  // The launch offer is applied here, on the server, from the live seat count.
-  const amount = priceNow(track.price, new Date(), await launchSeatsTaken()) * 100;
+  // The launch price is applied here, on the server, so the browser can't change it.
+  const amount = priceNow(track.price) * 100;
   const order = await createOrder(keys, {
     amount,
     receipt: `klymb-${Date.now().toString(36)}`,

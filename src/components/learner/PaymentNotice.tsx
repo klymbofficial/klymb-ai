@@ -1,7 +1,7 @@
 import { PayButton } from "@/components/home/PayButton";
 import type { Track } from "@/types/program";
 import { formatINR } from "@/lib/format";
-import { hasPaid, launchSeatsTaken } from "@/lib/access";
+import { hasPaid } from "@/lib/access";
 import { LAUNCH_OFFER, offerOpen, priceNow } from "@/lib/offer";
 
 /**
@@ -13,10 +13,8 @@ export async function PaymentNotice({ email, track }: { email: string; track: Tr
   if (track.price === 0) return null; // free track: nothing to unlock
   if (!process.env.RAZORPAY_KEY_ID || (await hasPaid(email))) return null;
 
-  const seatsTaken = await launchSeatsTaken();
-  const now = new Date();
-  const offer = offerOpen(now, seatsTaken);
-  const price = priceNow(track.price, now, seatsTaken);
+  const offer = offerOpen();
+  const price = priceNow(track.price);
 
   return (
     <div className="border-b border-line/30 bg-red-tint">
@@ -27,7 +25,7 @@ export async function PaymentNotice({ email, track }: { email: string; track: Tr
             {offer ? (
               <>
                 <strong className="text-ink">{formatINR(price)}</strong>{" "}
-                <span className="line-through">{formatINR(track.price)}</span> · launch offer, {Math.max(0, LAUNCH_OFFER.seats - seatsTaken)} seats left, ends {LAUNCH_OFFER.endsLabel} ·{" "}
+                <span className="line-through">{formatINR(track.price)}</span> · launch price until {LAUNCH_OFFER.endsLabel} ·{" "}
               </>
             ) : (
               <>{formatINR(price)} · </>
