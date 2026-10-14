@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
 
@@ -24,9 +23,6 @@ export default function ClosedPage() {
           team@klymb.ai
         </a>
       </div>
-      <p className="mt-10 text-sm text-muted">
-        Already enrolled? <Link href="/learn" className="font-semibold text-ink underline underline-offset-4">Continue your course</Link>
-      </p>
     </main>
   );
 }
