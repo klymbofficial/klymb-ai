@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mascot } from "page-mascot";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SITE_CLOSED } from "@/lib/site-status";
 import { SUPPORT_EMAIL, supportTopics, type SupportAnswer, type SupportTopic } from "@/data/support-faq";
 
 type View = { kind: "home" } | { kind: "topic"; topic: SupportTopic } | { kind: "answer"; topic: SupportTopic; item: SupportAnswer };
@@ -42,7 +43,8 @@ export function SupportBot() {
 
   useEffect(() => { panel.current?.scrollTo({ top: 0 }); }, [view]);
 
-  if (pathname.startsWith("/admin")) return null;
+  // Hidden in admin, and on public pages while the site is closed (they show the "back soon" page).
+  if (pathname.startsWith("/admin") || (SITE_CLOSED && !learner)) return null;
 
   const close = () => { setOpen(false); setView({ kind: "home" }); };
 
