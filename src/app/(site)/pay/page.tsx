@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { HIDE_MONEY } from "@/lib/site-status";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -12,6 +14,7 @@ export const metadata: Metadata = {
 
 /** The link to send in payment reminders: works for anyone who has registered, signed in or not. */
 export default function PayPage() {
+  if (HIDE_MONEY) notFound();
   return (
     <>
       <PageHeader

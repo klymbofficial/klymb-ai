@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import { enrolment } from "@/data/config";
 import { allFree, priceFrom } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
@@ -9,7 +10,12 @@ import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
  * hidden from screen readers. Hover pauses it, and reduced motion stops it.
  */
 export function AnnouncementBar() {
-  const items = allFree ? [
+  const items = HIDE_MONEY ? [
+    "Start any day: Day 1 opens when you enrol",
+    `${enrolment.dailyTime}, in your own time`,
+    "Reviewed work and two mock interviews",
+    "Individual feedback every week",
+  ] : allFree ? [
     "Every course is free right now",
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,

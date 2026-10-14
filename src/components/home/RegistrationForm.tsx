@@ -1,5 +1,6 @@
 "use client";
 
+import { HIDE_MONEY } from "@/lib/site-status";
 import Image from "next/image";
 import { useId, useRef, useState } from "react";
 import { experienceOptions, roleOptions } from "@/data/program";
@@ -219,7 +220,7 @@ export function RegistrationForm({
           )}
           <Button type="submit" soft arrow disabled={pending} aria-busy={pending} className="rounded-full px-8! py-3!">{pending ? "Saving…" : "Register"}</Button>
         </div>
-        <p className="mt-3 text-center text-xs text-muted">You pay on the next screen, after registering.</p>
+        {!HIDE_MONEY && <p className="mt-3 text-center text-xs text-muted">You pay on the next screen, after registering.</p>}
       </div>
       </form>
       {!googleUser && (

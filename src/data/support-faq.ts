@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import { enrolment } from "@/data/config";
 import { refundConditions, refundTiming } from "@/data/program";
 import { LAUNCH_OFFER, offerOpen } from "@/lib/offer";
@@ -53,7 +54,7 @@ export function supportTopics(): SupportTopic[] {
     };
 
   return [
-    pricing,
+    ...(HIDE_MONEY ? [] : [pricing]),
     {
       id: "course",
       title: "How the course works",

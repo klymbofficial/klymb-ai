@@ -1,5 +1,6 @@
 "use client";
 
+import { HIDE_MONEY } from "@/lib/site-status";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -7,7 +8,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/registrations", label: "Registrations" },
-  { href: "/admin/payments", label: "Payments" },
+  ...(HIDE_MONEY ? [] : [{ href: "/admin/payments", label: "Payments" }]),
   { href: "/admin/analytics", label: "Traffic" },
   { href: "/admin/engagement", label: "Engagement" },
   { href: "/admin/learners", label: "Learners & progress" },

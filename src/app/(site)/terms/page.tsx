@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
@@ -49,6 +50,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
+      {!HIDE_MONEY && (
       <Section n="5." title="Fees and refunds" plain="One fee per track. Finish everything and you get all of it back.">
         <p>
           {allFree ? (
@@ -62,6 +64,7 @@ export default function TermsPage() {
           of these terms.
         </p>
       </Section>
+      )}
 
       <Section n="6." title="What you submit" plain="Your work stays yours. We need permission to store, show and review it.">
         <p>

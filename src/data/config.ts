@@ -15,7 +15,7 @@
  */
 export const pricing = {
   currency: "INR",
-  programName: "30-Day Job Readiness Program",
+  programName: "Get ready for the AI era in 30 days",
   // Each track has its own launch price, see `price` in src/data/tracks.ts.
   referenceValue: 50000, // TODO: verify before launch: must match a real value breakdown
   // Off until the figure is backed by a documented value breakdown: a

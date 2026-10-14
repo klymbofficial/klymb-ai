@@ -1,5 +1,6 @@
 "use client";
 
+import { HIDE_MONEY } from "@/lib/site-status";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { enrolment } from "@/data/config";
@@ -36,8 +37,8 @@ export function StickyEnrolBar() {
     >
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-base font-extrabold nums">{allFree ? "Every track free" : offerOpen() ? `All tracks ${formatINR(priceNow(priceFrom))}` : `From ${formatINR(priceFrom)}`}</p>
-          <p className="truncate text-xs text-muted">Start any day · {enrolment.dailyTime} · {allFree ? "No payment" : "Refunded if you finish"}</p>
+          <p className="text-base font-extrabold nums">{HIDE_MONEY ? "5 career tracks" : allFree ? "Every track free" : offerOpen() ? `All tracks ${formatINR(priceNow(priceFrom))}` : `From ${formatINR(priceFrom)}`}</p>
+          <p className="truncate text-xs text-muted">Start any day · {enrolment.dailyTime} · {HIDE_MONEY ? "Mock interviews" : allFree ? "No payment" : "Refunded if you finish"}</p>
         </div>
         <ButtonLink href="#pricing" className="shrink-0" soft>Reserve seat</ButtonLink>
       </div>

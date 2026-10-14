@@ -1,3 +1,4 @@
+import { HIDE_MONEY } from "@/lib/site-status";
 import type { MetadataRoute } from "next";
 import { site } from "@/data/config";
 import { tracks } from "@/data/tracks";
@@ -20,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/contact", 0.4, "yearly"),
     page("/privacy", 0.2, "yearly"),
     page("/terms", 0.2, "yearly"),
-    page("/refund-policy", 0.3, "yearly"),
+    ...(HIDE_MONEY ? [] : [page("/refund-policy", 0.3, "yearly")]),
     page("/cookies", 0.2, "yearly"),
   ];
 }
