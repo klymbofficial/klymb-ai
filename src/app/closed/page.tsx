@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
-import { APP_URL } from "@/data/products";
 
 export const metadata: Metadata = { title: "Back soon", robots: { index: false, follow: false } };
 
@@ -18,13 +17,10 @@ export default function ClosedPage() {
         Klymb.ai is taking a short break.
       </h1>
       <p className="mt-4 max-w-xl text-muted">
-        The site will be back soon. In the meantime, keep building for free on app.klymb.ai, or write to us any time.
+        The site will be back soon. Questions in the meantime? Write to us any time.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <a href={APP_URL} className="inline-flex items-center gap-2 rounded-full bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
-          Go to app.klymb.ai <span aria-hidden="true">↗</span>
-        </a>
-        <a href="mailto:team@klymb.ai" className="inline-flex items-center rounded-full border-2 border-ink px-6 py-3 text-sm font-bold transition-colors hover:bg-ink hover:text-white">
+        <a href="mailto:team@klymb.ai" className="inline-flex items-center rounded-full bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
           team@klymb.ai
         </a>
       </div>
