@@ -7,7 +7,7 @@ import "server-only";
  * Brevo). Without them nothing is sent and callers carry on: an email must
  * never be the reason a payment fails to record.
  */
-export async function sendMail({ to, subject, html, text }: { to: { email: string; name?: string }; subject: string; html: string; text: string }) {
+export async function sendMail({ to, subject, html, text, replyTo }: { to: { email: string; name?: string }; subject: string; html: string; text: string; replyTo?: string }) {
   const apiKey = process.env.BREVO_API_KEY;
   const from = process.env.MAIL_FROM;
   if (!apiKey || !from) return { ok: false as const, reason: "not configured" };
@@ -18,7 +18,7 @@ export async function sendMail({ to, subject, html, text }: { to: { email: strin
     body: JSON.stringify({
       sender: { email: from, name: "Klymb.ai" },
       to: [to],
-      replyTo: { email: process.env.MAIL_REPLY_TO || from },
+      replyTo: { email: replyTo || process.env.MAIL_REPLY_TO || from },
       subject,
       htmlContent: html,
       textContent: text,
