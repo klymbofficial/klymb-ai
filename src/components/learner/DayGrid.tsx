@@ -13,7 +13,7 @@ export function DayGrid({ days, submitted }: { days: DayEntry[]; submitted: numb
       {days.map((d, i) => {
         const isDone = done.has(d.day);
         const label =
-          d.kind === "challenge" ? d.challenge.title : d.kind === "assessment" ? `Assessment: ${d.title}` : "Mock interview";
+          d.kind === "challenge" ? d.challenge.title : d.kind === "assessment" ? `Assessment: ${d.title}` : "Interview prep";
         return (
           <motion.li
             key={d.day}
@@ -34,7 +34,7 @@ export function DayGrid({ days, submitted }: { days: DayEntry[]; submitted: numb
             >
               {d.day}
               <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">
-                {d.kind === "assessment" ? "Test" : d.kind === "interview" ? "Mock" : isDone ? "Done" : ""}
+                {d.kind === "assessment" ? "Test" : d.kind === "interview" ? "Prep" : isDone ? "Done" : ""}
               </span>
             </Link>
           </motion.li>

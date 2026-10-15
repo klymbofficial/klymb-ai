@@ -24,7 +24,7 @@ export function DayPaywall({
       <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">Day {day} · {track.name}</p>
       <h1 className="display mt-3 text-[clamp(1.8rem,4vw,2.6rem)] text-balance">{title}</h1>
       <p className="mt-4 text-muted">
-        You&apos;ve seen Day 1. Unlock the full course to keep going: Days 2 to 30, four graded checkpoints and two mock interviews.
+        You&apos;ve seen Day 1. Unlock the full course to keep going: Days 2 to 30, four graded checkpoints and interview prep.
       </p>
 
       <div className="mt-8 rounded-card bg-surface p-6 text-left ring-1 ring-line/30">

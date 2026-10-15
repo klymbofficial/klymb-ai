@@ -36,7 +36,7 @@ export default function RefundPolicyPage() {
         </p>
       </Section>
 
-      <Section n="2." title="What counts as completing" plain="Every day submitted, every assessment defended, both mock interviews attended, the four posts published, and a real commit history.">
+      <Section n="2." title="What counts as completing" plain="Every day submitted, every assessment defended, both interview-prep days submitted, the four posts published, and a real commit history.">
         <p>All of the following must be true:</p>
         <ul>
           {refund.conditions.map((c) => <li key={c}>{c}</li>)}

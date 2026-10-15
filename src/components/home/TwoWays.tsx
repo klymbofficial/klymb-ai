@@ -64,7 +64,7 @@ export function TwoWays() {
               A structured course for one role, with a reviewer checking your work{HIDE_MONEY ? "." : allFree ? ", free for now." : " and a refund when you finish."}
             </p>
             <ul className="mt-6 space-y-2.5 text-[15px]">
-              {["One real workplace problem a day", "4 graded checkpoints and 2 mock interviews", "A portfolio a recruiter can open", HIDE_MONEY ? "Start any day, in your own time" : allFree ? "Free: all 30 days, no card needed" : "Day 1 free, 100% back when you complete"].map((t) => (
+              {["One real workplace problem a day", "4 graded checkpoints and interview prep", "A portfolio a recruiter can open", HIDE_MONEY ? "Start any day, in your own time" : allFree ? "Free: all 30 days, no card needed" : "Day 1 free, 100% back when you complete"].map((t) => (
                 <li key={t} className="flex gap-2.5"><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-soft" />{t}</li>
               ))}
             </ul>

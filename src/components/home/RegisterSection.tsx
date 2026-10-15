@@ -20,7 +20,7 @@ import { StudyBuddy } from "@/components/learner/StudyBuddy";
 const INCLUDED = [
   { icon: Target, title: "30 real problems, one a day", body: "Work a team actually does, not videos to watch." },
   { icon: ShieldCheck, title: "4 graded checkpoints", body: "Scored against a rubric, with written feedback." },
-  { icon: MessagesSquare, title: "2 mock interviews", body: "Practise the exact questions hiring panels ask." },
+  { icon: MessagesSquare, title: "Interview prep", body: "Practise the most-asked questions for your role." },
   { icon: FolderGit2, title: "A public portfolio on GitHub", body: "Evidence a recruiter can open, built day by day." },
 ];
 

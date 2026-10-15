@@ -1121,7 +1121,7 @@ export const pmModules = [
   { week: 1, name: "Frame the work", days: "Days 1–7", summary: "From a contradictory brief to a defensible plan." },
   { week: 2, name: "Plan honestly", days: "Days 8–14", summary: "Estimates you can defend, and the re-plan when agents draft the work." },
   { week: 3, name: "Hold under pressure", days: "Days 15–21", summary: "Risk, change, conflict, recovery and crisis communication." },
-  { week: 4, name: "Prove the impact", days: "Days 22–30", summary: "Measurement, portfolio, interview drills and two mock rounds." },
+  { week: 4, name: "Prove the impact", days: "Days 22–30", summary: "Measurement, portfolio, interview drills and the most-asked questions." },
 ];
 
 export function getPmDay(day: number): PmDay | undefined {

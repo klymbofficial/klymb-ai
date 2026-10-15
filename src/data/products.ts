@@ -17,7 +17,7 @@ export interface Product {
  * give it an href and drop its "Coming soon" badge; add more by adding items.
  */
 export const products: Product[] = [
-  { name: "Klymb.ai Courses", description: "30-day job-ready courses with reviewed work and mock interviews.", href: "/tracks", badge: "You're here" },
+  { name: "Klymb.ai Courses", description: "30-day job-ready courses with reviewed work and interview prep.", href: "/tracks", badge: "You're here" },
   { name: "app.klymb.ai", description: `${HIDE_MONEY ? "Hackathons" : "Free hackathons"}, challenges and cohorts. Get discovered by recruiters.`, href: APP_URL, external: true, ...(HIDE_MONEY ? {} : { badge: "Free" as const }) },
   { name: "Something new", description: "Our next product for your career. Launching soon.", badge: "Coming soon" },
 ];

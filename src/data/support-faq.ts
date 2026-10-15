@@ -41,7 +41,7 @@ export function supportTopics(): SupportTopic[] {
     ? {
         id: "pricing", title: "Price", audience: "both",
         items: [
-          { id: "cost", question: "How much does it cost?", keywords: ["price", "fee", "free", "paisa", "cost"], answer: ["Nothing right now: every track is free. All 30 days, the checkpoints and the mock interviews, with no card and no payment step."], action: { label: "Choose a track", href: "/tracks" } },
+          { id: "cost", question: "How much does it cost?", keywords: ["price", "fee", "free", "paisa", "cost"], answer: ["Nothing right now: every track is free. All 30 days, the checkpoints and interview prep, with no card and no payment step."], action: { label: "Choose a track", href: "/tracks" } },
         ],
       }
     : {
@@ -78,7 +78,7 @@ export function supportTopics(): SupportTopic[] {
         { id: "submit", question: "How do I submit a day?", keywords: ["submission", "deliverable", "link"], answer: ["At the bottom of the day's page: paste the link to your work on GitHub (in your own account), add a short note, answer the quick questions and press Submit. You can re-save a day as often as you like."] },
         { id: "missed", question: "I missed a day. What now?", keywords: ["miss", "behind", "catch"], answer: ["No problem: open the day you missed and submit it. Days stay open; they just unlock in order, so finish the earlier one first. Reminders will point you to it."], action: { label: "Open my dashboard", href: "/learn" } },
         { id: "checkpoints", question: "What are the checkpoints?", keywords: ["assessment", "rubric", "score", "weekly"], answer: ["On Days 7, 14, 21 and 28 you complete a checkpoint on that week's work. It's scored against a rubric and you get written feedback. Those days also ask for a short LinkedIn post about what you built."] },
-        { id: "mock", question: "When are the mock interviews?", keywords: ["interview", "practice"], answer: ["Days 29 and 30, after the four checkpoints: a technical round and a leadership or scenario round, with feedback."] },
+        { id: "mock", question: "How do I prepare for interviews?", keywords: ["interview", "practice", "questions"], answer: ["Days 29 and 30 are interview prep: the questions most often asked for your role, with what a strong answer shows. You write your answers using your own work as the example. Your track page lists the questions too."] },
         { id: "feedback", question: "When do I get feedback?", keywords: ["feedback", "reviewer", "rework"], answer: ["Reviewers look at your submissions and checkpoints and leave notes on the day. If a day is marked Needs rework, fix it and submit again from the same page."] },
         { id: "change-track", question: "Can I change my track?", keywords: ["change", "switch", "different"], answer: ["Not after you enrol: each track has its own 30 days, checkpoints and reviewer, so switching would mean starting again. If something has changed for you, write to us and we'll talk it through."] },
         { id: "certificate", question: "Do I get a certificate?", keywords: ["certificate"], answer: ["No certificate: your evidence is the portfolio in your GitHub repository, the checkpoint feedback and your LinkedIn posts. That's what recruiters can open and check."] },

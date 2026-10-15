@@ -1,6 +1,6 @@
 /**
  * Career track content. Each track uses the same layout with different data.
- * Days 7, 14, 21, 28 = weekly assessments. Days 29–30 = mock interviews.
+ * Days 7, 14, 21, 28 = weekly assessments. Days 29–30 = interview prep.
  */
 import type { Track, TrackSlug, TrackWeek, WeekNumber } from "@/types/program";
 

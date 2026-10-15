@@ -45,7 +45,7 @@ export const cohort = {
   cohortCapacity: 40,
   cohortCapacityIsPlaceholder: true,
   capacityReason:
-    "Cohort size is limited because every weekly assessment and mock interview gets individual feedback.",
+    "Cohort size is limited because every weekly assessment gets individual feedback.",
 };
 
 /** The canonical public address. Everything absolute, links in previews, the sitemap, is built from this. */

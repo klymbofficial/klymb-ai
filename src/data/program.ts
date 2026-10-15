@@ -18,7 +18,7 @@ export const hero = {
   eyebrow: "Get ready for the AI era in 30 days",
   headline: "Become Job-Ready in 30 Days",
   subheadline:
-    "Choose your target role, solve real workplace problems every day, complete weekly assessments and prepare for mock interviews with a structured career track.",
+    "Choose your target role, solve real workplace problems every day, complete weekly assessments and prepare for interviews with a structured career track.",
   /** The working professional's first question, answered in the hero. */
   timeLine: "1–2 hrs a day, in your own time. Start any day.",
   primaryCta: { label: "Choose My Career Track", href: "/tracks" },
@@ -42,7 +42,7 @@ export const sectionCopy = {
   tracks: {
     eyebrow: "Career paths",
     title: "Five roles. Pick the one you want next.",
-    intro: "Each track has its own 30 daily problems, four assessments and two mock interviews, written for that one role.",
+    intro: "Each track has its own 30 daily problems, four assessments and two days of interview prep, written for that one role.",
   },
   faq: { eyebrow: "FAQ", title: "Straight answers.", intro: "Everything you need to know before enrolling." },
 } as const;
@@ -53,7 +53,7 @@ export const inclusions = [
   { figure: "4", label: "Weekly assessments", detail: "After Days 7, 14, 21 and 28, with feedback." },
   { figure: "1+", label: "Role-specific project", detail: "Evidence you can show an interviewer." },
   { figure: "✓", label: "Interview preparation", detail: "Role-specific questions and answer frameworks." },
-  { figure: "2", label: "Mock interview days", detail: "Days 29 and 30, after Week 4." },
+  { figure: "2", label: "Interview-prep days", detail: "Days 29 and 30: the most-asked questions." },
 ];
 
 export const sources = {
@@ -111,7 +111,7 @@ export const howItWorks = [
   { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28: scored, with feedback." },
   { title: "Build role-specific evidence", body: "Your work becomes a portfolio piece you can walk through." },
   { title: "Practice for interviews", body: "Role-specific questions, frameworks and practice answers." },
-  { title: "Complete mock interviews", body: "Days 29 and 30: realistic interviews with feedback." },
+  { title: "Prepare for interviews", body: "Days 29 and 30: answer the most-asked questions for your role." },
 ];
 
 export const weekPhases: WeekPhase[] = [
@@ -123,8 +123,8 @@ export const weekPhases: WeekPhase[] = [
 
 export const mockInterviewPhase = {
   days: "Days 29–30",
-  name: "Mock interviews",
-  summary: "Technical, scenario and behavioural rounds with written feedback.",
+  name: "Interview prep",
+  summary: "The most-asked technical, scenario and behavioural questions, answered in writing.",
 };
 
 export const outcomes = [
@@ -133,7 +133,6 @@ export const outcomes = [
   "Complete weekly assessments",
   "Improve communication and decision-making",
   "Practice for the most-asked interview questions",
-  "Practice with mock interviews",
 ];
 
 export const valueBreakdown = [
@@ -142,7 +141,7 @@ export const valueBreakdown = [
   "Role-specific projects",
   "Progress tracking",
   "Interview preparation",
-  "2 mock interviews with written feedback",
+  "The most-asked interview questions, with model answers",
 ];
 
 /**
@@ -153,7 +152,7 @@ export const valueBreakdown = [
 export const refundConditions = [
   "All 30 days submitted by Day 30",
   "All 4 weekly assessments submitted and defended",
-  "Both mock interviews attended (Days 29–30)",
+  "Both interview-prep days submitted (Days 29–30)",
   "4 checkpoint posts published on your LinkedIn",
   "A public portfolio repo with commits on 20+ days",
 ];
@@ -187,8 +186,8 @@ export const faqs: Faq[] = [
       "After Days 7, 14, 21 and 28 you complete an assessment based on that week's work. It is scored against a rubric and you receive feedback on what to improve.",
   },
   {
-    question: "When do mock interviews happen?",
-    answer: "On Days 29 and 30, after all four weekly assessments are complete.",
+    question: "How do you prepare me for interviews?",
+    answer: "Days 29 and 30 are interview prep: you answer the questions most often asked for your role, in writing, using your own portfolio as evidence.",
   },
   {
     question: "Is employment guaranteed?",
@@ -198,7 +197,7 @@ export const faqs: Faq[] = [
   {
     question: "What is included in the price?",
     answer:
-      "One career track with 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation and mock interviews.",
+      "One career track with 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation.",
   },
   {
     question: "Will you try to sell me another course?",
@@ -208,7 +207,7 @@ export const faqs: Faq[] = [
   {
     question: "What is the refund policy?",
     answer:
-      "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both mock interviews attended: the full conditions are on the Refund Policy page.",
+      "Complete all 30 days and you get 100% of your fee back. Completion means every day submitted, all four assessments taken and both interview-prep days submitted: the full conditions are on the Refund Policy page.",
   },
 ];
 
@@ -243,7 +242,7 @@ export const whyRefund = {
     "Most online courses are paid for and never finished. We price the program so that finishing is the whole point.",
   points: [
     { title: "You pay to commit", body: "A fee makes you show up on Day 12 when motivation is low. Free programs are easy to abandon." },
-    { title: "You finish, you get it back", body: "Submit all 30 days, take the four assessments and attend both mock interviews. We refund 100% of the fee." },
+    { title: "You finish, you get it back", body: "Submit all 30 days, take the four assessments and complete both interview-prep days. We refund 100% of the fee." },
     { title: "We only win if you finish", body: "Your completion is what we show the next cohort. That is why every assessment gets individual feedback." },
   ],
   promises: [

@@ -13,13 +13,13 @@ export function AnnouncementBar() {
   const items = HIDE_MONEY ? [
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,
-    "Reviewed work and two mock interviews",
+    "Reviewed work and interview prep",
     "Individual feedback every week",
   ] : allFree ? [
     "Every course is free right now",
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,
-    "Reviewed work and two mock interviews",
+    "Reviewed work and interview prep",
     "Individual feedback every week",
   ] : [
     ...(offerOpen() ? [`Launch price: every track ${formatINR(LAUNCH_OFFER.price)} until ${LAUNCH_OFFER.endsLabel}`] : []),

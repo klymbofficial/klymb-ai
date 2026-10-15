@@ -22,7 +22,7 @@ function freeFaqs(list: typeof faqs) {
     .filter((f) => f.question !== "What is the refund policy?")
     .map((f) =>
       f.question === "What is included in the price?"
-        ? { question: "How much does it cost?", answer: "Nothing, right now: every track is free. You get 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation and mock interviews, with no card and no payment step." }
+        ? { question: "How much does it cost?", answer: "Nothing, right now: every track is free. You get 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation, with no card and no payment step." }
         : f.question === "Will you try to sell me another course?"
           ? { ...f, answer: "No. There is no advanced program or mastermind to upsell. The track you pick is the whole product." }
           : f,

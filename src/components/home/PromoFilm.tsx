@@ -398,7 +398,7 @@ function Visual({ scene, local }: { scene: number; local: number }) {
     );
   }
   if (scene === 4) {
-    const items = ["A public portfolio of real work", "4 checkpoints, defended on camera", "2 mock interviews with written feedback"];
+    const items = ["A public portfolio of real work", "4 checkpoints, defended on camera", "The most-asked interview questions, practised"];
     return (
       <ul className="mx-auto flex max-w-2xl flex-col gap-2 text-left sm:gap-3">
         {items.map((it, i) => (

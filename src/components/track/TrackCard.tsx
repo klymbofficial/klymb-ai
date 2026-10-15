@@ -44,7 +44,7 @@ export function TrackCard({ track }: { track: Track }) {
       </ul>
       <p className="mt-auto flex items-baseline gap-2 border-t border-line/25 pt-4">
         {HIDE_MONEY ? (
-          <span className="text-sm font-extrabold">30 days · 4 checkpoints · 2 mock interviews</span>
+          <span className="text-sm font-extrabold">30 days · 4 checkpoints · interview prep</span>
         ) : (
           <>
             <OfferPrice listPrice={track.price} className="text-lg font-extrabold nums" strikeClassName="text-sm font-semibold nums" />

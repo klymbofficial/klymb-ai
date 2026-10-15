@@ -93,7 +93,7 @@ export function TrackDetail({ track }: { track: Track }) {
                   {[
                     ["30", "days"],
                     ["4", "checkpoints"],
-                    ["2", "mock interviews"],
+                    ["2", "interview-prep days"],
                   ].map(([n, label]) => (
                     <div key={label}>
                       <dt className="sr-only">{label}</dt>
@@ -175,7 +175,7 @@ export function TrackDetail({ track }: { track: Track }) {
               id="curriculum-title"
               eyebrow="30-day overview"
               title="Every day, planned."
-              intro="Four weekly phases of daily problems, an assessment after each week, and mock interviews on Days 29–30. Open a week to see every day."
+              intro="Four weekly phases of daily problems, an assessment after each week, and interview prep on Days 29–30. Open a week to see every day."
             />
             <ButtonLink href={enrolHref} soft arrow className="px-5 py-2.5 text-xs">Enroll now</ButtonLink>
           </Appear>

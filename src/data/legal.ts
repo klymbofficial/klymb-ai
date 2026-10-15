@@ -69,7 +69,7 @@ export const refund = {
   conditions: [
     "All 30 days submitted: a deliverable or answers recorded for every day from 1 to 30",
     "All four weekly assessments submitted and defended (days 7, 14, 21 and 28)",
-    "Both mock interview rounds attended (days 29 and 30)",
+    "Both interview-prep days submitted (days 29 and 30)",
     "The four checkpoint LinkedIn posts published from your own profile",
     "Your portfolio repository public, with commits on at least 20 separate days",
   ],

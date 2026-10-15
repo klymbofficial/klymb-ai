@@ -39,9 +39,9 @@ export default function TermsPage() {
         </ul>
       </Section>
 
-      <Section n="4." title="The programme" plain="30 days, four assessments, two mock interviews, reviewed by a person. We may improve it as it runs.">
+      <Section n="4." title="The programme" plain="30 days, four assessments and two days of interview prep, reviewed by a person. We may improve it as it runs.">
         <p>
-          A cohort is 30 consecutive days of daily tasks, four weekly assessments, and two mock interview rounds, for one
+          A cohort is 30 consecutive days of daily tasks, four weekly assessments, and two days of interview preparation, for one
           career track. Content, schedule and reviewers may change; we will not reduce the substance of what you paid for.
         </p>
         <p>

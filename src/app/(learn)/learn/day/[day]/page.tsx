@@ -93,7 +93,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
     days: courseDays.filter((d) => d.week === m.week).map((d) => ({ day: d.day, title: d.title })),
   }));
 
-  const kindLabel = entry.kind === "build" ? "Required" : entry.kind === "assessment" ? "Assessment" : "Mock interview";
+  const kindLabel = entry.kind === "build" ? "Required" : entry.kind === "assessment" ? "Assessment" : "Interview prep";
 
   return (
     <div className="bg-card">

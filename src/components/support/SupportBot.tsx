@@ -318,7 +318,7 @@ function personalLine(id: string, me: Me | null): { text: string; action?: Suppo
       return next ? { text: `Your next checkpoint is Day ${next}${next === me.day ? ", which is today" : `, ${next - me.day} day${next - me.day > 1 ? "s" : ""} away`}.` } : null;
     }
     case "mock":
-      return me.day < 29 ? { text: `You're on Day ${me.day}, so the mock interviews are ${29 - me.day} days away.` } : null;
+      return me.day < 29 ? { text: `You're on Day ${me.day}, so interview prep starts in ${29 - me.day} days.` } : null;
     default:
       return null;
   }

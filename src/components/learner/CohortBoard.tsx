@@ -111,7 +111,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
 
           <ul className="flex items-center gap-4 text-xs font-semibold">
             <li className="flex items-center gap-2"><span aria-hidden="true" className="size-4 rounded bg-red-tint" />Test day</li>
-            <li className="flex items-center gap-2"><span aria-hidden="true" className="size-4 rounded bg-red-strong" />Mock day</li>
+            <li className="flex items-center gap-2"><span aria-hidden="true" className="size-4 rounded bg-red-strong" />Interview prep</li>
           </ul>
         </div>
 

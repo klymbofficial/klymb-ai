@@ -65,7 +65,7 @@ export function buildReminder(r: ReminderInput): Reminder | null {
   const n = r.name;
   const mins = Math.max(15, Math.round(r.minutes / 15) * 15);
   const streak = r.streak >= 2 ? `${r.streak}-day streak` : null;
-  const kindLine = r.kind === "assessment" ? "It's a checkpoint day." : r.kind === "interview" ? "Mock interview day." : "One real problem.";
+  const kindLine = r.kind === "assessment" ? "It's a checkpoint day." : r.kind === "interview" ? "Interview prep day." : "One real problem.";
 
   if (r.slot === "morning") {
     if (r.behind) {

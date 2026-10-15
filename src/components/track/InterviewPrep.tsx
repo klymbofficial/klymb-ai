@@ -7,27 +7,27 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 
 /**
  * Interview preparation on the page ground, in the page's own light voice:
- * the format of the mock rounds as three plain facts, then every sample
+ * the format of the prep days as three plain facts, then every sample
  * question as a card with what a strong answer shows, readable at a glance.
  * The sixth grid cell holds the topics, so the grid always closes square.
  */
 export function InterviewPrep({ track, enrolHref }: { track: Track; enrolHref: string }) {
   const facts = [
-    { icon: CalendarDays, label: mockInterviewPhase.days, detail: "Two mock rounds after Week 4" },
+    { icon: CalendarDays, label: mockInterviewPhase.days, detail: "Interview prep after Week 4" },
     { icon: MessageSquareText, label: "Three kinds of question", detail: "Technical, scenario, behavioural" },
-    { icon: PenLine, label: "Written feedback", detail: "On every answer you give" },
+    { icon: PenLine, label: "Model answers", detail: "What a strong answer shows" },
   ];
 
   return (
     <div>
       <div>
         <Appear className="max-w-2xl">
-          <Eyebrow>Interview preparation & mock interviews</Eyebrow>
+          <Eyebrow>Interview preparation</Eyebrow>
           <h2 id="interview-title" className="display display-soft mt-3 text-[clamp(1.75rem,3.6vw,2.6rem)] text-balance">
             Practise the questions {track.name} interviews actually ask.
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted">
-            Preparation runs through Week 4, then two mock rounds on {mockInterviewPhase.days}. Here is what you will be
+            Preparation runs through Week 4, then the most-asked questions on {mockInterviewPhase.days}. Here is what you will be
             asked, and what a strong answer looks like.
           </p>
         </Appear>

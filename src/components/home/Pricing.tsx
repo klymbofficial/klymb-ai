@@ -118,7 +118,7 @@ export function Pricing({ track }: { track?: Track } = {}) {
             <>
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">Every track</p>
               <p className="display mt-1 text-[clamp(2.75rem,6vw,4rem)]">Free</p>
-              <p className="mt-2 text-sm text-white/80">All 30 days, reviewed work and mock interviews. No card and no payment step.</p>
+              <p className="mt-2 text-sm text-white/80">All 30 days, reviewed work and interview prep. No card and no payment step.</p>
               <ul className="mt-5 divide-y divide-white/20 border-y border-white/20">
                 {tracks.map((t) => (
                   <li key={t.slug}>
@@ -152,7 +152,7 @@ export function Pricing({ track }: { track?: Track } = {}) {
           <dl className="mt-6 grid grid-cols-2 gap-6 border-t border-white/25 pt-6 sm:grid-cols-3">
             <Fact label="Starts" value="Any day" note="Day 1 opens when you enrol" />
             <Fact label="Time" value={enrolment.dailyTime} note="Whenever suits you" />
-            <Fact label="Mock interviews" value="Days 29–30" note="Scheduled with you in Week 4" />
+            <Fact label="Interview prep" value="Days 29–30" note="The most-asked questions for your role" />
           </dl>
           <ButtonLink href={ctaHref} variant="inverse" soft arrow className="mt-7">{ctaLabel}</ButtonLink>
         </div>

@@ -18,7 +18,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
     <>
       <div className="ticker bg-red-strong py-1.5 text-xs font-bold uppercase tracking-[0.06em] text-white sm:text-xs">
         <p className="ticker-track">
-          {allFree ? "One problem a day / Weekly checkpoints / Two mock interviews" : "One problem a day / Weekly checkpoints / 100% fee back when you finish"}
+          {allFree ? "One problem a day / Weekly checkpoints / Interview prep" : "One problem a day / Weekly checkpoints / 100% fee back when you finish"}
         </p>
       </div>
 
