@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/layout/Footer";
 import { MotionProvider } from "@/components/motion/MotionProvider";
 import { OfflineSync } from "@/components/pwa/OfflineSync";
+import { DeviceWatch } from "@/components/learner/DeviceWatch";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -14,6 +15,7 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
       <div id="learn-main" className="flex-1"><MotionProvider>{children}</MotionProvider></div>
       <Footer />
       <OfflineSync />
+      <DeviceWatch />
     </div>
   );
 }
