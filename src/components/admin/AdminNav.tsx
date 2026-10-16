@@ -12,6 +12,7 @@ const links = [
   { href: "/admin/analytics", label: "Traffic" },
   { href: "/admin/engagement", label: "Engagement" },
   { href: "/admin/learners", label: "Learners & progress" },
+  { href: "/admin/courses", label: "Course preview" },
   { href: "/admin/support", label: "Support" },
   { href: "/admin/audit", label: "Admin activity" },
 ];

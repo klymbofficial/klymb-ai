@@ -18,9 +18,10 @@ import { ResourceList } from "@/components/learner/ResourceList";
 import { Appear } from "@/components/motion/Appear";
 import { getCurriculum } from "@/data/curricula";
 import { contact } from "@/data/config";
-import { getTrack } from "@/data/tracks";
+import { allTracks, getTrack } from "@/data/tracks";
+import { getAdmin } from "@/lib/admin/auth";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
-import { requireLearner } from "@/lib/learner/data";
+import { requireLearner, type Submission } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
 import { DayLocked, DayPaywall } from "@/components/learner/DayPaywall";
 import deskImage from "@/assets/day-desk.png";
@@ -51,12 +52,27 @@ function Section({
 
 const RIGHT = 0.08;
 
-export default async function LearnDayPage({ params }: { params: Promise<{ day: string }> }) {
-  const state = await requireLearner();
-  if (state.state === "not-enrolled") notFound();
+export default async function LearnDayPage({
+  params, searchParams,
+}: { params: Promise<{ day: string }>; searchParams: Promise<{ track?: string }> }) {
+  // Admin preview: ?track=<slug> opens any track's days, all unlocked and read-only.
+  const { track: previewSlug } = await searchParams;
+  const admin = previewSlug ? await getAdmin() : null;
+  const preview = admin && previewSlug && getTrack(previewSlug)?.contentLive && getCurriculum(previewSlug) ? previewSlug : null;
+
+  let viewer: { id: string; name: string; email: string; track: string; submissions: Submission[] };
+  if (preview && admin) {
+    viewer = { id: "preview", name: admin.name ?? "Admin", email: admin.email, track: preview, submissions: [] };
+  } else {
+    const state = await requireLearner();
+    if (state.state === "not-enrolled") notFound();
+    viewer = { ...state.learner, submissions: state.submissions };
+  }
+  const q = preview ? `?track=${preview}` : "";
+
   // Each track's own 30 days; a track without a built course waits on the dashboard.
-  const curriculum = getCurriculum(state.learner.track);
-  if (!getTrack(state.learner.track)?.contentLive || !curriculum) redirect("/learn");
+  const curriculum = getCurriculum(viewer.track);
+  if (!getTrack(viewer.track)?.contentLive || !curriculum) redirect("/learn");
   const { days: courseDays, modules: courseModules } = curriculum;
   const session = await auth();
 
@@ -64,13 +80,13 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
   const entry = courseDays.find((d) => d.day === dayNumber);
   if (!entry) notFound();
 
-  const track = getTrack(state.learner.track)!;
-  const lock = await dayLock({ email: state.learner.email, track: track.slug, price: track.price, day: dayNumber, submittedDays: state.submissions.map((x) => x.day) });
+  const track = getTrack(viewer.track)!;
+  const lock = preview ? "open" : await dayLock({ email: viewer.email, track: track.slug, price: track.price, day: dayNumber, submittedDays: viewer.submissions.map((x) => x.day) });
   if (lock === "previous") {
     const prev = courseDays.find((d) => d.day === dayNumber - 1);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
         <DayLocked day={dayNumber} title={entry.title} previousDay={dayNumber - 1} previousTitle={prev?.title ?? ""} />
       </div>
     );
@@ -78,19 +94,19 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
   if (lock === "pay") {
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
-        <DayPaywall email={state.learner.email} track={track} day={dayNumber} title={entry.title} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
+        <DayPaywall email={viewer.email} track={track} day={dayNumber} title={entry.title} />
       </div>
     );
   }
 
   // Scraping guard: a person reads a few day pages an hour; a script reads hundreds.
-  const views = await checkRateLimit("day_view", { limit: 60, windowMinutes: 60, identity: state.learner.id });
+  const views = preview ? { allowed: true } : await checkRateLimit("day_view", { limit: 60, windowMinutes: 60, identity: viewer.id });
   if (!views.allowed) {
-    console.warn("day_view limit hit:", state.learner.email);
+    console.warn("day_view limit hit:", viewer.email);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
         <div className="mx-auto max-w-md px-6 py-24 text-center">
           <h1 className="display text-3xl">Take a short break</h1>
           <p className="mt-3 text-muted">You&apos;ve opened a lot of course pages in the last hour. Come back in a little while and everything will be here.</p>
@@ -99,8 +115,8 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
     );
   }
 
-  const submission = state.submissions.find((s) => s.day === dayNumber) ?? null;
-  const submittedDays = state.submissions.map((s) => s.day);
+  const submission = viewer.submissions.find((s) => s.day === dayNumber) ?? null;
+  const submittedDays = viewer.submissions.map((s) => s.day);
   const next = courseDays.find((d) => d.day === dayNumber + 1);
   const percent = Math.round((submittedDays.length / courseDays.length) * 100);
 
@@ -114,7 +130,18 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
 
   return (
     <div className="bg-card">
-      <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
+      <LearnerTopBar name={viewer.name} image={session?.user?.image} />
+      {preview && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line/30 bg-ink px-6 py-2.5 text-sm text-white">
+          <span className="font-bold">Admin preview · read-only</span>
+          {allTracks.filter((t) => t.contentLive).map((t) => (
+            <Link key={t.slug} href={`/learn/day/${dayNumber}?track=${t.slug}`} className={t.slug === preview ? "font-bold underline underline-offset-4" : "text-white/70 hover:text-white"}>
+              {t.name}
+            </Link>
+          ))}
+          <Link href="/admin/courses" className="ml-auto text-white/70 hover:text-white">All courses</Link>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-[322px_1fr]">
         <aside className="border-line/25 bg-paper px-6 pt-4 pb-8 lg:border-r">
@@ -122,13 +149,13 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
             <Link href="/learn" className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink/80 underline underline-offset-4 transition-colors hover:text-red-deep">
               <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to Dashboard
             </Link>
-            <p className="mt-5 font-heading text-2xl font-bold">{getTrack(state.learner.track)?.name}</p>
+            <p className="mt-5 font-heading text-2xl font-bold">{getTrack(viewer.track)?.name}</p>
             <p className="mt-1 text-sm text-muted">Week {entry.week} - {percent}% complete</p>
             <div className="mt-2 mb-6 h-1 overflow-hidden rounded-full bg-line/20">
               <div className="grow-x h-full rounded-full bg-red-strong" style={{ width: `${Math.max(2, percent)}%` }} />
             </div>
 
-            <ModuleSidebar modules={modules} currentDay={dayNumber} submitted={submittedDays} />
+            <ModuleSidebar modules={modules} currentDay={dayNumber} submitted={submittedDays} query={q} />
 
             <div className="mt-6 rounded-lg border border-line/25 bg-card p-4">
               <div className="flex gap-3">
@@ -148,7 +175,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
           </div>
         </aside>
 
-        <main className="min-w-0 px-4 py-10 sm:px-10 xl:px-16"><ContentGuard email={state.learner.email}>
+        <main className="min-w-0 px-4 py-10 sm:px-10 xl:px-16"><ContentGuard email={viewer.email}>
           <div className="grid items-center gap-8 xl:grid-cols-[1.15fr_1fr]">
               <div className="relative z-10">
                 <Appear y={8} className="flex flex-wrap items-center gap-3">
@@ -170,7 +197,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
                 <div className="float-soft">
                   <Image src={deskImage} alt="" aria-hidden="true" sizes="(min-width: 1280px) 40vw, 90vw" priority className="h-auto w-full xl:origin-right xl:scale-[1.18]" />
                 </div>
-                {next && !submission && (
+                {next && !submission && !preview && (
                   <span
                     title={`Submit Day ${entry.day} to open Day ${next.day}`}
                     className="absolute top-2 right-0 inline-flex cursor-not-allowed items-center gap-1.5 rounded-md bg-surface px-4 py-2 text-sm font-bold text-muted shadow-sm"
@@ -179,9 +206,9 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
                     <span className="sr-only">: locked until you submit Day {entry.day}</span>
                   </span>
                 )}
-                {next && submission && (
+                {next && (submission || preview) && (
                   <Link
-                    href={`/learn/day/${next.day}`}
+                    href={`/learn/day/${next.day}${q}`}
                     className="group absolute top-2 right-0 inline-flex items-center gap-1.5 rounded-md bg-red-strong px-4 py-2 text-sm font-bold text-white shadow-sm transition-[background-color,box-shadow] duration-200 hover:bg-red-press hover:shadow-card"
                   >
                     Day {next.day} <ChevronRight aria-hidden="true" className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -249,12 +276,16 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
                   <dd className="mt-1">{entry.reviewerChecks}</dd>
                 </div>
               </dl>
+              {preview ? (
+                <p className="rounded-lg bg-surface p-4 text-sm text-muted">Preview: submitting is turned off. Learners submit their link and answers here.</p>
+              ) : (
               <DaySubmission
                 day={entry.day}
                 submission={submission}
                 needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)}
                 nextDay={next?.day}
               />
+              )}
             </Section>
           </div>
         </ContentGuard></main>
