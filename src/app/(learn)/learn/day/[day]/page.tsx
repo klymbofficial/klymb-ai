@@ -8,6 +8,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { auth } from "@/auth";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
+import { ContentGuard } from "@/components/learner/ContentGuard";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { BuildSteps } from "@/components/learner/BuildSteps";
 import { DaySubmission } from "@/components/learner/DaySubmission";
 import { KnowledgeCheck } from "@/components/learner/KnowledgeCheck";
@@ -82,6 +84,21 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
     );
   }
 
+  // Scraping guard: a person reads a few day pages an hour; a script reads hundreds.
+  const views = await checkRateLimit("day_view", { limit: 60, windowMinutes: 60, identity: state.learner.id });
+  if (!views.allowed) {
+    console.warn("day_view limit hit:", state.learner.email);
+    return (
+      <div className="min-h-screen bg-card">
+        <LearnerTopBar name={state.learner.name} image={session?.user?.image} />
+        <div className="mx-auto max-w-md px-6 py-24 text-center">
+          <h1 className="display text-3xl">Take a short break</h1>
+          <p className="mt-3 text-muted">You&apos;ve opened a lot of course pages in the last hour. Come back in a little while and everything will be here.</p>
+        </div>
+      </div>
+    );
+  }
+
   const submission = state.submissions.find((s) => s.day === dayNumber) ?? null;
   const submittedDays = state.submissions.map((s) => s.day);
   const next = courseDays.find((d) => d.day === dayNumber + 1);
@@ -131,7 +148,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
           </div>
         </aside>
 
-        <main className="min-w-0 px-4 py-10 sm:px-10 xl:px-16">
+        <main className="min-w-0 px-4 py-10 sm:px-10 xl:px-16"><ContentGuard email={state.learner.email}>
           <div className="grid items-center gap-8 xl:grid-cols-[1.15fr_1fr]">
               <div className="relative z-10">
                 <Appear y={8} className="flex flex-wrap items-center gap-3">
@@ -231,7 +248,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
               />
             </Section>
           </div>
-        </main>
+        </ContentGuard></main>
       </div>
     </div>
   );

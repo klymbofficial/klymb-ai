@@ -321,3 +321,8 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 .film-seek::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--color-red-soft); }
 .film-seek::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 999px; background: #fff; box-shadow: 0 0 0 3px rgb(240 134 139 / 0.5); }
 .film-seek:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 999px; }
+
+/* Course content: prose can't be selected or printed; fields and code stay usable. */
+.content-guard { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.content-guard :is(input, textarea, select, pre, code, [contenteditable]) { -webkit-user-select: text; user-select: text; }
+@media print { .content-guard { display: none !important; } }
