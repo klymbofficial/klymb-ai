@@ -17,7 +17,7 @@ export async function GET() {
   const doneSet = new Set(done);
   let day = 1;
   while (day < 30 && doneSet.has(day)) day++;
-  const lock = await dayLock({ email: learner.email, price: track?.price ?? 0, day, submittedDays: done });
+  const lock = await dayLock({ email: learner.email, track: learner.track, price: track?.price ?? 0, day, submittedDays: done });
   const rework = submissions.filter((x) => x.status === "needs_rework").map((x) => x.day);
 
   return NextResponse.json({

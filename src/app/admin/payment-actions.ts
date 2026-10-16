@@ -1,6 +1,7 @@
 "use server";
 
 import { getAdmin } from "@/lib/admin/auth";
+import { logAdmin } from "@/lib/admin/audit";
 import { razorpayKeys, refundPayment } from "@/lib/razorpay";
 import { createServiceClient } from "@/lib/supabase/admin";
 
@@ -13,7 +14,8 @@ export type RefundResult = { ok: true } | { ok: false; message: string };
  * so the admin table always reflects what Razorpay actually did.
  */
 export async function refund(id: string, confirmEmail: string): Promise<RefundResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  const admin = await getAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
 
   const keys = razorpayKeys();
   const supabase = createServiceClient();
@@ -29,5 +31,6 @@ export async function refund(id: string, confirmEmail: string): Promise<RefundRe
 
   const result = await refundPayment(keys, pay.razorpay_payment_id);
   if (!result.ok) console.error("refund failed:", pay.razorpay_payment_id, result.message);
+  await logAdmin(admin, "payment.refund", pay.email, { payment_id: pay.razorpay_payment_id, ok: result.ok });
   return result;
 }

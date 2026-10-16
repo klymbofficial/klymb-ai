@@ -75,7 +75,7 @@ export default async function LearnHomePage() {
     );
   }
   const doneDays = new Set(submissions.map((s) => s.day));
-  const paid = track.price > 0 ? await hasPaid(learner.email) : true;
+  const paid = track.price > 0 ? await hasPaid(learner.email, learner.track) : true;
 
   const days: BoardDay[] = curriculum.days.map((d) => ({
     day: d.day,

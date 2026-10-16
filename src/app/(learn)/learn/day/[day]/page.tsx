@@ -63,7 +63,7 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
   if (!entry) notFound();
 
   const track = getTrack(state.learner.track)!;
-  const lock = await dayLock({ email: state.learner.email, price: track.price, day: dayNumber, submittedDays: state.submissions.map((x) => x.day) });
+  const lock = await dayLock({ email: state.learner.email, track: track.slug, price: track.price, day: dayNumber, submittedDays: state.submissions.map((x) => x.day) });
   if (lock === "previous") {
     const prev = courseDays.find((d) => d.day === dayNumber - 1);
     return (

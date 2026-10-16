@@ -11,7 +11,7 @@ import { LAUNCH_OFFER, offerOpen, priceNow } from "@/lib/offer";
  */
 export async function PaymentNotice({ email, track }: { email: string; track: Track }) {
   if (track.price === 0) return null; // free track: nothing to unlock
-  if (!process.env.RAZORPAY_KEY_ID || (await hasPaid(email))) return null;
+  if (!process.env.RAZORPAY_KEY_ID || (await hasPaid(email, track.slug))) return null;
 
   const offer = offerOpen();
   const price = priceNow(track.price);

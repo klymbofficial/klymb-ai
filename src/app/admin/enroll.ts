@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
+import { logAdmin } from "@/lib/admin/audit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
 import { todayInIndia } from "@/lib/learn";
@@ -12,7 +13,8 @@ export type EnrollResult = { ok: true } | { ok: false; message: string };
 export async function enrollRegistration(input: {
   name: string; email: string; track: TrackSlug; cohort_start: string;
 }): Promise<EnrollResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  const admin = await getAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
 
   const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Unavailable right now." };
@@ -25,6 +27,8 @@ export async function enrollRegistration(input: {
     // registration's cohort_start is only its intake key.
     cohort_start: todayInIndia(),
   });
+
+  if (!error) await logAdmin(admin, "learner.enrol", input.email.toLowerCase(), { track: input.track });
 
   // 23505 = already enrolled, which is not an error worth showing.
   if (error && error.code !== "23505") {

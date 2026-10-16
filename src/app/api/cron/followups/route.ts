@@ -42,7 +42,7 @@ export async function GET(req: Request) {
   for (const r of rows ?? []) {
     const track = getTrack(r.track);
     // Free track, or already paid: the sequence is over.
-    if (!track || track.price === 0 || (await hasPaid(r.email))) {
+    if (!track || track.price === 0 || (await hasPaid(r.email, r.track))) {
       await supabase.from("registrations").update({ followup_stage: FOLLOWUP_DONE }).eq("id", r.id);
       closed++;
       continue;

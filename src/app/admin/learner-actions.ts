@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
+import { logAdmin } from "@/lib/admin/audit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { resetDevice } from "@/lib/learner/device";
 
@@ -12,7 +13,8 @@ export type LearnerStatus = (typeof STATUSES)[number];
 
 /** Reversible: keeps their work and history, stops counting them in the cohort. */
 export async function setLearnerStatus(id: string, status: LearnerStatus): Promise<LearnerActionResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  const admin = await getAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
   if (!STATUSES.includes(status)) return { ok: false, message: "Unknown status." };
 
   const supabase = createServiceClient();
@@ -23,6 +25,7 @@ export async function setLearnerStatus(id: string, status: LearnerStatus): Promi
     console.error("status change failed:", error.code, error.message);
     return { ok: false, message: "That could not be saved." };
   }
+  await logAdmin(admin, "learner.status", id, { status });
 
   revalidatePath("/admin/learners");
   return { ok: true };
@@ -33,7 +36,8 @@ export async function setLearnerStatus(id: string, status: LearnerStatus): Promi
  * assessment they have. Prefer withdrawing: this cannot be undone.
  */
 export async function removeLearner(id: string, confirmEmail: string): Promise<LearnerActionResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  const admin = await getAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
 
   const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Unavailable right now." };
@@ -50,6 +54,7 @@ export async function removeLearner(id: string, confirmEmail: string): Promise<L
     console.error("learner delete failed:", error.code, error.message);
     return { ok: false, message: "That could not be deleted." };
   }
+  await logAdmin(admin, "learner.remove", learner.email);
 
   revalidatePath("/admin/learners");
   revalidatePath("/admin/registrations");
@@ -58,6 +63,9 @@ export async function removeLearner(id: string, confirmEmail: string): Promise<L
 
 /** Frees a learner's one-device lock, e.g. after they lose or change their phone. */
 export async function resetLearnerDevice(id: string): Promise<LearnerActionResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
-  return (await resetDevice(id)) ? { ok: true } : { ok: false, message: "That could not be reset." };
+  const admin = await getAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
+  const ok = await resetDevice(id);
+  if (ok) await logAdmin(admin, "learner.device_reset", id);
+  return ok ? { ok: true } : { ok: false, message: "That could not be reset." };
 }

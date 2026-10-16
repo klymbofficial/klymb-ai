@@ -48,6 +48,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   // Same rules as the page, enforced here too: days in order, Days 2+ paid.
   const lock = await dayLock({
     email: state.learner.email,
+    track: state.learner.track,
     price: getTrack(state.learner.track)?.price ?? 0,
     day,
     submittedDays: state.submissions.map((x) => x.day),

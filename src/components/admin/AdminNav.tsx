@@ -13,6 +13,7 @@ const links = [
   { href: "/admin/engagement", label: "Engagement" },
   { href: "/admin/learners", label: "Learners & progress" },
   { href: "/admin/support", label: "Support" },
+  { href: "/admin/audit", label: "Admin activity" },
 ];
 
 export function AdminNav() {
