@@ -1,4 +1,5 @@
 import "server-only";
+import { commitDays, mainRepo } from "@/lib/learner/github";
 import { getAdmin } from "@/lib/admin/auth";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
@@ -29,6 +30,9 @@ export interface LearnerProgress {
   linkedin_slug: string | null;
   days_submitted: number;
   last_submission_at: string | null;
+  /** The repo they submit from, and distinct days with their commits there (null: unknown). */
+  commit_repo: string | null;
+  commit_days: number | null;
   /** Checkpoint posts provided, out of the four due on days 7, 14, 21 and 28. */
   linkedin_posts: number;
   assessments_scored: number;
@@ -76,11 +80,19 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
 
   const ids = learners.map((l) => l.id);
   const [{ data: submissions }, { data: assessments }] = await Promise.all([
-    supabase.from("day_submissions").select("learner_id, day, submitted_at, linkedin_post_url").in("learner_id", ids),
+    supabase.from("day_submissions").select("learner_id, day, submitted_at, linkedin_post_url, deliverable_url").in("learner_id", ids),
     supabase.from("assessment_results").select("learner_id, after_day, band, weighted_score").in("learner_id", ids),
   ]);
 
-  return learners.map((l) => {
+  // Commit days on GitHub, for the "commits on 20+ days" rule. Cached an hour per repo.
+  const commitCounts = await Promise.all(
+    learners.map(async (l) => {
+      const repo = l.github_username ? mainRepo((submissions ?? []).filter((s) => s.learner_id === l.id).map((s) => s.deliverable_url)) : null;
+      return repo ? { repo: `${repo.owner}/${repo.repo}`, days: await commitDays(repo.owner, repo.repo, l.github_username!) } : null;
+    }),
+  );
+
+  return learners.map((l, i) => {
     const mine = submissions?.filter((s) => s.learner_id === l.id) ?? [];
     const scored = (assessments ?? [])
       .filter((a) => a.learner_id === l.id && a.weighted_score != null)
@@ -93,6 +105,8 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
       last_submission_at: last,
       assessments_scored: scored.length,
       latest_band: scored.at(-1)?.band ?? null,
+      commit_repo: commitCounts[i]?.repo ?? null,
+      commit_days: commitCounts[i]?.days ?? null,
     } as LearnerProgress;
   });
 }

@@ -10,6 +10,7 @@ import { dayLock } from "@/lib/access";
 import { getTrack } from "@/data/tracks";
 import { getCurriculumDay } from "@/data/curricula";
 import { todayInIndia } from "@/lib/learn";
+import { checkFreshPush } from "@/lib/learner/github";
 import { checkAnswers, checkPace, checkReusedLink, checkWorkLink } from "@/lib/learner/integrity";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -72,6 +73,10 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   if (!(await linkIsPublic(url!))) {
     return { ok: false, message: "We couldn't open that link. Check the file is pushed and the repository is public, then try again." };
   }
+  // A real, new push by the learner: committed by their account after the previous day was submitted.
+  const previous = state.submissions.find((x) => x.day === day - 1)?.submitted_at ?? null;
+  const pushError = await checkFreshPush(url!, state.learner.github_username!, previous);
+  if (pushError) return { ok: false, message: pushError };
 
   if (LINKEDIN_POST_DAYS.includes(day) && !linkedinPost && !submissionExists(state.submissions, day)) {
     return { ok: false, message: "This checkpoint needs your LinkedIn post link as well: it is part of the evidence." };

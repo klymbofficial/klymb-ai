@@ -51,6 +51,12 @@ function EvidenceCell({ learner }: { learner: LearnerProgress }) {
       ) : (
         <span className="font-bold text-red-deep">LinkedIn missing</span>
       )}
+      {learner.commit_repo && (
+        <a href={`https://github.com/${learner.commit_repo}/commits`} target="_blank" rel="noopener noreferrer"
+           className={clsx("nums underline underline-offset-2", learner.commit_days != null && learner.commit_days < 20 ? "text-muted" : "font-bold text-ink")}>
+          Commit days {learner.commit_days ?? "?"}/20
+        </a>
+      )}
       <span className={clsx("nums", learner.linkedin_posts === 0 && "text-muted")}>
         Posts {learner.linkedin_posts}/4
       </span>
