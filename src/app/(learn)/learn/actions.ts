@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
-import { releaseDevice } from "@/lib/learner/device";
+import { claimDevice, releaseDevice } from "@/lib/learner/device";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
@@ -169,6 +170,25 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
 
 export async function signInLearner() {
   await signIn("google", { redirectTo: "/learn" });
+}
+
+/**
+ * "Continue on this device": moves the learner's one device slot here, which
+ * signs the other device out on its next click. Limited to 5 a day, so an
+ * account can't bounce between two people all day.
+ */
+export async function continueOnThisDevice() {
+  const session = await auth();
+  const email = normaliseEmail(session?.user?.email);
+  const sid = session?.user?.sid;
+  if (!email || !sid || session?.user?.emailIsVerified !== true) redirect("/learn/login");
+
+  const limit = await checkRateLimit("device_takeover", { limit: 5, windowMinutes: 24 * 60, identity: email });
+  if (!limit.allowed) redirect("/learn/login?error=takeover-limit");
+
+  await claimDevice(email, sid);
+  console.info("device takeover:", email);
+  redirect("/learn");
 }
 
 export async function signOutLearner() {

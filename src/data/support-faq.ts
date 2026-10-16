@@ -101,7 +101,7 @@ export function supportTopics(): SupportTopic[] {
       title: "Sign-in and devices",
       audience: "learner",
       items: [
-        { id: "other-device", question: "It says I'm signed in on another device", keywords: ["device", "phone", "laptop", "another"], answer: ["Your account works on one device at a time. Sign out on the other device (top bar, Sign out), then sign in here.", `Lost that device? The lock frees itself after 7 days without use, or ask the team below and we'll reset it.`] },
+        { id: "other-device", question: "It says I'm signed in on another device", keywords: ["device", "phone", "laptop", "another"], answer: ["Your account works on one device at a time. On the new device, tap Continue on this device: the old one is signed out automatically.", "You can switch up to 5 times a day. If you hit that, ask the team below."] },
         { id: "cant-signin", question: "I can't sign in", keywords: ["signin", "google", "account", "access"], answer: ["Use Continue with Google with the exact email you registered with. A different Google account won't find your place."], action: { label: "Sign in", href: "/learn/login" } },
         { id: "change-email", question: "Can I change my email?", keywords: ["email", "change", "different", "account"], answer: ["Your place is tied to the email you registered with. If you need it moved to another email, send a message to the team below."] },
       ],

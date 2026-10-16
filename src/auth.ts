@@ -7,15 +7,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   callbacks: {
     ...authConfig.callbacks,
-    /** One device per learner: refuse a second device while the first is in use. */
-    async signIn({ profile }) {
-      const email = normaliseEmail(profile?.email);
-      if (!email || profile?.email_verified !== true) return true;
-      // Loaded on demand: the device module is server-only and touches the database.
-      const { deviceBusy } = await import("@/lib/learner/device");
-      if (await deviceBusy(email)) return "/learn/login?error=device";
-      return true;
-    },
+    // One device per learner: a second device may sign in, but it doesn't take the
+    // slot. It lands on "Signed in on another device" and the learner chooses
+    // whether to continue there (which signs the first device out).
     async jwt(params) {
       const token = await authConfig.callbacks.jwt(params);
       // A fresh sign-in gets its own session id and takes the learner's device slot.
@@ -23,7 +17,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const sid = randomUUID();
         token.sid = sid;
         const email = normaliseEmail(params.profile.email);
-        if (email) await (await import("@/lib/learner/device")).claimDevice(email, sid);
+        // Loaded on demand: the device module is server-only and touches the database.
+        const device = await import("@/lib/learner/device");
+        if (email && !(await device.deviceBusy(email))) await device.claimDevice(email, sid);
       }
       return token;
     },

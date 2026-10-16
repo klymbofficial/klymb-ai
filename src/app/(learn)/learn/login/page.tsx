@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { LearnerLoginForm } from "@/components/learner/LearnerLoginForm";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { getLearnerState } from "@/lib/learner/data";
-import { DEVICE_IDLE_DAYS } from "@/lib/learner/device";
+import { continueOnThisDevice, signOutLearner } from "@/app/(learn)/learn/actions";
 
 export const metadata: Metadata = { title: "Learner sign-in", robots: { index: false, follow: false } };
 
@@ -11,7 +11,7 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
   const { error, welcome } = await searchParams;
   const state = await getLearnerState();
   // Another device holds this learner's slot: stay here and explain, never loop back to /learn.
-  const blocked = state.state === "other-device" || error === "device";
+  const blocked = state.state === "other-device" || error === "device" || error === "takeover-limit";
   if (state.state !== "signed-out" && state.state !== "other-device") redirect("/learn");
 
   return (
@@ -24,14 +24,29 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
         <div className="card p-6 sm:p-8">
           {blocked ? (
             <>
-              <h1 className="display text-2xl">Signed in on another device</h1>
+              <h1 className="display text-2xl">Your account is open on another device</h1>
               <p className="mt-2 text-sm text-muted">
-                Your Klymb account can be used on one device at a time. Sign out on the other device first, then sign in here.
+                Klymb works on one device at a time. Continue here and your other device will be signed out.
               </p>
-              <p className="mt-3 text-sm text-muted">
-                Lost that device? The lock frees itself after {DEVICE_IDLE_DAYS} days without use, or email{" "}
-                <a href="mailto:team@klymb.ai" className="font-semibold underline underline-offset-2">team@klymb.ai</a> and we&apos;ll reset it.
-              </p>
+              {error === "takeover-limit" ? (
+                <p role="alert" className="mt-4 border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">
+                  You&apos;ve switched devices several times today. Use the device you signed in on, or email{" "}
+                  <a href="mailto:team@klymb.ai" className="underline underline-offset-2">team@klymb.ai</a>.
+                </p>
+              ) : state.state === "other-device" ? (
+                <div className="mt-6 flex flex-col gap-3">
+                  <form action={continueOnThisDevice}>
+                    <button className="w-full rounded-full bg-red-strong py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
+                      Continue on this device
+                    </button>
+                  </form>
+                  <form action={signOutLearner}>
+                    <button className="w-full rounded-full py-2.5 text-sm font-semibold text-muted underline underline-offset-2 hover:text-ink">
+                      Not now, sign out here
+                    </button>
+                  </form>
+                </div>
+              ) : null}
             </>
           ) : welcome ? (
             <>
@@ -50,7 +65,9 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
               </p>
             </>
           )}
-          <LearnerLoginForm error={error && !blocked ? "Google sign-in did not complete. Please try again." : undefined} />
+          {state.state !== "other-device" && (
+            <LearnerLoginForm error={error && !blocked ? "Google sign-in did not complete. Please try again." : undefined} />
+          )}
         </div>
       </div>
     </div>
