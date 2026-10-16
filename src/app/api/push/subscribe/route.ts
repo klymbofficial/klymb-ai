@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
-import { currentEmail } from "@/auth";
-import { normaliseEmail } from "@/lib/email";
+import { getLearnerState } from "@/lib/learner/data";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 const str = (v: unknown, max: number) => (typeof v === "string" && v.length > 0 && v.length <= max ? v : null);
 
+/** The signed-in learner on their one allowed device (a second device can't subscribe). */
 async function learnerId() {
-  const email = normaliseEmail(await currentEmail());
+  const state = await getLearnerState();
   const supabase = createServiceClient();
-  if (!email || !supabase) return { supabase, id: null };
-  const { data } = await supabase.from("learners").select("id").eq("email", email).maybeSingle();
-  return { supabase, id: (data?.id as string | undefined) ?? null };
+  return { supabase, id: state.state === "enrolled" ? state.learner.id : null };
 }
 
 /** Saves this device's push subscription for the signed-in learner. */

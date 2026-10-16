@@ -1,3 +1,4 @@
+import { isCronRequest } from "@/lib/cron-auth";
 import { NextResponse } from "next/server";
 import { getCurriculum } from "@/data/curricula";
 import { cohortDayDate } from "@/lib/learn";
@@ -13,7 +14,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
  * (copy in lib/reminders). Requires CRON_SECRET as a bearer token.
  */
 export async function GET(req: Request) {
-  if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const supabase = createServiceClient();

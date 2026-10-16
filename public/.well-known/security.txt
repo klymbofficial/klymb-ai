@@ -1,0 +1,4 @@
+Contact: mailto:team@klymb.ai
+Expires: 2027-10-16T00:00:00.000Z
+Preferred-Languages: en, hi
+Canonical: https://www.klymb.ai/.well-known/security.txt
