@@ -147,16 +147,18 @@ export function SupportBot() {
   const close = () => setOpen(false);
   const restart = () => { setMsgs(greeting()); lastQuestion.current = ""; };
 
+  // The wrapper never takes taps: only the open panel and the launcher do, so the
+  // closed panel's invisible box can't cover buttons underneath it.
   return (
-    <div className={clsx("fixed right-4 z-[60] flex flex-col items-end gap-3 sm:right-6", pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6")}>
+    <div className={clsx("pointer-events-none fixed right-4 z-[60] flex flex-col items-end gap-3 sm:right-6", pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6")}>
       <div
         role="dialog"
         aria-label="Help from Kamran"
         aria-hidden={!open}
         className={clsx(
           "flex h-[min(38rem,calc(100dvh-7rem))] w-[min(24rem,calc(100vw-2rem))] origin-bottom-right flex-col overflow-hidden rounded-[1.25rem] bg-card shadow-[0_24px_60px_rgba(32,30,29,0.22)] ring-1 ring-line/40",
-          "transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
+          "transition-[opacity,transform,visibility] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+          open ? "pointer-events-auto scale-100 opacity-100" : "invisible scale-95 opacity-0",
         )}
       >
         <div className="flex items-center gap-3 bg-gradient-to-br from-red via-red-press to-[#2a0204] px-4 py-3 text-white">
@@ -283,7 +285,7 @@ export function SupportBot() {
         }}
         aria-expanded={open}
         aria-label={open ? "Close help" : "Help: ask Kamran"}
-        className="group relative grid size-16 place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 hover:-translate-y-0.5 active:scale-95"
+        className="group pointer-events-auto relative grid size-16 place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 hover:-translate-y-0.5 active:scale-95"
       >
         <Image src="/mascots/kamran-excited-v2.png" alt="" width={64} height={64} className="size-16 rounded-full object-cover" />
         {!open && (
