@@ -43,10 +43,14 @@ export async function claimDevice(email: string, sid: string) {
 export async function checkDevice(learner: { id: string; email: string; device_session: string | null; device_seen_at: string | null }, sid: string | undefined) {
   if (await isAdmin(learner.email)) return true;
   const supabase = createServiceClient();
-  if (!supabase || !sid) return true; // fail open: never lock anyone out on an outage
+  // A session without a device id predates the lock: it must sign in again.
+  if (!sid) return false;
+  if (!supabase) return true; // fail open: never lock anyone out on an outage
   if (!learner.device_session) {
-    await supabase.from("learners").update({ device_session: sid, device_seen_at: new Date().toISOString() }).eq("id", learner.id).is("device_session", null);
-    return true;
+    // Only one device can win an empty slot: the update is conditional, and
+    // whoever didn't write it is the second device.
+    const { data } = await supabase.from("learners").update({ device_session: sid, device_seen_at: new Date().toISOString() }).eq("id", learner.id).is("device_session", null).select("id");
+    return !!data?.length;
   }
   if (learner.device_session !== sid) return false;
   if (!learner.device_seen_at || Date.now() - new Date(learner.device_seen_at).getTime() > SEEN_REFRESH_MS) {

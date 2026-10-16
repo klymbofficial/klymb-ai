@@ -8,6 +8,9 @@ import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGith
 import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
 import { getTrack } from "@/data/tracks";
+import { getCurriculumDay } from "@/data/curricula";
+import { todayInIndia } from "@/lib/learn";
+import { checkAnswers, checkPace, checkReusedLink, checkWorkLink } from "@/lib/learner/integrity";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { clamp, LIMITS, safeUrl } from "@/lib/validation";
@@ -25,20 +28,17 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   if (rawUrl && !url) {
     return { ok: false, message: "Enter a full link starting with https://, under 500 characters: or leave it blank." };
   }
-  // A quiz-only submit is valid: the answers are the work for that step.
   let quizAnswers: string[] | null = null;
-  if (typeof quizRaw === "string" && quizRaw) {
+  // Answers arrive as quiz_0, quiz_1… with the day's form (or as one JSON field from older clients).
+  const fields = Array.from({ length: 10 }, (_, i) => formData.get(`quiz_${i}`)).filter((v) => typeof v === "string");
+  if (fields.length) quizAnswers = fields.map((a) => clamp(a, LIMITS.quizAnswer));
+  else if (typeof quizRaw === "string" && quizRaw) {
     try {
       const parsed: unknown = JSON.parse(quizRaw);
       if (Array.isArray(parsed)) quizAnswers = parsed.slice(0, 10).map((a) => clamp(a, LIMITS.quizAnswer));
     } catch {
       return { ok: false, message: "Your answers could not be read. Please try again." };
     }
-  }
-
-  const hasQuiz = quizAnswers?.some((a) => a.trim().length > 2) ?? false;
-  if (!url && !hasQuiz && note.length < 20) {
-    return { ok: false, message: "Add a link to your work, answer the questions, or describe what you did in at least 20 characters." };
   }
 
   // Authorisation: the submission is written for the signed-in learner only.
@@ -59,11 +59,19 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const limit = await checkRateLimit("day_submit", { limit: 60, windowMinutes: 60, identity: state.learner.id });
   if (!limit.allowed) return { ok: false, message: "You have saved a lot in the last hour. Wait a few minutes and try again." };
 
-  // Evidence has to be the learner's own.
-  const ownershipError =
-    checkGithubUrl(url ?? "", state.learner.github_username) ??
-    checkLinkedinPostUrl(linkedinPost, state.learner.linkedin_slug);
-  if (ownershipError) return { ok: false, message: ownershipError };
+  // Evidence has to be real, today's, and the learner's own.
+  const questions = getCurriculumDay(state.learner.track, day)?.quiz ?? [];
+  const integrityError =
+    checkWorkLink(url) ??
+    checkGithubUrl(url!, state.learner.github_username) ??
+    checkReusedLink(url!, day, state.submissions) ??
+    checkAnswers(questions, quizAnswers) ??
+    checkLinkedinPostUrl(linkedinPost, state.learner.linkedin_slug) ??
+    checkPace(todayInIndia(), day, state.submissions);
+  if (integrityError) return { ok: false, message: integrityError };
+  if (!(await linkIsPublic(url!))) {
+    return { ok: false, message: "We couldn't open that link. Check the file is pushed and the repository is public, then try again." };
+  }
 
   if (LINKEDIN_POST_DAYS.includes(day) && !linkedinPost && !submissionExists(state.submissions, day)) {
     return { ok: false, message: "This checkpoint needs your LinkedIn post link as well: it is part of the evidence." };
@@ -72,21 +80,18 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const supabase = createServiceClient();
   if (!supabase) return { ok: false, message: "Submissions are unavailable right now." };
 
-  const { error } = await supabase
-    .from("day_submissions")
-    .upsert(
-      {
-        learner_id: state.learner.id,
-        day,
-        deliverable_url: url,
-        note: note || null,
-        ...(quizAnswers ? { quiz_answers: quizAnswers } : {}),
-        ...(linkedinPost ? { linkedin_post_url: linkedinPost } : {}),
-        status: "submitted",
-        submitted_at: new Date().toISOString(),
-      },
-      { onConflict: "learner_id,day" },
-    );
+  const row = {
+    deliverable_url: url,
+    note: note || null,
+    ...(quizAnswers ? { quiz_answers: quizAnswers } : {}),
+    ...(linkedinPost ? { linkedin_post_url: linkedinPost } : {}),
+    status: "submitted",
+  };
+  // submitted_at records the first save only, so re-saving an old day never
+  // looks like new progress (the daily pace limit depends on it).
+  const { error } = submissionExists(state.submissions, day)
+    ? await supabase.from("day_submissions").update(row).eq("learner_id", state.learner.id).eq("day", day)
+    : await supabase.from("day_submissions").insert({ ...row, learner_id: state.learner.id, day, submitted_at: new Date().toISOString() });
 
   if (error) {
     console.error("day submission failed:", error.code, error.message);
@@ -96,6 +101,16 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   revalidatePath("/learn");
   revalidatePath(`/learn/day/${day}`);
   return { ok: true };
+}
+
+/** The work must be reachable: a 404 means a private repo, an unpushed file or a made-up link. GitHub being down never blocks a learner. */
+async function linkIsPublic(url: string) {
+  try {
+    const res = await fetch(url, { method: "HEAD", redirect: "follow", signal: AbortSignal.timeout(5000), cache: "no-store" });
+    return res.status !== 404;
+  } catch {
+    return true;
+  }
 }
 
 function submissionExists(submissions: { day: number }[], day: number) {
@@ -112,6 +127,14 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
 
   const state = await getLearnerState();
   if (state.state !== "enrolled") return { error: "You are not enrolled in a cohort." };
+
+  // Locked once work is submitted: switching to someone else's account would
+  // make their repository look like yours. The team can change it on request.
+  const { github_username: oldGithub, linkedin_slug: oldLinkedin } = state.learner;
+  const changed = (oldGithub && oldGithub.toLowerCase() !== github.toLowerCase()) || (oldLinkedin && oldLinkedin !== linkedin);
+  if (changed && state.submissions.length > 0) {
+    return { error: "Your GitHub and LinkedIn are locked once you've submitted work. Ask Kamran (bottom right) to send a change request to the team." };
+  }
 
   const limit = await checkRateLimit("evidence_profile", { limit: 20, windowMinutes: 60, identity: state.learner.id });
   if (!limit.allowed) return { error: "Too many changes in the last hour. Try again shortly." };

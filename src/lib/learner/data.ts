@@ -51,6 +51,8 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
   const session = await auth();
   const email = normaliseEmail(verifiedEmailFrom(session));
   if (!email) return { state: "signed-out" };
+  // Sessions from before the one-device lock carry no device id: sign in again to claim one.
+  if (!session?.user?.sid) return { state: "signed-out" };
 
   const supabase = createServiceClient();
   if (!supabase) return { state: "signed-out" };

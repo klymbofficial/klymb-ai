@@ -53,13 +53,14 @@ export function DaySubmission({
         </fieldset>
       )}
 
-      <form action={onSubmit} className="flex flex-1 flex-col gap-5">
+      <form id={`day-form-${day}`} action={onSubmit} className="flex flex-1 flex-col gap-5">
         <div>
-          <label htmlFor={`url-${day}`} className="block text-[15px] font-semibold">Link to your work</label>
+          <label htmlFor={`url-${day}`} className="block text-[15px] font-semibold">Link to today&apos;s work</label>
+          <p className="mt-1 text-xs text-muted">A file, folder or commit in your own GitHub repository, not the repository home. Each day needs its own link.</p>
           <input
             id={`url-${day}`} name="deliverable_url" type="url" inputMode="url" spellCheck={false}
             defaultValue={submission?.deliverable_url ?? ""}
-            placeholder="https://github.com/your-name/your-portfolio-repo/..."
+            required placeholder="https://github.com/your-name/your-repo/blob/main/day-05/..."
             className="mt-2 block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
           />
         </div>

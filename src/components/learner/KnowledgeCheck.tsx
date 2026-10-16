@@ -1,44 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { submitDay } from "@/app/(learn)/learn/actions";
-import { submitOrQueue } from "@/lib/offlineQueue";
-import { track } from "@/lib/analytics";
-import { Button } from "@/components/ui/Button";
+import { MIN_ANSWER_CHARS } from "@/lib/learner/integrity";
 
 /**
- * Questions answerable only by someone who did the work. Answers are stored
- * with the day's submission for the reviewer: nothing is auto-graded, because
- * a marking script cannot tell a good judgement call from a plausible sentence.
+ * Questions answerable only by someone who did the work. The inputs belong to
+ * the day's submission form (the HTML `form` attribute), so the answers and
+ * the link are sent and checked together: a day can't be completed with one
+ * and not the other. Stored for the reviewer, never auto-graded.
  */
 export function KnowledgeCheck({
   day, questions, saved,
 }: { day: number; questions: string[]; saved: string[] | null }) {
   const [answers, setAnswers] = useState<string[]>(() => questions.map((_, i) => saved?.[i] ?? ""));
-  const [status, setStatus] = useState<"idle" | "saving" | "saved">(saved?.length ? "saved" : "idle");
-  const [error, setError] = useState("");
-
-  async function onSubmit(formData: FormData) {
-    setError("");
-    setStatus("saving");
-    formData.set("quiz", JSON.stringify(answers));
-    const result = await submitOrQueue(day, formData, submitDay);
-    if (result.ok) {
-      setStatus("saved");
-      track("knowledge_check_submit", { day, answered });
-    }
-    else {
-      setStatus("idle");
-      setError(result.message);
-    }
-  }
-
-  const answered = answers.filter((a) => a.trim().length > 2).length;
+  const answered = answers.filter((a) => a.trim().length >= MIN_ANSWER_CHARS).length;
 
   return (
-    <form action={onSubmit} className="flex flex-1 flex-col gap-6">
+    <div className="flex flex-1 flex-col gap-6">
       <p className="text-sm leading-relaxed text-muted">
-        Answer these in order — they prove you actually did the work. Your reviewer reads them alongside your deliverable.
+        Answer every question in your own words, a full sentence or more. They&apos;re sent with your deliverable when you submit the day, and your reviewer reads them together.
       </p>
 
       <ol className="flex flex-col gap-5">
@@ -47,16 +27,19 @@ export function KnowledgeCheck({
             <label htmlFor={`q-${day}-${i}`} className="block text-[15px] leading-snug font-semibold">
               <span className="text-red-deep">Q{i + 1}.</span> {q}
             </label>
-            <input
+            <textarea
               id={`q-${day}-${i}`}
-              type="text"
+              name={`quiz_${i}`}
+              form={`day-form-${day}`}
+              rows={2}
+              maxLength={2000}
               value={answers[i]}
               onChange={(e) => {
                 const next = [...answers];
                 next[i] = e.target.value;
                 setAnswers(next);
-                setStatus("idle");
               }}
+              onPaste={(e) => e.preventDefault()}
               placeholder="Type your answer..."
               className="mt-2 block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none"
             />
@@ -64,16 +47,9 @@ export function KnowledgeCheck({
         ))}
       </ol>
 
-      {error && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{error}</p>}
-
-      <div className="mt-auto flex flex-wrap items-center gap-4">
-        <Button type="submit" className="rounded-md px-4! py-2! text-xs!" disabled={status === "saving" || answered === 0} aria-busy={status === "saving"}>
-          {status === "saving" ? "Saving…" : "Submit answers"}
-        </Button>
-        <p role="status" aria-live="polite" className="text-sm text-muted">
-          {status === "saved" ? "Saved: you can change these any time." : `${answered} of ${questions.length} answered`}
-        </p>
-      </div>
-    </form>
+      <p role="status" aria-live="polite" className="mt-auto text-sm text-muted">
+        {answered} of {questions.length} answered · submit them with your deliverable
+      </p>
+    </div>
   );
 }
