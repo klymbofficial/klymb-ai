@@ -39,7 +39,7 @@ export function ContentGuard({ email, children }: { email: string; children: Rea
     };
   }, []);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="0" y="110" transform="rotate(-24 180 100)" font-family="sans-serif" font-size="13" fill="rgba(60,40,40,0.07)">${stamp.replace(/[<&>"]/g, "")}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="0" y="110" transform="rotate(-24 180 100)" font-family="sans-serif" font-size="13" fill="rgba(60,40,40,0.2)">${stamp.replace(/[<&>"]/g, "")}</text></svg>`;
 
   return (
     <div ref={ref} className="content-guard relative">
