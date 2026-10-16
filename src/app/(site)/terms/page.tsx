@@ -42,7 +42,7 @@ export default function TermsPage() {
       <Section n="4." title="The programme" plain="30 days, four assessments and two days of interview prep, reviewed by a person. We may improve it as it runs.">
         <p>
           A cohort is 30 consecutive days of daily tasks, four weekly assessments, and two days of interview preparation, for one
-          career track. Content, schedule and reviewers may change; we will not reduce the substance of what you paid for.
+          career track. Content, schedule and reviewers may change; we will not reduce the substance of {HIDE_MONEY ? "the programme" : "what you paid for"}.
         </p>
         <p>
           <strong>You cannot change track after you enroll.</strong> Each track has its own project, assessments and
@@ -73,7 +73,7 @@ export default function TermsPage() {
         </p>
         <p>
           Links you submit must be your own: your GitHub account, your LinkedIn posts. Submitting someone else&apos;s work
-          as yours ends your place without refund.
+          as yours ends your place{HIDE_MONEY ? "" : " without refund"}.
         </p>
       </Section>
 
@@ -115,24 +115,29 @@ export default function TermsPage() {
         <p>
           The service is provided as is. We do not warrant uninterrupted or error-free operation. We will restore service
           as quickly as we reasonably can, and if an outage costs you a submission deadline, tell your reviewer: nobody
-          loses a refund because our site was down.
+          {HIDE_MONEY ? "is marked down" : "loses a refund"} because our site was down.
         </p>
       </Section>
 
-      <Section n="12." title="Limitation of liability" plain="Our liability is capped at what you paid us.">
+      <Section n="12." title="Limitation of liability" plain={HIDE_MONEY ? "Our liability is limited as far as the law allows." : "Our liability is capped at what you paid us."}>
         <p>
           To the maximum extent permitted by law, we are not liable for indirect, incidental or consequential loss, or
-          loss of profit or opportunity. Our total liability for any claim relating to the service is limited to the fee
-          you paid us in the 12 months before the claim.
+          loss of profit or opportunity.{HIDE_MONEY ? "" : " Our total liability for any claim relating to the service is limited to the fee you paid us in the 12 months before the claim."}
         </p>
         <p>Nothing here limits liability that cannot be limited by law, including under consumer protection law.</p>
       </Section>
 
       <Section n="13." title="Ending your place">
         <p>
-          You may stop at any time; the refund position is in the <Link href="/refund-policy">Refund Policy</Link>. We may
-          end a place for dishonesty, harassment, or serious breach of these terms, and where we do so for dishonesty the
-          completion refund does not apply.
+          {HIDE_MONEY ? (
+            <>You may stop at any time. We may end a place for dishonesty, harassment, or serious breach of these terms.</>
+          ) : (
+            <>
+              You may stop at any time; the refund position is in the <Link href="/refund-policy">Refund Policy</Link>. We may
+              end a place for dishonesty, harassment, or serious breach of these terms, and where we do so for dishonesty the
+              completion refund does not apply.
+            </>
+          )}
         </p>
       </Section>
 

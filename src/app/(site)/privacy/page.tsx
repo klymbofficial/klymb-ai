@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Facts, LegalPage, Section } from "@/components/legal/LegalPage";
 import { dataPoints, entityRows, grievance } from "@/data/legal";
+import { HIDE_MONEY } from "@/lib/site-status";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -35,10 +36,12 @@ export default function PrivacyPage() {
 
       <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and, only if you allow cookies, aggregate analytics.">
         <Facts rows={dataPoints.collected} />
-        <p>
-          We do not collect payment card details. Payments are not yet live on this service; when they are, they will be
-          handled by a payment provider and this Policy will be updated before that happens.
-        </p>
+        {!HIDE_MONEY && (
+          <p>
+            We do not collect payment card details. Payments are not yet live on this service; when they are, they will be
+            handled by a payment provider and this Policy will be updated before that happens.
+          </p>
+        )}
         <p>
           <strong>We never ask for, and you should never submit, sensitive data</strong> such as government ID numbers,
           financial account details or health information. Do not put employer-confidential material in your coursework.
@@ -96,7 +99,7 @@ export default function PrivacyPage() {
           <li><strong>Registrations that do not enroll:</strong> kept for 24 months, so we can tell you when a track opens, then deleted.</li>
           <li><strong>Learner records and submissions:</strong> kept for 24 months after the cohort ends, so results and feedback remain available to you.</li>
           <li><strong>Technical logs:</strong> kept for the short period our hosting provider retains them.</li>
-          <li><strong>Records we must keep:</strong> proof of refund decisions and consent records, kept as long as needed for tax, accounting or a dispute.</li>
+          <li><strong>Records we must keep:</strong> {HIDE_MONEY ? "consent records" : "proof of refund decisions and consent records"}, kept as long as needed for tax, accounting or a dispute.</li>
         </ul>
       </Section>
 

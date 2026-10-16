@@ -1,4 +1,5 @@
 import "server-only";
+import { HIDE_MONEY } from "@/lib/site-status";
 
 /**
  * Transactional email through Brevo's HTTP API.
@@ -75,7 +76,7 @@ ${body}
 </td></tr>
 <tr><td align="center" style="padding:22px 10px 0;font-size:12px;line-height:1.7;color:#8a8785">
   ${wordmark(o.site, C.ink)}<br>
-  <a href="${o.site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; <a href="${o.site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; <a href="${o.site}/contact" style="color:#8a8785">Contact</a><br>
+  <a href="${o.site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${o.site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${o.site}/contact" style="color:#8a8785">Contact</a><br>
   Klymb.ai, a programme of Creators Enterprises Private Limited
 </td></tr>
 </table></td></tr></table></body></html>`;
