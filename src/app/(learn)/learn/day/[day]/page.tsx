@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
-  ArrowLeft, ArrowRight, BookOpen, ChevronRight, CircleHelp, CloudUpload, Pencil, SquareCheck, Target, Toolbox,
+  ArrowLeft, ArrowRight, BookOpen, Lock, ChevronRight, CircleHelp, CloudUpload, Pencil, SquareCheck, Target, Toolbox,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { auth } from "@/auth";
@@ -170,7 +170,16 @@ export default async function LearnDayPage({ params }: { params: Promise<{ day: 
                 <div className="float-soft">
                   <Image src={deskImage} alt="" aria-hidden="true" sizes="(min-width: 1280px) 40vw, 90vw" priority className="h-auto w-full xl:origin-right xl:scale-[1.18]" />
                 </div>
-                {next && (
+                {next && !submission && (
+                  <span
+                    title={`Submit Day ${entry.day} to open Day ${next.day}`}
+                    className="absolute top-2 right-0 inline-flex cursor-not-allowed items-center gap-1.5 rounded-md bg-surface px-4 py-2 text-sm font-bold text-muted shadow-sm"
+                  >
+                    <Lock aria-hidden="true" className="size-3.5" /> Day {next.day}
+                    <span className="sr-only">: locked until you submit Day {entry.day}</span>
+                  </span>
+                )}
+                {next && submission && (
                   <Link
                     href={`/learn/day/${next.day}`}
                     className="group absolute top-2 right-0 inline-flex items-center gap-1.5 rounded-md bg-red-strong px-4 py-2 text-sm font-bold text-white shadow-sm transition-[background-color,box-shadow] duration-200 hover:bg-red-press hover:shadow-card"
