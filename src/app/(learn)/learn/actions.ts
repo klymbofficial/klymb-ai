@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
 import { claimDevice, releaseDevice } from "@/lib/learner/device";
+import { broadcastTakeover } from "@/lib/learner/device-channel";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
@@ -188,6 +189,9 @@ export async function continueOnThisDevice() {
 
   await claimDevice(email, sid);
   console.info("device takeover:", email);
+  // Tell the old device right away (it re-checks and leaves within a second).
+  const { data: learner } = (await createServiceClient()?.from("learners").select("id").eq("email", email).maybeSingle()) ?? { data: null };
+  if (learner?.id) await broadcastTakeover(learner.id as string);
   redirect("/learn");
 }
 

@@ -30,6 +30,7 @@ const csp = [
   [
     "connect-src 'self'",
     "https://*.supabase.co",
+    "wss://*.supabase.co",
     "https://www.google-analytics.com",
     "https://*.analytics.google.com",
     "https://*.googletagmanager.com",
