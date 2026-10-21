@@ -38,6 +38,32 @@
   /* Inter for body and paragraph text; Archivo stays on headings. */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  /*
+   * System Design course app (/learn/system-design) only: the Modernist
+   * tokens it was designed with, defined on .sd-app in
+   * components/course-app/course-app.css. `sd-n-*` is its neutral ramp.
+   */
+  --color-sd-bg: var(--sd-bg);
+  --color-sd-surface: var(--sd-surface);
+  --color-sd-ink: var(--sd-ink);
+  --color-sd-divider: var(--sd-divider);
+  --color-sd-accent: var(--sd-accent);
+  --color-sd-accent-100: var(--sd-accent-100);
+  --color-sd-accent-300: var(--sd-accent-300);
+  --color-sd-accent-400: var(--sd-accent-400);
+  --color-sd-accent-600: var(--sd-accent-600);
+  --color-sd-accent-700: var(--sd-accent-700);
+  --color-sd-accent-800: var(--sd-accent-800);
+  --color-sd-n-100: var(--sd-n-100);
+  --color-sd-n-200: var(--sd-n-200);
+  --color-sd-n-300: var(--sd-n-300);
+  --color-sd-n-400: var(--sd-n-400);
+  --color-sd-n-500: var(--sd-n-500);
+  --color-sd-n-600: var(--sd-n-600);
+  --color-sd-n-700: var(--sd-n-700);
+  --color-sd-n-800: var(--sd-n-800);
+  --color-sd-n-900: var(--sd-n-900);
 }
 
 html {
