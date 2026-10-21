@@ -56,9 +56,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What is the non-AI comparator for your chosen opportunity, and why must AI beat it rather than beat doing nothing?",
       "Today's decision: Select a bounded opportunity and a falsifiable reason AI could help. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Name one piece of evidence that would make you reverse the investment decision, and how you would collect it."
     ]
   },
   {
@@ -99,9 +100,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Explain the difference between observed behaviour, reported pain, demand and willingness to pay, with one example of each from today.",
       "Today's decision: Keep, narrow or replace the initial job hypothesis. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Who is the buyer and who is the user for your job, and where do their priorities conflict?"
     ]
   },
   {
@@ -142,9 +144,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Why is a valid output schema not enough to make a response safe to use? Give one unsupported commitment it could still contain.",
       "Today's decision: Which semantic requirement must be enforced before a draft is useful? Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which rule in your contract is enforced by the program rather than by the prompt, and why does that difference matter?"
     ]
   },
   {
@@ -185,9 +188,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "When two sources disagree, which one wins in your precedence rules and why?",
       "Today's decision: Choose inclusion, precedence and fallback rules. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "What did you leave out of the context window to stay within the token budget, and what risk does leaving it out create?"
     ]
   },
   {
@@ -233,9 +237,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Why must eligibility (privacy, availability, contract) be checked before comparing model quality?",
       "Today's decision: Select, route, restrict or reject the model configuration. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which task slice did the aggregate-best configuration fail on, and how would routing address it?"
     ]
   },
   {
@@ -270,9 +275,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
     "reviewerChecks": "Transition passes with a replayable bounded task and correction. Advanced also identifies an adoption barrier and its evidence, rather than claiming demand from successful generation.",
     "resources": [],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What does 'inspectable' mean for your prototype's draft, and how did you test that a real user could check it?",
       "Today's decision: What should be removed or revised before broader testing? Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which part of the demo did you remove because users could not complete the task comfortably?"
     ]
   },
   {
@@ -306,9 +312,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
     "reviewerChecks": "Transition passes with a testable non-AI comparator, supported scope and appropriate restrictions. Advanced also passes an investment allocation and buyer-value defence. Review the course rubric; no diagnostic score substitutes for this checkpoint. Record evidence limitations and the next corrective case.",
     "resources": [],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Leadership asked for more automation. What evidence would justify it, and what would you say if that evidence is missing?",
       "Today's decision: Continue, narrow, stop or remediate. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "How do need, feasibility and authorisation each limit the scope you recommended?"
     ]
   },
   {
@@ -349,9 +356,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Explain data lineage in one sentence and why it matters for an AI product's sources.",
       "Today's decision: Admit, restrict or exclude the source and choose a procurement test. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Why can a source be acceptable for one user group but not another? Use your audit as the example."
     ]
   },
   {
@@ -392,9 +400,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "How can a chunk boundary change the evidence the model sees? Give a concrete example from your documents.",
       "Today's decision: Change processing, chunking or task scope only where evidence supports it. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Why did a document that looks simple to a human fail in processing?"
     ]
   },
   {
@@ -435,9 +444,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Compare dense, sparse and hybrid retrieval: name one situation where each fails.",
       "Today's decision: Select a configuration or retain the simpler baseline. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Why might a better retrieval score still produce less useful answers?"
     ]
   },
   {
@@ -478,9 +488,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Which interface element (preview, source view, edit, recovery) mattered most for trust in your test, and why?",
       "Today's decision: Revise the interaction or narrow the use case. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "What does it tell you when participants understand the interface differently from the team's intent, and what did you change?"
     ]
   },
   {
@@ -526,9 +537,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What is the practical difference between a deterministic workflow and an agent that plans its own steps?",
       "Today's decision: Keep a workflow, add bounded planning or remove the proposed capability. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which side effect or permission made you limit the agent's tools?"
     ]
   },
   {
@@ -569,9 +581,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Why does an unlimited retry policy make reliability worse rather than better?",
       "Today's decision: Change limits, recoverability or scope and name an accountable owner. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "What does a 'useful terminal state' mean for your task, and who owns the case when it is not reached?"
     ]
   },
   {
@@ -605,9 +618,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
     "reviewerChecks": "Transition passes with demonstrable access denial and useful failure recovery. Advanced also passes build/buy, exit and transfer-case architecture anchors. Submit the three-source discovery record or clearly labeled access-limited equivalent.",
     "resources": [],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Which acceptance condition did the reused design fail when the user, data or consequence changed?",
       "Today's decision: Accept, restrict, replace or remediate the architecture. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "How do you decide whether to restrict an architecture or replace it?"
     ]
   },
   {
@@ -653,9 +667,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Why does the denominator of an evaluation matter? Give an example where it hides a serious failure.",
       "Today's decision: Which evidence supports a release gate and which needs further collection? Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "What is evaluation leakage, and how did you prevent it in your pack?"
     ]
   },
   {
@@ -701,9 +716,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "When should a model-as-judge be allowed to gate a release, and when may it only assist human review?",
       "Today's decision: Which checks can gate release, assist review or remain exploratory? Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "How did you measure disagreement between reviewers, and what did a high disagreement tell you?"
     ]
   },
   {
@@ -744,9 +760,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Explain prompt injection in plain words and one control that limits its damage in your product.",
       "Today's decision: Contain, redesign, restrict or stop the pilot. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "What is 'excessive agency', and which permission did you remove because of it?"
     ]
   },
   {
@@ -792,9 +809,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What is the difference between session memory and persistent memory, and what extra controls does persistent memory need?",
       "Today's decision: Retain, narrow or remove persistence. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "How does a user correct or delete something the product remembered about them?"
     ]
   },
   {
@@ -845,9 +863,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Why can usage and acceptance rise while the business outcome gets worse?",
       "Today's decision: Improve capability, redesign workflow, change enablement or revise the value hypothesis. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which adoption metric is closest to real value for your product, and why?"
     ]
   },
   {
@@ -888,9 +907,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What is interference between test groups, and how could it bias your pilot result?",
       "Today's decision: Run, redesign or delay the experiment. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which stopping rule did you set, and why must it be decided before the experiment starts?"
     ]
   },
   {
@@ -924,9 +944,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
     "reviewerChecks": "Transition passes with a defensible gate and tested restriction. Advanced also passes the quality/economics adjudication anchor, quantifying a reversal condition without trading away mandatory authorization. Update Artifacts 3 and 4 with reviewer feedback.",
     "resources": [],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "How do severity and exposure combine to decide whether a quality issue blocks launch?",
       "Today's decision: Release, route, restrict, remediate or stop. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Two stakeholders read the same summary and disagree. What missing information would settle it?"
     ]
   },
   {
@@ -972,9 +993,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "List the costs beyond the model bill that belong in cost per useful outcome.",
       "Today's decision: Which configuration and commercial test deserve investment? Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "How can a cheaper model produce a worse financial result?"
     ]
   },
   {
@@ -1020,9 +1042,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What is a switching cost, and how did it affect your build-or-buy recommendation?",
       "Today's decision: Fund, stage, partner or stop each bet. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which assumed advantage could disappear in procurement review, and how would you test it early?"
     ]
   },
   {
@@ -1068,9 +1091,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Why does p95 latency matter more to users than average latency?",
       "Today's decision: Degrade, restrict eligibility, add capacity or change the promise. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "If reviewers become the bottleneck, which promise to users would you change first?"
     ]
   },
   {
@@ -1116,9 +1140,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What is an ablation, and why does it isolate a cause better than changing everything at once?",
       "Today's decision: Fix the mechanism, narrow the job or collect further evidence. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Why can strong intermediate metrics coexist with poor end-task quality?"
     ]
   },
   {
@@ -1164,9 +1189,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "Who has the authority to stop a launch in your plan, and what evidence triggers the decision?",
       "Today's decision: Stop, restrict or continue under accountable gates. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "What does a good rollback plan include before an incident happens?"
     ]
   },
   {
@@ -1207,9 +1233,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
       }
     ],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "What makes a portfolio claim reproducible by someone else?",
       "Today's decision: Correct the result, narrow the claim or remove it. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "Which claim did you narrow or remove because the evidence could not support it?"
     ]
   },
   {
@@ -1243,9 +1270,10 @@ export const aiPmCurriculum: CurriculumDay[] = [
     "reviewerChecks": "Transition passes the core capstone and its scope gates. Advanced also passes all five senior decision anchors. State primary-discovery versus access-limited evidence and report actual prototype results, not imagined production ROI.",
     "resources": [],
     "quiz": [
-      "Paste the link to today's work in your portfolio repo.",
+      "How do customer value, risk and economics trade off in your final recommendation?",
       "Today's decision: Go, narrow, defer or stop with an accountable next action. Give your answer and the evidence behind it.",
-      "Which explanation for today's failure did you rule out, and what evidence ruled it out?"
+      "Which explanation for today's failure did you rule out, and what evidence ruled it out?",
+      "If the panel changes one constraint without notice, how do you show your decision still holds or must change?"
     ]
   },
   {
