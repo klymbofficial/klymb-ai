@@ -31,7 +31,7 @@ function transcriptFor(id: string): [number, string][] {
 }
 
 /** The lesson video, portrait 9:16 on the dark grid. Its own controls are hidden; the player's buttons drive it. */
-function Video({ s, act }: { s: CourseState; act: Act }) {
+function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
   const day = dayOf(s.cur)!;
   const wide = day.video.wide;
   const ref = useRef<HTMLVideoElement>(null);
@@ -59,7 +59,7 @@ function Video({ s, act }: { s: CourseState; act: Act }) {
   };
 
   return (
-    <div id="lesson-watch" className={clsx("sd-grid relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
+    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
         <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
@@ -90,18 +90,20 @@ function Video({ s, act }: { s: CourseState; act: Act }) {
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
         className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
       />
+      {subs && <Subtitles s={s} />}
     </div>
   );
 }
 
-/** The line being spoken, in a band under the video (the clean video cut has no burned-in subtitles). */
+/** The line being spoken, overlaid at the bottom of the video like any player's captions (the clean cut has none burned in). */
 function Subtitles({ s }: { s: CourseState }) {
   const lines = TRANSCRIPTS[s.cur] ?? [];
   let cur = "";
   for (const [t, text] of lines) if (s.t >= t) cur = text;
+  if (!cur) return null;
   return (
-    <div aria-live="off" className="flex min-h-[68px] items-center justify-center bg-sd-ink px-4 py-2.5 text-center text-[15px] leading-[1.35] font-semibold text-sd-bg lg:min-h-[76px] lg:px-10 lg:text-[18px]">
-      {cur || "\u00a0"}
+    <div aria-live="off" className="pointer-events-none absolute inset-x-0 bottom-[5%] z-[2] flex justify-center">
+      <span className="max-w-[86%] bg-black/75 px-[0.5em] py-[0.2em] text-center text-[clamp(12px,2.1cqw,22px)] leading-[1.4] font-semibold text-white">{cur}</span>
     </div>
   );
 }
@@ -258,8 +260,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
         <div className="flex flex-col">
           {showVideo ? (
             <>
-              <Video s={s} act={act} />
-              {subsOn && <Subtitles s={s} />}
+              <Video s={s} act={act} subs={subsOn} />
               <div className="px-5 lg:px-0">
                 <Scrubber s={s} act={act} />
                 <div className="flex justify-between text-xs font-semibold lg:hidden">
