@@ -2,11 +2,13 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { PaymentsTable } from "@/components/admin/PaymentsTable";
 import { StatTile } from "@/components/admin/StatTile";
+import { canRefund, REFUND_EMAIL } from "@/lib/admin/access";
+import { requireAdmin } from "@/lib/admin/auth";
 import { getPayments } from "@/lib/admin/data";
 import { formatINR } from "@/lib/format";
 
 export default async function AdminPaymentsPage() {
-  const payments = await getPayments();
+  const [admin, payments] = await Promise.all([requireAdmin(), getPayments()]);
   const paid = payments.filter((p) => p.status === "paid");
   const refunded = payments.filter((p) => p.status === "refunded");
   const pending = paid.filter((p) => p.refund_request);
@@ -17,7 +19,7 @@ export default async function AdminPaymentsPage() {
       <PageTitle
         eyebrow="Money"
         title="Payments & refunds"
-        intro="Completed payments, newest first. A refund returns the full amount to the learner's original payment method and is normally issued once their 30 days are over. Every refund is recorded in Admin activity."
+        intro={`Completed payments, newest first. A refund returns the full amount to the learner's original payment method and is normally issued once their 30 days are over. Only ${REFUND_EMAIL} can issue refunds, and every refund is recorded in Admin activity.`}
       />
       <div className="mb-8 grid gap-3 sm:grid-cols-3">
         <StatTile label="Held" value={sum(paid)} hint={`${paid.length} paid payment${paid.length === 1 ? "" : "s"}`} />
@@ -27,7 +29,7 @@ export default async function AdminPaymentsPage() {
       {payments.length === 0 ? (
         <EmptyState title="No payments yet" body="Every course is free right now, so there is nothing to refund. Payments appear here as soon as Razorpay confirms them." />
       ) : (
-        <PaymentsTable rows={payments} />
+        <PaymentsTable rows={payments} canRefund={canRefund(admin)} />
       )}
     </>
   );

@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { dailyCounts, daysUntilCohortEnds, isOwnerEmail, ownerEmails, removalBlocked, resolveAdmin, type AdminRow } from "../src/lib/admin/access";
+import { canRefund, dailyCounts, daysUntilCohortEnds, isOwnerEmail, ownerEmails, removalBlocked, resolveAdmin, type AdminRow } from "../src/lib/admin/access";
 
 const OWNERS = ["owner@klymb.ai"];
 const table: AdminRow[] = [
@@ -69,4 +69,12 @@ test("daily counts bucket by IST day and fill empty days", () => {
     { date: "2026-10-21", count: 1 },
     { date: "2026-10-22", count: 2 },
   ]);
+});
+
+test("only klymbofficial can refund, whatever else they are", () => {
+  assert.equal(canRefund({ email: "klymbofficial@gmail.com" }), true);
+  assert.equal(canRefund({ email: " KlymbOfficial@Gmail.com " }), true);
+  assert.equal(canRefund({ email: "owner@klymb.ai" }), false);
+  assert.equal(canRefund({ email: "klymbofficial@gmail.com.evil.com" }), false);
+  assert.equal(canRefund(null), false);
 });

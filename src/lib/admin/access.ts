@@ -60,6 +60,17 @@ export function removalBlocked(target: unknown, by: AdminIdentity, owners: strin
   return null;
 }
 
+/**
+ * The only account that may refund money. Fixed in code on purpose, not read
+ * from the environment or the admin list: adding an admin or an owner never
+ * lets anyone else move money.
+ */
+export const REFUND_EMAIL = "klymbofficial@gmail.com";
+
+export function canRefund(admin: { email: string } | null): boolean {
+  return admin !== null && normaliseEmail(admin.email) === REFUND_EMAIL;
+}
+
 /** Days until a cohort's 30 days are over, counted from its start date (0 once it has ended). */
 export function daysUntilCohortEnds(cohortStart: string, now: Date = new Date(), length = 30): number {
   const start = Date.parse(`${cohortStart}T00:00:00+05:30`);

@@ -134,7 +134,7 @@ export default async function AdminOverviewPage() {
         <StatTile label="Refunded" value={money.refunded} hint={`${formatINR(money.refundedAmount / 100)} returned`} tone="muted" />
         <Link href="/admin/payments" className="card flex flex-col justify-center gap-1 p-5 transition-colors hover:bg-surface">
           <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Payments & refunds</span>
-          <span className="text-sm font-bold text-red-deep">Find a payment or refund it →</span>
+          <span className="text-sm font-bold text-red-deep">See every payment and refund →</span>
         </Link>
       </div>
 

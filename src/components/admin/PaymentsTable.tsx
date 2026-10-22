@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { refund } from "@/app/admin/payment-actions";
-import { daysUntilCohortEnds } from "@/lib/admin/access";
+import { daysUntilCohortEnds, REFUND_EMAIL } from "@/lib/admin/access";
 import type { PaymentRow } from "@/lib/admin/data";
 import { formatINR } from "@/lib/format";
 
 const dateTime = (iso: string) =>
   new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
-export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
+export function PaymentsTable({ rows, canRefund }: { rows: PaymentRow[]; canRefund: boolean }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const shown = q ? rows.filter((p) => p.email.toLowerCase().includes(q) || p.razorpay_payment_id?.toLowerCase().includes(q)) : rows;
@@ -47,7 +47,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
               <td className="px-4 py-3">{p.track}</td>
               <td className="px-4 py-3 font-bold">{formatINR(p.amount / 100)}</td>
               <td className="px-4 py-3 font-mono text-xs">{p.razorpay_payment_id}</td>
-              <td className="px-4 py-3"><RefundCell payment={p} /></td>
+              <td className="px-4 py-3"><RefundCell payment={p} canRefund={canRefund} /></td>
             </tr>
           ))}
         </tbody>
@@ -57,7 +57,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
   );
 }
 
-function RefundCell({ payment }: { payment: PaymentRow }) {
+function RefundCell({ payment, canRefund }: { payment: PaymentRow; canRefund: boolean }) {
   const [confirming, setConfirming] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
@@ -71,6 +71,14 @@ function RefundCell({ payment }: { payment: PaymentRow }) {
       <span className="flex flex-col items-start gap-0.5">
         <span className="text-xs font-bold uppercase tracking-wider text-red-deep">Refund pending</span>
         <span className="text-xs text-muted">Requested by {payment.refund_request.by}, {dateTime(payment.refund_request.at)}. Waiting for Razorpay.</span>
+      </span>
+    );
+  }
+  if (!canRefund) {
+    return (
+      <span className="flex flex-col items-start gap-0.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-ink">Paid</span>
+        <span className="text-xs text-muted">Refunds only from {REFUND_EMAIL}</span>
       </span>
     );
   }
