@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useRef } from "react";
 import { ONBOARDING, QUESTIONS, QUICK_CHECKS } from "@/data/system-design/course-app";
-import { answerQuickCheck, closeQuickCheck, fmt, lesson, quickCheckAt, startQuiz, type CourseState } from "@/lib/course-app";
+import { answerQuickCheck, closeQuickCheck, fmt, quickCheckAt, startQuiz, type CourseState } from "@/lib/course-app";
 import { Icon } from "./icons";
 import type { Act } from "./useCourseApp";
 
@@ -40,7 +40,7 @@ export function Onboarding({ s, act }: { s: CourseState; act: Act }) {
         <div key={`art-${i}`} className={clsx(anim, "sd-grid flex h-[300px] flex-none flex-col justify-between p-[22px] [--grid:24px] lg:aspect-square lg:h-auto")} style={{ animationDuration: ".5s" }} aria-hidden="true">
           {i === 0 && (
             <>
-              <span className="text-7xl leading-none font-extrabold tracking-[-0.05em] text-white/22 lg:text-[120px]">08</span>
+              <span className="text-7xl leading-none font-extrabold tracking-[-0.05em] text-white/22 lg:text-[120px]">21</span>
               <div className="flex flex-col items-start">
                 <div className="border-2 border-white/55 px-3.5 py-2.5 text-sm font-extrabold">Client</div>
                 <div className="ml-6 h-3.5 w-0.5 bg-sd-bg" />
@@ -62,10 +62,10 @@ export function Onboarding({ s, act }: { s: CourseState; act: Act }) {
           )}
           {i === 2 && (
             <>
-              <div className="flex items-start justify-between"><span className={big}>12</span><span className="text-sd-accent"><Icon name="flame" size={40} /></span></div>
+              <div className="flex items-start justify-between"><span className={big}>1</span><span className="text-sd-accent"><Icon name="flame" size={40} /></span></div>
               <div className="grid grid-cols-7 gap-1">
                 {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-                  <div key={d} className={clsx("aspect-square", d === 2 ? "sd-frozen-dark" : d === 6 ? "border-[1.5px] border-dashed border-white/50" : "bg-sd-accent")} />
+                  <div key={d} className={clsx("aspect-square", d === 0 ? "bg-sd-accent" : "border-[1.5px] border-dashed border-white/50")} />
                 ))}
               </div>
             </>
@@ -91,7 +91,7 @@ export function Onboarding({ s, act }: { s: CourseState; act: Act }) {
 
 /** The ungraded in-video question: a bottom sheet on mobile, a centred card on web. */
 export function QuickCheckSheet({ s, act }: { s: CourseState; act: Act }) {
-  const qc = QUICK_CHECKS[lesson(s.cur).mi];
+  const qc = QUICK_CHECKS[s.cur];
   const picked = s.qcPick;
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => { first.current?.focus(); }, []);

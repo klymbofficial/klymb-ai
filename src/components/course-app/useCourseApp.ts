@@ -3,11 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QUESTIONS } from "@/data/system-design/course-app";
 import {
-  START_SCREENS, defaultState, fromStored, isAnswered, nextQuestion, pickOption, previewState, tick, togglePlay, toStored,
+  START_SCREENS, deepLink, defaultState, fromStored, isAnswered, migrateLegacy, nextQuestion, pickOption, previewState, tick, togglePlay, toStored,
   type CourseState, type StartScreen,
 } from "@/lib/course-app";
 
-const STORAGE_KEY = "klymb.system-design.v1";
+/** v2: the real course. v1 held the design prototype's sample learner, so it isn't read. */
+const STORAGE_KEY = "klymb.system-design.v2";
+
+/** Progress and language from the old standalone Day pages, carried over once. */
+function readLegacy() {
+  const get = (k: string) => { try { return JSON.parse(window.localStorage.getItem(k) ?? "null"); } catch { return null; } };
+  return { day0: get("klymb-sd-day-0"), day1: get("klymb-sd-day-1"), lang: get("klymb-lang") };
+}
 
 export type Act = (fn: (s: CourseState) => CourseState) => void;
 
@@ -15,12 +22,15 @@ export type Act = (fn: (s: CourseState) => CourseState) => void;
  * The app's one store. Progress is saved to this browser only (there is no
  * backend yet). `?start=<screen>` opens a design-review state instead and
  * saves nothing; `&q=` and `&post=1` set the question and a finished
- * post-assessment, as on the design canvas.
+ * post-assessment, as on the design canvas. `?lesson=<id>` opens straight
+ * into a lesson (the old /system-design/day-N pages redirect here).
  */
 export function useCourseApp() {
   const [s, setS] = useState<CourseState>(() => defaultState());
   const [ready, setReady] = useState(false);
   const preview = useRef(false);
+  /** `?lesson=` read once: the URL is tidied after, and dev mode runs the effect twice. */
+  const link = useRef<string | null | undefined>(undefined);
   const latest = useRef(s);
   useEffect(() => { latest.current = s; }, [s]);
 
@@ -37,10 +47,15 @@ export function useCourseApp() {
       let raw: unknown = null;
       try { raw = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "null"); } catch { raw = null; }
       next = fromStored(raw);
+      if (!raw) next = migrateLegacy(next, readLegacy());
+      if (link.current === undefined) link.current = params.get("lesson");
+      if (link.current) {
+        next = deepLink(next, link.current);
+        window.history.replaceState(null, "", window.location.pathname);
+      }
     }
     if (!navigator.onLine) next = { ...next, offline: true };
     // Storage and the URL only exist in the browser, so the first real state arrives after mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setS(next);
     setReady(true);
   }, []);

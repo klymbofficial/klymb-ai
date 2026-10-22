@@ -3,10 +3,11 @@
 import clsx from "clsx";
 import { useRef, useState } from "react";
 import type { BuildTask, Lang } from "@/data/system-design/types";
+import { Icon } from "../icons";
 
 const UI = {
-  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Next: prove it →", picked: "Now tap the slot where it goes" },
-  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Agla: prove karo →", picked: "Ab woh slot tap karo jahan yeh jaayega" },
+  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Next: prove it", picked: "Now tap the slot where it goes" },
+  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Agla: prove karo", picked: "Ab woh slot tap karo jahan yeh jaayega" },
 };
 
 /**
@@ -66,15 +67,15 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
 
   return (
     <div>
-      <p className="text-lg font-extrabold leading-tight">{task.title}</p>
-      <p className="mt-1 text-sm text-muted">{task.intro}</p>
+      <h3 className="m-0 text-[22px] tracking-[-0.02em] lg:text-[26px]">{task.title}</h3>
+      <p className="m-0 mt-1 text-sm text-sd-n-800">{task.intro}</p>
 
       {/* the diagram */}
-      <div className="mt-4 rounded-2xl bg-night p-3 sm:p-4" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)", backgroundSize: "20px 20px" }}>
-        <div className="mx-auto w-max rounded-xl border-2 border-white/60 bg-white/10 px-4 py-2 text-sm font-extrabold text-white">{task.given}</div>
+      <div className="sd-grid mt-4 p-3 [--grid:20px] lg:p-5 lg:[--grid:26px]">
+        <div className="mx-auto w-max border-2 border-sd-bg bg-sd-bg px-4 py-2 text-sm font-extrabold text-sd-ink">{task.given}</div>
         {task.rows.map((row, r) => (
           <div key={r}>
-            <div className="mx-auto h-4 w-0.5 bg-white/30" aria-hidden="true" />
+            <div className="mx-auto h-4 w-0.5 bg-white/40" aria-hidden="true" />
             <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
               {row.map((sid) => {
                 const got = placed[sid];
@@ -87,15 +88,15 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                     onClick={() => picked && drop(picked, sid)}
                     aria-label={got ? `${label(got)}: ${task.slots[sid].role}` : task.slots[sid].role}
                     className={clsx(
-                      "min-h-[72px] rounded-xl border-2 px-2 py-2 text-center transition-[border-color,background-color,transform] duration-200",
-                      got && "border-emerald-400 bg-emerald-400/15",
-                      !got && !bad && "border-dashed border-white/35 bg-white/[0.03]",
-                      !got && picked && "border-yellow-300/80",
-                      bad && "animate-[shake_.35s] border-red-soft bg-red-soft/15",
+                      "min-h-[72px] cursor-pointer border-2 px-2 py-2 text-center transition-[border-color,background-color] duration-200",
+                      got && "border-sd-accent bg-sd-accent",
+                      !got && !bad && "border-dashed border-white/40 bg-transparent",
+                      !got && !bad && picked && "border-sd-accent-400",
+                      bad && "animate-[shake_.35s] border-sd-accent-400 bg-sd-accent/20",
                     )}
                   >
-                    {got && <span className="block text-[13px] font-extrabold text-emerald-300">✓ {label(got)}</span>}
-                    <span className={clsx("block text-[11px] leading-snug", got ? "text-white/70" : "text-white/80")}>{task.slots[sid].role}</span>
+                    {got && <span className="flex items-center justify-center gap-1 text-[13px] font-extrabold text-sd-bg"><Icon name="check" size={14} stroke={3} />{label(got)}</span>}
+                    <span className={clsx("block text-[11px] leading-snug", got ? "text-sd-bg/85" : "text-white/80")}>{task.slots[sid].role}</span>
                   </button>
                 );
               })}
@@ -105,18 +106,18 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
       </div>
 
       {/* feedback */}
-      <p role="status" aria-live="polite" className="mt-3 mb-3 min-h-[2.5rem] text-sm">
+      <p role="status" aria-live="polite" className="m-0 mt-3 mb-3 min-h-[2.5rem] text-sm">
         {missChip ? (
-          <span className="text-red-deep"><b>{ui.wrong}</b> {missChip.label} = {missChip.does}.</span>
+          <span className="text-sd-accent-700"><b>{ui.wrong}</b> {missChip.label} = {missChip.does}.</span>
         ) : picked ? (
-          <span className="font-semibold text-muted">{ui.picked}</span>
+          <span className="font-semibold text-sd-n-700">{ui.picked}</span>
         ) : null}
       </p>
 
       {/* the tray */}
       {!done ? (
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{ui.tray} · {ui.left(slotIds.length - Object.keys(placed).length)}</p>
+          <h6 className="sd-h6 m-0">{ui.tray} · {ui.left(slotIds.length - Object.keys(placed).length)}</h6>
           <div className="mt-2 flex flex-wrap gap-2">
             {tray.map((c) => (
               <button
@@ -127,8 +128,8 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                 onPointerUp={onUp}
                 onPointerCancel={() => { start.current = null; setDrag(null); }}
                 className={clsx(
-                  "touch-none select-none rounded-lg border-2 px-3.5 py-2.5 text-sm font-extrabold transition-[transform,background-color] active:scale-95",
-                  picked === c.id ? "border-ink bg-ink text-paper" : "border-ink/80 bg-card",
+                  "cursor-grab touch-none border-2 border-sd-ink px-3.5 py-2.5 text-sm font-extrabold select-none",
+                  picked === c.id ? "bg-sd-ink text-sd-bg" : "bg-sd-bg",
                   drag?.id === c.id && "opacity-40",
                 )}
               >
@@ -138,15 +139,15 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
           </div>
         </div>
       ) : (
-        <div className="rounded-xl bg-emerald-50 p-4">
-          <p className="font-extrabold text-emerald-800">{ui.built} {wrong === 0 ? ui.clean : ui.tries(wrong)}</p>
-          <p className="mt-1 text-sm text-emerald-900/80">{task.done}</p>
-          <button type="button" onClick={() => onDone(wrong)} className="mt-3 rounded-lg bg-ink px-5 py-3 text-sm font-bold text-paper transition-transform active:scale-[0.97]">{ui.next}</button>
+        <div className="sd-a-pop flex flex-col gap-1.5 bg-sd-ink p-4 text-sd-bg">
+          <span className="text-[17px] font-extrabold">{ui.built} {wrong === 0 ? ui.clean : ui.tries(wrong)}</span>
+          <span className="text-sm text-sd-bg/85">{task.done}</span>
+          <button type="button" onClick={() => onDone(wrong)} className="sd-btn sd-btn-primary mt-2 h-11 self-start gap-2">{ui.next}<Icon name="arrowR" size={16} /></button>
         </div>
       )}
 
       {drag && (
-        <div aria-hidden="true" className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-ink bg-ink px-3.5 py-2.5 text-sm font-extrabold text-paper shadow-float" style={{ left: drag.x, top: drag.y }}>
+        <div aria-hidden="true" className="sd-shadow-lg pointer-events-none fixed z-[80] -translate-x-1/2 -translate-y-1/2 border-2 border-sd-ink bg-sd-ink px-3.5 py-2.5 text-sm font-extrabold text-sd-bg" style={{ left: drag.x, top: drag.y }}>
           {label(drag.id)}
         </div>
       )}

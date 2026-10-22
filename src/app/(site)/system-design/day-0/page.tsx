@@ -1,12 +1,6 @@
-import type { Metadata } from "next";
-import { DayLesson } from "@/components/lesson/DayLesson";
-import { dayZero } from "@/data/system-design/day-0";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Day 0 · Start here | System Design in 21 Days",
-  description: "What system design is, explained with Raju's dhaba: servers, load balancers, caches, databases and queues, in about 12 minutes on your phone.",
-};
-
+/** Day 0 now lives in the course app; links already shared keep working. */
 export default function SystemDesignDayZero() {
-  return <DayLesson day={dayZero} />;
+  redirect("/learn/system-design?lesson=0-0");
 }
