@@ -475,7 +475,7 @@ export function fromStored(raw: unknown, now = Date.now()): CourseState {
   return s;
 }
 
-/** Progress from the old standalone Day pages (/system-design/day-N), carried over once. */
+/** Progress from the standalone Day pages (/system-design/day-N), carried over once on a first visit. */
 export function migrateLegacy(s: CourseState, legacy: { day0?: LessonProgress | null; day1?: LessonProgress | null; lang?: unknown }, now = Date.now()): CourseState {
   let n = s;
   for (const [id, p] of [["0-0", legacy.day0], ["1-0", legacy.day1]] as const) {

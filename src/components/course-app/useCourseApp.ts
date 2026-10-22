@@ -23,7 +23,7 @@ export type Act = (fn: (s: CourseState) => CourseState) => void;
  * backend yet). `?start=<screen>` opens a design-review state instead and
  * saves nothing; `&q=` and `&post=1` set the question and a finished
  * post-assessment, as on the design canvas. `?lesson=<id>` opens straight
- * into a lesson (the old /system-design/day-N pages redirect here).
+ * into a lesson (for links from Instagram and the standalone Day pages).
  */
 export function useCourseApp() {
   const [s, setS] = useState<CourseState>(() => defaultState());
