@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { QUESTIONS, REVIEW_LESSON } from "@/data/system-design/course-app";
-import { lesson, openLesson, pct, scoreDelta, type CourseState } from "@/lib/course-app";
+import { isSoon, lesson, lessonDay, openLesson, pct, scoreDelta, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { BackButton, stagger, useCountUp } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -26,7 +26,7 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
     .slice(0, 3)
     .map(({ q }) => {
       const id = REVIEW_LESSON[q.topic];
-      return { id, topic: q.topic, l: lesson(id) };
+      return { id, topic: q.topic, l: lesson(id), soon: isSoon(id) };
     });
   const close = () => act((p) => ({ ...p, screen: "home", tab: "home" }));
   const cta = compare ? close : () => act((p) => openLesson(p, p.cur));
@@ -45,9 +45,9 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
       <h6 className="sd-h6 mb-2">{compare ? "Still worth reviewing" : "Start with these lessons"}</h6>
       <div className="border-t-2 border-sd-divider">
         {recs.map((r) => (
-          <button key={r.topic} type="button" onClick={() => act((p) => openLesson(p, r.id))} className="grid w-full cursor-pointer grid-cols-[44px_1fr_18px_18px] items-center gap-2.5 border-b border-sd-divider py-[11px] text-left hover:bg-sd-accent-100">
-            <span className="text-[15px] font-extrabold text-sd-accent">{r.l.code}</span>
-            <span className="flex flex-col"><span className="text-sm font-semibold">{r.l.title}</span><span className="text-xs text-sd-n-700">{r.topic} · {r.l.dur}</span></span>
+          <button key={r.topic} type="button" disabled={r.soon} onClick={() => act((p) => openLesson(p, r.id))} className="grid w-full cursor-pointer grid-cols-[56px_1fr_18px_18px] items-center gap-2.5 border-b border-sd-divider py-[11px] text-left hover:bg-sd-accent-100 disabled:cursor-default disabled:hover:bg-transparent">
+            <span className="text-[13px] font-extrabold text-sd-accent">{lessonDay(r.id)}</span>
+            <span className="flex flex-col"><span className="text-sm font-semibold">{r.l.title}</span><span className="text-xs text-sd-n-700">{r.topic} · {r.soon ? "coming soon" : r.l.dur}</span></span>
             <span className="flex text-sd-accent"><Icon name="play" size={16} /></span>
             <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>
           </button>

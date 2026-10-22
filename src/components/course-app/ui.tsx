@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
-import { fmt, isDownloaded, lesson, sec, type CourseState } from "@/lib/course-app";
+import { fmt, isDownloaded, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
 
 /** Animation delay for the i-th item of a staggered list. */
 export const stagger = (i: number, step: number, base: number): CSSProperties => ({ animationDelay: `${base + i * step}ms` });
@@ -105,14 +105,16 @@ export function lessonView(s: CourseState, id: string) {
   const l = lesson(id);
   const done = s.done.includes(id);
   const cur = id === s.cur;
+  const soon = isSoon(id);
   return {
+    soon,
     id,
     title: l.title,
     done,
     cur,
     downloaded: isDownloaded(s, id),
-    dim: s.offline && !isDownloaded(s, id),
-    dur: cur && !done && s.t > 0 ? `${fmt(sec(l.dur) - s.t)} left` : l.dur,
+    dim: soon || (s.offline && !isDownloaded(s, id)),
+    dur: soon ? "Soon" : cur && !done && s.t > 0 ? `${fmt(sec(l.dur) - s.t)} left` : l.dur,
   };
 }
 

@@ -2,13 +2,29 @@
 
 import clsx from "clsx";
 import Image from "next/image";
-import { LEARNER, STREAK } from "@/data/system-design/course-app";
-import { LESSON_COUNT, fmt, lesson, openLesson, pct, startQuiz, type CourseState } from "@/lib/course-app";
+import { LESSON_COUNT, fmt, lesson, lessonDay, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Bar, parallax, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
 
 const WEEK = ["M", "T", "W", "T", "F", "S", "S"];
+
+/** This week, Monday first: which days had a finished step, and which one is today. */
+function thisWeek(s: CourseState, now = new Date()) {
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  return WEEK.map((l, i) => {
+    const d = new Date(mon);
+    d.setDate(mon.getDate() + i);
+    const key = localDate(d);
+    return { l, done: s.activeDays.includes(key), today: key === localDate(now), future: d > now && key !== localDate(now) };
+  });
+}
+
+function greeting(now = new Date()) {
+  const h = now.getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
 
 export function BellButton({ s, act }: { s: CourseState; act: Act }) {
   const unread = s.notifs.filter((n) => n.unread).length;
@@ -28,7 +44,7 @@ export function GoalCard({ s }: { s: CourseState }) {
       <span className="text-sm font-extrabold">Today’s goal · {Math.min(gm, s.goal)} / {s.goal} min</span>
       <span className="text-xs font-semibold text-sd-accent-700">{met ? "Goal met" : `${s.goal - gm} min to go`}</span>
       <Bar value={(s.todaySec / (s.goal * 60)) * 100} className="col-span-full h-1.5" />
-      <span className="col-span-full text-xs text-sd-n-700">Your streak is safe today. One lesson or one quick check keeps it going.</span>
+      <span className="col-span-full text-xs text-sd-n-700">{streak(s).today ? "Your streak is safe today." : "One lesson today keeps your streak going."}</span>
     </div>
   );
 }
@@ -39,11 +55,17 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
   const postP = s.post ? pct(s.post) : null;
   const doneCount = s.done.length;
   const coursePct = `${Math.round((doneCount / LESSON_COUNT) * 100)}%`;
+  const st = streak(s);
+  const week = thisWeek(s);
+  const hello = greeting();
   const path = [
-    { num: "01", title: "Pre-assessment", sub: "Your starting point", value: preP, go: () => act((p) => ({ ...p, screen: "results", lastKind: "pre" })) },
-    { num: "02", title: "Course", sub: "8 modules of video lessons", value: `${doneCount}/${LESSON_COUNT}`, go: () => act((p) => ({ ...p, screen: "course", tab: "course" })) },
     {
-      num: "03", title: "Post-assessment", sub: s.post ? "Compare with your baseline" : "Best after Module 08", value: postP ?? "—",
+      num: "01", title: "Pre-assessment", sub: s.pre.length ? "Your starting point" : "6 questions · not taken yet", value: preP,
+      go: () => act((p) => (p.pre.length ? { ...p, screen: "results", lastKind: "pre" } : startQuiz(p, "pre"))),
+    },
+    { num: "02", title: "Course", sub: "Day 0 + 21 days of lessons", value: `${doneCount}/${LESSON_COUNT}`, go: () => act((p) => ({ ...p, screen: "course", tab: "course" })) },
+    {
+      num: "03", title: "Post-assessment", sub: s.post ? "Compare with your baseline" : "Best after Day 21", value: postP ?? "—",
       go: () => act((p) => (p.post ? { ...p, screen: "results", lastKind: "post" } : startQuiz(p, "post"))),
     },
   ];
@@ -54,23 +76,19 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
       <div className="flex items-center justify-between lg:hidden">
         <Image src="/brand/klymb-logo.svg" alt="Klymb.ai" width={104} height={16} className="h-4 w-auto" priority />
         <div className="flex items-center gap-1.5">
-          <BellButton s={s} act={act} />
           <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} className="flex cursor-pointer items-center gap-1.5 border border-sd-divider px-2.5 py-1.5 text-[13px] font-extrabold hover:bg-sd-accent-100">
-            <span className="flex text-sd-accent"><Icon name="flame" size={16} /></span>{STREAK.current} days
+            <span className="flex text-sd-accent"><Icon name="flame" size={16} /></span>{st.current} {st.current === 1 ? "day" : "days"}
           </button>
         </div>
       </div>
       <div className="sd-drift lg:hidden">
         <div className="text-[11px] font-semibold tracking-[0.1em] text-sd-accent-700 uppercase">System Design</div>
-        <h2 className="mt-1.5 text-[30px] tracking-[-0.02em]">Good morning, {LEARNER.firstName}</h2>
+        <h2 className="mt-1.5 text-[30px] tracking-[-0.02em]">{hello}</h2>
       </div>
       {/* Web header. */}
       <div className="hidden flex-wrap items-end justify-between gap-4 border-b-2 border-sd-divider pb-4 lg:flex">
-        <h1 className="m-0 text-[42px] tracking-[-0.03em]">Good morning, {LEARNER.firstName}</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-sd-n-700">{doneCount} of {LESSON_COUNT} lessons · {coursePct} complete</span>
-          <BellButton s={s} act={act} />
-        </div>
+        <h1 className="m-0 text-[42px] tracking-[-0.03em]">{hello}</h1>
+        <span className="text-sm text-sd-n-700">{doneCount} of {LESSON_COUNT} lessons · {coursePct} complete</span>
       </div>
 
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)] lg:items-start lg:gap-8">
@@ -83,7 +101,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
         >
           <div className="sd-grid relative flex h-[184px] w-full flex-col justify-between px-4 py-3.5 [--grid:23px] lg:aspect-video lg:h-auto lg:px-6 lg:py-[22px] lg:[--grid:28px]">
             <div className="sd-mid text-[11px] font-extrabold tracking-[0.1em] text-sd-accent-400 uppercase lg:text-xs">
-              Continue · Module {String(c.mi + 1).padStart(2, "0")}<span className="hidden lg:inline"> · {c.m.title}</span>
+              {doneCount || s.t ? "Continue" : "Start"} · {lessonDay(s.cur)}<span className="hidden lg:inline"> · {c.m.title}</span>
             </div>
             <div className="flex items-end justify-between gap-3 lg:gap-4">
               <div className="sd-near max-w-[250px] text-2xl leading-[1.1] font-extrabold tracking-[-0.02em] lg:max-w-[460px] lg:text-[40px] lg:leading-[1.02] lg:tracking-[-0.03em]">{c.title}</div>
@@ -93,7 +111,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
           <Bar value={(s.t / c.secs) * 100} className="h-1 w-full" />
           <div className="flex w-full justify-between px-4 py-2.5 text-[13px] lg:px-5 lg:py-3 lg:text-sm">
             <span className="lg:hidden">{c.m.title}</span>
-            <span className="hidden lg:inline">Lesson {c.code}</span>
+            <span className="hidden lg:inline">{lessonDay(s.cur)} · {c.m.title}</span>
             <span className="font-semibold">{fmt(s.t)} / {c.dur}</span>
           </div>
         </button>
@@ -120,11 +138,9 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
             </div>
           </div>
           <div className="order-4 lg:order-none">
-            <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">This week</h6><span className="text-xs text-sd-n-700">5 of 7 days</span></div>
+            <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">This week</h6><span className="text-xs text-sd-n-700">{week.filter((d) => d.done).length} of 7 days</span></div>
             <div className="grid grid-cols-7 gap-1">
-              {WEEK.map((l, i) => {
-                const done = i < 5;
-                const today = i === 4;
+              {week.map(({ l, done, today }, i) => {
                 return (
                   <div key={i} className="flex flex-col gap-1">
                     <div className={clsx("sd-a-pop flex aspect-square items-center justify-center text-sd-bg", done ? "bg-sd-accent" : "border-[1.5px] border-dashed border-sd-divider")} style={stagger(i, 50, 350)}>

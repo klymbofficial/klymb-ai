@@ -1,13 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { LEARNER, STREAK } from "@/data/system-design/course-app";
-import { badges, type CourseState } from "@/lib/course-app";
+import { badges, defaultState, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Segmented, Stats, Toggle } from "../ui";
 import type { Act } from "../useCourseApp";
 
-type BoolKey = "autoplay" | "wifiOnly" | "streakRem" | "replyNotif" | "offline" | "vidErr";
+type BoolKey = "offline" | "vidErr";
+
+/** Design-review switches for the offline and video-error states; off for learners. */
+const PREVIEW_TOGGLES = false;
 
 function Row({ children }: { children: ReactNode }) {
   return <div className="flex flex-col gap-2 border-b border-sd-divider py-3">{children}</div>;
@@ -29,43 +31,31 @@ function LinkRow({ label, sub, onClick }: { label: string; sub: string; onClick:
 export function Profile({ s, act }: { s: CourseState; act: Act }) {
   const flip = (k: BoolKey) => () => act((p) => ({ ...p, [k]: !p[k] }));
   const tog = (k: BoolKey, label: string, sub?: string) => <Row><Toggle on={s[k]} onClick={flip(k)} label={label} sub={sub} /></Row>;
-  const used = s.dl.reduce((a, x) => a + x.size, 0);
-  const unread = s.notifs.filter((n) => n.unread).length;
+  const st = streak(s);
   const groups: [string, ReactNode][] = [
     ["Learning", <>
-      <Row><Label label="Daily goal" sub="Your streak only needs one lesson or quick check." /><Segmented value={s.goal} options={[[5, "5 min"], [15, "15 min"], [30, "30 min"]]} onChange={(goal) => act((p) => ({ ...p, goal }))} /></Row>
-      <Row><Label label="Reminder" sub="We’ll nudge you if you haven’t learned yet that day." /><Segmented value={s.remind} options={[["08:00", "8 am"], ["13:00", "1 pm"], ["19:00", "7 pm"]]} onChange={(remind) => act((p) => ({ ...p, remind }))} /></Row>
-      {tog("autoplay", "Autoplay next lesson", "Starts a 5-second countdown when a video ends.")}
+      <Row><Label label="Lesson language" sub="Questions, practice and cheatsheets. Videos are in Hinglish." /><Segmented value={s.lang} options={[["en", "English"], ["hi", "Hinglish"]]} onChange={(lang) => act((p) => ({ ...p, lang }))} /></Row>
+      <Row><Label label="Daily goal" sub="Your streak only needs one finished lesson step a day." /><Segmented value={s.goal} options={[[5, "5 min"], [15, "15 min"], [30, "30 min"]]} onChange={(goal) => act((p) => ({ ...p, goal }))} /></Row>
     </>],
-    ["Video and downloads", <>
-      <Row><Label label="Video quality" /><Segmented value={s.quality} options={[["auto", "Auto"], ["hd", "HD"], ["saver", "Data saver"]]} onChange={(quality) => act((p) => ({ ...p, quality }))} /></Row>
-      {tog("wifiOnly", "Download over Wi-Fi only")}
-      <Row><LinkRow label="Downloads" sub={`${s.dl.length} lessons · ${used} MB`} onClick={() => act((p) => ({ ...p, screen: "downloads" }))} /></Row>
-    </>],
-    ["Notifications", <>
-      {tog("streakRem", "Streak reminders")}
-      {tog("replyNotif", "Replies to my questions")}
-      <Row><LinkRow label="Notifications inbox" sub={unread ? `${unread} unread` : "All read"} onClick={() => act((p) => ({ ...p, screen: "notifs" }))} /></Row>
-    </>],
-    ["Preview states", <>
-      {tog("offline", "Offline", "Shows how the app behaves without internet.")}
-      {tog("vidErr", "Video fails to load", "Shows the player’s error state.")}
-    </>],
-    ["Account", <>
-      <Row><LinkRow label="Sign out" sub={LEARNER.email} onClick={() => act((p) => ({ ...p, screen: "onboard", onboarded: false, onb: 0, tab: "home", playing: false }))} /></Row>
+    ["This device", <>
+      <Row><LinkRow label="Start over" sub="Clears your progress, notes and baseline on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
     </>],
   ];
+  if (PREVIEW_TOGGLES) groups.push(["Preview states", <>
+    {tog("offline", "Offline", "Shows how the app behaves without internet.")}
+    {tog("vidErr", "Video fails to load", "Shows the player’s error state.")}
+  </>]);
 
   return (
     <div className="sd-a-screen flex max-w-[1040px] flex-col gap-[22px] px-5 pt-2 pb-7 lg:p-0">
       <div className="flex items-center gap-3.5 border-b-2 border-sd-divider pb-4">
-        <span className="flex size-16 flex-none items-center justify-center bg-sd-ink text-[22px] font-extrabold text-sd-bg lg:size-20 lg:text-[28px]">{LEARNER.initials}</span>
+        <span className="flex size-16 flex-none items-center justify-center bg-sd-ink text-sd-bg lg:size-20"><Icon name="user" size={28} /></span>
         <div className="flex flex-col">
-          <span className="text-2xl font-extrabold tracking-[-0.02em] lg:text-4xl">{LEARNER.name}</span>
-          <span className="text-[13px] text-sd-n-700">{LEARNER.email} · System Design</span>
+          <span className="text-2xl font-extrabold tracking-[-0.02em] lg:text-4xl">Your profile</span>
+          <span className="text-[13px] text-sd-n-700">System Design in 21 Days · progress is saved on this device</span>
         </div>
       </div>
-      <Stats className="lg:max-w-[520px]" items={[[STREAK.current, "day streak"], [s.done.length, "lessons done"], [badges(s).filter((b) => b.on).length, "badges"]]} />
+      <Stats className="lg:max-w-[520px]" items={[[st.current, "day streak"], [s.done.length, "lessons done"], [badges(s).filter((b) => b.on).length, "badges"]]} />
       <div className="grid grid-cols-1 items-start gap-y-6 lg:grid-cols-2 lg:gap-x-10">
         {groups.map(([label, rows]) => (
           <section key={label} aria-label={label}>

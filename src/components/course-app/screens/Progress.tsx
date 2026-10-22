@@ -1,24 +1,32 @@
 "use client";
 
 import clsx from "clsx";
-import { STREAK } from "@/data/system-design/course-app";
-import { badges, type CourseState } from "@/lib/course-app";
+import { badges, localDate, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Bar, parallax, stagger, useCountUp } from "../ui";
 import { moduleViews } from "./Course";
 
 const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-/** Sample activity for the last five weeks: day 9 was covered by a streak freeze, days 33–34 haven't happened yet. */
-const HEAT = Array.from({ length: 35 }, (_, i) => {
-  if (i === 9) return "frozen";
-  if (i > 32) return "future";
-  const active = (i >= 2 && i <= 16) || (i >= 21 && i <= 32);
-  return active ? (i % 3 === 0 ? "light" : "on") : "off";
-});
+/** The last five weeks, Monday first, ending this Sunday: active, idle, or still ahead. */
+function heat(s: CourseState, now = new Date()) {
+  const start = new Date(now);
+  start.setDate(now.getDate() - ((now.getDay() + 6) % 7) - 28);
+  const today = localDate(now);
+  return Array.from({ length: 35 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = localDate(d);
+    if (key > today) return "future";
+    return s.activeDays.includes(key) ? "on" : "off";
+  });
+}
 
 export function Progress({ s }: { s: CourseState }) {
-  const streak = useCountUp(STREAK.current);
+  const st = streak(s);
+  const shown = useCountUp(st.current);
+  const HEAT = heat(s);
+  const active = HEAT.filter((h) => h === "on").length;
   const b = badges(s);
   const mods = moduleViews(s);
   return (
@@ -27,14 +35,14 @@ export function Progress({ s }: { s: CourseState }) {
       <div className="flex flex-col gap-[22px] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:items-start lg:gap-8">
         <div {...parallax} className="flex flex-col gap-0.5 bg-sd-accent px-[18px] pt-[18px] pb-4 text-sd-bg lg:p-[22px]">
           <div className="flex items-start justify-between">
-            <span className="sd-near inline-block text-8xl leading-[0.85] font-extrabold tracking-[-0.05em] lg:text-[128px]" aria-label={`${STREAK.current}`}>{streak}</span>
+            <span className="sd-near inline-block text-8xl leading-[0.85] font-extrabold tracking-[-0.05em] lg:text-[128px]" aria-label={`${st.current}`}>{shown}</span>
             <Icon name="flame" size={40} />
           </div>
           <div className="mt-2 text-xl font-extrabold lg:mt-2.5 lg:text-2xl">day streak</div>
-          <div className="text-[13px] lg:text-sm">Longest: {STREAK.longest} days · {STREAK.freezes} streak freezes ready. A freeze covers a missed day for you.</div>
+          <div className="text-[13px] lg:text-sm">{st.current ? `Longest: ${st.longest} ${st.longest === 1 ? "day" : "days"}. One lesson a day keeps it going.` : "Finish one lesson step today to start your streak."}</div>
         </div>
         <div>
-          <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Last 5 weeks</h6><span className="text-xs text-sd-n-700">27 active · 1 frozen</span></div>
+          <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Last 5 weeks</h6><span className="text-xs text-sd-n-700">{active} active</span></div>
           <div className="grid grid-cols-7 gap-1 lg:gap-[5px]">
             {DAYS.map((d, i) => <span key={i} className="text-[11px] text-sd-n-700">{d}</span>)}
             {HEAT.map((h, i) => (
@@ -43,10 +51,8 @@ export function Progress({ s }: { s: CourseState }) {
                 aria-hidden="true"
                 className={clsx(
                   "sd-a-pop aspect-square lg:aspect-auto lg:h-[30px]",
-                  h === "frozen" && "sd-frozen",
                   h === "future" && "border-[1.5px] border-dashed border-sd-divider",
                   h === "on" && "bg-sd-accent",
-                  h === "light" && "bg-sd-accent-400",
                   h === "off" && "bg-sd-n-300",
                 )}
                 style={{ ...stagger(i, 12, 150), animationDuration: ".4s" }}
