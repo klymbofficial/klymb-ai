@@ -1,6 +1,5 @@
 "use client";
 
-import { HIDE_MONEY } from "@/lib/site-status";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,7 +7,8 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/registrations", label: "Registrations" },
-  ...(HIDE_MONEY ? [] : [{ href: "/admin/payments", label: "Payments" }]),
+  // Admin only, so it stays even while HIDE_MONEY keeps money off the public site.
+  { href: "/admin/payments", label: "Payments & refunds" },
   { href: "/admin/analytics", label: "Traffic" },
   { href: "/admin/engagement", label: "Engagement" },
   { href: "/admin/learners", label: "Learners & progress" },
@@ -17,12 +17,14 @@ const links = [
   { href: "/admin/audit", label: "Admin activity" },
 ];
 
-export function AdminNav() {
+const ownerLinks = [{ href: "/admin/admins", label: "Admins" }];
+
+export function AdminNav({ owner = false }: { owner?: boolean }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Admin sections">
       <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5">
-        {links.map((l) => {
+        {(owner ? [...links, ...ownerLinks] : links).map((l) => {
           const active = l.href === "/admin" ? pathname === "/admin" : pathname.startsWith(l.href);
           return (
             <li key={l.href}>

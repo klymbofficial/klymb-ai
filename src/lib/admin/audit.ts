@@ -7,6 +7,8 @@ export type AuditAction =
   | "learner.remove"
   | "learner.device_reset"
   | "payment.refund"
+  | "admin.add"
+  | "admin.remove"
   | "ticket.status";
 
 /**

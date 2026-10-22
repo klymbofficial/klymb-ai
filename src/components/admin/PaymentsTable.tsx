@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { refund } from "@/app/admin/payment-actions";
+import { daysUntilCohortEnds } from "@/lib/admin/access";
 import type { PaymentRow } from "@/lib/admin/data";
 import { formatINR } from "@/lib/format";
 
@@ -9,7 +10,20 @@ const dateTime = (iso: string) =>
   new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
 export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const shown = q ? rows.filter((p) => p.email.toLowerCase().includes(q) || p.razorpay_payment_id?.toLowerCase().includes(q)) : rows;
+
   return (
+    <div className="flex flex-col gap-3">
+    <label className="flex max-w-sm flex-col gap-1 text-xs font-bold">
+      Find a payment
+      <input
+        type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Email or pay_… ID"
+        autoComplete="off" spellCheck={false}
+        className="border border-line/60 bg-white px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none"
+      />
+    </label>
     <div className="overflow-x-auto rounded-xl border border-line/40 bg-card">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="border-b border-line/40 text-xs font-extrabold uppercase tracking-wider text-muted">
@@ -23,7 +37,10 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((p) => (
+          {shown.length === 0 && (
+            <tr><td colSpan={6} className="px-4 py-6 text-center text-sm text-muted">No payment matches “{query}”.</td></tr>
+          )}
+          {shown.map((p) => (
             <tr key={p.id} className="border-b border-line/20 last:border-0">
               <td className="px-4 py-3 whitespace-nowrap">{dateTime(p.created_at)}</td>
               <td className="px-4 py-3">{p.email}</td>
@@ -35,6 +52,7 @@ export function PaymentsTable({ rows }: { rows: PaymentRow[] }) {
           ))}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }
@@ -48,12 +66,26 @@ function RefundCell({ payment }: { payment: PaymentRow }) {
 
   if (payment.status === "refunded") return <span className="text-xs font-bold uppercase tracking-wider text-muted">Refunded</span>;
   if (requested) return <span className="text-xs font-bold text-ink">Refund requested. It shows as Refunded once Razorpay confirms.</span>;
+  if (payment.refund_request) {
+    return (
+      <span className="flex flex-col items-start gap-0.5">
+        <span className="text-xs font-bold uppercase tracking-wider text-red-deep">Refund pending</span>
+        <span className="text-xs text-muted">Requested by {payment.refund_request.by}, {dateTime(payment.refund_request.at)}. Waiting for Razorpay.</span>
+      </span>
+    );
+  }
+  const daysLeft = daysUntilCohortEnds(payment.cohort_start);
 
   return (
     <span className="flex flex-col items-start gap-1">
       <span className="text-xs font-bold uppercase tracking-wider text-ink">Paid</span>
       {confirming ? (
         <>
+          {daysLeft > 0 && (
+            <span className="max-w-[16rem] text-xs font-semibold text-red-deep">
+              Early: this learner&apos;s 30 days end in {daysLeft} day{daysLeft === 1 ? "" : "s"}. Refunds are normally issued after the cohort.
+            </span>
+          )}
           <label htmlFor={`refund-${payment.id}`} className="text-xs font-bold text-red-deep">
             Type {payment.email} to refund {formatINR(payment.amount / 100)}
           </label>
