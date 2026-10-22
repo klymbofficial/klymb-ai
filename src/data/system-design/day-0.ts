@@ -116,6 +116,68 @@ const en: DayCopy = {
     },
   ],
 
+  build: {
+    title: "Build the Swiggy order system",
+    intro: "Drag each box to the job it does. You can also tap a box, then tap a slot.",
+    given: "Your phone",
+    rows: [["dns", "lb", "cdn"], ["servers"], ["cache", "db"], ["queue"]],
+    slots: {
+      dns: { role: "Finds the server's address", answer: "dns" },
+      lb: { role: "Sends each request to a free server", answer: "lb" },
+      cdn: { role: "Serves images from a city near you", answer: "cdn" },
+      servers: { role: "Run the app's code", answer: "servers" },
+      cache: { role: "Instant answers for popular data", answer: "cache" },
+      db: { role: "Keeps orders and users safe", answer: "db" },
+      queue: { role: "SMS and rider work, in the background", answer: "queue" },
+    },
+    chips: [
+      { id: "lb", label: "Load balancer", does: "the manager at the door: it sends each request to a free server" },
+      { id: "cache", label: "Cache", does: "the ready counter: popular data, ready instantly" },
+      { id: "big", label: "One giant server", does: "not a box in this design. If one giant server fails, everything fails, so we add more servers instead" },
+      { id: "queue", label: "Queue", does: "the line of order slips: slow work done one by one in the background" },
+      { id: "dns", label: "DNS", does: "the address book: turns a name into a server's address" },
+      { id: "db", label: "Database", does: "the register: keeps records safe" },
+      { id: "servers", label: "Servers", does: "the cooks: they run the app's code" },
+      { id: "cdn", label: "CDN", does: "nearby branches: copies of images and videos close to users" },
+    ],
+    done: "That's the whole map of an app. Every box has its own day in this course.",
+  },
+
+  followUps: [
+    {
+      q: "\"One of your servers crashes during the dinner rush. What happens?\"",
+      answer: [
+        "The load balancer's health checks notice the server stopped answering.",
+        "It stops sending requests there, and the other servers take the load.",
+        "Users barely notice. That's why we run several servers, not one big one.",
+        "Keep servers stateless (no user data stored on them), so any server can handle any request.",
+      ],
+      say: "\"Health checks take the dead server out of rotation, and because the servers are stateless, the others absorb its traffic.\"",
+      deeper: "Day 2 · Load balancing",
+    },
+    {
+      q: "\"Traffic becomes 100x during the IPL final. What do you change?\"",
+      answer: [
+        "Estimate first: about 1,200 requests a second becomes about 1.2 lakh at the peak.",
+        "Add servers behind the load balancer, ahead of time, because the match date is known.",
+        "Serve popular data from the cache and images and video from the CDN, so most requests never reach the database.",
+        "Move slow work to queues. The database is the next bottleneck: read replicas and sharding.",
+      ],
+      say: "\"Pre-scale the servers, push reads to the cache and CDN, queue the slow work, and protect the database.\"",
+      deeper: "Days 1, 3, 5 and 6",
+    },
+    {
+      q: "\"Your cache goes down. Does the app stop working?\"",
+      answer: [
+        "No. The database is the source of truth, so answers stay correct, just slower.",
+        "The real danger: every request now hits the database at once and can overload it (a cache stampede).",
+        "Protect it with several cache nodes, rate limiting, and warming the cache back up gradually.",
+      ],
+      say: "\"The cache is a speed layer, not the source of truth. I'd make sure the database survives the sudden load while the cache recovers.\"",
+      deeper: "Days 3 and 18",
+    },
+  ],
+
   interview: [
     "System design is choosing an app's parts and connecting them so crores of people can use it, fast, even when something breaks.",
     "The parts: load balancer, servers, cache, database, queue and CDN, plus DNS to find them.",
@@ -249,6 +311,68 @@ const hi: DayCopy = {
         { text: "Tez SMS provider", why: "Thoda fark padega, par user phir bhi ek aisi cheez ka wait karega jiski zaroorat nahi." },
         { text: "SMS bhejna band", why: "Users ko SMS chahiye. Bas unhe uska wait mat karwao." },
       ],
+    },
+  ],
+
+  build: {
+    title: "Swiggy order system khud banao",
+    intro: "Har box ko uske kaam wali jagah pe drag karo. Ya box tap karo, phir slot tap karo.",
+    given: "Tumhara phone",
+    rows: [["dns", "lb", "cdn"], ["servers"], ["cache", "db"], ["queue"]],
+    slots: {
+      dns: { role: "Server ka address dhoondhta hai", answer: "dns" },
+      lb: { role: "Har request free server ko bhejta hai", answer: "lb" },
+      cdn: { role: "Images paas ke shehar se deta hai", answer: "cdn" },
+      servers: { role: "App ka code chalate hain", answer: "servers" },
+      cache: { role: "Popular data ka turant jawab", answer: "cache" },
+      db: { role: "Orders aur users safe rakhta hai", answer: "db" },
+      queue: { role: "SMS aur rider ka kaam, background mein", answer: "queue" },
+    },
+    chips: [
+      { id: "lb", label: "Load balancer", does: "darwaze ka manager: har request free server ko bhejta hai" },
+      { id: "cache", label: "Cache", does: "ready counter: popular data turant" },
+      { id: "big", label: "Ek giant server", does: "is design ka box nahi. Ek giant server gira toh sab gira, isliye hum aur servers lagate hain" },
+      { id: "queue", label: "Queue", does: "parchiyon ki line: slow kaam background mein ek ek karke" },
+      { id: "dns", label: "DNS", does: "address book: naam ko server ke address mein badalta hai" },
+      { id: "db", label: "Database", does: "register: records safe rakhta hai" },
+      { id: "servers", label: "Servers", does: "cooks: app ka code chalate hain" },
+      { id: "cdn", label: "CDN", does: "paas ki branches: images aur videos users ke paas" },
+    ],
+    done: "Yahi hai ek app ka poora map. Course mein har box ka apna ek din hai.",
+  },
+
+  followUps: [
+    {
+      q: "\"Dinner rush mein tumhara ek server crash ho gaya. Kya hoga?\"",
+      answer: [
+        "Load balancer ke health checks dekhte hain ki server jawab nahi de raha.",
+        "Woh us server ko requests bhejna band karta hai, baaki servers load sambhal lete hain.",
+        "Users ko pata bhi nahi chalta. Isiliye ek bade server ki jagah kai servers chalate hain.",
+        "Servers stateless rakho (unpe user ka data store nahi), taaki koi bhi server koi bhi request le sake.",
+      ],
+      say: "\"Health checks dead server ko rotation se nikaal dete hain, aur servers stateless hain, toh baaki uska traffic le lete hain.\"",
+      deeper: "Day 2 · Load balancing",
+    },
+    {
+      q: "\"IPL final mein traffic 100 guna ho gaya. Kya badloge?\"",
+      answer: [
+        "Pehle number: lagbhag 1,200 requests per second, peak pe lagbhag 1.2 lakh.",
+        "Load balancer ke peeche aur servers, pehle se, kyunki match ki date pata hai.",
+        "Popular data cache se, images aur video CDN se, taaki zyada tar requests database tak pahunche hi nahi.",
+        "Slow kaam queue mein. Agla bottleneck database hai: read replicas aur sharding.",
+      ],
+      say: "\"Servers pehle se badhao, reads cache aur CDN pe, slow kaam queue mein, aur database ko bachao.\"",
+      deeper: "Days 1, 3, 5 aur 6",
+    },
+    {
+      q: "\"Tumhara cache down ho gaya. Kya app band ho jayega?\"",
+      answer: [
+        "Nahi. Database asli source hai, toh jawab sahi rahenge, bas slow.",
+        "Asli khatra: ab har request ek saath database pe jaati hai aur usse gira sakti hai (cache stampede).",
+        "Bachao: kai cache nodes, rate limiting, aur cache ko dheere dheere wapas bharo.",
+      ],
+      say: "\"Cache speed layer hai, source of truth nahi. Main ensure karunga ki cache wapas aane tak database achanak ka load jhel le.\"",
+      deeper: "Days 3 aur 18",
     },
   ],
 

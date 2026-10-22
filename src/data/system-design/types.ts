@@ -31,6 +31,30 @@ export interface ConceptCard {
   moves: string[];
 }
 
+/** "Build it yourself": drag each box to the slot whose job it does. */
+export interface BuildTask {
+  title: string;
+  intro: string;
+  /** The fixed node at the top of the diagram (e.g. "Your phone"). */
+  given: string;
+  /** Slot ids per row, top to bottom. */
+  rows: string[][];
+  slots: Record<string, { role: string; answer: string }>;
+  /** Boxes in the tray; `does` is shown as the hint after a wrong drop. A chip no slot answers is a decoy. */
+  chips: { id: string; label: string; does: string }[];
+  done: string;
+}
+
+/** An interviewer's "what if" after the main answer, with the model answer. */
+export interface FollowUp {
+  q: string;
+  answer: string[];
+  /** The one line worth saying out loud. */
+  say: string;
+  /** Where the course goes deeper. */
+  deeper?: string;
+}
+
 export interface DayCopy {
   /** The hook's small pill; defaults to "Interview question". */
   tag?: string;
@@ -43,6 +67,8 @@ export interface DayCopy {
   sourceNote?: string;
   concept: { cards: ConceptCard[]; rule: string };
   post: Question[];
+  build?: BuildTask;
+  followUps?: FollowUp[];
   interview: string[];
   cheatsheet: { title: string; points: string[] };
   linkedin: string;

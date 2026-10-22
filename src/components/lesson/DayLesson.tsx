@@ -4,25 +4,32 @@ import clsx from "clsx";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Celebrate } from "@/components/learner/Celebrate";
+import { DiagramBuilder } from "@/components/lesson/DiagramBuilder";
+import { FollowUps } from "@/components/lesson/FollowUps";
 import { LessonQuiz, score } from "@/components/lesson/LessonQuiz";
 import type { Day, DayCopy, Lang } from "@/data/system-design/types";
 
-interface Progress { pre?: number[]; watched?: boolean; post?: number[] }
+interface Progress { pre?: number[]; watched?: boolean; built?: number; post?: number[]; follow?: boolean[] }
+type StepKey = "call" | "watch" | "reveal" | "build" | "prove" | "follow" | "done";
 
 const UI = {
   en: {
-    steps: ["Your call", "Watch", "What really happens", "Prove it", "Unlocked"],
+    steps: { call: "Your call", watch: "Watch", reveal: "What really happens", build: "Build it", prove: "Prove it", follow: "Follow-ups", done: "Unlocked" } as Record<StepKey, string>,
     interview: "Interview question",
     start: "You answer first →",
     startNote: "Video comes after. Your answer comes first.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `You picked ${n}/3 best moves. Now see what Flipkart actually did.`,
+    preDone: (n: number) => `You picked ${n}/3 best moves. Now watch the story.`,
     s2: "Watch the story", s2Sub: (m: number, l: string) => `~${m} min · voiced in ${l}`,
     watched: "Watched it → reveal", watchHint: "Finish the video to unlock the reveal",
     s3: "What really happens",
     yoursVsBest: "Your answer vs the best move", you: "You", best: "Best",
     concept: "Today's concept", proveCta: "Now prove it: a new scenario →",
     s4: "Prove it", s4Sub: "new scenario, same concept",
+    sBuild: "Build it yourself", sBuildSub: "drag the boxes into place",
+    builtDone: (n: number) => (n === 0 ? "Built on the first try." : `Built, with ${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`),
+    sFollow: "Interviewer follow-ups", sFollowSub: "3 \"what if\" questions",
+    followDone: (n: number, of: number) => `Follow-ups: you had ${n} of ${of} covered.`,
     s5: (n: number) => `Day ${n} complete`, s5Sub: "cheatsheet · interview mode · share",
     locked: "Finish the previous step",
     streak: "Streak: 1 day",
@@ -34,18 +41,22 @@ const UI = {
     newHere: "New to system design? Start with Day 0 →",
   },
   hi: {
-    steps: ["Your call", "Watch", "What really happens", "Prove it", "Unlocked"],
+    steps: { call: "Your call", watch: "Watch", reveal: "Asal mein kya hua", build: "Build it", prove: "Prove it", follow: "Follow-ups", done: "Unlocked" } as Record<StepKey, string>,
     interview: "Interview question",
     start: "Pehle tum batao →",
     startNote: "Video baad mein. Pehle tumhara answer.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `Tumne ${n}/3 best moves pakde. Ab dekho Flipkart ne asal mein kya kiya.`,
+    preDone: (n: number) => `Tumne ${n}/3 best moves pakde. Ab story dekho.`,
     s2: "Story dekho", s2Sub: (m: number, l: string) => `~${m} min · ${l}`,
     watched: "Dekh liya → reveal", watchHint: "Video poora dekho, reveal khul jayega",
     s3: "Asal mein kya hua",
     yoursVsBest: "Tumhara answer vs best move", you: "Tum", best: "Best",
     concept: "Aaj ka concept", proveCta: "Ab prove karo: naya scenario →",
     s4: "Prove it", s4Sub: "naya scenario, wahi concept",
+    sBuild: "Khud banao", sBuildSub: "boxes ko sahi jagah drag karo",
+    builtDone: (n: number) => (n === 0 ? "Pehli baar mein ban gaya." : `Ban gaya, raaste mein ${n} galat drop.`),
+    sFollow: "Interviewer follow-ups", sFollowSub: "3 \"what if\" sawaal",
+    followDone: (n: number, of: number) => `Follow-ups: ${of} mein se ${n} aate the.`,
     s5: (n: number) => `Day ${n} complete`, s5Sub: "cheatsheet · interview mode · share",
     locked: "Pichla step poora karo",
     streak: "Streak: 1 day",
@@ -83,62 +94,91 @@ export function DayLesson({ day }: { day: Day }) {
 
   const c = day.copy[lang];
   const ui = UI[lang];
-  const step = !p.pre ? 0 : !p.watched ? 1 : !p.post ? 3 : 4;
+  const hasBuild = !!c.build;
+  const hasFollow = !!c.followUps?.length;
+  const builtOk = !hasBuild || p.built !== undefined;
+  const followOk = !hasFollow || !!p.follow;
   const preScore = p.pre ? score(c.pre, p.pre) : 0;
   const postScore = p.post ? score(c.post, p.post) : 0;
 
-  const refs = useRef<(HTMLElement | null)[]>([]);
-  const go = (s: number) => requestAnimationFrame(() => refs.current[s]?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  const keys: StepKey[] = ["call", "watch", "reveal", ...(hasBuild ? ["build" as const] : []), "prove", ...(hasFollow ? ["follow" as const] : []), "done"];
+  const finished: Record<StepKey, boolean> = {
+    call: !!p.pre, watch: !!p.watched, reveal: hasBuild ? p.built !== undefined : !!p.post, build: p.built !== undefined,
+    prove: !!p.post, follow: !!p.follow, done: !!p.post && followOk,
+  };
+  const current = keys.findIndex((k) => !finished[k]);
+  const num = (k: StepKey) => keys.indexOf(k) + 1;
+
+  const refs = useRef<Partial<Record<StepKey, HTMLElement | null>>>({});
+  const go = (k: StepKey) => requestAnimationFrame(() => refs.current[k]?.scrollIntoView({ behavior: "smooth", block: "start" }));
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24 sm:px-6">
       <div className="mt-4 flex justify-end">
         <LangToggle lang={lang} onPick={pick} />
       </div>
-      <Hook day={day} c={c} ui={ui} onStart={() => go(0)} />
+      <Hook day={day} c={c} ui={ui} onStart={() => go("call")} />
 
       <nav aria-label="Today's steps" className="sticky top-20 z-20 -mx-4 mt-6 bg-paper/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <ol className="flex gap-1.5">
-          {ui.steps.map((s, k) => (
-            <li key={s} className="flex-1">
-              <span className={clsx("block h-1.5 rounded-full transition-colors duration-500", k < step || step === 4 ? "bg-red-strong" : k === step ? "bg-ink/60" : "bg-line/25")} />
-              <span className={clsx("mt-1.5 hidden text-[11px] font-bold sm:block", k <= step ? "text-ink" : "text-muted/70")}>{s}</span>
+          {keys.map((k, i) => (
+            <li key={k} className="flex-1">
+              <span className={clsx("block h-1.5 rounded-full transition-colors duration-500", current === -1 || i < current ? "bg-red-strong" : i === current ? "bg-ink/60" : "bg-line/25")} />
+              <span className={clsx("mt-1.5 hidden text-[11px] font-bold sm:block", current === -1 || i <= current ? "text-ink" : "text-muted/70")}>{ui.steps[k]}</span>
             </li>
           ))}
         </ol>
       </nav>
 
-      {/* 1. Your call */}
-      <Step n={1} title={ui.s1} sub={ui.s1Sub} lockedText={ui.locked} open locked={false} innerRef={(el) => { refs.current[0] = el; }}>
+      <Step n={num("call")} title={ui.s1} sub={ui.s1Sub} lockedText={ui.locked} open locked={false} innerRef={(el) => { refs.current.call = el; }}>
         {p.pre ? (
           <Done text={ui.preDone(preScore)} />
         ) : (
-          <LessonQuiz key={lang} questions={c.pre} label={ui.s1} lang={lang} onDone={(pre) => { update({ ...p, pre }); go(1); }} />
+          <LessonQuiz key={lang} questions={c.pre} label={ui.s1} lang={lang} onDone={(pre) => { update({ ...p, pre }); go("watch"); }} />
         )}
       </Step>
 
-      {/* 2. Watch */}
-      <Step n={2} title={ui.s2} sub={ui.s2Sub(day.video.minutes, day.video.lang)} lockedText={ui.locked} open={!!p.pre} locked={!p.pre} innerRef={(el) => { refs.current[1] = el; }}>
-        <Video day={day} ui={ui} watched={!!p.watched} onWatched={() => { update({ ...p, watched: true }); go(2); }} />
+      <Step n={num("watch")} title={ui.s2} sub={ui.s2Sub(day.video.minutes, day.video.lang)} lockedText={ui.locked} open={!!p.pre} locked={!p.pre} innerRef={(el) => { refs.current.watch = el; }}>
+        <Video day={day} ui={ui} watched={!!p.watched} onWatched={() => { update({ ...p, watched: true }); go("reveal"); }} />
       </Step>
 
-      {/* 3. Reveal */}
-      <Step n={3} title={ui.s3} sub={c.revealSub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current[2] = el; }}>
-        <Reveal c={c} ui={ui} pre={p.pre ?? []} onNext={() => go(3)} />
+      <Step n={num("reveal")} title={ui.s3} sub={c.revealSub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current.reveal = el; }}>
+        <Reveal c={c} ui={ui} pre={p.pre ?? []} onNext={() => go(hasBuild ? "build" : "prove")} />
       </Step>
 
-      {/* 4. Post */}
-      <Step n={4} title={ui.s4} sub={ui.s4Sub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current[3] = el; }}>
+      {c.build && (
+        <Step n={num("build")} title={ui.sBuild} sub={ui.sBuildSub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current.build = el; }}>
+          {p.built !== undefined ? (
+            <Done text={ui.builtDone(p.built)} />
+          ) : (
+            <DiagramBuilder key={lang} task={c.build} lang={lang} onDone={(built) => { update({ ...p, built }); go("prove"); }} />
+          )}
+        </Step>
+      )}
+
+      <Step n={num("prove")} title={ui.s4} sub={ui.s4Sub} lockedText={ui.locked} open={!!p.watched && builtOk} locked={!p.watched || !builtOk} innerRef={(el) => { refs.current.prove = el; }}>
         {p.post ? (
           <Done text={`Before: ${preScore}/3 → After: ${postScore}/3.`} />
         ) : (
-          <LessonQuiz key={lang} questions={c.post} label={ui.s4} lang={lang} onDone={(post) => { update({ ...p, post }); setBurst((b) => b + 1); go(4); }} />
+          <LessonQuiz key={lang} questions={c.post} label={ui.s4} lang={lang} onDone={(post) => {
+            update({ ...p, post });
+            if (hasFollow) go("follow"); else { setBurst((b) => b + 1); go("done"); }
+          }} />
         )}
       </Step>
 
-      {/* 5. Unlocked */}
-      <Step n={5} title={ui.s5(day.day)} sub={ui.s5Sub} lockedText={ui.locked} open={!!p.post} locked={!p.post} innerRef={(el) => { refs.current[4] = el; }}>
-        <Unlocked day={day} c={c} ui={ui} lang={lang} preScore={preScore} postScore={postScore} burst={burst} onReset={() => { update({}); go(0); }} />
+      {c.followUps && (
+        <Step n={num("follow")} title={ui.sFollow} sub={ui.sFollowSub} lockedText={ui.locked} open={!!p.post} locked={!p.post} innerRef={(el) => { refs.current.follow = el; }}>
+          {p.follow ? (
+            <Done text={ui.followDone(p.follow.filter(Boolean).length, p.follow.length)} />
+          ) : (
+            <FollowUps key={lang} items={c.followUps} lang={lang} onDone={(follow) => { update({ ...p, follow }); setBurst((b) => b + 1); go("done"); }} />
+          )}
+        </Step>
+      )}
+
+      <Step n={num("done")} title={ui.s5(day.day)} sub={ui.s5Sub} lockedText={ui.locked} open={!!p.post && followOk} locked={!p.post || !followOk} innerRef={(el) => { refs.current.done = el; }}>
+        <Unlocked day={day} c={c} ui={ui} lang={lang} preScore={preScore} postScore={postScore} burst={burst} onReset={() => { update({}); go("call"); }} />
       </Step>
 
       <Sources day={day} ui={ui} />
