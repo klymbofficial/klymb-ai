@@ -150,7 +150,13 @@ export function SupportBot() {
   // The wrapper never takes taps: only the open panel and the launcher do, so the
   // closed panel's invisible box can't cover buttons underneath it.
   return (
-    <div className={clsx("pointer-events-none fixed right-4 z-[60] flex flex-col items-end gap-3 sm:right-6", pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6")}>
+    <div
+      className={clsx(
+        "pointer-events-none fixed right-4 z-[60] flex flex-col items-end gap-3 sm:right-6",
+        // The System Design app has a tab bar and mini player along the bottom.
+        pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6",
+      )}
+    >
       <div
         role="dialog"
         aria-label="Help from Kamran"

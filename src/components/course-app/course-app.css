@@ -1,0 +1,157 @@
+/*
+ * The System Design course app: Modernist components (flat, square corners,
+ * labels flush left) and its motion. Everything is scoped to .sd-app so the
+ * rest of the site is untouched. Tailwind's `sd-*` colours (globals.css) read
+ * the tokens defined here.
+ */
+
+/* The Modernist tokens. A brighter red than the brand's #83050B, with ramps. */
+.sd-app {
+  --sd-bg: #f3f2f2;
+  --sd-surface: #eae9e9;
+  --sd-ink: #201e1d;
+  --sd-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --sd-accent: #ec3013;
+  --sd-accent-100: #fff2ef;
+  --sd-accent-300: #ffc4b8;
+  --sd-accent-400: #ff9783;
+  --sd-accent-600: #dd2b0f;
+  --sd-accent-700: #ae1800;
+  --sd-accent-800: #7c1405;
+  --sd-n-100: #f8f4f4;
+  --sd-n-200: #eae7e7;
+  --sd-n-300: #d7d3d3;
+  --sd-n-400: #bab6b6;
+  --sd-n-500: #9b9797;
+  --sd-n-600: #7d7979;
+  --sd-n-700: #605d5d;
+  --sd-n-800: #444141;
+  --sd-n-900: #2d2b2b;
+}
+
+/*
+ * In the components layer, so Tailwind utilities on the same element win
+ * (hidden, justify-start, padding and so on).
+ */
+@layer components {
+  .sd-app {
+    font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--sd-ink);
+    background: var(--sd-bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .sd-app :is(h1, h2, h3, h4, h5, h6) { font-family: inherit; font-weight: 800; line-height: 1.12; letter-spacing: -0.015em; }
+  .sd-app ::selection { background: color-mix(in srgb, var(--sd-accent) 30%, transparent); color: inherit; }
+  .sd-app :focus-visible { outline: 2px solid var(--sd-accent); outline-offset: 2px; }
+
+  /* Section labels: small, uppercase, tracked. */
+  .sd-h6 { font-size: 13px; font-weight: 800; line-height: 1.12; letter-spacing: 0.08em; text-transform: uppercase; }
+  .sd-kicker { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* — buttons — */
+  .sd-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; font-weight: 800; font-size: 14px; line-height: 1.2;
+    color: var(--sd-ink); background: transparent; border: 1px solid transparent;
+    padding: 8px 14.4px;
+  }
+  .sd-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .sd-btn-primary { background: var(--sd-accent); color: var(--sd-bg); }
+  .sd-btn-primary:hover:not(:disabled) { background: var(--sd-accent-600); }
+  .sd-btn-primary:active:not(:disabled) { background: var(--sd-accent-700); }
+  .sd-btn-secondary { border-color: var(--sd-divider); }
+  .sd-btn-secondary:hover:not(:disabled) { background: color-mix(in srgb, var(--sd-ink) 7%, transparent); }
+  .sd-btn-secondary:active:not(:disabled) { background: color-mix(in srgb, var(--sd-ink) 14%, transparent); }
+  .sd-btn-ghost { color: var(--sd-accent); padding-inline: 4px; }
+  .sd-btn-ghost:hover { background: color-mix(in srgb, var(--sd-accent) 10%, transparent); }
+  .sd-btn-ghost:active { background: color-mix(in srgb, var(--sd-accent) 18%, transparent); }
+  .sd-btn-icon { width: 36px; height: 36px; padding: 0; }
+  .sd-btn-block { width: 100%; justify-content: flex-start; text-align: left; }
+  /* Outlined button on the dark ground (video overlays, the offline banner). */
+  .sd-btn-on-dark { color: var(--sd-bg); border-color: color-mix(in srgb, #fff 40%, transparent); }
+  .sd-btn-on-dark:hover { background: color-mix(in srgb, #fff 10%, transparent); }
+
+  /* Every button gives a little under the finger. */
+  .sd-app button { transition: transform 0.08s; -webkit-tap-highlight-color: transparent; }
+  .sd-app button:active:not(:disabled) { transform: scale(0.98); }
+
+  /* — tags — */
+  .sd-tag { display: inline-flex; align-items: center; font-size: 11px; letter-spacing: 0.02em; padding: 3px 10px; line-height: 1.55; }
+  .sd-tag-accent { background: var(--sd-accent-100); color: var(--sd-accent-800); }
+  .sd-tag-neutral { background: var(--sd-n-100); color: var(--sd-n-800); }
+
+  /* — inputs — */
+  .sd-input {
+    width: 100%; min-height: 36px; padding: 6px 10px; font: inherit; font-size: 14px;
+    color: var(--sd-ink); caret-color: var(--sd-accent);
+    background: var(--sd-surface); border: 1px solid var(--sd-divider);
+  }
+  .sd-input:hover { border-color: color-mix(in srgb, var(--sd-ink) 45%, transparent); }
+  .sd-input:focus-visible { border-color: var(--sd-accent); outline-offset: 0; }
+  textarea.sd-input { min-height: 90px; resize: vertical; }
+
+  /* — dialog — */
+  .sd-dialog {
+    width: min(440px, 100%); display: flex; flex-direction: column; gap: 12px; padding: 16px;
+    background: var(--sd-surface);
+    box-shadow: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  }
+
+  .sd-shadow-md { box-shadow: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent); }
+  .sd-shadow-lg { box-shadow: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent); }
+  .sd-hover-lift:hover { box-shadow: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent); }
+  /* The quick check is a bottom sheet on mobile and a floating card on web. */
+  @media (min-width: 1024px) { .sd-lg-shadow { box-shadow: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent); } }
+
+  /* The dark grid that stands in for video and illustration. */
+  .sd-grid {
+    background-color: var(--sd-ink);
+    background-image:
+      linear-gradient(color-mix(in srgb, #fff 7%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, #fff 7%, transparent) 1px, transparent 1px);
+    background-size: var(--grid, 23px) var(--grid, 23px);
+    background-position: calc(var(--px, 0) * -10px) calc(var(--py, 0) * -10px + var(--sy, 0) * 0.3px);
+    transition: background-position 0.25s ease-out;
+    color: var(--sd-bg);
+  }
+
+  /*
+   * Pointer parallax: the element under the pointer sets --px and --py (-1 to 1)
+   * and its layers shift by depth. The grid moves least, then the far layer,
+   * then the title and play button.
+   */
+  .sd-far { transform: translate(calc(var(--px, 0) * -6px), calc(var(--py, 0) * -4px)); transition: transform 0.25s ease-out; }
+  .sd-mid { transform: translate(calc(var(--px, 0) * 8px), calc(var(--py, 0) * 6px)); transition: transform 0.25s ease-out; }
+  .sd-near { transform: translate(calc(var(--px, 0) * 16px), calc(var(--py, 0) * 10px)); transition: transform 0.25s ease-out; }
+  /* Scroll parallax on the mobile Home greeting: it drifts and fades. */
+  .sd-drift { transform: translateY(calc(var(--sy, 0) * 0.4px)); opacity: max(0, calc(1 - var(--sy, 0) / 140)); will-change: transform; }
+  @media (min-width: 1024px) { .sd-drift { transform: none; opacity: 1; } }
+
+  /* A frozen streak day. */
+  .sd-frozen { background: repeating-linear-gradient(45deg, var(--sd-accent-300) 0 3px, var(--sd-bg) 3px 6px); }
+  .sd-frozen-dark { background: repeating-linear-gradient(45deg, var(--sd-accent-300) 0 3px, var(--sd-ink) 3px 6px); }
+
+  /* — motion — */
+  @keyframes sd-screen { from { opacity: 0; transform: translateX(18px) } to { opacity: 1; transform: none } }
+  @keyframes sd-in { from { opacity: 0; transform: translateY(14px) } to { opacity: 1; transform: none } }
+  @keyframes sd-side { from { opacity: 0; transform: translateX(22px) } to { opacity: 1; transform: none } }
+  @keyframes sd-side-b { from { opacity: 0; transform: translateX(22px) } to { opacity: 1; transform: none } }
+  @keyframes sd-pop { 0% { opacity: 0; transform: scale(.5) } 70% { opacity: 1; transform: scale(1.08) } 100% { opacity: 1; transform: scale(1) } }
+  @keyframes sd-grow { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+
+  .sd-a-screen { animation: sd-screen 0.45s cubic-bezier(.2, .7, .2, 1) both; }
+  .sd-a-in { animation: sd-in 0.5s both; }
+  .sd-a-in-fast { animation: sd-in 0.35s both; }
+  .sd-a-pop { animation: sd-pop 0.5s both; }
+  .sd-a-grow { transform-origin: left; animation: sd-grow 0.8s cubic-bezier(.2, .7, .2, 1) both; }
+  /* Two names for the same slide, alternated so each new question replays it. */
+  .sd-a-side { animation: sd-side 0.45s both; }
+  .sd-a-side-b { animation: sd-side-b 0.45s both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sd-app *, .sd-app *::before, .sd-app *::after { animation: none !important; transition: none !important; }
+    .sd-far, .sd-mid, .sd-near, .sd-drift { transform: none; }
+  }
+}
