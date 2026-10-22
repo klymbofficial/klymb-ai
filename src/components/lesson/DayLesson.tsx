@@ -1,12 +1,12 @@
 "use client";
 
 import clsx from "clsx";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Celebrate } from "@/components/learner/Celebrate";
 import { LessonQuiz, score } from "@/components/lesson/LessonQuiz";
-import type { DayCopy, Lang, dayOne } from "@/data/system-design/day-1";
+import type { Day, DayCopy, Lang } from "@/data/system-design/types";
 
-type Day = typeof dayOne;
 interface Progress { pre?: number[]; watched?: boolean; post?: number[] }
 
 const UI = {
@@ -19,19 +19,19 @@ const UI = {
     preDone: (n: number) => `You picked ${n}/3 best moves. Now see what Flipkart actually did.`,
     s2: "Watch the story", s2Sub: (m: number, l: string) => `~${m} min · voiced in ${l}`,
     watched: "Watched it → reveal", watchHint: "Finish the video to unlock the reveal",
-    s3: "What really happens", s3Sub: "your answer vs Flipkart",
+    s3: "What really happens",
     yoursVsBest: "Your answer vs the best move", you: "You", best: "Best",
-    flipkart: "Flipkart, Big Billion Day 2015", sourceNote: "Source: Flipkart Stories (links at the bottom)",
     concept: "Today's concept", proveCta: "Now prove it: a new scenario →",
     s4: "Prove it", s4Sub: "new scenario, same concept",
-    s5: "Day 1 complete", s5Sub: "cheatsheet · interview mode · share",
+    s5: (n: number) => `Day ${n} complete`, s5Sub: "cheatsheet · interview mode · share",
     locked: "Finish the previous step",
     streak: "Streak: 1 day",
     interviewMode: "Interview mode · 2 min answer",
     share: "Share on LinkedIn",
     shareNote: "Download the infographic, then post. The text is copied for you: paste it, attach the image, done.",
     download: "Download infographic", post: "Copy text & open LinkedIn", copied: "Copied ✓ Paste it in LinkedIn",
-    tomorrow: "Tomorrow · Day 2", redo: "Do Day 1 again", sources: "Sources",
+    next: (n: number) => `Next · Day ${n}`, open: "Open →", redo: (n: number) => `Do Day ${n} again`, sources: "Sources",
+    newHere: "New to system design? Start with Day 0 →",
   },
   hi: {
     steps: ["Your call", "Watch", "What really happens", "Prove it", "Unlocked"],
@@ -42,19 +42,19 @@ const UI = {
     preDone: (n: number) => `Tumne ${n}/3 best moves pakde. Ab dekho Flipkart ne asal mein kya kiya.`,
     s2: "Story dekho", s2Sub: (m: number, l: string) => `~${m} min · ${l}`,
     watched: "Dekh liya → reveal", watchHint: "Video poora dekho, reveal khul jayega",
-    s3: "Asal mein kya hua", s3Sub: "tumhara answer vs Flipkart",
+    s3: "Asal mein kya hua",
     yoursVsBest: "Tumhara answer vs best move", you: "Tum", best: "Best",
-    flipkart: "Flipkart, Big Billion Day 2015", sourceNote: "Source: Flipkart Stories (links neeche hain)",
     concept: "Aaj ka concept", proveCta: "Ab prove karo: naya scenario →",
     s4: "Prove it", s4Sub: "naya scenario, wahi concept",
-    s5: "Day 1 complete", s5Sub: "cheatsheet · interview mode · share",
+    s5: (n: number) => `Day ${n} complete`, s5Sub: "cheatsheet · interview mode · share",
     locked: "Pichla step poora karo",
     streak: "Streak: 1 day",
     interviewMode: "Interview mode · 2 min answer",
     share: "LinkedIn par share karo",
     shareNote: "Infographic download karo, phir post karo. Text copy ho jayega: paste karo, image lagao, ho gaya.",
     download: "Infographic download karo", post: "Text copy karo & LinkedIn kholo", copied: "Copied ✓ LinkedIn mein paste karo",
-    tomorrow: "Kal · Day 2", redo: "Day 1 phir se karo", sources: "Sources",
+    next: (n: number) => `Agla · Day ${n}`, open: "Kholo →", redo: (n: number) => `Day ${n} phir se karo`, sources: "Sources",
+    newHere: "System design mein naye ho? Day 0 se shuru karo →",
   },
 };
 type Ui = (typeof UI)["en"];
@@ -123,7 +123,7 @@ export function DayLesson({ day }: { day: Day }) {
       </Step>
 
       {/* 3. Reveal */}
-      <Step n={3} title={ui.s3} sub={ui.s3Sub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current[2] = el; }}>
+      <Step n={3} title={ui.s3} sub={c.revealSub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current[2] = el; }}>
         <Reveal c={c} ui={ui} pre={p.pre ?? []} onNext={() => go(3)} />
       </Step>
 
@@ -137,7 +137,7 @@ export function DayLesson({ day }: { day: Day }) {
       </Step>
 
       {/* 5. Unlocked */}
-      <Step n={5} title={ui.s5} sub={ui.s5Sub} lockedText={ui.locked} open={!!p.post} locked={!p.post} innerRef={(el) => { refs.current[4] = el; }}>
+      <Step n={5} title={ui.s5(day.day)} sub={ui.s5Sub} lockedText={ui.locked} open={!!p.post} locked={!p.post} innerRef={(el) => { refs.current[4] = el; }}>
         <Unlocked day={day} c={c} ui={ui} lang={lang} preScore={preScore} postScore={postScore} burst={burst} onReset={() => { update({}); go(0); }} />
       </Step>
 
@@ -172,7 +172,7 @@ function Hook({ day, c, ui, onStart }: { day: Day; c: DayCopy; ui: Ui; onStart: 
       <div className="relative">
         <p className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em]">
           <span className="rounded-full bg-white/10 px-2.5 py-1">Day {day.day} / {day.of}</span>
-          <span className="rounded-full bg-red-strong px-2.5 py-1">{ui.interview}</span>
+          <span className="rounded-full bg-red-strong px-2.5 py-1">{c.tag ?? ui.interview}</span>
           <span className="text-white/60">{day.app} · {day.minutes} min</span>
         </p>
         <p className="mt-7 font-mono text-sm text-red-soft">{day.hook.date}</p>
@@ -181,15 +181,20 @@ function Hook({ day, c, ui, onStart }: { day: Day; c: DayCopy; ui: Ui; onStart: 
             <p key={l} className={clsx("appear text-lg leading-snug sm:text-xl", k === 0 ? "font-extrabold" : "text-white/80")} style={{ "--appear-delay": `${0.15 + k * 0.25}s` } as React.CSSProperties}>{l}</p>
           ))}
         </div>
-        <blockquote className="mt-6 border-l-2 border-red-soft pl-4 text-white/85">
-          <p className="italic">&ldquo;{day.hook.quote}&rdquo;</p>
-          <footer className="mt-1 text-xs text-white/55">{day.hook.quoteBy}</footer>
-        </blockquote>
+        {day.hook.quote && (
+          <blockquote className="mt-6 border-l-2 border-red-soft pl-4 text-white/85">
+            <p className="italic">&ldquo;{day.hook.quote}&rdquo;</p>
+            <footer className="mt-1 text-xs text-white/55">{day.hook.quoteBy}</footer>
+          </blockquote>
+        )}
         <h1 className="display mt-8 text-[clamp(2rem,7.5vw,3.25rem)] text-balance">{c.question}</h1>
         <button type="button" onClick={onStart} className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3.5 text-sm font-extrabold text-ink transition-transform active:scale-[0.97]">
           {ui.start}
         </button>
         <p className="mt-3 text-xs text-white/50">{ui.startNote}</p>
+        {day.prevHref && (
+          <Link href={day.prevHref} className="mt-5 inline-block text-sm font-bold text-red-soft underline underline-offset-4">{ui.newHere}</Link>
+        )}
       </div>
     </section>
   );
@@ -272,7 +277,7 @@ function Reveal({ c, ui, pre, onNext }: { c: DayCopy; ui: Ui; pre: number[]; onN
       </div>
 
       <div>
-        <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{ui.flipkart}</h3>
+        <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{c.revealTitle}</h3>
         <ol className="relative mt-4 space-y-4 border-l-2 border-red-strong/30 pl-5">
           {c.reveal.map((r) => (
             <li key={r.what} className="relative">
@@ -282,13 +287,13 @@ function Reveal({ c, ui, pre, onNext }: { c: DayCopy; ui: Ui; pre: number[]; onN
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-xs text-muted">{ui.sourceNote}</p>
+        {c.sourceNote && <p className="mt-3 text-xs text-muted">{c.sourceNote}</p>}
       </div>
 
       <div>
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{ui.concept}</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {[c.concept.predictable, c.concept.sudden].map((x, k) => (
+          {c.concept.cards.map((x, k) => (
             <div key={x.name} className={clsx("rounded-xl p-4", k === 0 ? "bg-night text-white" : "bg-red-tint")}>
               <p className="text-lg font-extrabold">{x.name}</p>
               <p className={clsx("mt-1 text-xs", k === 0 ? "text-white/60" : "text-muted")}>{x.examples.join(" · ")}</p>
@@ -363,17 +368,26 @@ function Unlocked({
         </div>
       </div>
 
-      <div className="rounded-xl border border-dashed border-line/50 p-4">
-        <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{ui.tomorrow} <LockIcon /></p>
-        <p className="mt-1 font-extrabold">{c.nextDay}</p>
-      </div>
+      {day.nextHref ? (
+        <Link href={day.nextHref} className="block rounded-xl bg-night p-5 text-white transition-transform active:scale-[0.99]">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-red-soft">{ui.next(day.day + 1)}</p>
+          <p className="mt-1 text-lg font-extrabold">{c.nextDay}</p>
+          <p className="mt-3 text-sm font-bold">{ui.open}</p>
+        </Link>
+      ) : (
+        <div className="rounded-xl border border-dashed border-line/50 p-4">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{ui.next(day.day + 1)} <LockIcon /></p>
+          <p className="mt-1 font-extrabold">{c.nextDay}</p>
+        </div>
+      )}
 
-      <button type="button" onClick={onReset} className="text-xs font-semibold text-muted underline underline-offset-4">{ui.redo}</button>
+      <button type="button" onClick={onReset} className="text-xs font-semibold text-muted underline underline-offset-4">{ui.redo(day.day)}</button>
     </div>
   );
 }
 
 function Sources({ day, ui }: { day: Day; ui: Ui }) {
+  if (!day.sources.length) return null;
   return (
     <section aria-label={ui.sources} className="mt-8 px-1 text-xs text-muted">
       <p className="font-bold">{ui.sources}</p>

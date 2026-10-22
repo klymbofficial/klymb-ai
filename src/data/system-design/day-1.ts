@@ -1,49 +1,9 @@
 /**
  * Day 1 of "System Design in 21 Days": Big Billion Day → predictable vs sudden load.
  * Every claim about Flipkart is from the public sources in `sources`; keep it that way.
- * Both languages must keep the same questions and choices in the same order:
- * saved answers are choice indexes, so switching language keeps a learner's progress.
  */
 
-export type Lang = "en" | "hi";
-
-export interface Choice {
-  text: string;
-  /** Why this choice is (or isn't) the best first move. Shown after answering. */
-  why: string;
-  best?: boolean;
-}
-
-export interface Question {
-  id: string;
-  scenario?: string;
-  prompt: string;
-  choices: Choice[];
-}
-
-export interface Source {
-  label: string;
-  href: string;
-}
-
-interface LoadType {
-  name: string;
-  examples: string[];
-  moves: string[];
-}
-
-export interface DayCopy {
-  hookLines: string[];
-  question: string;
-  pre: Question[];
-  reveal: { when: string; what: string }[];
-  concept: { predictable: LoadType; sudden: LoadType; rule: string };
-  post: Question[];
-  interview: string[];
-  cheatsheet: { title: string; points: string[] };
-  linkedin: string;
-  nextDay: string;
-}
+import type { Day, DayCopy } from "./types";
 
 const en: DayCopy = {
   hookLines: [
@@ -120,6 +80,9 @@ const en: DayCopy = {
     },
   ],
 
+  revealTitle: "Flipkart, Big Billion Day 2015",
+  revealSub: "your answer vs Flipkart",
+  sourceNote: "Source: Flipkart Stories (links at the bottom)",
   reveal: [
     { when: "~4 months before", what: "Preparation starts. Most of the last two months before code freeze go to infrastructure." },
     { when: "~1 month of tests", what: "Stress runs at 5x the projected numbers, across all systems." },
@@ -130,16 +93,15 @@ const en: DayCopy = {
   ],
 
   concept: {
-    predictable: {
+    cards: [{
       name: "Predictable load",
       examples: ["Big Billion Day midnight", "IPL final", "Tatkal at 10 AM", "Exam results"],
       moves: ["Forecast the peak", "Pre-scale and warm caches before it", "Load test well above the forecast", "Freeze code, write playbooks"],
-    },
-    sudden: {
+    }, {
       name: "Sudden load",
       examples: ["A celebrity tweets your link", "A reel goes viral", "News breaks"],
       moves: ["Auto-scale (minutes, not seconds)", "Rate limit per user", "Queue or waiting room", "Shed or degrade non-essential features"],
-    },
+    }],
     rule: "Real systems use both: pre-scale for the forecast, and keep protection for whatever goes past it.",
   },
 
@@ -285,6 +247,9 @@ const hi: DayCopy = {
     },
   ],
 
+  revealTitle: "Flipkart, Big Billion Day 2015",
+  revealSub: "tumhara answer vs Flipkart",
+  sourceNote: "Source: Flipkart Stories (links neeche hain)",
   reveal: [
     { when: "~4 mahine pehle", what: "Taiyaari shuru. Code freeze se pehle ke aakhri do mahine zyada tar infrastructure par gaye." },
     { when: "~1 mahine tak tests", what: "Saare systems par projected numbers ke 5x par stress tests." },
@@ -295,16 +260,15 @@ const hi: DayCopy = {
   ],
 
   concept: {
-    predictable: {
+    cards: [{
       name: "Predictable load",
       examples: ["Big Billion Day midnight", "IPL final", "Tatkal 10 baje", "Exam results"],
       moves: ["Peak ka forecast karo", "Usse pehle scale up karo, cache warm karo", "Forecast se kaafi upar load test", "Code freeze, playbooks likho"],
-    },
-    sudden: {
+    }, {
       name: "Sudden load",
       examples: ["Celebrity ne tumhara link tweet kiya", "Reel viral ho gayi", "Breaking news"],
       moves: ["Auto-scale (minutes lagte hain, seconds nahi)", "Per user rate limit", "Queue ya waiting room", "Faltu features band ya halke karo"],
-    },
+    }],
     rule: "Real systems dono karte hain: forecast ke liye pre-scale, aur usse upar ke liye protection.",
   },
 
@@ -375,7 +339,7 @@ const hi: DayCopy = {
   nextDay: "Swiggy dinner rush: 8 baje sab ek saath order karte hain. Load kaise baantoge?",
 };
 
-export const dayOne = {
+export const dayOne: Day = {
   day: 1,
   of: 21,
   app: "Flipkart",
@@ -385,10 +349,11 @@ export const dayOne = {
     quote: "We did not live up to the promises we made.",
     quoteBy: "Sachin & Binny Bansal, apology email, Oct 2014",
   },
-  copy: { en, hi } satisfies Record<Lang, DayCopy>,
+  copy: { en, hi },
   sources: [
     { label: "Flipkart Stories: TBBD Throwback, The Big Billion Day 2015", href: "https://stories.flipkart.com/tbbd-throwback-the-big-billion-day-2015/" },
     { label: "BOOM: Flipkart issues apology for Big Billion Day fiasco (2014)", href: "https://www.boomlive.in/flipkart-issues-apology-big-billion-day-fiasco/" },
-  ] satisfies Source[],
+  ],
   video: { src: "/videos/system-design/day-1.mp4", poster: "/videos/system-design/day-1-poster.jpg", minutes: 3, lang: "Hinglish" },
+  prevHref: "/system-design/day-0",
 };

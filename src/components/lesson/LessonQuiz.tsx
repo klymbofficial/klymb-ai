@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { useState } from "react";
-import type { Lang, Question } from "@/data/system-design/day-1";
+import type { Lang, Question } from "@/data/system-design/types";
 
 const UI = {
   en: { right: "Nailed it!", close: "Close. The best move is in green.", next: "Next", done: "Done" },
