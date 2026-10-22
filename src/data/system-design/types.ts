@@ -65,6 +65,8 @@ export interface DayCopy {
   revealSub: string;
   reveal: { when: string; what: string }[];
   sourceNote?: string;
+  /** Terms the video covers that deserve a plain explanation in the reveal (e.g. HTTP, TCP, UDP). */
+  explain?: { title: string; items: { term: string; what: string; example: string }[] };
   concept: { cards: ConceptCard[]; rule: string };
   post: Question[];
   build?: BuildTask;
@@ -83,7 +85,8 @@ export interface Day {
   hook: { date: string; quote?: string; quoteBy?: string };
   copy: Record<Lang, DayCopy>;
   sources: Source[];
-  video: { src: string; poster: string; minutes: number; lang: string };
+  /** Portrait (9:16) for the standalone Day page; `wide` is the 16:9 cut the course app's player plays when it exists. */
+  video: { src: string; poster: string; minutes: number; lang: string; wide?: { src: string; poster: string } };
   /** Pages around this one; the next day's card links only when it exists. */
   prevHref?: string;
   nextHref?: string;

@@ -19,7 +19,7 @@ const UI = {
     start: "You answer first →",
     startNote: "Video comes after. Your answer comes first.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `You picked ${n}/3 best moves. Now watch the story.`,
+    preDone: (n: number) => `You picked ${n} best moves. Now watch the story.`,
     s2: "Watch the story", s2Sub: (m: number, l: string) => `~${m} min · voiced in ${l}`,
     watched: "Watched it → reveal", watchHint: "Finish the video to unlock the reveal",
     s3: "What really happens",
@@ -46,7 +46,7 @@ const UI = {
     start: "Pehle tum batao →",
     startNote: "Video baad mein. Pehle tumhara answer.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `Tumne ${n}/3 best moves pakde. Ab story dekho.`,
+    preDone: (n: number) => `Tumne ${n} best moves pakde. Ab story dekho.`,
     s2: "Story dekho", s2Sub: (m: number, l: string) => `~${m} min · ${l}`,
     watched: "Dekh liya → reveal", watchHint: "Video poora dekho, reveal khul jayega",
     s3: "Asal mein kya hua",
@@ -158,7 +158,7 @@ export function DayLesson({ day }: { day: Day }) {
 
       <Step n={num("prove")} title={ui.s4} sub={ui.s4Sub} lockedText={ui.locked} open={!!p.watched && builtOk} locked={!p.watched || !builtOk} innerRef={(el) => { refs.current.prove = el; }}>
         {p.post ? (
-          <Done text={`Before: ${preScore}/3 → After: ${postScore}/3.`} />
+          <Done text={`Before: ${preScore}/${c.pre.length} → After: ${postScore}/${c.post.length}.`} />
         ) : (
           <LessonQuiz key={lang} questions={c.post} label={ui.s4} lang={lang} onDone={(post) => {
             update({ ...p, post });
@@ -331,6 +331,20 @@ function Reveal({ c, ui, pre, onNext }: { c: DayCopy; ui: Ui; pre: number[]; onN
       </div>
 
       <div>
+        {c.explain && (
+          <div className="mb-8">
+            <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{c.explain.title}</h3>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {c.explain.items.map((x) => (
+                <div key={x.term} className="rounded-xl bg-surface/70 p-4">
+                  <p className="text-lg font-extrabold">{x.term}</p>
+                  <p className="mt-1 text-sm leading-relaxed">{x.what}</p>
+                  <p className="mt-1 text-xs text-muted">e.g. {x.example}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{ui.concept}</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {c.concept.cards.map((x, k) => (
@@ -372,7 +386,7 @@ function Unlocked({
         <Celebrate burstKey={burst} />
         <p className="text-4xl" aria-hidden="true">🔥</p>
         <p className="mt-2 text-2xl font-extrabold">{ui.streak}</p>
-        <p className="mt-1 text-sm text-white/70">Before {preScore}/3 → After {postScore}/3</p>
+        <p className="mt-1 text-sm text-white/70">Before {preScore}/{c.pre.length} → After {postScore}/{c.post.length}</p>
       </div>
 
       <div className="rounded-2xl border-2 border-ink p-5">

@@ -16,12 +16,25 @@ const en: DayCopy = {
   pre: [
     {
       id: "d0-pre-1",
-      scenario: "Your app works perfectly with 10 users. Tomorrow, 10 lakh people open it at the same time.",
+      prompt: "What do you think system design is?",
+      choices: [
+        {
+          text: "Choosing an app’s parts (servers, databases, caches…) and how they work together, so it works for crores of people",
+          why: "Exactly. Code makes one feature work; system design makes it keep working for everyone, all the time, even when something breaks.",
+          best: true,
+        },
+        { text: "Designing how the app looks: colours, screens and buttons", why: "That’s UI/UX design. System design is everything behind the screen." },
+        { text: "Writing the code for one feature", why: "Code makes one feature work for one user. System design is what lets crores of people use it at once." },
+      ],
+    },
+    {
+      id: "d0-pre-2",
+      scenario: "Why does it matter? Your app works perfectly with 10 users. Tomorrow, 10 lakh people open it at the same time.",
       prompt: "What is most likely to happen?",
       choices: [
         {
           text: "It slows down or crashes, because one server can only do so much",
-          why: "Code that works for one user isn't automatically ready for lakhs. Making it ready is exactly what system design is.",
+          why: "Code that works for one user isn’t automatically ready for lakhs. Making it ready is exactly what system design is.",
           best: true,
         },
         { text: "Nothing, good code always scales", why: "Good code helps, but one machine still has limits on CPU, memory and network." },
@@ -29,27 +42,17 @@ const en: DayCopy = {
       ],
     },
     {
-      id: "d0-pre-2",
-      scenario: "Raju's dhaba now has 1,000 customers and only one cook: Raju.",
-      prompt: "What's the best fix?",
+      id: "d0-pre-3",
+      scenario: "Raju’s dhaba now has 1,000 customers and only one cook: Raju.",
+      prompt: "What’s the best fix?",
       choices: [
         {
           text: "Hire more cooks, and put a manager at the door to send each order to a free cook",
-          why: "More cooks are more servers. The manager is a load balancer. That's how apps grow too.",
+          why: "More cooks are more servers. The manager is a load balancer. That’s how apps grow too.",
           best: true,
         },
         { text: "Make Raju cook faster", why: "One person (one machine) has a ceiling. Making one machine bigger is vertical scaling, and it runs out." },
-        { text: "Close the door after 100 customers", why: "That's a last resort (rate limiting), not a plan for growth." },
-      ],
-    },
-    {
-      id: "d0-pre-3",
-      scenario: "Almost everyone orders chai and samosa.",
-      prompt: "How do you serve them instantly?",
-      choices: [
-        { text: "Make them in advance and keep them ready on the counter", why: "That's a cache: keep popular things ready so you don't redo the same work.", best: true },
-        { text: "Cook each one fresh when it's ordered", why: "Correct, but slow. With 1,000 customers the line never ends." },
-        { text: "Write every order in the register first", why: "The register (the database) keeps records safe. It isn't there for speed." },
+        { text: "Close the door after 100 customers", why: "That’s a last resort (rate limiting), not a plan for growth." },
       ],
     },
   ],
@@ -66,6 +69,17 @@ const en: DayCopy = {
     { when: "Order slips in a line", what: "Queue: slow background work (SMS, rider) done one by one, nothing lost." },
     { when: "New branch in the city", what: "CDN: copies of images and videos kept close to users." },
   ],
+
+  explain: {
+    title: "How the boxes talk",
+    items: [
+      { term: "HTTP", what: "The language of the web. Your phone sends a request (the order slip); the server sends back a response (the plate).", example: "Opening klymb.ai, loading a menu" },
+      { term: "REST", what: "The common style of HTTP APIs that apps use: simple addresses like GET /menu or POST /order.", example: "Most mobile apps talking to their servers" },
+      { term: "gRPC", what: "A faster, stricter way for servers to call each other, with a fixed format agreed in advance.", example: "One backend service calling another" },
+      { term: "TCP", what: "Like a courier: every packet arrives, in order, or it is sent again. Reliable, a little slower.", example: "Payments, chat messages, web pages" },
+      { term: "UDP", what: "Like live commentary: fast, and a missed packet is not sent again. You just move on.", example: "Video calls, live streams, online games" },
+    ],
+  },
 
   concept: {
     cards: [
@@ -112,6 +126,16 @@ const en: DayCopy = {
         { text: "A queue: confirm the order now, send the SMS in the background", why: "The user only needs the confirmation. Slow extras go to a queue.", best: true },
         { text: "A faster SMS provider", why: "Helps a little, but the user still waits for something they don't need to wait for." },
         { text: "Stop sending SMS", why: "Users want it. Just don't make them wait for it." },
+      ],
+    },
+    {
+      id: "d0-post-4",
+      scenario: "You’re building video calls. A few lost frames are fine; a frozen, lagging call is not.",
+      prompt: "TCP or UDP?",
+      choices: [
+        { text: "UDP: fast, and it doesn’t stop to resend lost packets", why: "Live audio and video can skip a frame. Waiting to resend old frames is what makes calls lag.", best: true },
+        { text: "TCP: every packet must arrive", why: "Perfect for payments and messages, but resending old frames makes a live call fall behind." },
+        { text: "HTTP requests every second", why: "Far too slow and heavy for live audio and video." },
       ],
     },
   ],
@@ -214,7 +238,20 @@ const hi: DayCopy = {
   pre: [
     {
       id: "d0-pre-1",
-      scenario: "Tumhara app 10 users ke saath perfect chalta hai. Kal 10 lakh log ek saath kholte hain.",
+      prompt: "Tumhe kya lagta hai, system design kya hai?",
+      choices: [
+        {
+          text: "App ke parts chunna (servers, databases, caches…) aur unhe jodna, taaki woh crores logon ke liye chale",
+          why: "Bilkul. Code ek feature chalata hai; system design use sab ke liye, hamesha chalata hai, kuch toote tab bhi.",
+          best: true,
+        },
+        { text: "App kaisa dikhta hai: colours, screens aur buttons", why: "Woh UI/UX design hai. System design screen ke peeche ka sab kuch hai." },
+        { text: "Ek feature ka code likhna", why: "Code ek user ke liye ek feature chalata hai. System design se crores log ek saath use kar paate hain." },
+      ],
+    },
+    {
+      id: "d0-pre-2",
+      scenario: "Yeh zaroori kyun hai? Tumhara app 10 users ke saath perfect chalta hai. Kal 10 lakh log ek saath kholte hain.",
       prompt: "Sabse zyada kya hone ke chances hain?",
       choices: [
         {
@@ -227,7 +264,7 @@ const hi: DayCopy = {
       ],
     },
     {
-      id: "d0-pre-2",
+      id: "d0-pre-3",
       scenario: "Raju ke dhabe pe ab 1,000 customers hain aur cook sirf ek: Raju.",
       prompt: "Best fix kya hai?",
       choices: [
@@ -238,16 +275,6 @@ const hi: DayCopy = {
         },
         { text: "Raju ko aur tez banwao", why: "Ek insaan (ek machine) ki limit hai. Ek machine ko bada karna vertical scaling hai, aur woh khatam ho jaata hai." },
         { text: "100 customers ke baad darwaza band", why: "Yeh aakhri upaay hai (rate limiting), growth ka plan nahi." },
-      ],
-    },
-    {
-      id: "d0-pre-3",
-      scenario: "Lagbhag sab chai aur samosa maangte hain.",
-      prompt: "Turant kaise doge?",
-      choices: [
-        { text: "Pehle se bana ke counter pe ready rakho", why: "Yeh cache hai: popular cheezein ready rakho taaki wahi kaam baar baar na karna pade.", best: true },
-        { text: "Har order pe fresh banao", why: "Sahi hai, par slow. 1,000 customers ke saath line kabhi khatam nahi hogi." },
-        { text: "Pehle har order register mein likho", why: "Register (database) records safe rakhta hai. Woh speed ke liye nahi hai." },
       ],
     },
   ],
@@ -264,6 +291,17 @@ const hi: DayCopy = {
     { when: "Line mein lagi parchiyan", what: "Queue: slow background kaam (SMS, rider) ek ek karke, kuch nahi khota." },
     { when: "Shehar mein nayi branch", what: "CDN: images aur videos ki copies users ke paas." },
   ],
+
+  explain: {
+    title: "Boxes aapas mein baat kaise karte hain",
+    items: [
+      { term: "HTTP", what: "Web ki bhasha. Phone request bhejta hai (order ki parchi); server response lautata hai (khane ki plate).", example: "klymb.ai kholna, menu load hona" },
+      { term: "REST", what: "Apps ke HTTP APIs ka common tareeka: simple address jaise GET /menu ya POST /order.", example: "Zyada tar mobile apps aur unke servers" },
+      { term: "gRPC", what: "Servers ke aapas mein baat karne ka tez aur strict tareeka, pehle se tay format ke saath.", example: "Ek backend service doosri ko call kare" },
+      { term: "TCP", what: "Courier jaisa: har packet pahunchta hai, sahi order mein, warna dobara bheja jaata hai. Reliable, thoda slow.", example: "Payments, chat messages, web pages" },
+      { term: "UDP", what: "Live commentary jaisa: tez, aur chhoota packet dobara nahi bheja jaata. Bas aage badho.", example: "Video calls, live streams, online games" },
+    ],
+  },
 
   concept: {
     cards: [
@@ -310,6 +348,16 @@ const hi: DayCopy = {
         { text: "Queue: order abhi confirm, SMS background mein", why: "User ko sirf confirmation chahiye. Slow extras queue mein jaate hain.", best: true },
         { text: "Tez SMS provider", why: "Thoda fark padega, par user phir bhi ek aisi cheez ka wait karega jiski zaroorat nahi." },
         { text: "SMS bhejna band", why: "Users ko SMS chahiye. Bas unhe uska wait mat karwao." },
+      ],
+    },
+    {
+      id: "d0-post-4",
+      scenario: "Tum video calls bana rahe ho. Kuch frames chhoot jaayein chalega; call atke ya lag kare, nahi chalega.",
+      prompt: "TCP ya UDP?",
+      choices: [
+        { text: "UDP: tez, chhoote packets dobara bhejne ke liye rukta nahi", why: "Live audio-video ek frame skip kar sakta hai. Purane frames dobara bhejne ka wait hi call ko lag karta hai.", best: true },
+        { text: "TCP: har packet pahunchna chahiye", why: "Payments aur messages ke liye perfect, par purane frames dobara bhejne se live call peeche reh jaati hai." },
+        { text: "Har second HTTP request", why: "Live audio-video ke liye bahut slow aur bhaari." },
       ],
     },
   ],
@@ -408,6 +456,9 @@ export const dayZero: Day = {
   hook: { date: "1 tap · 1 second" },
   copy: { en, hi },
   sources: [],
-  video: { src: "/videos/system-design/day-0.mp4", poster: "/videos/system-design/day-0-poster.jpg", minutes: 3, lang: "Hinglish" },
+  video: {
+    src: "/videos/system-design/day-0.mp4", poster: "/videos/system-design/day-0-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/videos/system-design/day-0-wide.mp4", poster: "/videos/system-design/day-0-wide-poster.jpg" },
+  },
   nextHref: "/system-design/day-1",
 };

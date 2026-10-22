@@ -8,7 +8,7 @@ import {
   retryVideo, seekTo, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { LangSwitch, Practice, YourCall } from "../lesson/Practice";
+import { LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
 import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
 
@@ -33,6 +33,7 @@ function transcriptFor(id: string): [number, string][] {
 /** The lesson video, portrait 9:16 on the dark grid. Its own controls are hidden; the player's buttons drive it. */
 function Video({ s, act }: { s: CourseState; act: Act }) {
   const day = dayOf(s.cur)!;
+  const wide = day.video.wide;
   const ref = useRef<HTMLVideoElement>(null);
   const errOffline = s.offline && !s.vidErr;
 
@@ -58,7 +59,7 @@ function Video({ s, act }: { s: CourseState; act: Act }) {
   };
 
   return (
-    <div className="sd-grid relative flex flex-none items-center justify-center overflow-hidden py-3 [--grid:23px] lg:py-6 lg:[--grid:32px]">
+    <div id="lesson-watch" className={clsx("sd-grid relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
         <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
@@ -73,8 +74,8 @@ function Video({ s, act }: { s: CourseState; act: Act }) {
       )}
       <video
         ref={ref}
-        src={day.video.src}
-        poster={day.video.poster}
+        src={wide?.src ?? day.video.src}
+        poster={wide?.poster ?? day.video.poster}
         playsInline
         preload="metadata"
         controlsList="nodownload noplaybackrate"
@@ -85,9 +86,9 @@ function Video({ s, act }: { s: CourseState; act: Act }) {
         onTimeUpdate={(e) => onTime(e.currentTarget)}
         onPlay={() => act((p) => (p.playing ? p : { ...p, playing: true }))}
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
-        onEnded={() => act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true }))}
+        onEnded={() => { act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true })); goTo("reveal", 400); }}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
-        className="block aspect-[9/16] h-[min(68dvh,560px)] max-w-full cursor-pointer bg-black lg:h-[640px]"
+        className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
       />
     </div>
   );
@@ -224,8 +225,18 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
       <div className="flex items-center gap-2 px-3 pt-1 pb-2.5 lg:p-0">
         <BackButton onClick={() => act((p) => ({ ...p, screen: p.tab, playing: false }))} />
         <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-[0.08em] uppercase">{lessonDay(s.cur)} · {c.m.title}</span>
+        {day && lp.pre && (
+          <button
+            type="button"
+            onClick={() => { if (window.confirm("Start this lesson again from the first question?")) { act((p) => ({ ...updateLesson(p, p.cur, null), t: 0, playing: false, ended: false, done: p.done.filter((x) => x !== p.cur) })); goTo("call", 50); } }}
+            className="sd-btn sd-btn-secondary h-[34px] flex-none gap-1.5 px-2.5 text-xs"
+          >
+            <Icon name="rotL" size={14} /><span className="hidden sm:inline">Restart</span>
+          </button>
+        )}
         {day && <LangSwitch s={s} act={act} />}
       </div>
+      {day && <LessonPath s={s} id={s.cur} day={day} />}
 
       <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
         <div className="flex flex-col">
@@ -265,6 +276,11 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
               <div><h2 className="m-0 text-[30px] tracking-[-0.02em]">{c.title}</h2><div className="text-sm text-sd-n-700">{pos} · {c.dur}</div></div>
               {done && <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>}
             </div>
+            {day && lp.watched && !lp.read && !lp.post && (
+              <button type="button" onClick={() => goTo("reveal", 0)} className="sd-a-in mt-4 flex w-full cursor-pointer items-center justify-between gap-3 bg-sd-ink px-4 py-3 text-left text-sd-bg">
+                <span className="text-sm font-extrabold">Video done. Next: what really happens</span><Icon name="down" size={18} />
+              </button>
+            )}
             {day && showVideo && <Practice s={s} act={act} id={s.cur} day={day} />}
           </div>
         </div>

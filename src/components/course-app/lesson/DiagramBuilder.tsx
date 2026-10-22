@@ -6,8 +6,8 @@ import type { BuildTask, Lang } from "@/data/system-design/types";
 import { Icon } from "../icons";
 
 const UI = {
-  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Next: prove it", picked: "Now tap the slot where it goes" },
-  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Agla: prove karo", picked: "Ab woh slot tap karo jahan yeh jaayega" },
+  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Continue", picked: "Now tap the slot where it goes" },
+  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Aage badho", picked: "Ab woh slot tap karo jahan yeh jaayega" },
 };
 
 /**

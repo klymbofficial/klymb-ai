@@ -29,7 +29,7 @@ export type Answer = number | number[] | string;
 export interface Note { t: number; text: string }
 
 /** A lesson's own steps: your call, the video, build it, prove it, follow-ups. */
-export interface LessonProgress { pre?: number[]; watched?: boolean; built?: number; post?: number[]; follow?: boolean[] }
+export interface LessonProgress { pre?: number[]; watched?: boolean; read?: boolean; built?: number; post?: number[]; follow?: boolean[] }
 
 export interface CourseState {
   screen: Screen;
