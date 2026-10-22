@@ -92,6 +92,18 @@ const en: DayCopy = {
     { when: "During the sale", what: "Recalibrated alerts, live dashboards, playbooks and tiger teams on 24x7 shifts." },
   ],
 
+  explain: {
+    title: "The moves, explained",
+    items: [
+      { term: "Auto-scaling", what: "Adds servers automatically when load rises. New servers take minutes to start and warm up.", example: "Sudden, unplanned spikes" },
+      { term: "Pre-scaling", what: "Adds servers before a known peak, so they are already warm when it hits.", example: "Sale midnight, IPL final" },
+      { term: "Load testing", what: "Fake traffic far above the forecast, to find what breaks first, before real users do.", example: "Flipkart 2015: 5x the projected numbers" },
+      { term: "Throttling", what: "Lets in only as much traffic as the system has proven it can handle; the rest waits.", example: "Waiting rooms, “please wait” pages" },
+      { term: "Queue", what: "Lines up work so nothing is lost; each system takes it at its own pace.", example: "Orders, SMS, payment calls" },
+      { term: "Graceful degradation", what: "Switch off the extras to keep the core working.", example: "Hide recommendations, keep checkout" },
+    ],
+  },
+
   concept: {
     cards: [{
       name: "Predictable load",
@@ -143,6 +155,69 @@ const en: DayCopy = {
         { text: "Pre-scale", why: "Pre-scaling needs advance notice. There was no warning here." },
         { text: "Run a load test now", why: "Load tests are for before the sale. Production is already load testing you." },
       ],
+    },
+  ],
+
+  build: {
+    title: "Plan the sale night",
+    intro: "Drag each move to the moment it belongs to. You can also tap a move, then tap a slot.",
+    given: "Big Billion Day · 12:00 AM",
+    rows: [["forecast", "prescale", "loadtest"], ["throttle", "queue"], ["oos", "fallback"]],
+    slots: {
+      forecast: { role: "Weeks before: how big will the peak be?", answer: "forecast" },
+      prescale: { role: "Days before: servers up and warm", answer: "prescale" },
+      loadtest: { role: "Before launch: prove it holds above the forecast", answer: "loadtest" },
+      throttle: { role: "At midnight: let in just under the tested limit", answer: "throttle" },
+      queue: { role: "Orders pile up: line them up, lose none", answer: "queue" },
+      oos: { role: "Stock runs out: stop selling it instantly", answer: "oos" },
+      fallback: { role: "A system fails: switch to the backup", answer: "fallback" },
+    },
+    chips: [
+      { id: "prescale", label: "Pre-scale", does: "adding servers and warming caches before the traffic arrives" },
+      { id: "late", label: "Auto-scale at 11:59 PM", does: "too late: new servers take minutes to start, and the midnight spike takes seconds" },
+      { id: "queue", label: "Async queue", does: "lining work up so nothing is lost, processed as fast as each system can take it" },
+      { id: "forecast", label: "Forecast", does: "estimating how much traffic will come, from past sales and the marketing plan" },
+      { id: "oos", label: "Mark out of stock", does: "stopping orders for items that are gone, so nobody pays for nothing" },
+      { id: "loadtest", label: "Load test at 5x", does: "simulating far more traffic than expected to find what breaks first" },
+      { id: "throttle", label: "Throttle", does: "letting in only as much traffic as the system has proven it can handle" },
+      { id: "fallback", label: "Fallback / hot standby", does: "a ready backup that takes over when a system fails" },
+    ],
+    done: "That’s a sale-night plan. Most of these moves are in Flipkart’s own write-up of Big Billion Day 2015.",
+  },
+
+  followUps: [
+    {
+      q: "\"You planned for 8x. At midnight it’s 15x. What now?\"",
+      answer: [
+        "Protect the core path first: browse, cart, payment. Everything else can wait.",
+        "Throttle at the tested limit and send the rest to a waiting room or queue, with a clear message.",
+        "Switch off non-essential features (recommendations, reviews) to free capacity.",
+        "Auto-scaling keeps adding servers in the background; the waiting room holds people until it catches up.",
+      ],
+      say: "\"Admit what we can serve, queue the rest with a clear message, and switch off non-essentials to protect checkout while we scale.\"",
+      deeper: "Days 7 and 18",
+    },
+    {
+      q: "\"Your payment partner can only take 2,000 requests a second. Sale traffic is 10 times that. How do you design around it?\"",
+      answer: [
+        "Never send more than the partner can take: rate limit the calls to it.",
+        "Queue payment requests and process them at the partner’s pace; show the user “processing”.",
+        "Add a second payment provider and split traffic between them.",
+        "Make every payment attempt idempotent, so a retry never charges twice.",
+      ],
+      say: "\"Queue payment calls at the partner’s rate, show a processing state, spread across providers, and make every attempt idempotent.\"",
+      deeper: "Days 8 and 13",
+    },
+    {
+      q: "\"How would you know the system is about to break, before users do?\"",
+      answer: [
+        "Know the limits first: load tests tell you where each system breaks.",
+        "Watch the signs live: requests per second, the slowest response times, error rate, queue length.",
+        "Alert well before the limit (say at 70%), not when it’s already down.",
+        "Keep a playbook for each alert, so the team acts in minutes.",
+      ],
+      say: "\"Load-test to know the limits, put the key signals on a dashboard, alert well below the limit, and keep a playbook for each alert.\"",
+      deeper: "Day 18",
     },
   ],
 
@@ -259,6 +334,18 @@ const hi: DayCopy = {
     { when: "Sale ke dauraan", what: "Naye sire se set alerts, live dashboards, playbooks aur 24x7 tiger teams." },
   ],
 
+  explain: {
+    title: "Moves, aasaan bhasha mein",
+    items: [
+      { term: "Auto-scaling", what: "Load badhne pe servers apne aap judte hain. Naye servers ko start aur warm hone mein minutes lagte hain.", example: "Achanak, bina plan ke spikes" },
+      { term: "Pre-scaling", what: "Pata hua peak aane se pehle servers jod do, taaki woh pehle se warm hon.", example: "Sale ki midnight, IPL final" },
+      { term: "Load testing", what: "Forecast se kaafi zyada nakli traffic, taaki pata chale pehle kya tootega, real users se pehle.", example: "Flipkart 2015: projected ka 5 guna" },
+      { term: "Throttling", what: "Utna hi traffic andar, jitna system ne test mein jhela hai; baaki wait karte hain.", example: "Waiting rooms, “thoda ruko” pages" },
+      { term: "Queue", what: "Kaam line mein lagta hai taaki kuch na khoye; har system apni speed se uthata hai.", example: "Orders, SMS, payment calls" },
+      { term: "Graceful degradation", what: "Extras band karo taaki core chalta rahe.", example: "Recommendations chhupao, checkout chalne do" },
+    ],
+  },
+
   concept: {
     cards: [{
       name: "Predictable load",
@@ -313,6 +400,69 @@ const hi: DayCopy = {
     },
   ],
 
+  build: {
+    title: "Sale ki raat plan karo",
+    intro: "Har move ko uske sahi waqt pe drag karo. Ya move tap karo, phir slot tap karo.",
+    given: "Big Billion Day · 12:00 AM",
+    rows: [["forecast", "prescale", "loadtest"], ["throttle", "queue"], ["oos", "fallback"]],
+    slots: {
+      forecast: { role: "Hafton pehle: peak kitna bada hoga?", answer: "forecast" },
+      prescale: { role: "Din pehle: servers taiyaar aur warm", answer: "prescale" },
+      loadtest: { role: "Launch se pehle: forecast se upar test", answer: "loadtest" },
+      throttle: { role: "Midnight pe: tested limit se thoda neeche andar lo", answer: "throttle" },
+      queue: { role: "Orders ka dher: line mein lagao, kuch na khoye", answer: "queue" },
+      oos: { role: "Stock khatam: turant bechna band", answer: "oos" },
+      fallback: { role: "Koi system gira: backup pe shift", answer: "fallback" },
+    },
+    chips: [
+      { id: "prescale", label: "Pre-scale", does: "traffic aane se pehle servers jodna aur cache warm karna" },
+      { id: "late", label: "11:59 PM pe auto-scale", does: "bahut der: naye servers minutes lete hain, midnight ka spike seconds mein aata hai" },
+      { id: "queue", label: "Async queue", does: "kaam line mein, kuch nahi khota, har system apni speed se uthata hai" },
+      { id: "forecast", label: "Forecast", does: "pichli sales aur marketing plan se andaaza ki kitna traffic aayega" },
+      { id: "oos", label: "Out of stock mark", does: "khatam items ke orders band, taaki koi bina saamaan ke pay na kare" },
+      { id: "loadtest", label: "5x load test", does: "umeed se kaafi zyada nakli traffic, taaki pata chale pehle kya tootega" },
+      { id: "throttle", label: "Throttle", does: "utna hi traffic andar jitna system ne test mein jhela hai" },
+      { id: "fallback", label: "Fallback / hot standby", does: "ready backup jo system girne pe sambhal le" },
+    ],
+    done: "Yeh hai sale ki raat ka plan. Inmein se zyada tar moves Flipkart ke Big Billion Day 2015 write-up mein hain.",
+  },
+
+  followUps: [
+    {
+      q: "\"Tumne 8x ka plan kiya. Midnight pe 15x aa gaya. Ab?\"",
+      answer: [
+        "Pehle core path bachao: browse, cart, payment. Baaki sab ruk sakta hai.",
+        "Tested limit pe throttle karo, baaki ko waiting room ya queue mein bhejo, saaf message ke saath.",
+        "Faltu features (recommendations, reviews) band karo taaki capacity bache.",
+        "Auto-scaling peeche servers jodta rahe; waiting room tab tak logon ko sambhale.",
+      ],
+      say: "\"Jitna serve kar sakte hain utna andar, baaki saaf message ke saath queue mein, aur scale hone tak checkout bachane ke liye extras band.\"",
+      deeper: "Days 7 aur 18",
+    },
+    {
+      q: "\"Payment partner sirf 2,000 requests per second le sakta hai. Sale traffic usse 10 guna hai. Kaise design karoge?\"",
+      answer: [
+        "Partner ki limit se zyada kabhi mat bhejo: uski calls pe rate limit.",
+        "Payment requests queue mein, partner ki speed se process; user ko “processing” dikhao.",
+        "Doosra payment provider jodo aur traffic baanto.",
+        "Har payment attempt idempotent rakho, taaki retry pe do baar paise na kate.",
+      ],
+      say: "\"Payment calls partner ki speed se queue mein, processing state dikhao, providers mein baanto, aur har attempt idempotent.\"",
+      deeper: "Days 8 aur 13",
+    },
+    {
+      q: "\"Users se pehle tumhe kaise pata chalega ki system tootne wala hai?\"",
+      answer: [
+        "Pehle limits jaano: load tests batate hain har system kahan tootta hai.",
+        "Live signs dekho: requests per second, sabse slow responses, error rate, queue length.",
+        "Limit se kaafi pehle alert (jaise 70% pe), gir jaane ke baad nahi.",
+        "Har alert ke liye playbook ready, taaki team minutes mein act kare.",
+      ],
+      say: "\"Load test se limits jaano, key signals dashboard pe, limit se kaafi neeche alert, aur har alert ka playbook.\"",
+      deeper: "Day 18",
+    },
+  ],
+
   interview: [
     "Pehle poocho: kya yeh load predictable hai? (date/time pata hai?)",
     "Predictable: forecast → pre-scale → forecast se kaafi upar load test → code freeze.",
@@ -354,6 +504,9 @@ export const dayOne: Day = {
     { label: "Flipkart Stories: TBBD Throwback, The Big Billion Day 2015", href: "https://stories.flipkart.com/tbbd-throwback-the-big-billion-day-2015/" },
     { label: "BOOM: Flipkart issues apology for Big Billion Day fiasco (2014)", href: "https://www.boomlive.in/flipkart-issues-apology-big-billion-day-fiasco/" },
   ],
-  video: { src: "/videos/system-design/day-1.mp4", poster: "/videos/system-design/day-1-poster.jpg", minutes: 3, lang: "Hinglish" },
+  video: {
+    src: "/videos/system-design/day-1.mp4", poster: "/videos/system-design/day-1-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/videos/system-design/day-1-wide.mp4", poster: "/videos/system-design/day-1-wide-poster.jpg" },
+  },
   prevHref: "/system-design/day-0",
 };

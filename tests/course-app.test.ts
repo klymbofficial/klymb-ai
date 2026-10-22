@@ -106,7 +106,7 @@ test("finishing Day 0 completes the Start here module and opens the recap", () =
 });
 
 test("finishing a lesson whose next day isn't out yet goes home", () => {
-  const s0 = updateLesson({ ...home(), screen: "player", cur: "1-0" }, "1-0", { pre: [0, 0, 0], watched: true, post: [0, 0, 0] }, NOW);
+  const s0 = updateLesson({ ...home(), screen: "player", cur: "1-0" }, "1-0", { pre: [0, 0, 0], watched: true, post: [0, 0, 0], built: 1, follow: [true, true, true] }, NOW);
   const s = completeNext(s0, false, NOW);
   assert.ok(s.done.includes("1-0"));
   assert.equal(s.screen, "home");
