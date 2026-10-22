@@ -45,6 +45,32 @@ export interface BuildTask {
   done: string;
 }
 
+/** A back-of-the-envelope estimate: type a number, then see the working. */
+export interface Estimate {
+  id: string;
+  prompt: string;
+  /** The facts to work from. */
+  given: string[];
+  unit: string;
+  answer: number;
+  /** Accepted as right within this fraction of the answer (0.2 = ±20%). */
+  tolerance: number;
+  /** The working, step by step. */
+  working: string[];
+}
+
+/** A full design problem: the learner writes an attempt before the walkthrough opens. */
+export interface DesignAttempt {
+  title: string;
+  brief: string;
+  constraints: string[];
+  /** Characters the attempt needs before the walkthrough opens. */
+  minChars: number;
+  walkthrough: { heading: string; points: string[] }[];
+  /** Self-check after reading the walkthrough. */
+  checklist: string[];
+}
+
 /** An interviewer's "what if" after the main answer, with the model answer. */
 export interface FollowUp {
   q: string;
@@ -66,10 +92,12 @@ export interface DayCopy {
   reveal: { when: string; what: string }[];
   sourceNote?: string;
   /** Terms the video covers that deserve a plain explanation in the reveal (e.g. HTTP, TCP, UDP). */
-  explain?: { title: string; items: { term: string; what: string; example: string }[] };
+  explain?: { title: string; items: { term: string; what: string; example: string }[]; optional?: boolean };
   concept: { cards: ConceptCard[]; rule: string };
   post: Question[];
+  estimates?: Estimate[];
   build?: BuildTask;
+  design?: DesignAttempt;
   followUps?: FollowUp[];
   interview: string[];
   cheatsheet: { title: string; points: string[] };

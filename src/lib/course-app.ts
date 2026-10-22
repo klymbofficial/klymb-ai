@@ -29,7 +29,15 @@ export type Answer = number | number[] | string;
 export interface Note { t: number; text: string }
 
 /** A lesson's own steps: your call, the video, build it, prove it, follow-ups. */
-export interface LessonProgress { pre?: number[]; watched?: boolean; read?: boolean; built?: number; post?: number[]; follow?: boolean[] }
+export interface LessonProgress {
+  pre?: number[]; watched?: boolean; read?: boolean; post?: number[];
+  /** Estimate answers, as typed. */
+  est?: number[];
+  built?: number;
+  /** The design attempt, and the self-check ticks after the walkthrough. */
+  design?: string; checks?: boolean[];
+  follow?: boolean[];
+}
 
 export interface CourseState {
   screen: Screen;
@@ -88,6 +96,8 @@ export interface CourseState {
   lessons: Record<string, LessonProgress>;
   /** Language of the lesson content; the app's own labels stay English. */
   lang: Lang;
+  /** Subtitles under the lesson video. */
+  subs: boolean;
   /** Local dates (YYYY-MM-DD) with any finished step: the streak. */
   activeDays: string[];
 }
@@ -142,7 +152,7 @@ export function flowDone(s: CourseState, id: string) {
   if (!d) return false;
   const p = s.lessons[id] ?? {};
   const c = d.copy[s.lang];
-  return !!(p.pre && p.watched && p.post && (!c.build || p.built !== undefined) && (!c.followUps?.length || p.follow));
+  return !!(p.pre && p.watched && p.post && (!c.estimates?.length || p.est) && (!c.build || p.built !== undefined) && (!c.design || p.design) && (!c.followUps?.length || p.follow));
 }
 
 /** Saves a lesson step and counts today towards the streak. */
@@ -215,7 +225,7 @@ export function defaultState(now = Date.now()): CourseState {
     goal: 15, remind: "19:00", autoplay: false, quality: "auto", wifiOnly: true, streakRem: true, replyNotif: true,
     todaySec: 0, today: localDate(new Date(now)),
     toast: null, toastUntil: 0,
-    lessons: {}, lang: "en", activeDays: [],
+    lessons: {}, lang: "en", subs: true, activeDays: [],
   };
 }
 
@@ -455,7 +465,7 @@ export function scoreDelta(s: CourseState) {
 const PERSISTED = [
   "onboarded", "cur", "t", "speed", "visited", "notes", "ptab", "openMod", "done", "pre", "post", "qcDone", "notifs", "threads", "voted",
   "dl", "dlProg", "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
-  "lessons", "lang", "activeDays",
+  "lessons", "lang", "subs", "activeDays",
 ] as const satisfies readonly (keyof CourseState)[];
 
 export function toStored(s: CourseState) {

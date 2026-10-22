@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import type { Lang, Question } from "@/data/system-design/types";
+import { shuffledOrder } from "@/lib/shuffle";
 import { Icon } from "../icons";
 import { stagger } from "../ui";
 
@@ -37,7 +38,8 @@ export function ChoiceQuiz({ questions, label, lang, onDone }: { questions: Ques
       <h3 className="m-0 text-[22px] tracking-[-0.02em] lg:text-[26px]">{q.prompt}</h3>
 
       <div className="flex flex-col gap-2" role="radiogroup">
-        {q.choices.map((c, k) => {
+        {shuffledOrder(q.id, q.choices.length).map((k, pos) => {
+          const c = q.choices[k];
           const mine = picked === k;
           return (
             <button
@@ -54,14 +56,14 @@ export function ChoiceQuiz({ questions, label, lang, onDone }: { questions: Ques
                 answered && mine && !c.best && "border-sd-accent bg-sd-accent-100",
                 answered && !mine && !c.best && "border-sd-divider opacity-50",
               )}
-              style={stagger(k, 60, 80)}
+              style={stagger(pos, 60, 80)}
             >
               <span className="flex items-start gap-3">
                 <span className={clsx(
                   "flex size-7 flex-none items-center justify-center border-[1.5px] text-[13px] font-extrabold",
                   answered && c.best ? "border-sd-bg bg-sd-bg text-sd-ink" : answered && mine ? "border-sd-accent bg-sd-accent text-sd-bg" : "border-sd-divider",
                 )}>
-                  {answered && c.best ? <Icon name="check" size={14} stroke={3} /> : answered && mine ? <Icon name="x" size={14} stroke={3} /> : String.fromCharCode(65 + k)}
+                  {answered && c.best ? <Icon name="check" size={14} stroke={3} /> : answered && mine ? <Icon name="x" size={14} stroke={3} /> : String.fromCharCode(65 + pos)}
                 </span>
                 <span className="pt-0.5 font-semibold">{c.text}</span>
               </span>

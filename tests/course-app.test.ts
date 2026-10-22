@@ -10,7 +10,7 @@ import {
 const NOW = new Date(2026, 9, 21, 9, 0, 0).getTime();
 const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
 /** Day 0 with every practice step done. */
-const day0Done = (s: CourseState) => updateLesson(s, "0-0", { pre: [0, 0, 0], watched: true, built: 0, post: [0, 0, 0], follow: [true, true, false] }, NOW);
+const day0Done = (s: CourseState) => updateLesson(s, "0-0", { pre: [0, 0, 0], watched: true, built: 0, post: [0, 0, 0, 0], est: [1200, 12, 700], follow: [true, true, false, true] }, NOW);
 
 test("fmt pads minutes and seconds and never goes negative", () => {
   assert.equal(fmt(0), "00:00");
@@ -106,7 +106,7 @@ test("finishing Day 0 completes the Start here module and opens the recap", () =
 });
 
 test("finishing a lesson whose next day isn't out yet goes home", () => {
-  const s0 = updateLesson({ ...home(), screen: "player", cur: "1-0" }, "1-0", { pre: [0, 0, 0], watched: true, post: [0, 0, 0], built: 1, follow: [true, true, true] }, NOW);
+  const s0 = updateLesson({ ...home(), screen: "player", cur: "1-0" }, "1-0", { pre: [0, 0, 0], watched: true, post: [0, 0, 0, 0], est: [267, 30000, 267], built: 1, design: "Waiting room, atomic stock counter, queue payments.", follow: [true, true, true, true] }, NOW);
   const s = completeNext(s0, false, NOW);
   assert.ok(s.done.includes("1-0"));
   assert.equal(s.screen, "home");
@@ -187,4 +187,14 @@ test("saved progress round-trips, and today's minutes reset on a new day", () =>
 test("a first visit starts on the splash screen", () => {
   assert.equal(fromStored(null, NOW).screen, "splash");
   assert.equal(fromStored({ onboarded: false }, NOW).screen, "splash");
+});
+
+test("a day with estimates and a design attempt isn't finished until both are done", () => {
+  const base = { pre: [0, 0, 0], watched: true, post: [0, 0, 0, 0], built: 1, follow: [true, true, true, true] };
+  const noEst = updateLesson(home(), "1-0", base, NOW);
+  assert.equal(flowDone(noEst, "1-0"), false, "estimates still to do");
+  const noDesign = updateLesson(home(), "1-0", { ...base, est: [267, 30000, 267] }, NOW);
+  assert.equal(flowDone(noDesign, "1-0"), false, "design attempt still to write");
+  const all = updateLesson(noDesign, "1-0", { design: "Waiting room and one atomic stock counter." }, NOW);
+  assert.equal(flowDone(all, "1-0"), true);
 });

@@ -19,12 +19,12 @@ const en: DayCopy = {
       prompt: "What do you think system design is?",
       choices: [
         {
-          text: "Choosing an app’s parts (servers, databases, caches…) and how they work together, so it works for crores of people",
-          why: "Exactly. Code makes one feature work; system design makes it keep working for everyone, all the time, even when something breaks.",
+          text: "Choosing an app’s parts (servers, databases, caches…) and how they work together, so it keeps working for crores of people",
+          why: "Exactly. Code makes one feature work; system design makes it keep working for everyone, all the time, even when a part breaks.",
           best: true,
         },
-        { text: "Designing how the app looks: colours, screens and buttons", why: "That’s UI/UX design. System design is everything behind the screen." },
-        { text: "Writing the code for one feature", why: "Code makes one feature work for one user. System design is what lets crores of people use it at once." },
+        { text: "Picking the right language and framework for the app", why: "It matters less than you’d think: a Java app and a Go app hit the same limits at scale. System design is about the parts and how they connect, not the language." },
+        { text: "Writing clean, efficient code for every feature", why: "Necessary, but efficient code on one machine still runs out. Design decides how many machines there are and how they share the work." },
       ],
     },
     {
@@ -33,12 +33,12 @@ const en: DayCopy = {
       prompt: "What is most likely to happen?",
       choices: [
         {
-          text: "It slows down or crashes, because one server can only do so much",
+          text: "It slows down or fails, because one server can only do so much",
           why: "Code that works for one user isn’t automatically ready for lakhs. Making it ready is exactly what system design is.",
           best: true,
         },
-        { text: "Nothing, good code always scales", why: "Good code helps, but one machine still has limits on CPU, memory and network." },
-        { text: "It gets faster, because more people are using it", why: "More users means more work for the same machines, not less." },
+        { text: "It’s fine, as long as the server is powerful enough", why: "A bigger machine buys time (vertical scaling): simple, no code changes. But it has a ceiling, gets expensive fast, and if it dies, everything dies." },
+        { text: "Only the database slows down; the app servers cope", why: "The database often does buckle first, but app servers, connections and the network hit limits too. You find the bottleneck by measuring, not assuming." },
       ],
     },
     {
@@ -48,15 +48,14 @@ const en: DayCopy = {
       choices: [
         {
           text: "Hire more cooks, and put a manager at the door to send each order to a free cook",
-          why: "More cooks are more servers. The manager is a load balancer. That’s how apps grow too.",
+          why: "More cooks are more servers; the manager is a load balancer. The trade-off: more people to coordinate, and the manager must not become the new bottleneck.",
           best: true,
         },
-        { text: "Make Raju cook faster", why: "One person (one machine) has a ceiling. Making one machine bigger is vertical scaling, and it runs out." },
-        { text: "Close the door after 100 customers", why: "That’s a last resort (rate limiting), not a plan for growth." },
+        { text: "Buy Raju a bigger stove so he cooks faster", why: "That’s vertical scaling. It’s simple and works for a while, but one Raju still has a ceiling, and if he falls ill the dhaba shuts." },
+        { text: "Pre-cook the popular dishes every morning and keep them ready", why: "That’s caching, and it really helps the popular items. But custom orders still wait for Raju, and food goes stale. Good alongside more cooks, not instead." },
       ],
     },
   ],
-
   revealTitle: "Raju's dhaba = every app",
   revealSub: "the dhaba, mapped to real systems",
   reveal: [
@@ -71,7 +70,8 @@ const en: DayCopy = {
   ],
 
   explain: {
-    title: "How the boxes talk",
+    title: "How the boxes talk: HTTP, REST, gRPC, TCP, UDP",
+    optional: true,
     items: [
       { term: "HTTP", what: "The language of the web. Your phone sends a request (the order slip); the server sends back a response (the plate).", example: "Opening klymb.ai, loading a menu" },
       { term: "REST", what: "The common style of HTTP APIs that apps use: simple addresses like GET /menu or POST /order.", example: "Most mobile apps talking to their servers" },
@@ -100,22 +100,22 @@ const en: DayCopy = {
   post: [
     {
       id: "d0-post-1",
-      scenario: "Images in your app load fast in Mumbai but slowly in Guwahati.",
-      prompt: "Which box fixes it?",
+      scenario: "Images in your app load fast in Mumbai but slowly in Guwahati. Your servers are in Mumbai.",
+      prompt: "What fixes it best?",
       choices: [
-        { text: "A CDN: keep copies of the images close to Guwahati", why: "The problem is distance. A CDN serves the files from a nearby city.", best: true },
-        { text: "A bigger database", why: "The database isn't what sends images, and it doesn't fix distance." },
-        { text: "More servers in Mumbai", why: "They'd still be far from Guwahati." },
+        { text: "A CDN: keep copies of the images in a city near Guwahati", why: "The problem is distance, and a CDN removes it. Trade-off: when an image changes you must clear the old copies, and you pay for CDN traffic.", best: true },
+        { text: "Compress the images to half the size", why: "Worth doing, and it helps everyone. But the bytes still travel about 2,500 km, so Guwahati stays slower than Mumbai." },
+        { text: "Cache the images in the app servers’ memory", why: "That saves the servers work, but the servers are still in Mumbai. It saves effort, not the trip." },
       ],
     },
     {
       id: "d0-post-2",
-      scenario: "Right after you changed your domain settings, nobody can open your site.",
+      scenario: "Right after you changed your domain settings, nobody can open your site. Your servers look healthy and idle.",
       prompt: "Which box do you check first?",
       choices: [
-        { text: "DNS", why: "DNS is the address book. If it points to the wrong place, nobody finds your servers.", best: true },
-        { text: "The cache", why: "The cache only matters once requests actually reach you." },
-        { text: "The queue", why: "Queues handle background work, not finding your site." },
+        { text: "DNS", why: "Healthy, idle servers mean requests aren’t arriving at all: people can’t find you. Tip: lower the DNS TTL before a planned change, so a mistake can be undone quickly.", best: true },
+        { text: "The load balancer", why: "A sensible second check. But a broken load balancer usually shows up as errors, not silence. Silence points earlier, to finding the address." },
+        { text: "Restart the servers", why: "They’re healthy and idle; restarting them changes nothing. Find out why no requests are arriving first." },
       ],
     },
     {
@@ -123,20 +123,50 @@ const en: DayCopy = {
       scenario: "Sending the order SMS makes \"Place order\" take 5 seconds.",
       prompt: "What do you add?",
       choices: [
-        { text: "A queue: confirm the order now, send the SMS in the background", why: "The user only needs the confirmation. Slow extras go to a queue.", best: true },
-        { text: "A faster SMS provider", why: "Helps a little, but the user still waits for something they don't need to wait for." },
-        { text: "Stop sending SMS", why: "Users want it. Just don't make them wait for it." },
+        { text: "A queue: confirm the order now, send the SMS in the background", why: "The user only needs the confirmation. Trade-off: the SMS may arrive a few seconds later, and you need retries if the SMS service fails. Worth it.", best: true },
+        { text: "Send the SMS from a separate thread on the same server", why: "The user stops waiting, so it looks fixed. But if that server restarts, the unsent SMS are lost. A queue keeps them safe and retries." },
+        { text: "Switch to a faster SMS provider", why: "Helps a little, but the user still waits for something they don’t need to wait for, and you’re now tied to one provider’s speed." },
       ],
     },
     {
       id: "d0-post-4",
-      scenario: "You’re building video calls. A few lost frames are fine; a frozen, lagging call is not.",
-      prompt: "TCP or UDP?",
+      scenario: "Your menu page is slow, so you cache it for 10 minutes.",
+      prompt: "What trade-off did you just accept?",
       choices: [
-        { text: "UDP: fast, and it doesn’t stop to resend lost packets", why: "Live audio and video can skip a frame. Waiting to resend old frames is what makes calls lag.", best: true },
-        { text: "TCP: every packet must arrive", why: "Perfect for payments and messages, but resending old frames makes a live call fall behind." },
-        { text: "HTTP requests every second", why: "Far too slow and heavy for live audio and video." },
+        { text: "A price or \"sold out\" change can take up to 10 minutes to show", why: "That’s the deal with every cache: speed for freshness. Fine for a menu. For stock, keep the time short or clear the cache when it changes.", best: true },
+        { text: "The database now has to work harder", why: "The opposite: the cache takes reads away from the database. That’s the point of it." },
+        { text: "Every user now sees a slower first load", why: "Only the first request after the cache expires is slow. Everyone after that, for 10 minutes, gets the fast copy." },
       ],
+    },
+  ],
+
+  estimates: [
+    {
+      id: "d0-est-1",
+      given: ["1 crore daily users", "Each makes about 10 requests a day", "A day has 86,400 seconds"],
+      prompt: "How many requests per second, on average?",
+      unit: "requests/sec",
+      answer: 1157,
+      tolerance: 0.3,
+      working: ["1 crore × 10 = 10 crore requests a day", "10 crore ÷ 86,400 ≈ 1,157", "Round it: about 1,200 requests per second. In your head, treat a day as ~1 lakh seconds."],
+    },
+    {
+      id: "d0-est-2",
+      given: ["Average: about 1,200 requests/sec", "Dinner peak is 5× the average", "One server handles 500 requests/sec"],
+      prompt: "How many servers do you need at the dinner peak?",
+      unit: "servers",
+      answer: 12,
+      tolerance: 0.25,
+      working: ["Peak = 1,200 × 5 = 6,000 requests/sec", "6,000 ÷ 500 = 12 servers", "Run a few spare (about 15) so one crash or a deploy doesn’t tip you over."],
+    },
+    {
+      id: "d0-est-3",
+      given: ["20 lakh orders a day", "Each order record is about 1 KB"],
+      prompt: "How much new order data per year, in GB?",
+      unit: "GB/year",
+      answer: 730,
+      tolerance: 0.3,
+      working: ["20 lakh × 1 KB = 20 lakh KB ≈ 2 GB a day", "2 GB × 365 ≈ 730 GB a year", "Under 1 TB a year fits one database easily. Images and logs, not orders, are what grow fast."],
     },
   ],
 
@@ -200,6 +230,16 @@ const en: DayCopy = {
       say: "\"The cache is a speed layer, not the source of truth. I'd make sure the database survives the sudden load while the cache recovers.\"",
       deeper: "Days 3 and 18",
     },
+    {
+      q: "\"Now the network is flaky and users tap \u2018Place order\u2019 twice. What stops a double order?\"",
+      answer: [
+        "The app sends a unique order key (an idempotency key) with the request, and resends the same key if it retries.",
+        "The server remembers keys it has seen: a repeat key gets the first result back instead of a second order.",
+        "Trade-off: you store keys for a while (say 24 hours), but nobody gets charged twice.",
+      ],
+      say: "\"Every order carries an idempotency key, so a retry or a double tap returns the same order instead of creating a new one.\"",
+      deeper: "Days 9 and 13",
+    },
   ],
 
   interview: [
@@ -241,12 +281,12 @@ const hi: DayCopy = {
       prompt: "Tumhe kya lagta hai, system design kya hai?",
       choices: [
         {
-          text: "App ke parts chunna (servers, databases, caches…) aur unhe jodna, taaki woh crores logon ke liye chale",
-          why: "Bilkul. Code ek feature chalata hai; system design use sab ke liye, hamesha chalata hai, kuch toote tab bhi.",
+          text: "App ke parts chunna (servers, databases, caches…) aur unhe jodna, taaki woh crores logon ke liye chalta rahe",
+          why: "Bilkul. Code ek feature chalata hai; system design use sab ke liye, hamesha chalata hai, koi part toote tab bhi.",
           best: true,
         },
-        { text: "App kaisa dikhta hai: colours, screens aur buttons", why: "Woh UI/UX design hai. System design screen ke peeche ka sab kuch hai." },
-        { text: "Ek feature ka code likhna", why: "Code ek user ke liye ek feature chalata hai. System design se crores log ek saath use kar paate hain." },
+        { text: "App ke liye sahi language aur framework chunna", why: "Jitna lagta hai utna fark nahi padta: Java app aur Go app scale pe ek jaisi limits se takraate hain. System design parts aur unke jodne ke baare mein hai, language ke nahi." },
+        { text: "Har feature ka clean, efficient code likhna", why: "Zaroori hai, par ek machine pe efficient code bhi ek din kam padta hai. Design tay karta hai kitni machines hongi aur kaam kaise baantengi." },
       ],
     },
     {
@@ -255,12 +295,12 @@ const hi: DayCopy = {
       prompt: "Sabse zyada kya hone ke chances hain?",
       choices: [
         {
-          text: "Slow ho jayega ya crash, kyunki ek server ki ek limit hoti hai",
+          text: "Slow ho jayega ya fail, kyunki ek server ki ek limit hoti hai",
           why: "Jo code ek user ke liye chalta hai, woh lakhon ke liye apne aap ready nahi hota. Usko ready karna hi system design hai.",
           best: true,
         },
-        { text: "Kuch nahi, achha code hamesha scale karta hai", why: "Achha code madad karta hai, par ek machine ke CPU, memory aur network ki limit rehti hai." },
-        { text: "Aur fast ho jayega, kyunki zyada log use kar rahe hain", why: "Zyada users matlab wahi machines pe zyada kaam, kam nahi." },
+        { text: "Theek rahega, bas server kaafi powerful hona chahiye", why: "Badi machine time deti hai (vertical scaling): simple, code nahi badalna. Par uski ceiling hai, kharcha tezi se badhta hai, aur woh giri toh sab gira." },
+        { text: "Sirf database slow hoga; app servers sambhal lenge", why: "Aksar database pehle thakta hai, par app servers, connections aur network ki bhi limit hai. Bottleneck measure karke milta hai, andaaze se nahi." },
       ],
     },
     {
@@ -270,15 +310,14 @@ const hi: DayCopy = {
       choices: [
         {
           text: "Aur cooks rakho, aur darwaze pe ek manager jo har order free cook ko de",
-          why: "Zyada cooks = zyada servers. Manager = load balancer. Apps bhi aise hi badhte hain.",
+          why: "Zyada cooks = zyada servers; manager = load balancer. Trade-off: coordinate karne ko zyada log, aur manager khud naya bottleneck na bane.",
           best: true,
         },
-        { text: "Raju ko aur tez banwao", why: "Ek insaan (ek machine) ki limit hai. Ek machine ko bada karna vertical scaling hai, aur woh khatam ho jaata hai." },
-        { text: "100 customers ke baad darwaza band", why: "Yeh aakhri upaay hai (rate limiting), growth ka plan nahi." },
+        { text: "Raju ko bada chulha do, taaki woh tez banaye", why: "Yeh vertical scaling hai. Simple hai aur kuch time chalta hai, par ek Raju ki limit hai, aur woh beemar pada toh dhaba band." },
+        { text: "Popular dishes subah hi bana ke ready rakho", why: "Yeh caching hai, aur popular items mein sach mein madad karta hai. Par custom orders phir bhi Raju ka wait karenge, aur khana basi hota hai. More cooks ke saath achha, unki jagah nahi." },
       ],
     },
   ],
-
   revealTitle: "Raju ka dhaba = har app",
   revealSub: "dhaba, asli systems ke saath",
   reveal: [
@@ -293,7 +332,8 @@ const hi: DayCopy = {
   ],
 
   explain: {
-    title: "Boxes aapas mein baat kaise karte hain",
+    title: "Boxes aapas mein baat kaise karte hain: HTTP, REST, gRPC, TCP, UDP",
+    optional: true,
     items: [
       { term: "HTTP", what: "Web ki bhasha. Phone request bhejta hai (order ki parchi); server response lautata hai (khane ki plate).", example: "klymb.ai kholna, menu load hona" },
       { term: "REST", what: "Apps ke HTTP APIs ka common tareeka: simple address jaise GET /menu ya POST /order.", example: "Zyada tar mobile apps aur unke servers" },
@@ -322,22 +362,22 @@ const hi: DayCopy = {
   post: [
     {
       id: "d0-post-1",
-      scenario: "Tumhare app mein images Mumbai mein fast, par Guwahati mein slow load hoti hain.",
-      prompt: "Kaunsa box isko fix karega?",
+      scenario: "Tumhare app mein images Mumbai mein fast, par Guwahati mein slow load hoti hain. Servers Mumbai mein hain.",
+      prompt: "Sabse achha fix kya hai?",
       choices: [
-        { text: "CDN: images ki copies Guwahati ke paas rakho", why: "Problem doori hai. CDN paas ke shehar se files deta hai.", best: true },
-        { text: "Bada database", why: "Images database nahi bhejta, aur doori bhi fix nahi hoti." },
-        { text: "Mumbai mein aur servers", why: "Woh phir bhi Guwahati se door rahenge." },
+        { text: "CDN: images ki copies Guwahati ke paas ke shehar mein", why: "Problem doori hai, aur CDN use hata deta hai. Trade-off: image badle toh purani copies clear karni padti hain, aur CDN traffic ka paisa lagta hai.", best: true },
+        { text: "Images ko compress karke aadha karo", why: "Karna chahiye, sab ki madad hoti hai. Par bytes phir bhi lagbhag 2,500 km chalte hain, toh Guwahati Mumbai se slow hi rahega." },
+        { text: "Images ko app servers ki memory mein cache karo", why: "Servers ka kaam bachta hai, par servers abhi bhi Mumbai mein hain. Mehnat bachti hai, safar nahi." },
       ],
     },
     {
       id: "d0-post-2",
-      scenario: "Domain settings badalte hi koi bhi tumhari site nahi khol pa raha.",
+      scenario: "Domain settings badalte hi koi tumhari site nahi khol pa raha. Servers healthy hain aur khaali baithe hain.",
       prompt: "Sabse pehle kaunsa box check karoge?",
       choices: [
-        { text: "DNS", why: "DNS address book hai. Galat jagah point kare toh koi tumhare servers tak nahi pahunchta.", best: true },
-        { text: "Cache", why: "Cache tab kaam aata hai jab request tum tak pahunch jaaye." },
-        { text: "Queue", why: "Queue background kaam sambhalti hai, site dhoondhna nahi." },
+        { text: "DNS", why: "Healthy aur khaali servers matlab requests aa hi nahi rahi: log tumhe dhoondh nahi pa rahe. Tip: planned change se pehle DNS TTL kam karo, taaki galti jaldi palat sako.", best: true },
+        { text: "Load balancer", why: "Doosra check sahi hai. Par toota load balancer aksar errors deta hai, sannata nahi. Sannata pehle ki taraf ishaara karta hai: address dhoondhna." },
+        { text: "Servers restart karo", why: "Woh healthy aur khaali hain; restart se kuch nahi badlega. Pehle yeh pata karo ki requests aa kyun nahi rahi." },
       ],
     },
     {
@@ -345,20 +385,50 @@ const hi: DayCopy = {
       scenario: "Order ka SMS bhejne ki wajah se \"Place order\" mein 5 second lagte hain.",
       prompt: "Kya add karoge?",
       choices: [
-        { text: "Queue: order abhi confirm, SMS background mein", why: "User ko sirf confirmation chahiye. Slow extras queue mein jaate hain.", best: true },
-        { text: "Tez SMS provider", why: "Thoda fark padega, par user phir bhi ek aisi cheez ka wait karega jiski zaroorat nahi." },
-        { text: "SMS bhejna band", why: "Users ko SMS chahiye. Bas unhe uska wait mat karwao." },
+        { text: "Queue: order abhi confirm, SMS background mein", why: "User ko sirf confirmation chahiye. Trade-off: SMS kuch second late aa sakta hai, aur SMS service fail ho toh retry chahiye. Worth it.", best: true },
+        { text: "Usi server pe alag thread se SMS bhejo", why: "User ka wait khatam, toh fix laga. Par server restart hua toh bina bheje SMS gayab. Queue unhe safe rakhti hai aur retry karti hai." },
+        { text: "Tez SMS provider le lo", why: "Thoda fark padega, par user phir bhi aisi cheez ka wait karega jiski zaroorat nahi, aur tum ek provider ki speed pe atak gaye." },
       ],
     },
     {
       id: "d0-post-4",
-      scenario: "Tum video calls bana rahe ho. Kuch frames chhoot jaayein chalega; call atke ya lag kare, nahi chalega.",
-      prompt: "TCP ya UDP?",
+      scenario: "Menu page slow hai, toh tumne use 10 minute ke liye cache kar diya.",
+      prompt: "Kaunsa trade-off accept kiya?",
       choices: [
-        { text: "UDP: tez, chhoote packets dobara bhejne ke liye rukta nahi", why: "Live audio-video ek frame skip kar sakta hai. Purane frames dobara bhejne ka wait hi call ko lag karta hai.", best: true },
-        { text: "TCP: har packet pahunchna chahiye", why: "Payments aur messages ke liye perfect, par purane frames dobara bhejne se live call peeche reh jaati hai." },
-        { text: "Har second HTTP request", why: "Live audio-video ke liye bahut slow aur bhaari." },
+        { text: "Price ya \"sold out\" badle toh dikhne mein 10 minute tak lag sakte hain", why: "Har cache ka yahi deal hai: freshness ke badle speed. Menu ke liye theek. Stock ke liye time chhota rakho ya badalte hi cache clear karo.", best: true },
+        { text: "Ab database ko zyada kaam karna padega", why: "Ulta: cache database se reads hata leta hai. Wahi toh uska kaam hai." },
+        { text: "Har user ko pehla load slow milega", why: "Sirf cache expire hone ke baad wali pehli request slow hoti hai. Uske baad 10 minute tak sabko fast copy milti hai." },
       ],
+    },
+  ],
+
+  estimates: [
+    {
+      id: "d0-est-1",
+      given: ["1 crore daily users", "Har user din mein lagbhag 10 requests", "Ek din = 86,400 second"],
+      prompt: "Average kitni requests per second?",
+      unit: "requests/sec",
+      answer: 1157,
+      tolerance: 0.3,
+      working: ["1 crore × 10 = 10 crore requests roz", "10 crore ÷ 86,400 ≈ 1,157", "Round karo: lagbhag 1,200 requests per second. Dimaag mein din ko ~1 lakh second maan lo."],
+    },
+    {
+      id: "d0-est-2",
+      given: ["Average: lagbhag 1,200 requests/sec", "Dinner peak average ka 5 guna", "Ek server 500 requests/sec sambhalta hai"],
+      prompt: "Dinner peak pe kitne servers chahiye?",
+      unit: "servers",
+      answer: 12,
+      tolerance: 0.25,
+      working: ["Peak = 1,200 × 5 = 6,000 requests/sec", "6,000 ÷ 500 = 12 servers", "Kuch spare chalao (lagbhag 15), taaki ek crash ya deploy se system na gire."],
+    },
+    {
+      id: "d0-est-3",
+      given: ["Roz 20 lakh orders", "Har order record lagbhag 1 KB"],
+      prompt: "Saal bhar mein kitna naya order data, GB mein?",
+      unit: "GB/year",
+      answer: 730,
+      tolerance: 0.3,
+      working: ["20 lakh × 1 KB ≈ 2 GB roz", "2 GB × 365 ≈ 730 GB saal mein", "Saal ka 1 TB se kam ek database mein aaraam se. Tezi se badhte hain images aur logs, orders nahi."],
     },
   ],
 
@@ -421,6 +491,16 @@ const hi: DayCopy = {
       ],
       say: "\"Cache speed layer hai, source of truth nahi. Main ensure karunga ki cache wapas aane tak database achanak ka load jhel le.\"",
       deeper: "Days 3 aur 18",
+    },
+    {
+      q: "\"Ab network kharab hai aur users \u2018Place order\u2019 do baar daba dete hain. Double order kaise rokoge?\"",
+      answer: [
+        "App har order ke saath ek unique key (idempotency key) bhejta hai, aur retry kare toh wahi key dobara.",
+        "Server dekhi hui keys yaad rakhta hai: wahi key dobara aaye toh naya order nahi, pehla result wapas.",
+        "Trade-off: keys kuch time (jaise 24 ghante) store karni padti hain, par kisi ka paisa do baar nahi katta.",
+      ],
+      say: "\"Har order ke saath idempotency key jaati hai, toh retry ya double tap pe naya order nahi banta, wahi order wapas milta hai.\"",
+      deeper: "Days 9 aur 13",
     },
   ],
 

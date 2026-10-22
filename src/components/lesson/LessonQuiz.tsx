@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import type { Lang, Question } from "@/data/system-design/types";
+import { shuffledOrder } from "@/lib/shuffle";
 
 const UI = {
   en: { right: "Nailed it!", close: "Close. The best move is in green.", next: "Next", done: "Done" },
@@ -39,7 +40,8 @@ export function LessonQuiz({
       <h3 className="mt-4 text-xl font-extrabold leading-tight">{q.prompt}</h3>
 
       <ul className="mt-4 flex flex-col gap-2.5">
-        {q.choices.map((c, k) => {
+        {shuffledOrder(q.id, q.choices.length).map((k, pos) => {
+          const c = q.choices[k];
           const mine = picked === k;
           return (
             <li key={c.text}>
@@ -60,7 +62,7 @@ export function LessonQuiz({
                     "mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-2 text-xs font-extrabold",
                     answered && c.best ? "border-emerald-600 bg-emerald-600 text-white" : answered && mine ? "border-red-strong bg-red-strong text-white" : "border-line/40 text-muted",
                   )}>
-                    {answered && c.best ? "✓" : answered && mine ? "✕" : String.fromCharCode(65 + k)}
+                    {answered && c.best ? "✓" : answered && mine ? "✕" : String.fromCharCode(65 + pos)}
                   </span>
                   <span>{c.text}</span>
                 </span>

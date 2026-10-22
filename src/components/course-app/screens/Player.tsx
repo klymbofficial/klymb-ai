@@ -94,6 +94,18 @@ function Video({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
+/** The line being spoken, in a band under the video (the clean video cut has no burned-in subtitles). */
+function Subtitles({ s }: { s: CourseState }) {
+  const lines = TRANSCRIPTS[s.cur] ?? [];
+  let cur = "";
+  for (const [t, text] of lines) if (s.t >= t) cur = text;
+  return (
+    <div aria-live="off" className="flex min-h-[68px] items-center justify-center bg-sd-ink px-4 py-2.5 text-center text-[15px] leading-[1.35] font-semibold text-sd-bg lg:min-h-[76px] lg:px-10 lg:text-[18px]">
+      {cur || "\u00a0"}
+    </div>
+  );
+}
+
 function Scrubber({ s, act }: { s: CourseState; act: Act }) {
   const d = lesson(s.cur).secs;
   const cur = `${((s.t / d) * 100).toFixed(2)}%`;
@@ -219,6 +231,10 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
     ["lessons", "Lessons"],
   ];
   const showVideo = !day || !!lp.pre;
+  // Subtitles belong to the clean (wide) cut; the portrait cut has them burned in.
+  const canSub = !!day?.video.wide && !!TRANSCRIPTS[s.cur];
+  const subsOn = canSub && s.subs;
+  const toggleSubs = () => act((p) => ({ ...p, subs: !p.subs }));
 
   return (
     <div className="sd-a-screen flex flex-1 max-w-[1200px] flex-col lg:flex-none lg:gap-4">
@@ -243,6 +259,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
           {showVideo ? (
             <>
               <Video s={s} act={act} />
+              {subsOn && <Subtitles s={s} />}
               <div className="px-5 lg:px-0">
                 <Scrubber s={s} act={act} />
                 <div className="flex justify-between text-xs font-semibold lg:hidden">
@@ -253,12 +270,14 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
                   <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-11 flex-1 justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
                   <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotR" /></button>
                   <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-11 w-14 justify-start">{s.speed}×</button>
+                  {canSub && <button type="button" onClick={toggleSubs} aria-pressed={s.subs} aria-label="Subtitles" className={clsx("sd-btn h-11 w-12 text-[13px]", s.subs ? "bg-sd-ink text-sd-bg" : "sd-btn-secondary")}>CC</button>}
                 </div>
                 <div className="mt-1.5 hidden items-center gap-2 lg:flex">
                   <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-10 w-[120px] justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
                   <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotL" size={16} /></button>
                   <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotR" size={16} /></button>
                   <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-10 w-14 justify-start">{s.speed}×</button>
+                  {canSub && <button type="button" onClick={toggleSubs} aria-pressed={s.subs} aria-label="Subtitles" className={clsx("sd-btn h-10 w-12 text-[13px]", s.subs ? "bg-sd-ink text-sd-bg" : "sd-btn-secondary")}>CC</button>}
                   {qc && <span className="ml-auto text-[13px] font-semibold text-sd-accent-700">Quick check at {qc}</span>}
                   <span className={clsx("pl-3 text-[13px] font-semibold", !qc && "ml-auto")}>{fmt(s.t)} / {c.dur}</span>
                 </div>
