@@ -1,5 +1,6 @@
 import "server-only";
 import { Pool, types } from "pg";
+import { connectionOptions } from "@/lib/db/connection";
 
 /**
  * The database: the `course` schema on the Neon instance that runs
@@ -65,15 +66,11 @@ const globalForDb = globalThis as typeof globalThis & { klymbPool?: Pool };
 
 function pool(url: string): Pool {
   if (globalForDb.klymbPool) return globalForDb.klymbPool;
-  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
   const created = new Pool({
-    connectionString: url,
+    ...connectionOptions(url),
     max: 3,
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 10_000,
-    // Neon serves a publicly trusted certificate, so verify it. A local
-    // Postgres for development usually speaks no TLS at all.
-    ssl: local ? undefined : { rejectUnauthorized: true },
   });
   // An idle client erroring (a Neon scale-to-zero, a network blip) emits on
   // the pool; without a listener Node treats it as an unhandled error and

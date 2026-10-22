@@ -18,6 +18,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { Client } from "pg";
+import { connectionOptions } from "../src/lib/db/connection";
 
 // .env.local and friends, read the way next dev reads them.
 loadEnvConfig(process.cwd());
@@ -37,8 +38,7 @@ async function main() {
     process.exit(1);
   }
 
-  const local = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
-  const client = new Client({ connectionString: url, ssl: local ? undefined : { rejectUnauthorized: true } });
+  const client = new Client(connectionOptions(url));
   await client.connect();
 
   try {
