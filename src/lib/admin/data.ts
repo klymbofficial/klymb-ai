@@ -1,7 +1,7 @@
 import "server-only";
 import { commitDays, mainRepo } from "@/lib/learner/github";
 import { getAdmin } from "@/lib/admin/auth";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 import type { TrackSlug } from "@/types/program";
 
 export interface Registration {
@@ -55,33 +55,42 @@ export interface LearnerDetail extends LearnerProgress {
 }
 
 export async function getRegistrations(): Promise<Registration[]> {
-  // The service client bypasses RLS, so authorisation is checked here.
+  // The connection has blanket read and write on the course schema, so
+  // authorisation is checked here.
   if (!(await getAdmin())) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
-  const { data } = await supabase
-    .from("registrations")
-    .select("id, created_at, name, email, phone, track, job_role, experience, linkedin, cohort_start")
-    .order("created_at", { ascending: false })
-    .limit(1000);
-  return (data as Registration[]) ?? [];
+  const sql = db();
+  if (!sql) return [];
+  const { data } = await sql.rows<Registration>`
+    select id, created_at, name, email, phone, track, job_role, experience, linkedin, cohort_start
+      from course.registrations
+     order by created_at desc
+     limit 1000
+  `;
+  return data ?? [];
 }
 
 export async function getLearnerProgress(): Promise<LearnerProgress[]> {
   if (!(await getAdmin())) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
+  const sql = db();
+  if (!sql) return [];
 
-  const { data: learners } = await supabase
-    .from("learners")
-    .select("id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug")
-    .order("created_at", { ascending: false });
+  const { data: learners } = await sql.rows<Omit<LearnerProgress, "days_submitted" | "last_submission_at" | "commit_repo" | "commit_days" | "linkedin_posts" | "assessments_scored" | "latest_band">>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug
+      from course.learners
+     order by created_at desc
+  `;
   if (!learners?.length) return [];
 
   const ids = learners.map((l) => l.id);
   const [{ data: submissions }, { data: assessments }] = await Promise.all([
-    supabase.from("day_submissions").select("learner_id, day, submitted_at, linkedin_post_url, deliverable_url").in("learner_id", ids),
-    supabase.from("assessment_results").select("learner_id, after_day, band, weighted_score").in("learner_id", ids),
+    sql.rows<{ learner_id: string; day: number; submitted_at: string; linkedin_post_url: string | null; deliverable_url: string | null }>`
+      select learner_id, day, submitted_at, linkedin_post_url, deliverable_url
+        from course.day_submissions where learner_id = any(${ids}::uuid[])
+    `,
+    sql.rows<{ learner_id: string; after_day: number; band: string | null; weighted_score: number | null }>`
+      select learner_id, after_day, band, weighted_score
+        from course.assessment_results where learner_id = any(${ids}::uuid[])
+    `,
   ]);
 
   // Commit days on GitHub, for the "commits on 20+ days" rule. Cached an hour per repo.
@@ -133,26 +142,29 @@ export function summariseRegistrations(rows: Registration[]): RegistrationSummar
 /** One learner, with every submission, for the reviewer's view. */
 export async function getLearnerDetail(id: string): Promise<LearnerDetail | null> {
   if (!(await getAdmin())) return null;
-  const supabase = createServiceClient();
-  if (!supabase) return null;
+  const sql = db();
+  if (!sql) return null;
 
-  const { data: learner } = await supabase
-    .from("learners")
-    .select("id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug")
-    .eq("id", id)
-    .maybeSingle();
+  const { data: learner } = await sql.row<LearnerProgress>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug
+      from course.learners
+     where id = ${id}
+  `;
   if (!learner) return null;
 
   const [{ data: submissions }, { data: assessments }] = await Promise.all([
-    supabase
-      .from("day_submissions")
-      .select("day, deliverable_url, note, linkedin_post_url, quiz_answers, status, submitted_at, reviewer_note")
-      .eq("learner_id", id)
-      .order("day"),
-    supabase.from("assessment_results").select("after_day, band, weighted_score").eq("learner_id", id),
+    sql.rows<LearnerSubmission>`
+      select day, deliverable_url, note, linkedin_post_url, quiz_answers, status, submitted_at, reviewer_note
+        from course.day_submissions
+       where learner_id = ${id}
+       order by day
+    `,
+    sql.rows<{ after_day: number; band: string | null; weighted_score: number | null }>`
+      select after_day, band, weighted_score from course.assessment_results where learner_id = ${id}
+    `,
   ]);
 
-  const rows = (submissions as LearnerSubmission[]) ?? [];
+  const rows = submissions ?? [];
   const scored = (assessments ?? []).filter((a) => a.weighted_score != null).sort((a, b) => a.after_day - b.after_day);
 
   return {
@@ -179,13 +191,14 @@ export interface PaymentRow {
 /** Completed payments only: unpaid orders are abandoned checkouts, not money. */
 export async function getPayments(): Promise<PaymentRow[]> {
   if (!(await getAdmin())) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
-  const { data } = await supabase
-    .from("payments")
-    .select("id, created_at, email, track, amount, status, razorpay_payment_id")
-    .in("status", ["paid", "refunded"])
-    .order("created_at", { ascending: false })
-    .limit(1000);
-  return (data as PaymentRow[]) ?? [];
+  const sql = db();
+  if (!sql) return [];
+  const { data } = await sql.rows<PaymentRow>`
+    select id, created_at, email, track, amount, status, razorpay_payment_id
+      from course.payments
+     where status in ('paid', 'refunded')
+     order by created_at desc
+     limit 1000
+  `;
+  return data ?? [];
 }

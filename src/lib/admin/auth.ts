@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 
 export interface AdminSession {
   email: string;
@@ -25,15 +25,13 @@ export const getAdmin = cache(async (): Promise<AdminSession | null> => {
   const email = normaliseEmail(await currentEmail());
   if (!email) return null;
 
-  const supabase = createServiceClient();
-  if (!supabase) return null;
+  const sql = db();
+  if (!sql) return null;
 
   // Exact match only: ILIKE would treat % and _ in a stored row as wildcards.
-  const { data } = await supabase
-    .from("admin_users")
-    .select("email, name")
-    .eq("email", email)
-    .maybeSingle();
+  const { data } = await sql.row<{ email: string; name: string | null }>`
+    select email, name from course.admin_users where email = ${email}
+  `;
 
   return data ? { email: data.email, name: data.name } : null;
 });

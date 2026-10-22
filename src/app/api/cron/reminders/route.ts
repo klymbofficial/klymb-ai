@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { getCurriculum } from "@/data/curricula";
 import { cohortDayDate } from "@/lib/learn";
 import { pushReady, sendPush } from "@/lib/push";
+import { db } from "@/lib/db/client";
 import { buildReminder, slotForIstHour, streakEnding } from "@/lib/reminders";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 /**
  * Run at 09:00, 13:00, 17:00 and 21:00 IST (GitHub Actions,
@@ -17,15 +17,23 @@ export async function GET(req: Request) {
   if (!isCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const supabase = createServiceClient();
-  if (!supabase || !pushReady()) return NextResponse.json({ error: "Not configured" }, { status: 500 });
+  const sql = db();
+  if (!sql || !pushReady()) return NextResponse.json({ error: "Not configured" }, { status: 500 });
 
-  const { data: subs } = await supabase.from("push_subscriptions").select("id, endpoint, p256dh, auth, learner_id");
+  const { data: subs } = await sql.rows<{
+    id: string; endpoint: string; p256dh: string; auth: string; learner_id: string;
+  }>`
+    select id, endpoint, p256dh, auth, learner_id from course.push_subscriptions
+  `;
   if (!subs?.length) return NextResponse.json({ sent: 0 });
 
-  const ids = [...new Set(subs.map((s) => s.learner_id as string))];
-  const { data: learners } = await supabase.from("learners").select("id, name, track, cohort_start").in("id", ids);
-  const { data: done } = await supabase.from("day_submissions").select("learner_id, day").in("learner_id", ids);
+  const ids = [...new Set(subs.map((s) => s.learner_id))];
+  const { data: learners } = await sql.rows<{ id: string; name: string | null; track: string; cohort_start: string }>`
+    select id, name, track, cohort_start from course.learners where id = any(${ids}::uuid[])
+  `;
+  const { data: done } = await sql.rows<{ learner_id: string; day: number }>`
+    select learner_id, day from course.day_submissions where learner_id = any(${ids}::uuid[])
+  `;
 
   // Now in India: the date, and which of the three slots this run is.
   const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
@@ -35,12 +43,12 @@ export async function GET(req: Request) {
   let sent = 0, removed = 0, skippedDone = 0;
 
   for (const l of learners ?? []) {
-    const course = getCurriculum(l.track as string);
+    const course = getCurriculum(l.track);
     if (!course) continue;
-    const day = course.days.find((d) => cohortDayDate(l.cohort_start as string, d.day) === today);
+    const day = course.days.find((d) => cohortDayDate(l.cohort_start, d.day) === today);
     if (!day) continue; // cohort not started, or finished
 
-    const submitted = new Set((done ?? []).filter((d) => d.learner_id === l.id).map((d) => d.day as number));
+    const submitted = new Set((done ?? []).filter((d) => d.learner_id === l.id).map((d) => d.day));
     const msg = buildReminder({
       slot,
       name: String(l.name ?? "").split(" ")[0] || "there",
@@ -58,10 +66,10 @@ export async function GET(req: Request) {
     if (!msg) { skippedDone++; continue; }
 
     for (const s of subs.filter((x) => x.learner_id === l.id)) {
-      const r = await sendPush(s as { endpoint: string; p256dh: string; auth: string }, msg);
+      const r = await sendPush(s, msg);
       if (r === "ok") sent++;
       if (r === "gone") {
-        await supabase.from("push_subscriptions").delete().eq("id", s.id);
+        await sql.run`delete from course.push_subscriptions where id = ${s.id}`;
         removed++;
       }
     }

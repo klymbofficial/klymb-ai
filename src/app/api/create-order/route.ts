@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { cohort } from "@/data/config";
 import { getTrack } from "@/data/tracks";
+import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 import { createOrder, razorpayKeys } from "@/lib/razorpay";
 import { priceNow } from "@/lib/offer";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 /**
  * Creates a Razorpay order for a registered learner.
@@ -22,23 +22,19 @@ export async function POST(req: Request) {
   if (!limit.allowed) return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
 
   const keys = razorpayKeys();
-  const supabase = createServiceClient();
-  if (!keys || !supabase) return NextResponse.json({ error: "Payments are not available right now." }, { status: 500 });
+  const sql = db();
+  if (!keys || !sql) return NextResponse.json({ error: "Payments are not available right now." }, { status: 500 });
 
   // A registration, or failing that a learner enrolled directly by an admin.
-  let { data: reg } = await supabase
-    .from("registrations")
-    .select("name, phone, track")
-    .eq("email", email)
-    .eq("cohort_start", cohort.startDate)
-    .maybeSingle();
+  let { data: reg } = await sql.row<{ name: string; phone: string; track: string }>`
+    select name, phone, track from course.registrations
+     where email = ${email} and cohort_start = ${cohort.startDate}
+  `;
   if (!reg) {
-    const { data: learner } = await supabase
-      .from("learners")
-      .select("name, track")
-      .eq("email", email)
-      .eq("cohort_start", cohort.startDate)
-      .maybeSingle();
+    const { data: learner } = await sql.row<{ name: string; track: string }>`
+      select name, track from course.learners
+       where email = ${email} and cohort_start = ${cohort.startDate}
+    `;
     if (learner) reg = { name: learner.name, phone: "", track: learner.track };
   }
   if (!reg) return NextResponse.json({ error: "We could not find a registration for this email. Register first, then pay." }, { status: 400 });
@@ -46,13 +42,11 @@ export async function POST(req: Request) {
   const track = getTrack(reg.track);
   if (!track) return NextResponse.json({ error: "Unknown track." }, { status: 400 });
 
-  const { data: paid } = await supabase
-    .from("payments")
-    .select("id")
-    .eq("email", email)
-    .eq("cohort_start", cohort.startDate)
-    .eq("status", "paid")
-    .limit(1);
+  const { data: paid } = await sql.rows<{ id: string }>`
+    select id from course.payments
+     where email = ${email} and cohort_start = ${cohort.startDate} and status = 'paid'
+     limit 1
+  `;
   if (paid?.length) return NextResponse.json({ error: "You have already paid for this cohort." }, { status: 409 });
 
   if (track.price === 0) return NextResponse.json({ error: "This track is free: no payment needed." }, { status: 400 });
@@ -69,14 +63,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: order.status });
   }
 
-  const { error } = await supabase.from("payments").insert({
-    email,
-    track: track.slug,
-    cohort_start: cohort.startDate,
-    amount: order.amount,
-    currency: order.currency,
-    razorpay_order_id: order.id,
-  });
+  const { error } = await sql.run`
+    insert into course.payments (email, track, cohort_start, amount, currency, razorpay_order_id)
+    values (${email}, ${track.slug}, ${cohort.startDate}, ${order.amount}, ${order.currency}, ${order.id})
+  `;
   if (error) {
     console.error("payments insert failed:", error.code, error.message);
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 500 });

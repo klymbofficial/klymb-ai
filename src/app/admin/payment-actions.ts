@@ -2,8 +2,8 @@
 
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
+import { db } from "@/lib/db/client";
 import { razorpayKeys, refundPayment } from "@/lib/razorpay";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 export type RefundResult = { ok: true } | { ok: false; message: string };
 
@@ -18,10 +18,12 @@ export async function refund(id: string, confirmEmail: string): Promise<RefundRe
   if (!admin) return { ok: false, message: "Not authorised." };
 
   const keys = razorpayKeys();
-  const supabase = createServiceClient();
-  if (!keys || !supabase) return { ok: false, message: "Unavailable right now." };
+  const sql = db();
+  if (!keys || !sql) return { ok: false, message: "Unavailable right now." };
 
-  const { data: pay } = await supabase.from("payments").select("email, status, razorpay_payment_id").eq("id", id).maybeSingle();
+  const { data: pay } = await sql.row<{ email: string; status: string; razorpay_payment_id: string | null }>`
+    select email, status, razorpay_payment_id from course.payments where id = ${id}
+  `;
   if (!pay?.razorpay_payment_id) return { ok: false, message: "That payment no longer exists." };
   if (pay.status !== "paid") return { ok: false, message: "This payment has already been refunded." };
   // Typed email must match, so a misclick cannot refund the wrong learner.

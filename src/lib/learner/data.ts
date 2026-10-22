@@ -2,9 +2,9 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { auth, verifiedEmailFrom } from "@/auth";
+import { db } from "@/lib/db/client";
 import { checkDevice } from "@/lib/learner/device";
 import { normaliseEmail } from "@/lib/email";
-import { createServiceClient } from "@/lib/supabase/admin";
 import type { TrackSlug } from "@/types/program";
 
 export interface Learner {
@@ -38,8 +38,6 @@ export type LearnerState =
   | { state: "not-enrolled"; email: string }
   | { state: "enrolled"; learner: Learner; submissions: Submission[] };
 
-const LEARNER_FIELDS = "id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug";
-
 /**
  * Resolves the signed-in user to their cohort place.
  *
@@ -54,26 +52,28 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
   // Sessions from before the one-device lock carry no device id: sign in again to claim one.
   if (!session?.user?.sid) return { state: "signed-out" };
 
-  const supabase = createServiceClient();
-  if (!supabase) return { state: "signed-out" };
+  const sql = db();
+  if (!sql) return { state: "signed-out" };
 
   // Exact match only: ownership of a cohort place must not be fuzzy.
-  const { data: learner } = await supabase
-    .from("learners")
-    .select(`${LEARNER_FIELDS}, device_session, device_seen_at`)
-    .eq("email", email)
-    .maybeSingle();
+  const { data: learner } = await sql.row<Learner & { device_session: string | null; device_seen_at: string | null }>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url,
+           github_username, linkedin_slug, device_session, device_seen_at
+      from course.learners
+     where email = ${email}
+  `;
 
   if (!learner) return { state: "not-enrolled", email };
   if (!(await checkDevice(learner, session?.user?.sid))) return { state: "other-device" };
 
-  const { data: submissions } = await supabase
-    .from("day_submissions")
-    .select("day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers, linkedin_post_url")
-    .eq("learner_id", learner.id)
-    .order("day");
+  const { data: submissions } = await sql.rows<Submission>`
+    select day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers, linkedin_post_url
+      from course.day_submissions
+     where learner_id = ${learner.id}
+     order by day
+  `;
 
-  return { state: "enrolled", learner: learner as Learner, submissions: (submissions as Submission[]) ?? [] };
+  return { state: "enrolled", learner: learner as Learner, submissions: submissions ?? [] };
 });
 
 export async function requireLearner() {

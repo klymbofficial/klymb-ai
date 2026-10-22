@@ -7,9 +7,10 @@ import { getTrack, trackSlugs } from "@/data/tracks";
 import { after } from "next/server";
 import { normaliseEmail } from "@/lib/email";
 import { sendWelcome } from "@/lib/welcome";
-import { ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient } from "@/lib/learner/enrolment";
+import { db } from "@/lib/db/client";
+import { ensureLearner, UNIQUE_VIOLATION } from "@/lib/learner/enrolment";
+import { enrolmentClient } from "@/lib/learner/enrolment-db";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { createServiceClient } from "@/lib/supabase/admin";
 import { clamp, LIMITS, parseRepoUrl, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
@@ -62,39 +63,30 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
     return { ok: false, message: "Too many registrations from this connection. Please try again later, or email us." };
   }
 
-  const supabase = createServiceClient();
-  if (!supabase) return { ok: false, message: "Registration is not available right now. Please email us instead." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Registration is not available right now. Please email us instead." };
 
-  const { error } = await supabase.from("registrations").insert({
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    track: data.track,
-    job_role: data.currentRole,
-    experience: data.experience,
-    linkedin: data.linkedin || null,
-    github: data.github || null,
-    consent: data.consent,
-    cohort_start: cohort.startDate,
-  });
+  const { error } = await sql.run`
+    insert into course.registrations
+      (name, email, phone, track, job_role, experience, linkedin, github, consent, cohort_start)
+    values (
+      ${data.name}, ${data.email}, ${data.phone}, ${data.track}, ${data.currentRole},
+      ${data.experience}, ${data.linkedin || null}, ${data.github || null},
+      ${data.consent}, ${cohort.startDate}
+    )
+  `;
 
   const duplicate = error?.code === UNIQUE_VIOLATION;
 
   if (duplicate) {
     // Already registered: keep their latest answers rather than the first ones.
-    await supabase
-      .from("registrations")
-      .update({
-        name: data.name,
-        phone: data.phone,
-        track: data.track,
-        job_role: data.currentRole,
-        experience: data.experience,
-        linkedin: data.linkedin || null,
-        github: data.github || null,
-      })
-      .eq("email", data.email)
-      .eq("cohort_start", cohort.startDate);
+    await sql.run`
+      update course.registrations
+         set name = ${data.name}, phone = ${data.phone}, track = ${data.track},
+             job_role = ${data.currentRole}, experience = ${data.experience},
+             linkedin = ${data.linkedin || null}, github = ${data.github || null}
+       where email = ${data.email} and cohort_start = ${cohort.startDate}
+    `;
   }
 
   if (error && !duplicate) {
@@ -106,9 +98,7 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   // hold a reserved place until their content opens.
   let enrolled = false;
   if (getTrack(data.track)?.contentLive) {
-    // The client satisfies the narrow shape ensureLearner needs; Supabase's own
-    // generics are too deep for TypeScript to prove it.
-    enrolled = await ensureLearner(supabase as unknown as EnrolmentClient, {
+    enrolled = await ensureLearner(enrolmentClient(sql), {
       email: data.email,
       name: data.name,
       track: data.track,

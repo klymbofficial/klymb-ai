@@ -1,6 +1,6 @@
 import "server-only";
 import { dayLockFor } from "@/lib/day-lock";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 
 /**
  * Day 1 is free on every paid track; Days 2 to 30 need a paid seat. Free
@@ -8,10 +8,14 @@ import { createServiceClient } from "@/lib/supabase/admin";
  * locks a paying learner out.
  */
 export async function hasPaid(email: string, track: string) {
-  const supabase = createServiceClient();
-  if (!supabase) return true;
+  const sql = db();
+  if (!sql) return true;
   // For this track only: paying for a cheaper track never unlocks a dearer one.
-  const { data, error } = await supabase.from("payments").select("id").eq("email", email).eq("track", track).eq("status", "paid").limit(1);
+  const { data, error } = await sql.rows<{ id: string }>`
+    select id from course.payments
+     where email = ${email} and track = ${track} and status = 'paid'
+     limit 1
+  `;
   if (error) return true;
   return !!data?.length;
 }

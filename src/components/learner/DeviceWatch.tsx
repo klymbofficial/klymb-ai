@@ -11,6 +11,9 @@ const BACKUP_EVERY_MS = 60_000;
  * a check every 60 seconds and on tab focus is the backup if the live
  * connection drops. Offline or a failed check does nothing, so a patchy
  * connection never kicks anyone out.
+ *
+ * Supabase is a message bus here and nothing else — the learner data this
+ * checks against lives in the Neon database, reached through /api/device.
  */
 export function DeviceWatch() {
   const pathname = usePathname() ?? "";
