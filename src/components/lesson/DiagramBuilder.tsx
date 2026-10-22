@@ -21,7 +21,9 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
   const [miss, setMiss] = useState<{ slot: string; chip: string } | null>(null);
   const [wrong, setWrong] = useState(0);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(null);
-  const start = useRef<{ id: string; x: number; y: number; moved: boolean } | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+  const start = useRef<{ id: string; x: number; y: number; moved: boolean; lastX: number; lastY: number } | null>(null);
+  const board = useRef<HTMLDivElement>(null);
 
   const slotIds = task.rows.flat();
   const done = slotIds.every((s) => placed[s]);
@@ -41,25 +43,47 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
     }
   }
 
+  /**
+   * The empty slot a drop at (x, y) lands in: the one under the pointer, or the
+   * nearest one within a thumb's width, so a box released on a slot's edge still counts.
+   */
+  function slotAt(x: number, y: number) {
+    let best: { id: string; d: number } | null = null;
+    for (const el of board.current?.querySelectorAll<HTMLElement>("[data-slot]") ?? []) {
+      const id = el.dataset.slot!;
+      if (placed[id]) continue;
+      const r = el.getBoundingClientRect();
+      const d = Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom));
+      if (d <= 44 && (!best || d < best.d)) best = { id, d };
+    }
+    return best?.id ?? null;
+  }
+
   const onDown = (id: string) => (e: React.PointerEvent) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
-    start.current = { id, x: e.clientX, y: e.clientY, moved: false };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* no capture: moves still reach the box while the pointer is over it, and release still drops */ }
+    start.current = { id, x: e.clientX, y: e.clientY, moved: false, lastX: e.clientX, lastY: e.clientY };
   };
   const onMove = (e: React.PointerEvent) => {
     const s = start.current;
     if (!s) return;
+    s.lastX = e.clientX;
+    s.lastY = e.clientY;
     if (!s.moved && Math.hypot(e.clientX - s.x, e.clientY - s.y) < 8) return;
+    if (!s.moved) setMiss(null);
     s.moved = true;
     setDrag({ id: s.id, x: e.clientX, y: e.clientY });
+    setOver(slotAt(e.clientX, e.clientY));
   };
-  const onUp = (e: React.PointerEvent) => {
+  /** Release, or the browser taking the pointer away: either way the box lands where it was let go. */
+  const finish = (x?: number, y?: number) => {
     const s = start.current;
     start.current = null;
     setDrag(null);
+    setOver(null);
     if (!s) return;
     if (!s.moved) { setPicked((p) => (p === s.id ? null : s.id)); return; }
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>("[data-slot]");
-    if (el?.dataset.slot) drop(s.id, el.dataset.slot);
+    const slot = slotAt(x ?? s.lastX, y ?? s.lastY);
+    if (slot) drop(s.id, slot);
   };
 
   const missChip = miss && task.chips.find((c) => c.id === miss.chip);
@@ -70,7 +94,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
       <p className="mt-1 text-sm text-muted">{task.intro}</p>
 
       {/* the diagram */}
-      <div className="mt-4 rounded-2xl bg-night p-3 sm:p-4" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)", backgroundSize: "20px 20px" }}>
+      <div ref={board} className="mt-4 rounded-2xl bg-night p-3 sm:p-4" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px)", backgroundSize: "20px 20px" }}>
         <div className="mx-auto w-max rounded-xl border-2 border-white/60 bg-white/10 px-4 py-2 text-sm font-extrabold text-white">{task.given}</div>
         {task.rows.map((row, r) => (
           <div key={r}>
@@ -91,7 +115,8 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                       got && "border-emerald-400 bg-emerald-400/15",
                       !got && !bad && "border-dashed border-white/35 bg-white/[0.03]",
                       !got && picked && "border-yellow-300/80",
-                      bad && "animate-[shake_.35s] border-red-soft bg-red-soft/15",
+                      bad && !drag && "animate-[shake_.35s] border-red-soft bg-red-soft/15",
+                      !got && over === sid && "scale-[1.03] border-solid border-yellow-300 bg-yellow-300/15",
                     )}
                   >
                     {got && <span className="block text-[13px] font-extrabold text-emerald-300">✓ {label(got)}</span>}
@@ -124,8 +149,9 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                 type="button"
                 onPointerDown={onDown(c.id)}
                 onPointerMove={onMove}
-                onPointerUp={onUp}
-                onPointerCancel={() => { start.current = null; setDrag(null); }}
+                onPointerUp={(e) => finish(e.clientX, e.clientY)}
+                onLostPointerCapture={() => finish()}
+                onPointerCancel={() => finish()}
                 className={clsx(
                   "touch-none select-none rounded-lg border-2 px-3.5 py-2.5 text-sm font-extrabold transition-[transform,background-color] active:scale-95",
                   picked === c.id ? "border-ink bg-ink text-paper" : "border-ink/80 bg-card",
