@@ -30,6 +30,10 @@ export interface Note { t: number; text: string }
 
 /** A lesson's own steps: your call, the video, build it, prove it, follow-ups. */
 export interface LessonProgress {
+  /** Pressed "Start Day N" on the day's opening card. */
+  started?: boolean;
+  /** Sent the end-of-day feedback. */
+  feedback?: boolean;
   pre?: number[]; watched?: boolean; read?: boolean; post?: number[];
   /** Estimate answers, as typed. */
   est?: number[];
@@ -98,6 +102,8 @@ export interface CourseState {
   lang: Lang;
   /** Subtitles under the lesson video. */
   subs: boolean;
+  /** Saw (or skipped) Kamran's tour of the lesson screen. */
+  toured: boolean;
   /** Local dates (YYYY-MM-DD) with any finished step: the streak. */
   activeDays: string[];
 }
@@ -225,7 +231,7 @@ export function defaultState(now = Date.now()): CourseState {
     goal: 15, remind: "19:00", autoplay: false, quality: "auto", wifiOnly: true, streakRem: true, replyNotif: true,
     todaySec: 0, today: localDate(new Date(now)),
     toast: null, toastUntil: 0,
-    lessons: {}, lang: "en", subs: true, activeDays: [],
+    lessons: {}, lang: "en", subs: true, toured: false, activeDays: [],
   };
 }
 
@@ -465,7 +471,7 @@ export function scoreDelta(s: CourseState) {
 const PERSISTED = [
   "onboarded", "cur", "t", "speed", "visited", "notes", "ptab", "openMod", "done", "pre", "post", "qcDone", "notifs", "threads", "voted",
   "dl", "dlProg", "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
-  "lessons", "lang", "subs", "activeDays",
+  "lessons", "lang", "subs", "toured", "activeDays",
 ] as const satisfies readonly (keyof CourseState)[];
 
 export function toStored(s: CourseState) {

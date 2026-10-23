@@ -8,7 +8,9 @@ import {
   retryVideo, seekTo, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
+import { DayStart, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
+import { Tour } from "../lesson/Tour";
+import { track } from "../track";
 import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
 
@@ -35,6 +37,8 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
   const day = dayOf(s.cur)!;
   const wide = day.video.wide;
   const ref = useRef<HTMLVideoElement>(null);
+  // Watch-through milestones already reported for this lesson's video.
+  const marks = useRef<{ id: string; seen: Set<number> }>({ id: "", seen: new Set() });
   const errOffline = s.offline && !s.vidErr;
 
   useEffect(() => {
@@ -50,6 +54,11 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
 
   const onTime = (v: HTMLVideoElement) => {
     const t = v.currentTime;
+    if (v.duration > 0) {
+      if (marks.current.id !== s.cur) marks.current = { id: s.cur, seen: new Set() };
+      const pct = Math.min(100, Math.floor((t / v.duration) * 4) * 25);
+      if (pct > 0 && !marks.current.seen.has(pct)) { marks.current.seen.add(pct); track("video_progress", s.cur, "watch", { pct }); }
+    }
     const seen = v.duration > 0 && t / v.duration >= 0.85;
     act((p) => {
       if (Math.floor(p.t) === Math.floor(t) && (!seen || p.lessons[p.cur]?.watched)) return p;
@@ -84,7 +93,7 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
         onClick={() => act(togglePlay)}
         onLoadedMetadata={(e) => { if (s.t > 0) e.currentTarget.currentTime = s.t; }}
         onTimeUpdate={(e) => onTime(e.currentTarget)}
-        onPlay={() => act((p) => (p.playing ? p : { ...p, playing: true }))}
+        onPlay={() => { track("video_play", s.cur, "watch", { at: Math.round(s.t) }); act((p) => (p.playing ? p : { ...p, playing: true })); }}
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
         onEnded={() => { act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true })); goTo("reveal", 400); }}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
@@ -285,7 +294,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
               </div>
             </>
           ) : (
-            <div className="px-5 lg:px-0"><YourCall s={s} act={act} id={s.cur} day={day!} /></div>
+            <div className="px-5 lg:px-0">{lp.started ? <YourCall s={s} act={act} id={s.cur} day={day!} /> : <DayStart s={s} act={act} id={s.cur} day={day!} />}</div>
           )}
           <div className="px-5 lg:px-0">
             <div className={clsx("lg:hidden", !showVideo && "mt-4")}>
@@ -305,7 +314,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-col lg:mt-0 lg:border-2 lg:border-sd-divider">
+        <div data-tour="tabs" className="mt-4 flex flex-col lg:mt-0 lg:border-2 lg:border-sd-divider">
           <Segmented
             value={s.ptab === "discuss" ? "notes" : s.ptab}
             options={tabs}
@@ -324,6 +333,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
           <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary sd-btn-block h-12"><Icon name="check" size={16} />{completeLabel}</button>
         </div>
       )}
+      {day && !s.toured && <Tour s={s} act={act} />}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   START_SCREENS, deepLink, defaultState, fromStored, isAnswered, migrateLegacy, nextQuestion, pickOption, previewState, tick, togglePlay, toStored,
   type CourseState, type StartScreen,
 } from "@/lib/course-app";
+import { useActivity } from "./track";
 
 /** v2: the real course. v1 held the design prototype's sample learner, so it isn't read. */
 const STORAGE_KEY = "klymb.system-design.v2";
@@ -28,6 +29,7 @@ export type Act = (fn: (s: CourseState) => CourseState) => void;
 export function useCourseApp() {
   const [s, setS] = useState<CourseState>(() => defaultState());
   const [ready, setReady] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const preview = useRef(false);
   /** `?lesson=` read once: the URL is tidied after, and dev mode runs the effect twice. */
   const link = useRef<string | null | undefined>(undefined);
@@ -57,6 +59,7 @@ export function useCourseApp() {
     if (!navigator.onLine) next = { ...next, offline: true };
     // Storage and the URL only exist in the browser, so the first real state arrives after mount.
     setS(next);
+    setPreviewing(preview.current);
     setReady(true);
   }, []);
 
@@ -105,6 +108,8 @@ export function useCourseApp() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  useActivity(s, ready, previewing);
 
   return { s, act, ready };
 }

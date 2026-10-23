@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { badges, defaultState, streak, type CourseState } from "@/lib/course-app";
+import { badges, dayOf, defaultState, openLesson, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Segmented, Stats, Toggle } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -38,6 +38,7 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
       <Row><Label label="Daily goal" sub="Your streak only needs one finished lesson step a day." /><Segmented value={s.goal} options={[[5, "5 min"], [15, "15 min"], [30, "30 min"]]} onChange={(goal) => act((p) => ({ ...p, goal }))} /></Row>
     </>],
     ["This device", <>
+      <Row><LinkRow label="Replay Kamran’s tour" sub="A quick walk through the lesson screen." onClick={() => act((p) => ({ ...openLesson(p, dayOf(p.cur) ? p.cur : "0-0"), toured: false }))} /></Row>
       <Row><LinkRow label="Start over" sub="Clears your progress, notes and baseline on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
     </>],
   ];

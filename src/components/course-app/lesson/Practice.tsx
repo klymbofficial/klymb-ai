@@ -11,7 +11,9 @@ import { ChoiceQuiz, score } from "./ChoiceQuiz";
 import { DesignIt } from "./DesignIt";
 import { DiagramBuilder } from "./DiagramBuilder";
 import { EstimateQuiz } from "./EstimateQuiz";
+import { Feedback } from "./Feedback";
 import { FollowUps } from "./FollowUps";
+import { track } from "../track";
 
 const UI = {
   en: {
@@ -28,6 +30,28 @@ const UI = {
     design: "Design it", designSub: "Attempt first, then the walkthrough", designed: "Attempt written, walkthrough read.",
     reference: "Optional reference",
     before: (a: number, aOf: number, b: number, bOf: number) => `Your call ${a}/${aOf} → Prove it ${b}/${bOf}`,
+    deeper: "Want to go deeper?",
+    leads: {
+      reveal: "You’ve seen the story. Now: what really happened, and the one idea behind it.",
+      prove: "Same idea, new situations. Let’s see if it sticks.",
+      estimate: "Interviewers love numbers. Rough maths is enough, no calculator needed.",
+      build: "Now put the pieces together yourself.",
+      design: "Time for a full problem. Try it your way first; the model answer opens after.",
+      follow: "The interviewer changes the rules. How do you adapt?",
+      done: "That’s the day. Here’s what to keep.",
+    } as Partial<Record<StepKey, string>>,
+    plan: {
+      call: "Answer 3 quick questions. No marks lost, it’s just your call",
+      watch: "Watch a short story video",
+      reveal: "See what really happened, and the idea behind it",
+      prove: "New situations, same idea",
+      estimate: "Rough numbers, the way interviews ask",
+      build: "Drag the boxes into a working design",
+      design: "A full design problem: your attempt first",
+      follow: "The interviewer changes the rules",
+      done: "Your cheatsheet and a post to share",
+    } as Record<StepKey, string>,
+    dayStart: (day: number, min: number) => `Day ${day} · about ${min} minutes`, today: "Today you’ll", start: (day: number) => `Start Day ${day}`,
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes", share: "Share on LinkedIn",
     shareNote: "Download the image, then post. The text is copied for you: paste it, attach the image, done.",
@@ -48,6 +72,28 @@ const UI = {
     design: "Design it", designSub: "Pehle khud try, phir walkthrough", designed: "Attempt likha, walkthrough padha.",
     reference: "Optional reference",
     before: (a: number, aOf: number, b: number, bOf: number) => `Your call ${a}/${aOf} → Prove it ${b}/${bOf}`,
+    deeper: "Aur gehraai mein jaana hai?",
+    leads: {
+      reveal: "Story dekh li. Ab: asal mein kya hua, aur uske peeche ka ek idea.",
+      prove: "Wahi idea, nayi situations. Dekhte hain yaad raha ya nahi.",
+      estimate: "Interviewers ko numbers pasand hain. Rough hisaab kaafi hai, calculator nahi chahiye.",
+      build: "Ab pieces khud jodo.",
+      design: "Ab ek poora problem. Pehle apne tareeke se try karo; model answer uske baad khulega.",
+      follow: "Interviewer rules badal deta hai. Tum kaise adapt karoge?",
+      done: "Aaj ka din ho gaya. Yeh yaad rakhna hai.",
+    } as Partial<Record<StepKey, string>>,
+    plan: {
+      call: "3 chhote sawaal. Koi marks nahi katenge, bas tumhara call",
+      watch: "Ek chhota story video",
+      reveal: "Asal mein kya hua, aur uske peeche ka idea",
+      prove: "Nayi situations, wahi idea",
+      estimate: "Rough numbers, jaise interview mein poochte hain",
+      build: "Boxes drag karke design banao",
+      design: "Ek poora design problem: pehle tumhara attempt",
+      follow: "Interviewer rules badalta hai",
+      done: "Cheatsheet aur share karne ke liye post",
+    } as Record<StepKey, string>,
+    dayStart: (day: number, min: number) => `Day ${day} · lagbhag ${min} minute`, today: "Aaj tum", start: (day: number) => `Day ${day} shuru karo`,
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo", share: "LinkedIn par share karo",
     shareNote: "Image download karo, phir post karo. Text copy ho jayega: paste karo, image lagao, ho gaya.",
@@ -106,7 +152,7 @@ export function LessonPath({ s, id, day }: { s: CourseState; id: string; day: Da
   const steps = lessonSteps(s, id, day);
   const cur = steps.findIndex((x) => !x.done);
   return (
-    <nav aria-label={ui.path} className="sticky top-0 z-[3] border-b-2 border-sd-divider bg-sd-bg/95 px-5 py-2.5 backdrop-blur lg:px-0">
+    <nav data-tour="path" aria-label={ui.path} className="sticky top-0 z-[3] border-b-2 border-sd-divider bg-sd-bg/95 px-5 py-2.5 backdrop-blur lg:px-0">
       <ol className="flex gap-1">
         {steps.map((st, i) => {
           const now = i === cur;
@@ -135,6 +181,41 @@ export function LessonPath({ s, id, day }: { s: CourseState; id: string; day: Da
   );
 }
 
+/** The day's opening card: what today holds and how long it takes, with one clear way in. */
+export function DayStart({ s, act, id, day }: { s: CourseState; act: Act; id: string; day: Day }) {
+  const ui = UI[s.lang];
+  const c = day.copy[s.lang];
+  const steps = lessonSteps(s, id, day);
+  return (
+    <div id="lesson-start" className="sd-a-in flex scroll-mt-16 flex-col gap-5 bg-sd-surface p-4 lg:p-6">
+      <div>
+        <span className="sd-kicker text-sd-accent-700">{ui.dayStart(day.day, day.minutes)}</span>
+        <h2 className="m-0 mt-1.5 text-[28px] leading-[1.05] tracking-[-0.03em] text-pretty lg:text-[38px]">{c.question}</h2>
+        <div className="mt-2 flex flex-col gap-0.5 text-[15px] text-sd-n-800">{c.hookLines.map((l) => <span key={l}>{l}</span>)}</div>
+      </div>
+      <div>
+        <h6 className="sd-h6 mb-2">{ui.today}</h6>
+        <ol className="m-0 grid list-none gap-x-6 p-0 sm:grid-cols-2">
+          {steps.map((st, i) => (
+            <li key={st.key} className="grid grid-cols-[28px_1fr] gap-2 border-b border-sd-divider py-2 text-sm">
+              <span className="font-extrabold text-sd-accent">{pad(i + 1)}</span>
+              <span><b>{ui.steps[st.key]}</b> · {ui.plan[st.key]}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <button
+        type="button"
+        data-tour="start"
+        onClick={() => { act((p) => updateLesson(p, id, { started: true })); goTo("call", 200); }}
+        className="sd-btn sd-btn-primary h-[52px] justify-between text-[16px] sm:max-w-[360px]"
+      >
+        {ui.start(day.day)}<Icon name="arrowR" />
+      </button>
+    </div>
+  );
+}
+
 /** Before the video: the day's opening question and scenarios, in place of the player. */
 export function YourCall({ s, act, id, day }: { s: CourseState; act: Act; id: string; day: Day }) {
   const ui = UI[s.lang];
@@ -157,7 +238,7 @@ export function YourCall({ s, act, id, day }: { s: CourseState; act: Act; id: st
   );
 }
 
-function Step({ id, n, title, sub, locked, lockedText, children }: { id: StepKey; n: number; title: string; sub?: string; locked: boolean; lockedText: string; children?: ReactNode }) {
+function Step({ id, n, title, sub, lead, locked, lockedText, children }: { id: StepKey; n: number; title: string; sub?: string; lead?: string; locked: boolean; lockedText: string; children?: ReactNode }) {
   return (
     <section id={`lesson-${id}`} className={clsx("scroll-mt-16 border-b border-sd-divider py-4", locked && "opacity-55")} aria-label={title}>
       <div className="grid grid-cols-[40px_1fr] items-start gap-2.5">
@@ -167,7 +248,12 @@ function Step({ id, n, title, sub, locked, lockedText, children }: { id: StepKey
           <span className="text-xs text-sd-n-700">{locked ? lockedText : sub}</span>
         </div>
       </div>
-      {!locked && children && <div className="mt-3.5 lg:pl-[50px]">{children}</div>}
+      {!locked && children && (
+        <div className="mt-3.5 lg:pl-[50px]">
+          {lead && <p className="m-0 mb-4 border-l-[3px] border-sd-accent pl-3 text-[15px] leading-[1.45] font-semibold text-pretty text-sd-n-800">{lead}</p>}
+          {children}
+        </div>
+      )}
     </section>
   );
 }
@@ -184,12 +270,12 @@ function Done({ text, next }: { text: string; next?: { label: string; key: StepK
 
 function Explain({ items }: { items: NonNullable<DayCopy["explain"]>["items"] }) {
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {items.map((x, i) => (
-        <div key={x.term} className={clsx("flex flex-col gap-1.5 p-4", i % 2 ? "bg-sd-surface" : "bg-sd-ink text-sd-bg")}>
-          <span className="text-[22px] leading-none font-extrabold tracking-[-0.02em]">{x.term}</span>
-          <span className="text-sm leading-[1.45]">{x.what}</span>
-          <span className={clsx("text-xs", i % 2 ? "text-sd-n-700" : "text-sd-bg/70")}>e.g. {x.example}</span>
+    <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      {items.map((x) => (
+        <div key={x.term} className="flex flex-col gap-1 border-l-2 border-sd-n-300 py-1 pl-3">
+          <span className="text-sm font-extrabold">{x.term}</span>
+          <span className="text-[13px] leading-[1.45] text-sd-n-800">{x.what}</span>
+          <span className="text-xs text-sd-n-700">e.g. {x.example}</span>
         </div>
       ))}
     </div>
@@ -246,15 +332,6 @@ function Reveal({ c, ui, pre, read, onRead }: { c: DayCopy; ui: Ui; pre: number[
         </div>
         <p className="m-0 mt-2 bg-sd-surface px-3.5 py-3 text-sm font-semibold">{c.concept.rule}</p>
       </div>
-      {c.explain?.optional && (
-        <details className="group border border-sd-divider">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-            <span className="flex flex-col"><span className="sd-kicker text-sd-n-700">{ui.reference}</span><span className="text-[15px] font-extrabold">{c.explain.title}</span></span>
-            <Icon name="down" size={18} className="block flex-none transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="px-4 pb-4"><Explain items={c.explain.items} /></div>
-        </details>
-      )}
       {!read && <button type="button" onClick={onRead} className="sd-btn sd-btn-primary h-12 self-start gap-2">{ui.readDone} · {ui.toNext(ui.steps.prove)}<Icon name="arrowR" size={16} /></button>}
     </div>
   );
@@ -266,6 +343,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
   const image = `/images/system-design/day-${day.day}-linkedin-${s.lang}.png`;
   // LinkedIn's share link prefills the text but can't carry an image, so the text also goes on the clipboard.
   const share = async () => {
+    track("share", id, "done", { kind: "linkedin" });
     try { await navigator.clipboard.writeText(c.linkedin); setCopied(true); } catch { /* blocked: the prefill still works */ }
     window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(c.linkedin)}`, "_blank", "noopener,noreferrer");
   };
@@ -275,6 +353,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
         <div className="flex flex-col"><span className="sd-kicker">Day {day.day} complete</span><span className="text-[22px] font-extrabold tracking-[-0.02em]">{ui.before(score(c.pre, p.pre ?? []), c.pre.length, score(c.post, p.post ?? []), c.post.length)}</span></div>
         <Icon name="flame" size={32} />
       </div>
+      <Feedback lesson={id} day={day.day} lang={s.lang} sent={!!p.feedback} onSent={() => act((q) => updateLesson(q, id, { feedback: true }))} />
       <div>
         <h6 className="sd-h6 mb-2">{ui.cheatsheet} · {c.cheatsheet.title}</h6>
         <div className="border-t-2 border-sd-divider">
@@ -293,7 +372,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
         {/* eslint-disable-next-line @next/next/no-img-element -- the same file the learner downloads */}
         <img src={image} alt={c.cheatsheet.title} width={1080} height={1350} className="w-full max-w-[420px] border border-sd-divider" />
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <a href={image} download={`klymb-system-design-day-${day.day}.png`} className="sd-btn sd-btn-secondary h-11 gap-2"><Icon name="download" size={16} />{ui.download}</a>
+          <a href={image} download={`klymb-system-design-day-${day.day}.png`} onClick={() => track("share", id, "done", { kind: "image" })} className="sd-btn sd-btn-secondary h-11 gap-2"><Icon name="download" size={16} />{ui.download}</a>
           <button type="button" onClick={share} className="sd-btn sd-btn-primary h-11">{copied ? ui.copied : ui.post}</button>
         </div>
       </div>
@@ -318,21 +397,21 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
   const nextOf = (k: StepKey) => { const n = after(k); return { key: n, label: ui.toNext(ui.steps[n]) }; };
 
   return (
-    <div className="mt-6 lg:mt-8">
+    <div data-tour="practice" className="mt-6 lg:mt-8">
       {!p.watched && <p className="m-0 mb-1 border-l-[3px] border-sd-accent pl-3 text-sm text-sd-n-800">{ui.watchFirst}</p>}
 
-      <Step id="reveal" n={num("reveal")} title={ui.reveal} sub={c.revealSub} locked={!open("reveal")} lockedText={ui.locked}>
+      <Step id="reveal" n={num("reveal")} lead={ui.leads.reveal} title={ui.reveal} sub={c.revealSub} locked={!open("reveal")} lockedText={ui.locked}>
         <Reveal c={c} ui={ui} pre={p.pre ?? []} read={!!p.read || !!p.post} onRead={() => set({ read: true }, "prove")} />
       </Step>
 
-      <Step id="prove" n={num("prove")} title={ui.prove} sub={ui.proveSub} locked={!open("prove")} lockedText={ui.locked}>
+      <Step id="prove" n={num("prove")} lead={ui.leads.prove} title={ui.prove} sub={ui.proveSub} locked={!open("prove")} lockedText={ui.locked}>
         {p.post
           ? <Done text={ui.proved(score(c.post, p.post), c.post.length)} next={nextOf("prove")} />
           : <ChoiceQuiz key={s.lang} questions={c.post} label={ui.prove} lang={s.lang} onDone={(post) => set({ post, read: true }, after("prove"))} />}
       </Step>
 
       {c.estimates?.length ? (
-        <Step id="estimate" n={num("estimate")} title={ui.estimate} sub={ui.estimateSub} locked={!open("estimate")} lockedText={ui.locked}>
+        <Step id="estimate" n={num("estimate")} lead={ui.leads.estimate} title={ui.estimate} sub={ui.estimateSub} locked={!open("estimate")} lockedText={ui.locked}>
           {p.est
             ? <Done text={ui.estimated(inRange(c.estimates, p.est), c.estimates.length)} next={nextOf("estimate")} />
             : <EstimateQuiz key={s.lang} items={c.estimates} lang={s.lang} onDone={(est) => set({ est }, after("estimate"))} />}
@@ -340,7 +419,7 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       ) : null}
 
       {c.build && (
-        <Step id="build" n={num("build")} title={ui.build} sub={c.build.title} locked={!open("build")} lockedText={ui.locked}>
+        <Step id="build" n={num("build")} lead={ui.leads.build} title={ui.build} sub={c.build.title} locked={!open("build")} lockedText={ui.locked}>
           {p.built !== undefined
             ? <Done text={ui.built(p.built)} next={nextOf("build")} />
             : <DiagramBuilder key={s.lang} task={c.build} lang={s.lang} onDone={(built) => set({ built }, after("build"))} />}
@@ -348,22 +427,32 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       )}
 
       {c.design && (
-        <Step id="design" n={num("design")} title={ui.design} sub={ui.designSub} locked={!open("design")} lockedText={ui.locked}>
+        <Step id="design" n={num("design")} lead={ui.leads.design} title={ui.design} sub={ui.designSub} locked={!open("design")} lockedText={ui.locked}>
           <DesignIt key={s.lang} task={c.design} lang={s.lang} saved={p.design} checks={p.checks} onSave={(design) => set({ design })} onChecks={(checks) => set({ checks })} onContinue={() => goTo(after("design"), 0)} />
         </Step>
       )}
 
       {c.followUps?.length ? (
-        <Step id="follow" n={num("follow")} title={ui.follow} sub={`${c.followUps.length} “what if” questions`} locked={!open("follow")} lockedText={ui.locked}>
+        <Step id="follow" n={num("follow")} lead={ui.leads.follow} title={ui.follow} sub={`${c.followUps.length} “what if” questions`} locked={!open("follow")} lockedText={ui.locked}>
           {p.follow
             ? <Done text={ui.followed(p.follow.filter(Boolean).length, p.follow.length)} next={nextOf("follow")} />
             : <FollowUps key={s.lang} items={c.followUps} lang={s.lang} onDone={(follow) => set({ follow }, "done")} />}
         </Step>
       ) : null}
 
-      <Step id="done" n={num("done")} title={ui.unlocked} sub={c.cheatsheet.title} locked={!open("done")} lockedText={ui.locked}>
+      <Step id="done" n={num("done")} lead={ui.leads.done} title={ui.unlocked} sub={c.cheatsheet.title} locked={!open("done")} lockedText={ui.locked}>
         <Unlocked s={s} act={act} id={id} day={day} c={c} ui={ui} />
       </Step>
+
+      {c.explain?.optional && (
+        <details className="group mt-6 text-sm">
+          <summary className="flex cursor-pointer list-none flex-wrap items-center gap-1.5 font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink [&::-webkit-details-marker]:hidden">
+            {ui.deeper} {c.explain.title}
+            <Icon name="down" size={14} className="block flex-none transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="mt-3"><Explain items={c.explain.items} /></div>
+        </details>
+      )}
     </div>
   );
 }

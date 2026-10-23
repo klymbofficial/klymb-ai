@@ -198,3 +198,35 @@ test("a day with estimates and a design attempt isn't finished until both are do
   const all = updateLesson(noDesign, "1-0", { design: "Waiting room and one atomic stock counter." }, NOW);
   assert.equal(flowDone(all, "1-0"), true);
 });
+
+test("course activity events are cut down to known names and short, flat values", async () => {
+  const { cleanEvent, validAnon } = await import("../src/lib/sd-events");
+  assert.equal(cleanEvent({ e: "drop_table" }), null);
+  const e = cleanEvent({ e: "step_done", lesson: "0-0", step: "pre", props: { score: 2, qs: "a,b", "bad key": 1, nested: { x: 1 }, long: "x".repeat(500) } });
+  assert.deepEqual(Object.keys(e!.props).sort(), ["long", "qs", "score"]);
+  assert.equal((e!.props.long as string).length, 300);
+  assert.equal(validAnon("abc"), false);
+  assert.equal(validAnon("3f2a9c1e-77aa-4c1d-9a1b-0c2d3e4f5a6b"), true);
+});
+
+test("the admin summary counts each learner once per step and finds where they stopped", async () => {
+  const { summarise } = await import("../src/lib/sd-summary");
+  const { LESSON_DAYS } = await import("../src/data/system-design/course-app");
+  const ev = (anon: string, event: string, step: string | null, props: Record<string, unknown> = {}, lesson = "0-0") =>
+    ({ created_at: new Date(NOW).toISOString(), anon_id: anon, email: null, event, lesson, step, props, lang: "en", device: "phone" });
+  const best = LESSON_DAYS["0-0"].copy.en.pre.map((q) => q.choices.findIndex((c) => c.best));
+  const events = [
+    ev("aaaaaaaa", "lesson_open", null), ev("aaaaaaaa", "lesson_open", null), ev("aaaaaaaa", "step_done", "started"),
+    ev("aaaaaaaa", "step_done", "pre", { qs: LESSON_DAYS["0-0"].copy.en.pre.map((q) => q.id).join(","), picks: best.join(",") }),
+    ev("aaaaaaaa", "ping", "watch"), ev("aaaaaaaa", "ping", "watch"),
+    ev("bbbbbbbb", "lesson_open", null), ev("bbbbbbbb", "ping", "call"), ev("bbbbbbbb", "day_complete", null),
+  ];
+  const sum = summarise(events, [], LESSON_DAYS);
+  const day0 = sum.lessons.find((l) => l.id === "0-0")!;
+  assert.equal(day0.funnel[0].value, 2, "two people opened Day 0");
+  assert.equal(day0.funnel[1].value, 1, "one pressed Start");
+  assert.deepEqual(day0.stoppedAt, [{ label: "Watch", value: 1 }], "the finisher isn't counted as stuck");
+  assert.equal(day0.answers[0].right, 1);
+  assert.equal(sum.totals.visitors, 2);
+  assert.equal(sum.totals.completedAny, 1);
+});

@@ -229,8 +229,12 @@ export interface Thread { id: string; name: string; ini: string; ago: string; t:
 /** Lesson Q&A needs a backend; none yet. */
 export const THREADS: Record<string, Thread[]> = {};
 
-export const ONBOARDING: [string, string][] = [
-  ["System design, phone pe", "21 days, about 15 minutes a day. Each day is one real Indian app and one idea: you answer first, then a short Hinglish story, then you build it and prove it."],
-  ["Start with a 6-question baseline", "It doesn’t lock anything. At the end, the same topics show you exactly what you learned."],
-  ["A small daily habit", "One lesson a day keeps your streak going. Kabhi bhi, kahin bhi: metro, cab or canteen."],
+/** The welcome screen: what the course gives you, before Day 0. [title, detail] */
+export const WELCOME: [string, string][] = [
+  ["21 days, one real Indian app each day", "Flipkart, Swiggy, IRCTC, UPI, Hotstar and more: what broke, and how they fixed it."],
+  ["A 3-minute Hinglish story video", "With subtitles you can switch on or off."],
+  ["You answer first, then learn", "Make your call, then see what really happened and the idea behind it."],
+  ["Practice that feels like the interview", "Estimates, drag-and-drop designs and full design problems."],
+  ["Interviewer follow-ups", "What they ask next, and a 2-minute answer you can say out loud."],
+  ["A cheatsheet every day, at your own pace", "15 minutes a day, on your phone: metro, cab or canteen."],
 ];

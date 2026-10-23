@@ -6,8 +6,8 @@ import type { BuildTask, Lang } from "@/data/system-design/types";
 import { Icon } from "../icons";
 
 const UI = {
-  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Continue", picked: "Now tap the slot where it goes" },
-  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Aage badho", picked: "Ab woh slot tap karo jahan yeh jaayega" },
+  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Continue", picked: "Now tap the slot where it goes", hint: "Drag a box up to the slot that does its job, or tap a box, then a slot" },
+  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Aage badho", picked: "Ab woh slot tap karo jahan yeh jaayega", hint: "Box ko upar uske kaam wale slot pe drag karo, ya box tap karo, phir slot" },
 };
 
 /**
@@ -88,6 +88,9 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
   };
 
   const missChip = miss && task.chips.find((c) => c.id === miss.chip);
+  // While a box is held (picked or dragged), every open slot lights up as a place it can go.
+  const holding = !!picked || !!drag;
+  const fresh = Object.keys(placed).length === 0 && wrong === 0 && !holding;
 
   return (
     <div>
@@ -114,8 +117,8 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                     className={clsx(
                       "min-h-[72px] cursor-pointer border-2 px-2 py-2 text-center transition-[border-color,background-color,transform] duration-200",
                       got && "border-sd-accent bg-sd-accent",
-                      !got && !bad && "border-dashed border-white/40 bg-transparent",
-                      !got && !bad && picked && "border-sd-accent-400",
+                      !got && !bad && !holding && "border-dashed border-white/40 bg-transparent",
+                      !got && !bad && holding && over !== sid && "border-dashed border-sd-accent-400 bg-sd-accent/10 hover:border-solid hover:bg-sd-accent/25",
                       bad && !drag && "animate-[shake_.35s] border-sd-accent-400 bg-sd-accent/20",
                       !got && over === sid && "scale-[1.03] border-solid border-sd-accent-400 bg-sd-accent/25",
                     )}
@@ -136,6 +139,11 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
           <span className="text-sd-accent-700"><b>{ui.wrong}</b> {missChip.label} = {missChip.does}.</span>
         ) : picked ? (
           <span className="font-semibold text-sd-n-700">{ui.picked}</span>
+        ) : fresh ? (
+          <span className="flex items-center gap-2 font-semibold text-sd-accent-700">
+            <span className="flex flex-none animate-bounce text-sd-accent"><Icon name="arrowR" size={18} className="block flex-none -rotate-90" /></span>
+            {ui.hint}
+          </span>
         ) : null}
       </p>
 
@@ -154,11 +162,12 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                 onLostPointerCapture={() => finish()}
                 onPointerCancel={() => finish()}
                 className={clsx(
-                  "cursor-grab touch-none border-2 border-sd-ink px-3.5 py-2.5 text-sm font-extrabold select-none",
+                  "flex cursor-grab touch-none items-center gap-1.5 border-2 border-sd-ink px-3 py-2.5 text-sm font-extrabold transition-[transform,box-shadow] duration-150 select-none hover:-translate-y-0.5 hover:shadow-[0_3px_0_var(--sd-ink)] active:cursor-grabbing",
                   picked === c.id ? "bg-sd-ink text-sd-bg" : "bg-sd-bg",
                   drag?.id === c.id && "opacity-40",
                 )}
               >
+                <span aria-hidden="true" className="grid grid-cols-2 gap-[2px] opacity-50">{[0, 1, 2, 3, 4, 5].map((k) => <span key={k} className="size-[3px] bg-current" />)}</span>
                 {c.label}
               </button>
             ))}

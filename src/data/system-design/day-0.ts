@@ -70,7 +70,7 @@ const en: DayCopy = {
   ],
 
   explain: {
-    title: "How the boxes talk: HTTP, REST, gRPC, TCP, UDP",
+    title: "How the boxes talk (HTTP, TCP, UDP)",
     optional: true,
     items: [
       { term: "HTTP", what: "The language of the web. Your phone sends a request (the order slip); the server sends back a response (the plate).", example: "Opening klymb.ai, loading a menu" },
@@ -332,7 +332,7 @@ const hi: DayCopy = {
   ],
 
   explain: {
-    title: "Boxes aapas mein baat kaise karte hain: HTTP, REST, gRPC, TCP, UDP",
+    title: "Boxes kaise baat karte hain (HTTP, TCP, UDP)",
     optional: true,
     items: [
       { term: "HTTP", what: "Web ki bhasha. Phone request bhejta hai (order ki parchi); server response lautata hai (khane ki plate).", example: "klymb.ai kholna, menu load hona" },
