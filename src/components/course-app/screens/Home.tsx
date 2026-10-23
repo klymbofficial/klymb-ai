@@ -2,7 +2,9 @@
 
 import clsx from "clsx";
 import Image from "next/image";
-import { LESSON_COUNT, fmt, lesson, lessonDay, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
+import { LESSON_COUNT, dayOf, fmt, isSoon, lesson, lessonDay, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
+import { lessonSteps } from "../lesson/Practice";
 import { Icon } from "../icons";
 import { Bar, parallax, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -49,6 +51,21 @@ export function GoalCard({ s }: { s: CourseState }) {
   );
 }
 
+const STEP_NAME: Record<string, string> = { call: "Your call", watch: "the video", reveal: "Learn", prove: "Prove it", estimate: "Estimate", build: "Build it", design: "Design it", follow: "the follow-ups", done: "the finish" };
+
+/** Kamran's line on Home: one thing about where the learner is right now. */
+function kamranSays(s: CourseState) {
+  const day = dayOf(s.cur);
+  const name = lessonDay(s.cur);
+  if (isSoon(s.cur)) return `Nice work, you’ve done everything that’s out. ${name} is coming soon, I’ll keep it ready.`;
+  if (!day) return `${name} is ready when you are.`;
+  const p = s.lessons[s.cur];
+  if (!s.done.length && !p) return `Hi, I’m Kamran. ${name} is ready when you are: about ${day.minutes} minutes.`;
+  if (!p) return `Welcome back! ${name} is ready when you are: about ${day.minutes} minutes.`;
+  const next = lessonSteps(s, s.cur, day).find((x) => !x.done);
+  return `Welcome back! You’re on ${name}, at ${STEP_NAME[next?.key ?? "done"]}. Pick up where you left off.`;
+}
+
 export function Home({ s, act }: { s: CourseState; act: Act }) {
   const c = lesson(s.cur);
   const preP = pct(s.pre);
@@ -89,6 +106,10 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
       <div className="hidden flex-wrap items-end justify-between gap-4 border-b-2 border-sd-divider pb-4 lg:flex">
         <h1 className="m-0 text-[42px] tracking-[-0.03em]">{hello}</h1>
         <span className="text-sm text-sd-n-700">{doneCount} of {LESSON_COUNT} lessons · {coursePct} complete</span>
+      </div>
+
+      <div className="sd-a-in" style={{ animationDuration: ".5s" }}>
+        <StudyBuddy tone="light" size={88} message={kamranSays(s)} />
       </div>
 
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,1fr)] lg:items-start lg:gap-8">
