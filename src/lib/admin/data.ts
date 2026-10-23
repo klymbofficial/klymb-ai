@@ -1,5 +1,4 @@
 import "server-only";
-import { commitDays, mainRepo } from "@/lib/learner/github";
 import { getAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import type { TrackSlug } from "@/types/program";
@@ -74,8 +73,9 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
   const sql = db();
   if (!sql) return [];
 
-  const { data: learners } = await sql.rows<Omit<LearnerProgress, "days_submitted" | "last_submission_at" | "commit_repo" | "commit_days" | "linkedin_posts" | "assessments_scored" | "latest_band">>`
-    select id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug
+  const { data: learners } = await sql.rows<Omit<LearnerProgress, "days_submitted" | "last_submission_at" | "linkedin_posts" | "assessments_scored" | "latest_band">>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url,
+           github_username, linkedin_slug, commit_repo, commit_days
       from course.learners
      order by created_at desc
   `;
@@ -93,15 +93,12 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
     `,
   ]);
 
-  // Commit days on GitHub, for the "commits on 20+ days" rule. Cached an hour per repo.
-  const commitCounts = await Promise.all(
-    learners.map(async (l) => {
-      const repo = l.github_username ? mainRepo((submissions ?? []).filter((s) => s.learner_id === l.id).map((s) => s.deliverable_url)) : null;
-      return repo ? { repo: `${repo.owner}/${repo.repo}`, days: await commitDays(repo.owner, repo.repo, l.github_username!) } : null;
-    }),
-  );
-
-  return learners.map((l, i) => {
+  // Commit days are read, not fetched. They used to be counted here, one
+  // commitDays() call per learner — and each of those makes up to three GitHub
+  // requests, so this page alone could burn the whole hourly API budget that
+  // checkFreshPush needs for learners to submit. The hourly cron refreshes
+  // them now (src/lib/learner/commits.ts).
+  return learners.map((l) => {
     const mine = submissions?.filter((s) => s.learner_id === l.id) ?? [];
     const scored = (assessments ?? [])
       .filter((a) => a.learner_id === l.id && a.weighted_score != null)
@@ -114,8 +111,6 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
       last_submission_at: last,
       assessments_scored: scored.length,
       latest_band: scored.at(-1)?.band ?? null,
-      commit_repo: commitCounts[i]?.repo ?? null,
-      commit_days: commitCounts[i]?.days ?? null,
     } as LearnerProgress;
   });
 }
