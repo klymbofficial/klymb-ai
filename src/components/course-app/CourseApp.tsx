@@ -17,6 +17,7 @@ import { QuizIntro, QuizQuestion } from "./screens/Quiz";
 import { Recap } from "./screens/Recap";
 import { Results } from "./screens/Results";
 import { useCourseApp, type Act } from "./useCourseApp";
+import { CourseUserProvider, type CourseUser } from "./user";
 
 const TABS: [Tab, string, IconName][] = [["home", "Home", "home"], ["course", "Course", "layers"], ["progress", "Progress", "chart"], ["profile", "Profile", "user"]];
 
@@ -121,7 +122,7 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
  * mobile app (tabs along the bottom, full-screen lessons and assessments);
  * from 1024px a sidebar replaces the tabs and panels sit side by side.
  */
-export function CourseApp() {
+export function CourseApp({ user = null }: { user?: CourseUser | null }) {
   const { s, act, ready } = useCourseApp();
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -139,6 +140,7 @@ export function CourseApp() {
   const mini = miniActive(s) && !s.ended;
 
   return (
+    <CourseUserProvider value={user}>
     <div className="sd-app relative flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
       <Sidebar s={s} act={act} />
       <div
@@ -172,5 +174,6 @@ export function CourseApp() {
       {s.confirmExit && <LeaveQuizDialog s={s} act={act} />}
       {s.toast && <Toast text={s.toast} />}
     </div>
+    </CourseUserProvider>
   );
 }

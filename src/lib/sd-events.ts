@@ -4,7 +4,7 @@
  */
 export const SD_EVENTS = [
   "screen", "lesson_open", "ping", "step_done", "day_complete",
-  "video_play", "video_progress", "subs", "lang", "tour", "welcome", "share",
+  "video_play", "video_progress", "subs", "lang", "tour", "welcome", "share", "signin",
 ] as const;
 export type SdEvent = (typeof SD_EVENTS)[number];
 

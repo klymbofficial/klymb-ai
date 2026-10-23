@@ -5,6 +5,7 @@ import { badges, dayOf, defaultState, openLesson, streak, type CourseState } fro
 import { Icon } from "../icons";
 import { Segmented, Stats, Toggle } from "../ui";
 import type { Act } from "../useCourseApp";
+import { GoogleButton, useCourseUser } from "../user";
 
 type BoolKey = "offline" | "vidErr";
 
@@ -29,6 +30,7 @@ function LinkRow({ label, sub, onClick }: { label: string; sub: string; onClick:
 }
 
 export function Profile({ s, act }: { s: CourseState; act: Act }) {
+  const user = useCourseUser();
   const flip = (k: BoolKey) => () => act((p) => ({ ...p, [k]: !p[k] }));
   const tog = (k: BoolKey, label: string, sub?: string) => <Row><Toggle on={s[k]} onClick={flip(k)} label={label} sub={sub} /></Row>;
   const st = streak(s);
@@ -38,6 +40,7 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
       <Row><Label label="Daily goal" sub="Your streak only needs one finished lesson step a day." /><Segmented value={s.goal} options={[[5, "5 min"], [15, "15 min"], [30, "30 min"]]} onChange={(goal) => act((p) => ({ ...p, goal }))} /></Row>
     </>],
     ["This device", <>
+      <Row>{user ? <Label label={`Signed in as ${user.email}`} sub="Your activity is saved to your name." /> : <div className="flex w-full flex-col gap-2"><Label label="Not signed in" sub="Sign in to keep your progress and streak under your name." /><GoogleButton where="profile" lesson={s.cur} className="h-11 border-2 border-sd-ink sm:max-w-[320px]" /></div>}</Row>
       <Row><LinkRow label="Replay Kamran’s tour" sub="A quick walk through the lesson screen." onClick={() => act((p) => ({ ...openLesson(p, dayOf(p.cur) ? p.cur : "0-0"), toured: false }))} /></Row>
       <Row><LinkRow label="Start over" sub="Clears your progress, notes and baseline on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
     </>],

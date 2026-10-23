@@ -163,6 +163,7 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
         <Panel title="Pages they visit" note="Screens opened inside the course."><BarList rows={data.screens} unit="views" /></Panel>
         <Panel title="Welcome screen"><BarList rows={data.welcome} unit="people" /></Panel>
         <Panel title="Kamran’s tour"><BarList rows={data.tour} unit="people" /></Panel>
+        <Panel title="Google sign-in clicks" note="Where people chose to sign in."><BarList rows={data.signins} unit="clicks" emptyLabel="No sign-in clicks yet." /></Panel>
         <Panel title="Other"><ul className="flex flex-col gap-2 text-sm"><li>Turned subtitles off: <b>{data.subsOff}</b></li><li>LinkedIn shares and image downloads: <b>{data.shares}</b></li></ul></Panel>
       </div>
 

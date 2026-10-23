@@ -7,6 +7,7 @@ import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { answerQuickCheck, closeQuickCheck, fmt, openLesson, quickCheckAt, startQuiz, type CourseState } from "@/lib/course-app";
 import { Icon } from "./icons";
 import { track } from "./track";
+import { GoogleButton, firstName, useCourseUser } from "./user";
 import type { Act } from "./useCourseApp";
 
 /* Overlays sit above the site-wide help launcher (z-60). */
@@ -26,8 +27,30 @@ export function Splash({ act }: { act: Act }) {
   );
 }
 
+/** Signed out: Google first (it saves progress to your name), Day 0 without signing in as the quiet option. Signed in: straight to Day 0. */
+function StartButtons({ user, startDay0, baseline }: { user: boolean; startDay0: () => void; baseline: () => void }) {
+  const link = "cursor-pointer self-center py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink lg:self-start";
+  if (user) {
+    return (
+      <div className="flex flex-col gap-1">
+        <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
+        <button type="button" onClick={baseline} className={link}>Or take the 6-question baseline first</button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <GoogleButton lesson="0-0" where="welcome" label="Continue with Google" className="h-[56px] border-2 border-sd-ink text-[16px]" />
+      <span className="text-center text-xs text-sd-n-700 lg:text-left">Saves your progress and streak to your name.</span>
+      <button type="button" onClick={startDay0} className={link}>Or try Day 0 without signing in</button>
+    </div>
+  );
+}
+
 /** The welcome: Kamran says hello, the page says what the course gives you, and one button starts Day 0. */
 export function Onboarding({ act }: { s: CourseState; act: Act }) {
+  const user = useCourseUser();
+  const first = firstName(user);
   const done = (p: CourseState): CourseState => ({ ...p, onboarded: true });
   const startDay0 = () => { track("welcome", null, null, { choice: "day0" }); act((p) => openLesson(done(p), "0-0")); };
   const baseline = () => { track("welcome", null, null, { choice: "baseline" }); act((p) => startQuiz(done(p), "pre")); };
@@ -37,13 +60,10 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
       <div className="flex w-full flex-col gap-6 lg:grid lg:max-w-[1080px] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">
         <div className="sd-a-side-b flex flex-col gap-5" style={{ animationDuration: ".5s" }}>
           <span className="sd-kicker text-sd-accent-700">Klymb.ai · System Design in 21 Days</span>
-          <StudyBuddy tone="light" size={96} message="Hi, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes." />
+          <StudyBuddy tone="light" size={96} message={`Hi${first ? ` ${first}` : ""}, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes.`} />
           <h1 className="m-0 text-[38px] leading-[1] tracking-[-0.04em] text-pretty lg:text-[60px]">System design, phone pe.</h1>
           <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Here’s what you get, every day for 21 days. No experience needed: Day 0 starts from what system design even is.</p>
-          <div className="hidden flex-col gap-2 lg:flex">
-            <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] max-w-[360px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
-            <button type="button" onClick={baseline} className="w-max cursor-pointer text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink">Or take the 6-question baseline first</button>
-          </div>
+          <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} baseline={baseline} /></div>
         </div>
         <ol className="sd-a-side m-0 grid list-none gap-px border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2" style={{ animationDuration: ".5s", animationDelay: "80ms" }}>
           {WELCOME.map(([title, detail], i) => (
@@ -54,9 +74,8 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
             </li>
           ))}
         </ol>
-        <div className="sticky -bottom-8 -mx-5 flex flex-col gap-1 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-8 lg:hidden">
-          <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
-          <button type="button" onClick={baseline} className="cursor-pointer self-center py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4">Or take the 6-question baseline first</button>
+        <div className="sticky -bottom-8 -mx-5 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-8 lg:hidden">
+          <StartButtons user={!!user} startDay0={startDay0} baseline={baseline} />
         </div>
       </div>
     </div>

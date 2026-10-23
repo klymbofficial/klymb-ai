@@ -13,7 +13,9 @@ import { DiagramBuilder } from "./DiagramBuilder";
 import { EstimateQuiz } from "./EstimateQuiz";
 import { Feedback } from "./Feedback";
 import { FollowUps } from "./FollowUps";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { track } from "../track";
+import { GoogleButton, useCourseUser } from "../user";
 
 const UI = {
   en: {
@@ -51,6 +53,7 @@ const UI = {
       follow: "The interviewer changes the rules",
       done: "Your cheatsheet and a post to share",
     } as Record<StepKey, string>,
+    savePrompt: (day: number) => `Day ${day} done! Sign in so it’s saved to your name, on any phone or laptop, and your streak keeps counting.`,
     dayStart: (day: number, min: number) => `Day ${day} · about ${min} minutes`, today: "Today you’ll", start: (day: number) => `Start Day ${day}`,
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes", share: "Share on LinkedIn",
@@ -93,6 +96,7 @@ const UI = {
       follow: "Interviewer rules badalta hai",
       done: "Cheatsheet aur share karne ke liye post",
     } as Record<StepKey, string>,
+    savePrompt: (day: number) => `Day ${day} ho gaya! Sign in karo taaki yeh tumhare naam pe save ho, kisi bhi phone ya laptop pe, aur streak chalti rahe.`,
     dayStart: (day: number, min: number) => `Day ${day} · lagbhag ${min} minute`, today: "Aaj tum", start: (day: number) => `Day ${day} shuru karo`,
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo", share: "LinkedIn par share karo",
@@ -339,6 +343,7 @@ function Reveal({ c, ui, pre, read, onRead }: { c: DayCopy; ui: Ui; pre: number[
 
 function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: string; day: Day; c: DayCopy; ui: Ui }) {
   const [copied, setCopied] = useState(false);
+  const user = useCourseUser();
   const p = s.lessons[id] ?? {};
   const image = `/images/system-design/day-${day.day}-linkedin-${s.lang}.png`;
   // LinkedIn's share link prefills the text but can't carry an image, so the text also goes on the clipboard.
@@ -353,6 +358,12 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
         <div className="flex flex-col"><span className="sd-kicker">Day {day.day} complete</span><span className="text-[22px] font-extrabold tracking-[-0.02em]">{ui.before(score(c.pre, p.pre ?? []), c.pre.length, score(c.post, p.post ?? []), c.post.length)}</span></div>
         <Icon name="flame" size={32} />
       </div>
+      {!user && (
+        <div className="flex flex-col gap-3 border-2 border-sd-ink p-4">
+          <StudyBuddy tone="light" size={72} message={ui.savePrompt(day.day)} />
+          <GoogleButton lesson={id} where="day-done" label="Save my progress with Google" className="h-12 border-2 border-sd-ink sm:max-w-[360px]" />
+        </div>
+      )}
       <Feedback lesson={id} day={day.day} lang={s.lang} sent={!!p.feedback} onSent={() => act((q) => updateLesson(q, id, { feedback: true }))} />
       <div>
         <h6 className="sd-h6 mb-2">{ui.cheatsheet} · {c.cheatsheet.title}</h6>
