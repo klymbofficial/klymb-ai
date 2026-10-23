@@ -25,6 +25,17 @@ loadEnvConfig(process.cwd());
 
 const DIR = path.join(process.cwd(), "db", "migrations");
 
+/** Who and where, from a connection string, with the password left out. */
+function announce(url: string) {
+  try {
+    const { username, hostname, pathname } = new URL(url);
+    const endpoint = hostname.split(".")[0].replace(/-pooler$/, "");
+    console.log(`→ ${pathname.replace("/", "")} on ${endpoint} as ${username}\n`);
+  } catch {
+    console.log("→ connecting (connection string is not a parseable URL)\n");
+  }
+}
+
 async function main() {
   const url = process.env.DATABASE_MIGRATE_URL ?? process.env.DATABASE_URL;
   if (!url) {
@@ -37,6 +48,12 @@ async function main() {
     console.error(`No .sql files in ${DIR}`);
     process.exit(1);
   }
+
+  // Say out loud which database this is about to change. There are four
+  // connection strings in play — branch and production, each with an owner and
+  // an application role — and the only thing distinguishing them is a hostname
+  // nobody reads carefully. Never print the password.
+  announce(url);
 
   const client = new Client(connectionOptions(url));
   await client.connect();
