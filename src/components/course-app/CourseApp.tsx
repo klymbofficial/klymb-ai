@@ -4,8 +4,7 @@ import "./course-app.css";
 import clsx from "clsx";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
-import { STREAK } from "@/data/system-design/course-app";
-import { TAB_SCREENS, fmt, lesson, miniActive, openLesson, togglePlay, type CourseState, type Tab } from "@/lib/course-app";
+import { TAB_SCREENS, fmt, hasQuickCheck, lesson, miniActive, openLesson, streak, togglePlay, type CourseState, type Tab } from "@/lib/course-app";
 import { Icon, type IconName } from "./icons";
 import { LeaveQuizDialog, Onboarding, QuickCheckSheet, Splash, Toast } from "./Overlays";
 import { Course } from "./screens/Course";
@@ -18,6 +17,7 @@ import { QuizIntro, QuizQuestion } from "./screens/Quiz";
 import { Recap } from "./screens/Recap";
 import { Results } from "./screens/Results";
 import { useCourseApp, type Act } from "./useCourseApp";
+import { CourseUserProvider, type CourseUser } from "./user";
 
 const TABS: [Tab, string, IconName][] = [["home", "Home", "home"], ["course", "Course", "layers"], ["progress", "Progress", "chart"], ["profile", "Profile", "user"]];
 
@@ -55,14 +55,18 @@ function MiniPlayer({ s, act, className }: { s: CourseState; act: Act; className
   );
 }
 
+/** The notifications inbox comes back once there is a backend to send them. */
+const INBOX = false;
+
 function Sidebar({ s, act }: { s: CourseState; act: Act }) {
   const unread = s.notifs.filter((n) => n.unread).length;
+  const st = streak(s);
   return (
     <aside className="hidden h-dvh flex-col gap-7 overflow-y-auto border-r-2 border-sd-divider py-6 lg:flex">
       <div className="px-6"><Image src="/brand/klymb-logo.svg" alt="Klymb.ai" width={117} height={18} className="h-[18px] w-auto" priority /></div>
       <div className="px-6">
         <div className="text-[11px] font-semibold tracking-[0.1em] text-sd-accent-700 uppercase">Course</div>
-        <div className="text-[17px] font-extrabold">System Design</div>
+        <div className="text-[17px] font-extrabold">System Design in 21 Days</div>
       </div>
       <nav aria-label="Course" className="flex flex-col border-t-2 border-sd-divider">
         {TABS.map(([k, label, icon]) => {
@@ -80,13 +84,13 @@ function Sidebar({ s, act }: { s: CourseState; act: Act }) {
           );
         })}
       </nav>
-      <button type="button" onClick={() => act((p) => ({ ...p, screen: "notifs" }))} className="-mt-4 flex cursor-pointer items-center gap-3 px-6 py-[13px] text-left text-[15px] font-extrabold hover:bg-sd-accent-100">
+      {INBOX && <button type="button" onClick={() => act((p) => ({ ...p, screen: "notifs" }))} className="-mt-4 flex cursor-pointer items-center gap-3 px-6 py-[13px] text-left text-[15px] font-extrabold hover:bg-sd-accent-100">
         <Icon name="bell" /><span className="flex-1">Notifications</span>
         {unread > 0 && <span className="h-5 min-w-5 bg-sd-accent px-1.5 text-[11px] leading-5 font-extrabold text-sd-bg">{unread}<span className="sr-only"> unread</span></span>}
-      </button>
+      </button>}
       <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} className="mx-6 mt-auto flex cursor-pointer flex-col gap-0.5 bg-sd-accent p-3.5 text-left text-sd-bg hover:bg-sd-accent-600">
-        <span className="flex items-start justify-between"><span className="text-[44px] leading-[0.9] font-extrabold tracking-[-0.04em]">{STREAK.current}</span><Icon name="flame" /></span>
-        <span className="mt-1.5 text-sm font-extrabold">day streak</span>
+        <span className="flex items-start justify-between"><span className="text-[44px] leading-[0.9] font-extrabold tracking-[-0.04em]">{st.current}</span><Icon name="flame" /></span>
+        <span className="mt-1.5 text-sm font-extrabold">{st.current ? "day streak" : "Start your streak today"}</span>
       </button>
     </aside>
   );
@@ -118,7 +122,7 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
  * mobile app (tabs along the bottom, full-screen lessons and assessments);
  * from 1024px a sidebar replaces the tabs and panels sit side by side.
  */
-export function CourseApp() {
+export function CourseApp({ user = null }: { user?: CourseUser | null }) {
   const { s, act, ready } = useCourseApp();
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -136,6 +140,7 @@ export function CourseApp() {
   const mini = miniActive(s) && !s.ended;
 
   return (
+    <CourseUserProvider value={user}>
     <div className="sd-app relative flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
       <Sidebar s={s} act={act} />
       <div
@@ -165,9 +170,10 @@ export function CourseApp() {
 
       {s.screen === "splash" && <Splash act={act} />}
       {s.screen === "onboard" && <Onboarding s={s} act={act} />}
-      {s.qcOpen && s.screen === "player" && <QuickCheckSheet s={s} act={act} />}
+      {s.qcOpen && s.screen === "player" && hasQuickCheck(s.cur) && <QuickCheckSheet s={s} act={act} />}
       {s.confirmExit && <LeaveQuizDialog s={s} act={act} />}
       {s.toast && <Toast text={s.toast} />}
     </div>
+    </CourseUserProvider>
   );
 }

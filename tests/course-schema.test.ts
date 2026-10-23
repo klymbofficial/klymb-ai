@@ -11,6 +11,8 @@ const dir = "db/migrations";
 const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
 const init = readFileSync(`${dir}/0001_init.sql`, "utf8");
 const grants = readFileSync(`${dir}/0002_grants.sql`, "utf8");
+/** Every migration, so the invariants below apply to new ones too. */
+const all = files.map((f) => readFileSync(`${dir}/${f}`, "utf8")).join("\n");
 
 /**
  * Executable SQL only. These files explain in prose what was dropped on the
@@ -20,11 +22,14 @@ const grants = readFileSync(`${dir}/0002_grants.sql`, "utf8");
 const code = (sql: string) => sql.replace(/--.*$/gm, "");
 const initCode = code(init);
 const grantsCode = code(grants);
+const allCode = code(all);
 
 const TABLES = [
   "registrations", "admin_users", "learners", "day_submissions", "assessment_results",
   "payments", "push_subscriptions", "support_tickets", "admin_audit_log", "rate_limit_events",
 ];
+/** Added by 0003 when the System Design course landed on main. */
+const SD_TABLES = ["sd_events", "sd_feedback"];
 
 test("migrations are ordered and uniquely numbered", () => {
   const numbers = files.map((f) => f.slice(0, 4));
@@ -34,9 +39,16 @@ test("migrations are ordered and uniquely numbered", () => {
 
 test("every table is created in the course schema", () => {
   assert.match(init, /create schema if not exists course/);
-  for (const table of TABLES) {
-    assert.match(init, new RegExp(`create table if not exists course\\.${table} \\(`), `${table} is missing`);
+  for (const table of [...TABLES, ...SD_TABLES]) {
+    assert.match(all, new RegExp(`create table if not exists course\\.${table} \\(`), `${table} is missing`);
   }
+});
+
+test("no migration creates a table outside the course schema", () => {
+  // Applies to every file, so a later one cannot quietly reintroduce public.
+  const created = [...allCode.matchAll(/create table (?:if not exists )?([a-z_]+)\./g)].map((m) => m[1]);
+  assert.ok(created.length > 0, "no create table statements found");
+  assert.deepEqual([...new Set(created)], ["course"]);
 });
 
 test("nothing is created in public, which belongs to app.klymb.ai's Prisma", () => {
@@ -52,7 +64,7 @@ test("nothing is created in public, which belongs to app.klymb.ai's Prisma", () 
 test("the Supabase-only policies and roles are gone", () => {
   // They keyed off auth.jwt() and auth.uid(); this app signs nobody into
   // Supabase Auth, so not one of them ever matched a real request.
-  for (const sql of [initCode, grantsCode]) {
+  for (const sql of [allCode]) {
     assert.doesNotMatch(sql, /enable row level security/);
     assert.doesNotMatch(sql, /create policy/);
     assert.doesNotMatch(sql, /auth\.(jwt|uid)\(\)/);

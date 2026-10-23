@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { MODULES } from "@/data/system-design/course-app";
-import { LESSON_COUNT, moduleIds, moduleMinutes, openLesson, pad, pct, startQuiz, type CourseState } from "@/lib/course-app";
+import { LESSON_COUNT, isSoon, moduleIds, moduleMinutes, openLesson, pad, pct, startQuiz, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Bar, Duration, LessonMark, lessonView, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -12,21 +12,25 @@ export function moduleViews(s: CourseState) {
   return MODULES.map((m, mi) => {
     const ids = moduleIds(mi);
     const n = ids.filter((id) => s.done.includes(id)).length;
-    return { mi, num: pad(mi + 1), title: m.title, meta: `${m.lessons.length} lessons · ${moduleMinutes(mi)} min`, n, total: ids.length, complete: n === ids.length, ids };
+    const out = ids.filter((id) => !isSoon(id)).length;
+    const count = `${ids.length} ${ids.length === 1 ? "lesson" : "lessons"}`;
+    const meta = out === ids.length ? `${count} · ${moduleMinutes(mi)} min` : out ? `${out} of ${ids.length} out now · more coming` : `${count} · coming soon`;
+    return { mi, num: pad(mi + 1), title: m.title, meta, n, total: ids.length, complete: n === ids.length, ids };
   });
 }
 
 function AssessmentRow({ kind, s, act }: { kind: "pre" | "post"; s: CourseState; act: Act }) {
   const pre = kind === "pre";
-  const go = () => act((p) => (pre ? { ...p, screen: "results", lastKind: "pre" } : p.post ? { ...p, screen: "results", lastKind: "post" } : startQuiz(p, "post")));
+  const taken = pre ? s.pre.length > 0 : !!s.post;
+  const go = () => act((p) => (taken ? { ...p, screen: "results", lastKind: kind } : startQuiz(p, kind)));
   return (
     <button type="button" onClick={go} className="flex cursor-pointer items-center gap-3 bg-sd-surface p-3.5 text-left hover:bg-sd-n-300">
       <span className={clsx("flex size-9 flex-none items-center justify-center text-sd-bg", pre ? "bg-sd-ink" : "bg-sd-accent")}><Icon name={pre ? "target" : "trending"} /></span>
       <span className="flex flex-1 flex-col">
         <span className="text-[15px] font-extrabold">{pre ? "Pre-assessment" : "Post-assessment"}</span>
-        <span className="text-xs text-sd-n-700">{pre ? `Baseline set · ${pct(s.pre)}` : s.post ? `Done · ${pct(s.post)}` : "Not taken yet · best after Module 08"}</span>
+        <span className="text-xs text-sd-n-700">{pre ? (taken ? `Baseline set · ${pct(s.pre)}` : "Not taken yet · 6 questions") : s.post ? `Done · ${pct(s.post)}` : "Not taken yet · best after Day 21"}</span>
       </span>
-      {pre ? <span className="sd-tag sd-tag-neutral">Done</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
+      {taken ? <span className="sd-tag sd-tag-neutral">Done</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
     </button>
   );
 }
@@ -41,7 +45,7 @@ export function Course({ s, act }: { s: CourseState; act: Act }) {
       <div className="contents lg:block">
         <div className="order-1 lg:border-b-2 lg:border-sd-divider lg:pb-4">
           <h2 className="m-0 text-[30px] tracking-[-0.02em] lg:text-[42px] lg:tracking-[-0.03em]">Course</h2>
-          <div className="text-[13px] text-sd-n-700 lg:text-sm">System Design · 8 modules · {LESSON_COUNT} lessons</div>
+          <div className="text-[13px] text-sd-n-700 lg:text-sm">System Design in 21 Days · Day 0 + {LESSON_COUNT - 1} days · {MODULES.length} modules</div>
         </div>
         <div className="order-4 border-t-2 border-sd-divider lg:border-t-0">
           {mods.map((m) => {

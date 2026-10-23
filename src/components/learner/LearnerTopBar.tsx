@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signOutLearner } from "@/app/(learn)/learn/actions";
 import { navLinks } from "@/data/program";
 import { ReminderBell } from "@/components/pwa/ReminderBell";
+import { AdminLink } from "@/components/layout/AdminLink";
 
 /** The signed-in bar shared by the dashboard and the day pages. */
 export function LearnerTopBar({ name, image }: { name: string; image?: string | null }) {
@@ -41,6 +42,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
           </nav>
 
           <div className="flex items-center gap-3 justify-self-end">
+            <AdminLink className="rounded-md border border-line/50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors hover:border-red-deep hover:text-red-deep" />
             <ReminderBell />
             {image ? (
               <Image src={image} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />

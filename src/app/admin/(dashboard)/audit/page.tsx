@@ -11,6 +11,8 @@ const LABELS: Record<string, string> = {
   "learner.remove": "Removed a learner",
   "learner.device_reset": "Reset a learner's device",
   "payment.refund": "Refunded a payment",
+  "admin.add": "Added an admin",
+  "admin.remove": "Removed an admin",
   "ticket.status": "Updated a support request",
 };
 
@@ -43,7 +45,7 @@ export default async function AdminAuditPage() {
       <PageTitle
         eyebrow="Security"
         title="Admin activity"
-        intro="Every enrolment, status change, removal, device reset, refund and support update, with who did it. Entries can't be edited or deleted."
+        intro="Every enrolment, status change, removal, device reset, refund, support update and admin change, with who did it. Entries can't be edited or deleted."
       />
       {entries.length === 0 ? (
         <EmptyState title="No admin actions yet" body="Actions taken in this admin appear here as they happen." />

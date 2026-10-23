@@ -2,9 +2,12 @@
 
 import clsx from "clsx";
 import { useEffect, useRef } from "react";
-import { ONBOARDING, QUESTIONS, QUICK_CHECKS } from "@/data/system-design/course-app";
-import { answerQuickCheck, closeQuickCheck, fmt, lesson, quickCheckAt, startQuiz, type CourseState } from "@/lib/course-app";
+import { QUESTIONS, QUICK_CHECKS, WELCOME } from "@/data/system-design/course-app";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
+import { answerQuickCheck, closeQuickCheck, fmt, openLesson, quickCheckAt, startQuiz, type CourseState } from "@/lib/course-app";
 import { Icon } from "./icons";
+import { track } from "./track";
+import { GoogleButton, firstName, useCourseUser } from "./user";
 import type { Act } from "./useCourseApp";
 
 /* Overlays sit above the site-wide help launcher (z-60). */
@@ -24,65 +27,55 @@ export function Splash({ act }: { act: Act }) {
   );
 }
 
-/** Three intro slides. The last one goes straight to the pre-assessment, so the baseline is set on day one. */
-export function Onboarding({ s, act }: { s: CourseState; act: Act }) {
-  const i = s.onb;
-  const last = i === ONBOARDING.length - 1;
-  const anim = i % 2 ? "sd-a-side" : "sd-a-side-b";
+/** Signed out: Google first (it saves progress to your name), Day 0 without signing in as the quiet option. Signed in: straight to Day 0. */
+function StartButtons({ user, startDay0, baseline }: { user: boolean; startDay0: () => void; baseline: () => void }) {
+  const link = "cursor-pointer self-center py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink lg:self-start";
+  if (user) {
+    return (
+      <div className="flex flex-col gap-1">
+        <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
+        <button type="button" onClick={baseline} className={link}>Or take the 6-question baseline first</button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      <GoogleButton lesson="0-0" where="welcome" label="Continue with Google" className="h-[56px] border-2 border-sd-ink text-[16px]" />
+      <span className="text-center text-xs text-sd-n-700 lg:text-left">Saves your progress and streak to your name.</span>
+      <button type="button" onClick={startDay0} className={link}>Or try Day 0 without signing in</button>
+    </div>
+  );
+}
+
+/** The welcome: Kamran says hello, the page says what the course gives you, and one button starts Day 0. */
+export function Onboarding({ act }: { s: CourseState; act: Act }) {
+  const user = useCourseUser();
+  const first = firstName(user);
   const done = (p: CourseState): CourseState => ({ ...p, onboarded: true });
-  const nextSlide = () => act((p) => (p.onb < ONBOARDING.length - 1 ? { ...p, onb: p.onb + 1 } : startQuiz(done(p), "pre")));
-  const skip = () => act((p) => ({ ...done(p), screen: "home", tab: "home" }));
-  const big = "text-8xl leading-[0.85] font-extrabold tracking-[-0.05em] lg:text-[140px]";
+  const startDay0 = () => { track("welcome", null, null, { choice: "day0" }); act((p) => openLesson(done(p), "0-0")); };
+  const baseline = () => { track("welcome", null, null, { choice: "baseline" }); act((p) => startQuiz(done(p), "pre")); };
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-sd-bg px-5 pt-14 pb-[34px] lg:items-center lg:justify-center lg:p-10" role="dialog" aria-modal="true" aria-label="Welcome">
-      <div className="flex flex-1 flex-col gap-[22px] lg:grid lg:w-full lg:max-w-[1000px] lg:flex-none lg:grid-cols-2 lg:items-center lg:gap-14">
-        <div key={`art-${i}`} className={clsx(anim, "sd-grid flex h-[300px] flex-none flex-col justify-between p-[22px] [--grid:24px] lg:aspect-square lg:h-auto")} style={{ animationDuration: ".5s" }} aria-hidden="true">
-          {i === 0 && (
-            <>
-              <span className="text-7xl leading-none font-extrabold tracking-[-0.05em] text-white/22 lg:text-[120px]">08</span>
-              <div className="flex flex-col items-start">
-                <div className="border-2 border-white/55 px-3.5 py-2.5 text-sm font-extrabold">Client</div>
-                <div className="ml-6 h-3.5 w-0.5 bg-sd-bg" />
-                <div className="border-2 border-sd-accent bg-sd-accent px-3.5 py-2.5 text-sm font-extrabold">Load balancer</div>
-                <div className="ml-6 h-3.5 w-0.5 bg-sd-bg" />
-                <div className="border-2 border-white/55 px-3.5 py-2.5 text-sm font-extrabold">App servers</div>
-              </div>
-            </>
-          )}
-          {i === 1 && (
-            <>
-              <div className="flex flex-col gap-0.5"><span className="text-xs tracking-[0.08em] uppercase">Before</span><span className="text-[40px] font-extrabold text-white/55">33%</span></div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs tracking-[0.08em] uppercase">After</span>
-                <span className={big}>83%</span>
-                <span className="self-start bg-sd-accent px-2.5 py-1 text-[13px] font-extrabold">+50 pts</span>
-              </div>
-            </>
-          )}
-          {i === 2 && (
-            <>
-              <div className="flex items-start justify-between"><span className={big}>12</span><span className="text-sd-accent"><Icon name="flame" size={40} /></span></div>
-              <div className="grid grid-cols-7 gap-1">
-                {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-                  <div key={d} className={clsx("aspect-square", d === 2 ? "sd-frozen-dark" : d === 6 ? "border-[1.5px] border-dashed border-white/50" : "bg-sd-accent")} />
-                ))}
-              </div>
-            </>
-          )}
+    <div className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-sd-bg px-5 pt-10 pb-8 lg:items-center lg:justify-center lg:p-10" role="dialog" aria-modal="true" aria-label="Welcome">
+      <div className="flex w-full flex-col gap-6 lg:grid lg:max-w-[1080px] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">
+        <div className="sd-a-side-b flex flex-col gap-5" style={{ animationDuration: ".5s" }}>
+          <span className="sd-kicker text-sd-accent-700">Klymb.ai · System Design in 21 Days</span>
+          <StudyBuddy tone="light" size={96} message={`Hi${first ? ` ${first}` : ""}, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes.`} />
+          <h1 className="m-0 text-[38px] leading-[1] tracking-[-0.04em] text-pretty lg:text-[60px]">System design, phone pe.</h1>
+          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Here’s what you get, every day for 21 days. No experience needed: Day 0 starts from what system design even is.</p>
+          <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} baseline={baseline} /></div>
         </div>
-        <div key={`copy-${i}`} className={clsx(anim, "flex flex-1 flex-col gap-3.5 lg:flex-none")} style={{ animationDuration: ".5s", animationDelay: "80ms" }}>
-          <div className="grid grid-cols-3 gap-1 lg:max-w-[200px]" aria-label={`Step ${i + 1} of ${ONBOARDING.length}`}>
-            {ONBOARDING.map((_, k) => <div key={k} className={clsx("h-[5px] transition-colors duration-300", k <= i ? "bg-sd-accent" : "bg-sd-n-300")} />)}
-          </div>
-          <h1 className="m-0 text-[34px] leading-[1.02] tracking-[-0.03em] text-pretty lg:text-5xl">{ONBOARDING[i][0]}</h1>
-          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">{ONBOARDING[i][1]}</p>
-          <div className="mt-auto flex gap-2 lg:mt-3">
-            {!last && <button type="button" onClick={skip} className="sd-btn sd-btn-secondary h-[52px] w-24 justify-start">Skip</button>}
-            <button type="button" onClick={nextSlide} className="sd-btn sd-btn-primary h-[52px] flex-1 justify-between text-[15px] lg:max-w-[360px]">
-              {last ? "Take the 6-question baseline" : "Next"}<Icon name="arrowR" />
-            </button>
-          </div>
+        <ol className="sd-a-side m-0 grid list-none gap-px border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2" style={{ animationDuration: ".5s", animationDelay: "80ms" }}>
+          {WELCOME.map(([title, detail], i) => (
+            <li key={title} className="flex flex-col gap-1 bg-sd-bg p-4">
+              <span className="text-sm font-extrabold text-sd-accent">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-[16px] leading-[1.2] font-extrabold">{title}</span>
+              <span className="text-[13px] leading-[1.4] text-sd-n-800">{detail}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="sticky -bottom-8 -mx-5 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-8 lg:hidden">
+          <StartButtons user={!!user} startDay0={startDay0} baseline={baseline} />
         </div>
       </div>
     </div>
@@ -91,7 +84,7 @@ export function Onboarding({ s, act }: { s: CourseState; act: Act }) {
 
 /** The ungraded in-video question: a bottom sheet on mobile, a centred card on web. */
 export function QuickCheckSheet({ s, act }: { s: CourseState; act: Act }) {
-  const qc = QUICK_CHECKS[lesson(s.cur).mi];
+  const qc = QUICK_CHECKS[s.cur];
   const picked = s.qcPick;
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => { first.current?.focus(); }, []);

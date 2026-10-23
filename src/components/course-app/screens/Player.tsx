@@ -1,14 +1,17 @@
 "use client";
 
 import clsx from "clsx";
-import type { MouseEvent } from "react";
-import { TRANSCRIPTS } from "@/data/system-design/course-app";
+import { useEffect, useRef, type MouseEvent } from "react";
+import { MODULES, TRANSCRIPTS } from "@/data/system-design/course-app";
 import {
-  ALL_IDS, SPEEDS, addNote, completeNext, fmt, isDownloaded, lesson, moduleIds, openLesson, pad, postQuestion, quickCheckAt,
-  retryVideo, seekTo, toggleDownload, togglePlay, type CourseState, type PlayerTab,
+  ALL_IDS, SPEEDS, addNote, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, moduleIds, openLesson, quickCheckAt,
+  retryVideo, seekTo, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { BackButton, Duration, LessonMark, Segmented, lessonView, parallax } from "../ui";
+import { DayStart, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
+import { Tour } from "../lesson/Tour";
+import { track } from "../track";
+import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
 
 /** Placeholder transcript for lessons that don't have a written one yet. */
@@ -29,62 +32,87 @@ function transcriptFor(id: string): [number, string][] {
   ];
 }
 
-const stop = (e: MouseEvent) => e.stopPropagation();
+/** The lesson video, portrait 9:16 on the dark grid. Its own controls are hidden; the player's buttons drive it. */
+function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
+  const day = dayOf(s.cur)!;
+  const wide = day.video.wide;
+  const ref = useRef<HTMLVideoElement>(null);
+  // Watch-through milestones already reported for this lesson's video.
+  const marks = useRef<{ id: string; seen: Set<number> }>({ id: "", seen: new Set() });
+  const errOffline = s.offline && !s.vidErr;
 
-function Video({ s, act }: { s: CourseState; act: Act }) {
-  const c = lesson(s.cur);
-  const fi = Math.floor(s.t / 4) % 3;
-  const nextId = ALL_IDS[ALL_IDS.indexOf(s.cur) + 1];
-  const errOffline = s.offline && !isDownloaded(s, s.cur) && !s.vidErr;
-  const showUpNext = s.ended && s.upNext > 0 && !!nextId;
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (s.playing && v.paused) v.play().catch(() => act((p) => ({ ...p, playing: false })));
+    if (!s.playing && !v.paused) v.pause();
+  }, [s.playing, act]);
+  useEffect(() => { if (ref.current) ref.current.playbackRate = s.speed; }, [s.speed]);
+  // Seeks from the scrubber, the ±10s buttons and notes; the video's own progress stays within a second of `t`.
+  useEffect(() => { const v = ref.current; if (v && v.readyState > 0 && Math.abs(v.currentTime - s.t) > 1.5) v.currentTime = s.t; }, [s.t]);
+  useEffect(() => { if (!s.vidErr) ref.current?.load(); }, [s.vidErr]);
+
+  const onTime = (v: HTMLVideoElement) => {
+    const t = v.currentTime;
+    if (v.duration > 0) {
+      if (marks.current.id !== s.cur) marks.current = { id: s.cur, seen: new Set() };
+      const pct = Math.min(100, Math.floor((t / v.duration) * 4) * 25);
+      if (pct > 0 && !marks.current.seen.has(pct)) { marks.current.seen.add(pct); track("video_progress", s.cur, "watch", { pct }); }
+    }
+    const seen = v.duration > 0 && t / v.duration >= 0.85;
+    act((p) => {
+      if (Math.floor(p.t) === Math.floor(t) && (!seen || p.lessons[p.cur]?.watched)) return p;
+      const n = { ...p, t };
+      return seen && !p.lessons[p.cur]?.watched ? updateLesson(n, p.cur, { watched: true }) : n;
+    });
+  };
+
   return (
-    <div
-      onClick={() => act(togglePlay)}
-      {...parallax}
-      role="button"
-      tabIndex={-1}
-      aria-label={s.playing ? "Pause" : "Play"}
-      className="sd-grid relative flex h-[218px] flex-none cursor-pointer flex-col justify-between overflow-hidden px-4 py-3.5 [--grid:23px] lg:aspect-video lg:h-auto lg:p-6 lg:[--grid:32px]"
-    >
+    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
-        <div onClick={stop} className="sd-a-in absolute inset-0 z-[3] flex cursor-default flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
+        <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
           <span className="text-xl leading-[1.1] font-extrabold lg:text-[32px]">{errOffline ? "You’re offline" : "This video didn’t load"}</span>
           <span className="max-w-[520px] text-[13px] leading-[1.4] lg:text-[15px]">
-            {errOffline ? "This lesson isn’t downloaded. Reconnect, or watch one of your downloaded lessons." : `It may be your connection or our servers. Your place is saved at ${fmt(s.t)}.`}
+            {errOffline ? "Lessons need a connection for now. Reconnect and it picks up where you left off." : `It may be your connection or our servers. Your place is saved at ${fmt(s.t)}.`}
           </span>
           <div className="mt-1 flex gap-2">
             <button type="button" onClick={() => act((p) => retryVideo(p))} className="sd-btn sd-btn-primary h-10"><Icon name="rotR" size={16} />Try again</button>
-            {errOffline && <button type="button" onClick={() => act((p) => ({ ...p, screen: "downloads" }))} className="sd-btn sd-btn-on-dark h-10">Open downloads</button>}
           </div>
         </div>
       )}
-      {showUpNext && (
-        <div onClick={stop} className="sd-a-in absolute inset-0 z-[2] flex cursor-default flex-col justify-end gap-2.5 bg-sd-ink/90 p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
-          <span className="text-[11px] font-extrabold tracking-[0.1em] text-sd-accent-400 uppercase lg:text-[13px]">Up next in {s.upNext}s</span>
-          <span className="text-[22px] leading-[1.1] font-extrabold tracking-[-0.02em] lg:text-4xl">{lesson(nextId).title}</span>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => act((p) => completeNext(p, true))} className="sd-btn sd-btn-primary h-10"><Icon name="play" size={16} />Play now</button>
-            <button type="button" onClick={() => act((p) => ({ ...p, upNext: 0 }))} className="sd-btn sd-btn-on-dark h-10">Cancel</button>
-          </div>
-        </div>
-      )}
-      <div className="sd-far text-[56px] leading-none font-extrabold tracking-[-0.04em] text-white/22 lg:text-8xl">{c.code}</div>
-      <div className="sd-near flex items-center gap-1.5 lg:gap-2.5">
-        {c.m.flow.map((f, i) => {
-          const on = s.playing && i === fi;
-          return (
-            <div key={f} className="flex items-center gap-1.5 lg:gap-2.5">
-              <div className={clsx("border-[1.5px] px-2.5 py-[7px] text-xs font-extrabold transition-colors duration-300 lg:border-2 lg:px-[18px] lg:py-3 lg:text-base", on ? "border-sd-accent bg-sd-accent" : "border-white/55 bg-transparent")}>{f}</div>
-              {i < 2 && <span className="flex opacity-60"><Icon name="arrowR" className="block size-4 flex-none lg:size-5" /></span>}
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex items-end justify-between">
-        <div className="sd-mid flex size-[52px] items-center justify-center bg-sd-accent lg:size-[68px]"><Icon name={s.playing ? "pause" : "play"} size={22} /></div>
-        <span className="text-xs font-extrabold lg:text-sm">{s.speed}×</span>
-      </div>
+      <video
+        ref={ref}
+        src={wide?.src ?? day.video.src}
+        poster={wide?.poster ?? day.video.poster}
+        playsInline
+        preload="metadata"
+        controlsList="nodownload noplaybackrate"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
+        onClick={() => act(togglePlay)}
+        onLoadedMetadata={(e) => { if (s.t > 0) e.currentTarget.currentTime = s.t; }}
+        onTimeUpdate={(e) => onTime(e.currentTarget)}
+        onPlay={() => { track("video_play", s.cur, "watch", { at: Math.round(s.t) }); act((p) => (p.playing ? p : { ...p, playing: true })); }}
+        onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
+        onEnded={() => { act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true })); goTo("reveal", 400); }}
+        onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
+        className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
+      />
+      {subs && <Subtitles s={s} />}
+    </div>
+  );
+}
+
+/** The line being spoken, overlaid at the bottom of the video like any player's captions (the clean cut has none burned in). */
+function Subtitles({ s }: { s: CourseState }) {
+  const lines = TRANSCRIPTS[s.cur] ?? [];
+  let cur = "";
+  for (const [t, text] of lines) if (s.t >= t) cur = text;
+  if (!cur) return null;
+  return (
+    <div aria-live="off" className="pointer-events-none absolute inset-x-0 bottom-[5%] z-[2] flex justify-center">
+      <span className="max-w-[86%] bg-black/75 px-[0.5em] py-[0.2em] text-center text-[clamp(12px,2.1cqw,22px)] leading-[1.4] font-semibold text-white">{cur}</span>
     </div>
   );
 }
@@ -120,7 +148,7 @@ function Scrubber({ s, act }: { s: CourseState; act: Act }) {
       <div className="absolute inset-x-0 h-1 bg-sd-n-300" />
       <div className="absolute left-0 h-1 bg-sd-accent" style={{ width: cur }} />
       {notes.map((n, i) => <div key={i} className="absolute top-[3px] -ml-px h-4 w-[3px] bg-sd-ink lg:h-[18px]" style={{ left: `${((n.t / d) * 100).toFixed(2)}%` }} />)}
-      {!s.qcDone.includes(s.cur) && (
+      {hasQuickCheck(s.cur) && !s.qcDone.includes(s.cur) && (
         <div className="absolute top-1 -ml-1.5 size-3 rotate-45 border-[2.5px] border-sd-accent bg-sd-bg lg:top-[5px] lg:-ml-[7px] lg:size-3.5" style={{ left: `${((cp / d) * 100).toFixed(2)}%` }} />
       )}
       <div className="absolute -ml-1.5 size-3 border-2 border-sd-bg bg-sd-accent lg:-ml-[7px] lg:size-3.5" style={{ left: cur }} />
@@ -178,74 +206,6 @@ function Transcript({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
-function Discussion({ s, act }: { s: CourseState; act: Act }) {
-  const threads = [...(s.threads[s.cur] ?? [])].sort((a, b) => b.votes + (s.voted[b.id] ? 1 : 0) - (a.votes + (s.voted[a.id] ? 1 : 0)));
-  return (
-    <div className="flex flex-col gap-3 px-5 py-3.5 lg:max-h-[460px] lg:overflow-y-auto lg:p-3.5">
-      <div className="flex gap-2">
-        <input className="sd-input min-h-10" value={s.qDraft} aria-label="Question" onChange={(e) => act((p) => ({ ...p, qDraft: e.target.value }))} placeholder={`Ask about ${fmt(s.t)}`} />
-        <button type="button" onClick={() => act((p) => postQuestion(p))} disabled={!s.qDraft.trim()} className="sd-btn sd-btn-primary h-10 flex-none">Ask</button>
-      </div>
-      <div className="flex flex-col">
-        {threads.map((th) => {
-          const voted = !!s.voted[th.id];
-          const open = s.openThread === th.id;
-          const n = th.replies.length;
-          const mine = th.name === "You";
-          return (
-            <div key={th.id} className="sd-a-in grid grid-cols-[32px_minmax(0,1fr)] gap-2.5 border-b border-sd-divider py-3" style={{ animationDuration: ".4s" }}>
-              <span className={clsx("flex size-8 items-center justify-center text-[11px] font-extrabold", mine ? "bg-sd-ink text-sd-bg" : "bg-sd-n-300")}>{th.ini}</span>
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                  <b className="text-[13px]">{th.name}</b>
-                  <span className="text-sd-n-700">{th.ago}</span>
-                  <button type="button" onClick={() => act((p) => seekTo(p, th.t))} className="sd-tag sd-tag-accent cursor-pointer font-extrabold">{fmt(th.t)}</button>
-                </div>
-                <span className="text-sm leading-[1.4]">{th.text}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label="Upvote"
-                    aria-pressed={voted}
-                    onClick={() => act((p) => ({ ...p, voted: { ...p.voted, [th.id]: !p.voted[th.id] } }))}
-                    className={clsx("flex cursor-pointer items-center gap-1 border-[1.5px] px-2 py-1 text-xs font-extrabold transition-colors duration-200", voted ? "border-sd-accent bg-sd-accent text-sd-bg" : "border-sd-divider")}
-                  >
-                    <Icon name="up" size={16} />{th.votes + (voted ? 1 : 0)}
-                  </button>
-                  <button type="button" onClick={() => act((p) => ({ ...p, openThread: open ? null : th.id }))} className="sd-btn sd-btn-ghost px-1.5 py-1 text-xs">
-                    {n ? (open ? "Hide replies" : `${n} ${n > 1 ? "replies" : "reply"}`) : "No replies yet"}
-                  </button>
-                </div>
-                {open && (
-                  <div className="sd-a-in flex flex-col gap-2.5 border-l-2 border-sd-divider pt-2.5 pl-3" style={{ animationDuration: ".3s" }}>
-                    {th.replies.map((rp, i) => (
-                      <div key={i} className="flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <b className="text-[13px]">{rp.name}</b>
-                          {rp.inst && <span className="sd-tag bg-sd-ink font-semibold text-sd-bg">Instructor</span>}
-                          <span className="text-sd-n-700">{rp.ago}</span>
-                        </div>
-                        <span className="text-sm leading-[1.4]">{rp.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        {!threads.length && (
-          <div className="flex flex-col gap-1.5 py-4">
-            <span className="flex size-12 items-center justify-center border-2 border-dashed border-sd-n-500 text-sd-n-700"><Icon name="msg" /></span>
-            <b className="text-[15px]">No questions on this lesson yet</b>
-            <span className="text-[13px] text-sd-n-700">Ask one. It gets pinned to the moment you’re watching.</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function ModuleLessons({ s, act }: { s: CourseState; act: Act }) {
   return (
     <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
@@ -265,11 +225,13 @@ function ModuleLessons({ s, act }: { s: CourseState; act: Act }) {
 
 export function Player({ s, act }: { s: CourseState; act: Act }) {
   const c = lesson(s.cur);
+  const day = dayOf(s.cur);
+  const lp = s.lessons[s.cur] ?? {};
   const nextId = ALL_IDS[ALL_IDS.indexOf(s.cur) + 1];
-  const pos = `Lesson ${c.li + 1} of ${c.m.lessons.length} · Module ${c.mi + 1} of 8`;
-  const qcTime = fmt(quickCheckAt(s.cur));
+  const pos = `${lessonDay(s.cur)} · Lesson ${c.li + 1} of ${c.m.lessons.length} · Module ${c.mi + 1} of ${MODULES.length}`;
+  const qc = hasQuickCheck(s.cur) ? fmt(quickCheckAt(s.cur)) : null;
+  const done = flowDone(s, s.cur);
   const completeLabel = nextId ? "Mark complete · next lesson" : "Mark complete";
-  const dlLabel = isDownloaded(s, s.cur) ? "Saved" : s.cur in s.dlProg ? `${Math.floor(s.dlProg[s.cur])}%` : "Download";
   const playLabel = s.playing ? "Pause" : s.t > 0 ? "Resume" : "Play";
   const cycleSpeed = () => act((p) => ({ ...p, speed: SPEEDS[(SPEEDS.indexOf(p.speed) + 1) % SPEEDS.length] }));
   const back10 = () => act((p) => ({ ...p, t: Math.max(0, p.t - 10), ended: false, upNext: 0 }));
@@ -277,69 +239,101 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
   const tabs: [PlayerTab, string][] = [
     ["notes", `Notes (${(s.notes[s.cur] ?? []).length})`],
     ["transcript", "Transcript"],
-    ["discuss", `Q&A (${(s.threads[s.cur] ?? []).length})`],
     ["lessons", "Lessons"],
   ];
+  const showVideo = !day || !!lp.pre;
+  // Subtitles belong to the clean (wide) cut; the portrait cut has them burned in.
+  const canSub = !!day?.video.wide && !!TRANSCRIPTS[s.cur];
+  const subsOn = canSub && s.subs;
+  const toggleSubs = () => act((p) => ({ ...p, subs: !p.subs }));
 
   return (
     <div className="sd-a-screen flex flex-1 max-w-[1200px] flex-col lg:flex-none lg:gap-4">
       <div className="flex items-center gap-2 px-3 pt-1 pb-2.5 lg:p-0">
-        <BackButton onClick={() => act((p) => ({ ...p, screen: p.tab }))} />
-        <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-[0.08em] uppercase">Module {pad(c.mi + 1)} · {c.m.title}</span>
-        <button type="button" onClick={() => act((p) => toggleDownload(p))} className="sd-btn sd-btn-secondary ml-auto h-[34px] flex-none"><Icon name="download" size={16} />{dlLabel}</button>
+        <BackButton onClick={() => act((p) => ({ ...p, screen: p.tab, playing: false }))} />
+        <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-[0.08em] uppercase">{lessonDay(s.cur)} · {c.m.title}</span>
+        {day && lp.pre && (
+          <button
+            type="button"
+            onClick={() => { if (window.confirm("Start this lesson again from the first question?")) { act((p) => ({ ...updateLesson(p, p.cur, null), t: 0, playing: false, ended: false, done: p.done.filter((x) => x !== p.cur) })); goTo("call", 50); } }}
+            className="sd-btn sd-btn-secondary h-[34px] flex-none gap-1.5 px-2.5 text-xs"
+          >
+            <Icon name="rotL" size={14} /><span className="hidden sm:inline">Restart</span>
+          </button>
+        )}
+        {day && <LangSwitch s={s} act={act} />}
       </div>
+      {day && <LessonPath s={s} id={s.cur} day={day} />}
 
       <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
         <div className="flex flex-col">
-          <Video s={s} act={act} />
+          {showVideo ? (
+            <>
+              <Video s={s} act={act} subs={subsOn} />
+              <div className="px-5 lg:px-0">
+                <Scrubber s={s} act={act} />
+                <div className="flex justify-between text-xs font-semibold lg:hidden">
+                  <span>{fmt(s.t)}</span>{qc && <span className="text-sd-accent-700">Quick check at {qc}</span>}<span>{c.dur}</span>
+                </div>
+                <div className="mt-2 mb-3.5 flex items-center gap-2 lg:hidden">
+                  <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotL" /></button>
+                  <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-11 flex-1 justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
+                  <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotR" /></button>
+                  <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-11 w-14 justify-start">{s.speed}×</button>
+                  {canSub && <button type="button" onClick={toggleSubs} aria-pressed={s.subs} aria-label="Subtitles" className={clsx("sd-btn h-11 w-12 text-[13px]", s.subs ? "bg-sd-ink text-sd-bg" : "sd-btn-secondary")}>CC</button>}
+                </div>
+                <div className="mt-1.5 hidden items-center gap-2 lg:flex">
+                  <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-10 w-[120px] justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
+                  <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotL" size={16} /></button>
+                  <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotR" size={16} /></button>
+                  <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-10 w-14 justify-start">{s.speed}×</button>
+                  {canSub && <button type="button" onClick={toggleSubs} aria-pressed={s.subs} aria-label="Subtitles" className={clsx("sd-btn h-10 w-12 text-[13px]", s.subs ? "bg-sd-ink text-sd-bg" : "sd-btn-secondary")}>CC</button>}
+                  {qc && <span className="ml-auto text-[13px] font-semibold text-sd-accent-700">Quick check at {qc}</span>}
+                  <span className={clsx("pl-3 text-[13px] font-semibold", !qc && "ml-auto")}>{fmt(s.t)} / {c.dur}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="px-5 lg:px-0">{lp.started ? <YourCall s={s} act={act} id={s.cur} day={day!} /> : <DayStart s={s} act={act} id={s.cur} day={day!} />}</div>
+          )}
           <div className="px-5 lg:px-0">
-            <Scrubber s={s} act={act} />
-            <div className="flex justify-between text-xs font-semibold lg:hidden">
-              <span>{fmt(s.t)}</span><span className="text-sd-accent-700">Quick check at {qcTime}</span><span>{c.dur}</span>
-            </div>
-            <div className="mt-2 mb-3.5 flex items-center gap-2 lg:hidden">
-              <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotL" /></button>
-              <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-11 flex-1 justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
-              <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotR" /></button>
-              <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-11 w-14 justify-start">{s.speed}×</button>
-            </div>
-            <div className="mt-1.5 hidden items-center gap-2 lg:flex">
-              <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-10 w-[120px] justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
-              <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotL" size={16} /></button>
-              <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotR" size={16} /></button>
-              <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-10 w-14 justify-start">{s.speed}×</button>
-              <span className="ml-auto text-[13px] font-semibold text-sd-accent-700">Quick check at {qcTime}</span>
-              <span className="pl-3 text-[13px] font-semibold">{fmt(s.t)} / {c.dur}</span>
-            </div>
-            <div className="lg:hidden">
+            <div className={clsx("lg:hidden", !showVideo && "mt-4")}>
               <h3 className="m-0 mb-0.5 text-[22px] tracking-[-0.02em]">{c.title}</h3>
-              <div className="mb-3.5 text-[13px] text-sd-n-700">{pos} · {c.dur}</div>
+              <div className="mb-1 text-[13px] text-sd-n-700">{pos} · {c.dur}</div>
             </div>
             <div className="mt-5 hidden flex-wrap items-end justify-between gap-4 border-t-2 border-sd-divider pt-4 lg:flex">
               <div><h2 className="m-0 text-[30px] tracking-[-0.02em]">{c.title}</h2><div className="text-sm text-sd-n-700">{pos} · {c.dur}</div></div>
-              <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>
+              {done && <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>}
             </div>
+            {day && lp.watched && !lp.read && !lp.post && (
+              <button type="button" onClick={() => goTo("reveal", 0)} className="sd-a-in mt-4 flex w-full cursor-pointer items-center justify-between gap-3 bg-sd-ink px-4 py-3 text-left text-sd-bg">
+                <span className="text-sm font-extrabold">Video done. Next: what really happens</span><Icon name="down" size={18} />
+              </button>
+            )}
+            {day && showVideo && <Practice s={s} act={act} id={s.cur} day={day} />}
           </div>
         </div>
 
-        <div className="flex flex-col lg:border-2 lg:border-sd-divider">
+        <div data-tour="tabs" className="mt-4 flex flex-col lg:mt-0 lg:border-2 lg:border-sd-divider">
           <Segmented
-            value={s.ptab}
+            value={s.ptab === "discuss" ? "notes" : s.ptab}
             options={tabs}
             onChange={(v) => act((p) => ({ ...p, ptab: v }))}
             className="mx-5 lg:mx-0 lg:border-0 lg:border-b-2"
             itemClass="px-3 py-[9px] text-[13px] lg:px-2.5 lg:py-[11px] lg:text-xs"
           />
-          {s.ptab === "notes" && <Notes s={s} act={act} />}
+          {s.ptab !== "transcript" && s.ptab !== "lessons" && <Notes s={s} act={act} />}
           {s.ptab === "transcript" && <Transcript s={s} act={act} />}
-          {s.ptab === "discuss" && <Discussion s={s} act={act} />}
           {s.ptab === "lessons" && <ModuleLessons s={s} act={act} />}
         </div>
       </div>
 
-      <div className="sticky bottom-0 mt-auto border-t-2 border-sd-divider bg-sd-bg px-5 pt-2 pb-4 lg:hidden">
-        <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-secondary sd-btn-block h-12"><Icon name="check" size={16} />{completeLabel}</button>
-      </div>
+      {done && (
+        <div className="sticky bottom-0 mt-auto border-t-2 border-sd-divider bg-sd-bg px-5 pt-2 pb-4 lg:hidden">
+          <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary sd-btn-block h-12"><Icon name="check" size={16} />{completeLabel}</button>
+        </div>
+      )}
+      {day && !s.toured && <Tour s={s} act={act} />}
     </div>
   );
 }

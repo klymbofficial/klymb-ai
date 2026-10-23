@@ -8,6 +8,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Wordmark } from "./Wordmark";
 import { products } from "@/data/products";
 import { ProductsMenu } from "./ProductsMenu";
+import { AdminLink } from "./AdminLink";
 
 /**
  * The wordmark and the call to action sit on the page ground; the links
@@ -50,7 +51,8 @@ export function Header() {
           </ul>
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden items-center gap-5 lg:flex">
+          <AdminLink className="text-xs font-extrabold uppercase tracking-wider underline-offset-4 hover:text-red-deep hover:underline" />
           <ButtonLink href="/tracks" className="rounded-full px-6 py-2.5 text-xs">Choose Your Track</ButtonLink>
         </div>
 
@@ -92,7 +94,8 @@ export function Header() {
               ))}
             </ul>
           </div>
-          <div className="p-3">
+          <div className="flex flex-col gap-2 p-3">
+            <AdminLink onClick={() => setOpen(false)} className="rounded-lg border border-line/50 py-2.5 text-center text-sm font-bold" />
             <ButtonLink href="/tracks" className="w-full rounded-lg" arrow>Choose Your Track</ButtonLink>
           </div>
         </nav>

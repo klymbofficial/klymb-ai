@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
         </div>
 
-        <AdminNav />
+        <AdminNav owner={admin.owner} />
 
         <div className="mt-auto hidden flex-col gap-3 border-t border-white/15 pt-4 lg:flex">
           <div>

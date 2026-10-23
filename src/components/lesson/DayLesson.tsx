@@ -1,60 +1,71 @@
 "use client";
 
 import clsx from "clsx";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Celebrate } from "@/components/learner/Celebrate";
+import { DiagramBuilder } from "@/components/lesson/DiagramBuilder";
+import { FollowUps } from "@/components/lesson/FollowUps";
 import { LessonQuiz, score } from "@/components/lesson/LessonQuiz";
-import type { DayCopy, Lang, dayOne } from "@/data/system-design/day-1";
+import type { Day, DayCopy, Lang } from "@/data/system-design/types";
 
-type Day = typeof dayOne;
-interface Progress { pre?: number[]; watched?: boolean; post?: number[] }
+interface Progress { pre?: number[]; watched?: boolean; built?: number; post?: number[]; follow?: boolean[] }
+type StepKey = "call" | "watch" | "reveal" | "build" | "prove" | "follow" | "done";
 
 const UI = {
   en: {
-    steps: ["Your call", "Watch", "What really happens", "Prove it", "Unlocked"],
+    steps: { call: "Your call", watch: "Watch", reveal: "What really happens", build: "Build it", prove: "Prove it", follow: "Follow-ups", done: "Unlocked" } as Record<StepKey, string>,
     interview: "Interview question",
     start: "You answer first →",
     startNote: "Video comes after. Your answer comes first.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `You picked ${n}/3 best moves. Now see what Flipkart actually did.`,
+    preDone: (n: number) => `You picked ${n} best moves. Now watch the story.`,
     s2: "Watch the story", s2Sub: (m: number, l: string) => `~${m} min · voiced in ${l}`,
     watched: "Watched it → reveal", watchHint: "Finish the video to unlock the reveal",
-    s3: "What really happens", s3Sub: "your answer vs Flipkart",
+    s3: "What really happens",
     yoursVsBest: "Your answer vs the best move", you: "You", best: "Best",
-    flipkart: "Flipkart, Big Billion Day 2015", sourceNote: "Source: Flipkart Stories (links at the bottom)",
     concept: "Today's concept", proveCta: "Now prove it: a new scenario →",
     s4: "Prove it", s4Sub: "new scenario, same concept",
-    s5: "Day 1 complete", s5Sub: "cheatsheet · interview mode · share",
+    sBuild: "Build it yourself", sBuildSub: "drag the boxes into place",
+    builtDone: (n: number) => (n === 0 ? "Built on the first try." : `Built, with ${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`),
+    sFollow: "Interviewer follow-ups", sFollowSub: "3 \"what if\" questions",
+    followDone: (n: number, of: number) => `Follow-ups: you had ${n} of ${of} covered.`,
+    s5: (n: number) => `Day ${n} complete`, s5Sub: "cheatsheet · interview mode · share",
     locked: "Finish the previous step",
     streak: "Streak: 1 day",
     interviewMode: "Interview mode · 2 min answer",
     share: "Share on LinkedIn",
     shareNote: "Download the infographic, then post. The text is copied for you: paste it, attach the image, done.",
     download: "Download infographic", post: "Copy text & open LinkedIn", copied: "Copied ✓ Paste it in LinkedIn",
-    tomorrow: "Tomorrow · Day 2", redo: "Do Day 1 again", sources: "Sources",
+    next: (n: number) => `Next · Day ${n}`, open: "Open →", redo: (n: number) => `Do Day ${n} again`, sources: "Sources",
+    newHere: "New to system design? Start with Day 0 →",
   },
   hi: {
-    steps: ["Your call", "Watch", "What really happens", "Prove it", "Unlocked"],
+    steps: { call: "Your call", watch: "Watch", reveal: "Asal mein kya hua", build: "Build it", prove: "Prove it", follow: "Follow-ups", done: "Unlocked" } as Record<StepKey, string>,
     interview: "Interview question",
     start: "Pehle tum batao →",
     startNote: "Video baad mein. Pehle tumhara answer.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `Tumne ${n}/3 best moves pakde. Ab dekho Flipkart ne asal mein kya kiya.`,
+    preDone: (n: number) => `Tumne ${n} best moves pakde. Ab story dekho.`,
     s2: "Story dekho", s2Sub: (m: number, l: string) => `~${m} min · ${l}`,
     watched: "Dekh liya → reveal", watchHint: "Video poora dekho, reveal khul jayega",
-    s3: "Asal mein kya hua", s3Sub: "tumhara answer vs Flipkart",
+    s3: "Asal mein kya hua",
     yoursVsBest: "Tumhara answer vs best move", you: "Tum", best: "Best",
-    flipkart: "Flipkart, Big Billion Day 2015", sourceNote: "Source: Flipkart Stories (links neeche hain)",
     concept: "Aaj ka concept", proveCta: "Ab prove karo: naya scenario →",
     s4: "Prove it", s4Sub: "naya scenario, wahi concept",
-    s5: "Day 1 complete", s5Sub: "cheatsheet · interview mode · share",
+    sBuild: "Khud banao", sBuildSub: "boxes ko sahi jagah drag karo",
+    builtDone: (n: number) => (n === 0 ? "Pehli baar mein ban gaya." : `Ban gaya, raaste mein ${n} galat drop.`),
+    sFollow: "Interviewer follow-ups", sFollowSub: "3 \"what if\" sawaal",
+    followDone: (n: number, of: number) => `Follow-ups: ${of} mein se ${n} aate the.`,
+    s5: (n: number) => `Day ${n} complete`, s5Sub: "cheatsheet · interview mode · share",
     locked: "Pichla step poora karo",
     streak: "Streak: 1 day",
     interviewMode: "Interview mode · 2 min answer",
     share: "LinkedIn par share karo",
     shareNote: "Infographic download karo, phir post karo. Text copy ho jayega: paste karo, image lagao, ho gaya.",
     download: "Infographic download karo", post: "Text copy karo & LinkedIn kholo", copied: "Copied ✓ LinkedIn mein paste karo",
-    tomorrow: "Kal · Day 2", redo: "Day 1 phir se karo", sources: "Sources",
+    next: (n: number) => `Agla · Day ${n}`, open: "Kholo →", redo: (n: number) => `Day ${n} phir se karo`, sources: "Sources",
+    newHere: "System design mein naye ho? Day 0 se shuru karo →",
   },
 };
 type Ui = (typeof UI)["en"];
@@ -83,62 +94,91 @@ export function DayLesson({ day }: { day: Day }) {
 
   const c = day.copy[lang];
   const ui = UI[lang];
-  const step = !p.pre ? 0 : !p.watched ? 1 : !p.post ? 3 : 4;
+  const hasBuild = !!c.build;
+  const hasFollow = !!c.followUps?.length;
+  const builtOk = !hasBuild || p.built !== undefined;
+  const followOk = !hasFollow || !!p.follow;
   const preScore = p.pre ? score(c.pre, p.pre) : 0;
   const postScore = p.post ? score(c.post, p.post) : 0;
 
-  const refs = useRef<(HTMLElement | null)[]>([]);
-  const go = (s: number) => requestAnimationFrame(() => refs.current[s]?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  const keys: StepKey[] = ["call", "watch", "reveal", ...(hasBuild ? ["build" as const] : []), "prove", ...(hasFollow ? ["follow" as const] : []), "done"];
+  const finished: Record<StepKey, boolean> = {
+    call: !!p.pre, watch: !!p.watched, reveal: hasBuild ? p.built !== undefined : !!p.post, build: p.built !== undefined,
+    prove: !!p.post, follow: !!p.follow, done: !!p.post && followOk,
+  };
+  const current = keys.findIndex((k) => !finished[k]);
+  const num = (k: StepKey) => keys.indexOf(k) + 1;
+
+  const refs = useRef<Partial<Record<StepKey, HTMLElement | null>>>({});
+  const go = (k: StepKey) => requestAnimationFrame(() => refs.current[k]?.scrollIntoView({ behavior: "smooth", block: "start" }));
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24 sm:px-6">
       <div className="mt-4 flex justify-end">
         <LangToggle lang={lang} onPick={pick} />
       </div>
-      <Hook day={day} c={c} ui={ui} onStart={() => go(0)} />
+      <Hook day={day} c={c} ui={ui} onStart={() => go("call")} />
 
       <nav aria-label="Today's steps" className="sticky top-20 z-20 -mx-4 mt-6 bg-paper/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <ol className="flex gap-1.5">
-          {ui.steps.map((s, k) => (
-            <li key={s} className="flex-1">
-              <span className={clsx("block h-1.5 rounded-full transition-colors duration-500", k < step || step === 4 ? "bg-red-strong" : k === step ? "bg-ink/60" : "bg-line/25")} />
-              <span className={clsx("mt-1.5 hidden text-[11px] font-bold sm:block", k <= step ? "text-ink" : "text-muted/70")}>{s}</span>
+          {keys.map((k, i) => (
+            <li key={k} className="flex-1">
+              <span className={clsx("block h-1.5 rounded-full transition-colors duration-500", current === -1 || i < current ? "bg-red-strong" : i === current ? "bg-ink/60" : "bg-line/25")} />
+              <span className={clsx("mt-1.5 hidden text-[11px] font-bold sm:block", current === -1 || i <= current ? "text-ink" : "text-muted/70")}>{ui.steps[k]}</span>
             </li>
           ))}
         </ol>
       </nav>
 
-      {/* 1. Your call */}
-      <Step n={1} title={ui.s1} sub={ui.s1Sub} lockedText={ui.locked} open locked={false} innerRef={(el) => { refs.current[0] = el; }}>
+      <Step n={num("call")} title={ui.s1} sub={ui.s1Sub} lockedText={ui.locked} open locked={false} innerRef={(el) => { refs.current.call = el; }}>
         {p.pre ? (
           <Done text={ui.preDone(preScore)} />
         ) : (
-          <LessonQuiz key={lang} questions={c.pre} label={ui.s1} lang={lang} onDone={(pre) => { update({ ...p, pre }); go(1); }} />
+          <LessonQuiz key={lang} questions={c.pre} label={ui.s1} lang={lang} onDone={(pre) => { update({ ...p, pre }); go("watch"); }} />
         )}
       </Step>
 
-      {/* 2. Watch */}
-      <Step n={2} title={ui.s2} sub={ui.s2Sub(day.video.minutes, day.video.lang)} lockedText={ui.locked} open={!!p.pre} locked={!p.pre} innerRef={(el) => { refs.current[1] = el; }}>
-        <Video day={day} ui={ui} watched={!!p.watched} onWatched={() => { update({ ...p, watched: true }); go(2); }} />
+      <Step n={num("watch")} title={ui.s2} sub={ui.s2Sub(day.video.minutes, day.video.lang)} lockedText={ui.locked} open={!!p.pre} locked={!p.pre} innerRef={(el) => { refs.current.watch = el; }}>
+        <Video day={day} ui={ui} watched={!!p.watched} onWatched={() => { update({ ...p, watched: true }); go("reveal"); }} />
       </Step>
 
-      {/* 3. Reveal */}
-      <Step n={3} title={ui.s3} sub={ui.s3Sub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current[2] = el; }}>
-        <Reveal c={c} ui={ui} pre={p.pre ?? []} onNext={() => go(3)} />
+      <Step n={num("reveal")} title={ui.s3} sub={c.revealSub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current.reveal = el; }}>
+        <Reveal c={c} ui={ui} pre={p.pre ?? []} onNext={() => go(hasBuild ? "build" : "prove")} />
       </Step>
 
-      {/* 4. Post */}
-      <Step n={4} title={ui.s4} sub={ui.s4Sub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current[3] = el; }}>
+      {c.build && (
+        <Step n={num("build")} title={ui.sBuild} sub={ui.sBuildSub} lockedText={ui.locked} open={!!p.watched} locked={!p.watched} innerRef={(el) => { refs.current.build = el; }}>
+          {p.built !== undefined ? (
+            <Done text={ui.builtDone(p.built)} />
+          ) : (
+            <DiagramBuilder key={lang} task={c.build} lang={lang} onDone={(built) => { update({ ...p, built }); go("prove"); }} />
+          )}
+        </Step>
+      )}
+
+      <Step n={num("prove")} title={ui.s4} sub={ui.s4Sub} lockedText={ui.locked} open={!!p.watched && builtOk} locked={!p.watched || !builtOk} innerRef={(el) => { refs.current.prove = el; }}>
         {p.post ? (
-          <Done text={`Before: ${preScore}/3 → After: ${postScore}/3.`} />
+          <Done text={`Before: ${preScore}/${c.pre.length} → After: ${postScore}/${c.post.length}.`} />
         ) : (
-          <LessonQuiz key={lang} questions={c.post} label={ui.s4} lang={lang} onDone={(post) => { update({ ...p, post }); setBurst((b) => b + 1); go(4); }} />
+          <LessonQuiz key={lang} questions={c.post} label={ui.s4} lang={lang} onDone={(post) => {
+            update({ ...p, post });
+            if (hasFollow) go("follow"); else { setBurst((b) => b + 1); go("done"); }
+          }} />
         )}
       </Step>
 
-      {/* 5. Unlocked */}
-      <Step n={5} title={ui.s5} sub={ui.s5Sub} lockedText={ui.locked} open={!!p.post} locked={!p.post} innerRef={(el) => { refs.current[4] = el; }}>
-        <Unlocked day={day} c={c} ui={ui} lang={lang} preScore={preScore} postScore={postScore} burst={burst} onReset={() => { update({}); go(0); }} />
+      {c.followUps && (
+        <Step n={num("follow")} title={ui.sFollow} sub={ui.sFollowSub} lockedText={ui.locked} open={!!p.post} locked={!p.post} innerRef={(el) => { refs.current.follow = el; }}>
+          {p.follow ? (
+            <Done text={ui.followDone(p.follow.filter(Boolean).length, p.follow.length)} />
+          ) : (
+            <FollowUps key={lang} items={c.followUps} lang={lang} onDone={(follow) => { update({ ...p, follow }); setBurst((b) => b + 1); go("done"); }} />
+          )}
+        </Step>
+      )}
+
+      <Step n={num("done")} title={ui.s5(day.day)} sub={ui.s5Sub} lockedText={ui.locked} open={!!p.post && followOk} locked={!p.post || !followOk} innerRef={(el) => { refs.current.done = el; }}>
+        <Unlocked day={day} c={c} ui={ui} lang={lang} preScore={preScore} postScore={postScore} burst={burst} onReset={() => { update({}); go("call"); }} />
       </Step>
 
       <Sources day={day} ui={ui} />
@@ -172,7 +212,7 @@ function Hook({ day, c, ui, onStart }: { day: Day; c: DayCopy; ui: Ui; onStart: 
       <div className="relative">
         <p className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.14em]">
           <span className="rounded-full bg-white/10 px-2.5 py-1">Day {day.day} / {day.of}</span>
-          <span className="rounded-full bg-red-strong px-2.5 py-1">{ui.interview}</span>
+          <span className="rounded-full bg-red-strong px-2.5 py-1">{c.tag ?? ui.interview}</span>
           <span className="text-white/60">{day.app} · {day.minutes} min</span>
         </p>
         <p className="mt-7 font-mono text-sm text-red-soft">{day.hook.date}</p>
@@ -181,15 +221,20 @@ function Hook({ day, c, ui, onStart }: { day: Day; c: DayCopy; ui: Ui; onStart: 
             <p key={l} className={clsx("appear text-lg leading-snug sm:text-xl", k === 0 ? "font-extrabold" : "text-white/80")} style={{ "--appear-delay": `${0.15 + k * 0.25}s` } as React.CSSProperties}>{l}</p>
           ))}
         </div>
-        <blockquote className="mt-6 border-l-2 border-red-soft pl-4 text-white/85">
-          <p className="italic">&ldquo;{day.hook.quote}&rdquo;</p>
-          <footer className="mt-1 text-xs text-white/55">{day.hook.quoteBy}</footer>
-        </blockquote>
+        {day.hook.quote && (
+          <blockquote className="mt-6 border-l-2 border-red-soft pl-4 text-white/85">
+            <p className="italic">&ldquo;{day.hook.quote}&rdquo;</p>
+            <footer className="mt-1 text-xs text-white/55">{day.hook.quoteBy}</footer>
+          </blockquote>
+        )}
         <h1 className="display mt-8 text-[clamp(2rem,7.5vw,3.25rem)] text-balance">{c.question}</h1>
         <button type="button" onClick={onStart} className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3.5 text-sm font-extrabold text-ink transition-transform active:scale-[0.97]">
           {ui.start}
         </button>
         <p className="mt-3 text-xs text-white/50">{ui.startNote}</p>
+        {day.prevHref && (
+          <Link href={day.prevHref} className="mt-5 inline-block text-sm font-bold text-red-soft underline underline-offset-4">{ui.newHere}</Link>
+        )}
       </div>
     </section>
   );
@@ -272,7 +317,7 @@ function Reveal({ c, ui, pre, onNext }: { c: DayCopy; ui: Ui; pre: number[]; onN
       </div>
 
       <div>
-        <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{ui.flipkart}</h3>
+        <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{c.revealTitle}</h3>
         <ol className="relative mt-4 space-y-4 border-l-2 border-red-strong/30 pl-5">
           {c.reveal.map((r) => (
             <li key={r.what} className="relative">
@@ -282,13 +327,27 @@ function Reveal({ c, ui, pre, onNext }: { c: DayCopy; ui: Ui; pre: number[]; onN
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-xs text-muted">{ui.sourceNote}</p>
+        {c.sourceNote && <p className="mt-3 text-xs text-muted">{c.sourceNote}</p>}
       </div>
 
       <div>
+        {c.explain && (
+          <div className="mb-8">
+            <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{c.explain.title}</h3>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {c.explain.items.map((x) => (
+                <div key={x.term} className="rounded-xl bg-surface/70 p-4">
+                  <p className="text-lg font-extrabold">{x.term}</p>
+                  <p className="mt-1 text-sm leading-relaxed">{x.what}</p>
+                  <p className="mt-1 text-xs text-muted">e.g. {x.example}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-muted">{ui.concept}</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {[c.concept.predictable, c.concept.sudden].map((x, k) => (
+          {c.concept.cards.map((x, k) => (
             <div key={x.name} className={clsx("rounded-xl p-4", k === 0 ? "bg-night text-white" : "bg-red-tint")}>
               <p className="text-lg font-extrabold">{x.name}</p>
               <p className={clsx("mt-1 text-xs", k === 0 ? "text-white/60" : "text-muted")}>{x.examples.join(" · ")}</p>
@@ -327,7 +386,7 @@ function Unlocked({
         <Celebrate burstKey={burst} />
         <p className="text-4xl" aria-hidden="true">🔥</p>
         <p className="mt-2 text-2xl font-extrabold">{ui.streak}</p>
-        <p className="mt-1 text-sm text-white/70">Before {preScore}/3 → After {postScore}/3</p>
+        <p className="mt-1 text-sm text-white/70">Before {preScore}/{c.pre.length} → After {postScore}/{c.post.length}</p>
       </div>
 
       <div className="rounded-2xl border-2 border-ink p-5">
@@ -363,17 +422,26 @@ function Unlocked({
         </div>
       </div>
 
-      <div className="rounded-xl border border-dashed border-line/50 p-4">
-        <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{ui.tomorrow} <LockIcon /></p>
-        <p className="mt-1 font-extrabold">{c.nextDay}</p>
-      </div>
+      {day.nextHref ? (
+        <Link href={day.nextHref} className="block rounded-xl bg-night p-5 text-white transition-transform active:scale-[0.99]">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-red-soft">{ui.next(day.day + 1)}</p>
+          <p className="mt-1 text-lg font-extrabold">{c.nextDay}</p>
+          <p className="mt-3 text-sm font-bold">{ui.open}</p>
+        </Link>
+      ) : (
+        <div className="rounded-xl border border-dashed border-line/50 p-4">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">{ui.next(day.day + 1)} <LockIcon /></p>
+          <p className="mt-1 font-extrabold">{c.nextDay}</p>
+        </div>
+      )}
 
-      <button type="button" onClick={onReset} className="text-xs font-semibold text-muted underline underline-offset-4">{ui.redo}</button>
+      <button type="button" onClick={onReset} className="text-xs font-semibold text-muted underline underline-offset-4">{ui.redo(day.day)}</button>
     </div>
   );
 }
 
 function Sources({ day, ui }: { day: Day; ui: Ui }) {
+  if (!day.sources.length) return null;
   return (
     <section aria-label={ui.sources} className="mt-8 px-1 text-xs text-muted">
       <p className="font-bold">{ui.sources}</p>

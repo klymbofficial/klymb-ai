@@ -352,3 +352,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 .content-guard { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .content-guard :is(input, textarea, select, pre, code, [contenteditable]) { -webkit-user-select: text; user-select: text; }
 @media print { .content-guard { display: none !important; } }
+
+/* Diagram builder: a wrong drop nudges the slot sideways. */
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { [data-slot] { animation: none !important; } }

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { auth, verifiedEmailFrom } from "@/auth";
 import { CourseApp } from "@/components/course-app/CourseApp";
 
 export const metadata: Metadata = {
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#f3f2f2", viewportFit: "cover" };
 
-export default function SystemDesignCoursePage() {
-  return <CourseApp />;
+export default async function SystemDesignCoursePage() {
+  const session = await auth();
+  const email = verifiedEmailFrom(session);
+  return <CourseApp user={email ? { email, name: session?.user?.name ?? null } : null} />;
 }

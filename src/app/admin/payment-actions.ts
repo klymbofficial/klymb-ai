@@ -1,5 +1,6 @@
 "use server";
 
+import { canRefund, REFUND_EMAIL } from "@/lib/admin/access";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { db } from "@/lib/db/client";
@@ -8,7 +9,7 @@ import { razorpayKeys, refundPayment } from "@/lib/razorpay";
 export type RefundResult = { ok: true } | { ok: false; message: string };
 
 /**
- * Refunds a payment in full through Razorpay.
+ * Refunds a payment in full through Razorpay. Only REFUND_EMAIL may do it.
  *
  * The row is not marked here: Razorpay's refund.processed webhook does that,
  * so the admin table always reflects what Razorpay actually did.
@@ -16,6 +17,7 @@ export type RefundResult = { ok: true } | { ok: false; message: string };
 export async function refund(id: string, confirmEmail: string): Promise<RefundResult> {
   const admin = await getAdmin();
   if (!admin) return { ok: false, message: "Not authorised." };
+  if (!canRefund(admin)) return { ok: false, message: `Only ${REFUND_EMAIL} can issue refunds.` };
 
   const keys = razorpayKeys();
   const sql = db();
