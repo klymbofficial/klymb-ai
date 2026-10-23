@@ -1,5 +1,4 @@
 import "server-only";
-import { commitDays, mainRepo } from "@/lib/learner/github";
 import { getAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import type { TrackSlug } from "@/types/program";
@@ -74,8 +73,9 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
   const sql = db();
   if (!sql) return [];
 
-  const { data: learners } = await sql.rows<Omit<LearnerProgress, "days_submitted" | "last_submission_at" | "commit_repo" | "commit_days" | "linkedin_posts" | "assessments_scored" | "latest_band">>`
-    select id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug
+  const { data: learners } = await sql.rows<Omit<LearnerProgress, "days_submitted" | "last_submission_at" | "linkedin_posts" | "assessments_scored" | "latest_band">>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url,
+           github_username, linkedin_slug, commit_repo, commit_days
       from course.learners
      order by created_at desc
   `;
@@ -93,15 +93,12 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
     `,
   ]);
 
-  // Commit days on GitHub, for the "commits on 20+ days" rule. Cached an hour per repo.
-  const commitCounts = await Promise.all(
-    learners.map(async (l) => {
-      const repo = l.github_username ? mainRepo((submissions ?? []).filter((s) => s.learner_id === l.id).map((s) => s.deliverable_url)) : null;
-      return repo ? { repo: `${repo.owner}/${repo.repo}`, days: await commitDays(repo.owner, repo.repo, l.github_username!) } : null;
-    }),
-  );
-
-  return learners.map((l, i) => {
+  // Commit days are read, not fetched. They used to be counted here, one
+  // commitDays() call per learner — and each of those makes up to three GitHub
+  // requests, so this page alone could burn the whole hourly API budget that
+  // checkFreshPush needs for learners to submit. The hourly cron refreshes
+  // them now (src/lib/learner/commits.ts).
+  return learners.map((l) => {
     const mine = submissions?.filter((s) => s.learner_id === l.id) ?? [];
     const scored = (assessments ?? [])
       .filter((a) => a.learner_id === l.id && a.weighted_score != null)
@@ -114,8 +111,6 @@ export async function getLearnerProgress(): Promise<LearnerProgress[]> {
       last_submission_at: last,
       assessments_scored: scored.length,
       latest_band: scored.at(-1)?.band ?? null,
-      commit_repo: commitCounts[i]?.repo ?? null,
-      commit_days: commitCounts[i]?.days ?? null,
     } as LearnerProgress;
   });
 }
@@ -244,34 +239,44 @@ export async function getOverviewCounts(): Promise<OverviewCounts | null> {
   if (!sql) return null;
 
   const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
-  const [{ data: learners }, { data: recent }, { data: payments }] = await Promise.all([
-    sql.rows<{ track: string; status: string; created_at: string }>`
-      select track, status, created_at from course.learners limit 5000
+  // Counted in the database. These were `limit 5000` fetches that counted in
+  // JavaScript, which is both slower and quietly wrong past 5000 rows: the
+  // overview would have under-reported rather than failed.
+  const [{ data: learners }, { data: byTrack }, { data: submitting }, { data: money }] = await Promise.all([
+    sql.row<{ total: number; active: number; joined: number }>`
+      select count(*)::int                                            as total,
+             count(*) filter (where status = 'active')::int           as active,
+             count(*) filter (where created_at >= ${weekAgo})::int    as joined
+        from course.learners
     `,
-    sql.rows<{ learner_id: string }>`
-      select learner_id from course.day_submissions where submitted_at >= ${weekAgo} limit 5000
+    sql.rows<{ track: string; n: number }>`
+      select track, count(*)::int as n from course.learners group by 1
     `,
-    sql.rows<{ status: string; amount: number }>`
-      select status, amount from course.payments where status in ('paid', 'refunded') limit 5000
+    sql.scalar<number>`
+      select count(distinct learner_id)::int from course.day_submissions where submitted_at >= ${weekAgo}
+    `,
+    sql.row<{ paid: number; paid_amount: number; refunded: number; refunded_amount: number }>`
+      select count(*) filter (where status = 'paid')::int                        as paid,
+             coalesce(sum(amount) filter (where status = 'paid'), 0)::int        as paid_amount,
+             count(*) filter (where status = 'refunded')::int                    as refunded,
+             coalesce(sum(amount) filter (where status = 'refunded'), 0)::int    as refunded_amount
+        from course.payments
     `,
   ]);
 
-  const rows = learners ?? [];
-  const money = payments ?? [];
-  const total = (status: string) => money.filter((p) => p.status === status);
   return {
     learners: {
-      total: rows.length,
-      active: rows.filter((l) => l.status === "active").length,
-      joinedLast7d: rows.filter((l) => Date.parse(l.created_at) >= Date.parse(weekAgo)).length,
-      byTrack: rows.reduce<Record<string, number>>((acc, l) => ({ ...acc, [l.track]: (acc[l.track] ?? 0) + 1 }), {}),
+      total: learners?.total ?? 0,
+      active: learners?.active ?? 0,
+      joinedLast7d: learners?.joined ?? 0,
+      byTrack: Object.fromEntries((byTrack ?? []).map((t) => [t.track, t.n])),
     },
-    submittingLast7d: new Set((recent ?? []).map((s) => s.learner_id)).size,
+    submittingLast7d: submitting ?? 0,
     money: {
-      paid: total("paid").length,
-      paidAmount: total("paid").reduce((s, p) => s + p.amount, 0),
-      refunded: total("refunded").length,
-      refundedAmount: total("refunded").reduce((s, p) => s + p.amount, 0),
+      paid: money?.paid ?? 0,
+      paidAmount: money?.paid_amount ?? 0,
+      refunded: money?.refunded ?? 0,
+      refundedAmount: money?.refunded_amount ?? 0,
     },
   };
 }

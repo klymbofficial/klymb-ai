@@ -8,6 +8,7 @@ import { formatINR } from "@/lib/format";
 import { dueFollowup, FOLLOWUP_DONE } from "@/lib/followups";
 import { noteEmail, sendMail } from "@/lib/mail";
 import { db } from "@/lib/db/client";
+import { refreshCommitDays } from "@/lib/learner/commits";
 import { LAUNCH_OFFER, offerOpen, priceNow } from "@/lib/offer";
 
 /** At most this many per run: Brevo's free plan sends 300 a day. */
@@ -25,7 +26,24 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const sql = db();
-  if (!sql || !process.env.BREVO_API_KEY) return NextResponse.json({ error: "Not configured" }, { status: 500 });
+  if (!sql) return NextResponse.json({ error: "Not configured" }, { status: 500 });
+
+  // Housekeeping first, and before the Brevo gate, so it runs every hour
+  // whether or not email is configured. It used to happen inside a random 1%
+  // of user requests, where it scanned rate_limit_events in the middle of a
+  // registration; here it is bounded, indexed and off the request path.
+  const pruned = await sql.rows<{ task: string; result: number }>`
+    select task, result from course.maintenance()
+  `;
+  if (pruned.error) console.error("maintenance failed:", pruned.error.message);
+
+  // Commit counts for the admin learner table, refreshed a batch at a time so
+  // this never competes with learners submitting work for GitHub's API budget.
+  const commits = await refreshCommitDays(sql);
+
+  if (!process.env.BREVO_API_KEY) {
+    return NextResponse.json({ maintenance: pruned.data ?? [], commits, sent: 0, skipped: "email not configured" });
+  }
 
   const now = new Date();
   const { data: rows, error } = await sql.rows<{
@@ -82,7 +100,7 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ checked: rows?.length ?? 0, sent, closed });
+  return NextResponse.json({ checked: rows?.length ?? 0, sent, closed, maintenance: pruned.data ?? [], commits });
 }
 
 function followupEmail(
