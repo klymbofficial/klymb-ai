@@ -25,6 +25,58 @@ loadEnvConfig(process.cwd());
 
 const DIR = path.join(process.cwd(), "db", "migrations");
 
+/**
+ * Splits a file into individual statements.
+ *
+ * Only needed for no-transaction migrations: node-postgres sends a
+ * multi-statement string as one simple query, and Postgres wraps that in an
+ * implicit transaction block — which CREATE INDEX CONCURRENTLY refuses to run
+ * in, explicit BEGIN or not. So those files go over one statement at a time.
+ *
+ * Dollar-quoted bodies are the reason this can't be `sql.split(";")`: a
+ * function body is full of semicolons that are not statement boundaries.
+ */
+function statements(sql: string): string[] {
+  const out: string[] = [];
+  let start = 0;
+  let i = 0;
+  while (i < sql.length) {
+    const rest = sql.slice(i);
+    if (sql.startsWith("--", i)) {
+      const nl = sql.indexOf("\n", i);
+      i = nl === -1 ? sql.length : nl + 1;
+      continue;
+    }
+    if (sql.startsWith("/*", i)) {
+      const close = sql.indexOf("*/", i + 2);
+      i = close === -1 ? sql.length : close + 2;
+      continue;
+    }
+    if (sql[i] === "'") {
+      i += 1;
+      while (i < sql.length && sql[i] !== "'") i += 1;
+      i += 1;
+      continue;
+    }
+    const dollar = /^\$[A-Za-z_]*\$/.exec(rest);
+    if (dollar) {
+      const tag = dollar[0];
+      const close = sql.indexOf(tag, i + tag.length);
+      i = close === -1 ? sql.length : close + tag.length;
+      continue;
+    }
+    if (sql[i] === ";") {
+      const stmt = sql.slice(start, i).trim();
+      if (stmt) out.push(stmt);
+      start = i + 1;
+    }
+    i += 1;
+  }
+  const tail = sql.slice(start).trim();
+  if (tail) out.push(tail);
+  return out;
+}
+
 /** Who and where, from a connection string, with the password left out. */
 function announce(url: string) {
   try {
@@ -86,6 +138,25 @@ async function main() {
         // next environment will hit as a schema difference, so say so rather
         // than skipping in silence.
         if (seen !== checksum) console.warn(`! ${name} changed since it was applied (${seen} → ${checksum})`);
+        continue;
+      }
+
+      // CREATE INDEX CONCURRENTLY and a few other statements cannot run inside
+      // a transaction block. A file says so with `-- migrate: no-transaction`
+      // on any line, and is then responsible for being safe to re-run, since a
+      // failure part-way leaves what it already did in place.
+      const standalone = /^--\s*migrate:\s*no-transaction\s*$/m.test(sql);
+
+      if (standalone) {
+        const parts = statements(sql);
+        try {
+          for (const stmt of parts) await client.query(stmt);
+          await client.query("insert into course.schema_migrations (name, checksum) values ($1, $2)", [name, checksum]);
+          console.log(`✓ ${name} (${parts.length} statements, outside a transaction)`);
+          count += 1;
+        } catch (e) {
+          throw new Error(`${name} failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
         continue;
       }
 

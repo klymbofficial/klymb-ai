@@ -25,7 +25,20 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const sql = db();
-  if (!sql || !process.env.BREVO_API_KEY) return NextResponse.json({ error: "Not configured" }, { status: 500 });
+  if (!sql) return NextResponse.json({ error: "Not configured" }, { status: 500 });
+
+  // Housekeeping first, and before the Brevo gate, so it runs every hour
+  // whether or not email is configured. It used to happen inside a random 1%
+  // of user requests, where it scanned rate_limit_events in the middle of a
+  // registration; here it is bounded, indexed and off the request path.
+  const pruned = await sql.rows<{ table_name: string; deleted: number }>`
+    select table_name, deleted from course.prune_old_rows()
+  `;
+  if (pruned.error) console.error("prune failed:", pruned.error.message);
+
+  if (!process.env.BREVO_API_KEY) {
+    return NextResponse.json({ pruned: pruned.data ?? [], sent: 0, skipped: "email not configured" });
+  }
 
   const now = new Date();
   const { data: rows, error } = await sql.rows<{
@@ -82,7 +95,7 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ checked: rows?.length ?? 0, sent, closed });
+  return NextResponse.json({ checked: rows?.length ?? 0, sent, closed, pruned: pruned.data ?? [] });
 }
 
 function followupEmail(
