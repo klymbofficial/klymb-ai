@@ -164,7 +164,7 @@ export function summarise(events: SdEventRow[], feedback: SdFeedbackRow[], days:
     tour: count(events.filter((e) => e.event === "tour"), (e) => (e.props?.action === "finished" ? "Finished the tour" : `Skipped at stop ${e.props?.at}`)),
     subsOff: new Set(events.filter((e) => e.event === "subs" && e.props?.on === false).map((e) => e.anon_id)).size,
     shares: events.filter((e) => e.event === "share").length,
-    signins: count(events.filter((e) => e.event === "signin"), (e) => ({ welcome: "Welcome screen", "day-done": "End of a day", home: "Home", profile: "Profile" })[String(e.props?.where)] ?? "Other"),
+    signins: count(events.filter((e) => e.event === "signin"), (e) => ({ welcome: "Welcome screen", "day-done": "End of a day", home: "Home", profile: "Profile", recap: "Module complete" })[String(e.props?.where)] ?? "Other"),
     comments: feedback.filter((f) => f.improve).slice(0, 60),
     learners,
   };

@@ -5,6 +5,8 @@ import { dayOf, moduleIds, moduleMinutes, openLesson, pad, startQuiz, type Cours
 import { Icon } from "../icons";
 import { BackButton, Stats, parallax, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
+import { StudyBuddy } from "@/components/learner/StudyBuddy";
+import { GoogleButton, firstName, useCourseUser } from "../user";
 
 /** Modules that award a badge when finished. */
 const MODULE_BADGE: Record<number, { name: string; icon: "zap" | "db" }> = { 0: { name: "Started right", icon: "zap" } };
@@ -15,7 +17,18 @@ function takeaways(s: CourseState, mi: number) {
   return points.slice(0, 3);
 }
 
+/** Kamran's line on a finished module: well done, and what comes next. */
+function kamranSays(rm: number, first: string | null) {
+  const hi = first ? `Well done, ${first}!` : "Well done!";
+  const nextDay = dayOf(`${rm + 1}-0`);
+  const next = MODULES[rm + 1];
+  if (!next) return `${hi} That’s the whole course. Take the post-assessment and see how far you’ve come.`;
+  if (!nextDay) return `${hi} You finished ${MODULES[rm].title}. ${next.title} is coming soon, I’ll keep it ready.`;
+  return `${hi} You finished ${MODULES[rm].title}. Next up: Day ${nextDay.day}, ${nextDay.app}. About ${nextDay.minutes} minutes.`;
+}
+
 export function Recap({ s, act }: { s: CourseState; act: Act }) {
+  const user = useCourseUser();
   const rm = s.recapMod;
   const mod = MODULES[rm];
   const next = MODULES[rm + 1];
@@ -31,6 +44,10 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
       <div {...parallax} className="sd-a-pop flex flex-col gap-2 overflow-hidden bg-sd-accent p-5 text-sd-bg lg:p-7" style={{ animationDuration: ".6s" }}>
         <span className="sd-kicker">Module {pad(rm + 1)} complete</span>
         <span className="sd-near text-[40px] leading-[0.95] font-extrabold tracking-[-0.04em] lg:text-[64px]">{mod.title}</span>
+      </div>
+      <div className="sd-a-in flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ animationDelay: "250ms" }}>
+        <StudyBuddy tone="light" size={88} message={kamranSays(rm, firstName(user))} />
+        {!user && <div className="sm:w-[280px]"><GoogleButton lesson={`${rm + 1}-0`} where="recap" label="Save progress with Google" className="h-11 border-2 border-sd-ink" /></div>}
       </div>
       <Stats className="border-t-2 border-t-sd-divider" cellClass="py-2.5" valueClass="text-[26px]" items={[[`${n}/${n}`, "lessons"], [`${moduleMinutes(rm)} min`, "watched"], [notes, "notes"]]} />
       <div>
@@ -49,6 +66,7 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
           <Icon name={badge.icon} size={22} /><span className="text-[15px] font-extrabold">Badge earned: {badge.name}</span>
         </div>
       )}
+      {badge && <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} className="sd-btn sd-btn-secondary min-h-11 self-start px-4">Download and share your badge <Icon name="arrowR" size={16} /></button>}
       <div className="mt-auto flex flex-col gap-2 lg:mt-0 lg:max-w-[440px]">
         <button type="button" onClick={goNext} className="sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-[15px]">{next ? `Start Module ${pad(rm + 2)}: ${next.title}` : "Take the post-assessment"}<Icon name="arrowR" /></button>
         <button type="button" onClick={review} className="sd-btn sd-btn-secondary sd-btn-block h-12">Review your notes</button>
