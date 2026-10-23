@@ -1,6 +1,6 @@
 import "server-only";
 import { getAdmin } from "@/lib/admin/auth";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 import { allTracks as tracks } from "@/data/tracks";
 
 /** Platform engagement, computed from our own tables rather than Google's. */
@@ -48,15 +48,21 @@ function bucketKey(iso: string, granularity: Granularity): string {
 
 export async function getEngagement(days = 30, granularity: Granularity = "daily"): Promise<EngagementSummary> {
   if (!(await getAdmin())) return EMPTY;
-  const supabase = createServiceClient();
-  if (!supabase) return EMPTY;
+  const sql = db();
+  if (!sql) return EMPTY;
 
   const since = new Date(Date.now() - days * 864e5).toISOString();
 
   const [{ data: registrations }, { data: submissions }, { data: learners }] = await Promise.all([
-    supabase.from("registrations").select("created_at, track").gte("created_at", since),
-    supabase.from("day_submissions").select("submitted_at, learner_id, day").gte("submitted_at", since),
-    supabase.from("learners").select("id, track, status"),
+    sql.rows<{ created_at: string; track: string }>`
+      select created_at, track from course.registrations where created_at >= ${since}
+    `,
+    sql.rows<{ submitted_at: string; learner_id: string; day: number }>`
+      select submitted_at, learner_id, day from course.day_submissions where submitted_at >= ${since}
+    `,
+    sql.rows<{ id: string; track: string; status: string }>`
+      select id, track, status from course.learners
+    `,
   ]);
 
   // One bucket per period, so a quiet day still shows as a zero rather than a gap.

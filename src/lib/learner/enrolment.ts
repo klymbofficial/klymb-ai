@@ -19,17 +19,20 @@ export interface EnrolInput {
 
 /**
  * The minimum surface we need, so this is testable without a live database.
- * Results are PromiseLike because Supabase query builders are thenables.
+ * Implemented for real in ./enrolment-db.ts; this module stays free of any
+ * database import so the tests can exercise the rule on its own.
  */
 export interface EnrolmentClient {
-  from(table: string): {
-    select(columns: string): {
-      eq(column: string, value: string): {
-        maybeSingle(): PromiseLike<{ data: unknown; error: unknown }>;
-      };
-    };
-    insert(values: Record<string, unknown>): PromiseLike<{ error: { code?: string } | null }>;
-  };
+  /** The learner's existing place, if they have one. */
+  findLearner(email: string): Promise<{ id: string } | null>;
+  /**
+   * The app.klymb.ai user holding this address, so a course place is attached
+   * to the real account rather than only matching on the string. Null when
+   * they have no platform account yet, which is not a problem: the address is
+   * still the identity everything authorises against.
+   */
+  findPlatformUserId(email: string): Promise<string | null>;
+  insertLearner(values: Record<string, unknown>): Promise<{ error: { code?: string } | null }>;
 }
 
 /** Postgres unique violation: the row already exists, which is success here. */
@@ -40,14 +43,14 @@ export const UNIQUE_VIOLATION = "23505";
  * Returns true when a place exists afterwards, false when it does not.
  */
 export async function ensureLearner(client: EnrolmentClient, input: EnrolInput): Promise<boolean> {
-  const existing = await client.from("learners").select("id").eq("email", input.email).maybeSingle();
-  if (existing.data) return true;
+  if (await client.findLearner(input.email)) return true;
 
-  const { error } = await client.from("learners").insert({
+  const { error } = await client.insertLearner({
     email: input.email,
     name: input.name,
     track: input.track,
     cohort_start: input.cohortStart,
+    user_id: await client.findPlatformUserId(input.email),
     ...(input.githubUsername ? { github_username: input.githubUsername, github_url: input.githubUrl ?? null } : {}),
   });
 

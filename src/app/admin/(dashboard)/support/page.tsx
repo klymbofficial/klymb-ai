@@ -2,7 +2,7 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { RangeTabs } from "@/components/admin/RangeTabs";
 import { requireAdmin } from "@/lib/admin/auth";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 import { setTicketStatus } from "@/app/admin/support-actions";
 
 interface Ticket { id: string; created_at: string; email: string; name: string | null; message: string; page: string | null; context: Record<string, string>; status: "open" | "resolved" }
@@ -10,11 +10,17 @@ interface Ticket { id: string; created_at: string; email: string; name: string |
 export default async function AdminSupportPage({ searchParams }: { searchParams: Promise<{ show?: string }> }) {
   await requireAdmin();
   const show = (await searchParams).show === "resolved" ? "resolved" : "open";
-  const supabase = createServiceClient();
-  const { data } = supabase
-    ? await supabase.from("support_tickets").select("id, created_at, email, name, message, page, context, status").eq("status", show).order("created_at", { ascending: false }).limit(200)
+  const sql = db();
+  const { data } = sql
+    ? await sql.rows<Ticket>`
+        select id, created_at, email, name, message, page, context, status
+          from course.support_tickets
+         where status = ${show}
+         order by created_at desc
+         limit 200
+      `
     : { data: null };
-  const tickets = (data as Ticket[] | null) ?? [];
+  const tickets = data ?? [];
 
   return (
     <>

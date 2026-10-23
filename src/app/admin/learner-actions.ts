@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 import { resetDevice } from "@/lib/learner/device";
 
 export type LearnerActionResult = { ok: true } | { ok: false; message: string };
@@ -17,10 +17,10 @@ export async function setLearnerStatus(id: string, status: LearnerStatus): Promi
   if (!admin) return { ok: false, message: "Not authorised." };
   if (!STATUSES.includes(status)) return { ok: false, message: "Unknown status." };
 
-  const supabase = createServiceClient();
-  if (!supabase) return { ok: false, message: "Unavailable right now." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
 
-  const { error } = await supabase.from("learners").update({ status }).eq("id", id);
+  const { error } = await sql.run`update course.learners set status = ${status} where id = ${id}`;
   if (error) {
     console.error("status change failed:", error.code, error.message);
     return { ok: false, message: "That could not be saved." };
@@ -39,17 +39,19 @@ export async function removeLearner(id: string, confirmEmail: string): Promise<L
   const admin = await getAdmin();
   if (!admin) return { ok: false, message: "Not authorised." };
 
-  const supabase = createServiceClient();
-  if (!supabase) return { ok: false, message: "Unavailable right now." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
 
   // Typed email must match the record, so a misclick cannot delete the wrong learner.
-  const { data: learner } = await supabase.from("learners").select("email").eq("id", id).maybeSingle();
+  const { data: learner } = await sql.row<{ email: string }>`
+    select email from course.learners where id = ${id}
+  `;
   if (!learner) return { ok: false, message: "That learner no longer exists." };
   if (learner.email.toLowerCase() !== confirmEmail.trim().toLowerCase()) {
     return { ok: false, message: "The email you typed does not match this learner. Nothing was deleted." };
   }
 
-  const { error } = await supabase.from("learners").delete().eq("id", id);
+  const { error } = await sql.run`delete from course.learners where id = ${id}`;
   if (error) {
     console.error("learner delete failed:", error.code, error.message);
     return { ok: false, message: "That could not be deleted." };

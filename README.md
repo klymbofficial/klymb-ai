@@ -9,7 +9,13 @@
 
 Frontend for Klymb.ai: a 30-day job-readiness program with five career tracks (QA Engineer, L1/L2 Support, Project Manager, Junior Developer, Reporting Analyst). Each track has daily practical problems, weekly assessments after Days 7/14/21/28, role-specific projects, interview preparation and mock interviews on Days 29–30.
 
-> Registrations are saved to **Supabase** (`registrations` table, insert-only via RLS — see `supabase/migrations/`). Payments, authentication and email are not connected yet. Learner pages use clearly labelled sample data.
+> Data lives in the **`course` schema of the Neon database that also runs
+> [app.klymb.ai](https://app.klymb.ai)** — one user base, so a learner here is the
+> same person as the platform user with that address (`course.learners.user_id`
+> references `public."User"`). Schema in `db/migrations/`, applied with
+> `npm run db:migrate`. Supabase remains only as the message bus for the live
+> device-switch sign-out; `supabase/migrations/` is the retired schema, kept as
+> history and applied nowhere.
 
 ## Setup
 
@@ -23,7 +29,10 @@ npm start        # serve the production build
 npm run lint
 ```
 
-No environment variables are needed yet. When integrations are added, copy `.env.example` to `.env.local` (git-ignored) and set the same values in Vercel → Project Settings → Environment Variables. Never commit secrets.
+Copy `.env.example` to `.env.local` (git-ignored) and set the same values in
+Vercel → Project Settings → Environment Variables. Never commit secrets.
+`DATABASE_URL` is the one the app cannot work without: see [`db/README.md`](db/README.md)
+for how the schema and its role are set up.
 
 ## Security
 
@@ -31,14 +40,16 @@ No environment variables are needed yet. When integrations are added, copy `.env
 | --- | --- |
 | Identity is a Google-verified email, compared with exact equality | `src/auth.ts`, `src/lib/email.ts` |
 | Admin status read from `admin_users` on every request, never from env or a token | `src/lib/admin/auth.ts` |
-| All database writes run server-side under the service-role key; the anon role has no write privileges | `src/lib/supabase/admin.ts`, migration `20260922000000` |
+| Every query runs server-side; the browser holds no database credential | `src/lib/db/client.ts` |
+| The app connects as `klymb_course`, which may only read and write the `course` schema, and may read just `(id, email)` of the platform's users | `db/migrations/0002_grants.sql` |
+| Values are always bound parameters — the query tag has no way to inline a string as SQL | `src/lib/db/client.ts` |
 | Registration throttle, keyed by a salted hash of the caller's IP | `src/lib/rate-limit.ts`, `src/lib/fingerprint.ts` |
 | Server-side allowlists and length caps on every submitted field | `src/lib/validation.ts` |
 | CSP, nosniff, Referrer-Policy, Permissions-Policy, frame-ancestors | `next.config.ts` |
 
 **Content Security Policy.** These hosts must stay allowlisted or something breaks:
 `www.googletagmanager.com` (analytics script), `www.google-analytics.com` and `*.analytics.google.com`
-(measurement), `accounts.google.com` (sign-in redirect and form post), `*.supabase.co` (database),
+(measurement), `accounts.google.com` (sign-in redirect and form post), `*.supabase.co` (live device-switch channel),
 `i.ytimg.com` (day-page thumbnails), `*.googleusercontent.com` (Google profile images).
 `script-src` keeps `'unsafe-inline'` because Next.js inlines its bootstrap; `'unsafe-eval'` is added in
 development only, for React Refresh.
@@ -49,7 +60,8 @@ development only, for React Refresh.
 
 1. Push this repo to GitHub.
 2. In Vercel, choose **Add New → Project** and import the repo. The Next.js preset is detected automatically (build command `npm run build`).
-3. Deploy. No environment variables are required for the current frontend.
+3. Set the environment variables from `.env.example` — at minimum `DATABASE_URL`,
+   `AUTH_SECRET`, `AUTH_URL` and the Google OAuth pair — then deploy.
 
 ## Routes
 
@@ -104,10 +116,9 @@ src/
 
 ## TODO — next integrations
 
-- [x] **Supabase** — registrations
-- [ ] **Supabase** — learners, submissions and progress
+- [x] **Database** — registrations, learners, submissions, progress and payments, on the shared Neon instance
 - [ ] **Razorpay** — payment step after registration (server-side order creation and signature verification; never trust client-side success)
-- [ ] **Authentication** — learner sign-in (e.g. Supabase Auth, email OTP)
+- [x] **Authentication** — learner sign-in with Google, the verified email as the identity
 - [ ] **Real learner dashboard** — replace `src/data/demo.ts` with the signed-in learner's data
 - [ ] **Assessment scoring** — reviewer workflow, rubric scores and feedback
 - [ ] **Email or WhatsApp notifications** — registration confirmation, daily challenge reminders, assessment feedback

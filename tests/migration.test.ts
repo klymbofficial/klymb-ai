@@ -2,6 +2,12 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { readFileSync, readdirSync } from "node:fs";
 
+/**
+ * The retired Supabase schema, kept in the tree as history and applied
+ * nowhere. These assertions pin what that schema said, so the record of it
+ * stays accurate; the live schema is db/migrations, covered by
+ * tests/course-schema.test.ts.
+ */
 const dir = "supabase/migrations";
 const hardening = readFileSync(`${dir}/20260922000000_security_hardening.sql`, "utf8");
 

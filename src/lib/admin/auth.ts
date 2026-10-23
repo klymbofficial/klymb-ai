@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { currentEmail } from "@/auth";
 import { resolveAdmin, type AdminIdentity } from "@/lib/admin/access";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 
 export type AdminSession = AdminIdentity;
 
@@ -20,12 +20,14 @@ export type AdminSession = AdminIdentity;
  * separate database round trip. Nothing is shared across requests.
  */
 export const getAdmin = cache(async (): Promise<AdminSession | null> => {
-  const supabase = createServiceClient();
-  if (!supabase) return null;
+  const sql = db();
+  if (!sql) return null;
 
   return resolveAdmin(await currentEmail(), async (email) => {
     // Exact match only: ILIKE would treat % and _ in a stored row as wildcards.
-    const { data } = await supabase.from("admin_users").select("email, name").eq("email", email).maybeSingle();
+    const { data } = await sql.row<{ email: string; name: string | null }>`
+      select email, name from course.admin_users where email = ${email}
+    `;
     return data;
   });
 });

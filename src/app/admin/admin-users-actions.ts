@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 import { removalBlocked } from "@/lib/admin/access";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
+import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 export type AdminUserResult = { ok: true } | { ok: false; message: string };
 
@@ -18,10 +18,10 @@ export async function addAdminUser(rawEmail: string, rawName: string): Promise<A
   if (!email) return { ok: false, message: "That is not a valid email." };
   const name = rawName.trim().slice(0, 80) || null;
 
-  const supabase = createServiceClient();
-  if (!supabase) return { ok: false, message: "Unavailable right now." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
 
-  const { error } = await supabase.from("admin_users").insert({ email, name });
+  const { error } = await sql.run`insert into course.admin_users (email, name) values (${email}, ${name})`;
   if (error?.code === "23505") return { ok: false, message: `${email} is already an admin.` };
   if (error) {
     console.error("admin add failed:", error.code, error.message);
@@ -46,10 +46,11 @@ export async function removeAdminUser(rawEmail: string, confirmEmail: string): P
     return { ok: false, message: "The email you typed does not match. Nobody was removed." };
   }
 
-  const supabase = createServiceClient();
-  if (!supabase) return { ok: false, message: "Unavailable right now." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
 
-  const { error, count } = await supabase.from("admin_users").delete({ count: "exact" }).eq("email", email);
+  // `data` is the number of rows the delete touched.
+  const { data: count, error } = await sql.run`delete from course.admin_users where email = ${email}`;
   if (error) {
     console.error("admin remove failed:", error.code, error.message);
     return { ok: false, message: "That could not be removed." };

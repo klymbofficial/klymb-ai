@@ -1,7 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
+import { type Db, db } from "@/lib/db/client";
 import { callerFingerprint, identityFingerprint } from "@/lib/fingerprint";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 /**
  * Database-backed throttle.
@@ -18,10 +18,8 @@ export interface RateLimitResult {
   degraded?: boolean;
 }
 
-type Client = NonNullable<ReturnType<typeof createServiceClient>>;
-
-/** PostgREST and Postgres codes for "that function does not exist (yet)". */
-const MISSING_FUNCTION = new Set(["PGRST202", "42883"]);
+/** Postgres undefined_function: the migration has not been applied here yet. */
+const MISSING_FUNCTION = "42883";
 
 /**
  * Allows `limit` actions per `windowMinutes` for one caller.
@@ -37,8 +35,8 @@ export async function checkRateLimit(
   action: string,
   { limit, windowMinutes, identity }: { limit: number; windowMinutes: number; identity?: string },
 ): Promise<RateLimitResult> {
-  const supabase = createServiceClient();
-  if (!supabase) return { allowed: true, degraded: true };
+  const sql = db();
+  if (!sql) return { allowed: true, degraded: true };
 
   try {
     const salt = process.env.AUTH_SECRET;
@@ -50,14 +48,11 @@ export async function checkRateLimit(
       fingerprint = callerFingerprint(headerList.get("x-forwarded-for"), headerList.get("x-real-ip"), salt);
     }
 
-    const { data, error } = await supabase.rpc("rate_limit_hit", {
-      p_action: action,
-      p_fingerprint: fingerprint,
-      p_limit: limit,
-      p_window_minutes: windowMinutes,
-    });
+    const { data, error } = await sql.scalar<boolean>`
+      select course.rate_limit_hit(${action}, ${fingerprint}, ${limit}, ${windowMinutes})
+    `;
     if (!error) return { allowed: data === true };
-    if (MISSING_FUNCTION.has(error.code ?? "")) return recordThenCount(supabase, action, fingerprint, limit, windowMinutes);
+    if (error.code === MISSING_FUNCTION) return recordThenCount(sql, action, fingerprint, limit, windowMinutes);
     return { allowed: true, degraded: true };
   } catch {
     return { allowed: true, degraded: true };
@@ -65,24 +60,24 @@ export async function checkRateLimit(
 }
 
 /**
- * Used only until migration 20260924000000 is applied. Recording before
+ * Used only where course.rate_limit_hit is not in place yet. Recording before
  * counting means simultaneous requests each see the others, so a burst is
  * refused rather than waved through; it can over-block a burst, never
  * under-block one.
  */
 async function recordThenCount(
-  supabase: Client, action: string, fingerprint: string, limit: number, windowMinutes: number,
+  sql: Db, action: string, fingerprint: string, limit: number, windowMinutes: number,
 ): Promise<RateLimitResult> {
-  const { error: insertError } = await supabase.from("rate_limit_events").insert({ action, fingerprint });
+  const { error: insertError } = await sql.run`
+    insert into course.rate_limit_events (action, fingerprint) values (${action}, ${fingerprint})
+  `;
   if (insertError) return { allowed: true, degraded: true };
 
   const since = new Date(Date.now() - windowMinutes * 60_000).toISOString();
-  const { count, error } = await supabase
-    .from("rate_limit_events")
-    .select("id", { count: "exact", head: true })
-    .eq("action", action)
-    .eq("fingerprint", fingerprint)
-    .gte("created_at", since);
+  const { data: count, error } = await sql.scalar<number>`
+    select count(*)::int from course.rate_limit_events
+     where action = ${action} and fingerprint = ${fingerprint} and created_at >= ${since}
+  `;
 
   if (error) return { allowed: true, degraded: true };
   return { allowed: (count ?? 0) <= limit };

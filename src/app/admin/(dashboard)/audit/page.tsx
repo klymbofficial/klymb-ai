@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { requireAdmin } from "@/lib/admin/auth";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 
 interface Entry { id: number; at: string; admin_email: string; action: string; target: string | null; details: Record<string, unknown> }
 
@@ -20,16 +20,25 @@ const UUID = /^[0-9a-f-]{36}$/i;
 
 export default async function AdminAuditPage() {
   await requireAdmin();
-  const supabase = createServiceClient();
-  const { data } = supabase
-    ? await supabase.from("admin_audit_log").select("id, at, admin_email, action, target, details").order("at", { ascending: false }).limit(300)
+  const sql = db();
+  const { data } = sql
+    ? await sql.rows<Entry>`
+        select id, at, admin_email, action, target, details
+          from course.admin_audit_log
+         order by at desc
+         limit 300
+      `
     : { data: null };
-  const entries = (data as Entry[] | null) ?? [];
+  const entries = data ?? [];
 
   // Learner ids read better as emails.
   const ids = [...new Set(entries.map((e) => e.target).filter((t): t is string => !!t && UUID.test(t)))];
-  const { data: learners } = supabase && ids.length ? await supabase.from("learners").select("id, email").in("id", ids) : { data: null };
-  const who = new Map((learners ?? []).map((l) => [l.id as string, l.email as string]));
+  const { data: learners } = sql && ids.length
+    ? await sql.rows<{ id: string; email: string }>`
+        select id, email from course.learners where id = any(${ids}::uuid[])
+      `
+    : { data: null };
+  const who = new Map((learners ?? []).map((l) => [l.id, l.email]));
 
   return (
     <>

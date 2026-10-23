@@ -1,7 +1,7 @@
 import "server-only";
 import { commitDays, mainRepo } from "@/lib/learner/github";
 import { getAdmin } from "@/lib/admin/auth";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 import type { TrackSlug } from "@/types/program";
 
 export interface Registration {
@@ -55,33 +55,42 @@ export interface LearnerDetail extends LearnerProgress {
 }
 
 export async function getRegistrations(): Promise<Registration[]> {
-  // The service client bypasses RLS, so authorisation is checked here.
+  // The connection has blanket read and write on the course schema, so
+  // authorisation is checked here.
   if (!(await getAdmin())) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
-  const { data } = await supabase
-    .from("registrations")
-    .select("id, created_at, name, email, phone, track, job_role, experience, linkedin, cohort_start")
-    .order("created_at", { ascending: false })
-    .limit(1000);
-  return (data as Registration[]) ?? [];
+  const sql = db();
+  if (!sql) return [];
+  const { data } = await sql.rows<Registration>`
+    select id, created_at, name, email, phone, track, job_role, experience, linkedin, cohort_start
+      from course.registrations
+     order by created_at desc
+     limit 1000
+  `;
+  return data ?? [];
 }
 
 export async function getLearnerProgress(): Promise<LearnerProgress[]> {
   if (!(await getAdmin())) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
+  const sql = db();
+  if (!sql) return [];
 
-  const { data: learners } = await supabase
-    .from("learners")
-    .select("id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug")
-    .order("created_at", { ascending: false });
+  const { data: learners } = await sql.rows<Omit<LearnerProgress, "days_submitted" | "last_submission_at" | "commit_repo" | "commit_days" | "linkedin_posts" | "assessments_scored" | "latest_band">>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug
+      from course.learners
+     order by created_at desc
+  `;
   if (!learners?.length) return [];
 
   const ids = learners.map((l) => l.id);
   const [{ data: submissions }, { data: assessments }] = await Promise.all([
-    supabase.from("day_submissions").select("learner_id, day, submitted_at, linkedin_post_url, deliverable_url").in("learner_id", ids),
-    supabase.from("assessment_results").select("learner_id, after_day, band, weighted_score").in("learner_id", ids),
+    sql.rows<{ learner_id: string; day: number; submitted_at: string; linkedin_post_url: string | null; deliverable_url: string | null }>`
+      select learner_id, day, submitted_at, linkedin_post_url, deliverable_url
+        from course.day_submissions where learner_id = any(${ids}::uuid[])
+    `,
+    sql.rows<{ learner_id: string; after_day: number; band: string | null; weighted_score: number | null }>`
+      select learner_id, after_day, band, weighted_score
+        from course.assessment_results where learner_id = any(${ids}::uuid[])
+    `,
   ]);
 
   // Commit days on GitHub, for the "commits on 20+ days" rule. Cached an hour per repo.
@@ -133,26 +142,29 @@ export function summariseRegistrations(rows: Registration[]): RegistrationSummar
 /** One learner, with every submission, for the reviewer's view. */
 export async function getLearnerDetail(id: string): Promise<LearnerDetail | null> {
   if (!(await getAdmin())) return null;
-  const supabase = createServiceClient();
-  if (!supabase) return null;
+  const sql = db();
+  if (!sql) return null;
 
-  const { data: learner } = await supabase
-    .from("learners")
-    .select("id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug")
-    .eq("id", id)
-    .maybeSingle();
+  const { data: learner } = await sql.row<LearnerProgress>`
+    select id, name, email, track, cohort_start, status, github_url, linkedin_url, github_username, linkedin_slug
+      from course.learners
+     where id = ${id}
+  `;
   if (!learner) return null;
 
   const [{ data: submissions }, { data: assessments }] = await Promise.all([
-    supabase
-      .from("day_submissions")
-      .select("day, deliverable_url, note, linkedin_post_url, quiz_answers, status, submitted_at, reviewer_note")
-      .eq("learner_id", id)
-      .order("day"),
-    supabase.from("assessment_results").select("after_day, band, weighted_score").eq("learner_id", id),
+    sql.rows<LearnerSubmission>`
+      select day, deliverable_url, note, linkedin_post_url, quiz_answers, status, submitted_at, reviewer_note
+        from course.day_submissions
+       where learner_id = ${id}
+       order by day
+    `,
+    sql.rows<{ after_day: number; band: string | null; weighted_score: number | null }>`
+      select after_day, band, weighted_score from course.assessment_results where learner_id = ${id}
+    `,
   ]);
 
-  const rows = (submissions as LearnerSubmission[]) ?? [];
+  const rows = submissions ?? [];
   const scored = (assessments ?? []).filter((a) => a.weighted_score != null).sort((a, b) => a.after_day - b.after_day);
 
   return {
@@ -182,31 +194,33 @@ export interface PaymentRow {
 /** Completed payments only: unpaid orders are abandoned checkouts, not money. */
 export async function getPayments(): Promise<PaymentRow[]> {
   if (!(await getAdmin())) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
+  const sql = db();
+  if (!sql) return [];
   const [{ data }, { data: log }] = await Promise.all([
-    supabase
-      .from("payments")
-      .select("id, created_at, email, track, cohort_start, amount, status, razorpay_payment_id")
-      .in("status", ["paid", "refunded"])
-      .order("created_at", { ascending: false })
-      .limit(1000),
-    supabase
-      .from("admin_audit_log")
-      .select("at, admin_email, details")
-      .eq("action", "payment.refund")
-      .order("at", { ascending: false })
-      .limit(1000),
+    sql.rows<Omit<PaymentRow, "refund_request">>`
+      select id, created_at, email, track, cohort_start, amount, status, razorpay_payment_id
+        from course.payments
+       where status in ('paid', 'refunded')
+       order by created_at desc
+       limit 1000
+    `,
+    sql.rows<{ at: string; admin_email: string; details: { payment_id?: string; ok?: boolean } }>`
+      select at, admin_email, details
+        from course.admin_audit_log
+       where action = 'payment.refund'
+       order by at desc
+       limit 1000
+    `,
   ]);
 
   // Newest first, so the first accepted request per payment wins.
   const requests = new Map<string, { by: string; at: string }>();
-  for (const e of (log ?? []) as { at: string; admin_email: string; details: { payment_id?: string; ok?: boolean } }[]) {
+  for (const e of log ?? []) {
     const id = e.details?.payment_id;
     if (id && e.details.ok && !requests.has(id)) requests.set(id, { by: e.admin_email, at: e.at });
   }
 
-  return ((data ?? []) as Omit<PaymentRow, "refund_request">[]).map((p) => ({
+  return (data ?? []).map((p) => ({
     ...p,
     refund_request: (p.razorpay_payment_id && requests.get(p.razorpay_payment_id)) || null,
   }));
@@ -226,18 +240,24 @@ export interface OverviewCounts {
  */
 export async function getOverviewCounts(): Promise<OverviewCounts | null> {
   if (!(await getAdmin())) return null;
-  const supabase = createServiceClient();
-  if (!supabase) return null;
+  const sql = db();
+  if (!sql) return null;
 
   const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
   const [{ data: learners }, { data: recent }, { data: payments }] = await Promise.all([
-    supabase.from("learners").select("track, status, created_at").limit(5000),
-    supabase.from("day_submissions").select("learner_id").gte("submitted_at", weekAgo).limit(5000),
-    supabase.from("payments").select("status, amount").in("status", ["paid", "refunded"]).limit(5000),
+    sql.rows<{ track: string; status: string; created_at: string }>`
+      select track, status, created_at from course.learners limit 5000
+    `,
+    sql.rows<{ learner_id: string }>`
+      select learner_id from course.day_submissions where submitted_at >= ${weekAgo} limit 5000
+    `,
+    sql.rows<{ status: string; amount: number }>`
+      select status, amount from course.payments where status in ('paid', 'refunded') limit 5000
+    `,
   ]);
 
-  const rows = (learners ?? []) as { track: string; status: string; created_at: string }[];
-  const money = (payments ?? []) as { status: string; amount: number }[];
+  const rows = learners ?? [];
+  const money = payments ?? [];
   const total = (status: string) => money.filter((p) => p.status === status);
   return {
     learners: {
@@ -246,7 +266,7 @@ export async function getOverviewCounts(): Promise<OverviewCounts | null> {
       joinedLast7d: rows.filter((l) => Date.parse(l.created_at) >= Date.parse(weekAgo)).length,
       byTrack: rows.reduce<Record<string, number>>((acc, l) => ({ ...acc, [l.track]: (acc[l.track] ?? 0) + 1 }), {}),
     },
-    submittingLast7d: new Set((recent ?? []).map((s) => s.learner_id as string)).size,
+    submittingLast7d: new Set((recent ?? []).map((s) => s.learner_id)).size,
     money: {
       paid: total("paid").length,
       paidAmount: total("paid").reduce((s, p) => s + p.amount, 0),

@@ -14,8 +14,8 @@ import { getCurriculumDay } from "@/data/curricula";
 import { todayInIndia } from "@/lib/learn";
 import { checkFreshPush } from "@/lib/learner/github";
 import { checkAnswers, checkPace, checkReusedLink, checkWorkLink } from "@/lib/learner/integrity";
+import { db } from "@/lib/db/client";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { createServiceClient } from "@/lib/supabase/admin";
 import { clamp, LIMITS, safeUrl } from "@/lib/validation";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string };
@@ -85,21 +85,35 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
     return { ok: false, message: "This checkpoint needs your LinkedIn post link as well: it is part of the evidence." };
   }
 
-  const supabase = createServiceClient();
-  if (!supabase) return { ok: false, message: "Submissions are unavailable right now." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Submissions are unavailable right now." };
 
-  const row = {
-    deliverable_url: url,
-    note: note || null,
-    ...(quizAnswers ? { quiz_answers: quizAnswers } : {}),
-    ...(linkedinPost ? { linkedin_post_url: linkedinPost } : {}),
-    status: "submitted",
-  };
+  // Answers are a JSON array in a jsonb column, so they go over as JSON text:
+  // a bare array would be sent as a Postgres array literal, which jsonb rejects.
+  const answers = quizAnswers ? JSON.stringify(quizAnswers) : null;
+  const post = linkedinPost || null;
   // submitted_at records the first save only, so re-saving an old day never
   // looks like new progress (the daily pace limit depends on it).
   const { error } = submissionExists(state.submissions, day)
-    ? await supabase.from("day_submissions").update(row).eq("learner_id", state.learner.id).eq("day", day)
-    : await supabase.from("day_submissions").insert({ ...row, learner_id: state.learner.id, day, submitted_at: new Date().toISOString() });
+    // coalesce, not assignment: a save that carries no answers or no post must
+    // leave the ones already stored alone, as omitting the column used to.
+    ? await sql.run`
+        update course.day_submissions
+           set deliverable_url = ${url},
+               note = ${note || null},
+               quiz_answers = coalesce(${answers}::jsonb, quiz_answers),
+               linkedin_post_url = coalesce(${post}, linkedin_post_url),
+               status = 'submitted'
+         where learner_id = ${state.learner.id} and day = ${day}
+      `
+    : await sql.run`
+        insert into course.day_submissions
+          (learner_id, day, deliverable_url, note, quiz_answers, linkedin_post_url, status, submitted_at)
+        values (
+          ${state.learner.id}, ${day}, ${url}, ${note || null}, ${answers}::jsonb,
+          ${post}, 'submitted', ${new Date().toISOString()}
+        )
+      `;
 
   if (error) {
     console.error("day submission failed:", error.code, error.message);
@@ -147,18 +161,17 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
   const limit = await checkRateLimit("evidence_profile", { limit: 20, windowMinutes: 60, identity: state.learner.id });
   if (!limit.allowed) return { error: "Too many changes in the last hour. Try again shortly." };
 
-  const supabase = createServiceClient();
-  if (!supabase) return { error: "That could not be saved right now." };
+  const sql = db();
+  if (!sql) return { error: "That could not be saved right now." };
 
-  const { error } = await supabase
-    .from("learners")
-    .update({
-      github_username: github,
-      linkedin_slug: linkedin,
-      github_url: `https://github.com/${github}`,
-      linkedin_url: `https://www.linkedin.com/in/${linkedin}`,
-    })
-    .eq("id", state.learner.id);
+  const { error } = await sql.run`
+    update course.learners
+       set github_username = ${github},
+           linkedin_slug = ${linkedin},
+           github_url = ${`https://github.com/${github}`},
+           linkedin_url = ${`https://www.linkedin.com/in/${linkedin}`}
+     where id = ${state.learner.id}
+  `;
 
   if (error) {
     console.error("profile save failed:", error.code, error.message);
@@ -190,8 +203,11 @@ export async function continueOnThisDevice() {
   await claimDevice(email, sid);
   console.info("device takeover:", email);
   // Tell the old device right away (it re-checks and leaves within a second).
-  const { data: learner } = (await createServiceClient()?.from("learners").select("id").eq("email", email).maybeSingle()) ?? { data: null };
-  if (learner?.id) await broadcastTakeover(learner.id as string);
+  const sql = db();
+  const { data: learner } = sql
+    ? await sql.row<{ id: string }>`select id from course.learners where email = ${email}`
+    : { data: null };
+  if (learner?.id) await broadcastTakeover(learner.id);
   redirect("/learn");
 }
 

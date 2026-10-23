@@ -7,6 +7,12 @@ import { createHmac } from "node:crypto";
  * The channel name is an HMAC of the learner id, so nobody can guess another
  * learner's channel. The message carries nothing: listeners re-check with
  * the server, which alone decides who holds the device.
+ *
+ * This and src/components/learner/DeviceWatch.tsx are the only places Supabase
+ * is still used, and only as a message bus. Every table moved to the Neon
+ * database that runs app.klymb.ai (see src/lib/db/client.ts), so the Supabase
+ * project holds no data at all — broadcast is a pub/sub service that never
+ * touches a database, which is why the move cost this feature nothing.
  */
 export function deviceChannel(learnerId: string) {
   const secret = process.env.AUTH_SECRET ?? "";

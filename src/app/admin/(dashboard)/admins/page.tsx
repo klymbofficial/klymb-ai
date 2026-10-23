@@ -2,15 +2,17 @@ import { AdminUsers } from "@/components/admin/AdminUsers";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { isOwnerEmail } from "@/lib/admin/access";
 import { requireOwner } from "@/lib/admin/auth";
-import { createServiceClient } from "@/lib/supabase/admin";
+import { db } from "@/lib/db/client";
 
 export default async function AdminUsersPage() {
   const me = await requireOwner();
-  const supabase = createServiceClient();
-  const { data } = supabase
-    ? await supabase.from("admin_users").select("email, name, added_at").order("added_at")
+  const sql = db();
+  const { data } = sql
+    ? await sql.rows<{ email: string; name: string | null; added_at: string }>`
+        select email, name, added_at from course.admin_users order by added_at
+      `
     : { data: null };
-  const rows = ((data as { email: string; name: string | null; added_at: string }[] | null) ?? []).map((r) => ({
+  const rows = (data ?? []).map((r) => ({
     ...r,
     owner: isOwnerEmail(r.email),
     you: r.email === me.email,

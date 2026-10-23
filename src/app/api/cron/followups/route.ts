@@ -7,8 +7,8 @@ import { hasPaid } from "@/lib/access";
 import { formatINR } from "@/lib/format";
 import { dueFollowup, FOLLOWUP_DONE } from "@/lib/followups";
 import { noteEmail, sendMail } from "@/lib/mail";
+import { db } from "@/lib/db/client";
 import { LAUNCH_OFFER, offerOpen, priceNow } from "@/lib/offer";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 /** At most this many per run: Brevo's free plan sends 300 a day. */
 const BATCH = 60;
@@ -24,17 +24,20 @@ export async function GET(req: Request) {
   if (!isCronRequest(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const supabase = createServiceClient();
-  if (!supabase || !process.env.BREVO_API_KEY) return NextResponse.json({ error: "Not configured" }, { status: 500 });
+  const sql = db();
+  if (!sql || !process.env.BREVO_API_KEY) return NextResponse.json({ error: "Not configured" }, { status: 500 });
 
   const now = new Date();
-  const { data: rows, error } = await supabase
-    .from("registrations")
-    .select("id, name, email, track, created_at, followup_stage")
-    .lt("followup_stage", FOLLOWUP_DONE)
-    .lte("created_at", new Date(now.getTime() - 3_600_000).toISOString())
-    .order("created_at")
-    .limit(BATCH);
+  const { data: rows, error } = await sql.rows<{
+    id: string; name: string | null; email: string; track: string; created_at: string; followup_stage: number;
+  }>`
+    select id, name, email, track, created_at, followup_stage
+      from course.registrations
+     where followup_stage < ${FOLLOWUP_DONE}
+       and created_at <= ${new Date(now.getTime() - 3_600_000).toISOString()}
+     order by created_at
+     limit ${BATCH}
+  `;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   let sent = 0, closed = 0;
@@ -43,7 +46,7 @@ export async function GET(req: Request) {
     const track = getTrack(r.track);
     // Free track, or already paid: the sequence is over.
     if (!track || track.price === 0 || (await hasPaid(r.email, r.track))) {
-      await supabase.from("registrations").update({ followup_stage: FOLLOWUP_DONE }).eq("id", r.id);
+      await sql.run`update course.registrations set followup_stage = ${FOLLOWUP_DONE} where id = ${r.id}`;
       closed++;
       continue;
     }
@@ -51,13 +54,12 @@ export async function GET(req: Request) {
     if (!step) continue;
 
     // Claim the step first: only the run that moves the stage sends the email.
-    const { data: claimed } = await supabase
-      .from("registrations")
-      .update({ followup_stage: step, followup_sent_at: now.toISOString() })
-      .eq("id", r.id)
-      .eq("followup_stage", r.followup_stage)
-      .select("id")
-      .maybeSingle();
+    const { data: claimed } = await sql.row<{ id: string }>`
+      update course.registrations
+         set followup_stage = ${step}, followup_sent_at = ${now.toISOString()}
+       where id = ${r.id} and followup_stage = ${r.followup_stage}
+      returning id
+    `;
     if (!claimed) continue;
 
     const mail = followupEmail(step, {
@@ -73,7 +75,10 @@ export async function GET(req: Request) {
     else {
       console.error("follow-up failed:", r.id, step, result.reason);
       // Release the claim so the next run can try again.
-      await supabase.from("registrations").update({ followup_stage: r.followup_stage }).eq("id", r.id).eq("followup_stage", step);
+      await sql.run`
+        update course.registrations set followup_stage = ${r.followup_stage}
+         where id = ${r.id} and followup_stage = ${step}
+      `;
     }
   }
 

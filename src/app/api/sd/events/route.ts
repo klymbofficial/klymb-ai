@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
+import { db } from "@/lib/db/client";
 import { cleanEvent, validAnon } from "@/lib/sd-events";
-import { createServiceClient } from "@/lib/supabase/admin";
 
 /**
  * Activity from the System Design course: a small batch of events per call,
@@ -18,11 +18,16 @@ export async function POST(req: Request) {
   const email = normaliseEmail(await currentEmail().catch(() => null));
   const lang = body.lang === "hi" || body.lang === "en" ? body.lang : null;
   const device = typeof body.device === "string" ? body.device.slice(0, 12) : null;
-  const supabase = createServiceClient();
-  if (!supabase) return NextResponse.json({ ok: true });
-  const { error } = await supabase.from("sd_events").insert(
-    events.map((e) => ({ anon_id: body.anon, email, event: e.event, lesson: e.lesson, step: e.step, props: e.props, path: e.path, lang, device })),
-  );
+  const sql = db();
+  if (!sql) return NextResponse.json({ ok: true });
+  // The whole batch in one statement: the rows go over as JSON and Postgres
+  // expands them, rather than one round trip per event.
+  const { error } = await sql.run`
+    insert into course.sd_events (anon_id, email, event, lesson, step, props, path, lang, device)
+    select ${body.anon}, ${email}, e.event, e.lesson, e.step, e.props, e.path, ${lang}, ${device}
+      from jsonb_to_recordset(${JSON.stringify(events)}::jsonb)
+        as e(event text, lesson text, step text, props jsonb, path text)
+  `;
   if (error) console.error("sd events save failed:", error.message);
   return NextResponse.json({ ok: !error });
 }

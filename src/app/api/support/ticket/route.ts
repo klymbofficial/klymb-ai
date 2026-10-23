@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
 import { sendMail } from "@/lib/mail";
+import { db } from "@/lib/db/client";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { createServiceClient } from "@/lib/supabase/admin";
 import { SUPPORT_EMAIL } from "@/data/support-faq";
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -36,9 +36,13 @@ export async function POST(req: Request) {
   const limit = await checkRateLimit("support-ticket", { limit: 5, windowMinutes: 60 });
   if (!limit.allowed) return NextResponse.json({ error: "You've sent a few already. We'll reply soon." }, { status: 429 });
 
-  const supabase = createServiceClient();
-  const { data, error } = supabase
-    ? await supabase.from("support_tickets").insert({ email, name: name || null, message, page: page || null, context }).select("id").single()
+  const sql = db();
+  const { data, error } = sql
+    ? await sql.row<{ id: string }>`
+        insert into course.support_tickets (email, name, message, page, context)
+        values (${email}, ${name || null}, ${message}, ${page || null}, ${JSON.stringify(context)}::jsonb)
+        returning id
+      `
     : { data: null, error: { message: "no database" } };
   if (error) console.error("support ticket save failed:", error.message);
 
