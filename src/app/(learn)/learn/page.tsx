@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { Appear } from "@/components/motion/Appear";
 import { CohortBoard, type BoardDay } from "@/components/learner/CohortBoard";
 import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
+import { Achievements } from "@/components/learner/Achievements";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
@@ -151,6 +152,8 @@ export default async function LearnHomePage() {
         <Appear>
           <CohortBoard days={days} initialDay={nextDay.day} />
         </Appear>
+
+        <Achievements days={days.filter((d) => d.submitted).length} name={learner.name} course={track.name} slug={learner.track} />
 
         <Appear className="mt-14">
           <section aria-labelledby="evidence">

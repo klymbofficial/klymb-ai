@@ -29,6 +29,19 @@ const toggleMute = (p: CourseState): CourseState => ({ ...p, muted: !p.muted, vo
  * Player shortcuts while a lesson video is on screen. Space is handled with
  * the app's other keys; ←/→ belong to the focused scrubber.
  */
+/**
+ * Fullscreen for the lesson video. The whole player box goes fullscreen so the
+ * design's own controls come with it; iPhone Safari can only fullscreen a
+ * <video>, so it falls back to the native player there.
+ */
+export function toggleFullscreen() {
+  if (document.fullscreenElement) { void document.exitFullscreen(); return; }
+  const box = document.getElementById("lesson-watch");
+  const video = box?.querySelector("video") as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+  if (box?.requestFullscreen) box.requestFullscreen().catch(() => video?.webkitEnterFullscreen?.());
+  else video?.webkitEnterFullscreen?.();
+}
+
 export function usePlayerKeys(act: Act, active: boolean) {
   useEffect(() => {
     if (!active) return;
@@ -44,6 +57,7 @@ export function usePlayerKeys(act: Act, active: boolean) {
       else if (k === "0") act((p) => setSpeed(p, 1));
       else if (k === "c" || k === "C") act(toggleSubs);
       else if (k === "m" || k === "M") act(toggleMute);
+      else if (k === "f" || k === "F") toggleFullscreen();
       else return;
       e.preventDefault();
     };
@@ -91,7 +105,7 @@ const MENU_TITLE: Record<MenuKey, string> = { speed: "Speed", audio: "Audio", cc
 const audioCode = (lang?: string) => (lang ? (lang === "Hinglish" ? "HGL" : lang.slice(0, 2).toUpperCase()) : "");
 const ccName = (s: CourseState) => (s.subLang === "en" ? "English" : "Hinglish");
 
-const barBtn = "flex h-11 w-10 flex-none cursor-pointer items-center justify-center rounded-lg p-0 text-white hover:bg-white/16";
+const barBtn = "flex h-11 w-9 flex-none sm:w-10 cursor-pointer items-center justify-center rounded-lg p-0 text-white hover:bg-white/16";
 
 /**
  * Mobile: the controls sit on the video, YouTube-style. A scrubber, then play,
@@ -139,6 +153,7 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
             <span className={clsx("rounded border-[1.5px] border-white px-[5px] py-0.5", s.subs ? "bg-sd-accent" : "bg-transparent")}>CC</span>
           </button>
         )}
+        <button type="button" onClick={toggleFullscreen} aria-label="Fullscreen" className={barBtn}><Icon name="fullscreen" /></button>
       </div>
     </div>
   );
@@ -186,6 +201,7 @@ export function ControlRow({ s, act, ui, qc }: { s: CourseState; act: Act; ui: R
           {menu("cc")}
         </div>
       )}
+      <button type="button" onClick={toggleFullscreen} aria-label="Fullscreen" title="Fullscreen (F)" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="fullscreen" size={16} /></button>
       {qc && <span className="ml-auto text-[13px] font-semibold text-sd-accent-700">Quick check at {qc}</span>}
       <span className={clsx("pl-3 text-[13px] font-semibold tabular-nums", !qc && "ml-auto")}>{fmt(s.t)} / {lesson(s.cur).dur}</span>
     </div>

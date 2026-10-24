@@ -51,6 +51,8 @@ export interface LessonProgress {
    * `failed`, and a retake opens once the video is watched again (`rewatched`).
    */
   check?: number; checkPicks?: number[]; tries?: number; failed?: boolean; rewatched?: boolean;
+  /** Seconds of video actually played since the last miss; skipping ahead does not count. */
+  rewatchSec?: number;
 }
 
 export interface CourseState {
@@ -492,20 +494,20 @@ export function closeQuiz(s: CourseState): CourseState {
   return { ...s, screen: s.tab, confirmExit: false };
 }
 
-export interface Badge { name: string; icon: "play" | "target" | "flame" | "zap" | "note" | "trending" | "db" | "award"; on: boolean }
+export interface Badge { name: string; description: string; icon: "play" | "target" | "flame" | "zap" | "note" | "trending" | "db" | "award"; on: boolean }
 
 export function badges(s: CourseState, now = Date.now()): Badge[] {
   const modDone = (mi: number) => moduleIds(mi).every((id) => s.done.includes(id));
   const st = streak(s, now);
   return [
-    { name: "First lesson", icon: "play", on: s.done.length > 0 },
-    { name: "First pass", icon: "target", on: Object.values(s.lessons).some((p) => !!p.post) },
-    { name: "7-day streak", icon: "flame", on: st.longest >= 7 },
-    { name: "Started right", icon: "zap", on: modDone(0) },
-    { name: "Note taker", icon: "note", on: allNotes(s).length >= 3 },
-    { name: "Perfect score", icon: "trending", on: Object.values(s.lessons).some((p) => p.check === 100) },
-    { name: "Builder", icon: "db", on: Object.values(s.lessons).some((p) => p.built !== undefined) },
-    { name: "Course complete", icon: "award", on: s.done.length === LESSON_COUNT },
+    { name: "First lesson", description: "Finished my first System Design lesson.", icon: "play", on: s.done.length > 0 },
+    { name: "First pass", description: "Passed my first System Design lesson assessment.", icon: "target", on: Object.values(s.lessons).some((p) => !!p.post) },
+    { name: "7-day streak", description: "Kept learning for seven consecutive days.", icon: "flame", on: st.longest >= 7 },
+    { name: "Started right", description: "Finished the first System Design module.", icon: "zap", on: modDone(0) },
+    { name: "Note taker", description: "Saved three notes from my learning journey.", icon: "note", on: allNotes(s).length >= 3 },
+    { name: "Perfect score", description: "Scored 100% on a System Design lesson assessment.", icon: "trending", on: Object.values(s.lessons).some((p) => p.check === 100) },
+    { name: "Builder", description: "Submitted my first architecture practice answer.", icon: "db", on: Object.values(s.lessons).some((p) => p.built !== undefined) },
+    { name: "Course complete", description: "Finished every lesson in the System Design course.", icon: "award", on: ALL_IDS.every((id) => s.done.includes(id)) },
   ];
 }
 
@@ -546,6 +548,8 @@ export function migrateLegacy(s: CourseState, legacy: { day0?: LessonProgress | 
 /** `?lesson=<id>`: open straight into that lesson, skipping the splash and intro (links from Instagram land here). */
 export function deepLink(s: CourseState, id: string | null, now = Date.now()): CourseState {
   if (!id || !ALL_IDS.includes(id) || isSoon(id)) return s;
+  // Back from "Continue with Google" on the welcome, or a first visit: the commitment comes before Day 0.
+  if (id === "0-0" && !s.commitment && s.done.length === 0) return { ...s, onboarded: true, tab: "course", cur: id, screen: "commit" };
   // Shared links open their lesson even when it's still locked here.
   return openLesson({ ...s, onboarded: true, tab: "course" }, id, now, true);
 }
@@ -595,6 +599,8 @@ export function audioTrack(s: CourseState, id = s.cur) {
 
 /** Locked until the lesson before it is passed (or done). Lessons not out yet are handled as "coming soon". */
 export function isLocked(s: CourseState, id: string) {
+  // Learners already in a lesson keep it: the check arrived after they had moved on.
+  if (id === s.cur || s.done.includes(id) || s.lessons[id]?.started) return false;
   const i = ALL_IDS.indexOf(id);
   const prev = ALL_IDS[i - 1];
   if (!prev || !dayOf(prev)) return false;
@@ -619,11 +625,27 @@ export function submitCheck(s: CourseState, id: string, questions: ChoiceQuestio
   const best = Math.max(was.check ?? 0, pct);
   const tries = (was.tries ?? 0) + 1;
   if (!passed(pct)) {
-    return updateLesson(s, id, { check: was.post ? best : pct, checkPicks: picks, tries, failed: !was.post, rewatched: false }, now);
+    return updateLesson(s, id, { check: was.post ? best : pct, checkPicks: picks, tries, failed: !was.post, rewatched: false, rewatchSec: 0 }, now);
   }
   const n = updateLesson(s, id, { post: picks, read: true, check: best, checkPicks: picks, tries, failed: false, rewatched: false }, now);
   const today = localDate(new Date(now));
   return n.popDay === today ? n : { ...n, streakPop: true, popDay: today };
+}
+
+/** Share of the video that must be played again after a miss before the retake opens. */
+export const REWATCH_SHARE = 0.85;
+
+/**
+ * Counts seconds played after a missed check. Only real playback counts:
+ * the caller passes the gap between two time updates, and a jump (a seek or
+ * a skip) is too large to be playback, so it adds nothing.
+ */
+export function addRewatch(s: CourseState, id: string, played: number, duration: number): CourseState {
+  const p = s.lessons[id];
+  if (!p?.failed || p.rewatched || !(duration > 0) || !(played > 0) || played > 2) return s;
+  const sec = (p.rewatchSec ?? 0) + played;
+  const n = { ...s, lessons: { ...s.lessons, [id]: { ...p, rewatchSec: sec } } };
+  return sec >= duration * REWATCH_SHARE ? markRewatched(n, id) : n;
 }
 
 /** After a fail, watching the video again opens the retake. */

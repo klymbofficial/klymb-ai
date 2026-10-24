@@ -1,6 +1,10 @@
 "use client";
 
 import clsx from "clsx";
+import { useState } from "react";
+import { ShareAchievement } from "@/components/achievements/ShareAchievement";
+import { site } from "@/data/config";
+import { useCourseUser } from "../user";
 import { badges, localDate, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Bar, parallax, stagger, useCountUp } from "../ui";
@@ -23,11 +27,15 @@ function heat(s: CourseState, now = new Date()) {
 }
 
 export function Progress({ s }: { s: CourseState }) {
+  const user = useCourseUser();
+  const [selected, setSelected] = useState<string | null>(null);
   const st = streak(s);
   const shown = useCountUp(st.current);
   const HEAT = heat(s);
   const active = HEAT.filter((h) => h === "on").length;
   const b = badges(s);
+  const earned = b.filter((x) => x.on);
+  const shareBadge = earned.find((x) => x.name === selected) ?? earned[earned.length - 1];
   const mods = moduleViews(s);
   return (
     <div className="sd-a-screen flex max-w-[1120px] flex-col gap-[22px] px-5 pt-2 pb-7 lg:gap-7 lg:p-0">
@@ -62,19 +70,21 @@ export function Progress({ s }: { s: CourseState }) {
         </div>
       </div>
       <div>
-        <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Badges</h6><span className="text-xs text-sd-n-700">{b.filter((x) => x.on).length} of 8</span></div>
-        <div className="grid grid-cols-4 gap-1.5 lg:grid-cols-8 lg:gap-2">
+        <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Badges</h6><span className="text-xs text-sd-n-700">{earned.length} of {b.length}</span></div>
+        <p className="mb-3 text-sm text-sd-n-700">{earned.length ? "Choose an earned badge to download and share your progress." : "Finish your first lesson or pass a lesson assessment to unlock a badge you can share."}</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {b.map((x, i) => (
-            <div key={x.name} className="sd-a-pop flex flex-col items-center gap-1.5 py-1 text-center" style={stagger(i, 60, 300)}>
+            <button type="button" key={x.name} disabled={!x.on} aria-pressed={x.on && shareBadge?.name === x.name} title={x.description} onClick={() => setSelected(x.name)} className={clsx("sd-a-pop flex flex-col items-center gap-1.5 rounded-xl py-1 text-center", x.on && "cursor-pointer", x.on && shareBadge?.name === x.name && "outline-2 outline-offset-2 outline-sd-accent")} style={stagger(i, 60, 300)}>
               <div className={clsx("size-[62px] flex-none rounded-full p-1 lg:size-[72px]", x.on ? "sd-medal-ring" : "bg-sd-n-300")}>
                 <div className={clsx("flex size-full items-center justify-center rounded-full", x.on ? "sd-medal-core text-white" : "border-2 border-dashed border-sd-n-400 bg-sd-bg text-sd-n-500")}>
                   <Icon name={x.on ? x.icon : "lock"} size={24} />
                 </div>
               </div>
               <span className={clsx("text-[11px] leading-[1.2] font-bold lg:text-[13px]", x.on ? "text-sd-ink" : "text-sd-n-600")}>{x.name}<span className="sr-only">{x.on ? ", earned" : ", locked"}</span></span>
-            </div>
+            </button>
           ))}
         </div>
+        {shareBadge && <div className="mt-5"><ShareAchievement key={shareBadge.name} badge={shareBadge} course="System Design in 21 Days" courseUrl={`${site.url}/learn/system-design`} initialName={user?.name ?? ""} /></div>}
       </div>
       <div>
         <h6 className="sd-h6 mb-2">Modules</h6>

@@ -5,7 +5,7 @@ import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
 import {
   ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, quickCheckAt,
-  markRewatched, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
+  addRewatch, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { DayStart, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
@@ -47,6 +47,8 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
   const ref = useRef<HTMLVideoElement>(null);
   // Watch-through milestones already reported for this lesson's video.
   const marks = useRef<{ id: string; seen: Set<number> }>({ id: "", seen: new Set() });
+  // Where playback was at the last time update, to count only real playback after a miss.
+  const last = useRef<{ id: string; t: number }>({ id: "", t: 0 });
   const errOffline = s.offline && !s.vidErr;
 
   useEffect(() => {
@@ -63,6 +65,9 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
 
   const onTime = (v: HTMLVideoElement) => {
     const t = v.currentTime;
+    // Real playback since the last update; a seek makes the gap too big to count.
+    const played = !v.paused && last.current.id === s.cur ? (t - last.current.t) / (v.playbackRate || 1) : 0;
+    last.current = { id: s.cur, t };
     if (v.duration > 0) {
       if (marks.current.id !== s.cur) marks.current = { id: s.cur, seen: new Set() };
       const pct = Math.min(100, Math.floor((t / v.duration) * 4) * 25);
@@ -71,12 +76,12 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
     const seen = v.duration > 0 && t / v.duration >= 0.85;
     act((p) => {
       const lp = p.lessons[p.cur];
-      const owed = seen && (!lp?.watched || (lp.failed && !lp.rewatched));
-      if (Math.floor(p.t) === Math.floor(t) && !owed) return p;
-      const n = { ...p, t };
-      if (!seen) return n;
-      // Watching it again after a missed check opens the retake.
-      return markRewatched(lp?.watched ? n : updateLesson(n, p.cur, { watched: true }), p.cur);
+      // After a missed check, the retake opens once enough has actually been played again.
+      const base = lp?.failed && !lp.rewatched ? addRewatch(p, p.cur, played, v.duration) : p;
+      const owed = seen && !lp?.watched;
+      if (base === p && Math.floor(p.t) === Math.floor(t) && !owed) return p;
+      const n = { ...base, t };
+      return owed ? updateLesson(n, p.cur, { watched: true }) : n;
     });
   };
 
@@ -116,7 +121,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
         onEnded={() => {
           const retake = !!s.lessons[s.cur]?.failed;
-          act((p) => ({ ...markRewatched(updateLesson(p, p.cur, { watched: true }), p.cur), playing: false, ended: true }));
+          act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true }));
           goTo(retake ? "prove" : "reveal", 400);
         }}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}

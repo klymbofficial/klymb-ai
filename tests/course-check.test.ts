@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { LESSON_DAYS } from "../src/data/system-design/course-app";
 import {
-  CHECK_SIZE, START_SCREENS, badges, checkAverage, checkPct, commit, deepLink, defaultState, flowDone, fromStored, isLocked, markRewatched,
+  CHECK_SIZE, START_SCREENS, addRewatch, badges, checkAverage, checkPct, commit, deepLink, defaultState, flowDone, fromStored, isLocked, markRewatched,
   openLesson, previewState, submitCheck, toStored, updateLesson, type CourseState,
 } from "../src/lib/course-app";
 
@@ -106,4 +106,32 @@ test("every design-review screen builds", () => {
   for (const st of START_SCREENS) assert.ok(previewState(st, {}, NOW).screen, st);
   assert.equal(previewState("commit", {}, NOW).commitment, null);
   assert.equal(previewState("lessonfail", {}, NOW).lessons["1-0"].failed, true);
+});
+
+test("after a miss, only real playback opens the retake: skipping to the end does not", () => {
+  const failed = submitCheck(home(), "0-0", qs, picks(3), NOW);
+  const DUR = 100;
+  // A seek shows up as one big jump, which is not playback.
+  assert.equal(addRewatch(failed, "0-0", 90, DUR).lessons["0-0"].rewatched, false);
+  let s = failed;
+  for (let i = 0; i < 84; i++) s = addRewatch(s, "0-0", 1, DUR);
+  assert.equal(s.lessons["0-0"].rewatched, false, "84 of 100 seconds is not enough");
+  s = addRewatch(s, "0-0", 1, DUR);
+  assert.equal(s.lessons["0-0"].rewatched, true, "85% played opens the retake");
+  // A second miss starts the count again.
+  const again = submitCheck(s, "0-0", qs, picks(3), NOW);
+  assert.equal(again.lessons["0-0"].rewatchSec, 0);
+});
+
+test("learners already in a lesson keep it when the checks arrive", () => {
+  const s: CourseState = { ...home(), cur: "1-0", lessons: { "1-0": { started: true } } };
+  assert.equal(isLocked(s, "1-0"), false);
+  assert.equal(isLocked({ ...home(), cur: "0-0" }, "1-0"), true);
+});
+
+test("coming back from Google on the welcome shows the commitment before Day 0", () => {
+  const fresh = deepLink(defaultState(NOW), "0-0", NOW);
+  assert.equal(fresh.screen, "commit");
+  const signed = deepLink(commit(defaultState(NOW), "Asha", NOW), "0-0", NOW);
+  assert.equal(signed.screen, "player");
 });
