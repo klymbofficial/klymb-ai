@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
-import { fmt, isDownloaded, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
+import { fmt, isDownloaded, isLocked, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
 
 /** Animation delay for the i-th item of a staggered list. */
 export const stagger = (i: number, step: number, base: number): CSSProperties => ({ animationDelay: `${base + i * step}ms` });
@@ -46,8 +46,8 @@ export function useCountUp(to: number) {
 
 export function Bar({ value, className = "h-1.5", grow, style, fillClass = "bg-sd-accent" }: { value: number; className?: string; grow?: boolean; style?: CSSProperties; fillClass?: string }) {
   return (
-    <div className={clsx("bg-sd-n-300", className)}>
-      <div className={clsx("h-full", fillClass, grow ? "sd-a-grow" : "transition-[width] duration-600")} style={{ width: `${Math.min(100, Math.max(0, value))}%`, ...style }} />
+    <div className={clsx("overflow-hidden rounded-full bg-sd-n-300", className)}>
+      <div className={clsx("h-full rounded-full", fillClass, grow ? "sd-a-grow" : "transition-[width] duration-600")} style={{ width: `${Math.min(100, Math.max(0, value))}%`, ...style }} />
     </div>
   );
 }
@@ -79,7 +79,7 @@ export function ScreenTitle({ children, aside, sub }: { children: ReactNode; asi
 export function EmptyState({ icon, title, body, action }: { icon: IconName; title: string; body: string; action: ReactNode }) {
   return (
     <div className="sd-a-in flex flex-col gap-3 py-7">
-      <span className="flex size-[72px] items-center justify-center border-2 border-dashed border-sd-n-500 text-sd-n-700"><Icon name={icon} size={40} /></span>
+      <span className="flex size-[72px] items-center justify-center rounded-xl border-2 border-dashed border-sd-n-500 text-sd-n-700"><Icon name={icon} size={40} /></span>
       <h3 className="m-0 text-2xl tracking-[-0.02em]">{title}</h3>
       <p className="m-0 max-w-[380px] text-sm text-pretty text-sd-n-800">{body}</p>
       <div>{action}</div>
@@ -106,22 +106,28 @@ export function lessonView(s: CourseState, id: string) {
   const done = s.done.includes(id);
   const cur = id === s.cur;
   const soon = isSoon(id);
+  const locked = !soon && isLocked(s, id);
+  const p = s.lessons[id];
   return {
     soon,
+    locked,
     id,
     title: l.title,
     done,
     cur,
+    /** The lesson check's score, and whether that score is a miss waiting for a retake. */
+    score: p?.check,
+    failed: !!p?.failed,
     downloaded: isDownloaded(s, id),
-    dim: soon || (s.offline && !isDownloaded(s, id)),
+    dim: soon || locked || (s.offline && !isDownloaded(s, id)),
     dur: soon ? "Soon" : cur && !done && s.t > 0 ? `${fmt(sec(l.dur) - s.t)} left` : l.dur,
   };
 }
 
-export function LessonMark({ done, cur }: { done: boolean; cur: boolean }) {
+export function LessonMark({ done, cur, locked }: { done: boolean; cur: boolean; locked?: boolean }) {
   return (
-    <span className={clsx("flex size-[22px] flex-none items-center justify-center text-sd-bg", done ? "bg-sd-ink" : cur ? "bg-sd-accent" : "border-[1.5px] border-sd-divider")}>
-      {done ? <Icon name="check" size={14} stroke={3} /> : cur ? <Icon name="play" size={12} /> : null}
+    <span className={clsx("flex size-[22px] flex-none items-center justify-center rounded-md text-sd-bg", done ? "bg-sd-ink" : cur ? "bg-sd-accent" : locked ? "text-sd-n-500" : "border-[1.5px] border-sd-divider")}>
+      {done ? <Icon name="check" size={14} stroke={3} /> : cur ? <Icon name="play" size={12} /> : locked ? <Icon name="lock" size={14} /> : null}
     </span>
   );
 }
@@ -131,6 +137,9 @@ export function Duration({ v }: { v: ReturnType<typeof lessonView> }) {
     <span className="flex items-center gap-1 text-xs text-sd-n-700">
       {v.downloaded && <Icon name="download" size={12} stroke={2.5} />}
       {v.dur}
+      {v.score !== undefined && (
+        <span className={clsx("rounded-md px-1.5 py-px font-bold", v.failed ? "bg-sd-accent-100 text-sd-accent-700" : "bg-sd-n-300 text-sd-ink")} title={v.failed ? "Not passed yet" : "Lesson assessment score"}>{v.score}%</span>
+      )}
     </span>
   );
 }
@@ -151,7 +160,7 @@ export function Toggle({ on, onClick, label, sub }: { on: boolean; onClick: () =
 
 export function Segmented<T extends string | number>({ value, options, onChange, className, itemClass = "px-2.5 py-2 text-[13px]" }: { value: T; options: [T, string][]; onChange: (v: T) => void; className?: string; itemClass?: string }) {
   return (
-    <div role="radiogroup" className={clsx("grid border border-sd-divider", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div role="radiogroup" className={clsx("grid overflow-hidden rounded-lg border border-sd-divider", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map(([v, label]) => (
         <button
           key={String(v)}

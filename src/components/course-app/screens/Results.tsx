@@ -2,25 +2,24 @@
 
 import clsx from "clsx";
 import { QUESTIONS, REVIEW_LESSON } from "@/data/system-design/course-app";
-import { isSoon, lesson, lessonDay, openLesson, pct, scoreDelta, type CourseState } from "@/lib/course-app";
+import { isSoon, lesson, lessonDay, openLesson, pct, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { BackButton, stagger, useCountUp } from "../ui";
 import type { Act } from "../useCourseApp";
 
 function Mark({ ok }: { ok: boolean }) {
   return (
-    <span className={clsx("flex size-[26px] items-center justify-center border-[1.5px] lg:size-7", ok ? "border-sd-ink bg-sd-ink text-sd-bg" : "border-sd-divider text-sd-n-600")}>
+    <span className={clsx("flex size-[26px] items-center justify-center rounded-lg border-[1.5px] lg:size-7", ok ? "border-sd-ink bg-sd-ink text-sd-bg" : "border-sd-divider text-sd-n-600")}>
       {ok ? <Icon name="check" size={14} stroke={3} /> : <Icon name="x" size={14} stroke={2.5} />}
     </span>
   );
 }
 
+/** The final assessment's results. Lesson checks show their own results inside the lesson. */
 export function Results({ s, act }: { s: CourseState; act: Act }) {
-  const compare = s.lastKind === "post" && !!s.post;
-  const res = compare && s.post ? s.post : s.pre;
-  const resPct = parseInt(pct(res), 10);
+  const res = s.post ?? [];
+  const resPct = parseInt(pct(res), 10) || 0;
   const shown = useCountUp(resPct);
-  const delta = scoreDelta(s);
   const recs = QUESTIONS.map((q, i) => ({ q, i }))
     .filter((x) => !res[x.i])
     .slice(0, 3)
@@ -29,23 +28,15 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
       return { id, topic: q.topic, l: lesson(id), soon: isSoon(id) };
     });
   const close = () => act((p) => ({ ...p, screen: "home", tab: "home" }));
-  const cta = compare ? close : () => act((p) => openLesson(p, p.cur));
-  const ctaLabel = compare ? "Back to home" : "Continue the course";
-
-  const compareBox = compare && (
-    <div className="sd-a-in mx-5 mt-[18px] grid grid-cols-3 gap-2 bg-sd-accent p-4 text-sd-bg lg:mx-0 lg:mt-2 lg:p-[18px]" style={{ animationDuration: ".6s", animationDelay: "450ms" }}>
-      {[["Before", pct(s.pre)], ["After", pct(res)], ["Change", `${delta >= 0 ? "+" : ""}${delta} pts`]].map(([k, v]) => (
-        <div key={k}><div className="text-[11px] tracking-[0.08em] uppercase">{k}</div><div className="text-[26px] font-extrabold lg:text-[32px]">{v}</div></div>
-      ))}
-    </div>
-  );
+  const cta = close;
+  const ctaLabel = "Back to home";
 
   const recList = recs.length > 0 && (
     <div className="mx-5 mt-[22px] lg:mx-0 lg:mt-2">
-      <h6 className="sd-h6 mb-2">{compare ? "Still worth reviewing" : "Start with these lessons"}</h6>
+      <h6 className="sd-h6 mb-2">Still worth reviewing</h6>
       <div className="border-t-2 border-sd-divider">
         {recs.map((r) => (
-          <button key={r.topic} type="button" disabled={r.soon} onClick={() => act((p) => openLesson(p, r.id))} className="grid w-full cursor-pointer grid-cols-[56px_1fr_18px_18px] items-center gap-2.5 border-b border-sd-divider py-[11px] text-left hover:bg-sd-accent-100 disabled:cursor-default disabled:hover:bg-transparent">
+          <button key={r.topic} type="button" disabled={r.soon} onClick={() => act((p) => openLesson(p, r.id))} className="grid w-full cursor-pointer grid-cols-[56px_1fr_18px_18px] items-center gap-2.5 rounded-lg border-b border-sd-divider py-[11px] text-left hover:bg-sd-accent-100 disabled:cursor-default disabled:hover:bg-transparent">
             <span className="text-[13px] font-extrabold text-sd-accent">{lessonDay(r.id)}</span>
             <span className="flex flex-col"><span className="text-sm font-semibold">{r.l.title}</span><span className="text-xs text-sd-n-700">{r.topic} · {r.soon ? "coming soon" : r.l.dur}</span></span>
             <span className="flex text-sd-accent"><Icon name="play" size={16} /></span>
@@ -62,25 +53,23 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
       <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
         <div className="flex flex-col lg:gap-3">
           <div className="px-5 pt-1 lg:contents">
-            <div className="sd-kicker text-sd-accent-700">{compare ? "Post-assessment" : "Pre-assessment"} results</div>
+            <div className="sd-kicker text-sd-accent-700">Final assessment results</div>
             <div className="mt-1.5 text-[104px] leading-[0.9] font-extrabold tracking-[-0.05em] lg:mt-0 lg:text-[160px] lg:leading-[0.85]" aria-label={`${resPct}%`}>{shown}%</div>
-            <div className="mt-2.5 text-[15px] lg:mt-0 lg:text-[17px]">{res.reduce((x, y) => x + y, 0)} of 6 correct</div>
+            <div className="mt-2.5 text-[15px] lg:mt-0 lg:text-[17px]">{res.reduce((x, y) => x + y, 0)} of {QUESTIONS.length} correct</div>
           </div>
-          {compareBox}
           <div className="hidden lg:block">{recList}</div>
           <div className="mt-2 hidden lg:block">
             <button type="button" onClick={cta} className="sd-btn sd-btn-primary h-[52px] w-[280px] justify-between text-base">{ctaLabel}<Icon name="arrowR" /></button>
           </div>
         </div>
         <div className="mx-5 mt-[22px] lg:mx-0 lg:mt-0">
-          <div className="grid grid-cols-[1fr_64px_64px] gap-2 border-b-2 border-sd-divider pb-2 text-[11px] tracking-[0.08em] text-sd-n-700 uppercase lg:grid-cols-[1fr_72px_72px]">
-            <span>Topic</span><span>{compare ? "Before" : "Result"}</span><span>{compare ? "After" : ""}</span>
+          <div className="grid grid-cols-[1fr_64px] gap-2 border-b-2 border-sd-divider pb-2 text-[11px] tracking-[0.08em] text-sd-n-700 uppercase lg:grid-cols-[1fr_72px]">
+            <span>Topic</span><span>Result</span>
           </div>
           {QUESTIONS.map((q, i) => (
-            <div key={q.topic} className="sd-a-in grid grid-cols-[1fr_64px_64px] items-center gap-2 border-b border-sd-divider py-2.5 lg:grid-cols-[1fr_72px_72px] lg:py-[13px]" style={stagger(i, 70, 600)}>
+            <div key={q.topic} className="sd-a-in grid grid-cols-[1fr_64px] items-center gap-2 border-b border-sd-divider py-2.5 lg:grid-cols-[1fr_72px] lg:py-[13px]" style={stagger(i, 70, 600)}>
               <span className="text-sm font-semibold lg:text-[15px]">{q.topic}</span>
-              <Mark ok={!!(compare ? s.pre[i] : res[i])} />
-              {compare && s.post && <Mark ok={!!s.post[i]} />}
+              <Mark ok={!!res[i]} />
             </div>
           ))}
         </div>

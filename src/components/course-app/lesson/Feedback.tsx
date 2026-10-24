@@ -41,7 +41,7 @@ export function Feedback({ lesson, day, lang, sent, onSent }: { lesson: string; 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
-  if (sent) return <p className="m-0 flex items-center gap-2 bg-sd-surface px-4 py-3 text-sm font-extrabold"><Icon name="check" size={16} stroke={3} />{ui.thanks}</p>;
+  if (sent) return <p className="m-0 flex items-center gap-2 rounded-xl bg-sd-surface px-4 py-3 text-sm font-extrabold"><Icon name="check" size={16} stroke={3} />{ui.thanks}</p>;
 
   const send = async () => {
     setBusy(true);
@@ -59,7 +59,7 @@ export function Feedback({ lesson, day, lang, sent, onSent }: { lesson: string; 
   };
 
   return (
-    <div className="flex flex-col gap-4 border-2 border-sd-ink p-4">
+    <div className="flex flex-col gap-4 rounded-xl border-2 border-sd-ink p-4">
       <div>
         <span className="text-[19px] font-extrabold tracking-[-0.01em]">{ui.title(day)}</span>
         <span className="block text-xs text-sd-n-700">{ui.sub}</span>

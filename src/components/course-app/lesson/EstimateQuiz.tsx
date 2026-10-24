@@ -38,7 +38,7 @@ export function EstimateQuiz({ items, lang, onDone }: { items: Estimate[]; lang:
       <div className="flex items-center justify-between">
         <span className="sd-kicker text-sd-accent-700">{ui.label} · {i + 1} / {items.length}</span>
         <span className="flex gap-1" aria-hidden="true">
-          {items.map((x, k) => <span key={x.id} className={clsx("h-[5px] w-6", k < i || (k === i && checked) ? "bg-sd-accent" : "bg-sd-n-300")} />)}
+          {items.map((x, k) => <span key={x.id} className={clsx("h-[5px] w-6 rounded-full", k < i || (k === i && checked) ? "bg-sd-accent" : "bg-sd-n-300")} />)}
         </span>
       </div>
       <ul className="m-0 flex list-none flex-col gap-1 border-l-[3px] border-sd-accent p-0 pl-3 text-[15px]">

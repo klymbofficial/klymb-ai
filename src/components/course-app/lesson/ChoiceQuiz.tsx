@@ -31,7 +31,7 @@ export function ChoiceQuiz({ questions, label, lang, onDone }: { questions: Ques
       <div className="flex items-center justify-between text-xs font-semibold text-sd-n-700">
         <span className="sd-kicker text-sd-accent-700">{label} · {i + 1} / {questions.length}</span>
         <span className="flex gap-1" aria-hidden="true">
-          {questions.map((x, k) => <span key={x.id} className={clsx("h-[5px] w-6", k < i || (k === i && answered) ? "bg-sd-accent" : "bg-sd-n-300")} />)}
+          {questions.map((x, k) => <span key={x.id} className={clsx("h-[5px] w-6 rounded-full", k < i || (k === i && answered) ? "bg-sd-accent" : "bg-sd-n-300")} />)}
         </span>
       </div>
       {q.scenario && <p className="m-0 border-l-[3px] border-sd-accent pl-3 text-[15px] leading-[1.45]">{q.scenario}</p>}
@@ -50,7 +50,7 @@ export function ChoiceQuiz({ questions, label, lang, onDone }: { questions: Ques
               disabled={answered}
               onClick={() => setPicks((p) => { const n = [...p]; n[i] = k; return n; })}
               className={clsx(
-                "sd-a-in flex cursor-pointer flex-col gap-1.5 border-2 p-3 text-left text-[15px] disabled:cursor-default lg:p-4",
+                "sd-a-in flex cursor-pointer flex-col gap-1.5 rounded-lg border-2 p-3 text-left text-[15px] disabled:cursor-default lg:p-4",
                 !answered && "border-sd-divider hover:border-sd-accent",
                 answered && c.best && "border-sd-ink bg-sd-ink text-sd-bg",
                 answered && mine && !c.best && "border-sd-accent bg-sd-accent-100",
@@ -60,7 +60,7 @@ export function ChoiceQuiz({ questions, label, lang, onDone }: { questions: Ques
             >
               <span className="flex items-start gap-3">
                 <span className={clsx(
-                  "flex size-7 flex-none items-center justify-center border-[1.5px] text-[13px] font-extrabold",
+                  "flex size-7 flex-none items-center justify-center rounded-lg border-[1.5px] text-[13px] font-extrabold",
                   answered && c.best ? "border-sd-bg bg-sd-bg text-sd-ink" : answered && mine ? "border-sd-accent bg-sd-accent text-sd-bg" : "border-sd-divider",
                 )}>
                   {answered && c.best ? <Icon name="check" size={14} stroke={3} /> : answered && mine ? <Icon name="x" size={14} stroke={3} /> : String.fromCharCode(65 + pos)}

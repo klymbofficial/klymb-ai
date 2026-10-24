@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { dayOf, type CourseState, type LessonProgress } from "@/lib/course-app";
+import { checkPct, dayOf, type CourseState, type LessonProgress } from "@/lib/course-app";
 import type { SdEvent } from "@/lib/sd-events";
 import { inRange, lessonSteps } from "./lesson/Practice";
 
@@ -103,6 +103,13 @@ export function useActivity(s: CourseState, ready: boolean, preview: boolean) {
         for (const key of STEP_FIELDS) {
           if (p[key] !== undefined && p[key] !== false && JSON.stringify(p[key]) !== JSON.stringify(was[key])) track("step_done", id, key, stepProps(s, id, key, p));
         }
+      }
+    }
+    // Every lesson-check attempt, passes and misses alike.
+    for (const [id, p] of Object.entries(s.lessons)) {
+      if (p.tries && p.tries !== before.lessons[id]?.tries) {
+        const qs = dayOf(id)?.copy[s.lang].post ?? [];
+        track("step_done", id, "check", { qs: qs.map((q) => q.id).join(","), picks: join(p.checkPicks ?? []), pct: checkPct(qs, p.checkPicks ?? []), passed: !p.failed && !!p.post, try: p.tries });
       }
     }
     for (const id of s.done) if (!before.done.includes(id)) track("day_complete", id);

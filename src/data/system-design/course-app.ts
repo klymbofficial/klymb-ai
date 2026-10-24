@@ -4,7 +4,7 @@
  * The course is "System Design in 21 Days": a Day 0 start, then three weeks.
  * Built days carry their full lesson (video, questions, practice) from
  * src/data/system-design/day-N.ts via LESSON_DAYS; the rest are listed as
- * coming soon. The six-question baseline and its diagrams are course-wide.
+ * coming soon. The six-question final assessment and its diagrams are course-wide.
  */
 import { dayZero } from "./day-0";
 import { dayOne } from "./day-1";

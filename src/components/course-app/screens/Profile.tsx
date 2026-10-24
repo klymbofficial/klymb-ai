@@ -42,7 +42,7 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
     ["This device", <>
       <Row>{user ? <Label label={`Signed in as ${user.email}`} sub="Your activity is saved to your name." /> : <div className="flex w-full flex-col gap-2"><Label label="Not signed in" sub="Sign in to keep your progress and streak under your name." /><GoogleButton where="profile" lesson={s.cur} className="h-11 border-2 border-sd-ink sm:max-w-[320px]" /></div>}</Row>
       <Row><LinkRow label="Replay Kamran’s tour" sub="A quick walk through the lesson screen." onClick={() => act((p) => ({ ...openLesson(p, dayOf(p.cur) ? p.cur : "0-0"), toured: false }))} /></Row>
-      <Row><LinkRow label="Start over" sub="Clears your progress, notes and baseline on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
+      <Row><LinkRow label="Start over" sub="Clears your progress, notes and assessment scores on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
     </>],
   ];
   if (PREVIEW_TOGGLES) groups.push(["Preview states", <>
@@ -53,7 +53,7 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
   return (
     <div className="sd-a-screen flex max-w-[1040px] flex-col gap-[22px] px-5 pt-2 pb-7 lg:p-0">
       <div className="flex items-center gap-3.5 border-b-2 border-sd-divider pb-4">
-        <span className="flex size-16 flex-none items-center justify-center bg-sd-ink text-sd-bg lg:size-20"><Icon name="user" size={28} /></span>
+        <span className="flex size-16 flex-none items-center justify-center rounded-lg bg-sd-ink text-sd-bg lg:size-20"><Icon name="user" size={28} /></span>
         <div className="flex flex-col">
           <span className="text-2xl font-extrabold tracking-[-0.02em] lg:text-4xl">Your profile</span>
           <span className="text-[13px] text-sd-n-700">System Design in 21 Days · progress is saved on this device</span>

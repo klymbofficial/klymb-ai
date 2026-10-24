@@ -98,8 +98,8 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
       <p className="m-0 mt-1 text-sm text-sd-n-800">{task.intro}</p>
 
       {/* the diagram */}
-      <div ref={board} className="sd-grid mt-4 p-3 [--grid:20px] lg:p-5 lg:[--grid:26px]">
-        <div className="mx-auto w-max border-2 border-sd-bg bg-sd-bg px-4 py-2 text-sm font-extrabold text-sd-ink">{task.given}</div>
+      <div ref={board} className="sd-grid mt-4 rounded-xl p-3 [--grid:20px] lg:p-5 lg:[--grid:26px]">
+        <div className="mx-auto w-max rounded-lg border-2 border-sd-bg bg-sd-bg px-4 py-2 text-sm font-extrabold text-sd-ink">{task.given}</div>
         {task.rows.map((row, r) => (
           <div key={r}>
             <div className="mx-auto h-4 w-0.5 bg-white/40" aria-hidden="true" />
@@ -115,7 +115,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                     onClick={() => picked && drop(picked, sid)}
                     aria-label={got ? `${label(got)}: ${task.slots[sid].role}` : task.slots[sid].role}
                     className={clsx(
-                      "min-h-[72px] cursor-pointer border-2 px-2 py-2 text-center transition-[border-color,background-color,transform] duration-200",
+                      "min-h-[72px] cursor-pointer rounded-lg border-2 px-2 py-2 text-center transition-[border-color,background-color,transform] duration-200",
                       got && "border-sd-accent bg-sd-accent",
                       !got && !bad && !holding && "border-dashed border-white/40 bg-transparent",
                       !got && !bad && holding && over !== sid && "border-dashed border-sd-accent-400 bg-sd-accent/10 hover:border-solid hover:bg-sd-accent/25",
@@ -162,7 +162,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                 onLostPointerCapture={() => finish()}
                 onPointerCancel={() => finish()}
                 className={clsx(
-                  "flex cursor-grab touch-none items-center gap-1.5 border-2 border-sd-ink px-3 py-2.5 text-sm font-extrabold transition-[transform,box-shadow] duration-150 select-none hover:-translate-y-0.5 hover:shadow-[0_3px_0_var(--sd-ink)] active:cursor-grabbing",
+                  "flex cursor-grab touch-none items-center gap-1.5 rounded-lg border-2 border-sd-ink px-3 py-2.5 text-sm font-extrabold transition-[transform,box-shadow] duration-150 select-none hover:-translate-y-0.5 hover:shadow-[0_3px_0_var(--sd-ink)] active:cursor-grabbing",
                   picked === c.id ? "bg-sd-ink text-sd-bg" : "bg-sd-bg",
                   drag?.id === c.id && "opacity-40",
                 )}
@@ -182,7 +182,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
       )}
 
       {drag && (
-        <div aria-hidden="true" className="sd-shadow-lg pointer-events-none fixed z-[80] -translate-x-1/2 -translate-y-1/2 border-2 border-sd-ink bg-sd-ink px-3.5 py-2.5 text-sm font-extrabold text-sd-bg" style={{ left: drag.x, top: drag.y }}>
+        <div aria-hidden="true" className="sd-shadow-lg pointer-events-none fixed z-[80] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-sd-ink bg-sd-ink px-3.5 py-2.5 text-sm font-extrabold text-sd-bg" style={{ left: drag.x, top: drag.y }}>
           {label(drag.id)}
         </div>
       )}

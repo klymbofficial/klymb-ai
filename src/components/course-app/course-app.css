@@ -61,6 +61,7 @@
     cursor: pointer; font-weight: 800; font-size: 14px; line-height: 1.2;
     color: var(--sd-ink); background: transparent; border: 1px solid transparent;
     padding: 8px 14.4px;
+    border-radius: 8px;
   }
   .sd-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .sd-btn-primary { background: var(--sd-accent); color: var(--sd-bg); }
@@ -91,7 +92,7 @@
   .sd-input {
     width: 100%; min-height: 36px; padding: 6px 10px; font: inherit; font-size: 14px;
     color: var(--sd-ink); caret-color: var(--sd-accent);
-    background: var(--sd-surface); border: 1px solid var(--sd-divider);
+    background: var(--sd-surface); border: 1px solid var(--sd-divider); border-radius: 8px;
   }
   .sd-input:hover { border-color: color-mix(in srgb, var(--sd-ink) 45%, transparent); }
   .sd-input:focus-visible { border-color: var(--sd-accent); outline-offset: 0; }
@@ -100,8 +101,18 @@
   /* — dialog — */
   .sd-dialog {
     width: min(440px, 100%); display: flex; flex-direction: column; gap: 12px; padding: 16px;
-    background: var(--sd-surface);
+    background: var(--sd-surface); border-radius: 16px;
     box-shadow: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  }
+
+  /* Earned badges are medals in the brand red: a lit rim, a domed face. */
+  .sd-medal-ring {
+    background: conic-gradient(from 210deg, #f9eaeb, #c2272e, var(--sd-accent), #e06a70, #f9eaeb);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--sd-accent) 35%, transparent);
+  }
+  .sd-medal-core {
+    background: radial-gradient(circle at 35% 30%, #c2272e, var(--sd-accent) 70%);
+    box-shadow: inset 0 -6px 12px rgba(0, 0, 0, .22), inset 0 4px 8px rgba(255, 255, 255, .35);
   }
 
   .sd-shadow-md { box-shadow: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent); }
@@ -157,6 +168,36 @@
   /* Two names for the same slide, alternated so each new question replays it. */
   .sd-a-side { animation: sd-side 0.45s both; }
   .sd-a-side-b { animation: sd-side-b 0.45s both; }
+
+  /* The streak pop-up: backdrop fades, sheet springs up, flame pops and flickers, today's box ticks. */
+  @keyframes sd-fade { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes sd-sheet { from { opacity: 0; transform: translateY(40px) scale(.96) } to { opacity: 1; transform: none } }
+  @keyframes sd-flame-big { 0% { transform: scale(0) rotate(-35deg) } 60% { transform: scale(1.25) rotate(8deg) } 100% { transform: scale(1) } }
+  @keyframes sd-flicker { 0%, 100% { transform: none } 50% { transform: scale(1.06, .93) rotate(-3deg) } }
+  @keyframes sd-tickbox {
+    0% { background: transparent; transform: scale(.7); box-shadow: 0 0 0 0 var(--sd-accent) }
+    55% { background: var(--sd-accent); transform: scale(1.18) }
+    100% { background: var(--sd-accent); transform: scale(1); box-shadow: 0 0 0 12px transparent }
+  }
+  @keyframes sd-check { from { opacity: 0; transform: scale(0) rotate(-35deg) } to { opacity: 1; transform: none } }
+  @keyframes sd-rise { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+  /* A number rolling over: the old one slides up and out, the new one springs up in. */
+  @keyframes sd-roll-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateY(-105%) } }
+  @keyframes sd-roll-in { from { opacity: 0; transform: translateY(105%) } to { opacity: 1; transform: none } }
+  /* The streak button on Home after a pass: the flame jumps and the card rings once. */
+  @keyframes sd-flame-jump { 0% { transform: none } 30% { transform: scale(1.8) rotate(-14deg) } 55% { transform: scale(.9) rotate(8deg) } 100% { transform: none } }
+  @keyframes sd-ring { from { box-shadow: 0 0 0 0 var(--sd-accent) } to { box-shadow: 0 0 0 22px transparent } }
+  .sd-a-fade { animation: sd-fade .25s both; }
+  .sd-a-sheet { animation: sd-sheet .45s cubic-bezier(.2, 1.2, .4, 1) both; }
+  .sd-a-flame-big { animation: sd-flame-big .6s .1s both; }
+  .sd-a-flicker { animation: sd-flicker 1.4s .8s ease-in-out infinite; }
+  .sd-a-tickbox { animation: sd-tickbox .55s .8s both; }
+  .sd-a-check { animation: sd-check .4s 1.15s both; }
+  .sd-a-rise { animation: sd-rise .4s 1.3s both; }
+  .sd-roll-out { opacity: 0; animation: sd-roll-out .5s cubic-bezier(.5, 0, .7, .4) both; }
+  .sd-roll-in { animation: sd-roll-in .7s cubic-bezier(.2, 1.5, .4, 1) both; }
+  .sd-a-flame-jump { animation: sd-flame-jump .9s .15s both; }
+  .sd-a-ring { animation: sd-ring .9s .2s both; }
 
   @media (prefers-reduced-motion: reduce) {
     .sd-app *, .sd-app *::before, .sd-app *::after { animation: none !important; transition: none !important; }

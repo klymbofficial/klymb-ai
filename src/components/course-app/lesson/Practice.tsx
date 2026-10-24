@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useState, type ReactNode } from "react";
 import type { Day, DayCopy } from "@/data/system-design/types";
-import { completeNext, flowDone, pad, updateLesson, type CourseState, type LessonProgress } from "@/lib/course-app";
+import { ALL_IDS, completeNext, flowDone, isSoon, lesson, pad, updateLesson, type CourseState, type LessonProgress } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Segmented, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -13,6 +13,7 @@ import { DiagramBuilder } from "./DiagramBuilder";
 import { EstimateQuiz } from "./EstimateQuiz";
 import { Feedback } from "./Feedback";
 import { FollowUps } from "./FollowUps";
+import { LessonCheck } from "./LessonCheck";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { track } from "../track";
 import { GoogleButton, useCourseUser } from "../user";
@@ -23,7 +24,7 @@ const UI = {
     yourCall: "Your call", path: "Today’s path", stepOf: (n: number, of: number) => `Step ${n} of ${of}`,
     locked: "Finish the step before",
     reveal: "What really happens", build: "Build it yourself", prove: "Prove it", follow: "Interviewer follow-ups", unlocked: "Day complete",
-    proveSub: "New scenarios, same ideas", yours: "Your answer vs the best move", you: "You", best: "Best", concept: "Today’s idea",
+    proveSub: "5 questions · 60% to pass · answers at the end", yours: "Your answer vs the best move", you: "You", best: "Best", concept: "Today’s idea",
     watchFirst: "Watch the video first. Everything below opens after it.",
     built: (n: number) => (n === 0 ? "Built on the first try." : `Built, with ${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`),
     followed: (n: number, of: number) => `You had ${n} of ${of} follow-ups covered.`,
@@ -66,7 +67,7 @@ const UI = {
     yourCall: "Your call", path: "Aaj ka raasta", stepOf: (n: number, of: number) => `Step ${n} / ${of}`,
     locked: "Pichla step poora karo",
     reveal: "Asal mein kya hota hai", build: "Khud banao", prove: "Prove it", follow: "Interviewer follow-ups", unlocked: "Day complete",
-    proveSub: "Naye scenarios, wahi ideas", yours: "Tumhara answer vs best move", you: "Tum", best: "Best", concept: "Aaj ka idea",
+    proveSub: "5 sawaal · 60% se pass · jawab end mein", yours: "Tumhara answer vs best move", you: "Tum", best: "Best", concept: "Aaj ka idea",
     watchFirst: "Pehle video dekho. Neeche sab uske baad khulega.",
     built: (n: number) => (n === 0 ? "Pehli baar mein ban gaya." : `Ban gaya, raaste mein ${n} galat drop.`),
     followed: (n: number, of: number) => `${of} mein se ${n} follow-ups aate the.`,
@@ -169,7 +170,7 @@ export function LessonPath({ s, id, day }: { s: CourseState; id: string; day: Da
                 aria-current={now ? "step" : undefined}
                 className="flex w-full cursor-pointer flex-col items-start gap-1 text-left disabled:cursor-default"
               >
-                <span className={clsx("block h-[5px] w-full transition-colors duration-500", st.done ? "bg-sd-accent" : now ? "bg-sd-ink" : "bg-sd-n-300")} />
+                <span className={clsx("block h-[5px] w-full rounded-full transition-colors duration-500", st.done ? "bg-sd-accent" : now ? "bg-sd-ink" : "bg-sd-n-300")} />
                 <span className={clsx("hidden w-full truncate text-[11px] font-extrabold tracking-[0.04em] uppercase sm:block", now ? "text-sd-ink" : st.done ? "text-sd-accent-700" : "text-sd-n-500")}>
                   {pad(i + 1)} {ui.steps[st.key]}
                 </span>
@@ -191,7 +192,7 @@ export function DayStart({ s, act, id, day }: { s: CourseState; act: Act; id: st
   const c = day.copy[s.lang];
   const steps = lessonSteps(s, id, day);
   return (
-    <div id="lesson-start" className="sd-a-in flex scroll-mt-16 flex-col gap-5 bg-sd-surface p-4 lg:p-6">
+    <div id="lesson-start" className="sd-a-in flex scroll-mt-16 flex-col gap-5 rounded-xl bg-sd-surface p-4 lg:p-6">
       <div>
         <span className="sd-kicker text-sd-accent-700">{ui.dayStart(day.day, day.minutes)}</span>
         <h2 className="m-0 mt-1.5 text-[28px] leading-[1.05] tracking-[-0.03em] text-pretty lg:text-[38px]">{c.question}</h2>
@@ -225,7 +226,7 @@ export function YourCall({ s, act, id, day }: { s: CourseState; act: Act; id: st
   const ui = UI[s.lang];
   const c = day.copy[s.lang];
   return (
-    <div id="lesson-call" className="sd-a-in flex scroll-mt-16 flex-col gap-4 bg-sd-surface p-4 lg:p-6">
+    <div id="lesson-call" className="sd-a-in flex scroll-mt-16 flex-col gap-4 rounded-xl bg-sd-surface p-4 lg:p-6">
       <div>
         <span className="sd-kicker text-sd-accent-700">{c.tag ?? "Interview question"} · Day {day.day}</span>
         <h2 className="m-0 mt-1.5 text-[26px] leading-[1.05] tracking-[-0.03em] text-pretty lg:text-[36px]">{c.question}</h2>
@@ -266,7 +267,7 @@ function Step({ id, n, title, sub, lead, locked, lockedText, children }: { id: S
 function Done({ text, next }: { text: string; next?: { label: string; key: StepKey } }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <span className="flex items-center gap-2 text-sm font-extrabold"><span className="flex size-6 items-center justify-center bg-sd-ink text-sd-bg"><Icon name="check" size={14} stroke={3} /></span>{text}</span>
+      <span className="flex items-center gap-2 text-sm font-extrabold"><span className="flex size-6 items-center justify-center rounded-md bg-sd-ink text-sd-bg"><Icon name="check" size={14} stroke={3} /></span>{text}</span>
       {next && <button type="button" onClick={() => goTo(next.key, 0)} className="sd-btn sd-btn-secondary h-10 gap-2">{next.label}<Icon name="down" size={16} /></button>}
     </div>
   );
@@ -334,7 +335,7 @@ function Reveal({ c, ui, pre, read, onRead }: { c: DayCopy; ui: Ui; pre: number[
             </div>
           ))}
         </div>
-        <p className="m-0 mt-2 bg-sd-surface px-3.5 py-3 text-sm font-semibold">{c.concept.rule}</p>
+        <p className="m-0 mt-2 rounded-xl bg-sd-surface px-3.5 py-3 text-sm font-semibold">{c.concept.rule}</p>
       </div>
       {!read && <button type="button" onClick={onRead} className="sd-btn sd-btn-primary h-12 self-start gap-2">{ui.readDone} · {ui.toNext(ui.steps.prove)}<Icon name="arrowR" size={16} /></button>}
     </div>
@@ -354,12 +355,12 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
   };
   return (
     <div className="flex flex-col gap-6">
-      <div className="sd-a-pop flex items-end justify-between bg-sd-accent p-4 text-sd-bg">
+      <div className="sd-a-pop flex items-end justify-between rounded-xl bg-sd-accent p-4 text-sd-bg">
         <div className="flex flex-col"><span className="sd-kicker">Day {day.day} complete</span><span className="text-[22px] font-extrabold tracking-[-0.02em]">{ui.before(score(c.pre, p.pre ?? []), c.pre.length, score(c.post, p.post ?? []), c.post.length)}</span></div>
         <Icon name="flame" size={32} />
       </div>
       {!user && (
-        <div className="flex flex-col gap-3 border-2 border-sd-ink p-4">
+        <div className="flex flex-col gap-3 rounded-xl border-2 border-sd-ink p-4">
           <StudyBuddy tone="light" size={72} message={ui.savePrompt(day.day)} />
           <GoogleButton lesson={id} where="day-done" label="Save my progress with Google" className="h-12 border-2 border-sd-ink sm:max-w-[360px]" />
         </div>
@@ -375,7 +376,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
       </div>
       <div>
         <h6 className="sd-h6 mb-2">{ui.interview}</h6>
-        <div className="flex flex-col gap-2 bg-sd-surface p-4 text-[15px] leading-[1.45]">{c.interview.map((l, i) => <span key={l}><b className="text-sd-accent">{i + 1}.</b> {l}</span>)}</div>
+        <div className="flex flex-col gap-2 rounded-xl bg-sd-surface p-4 text-[15px] leading-[1.45]">{c.interview.map((l, i) => <span key={l}><b className="text-sd-accent">{i + 1}.</b> {l}</span>)}</div>
       </div>
       <div>
         <h6 className="sd-h6 mb-1">{ui.share}</h6>
@@ -406,6 +407,7 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
   const num = (k: StepKey) => steps.findIndex((x) => x.key === k) + 1;
   const after = (k: StepKey) => steps[steps.findIndex((x) => x.key === k) + 1]?.key ?? "done";
   const nextOf = (k: StepKey) => { const n = after(k); return { key: n, label: ui.toNext(ui.steps[n]) }; };
+  const nextLesson = ALL_IDS[ALL_IDS.indexOf(id) + 1];
 
   return (
     <div data-tour="practice" className="mt-6 lg:mt-8">
@@ -416,9 +418,18 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       </Step>
 
       <Step id="prove" n={num("prove")} lead={ui.leads.prove} title={ui.prove} sub={ui.proveSub} locked={!open("prove")} lockedText={ui.locked}>
-        {p.post
-          ? <Done text={ui.proved(score(c.post, p.post), c.post.length)} next={nextOf("prove")} />
-          : <ChoiceQuiz key={s.lang} questions={c.post} label={ui.prove} lang={s.lang} onDone={(post) => set({ post, read: true }, after("prove"))} />}
+        <LessonCheck
+          key={id}
+          s={s}
+          act={act}
+          id={id}
+          title={lesson(id).title}
+          questions={c.post}
+          hasNext={!!nextLesson && !isSoon(nextLesson)}
+          next={nextOf("prove").label}
+          onPass={() => goTo(after("prove"), 250)}
+          onRewatch={() => { act((q) => ({ ...q, t: 0, playing: true, ended: false, upNext: 0 })); goTo("watch", 0); }}
+        />
       </Step>
 
       {c.estimates?.length ? (
