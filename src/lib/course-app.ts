@@ -4,12 +4,14 @@ import {
   NOTIFICATIONS,
   QUESTIONS,
   QUICK_CHECKS,
+  TRANSCRIPTS,
   THREADS,
   TIMED_SECONDS,
   type Notif,
   type Question,
   type Thread,
 } from "@/data/system-design/course-app";
+import { SUBTITLES_EN } from "@/data/system-design/subtitles-en";
 import type { Lang } from "@/data/system-design/types";
 
 /**
@@ -100,8 +102,15 @@ export interface CourseState {
   lessons: Record<string, LessonProgress>;
   /** Language of the lesson content; the app's own labels stay English. */
   lang: Lang;
-  /** Subtitles under the lesson video. */
+  /** Subtitles under the lesson video, in `subLang`, at `subSize`. */
   subs: boolean;
+  subLang: SubLang;
+  subSize: SubSize;
+  /** Voice-over language of the lesson video, by its label ("Hinglish"). Falls back to the original when a lesson lacks it. */
+  audio: string;
+  /** 0–1. */
+  volume: number;
+  muted: boolean;
   /** Saw (or skipped) Kamran's tour of the lesson screen. */
   toured: boolean;
   /** Local dates (YYYY-MM-DD) with any finished step: the streak. */
@@ -112,7 +121,13 @@ export const LESSON_COUNT = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 export const ALL_IDS = MODULES.flatMap((m, mi) => m.lessons.map((_, li) => `${mi}-${li}`));
 /** Downloads have a 2 GB allowance. */
 export const STORAGE_MB = 2048;
-export const SPEEDS = [1, 1.25, 1.5, 2];
+/** Playback speed: preset steps, and the range the fine control allows. */
+export const SPEED_PRESETS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+export const SPEED_MIN = 0.5;
+export const SPEED_MAX = 2.5;
+export type SubLang = "hinglish" | "en";
+export type SubSize = "s" | "m" | "l";
+export const SUB_LANGS: [SubLang, string][] = [["hinglish", "Hinglish"], ["en", "English"]];
 /** Tabs keep a lesson playing in the mini player. */
 export const TAB_SCREENS: Screen[] = ["home", "course", "progress", "profile"];
 
@@ -231,7 +246,8 @@ export function defaultState(now = Date.now()): CourseState {
     goal: 15, remind: "19:00", autoplay: false, quality: "auto", wifiOnly: true, streakRem: true, replyNotif: true,
     todaySec: 0, today: localDate(new Date(now)),
     toast: null, toastUntil: 0,
-    lessons: {}, lang: "en", subs: true, toured: false, activeDays: [],
+    lessons: {}, lang: "en", subs: true, subLang: "hinglish", subSize: "m", audio: "Hinglish", volume: 1, muted: false,
+    toured: false, activeDays: [],
   };
 }
 
@@ -471,7 +487,7 @@ export function scoreDelta(s: CourseState) {
 const PERSISTED = [
   "onboarded", "cur", "t", "speed", "visited", "notes", "ptab", "openMod", "done", "pre", "post", "qcDone", "notifs", "threads", "voted",
   "dl", "dlProg", "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
-  "lessons", "lang", "subs", "toured", "activeDays",
+  "lessons", "lang", "subs", "subLang", "subSize", "audio", "volume", "muted", "toured", "activeDays",
 ] as const satisfies readonly (keyof CourseState)[];
 
 export function toStored(s: CourseState) {
@@ -506,3 +522,47 @@ export function deepLink(s: CourseState, id: string | null, now = Date.now()): C
   if (!id || !ALL_IDS.includes(id) || isSoon(id)) return s;
   return openLesson({ ...s, onboarded: true, tab: "course" }, id, now);
 }
+
+/** Clamped to the allowed range, in steps of 0.05 so the label never shows float noise. */
+export function setSpeed(s: CourseState, v: number): CourseState {
+  const speed = Math.round(Math.min(SPEED_MAX, Math.max(SPEED_MIN, v)) * 20) / 20;
+  return speed === s.speed ? s : { ...s, speed };
+}
+
+/** The next preset up or down from the current speed (which may sit between presets). */
+export function stepSpeed(s: CourseState, dir: 1 | -1): CourseState {
+  const next = dir > 0 ? SPEED_PRESETS.find((p) => p > s.speed + 1e-9) : [...SPEED_PRESETS].reverse().find((p) => p < s.speed - 1e-9);
+  return next === undefined ? s : setSpeed(s, next);
+}
+
+/** "1×", "1.25×", "0.8×". */
+export const speedLabel = (v: number) => `${Number(v.toFixed(2))}×`;
+
+/** Subtitle lines for a lesson in a language, or none. Hinglish are the video's own captions. */
+export function subtitleLines(id: string, lang: SubLang): [number, string][] {
+  return (lang === "en" ? SUBTITLES_EN[id] : TRANSCRIPTS[id]) ?? [];
+}
+
+/** Languages a lesson has subtitles in. */
+export const subtitleLangs = (id: string) => SUB_LANGS.filter(([l]) => subtitleLines(id, l).length > 0);
+
+/** The line being spoken at `t`, or "". */
+export function lineAt(lines: [number, string][], t: number) {
+  let cur = "";
+  for (const [at, text] of lines) if (t >= at) cur = text;
+  return cur;
+}
+
+/** The voice-overs a lesson's video has: the original first, then any others. */
+export function audioTracks(id: string) {
+  const v = dayOf(id)?.video;
+  if (!v) return [];
+  return [{ lang: v.lang, src: v.src, wide: v.wide?.src }, ...(v.audio ?? [])];
+}
+
+/** The track to play: the chosen language when this lesson has it, else the original. */
+export function audioTrack(s: CourseState, id = s.cur) {
+  const all = audioTracks(id);
+  return all.find((a) => a.lang === s.audio) ?? all[0];
+}
+

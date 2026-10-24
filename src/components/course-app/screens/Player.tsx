@@ -1,11 +1,11 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef, type MouseEvent } from "react";
-import { MODULES, TRANSCRIPTS } from "@/data/system-design/course-app";
+import { useEffect, useRef, useState, type MouseEvent, type RefObject } from "react";
+import { MODULES } from "@/data/system-design/course-app";
 import {
-  ALL_IDS, SPEEDS, addNote, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, moduleIds, openLesson, quickCheckAt,
-  retryVideo, seekTo, togglePlay, updateLesson, type CourseState, type PlayerTab,
+  ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, quickCheckAt,
+  retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { DayStart, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
@@ -13,11 +13,14 @@ import { Tour } from "../lesson/Tour";
 import { track } from "../track";
 import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
+import { ControlBar, Osd, PlayerSettings, StatusLine, SUB_SIZE_CLASS, canSubtitle, useFullscreen, useOsd, usePlayerKeys } from "./PlayerControls";
 
 /** Placeholder transcript for lessons that don't have a written one yet. */
-function transcriptFor(id: string): [number, string][] {
-  const written = TRANSCRIPTS[id];
-  if (written) return written;
+function transcriptFor(s: CourseState, id: string): [number, string][] {
+  const mine = subtitleLines(id, s.subLang);
+  if (mine.length) return mine;
+  const written = subtitleLines(id, "hinglish");
+  if (written.length) return written;
   const c = lesson(id);
   const d = c.secs;
   const [a, b, z] = c.m.flow;
@@ -32,11 +35,17 @@ function transcriptFor(id: string): [number, string][] {
   ];
 }
 
-/** The lesson video, portrait 9:16 on the dark grid. Its own controls are hidden; the player's buttons drive it. */
-function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
+/**
+ * The lesson video on the dark grid: the 16:9 cut when there is one, else the
+ * 9:16 one. Its own controls are hidden; the player's buttons drive it.
+ */
+function Video({ s, act, subs, box }: { s: CourseState; act: Act; subs?: boolean; box: RefObject<HTMLDivElement | null> }) {
   const day = dayOf(s.cur)!;
-  const wide = day.video.wide;
+  const voice = audioTrack(s)!;
+  const wide = !!voice.wide;
+  const poster = wide ? day.video.wide?.poster ?? day.video.poster : day.video.poster;
   const ref = useRef<HTMLVideoElement>(null);
+  const osd = useOsd(s);
   // Watch-through milestones already reported for this lesson's video.
   const marks = useRef<{ id: string; seen: Set<number> }>({ id: "", seen: new Set() });
   const errOffline = s.offline && !s.vidErr;
@@ -48,6 +57,7 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
     if (!s.playing && !v.paused) v.pause();
   }, [s.playing, act]);
   useEffect(() => { if (ref.current) ref.current.playbackRate = s.speed; }, [s.speed]);
+  useEffect(() => { const v = ref.current; if (v) { v.volume = s.volume; v.muted = s.muted; } }, [s.volume, s.muted]);
   // Seeks from the scrubber, the ±10s buttons and notes; the video's own progress stays within a second of `t`.
   useEffect(() => { const v = ref.current; if (v && v.readyState > 0 && Math.abs(v.currentTime - s.t) > 1.5) v.currentTime = s.t; }, [s.t]);
   useEffect(() => { if (!s.vidErr) ref.current?.load(); }, [s.vidErr]);
@@ -68,7 +78,7 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
   };
 
   return (
-    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
+    <div ref={box} id="lesson-watch" className={clsx("sd-grid sd-fs @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
         <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
@@ -83,15 +93,21 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
       )}
       <video
         ref={ref}
-        src={wide?.src ?? day.video.src}
-        poster={wide?.poster ?? day.video.poster}
+        src={voice.wide ?? voice.src}
+        poster={poster}
         playsInline
         preload="metadata"
         controlsList="nodownload noplaybackrate"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
         onClick={() => act(togglePlay)}
-        onLoadedMetadata={(e) => { if (s.t > 0) e.currentTarget.currentTime = s.t; }}
+        onLoadedMetadata={(e) => {
+          // Also runs after switching voice-over: carry on from the same moment, at the same speed and volume.
+          const v = e.currentTarget;
+          if (s.t > 0) v.currentTime = s.t;
+          Object.assign(v, { playbackRate: s.speed, volume: s.volume, muted: s.muted });
+          if (s.playing && v.paused) v.play().catch(() => act((p) => ({ ...p, playing: false })));
+        }}
         onTimeUpdate={(e) => onTime(e.currentTarget)}
         onPlay={() => { track("video_play", s.cur, "watch", { at: Math.round(s.t) }); act((p) => (p.playing ? p : { ...p, playing: true })); }}
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
@@ -100,19 +116,18 @@ function Video({ s, act, subs }: { s: CourseState; act: Act; subs?: boolean }) {
         className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
       />
       {subs && <Subtitles s={s} />}
+      <Osd osd={osd} />
     </div>
   );
 }
 
 /** The line being spoken, overlaid at the bottom of the video like any player's captions (the clean cut has none burned in). */
 function Subtitles({ s }: { s: CourseState }) {
-  const lines = TRANSCRIPTS[s.cur] ?? [];
-  let cur = "";
-  for (const [t, text] of lines) if (s.t >= t) cur = text;
+  const cur = lineAt(subtitleLines(s.cur, s.subLang), s.t);
   if (!cur) return null;
   return (
-    <div aria-live="off" className="pointer-events-none absolute inset-x-0 bottom-[5%] z-[2] flex justify-center">
-      <span className="max-w-[86%] bg-black/75 px-[0.5em] py-[0.2em] text-center text-[clamp(12px,2.1cqw,22px)] leading-[1.4] font-semibold text-white">{cur}</span>
+    <div aria-live="off" lang={s.subLang === "en" ? "en" : "hi-Latn"} className="pointer-events-none absolute inset-x-0 bottom-[5%] z-[2] flex justify-center">
+      <span className={clsx("max-w-[86%] bg-black/75 px-[0.5em] py-[0.2em] text-center leading-[1.4] font-semibold text-white", SUB_SIZE_CLASS[s.subSize])}>{cur}</span>
     </div>
   );
 }
@@ -185,7 +200,7 @@ function Notes({ s, act }: { s: CourseState; act: Act }) {
 }
 
 function Transcript({ s, act }: { s: CourseState; act: Act }) {
-  const tl = transcriptFor(s.cur);
+  const tl = transcriptFor(s, s.cur);
   let ai = 0;
   tl.forEach(([t], i) => { if (s.t >= t) ai = i; });
   return (
@@ -232,20 +247,16 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
   const qc = hasQuickCheck(s.cur) ? fmt(quickCheckAt(s.cur)) : null;
   const done = flowDone(s, s.cur);
   const completeLabel = nextId ? "Mark complete · next lesson" : "Mark complete";
-  const playLabel = s.playing ? "Pause" : s.t > 0 ? "Resume" : "Play";
-  const cycleSpeed = () => act((p) => ({ ...p, speed: SPEEDS[(SPEEDS.indexOf(p.speed) + 1) % SPEEDS.length] }));
-  const back10 = () => act((p) => ({ ...p, t: Math.max(0, p.t - 10), ended: false, upNext: 0 }));
-  const fwd10 = () => act((p) => ({ ...p, t: Math.min(lesson(p.cur).secs, p.t + 10) }));
   const tabs: [PlayerTab, string][] = [
     ["notes", `Notes (${(s.notes[s.cur] ?? []).length})`],
     ["transcript", "Transcript"],
     ["lessons", "Lessons"],
   ];
   const showVideo = !day || !!lp.pre;
-  // Subtitles belong to the clean (wide) cut; the portrait cut has them burned in.
-  const canSub = !!day?.video.wide && !!TRANSCRIPTS[s.cur];
-  const subsOn = canSub && s.subs;
-  const toggleSubs = () => act((p) => ({ ...p, subs: !p.subs }));
+  const subsOn = !!day && canSubtitle(s) && s.subs;
+  const [settings, setSettings] = useState(false);
+  const fs = useFullscreen();
+  usePlayerKeys(act, fs.toggle, showVideo && !!day && !s.qcOpen);
 
   return (
     <div className="sd-a-screen flex flex-1 max-w-[1200px] flex-col lg:flex-none lg:gap-4">
@@ -269,28 +280,12 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
         <div className="flex flex-col">
           {showVideo ? (
             <>
-              <Video s={s} act={act} subs={subsOn} />
+              <Video s={s} act={act} subs={subsOn} box={fs.box} />
               <div className="px-5 lg:px-0">
                 <Scrubber s={s} act={act} />
-                <div className="flex justify-between text-xs font-semibold lg:hidden">
-                  <span>{fmt(s.t)}</span>{qc && <span className="text-sd-accent-700">Quick check at {qc}</span>}<span>{c.dur}</span>
-                </div>
-                <div className="mt-2 mb-3.5 flex items-center gap-2 lg:hidden">
-                  <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotL" /></button>
-                  <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-11 flex-1 justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
-                  <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-11"><Icon name="rotR" /></button>
-                  <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-11 w-14 justify-start">{s.speed}×</button>
-                  {canSub && <button type="button" onClick={toggleSubs} aria-pressed={s.subs} aria-label="Subtitles" className={clsx("sd-btn h-11 w-12 text-[13px]", s.subs ? "bg-sd-ink text-sd-bg" : "sd-btn-secondary")}>CC</button>}
-                </div>
-                <div className="mt-1.5 hidden items-center gap-2 lg:flex">
-                  <button type="button" onClick={() => act(togglePlay)} className="sd-btn sd-btn-primary h-10 w-[120px] justify-start gap-2"><Icon name={s.playing ? "pause" : "play"} size={16} />{playLabel}</button>
-                  <button type="button" onClick={back10} aria-label="Back 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotL" size={16} /></button>
-                  <button type="button" onClick={fwd10} aria-label="Forward 10 seconds" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="rotR" size={16} /></button>
-                  <button type="button" onClick={cycleSpeed} aria-label="Playback speed" className="sd-btn sd-btn-secondary h-10 w-14 justify-start">{s.speed}×</button>
-                  {canSub && <button type="button" onClick={toggleSubs} aria-pressed={s.subs} aria-label="Subtitles" className={clsx("sd-btn h-10 w-12 text-[13px]", s.subs ? "bg-sd-ink text-sd-bg" : "sd-btn-secondary")}>CC</button>}
-                  {qc && <span className="ml-auto text-[13px] font-semibold text-sd-accent-700">Quick check at {qc}</span>}
-                  <span className={clsx("pl-3 text-[13px] font-semibold", !qc && "ml-auto")}>{fmt(s.t)} / {c.dur}</span>
-                </div>
+                <ControlBar s={s} act={act} settings={settings} onSettings={() => setSettings((o) => !o)} fs={fs.on} onFs={fs.toggle} />
+                <StatusLine s={s} qc={qc} />
+                {settings && <PlayerSettings s={s} act={act} onClose={() => setSettings(false)} />}
               </div>
             </>
           ) : (

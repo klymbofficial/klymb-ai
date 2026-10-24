@@ -1,7 +1,7 @@
 import {
-  ArrowDown, ArrowRight, ArrowUp, Award, Bell, ChartColumn, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
-  CircleAlert, Clock, Database, Download, FileText, Flame, House, Layers, Lock, MessageSquare, Pause, Play, Plus,
-  RotateCcw, RotateCw, Target, Trash, TrendingUp, User, WifiOff, X, Zap, type LucideIcon,
+  ArrowDown, ArrowRight, ArrowUp, AudioLines, Award, Bell, Captions, ChartColumn, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
+  CircleAlert, Clock, Database, Download, FileText, Flame, Gauge, House, Keyboard, Layers, Lock, Maximize, Minimize, Minus, MessageSquare, Pause, Play, Plus,
+  RotateCcw, RotateCw, Settings, Target, Trash, TrendingUp, User, Volume2, VolumeX, WifiOff, X, Zap, type LucideIcon,
 } from "lucide-react";
 
 const ICONS = {
@@ -9,7 +9,8 @@ const ICONS = {
   chevL: ChevronLeft, chevR: ChevronRight, chevD: ChevronDown, chevU: ChevronUp, clock: Clock, award: Award, note: FileText,
   up: ArrowUp, down: ArrowDown, rotL: RotateCcw, rotR: RotateCw, plus: Plus, x: X, arrowR: ArrowRight, target: Target,
   trending: TrendingUp, zap: Zap, msg: MessageSquare, bell: Bell, user: User, download: Download, trash: Trash,
-  wifiOff: WifiOff, alert: CircleAlert, db: Database,
+  wifiOff: WifiOff, alert: CircleAlert, db: Database, settings: Settings, volume: Volume2, mute: VolumeX, fullscreen: Maximize,
+  exitFullscreen: Minimize, captions: Captions, audio: AudioLines, keyboard: Keyboard, gauge: Gauge, minus: Minus,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
