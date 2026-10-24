@@ -5,19 +5,24 @@
  * the tokens defined here.
  */
 
-/* The Modernist tokens. A brighter red than the brand's #83050B, with ramps. */
+/*
+ * The Modernist tokens, in the brand red of the Klymb wordmark (#83050B).
+ * 600 and 400 are the site's own press and on-dark reds (globals.css);
+ * 700 is the brand red again, for small text on light grounds (9.6:1).
+ */
 .sd-app {
   --sd-bg: #f3f2f2;
   --sd-surface: #eae9e9;
   --sd-ink: #201e1d;
   --sd-divider: color-mix(in srgb, #201e1d 40%, transparent);
-  --sd-accent: #ec3013;
-  --sd-accent-100: #fff2ef;
-  --sd-accent-300: #ffc4b8;
-  --sd-accent-400: #ff9783;
-  --sd-accent-600: #dd2b0f;
-  --sd-accent-700: #ae1800;
-  --sd-accent-800: #7c1405;
+  --sd-accent: #83050b;
+  --sd-accent-100: #f9eaeb;
+  --sd-accent-300: #e8b4b7;
+  --sd-accent-400: #f0868b;
+  --sd-accent-600: #690409;
+  --sd-accent-700: #83050b;
+  --sd-accent-800: #5a0307;
+  --sd-accent-900: #4a0206;
   --sd-n-100: #f8f4f4;
   --sd-n-200: #eae7e7;
   --sd-n-300: #d7d3d3;
@@ -60,7 +65,7 @@
   .sd-btn:disabled { opacity: 0.45; cursor: not-allowed; }
   .sd-btn-primary { background: var(--sd-accent); color: var(--sd-bg); }
   .sd-btn-primary:hover:not(:disabled) { background: var(--sd-accent-600); }
-  .sd-btn-primary:active:not(:disabled) { background: var(--sd-accent-700); }
+  .sd-btn-primary:active:not(:disabled) { background: var(--sd-accent-900); }
   .sd-btn-secondary { border-color: var(--sd-divider); }
   .sd-btn-secondary:hover:not(:disabled) { background: color-mix(in srgb, var(--sd-ink) 7%, transparent); }
   .sd-btn-secondary:active:not(:disabled) { background: color-mix(in srgb, var(--sd-ink) 14%, transparent); }
