@@ -106,7 +106,7 @@ export function useActivity(s: CourseState, ready: boolean, preview: boolean) {
       }
     }
     for (const id of s.done) if (!before.done.includes(id)) track("day_complete", id);
-    if (before.subs !== s.subs) track("subs", s.cur, null, { on: s.subs });
+    if (before.subs !== s.subs || before.subLang !== s.subLang) track("subs", s.cur, null, { on: s.subs, lang: s.subLang });
     if (before.lang !== s.lang) track("lang", s.cur, null, { lang: s.lang });
   }, [on, s]);
 

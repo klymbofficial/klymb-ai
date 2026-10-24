@@ -114,7 +114,11 @@ export interface Day {
   copy: Record<Lang, DayCopy>;
   sources: Source[];
   /** Portrait (9:16) for the standalone Day page; `wide` is the 16:9 cut the course app's player plays when it exists. */
-  video: { src: string; poster: string; minutes: number; lang: string; wide?: { src: string; poster: string } };
+  video: {
+    src: string; poster: string; minutes: number; lang: string; wide?: { src: string; poster: string };
+    /** Other voice-overs of the same cut, picked in the player's Audio setting. `lang` above is the original's. */
+    audio?: { lang: string; src: string; wide?: string }[];
+  };
   /** Pages around this one; the next day's card links only when it exists. */
   prevHref?: string;
   nextHref?: string;
