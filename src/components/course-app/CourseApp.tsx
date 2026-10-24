@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { TAB_SCREENS, fmt, hasQuickCheck, lesson, miniActive, openLesson, streak, togglePlay, type CourseState, type Tab } from "@/lib/course-app";
 import { Icon, type IconName } from "./icons";
-import { LeaveQuizDialog, Onboarding, QuickCheckSheet, Splash, Toast } from "./Overlays";
+import { Commitment, LeaveQuizDialog, Onboarding, QuickCheckSheet, Splash, StreakPop, Toast } from "./Overlays";
 import { Course } from "./screens/Course";
 import { Home } from "./screens/Home";
 import { Downloads, Notifications } from "./screens/Inbox";
@@ -42,9 +42,9 @@ function MiniPlayer({ s, act, className }: { s: CourseState; act: Act; className
   const c = lesson(s.cur);
   const resume = () => act((p) => openLesson(p, p.cur));
   return (
-    <div className={clsx("sd-a-in relative grid grid-cols-[44px_minmax(0,1fr)_40px_32px] items-center gap-2.5 bg-sd-ink p-2 text-sd-bg", className)} style={{ animationDuration: ".3s" }}>
+    <div className={clsx("sd-a-in relative grid grid-cols-[44px_minmax(0,1fr)_40px_32px] items-center gap-2.5 overflow-hidden rounded-xl bg-sd-ink p-2 text-sd-bg", className)} style={{ animationDuration: ".3s" }}>
       <div className="absolute top-0 left-0 h-[3px] bg-sd-accent transition-[width] duration-1000 ease-linear" style={{ width: `${((s.t / c.secs) * 100).toFixed(2)}%` }} />
-      <button type="button" onClick={resume} aria-label={`Open ${c.title}`} className="size-11 cursor-pointer bg-sd-accent text-xs font-extrabold">{c.code}</button>
+      <button type="button" onClick={resume} aria-label={`Open ${c.title}`} className="size-11 cursor-pointer rounded-lg bg-sd-accent text-xs font-extrabold">{c.code}</button>
       <button type="button" onClick={resume} className="flex min-w-0 cursor-pointer flex-col p-0 text-left">
         <span className="truncate text-[13px] font-extrabold">{c.title}</span>
         <span className="text-[11px]">{fmt(s.t)} / {c.dur}</span>
@@ -86,9 +86,9 @@ function Sidebar({ s, act }: { s: CourseState; act: Act }) {
       </nav>
       {INBOX && <button type="button" onClick={() => act((p) => ({ ...p, screen: "notifs" }))} className="-mt-4 flex cursor-pointer items-center gap-3 px-6 py-[13px] text-left text-[15px] font-extrabold hover:bg-sd-accent-100">
         <Icon name="bell" /><span className="flex-1">Notifications</span>
-        {unread > 0 && <span className="h-5 min-w-5 bg-sd-accent px-1.5 text-[11px] leading-5 font-extrabold text-sd-bg">{unread}<span className="sr-only"> unread</span></span>}
+        {unread > 0 && <span className="h-5 min-w-5 rounded-full bg-sd-accent px-1.5 text-[11px] leading-5 font-extrabold text-sd-bg">{unread}<span className="sr-only"> unread</span></span>}
       </button>}
-      <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} className="mx-6 mt-auto flex cursor-pointer flex-col gap-0.5 bg-sd-accent p-3.5 text-left text-sd-bg hover:bg-sd-accent-600">
+      <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} className="mx-6 mt-auto flex cursor-pointer flex-col gap-0.5 rounded-xl bg-sd-accent p-3.5 text-left text-sd-bg hover:bg-sd-accent-600">
         <span className="flex items-start justify-between"><span className="text-[44px] leading-[0.9] font-extrabold tracking-[-0.04em]">{st.current}</span><Icon name="flame" /></span>
         <span className="mt-1.5 text-sm font-extrabold">{st.current ? "day streak" : "Start your streak today"}</span>
       </button>
@@ -170,6 +170,8 @@ export function CourseApp({ user = null }: { user?: CourseUser | null }) {
 
       {s.screen === "splash" && <Splash act={act} />}
       {s.screen === "onboard" && <Onboarding s={s} act={act} />}
+      {s.screen === "commit" && <Commitment s={s} act={act} />}
+      {s.streakPop && <StreakPop s={s} act={act} />}
       {s.qcOpen && s.screen === "player" && hasQuickCheck(s.cur) && <QuickCheckSheet s={s} act={act} />}
       {s.confirmExit && <LeaveQuizDialog s={s} act={act} />}
       {s.toast && <Toast text={s.toast} />}

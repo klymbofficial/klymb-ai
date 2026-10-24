@@ -52,7 +52,7 @@ export function FollowUps({ items, lang, onDone }: { items: FollowUp[]; lang: La
       <div className="flex items-center justify-between">
         <span className="sd-kicker text-sd-accent-700">{ui.label} · {i + 1} / {items.length}</span>
         <span className="flex gap-1" aria-hidden="true">
-          {items.map((x, k) => <span key={x.q} className={clsx("h-[5px] w-6", k < i ? "bg-sd-accent" : k === i ? "bg-sd-ink" : "bg-sd-n-300")} />)}
+          {items.map((x, k) => <span key={x.q} className={clsx("h-[5px] w-6 rounded-full", k < i ? "bg-sd-accent" : k === i ? "bg-sd-ink" : "bg-sd-n-300")} />)}
         </span>
       </div>
 

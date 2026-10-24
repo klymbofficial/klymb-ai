@@ -12,7 +12,7 @@ import {
   type Thread,
 } from "@/data/system-design/course-app";
 import { SUBTITLES_EN } from "@/data/system-design/subtitles-en";
-import type { Lang } from "@/data/system-design/types";
+import type { Lang, Question as ChoiceQuestion } from "@/data/system-design/types";
 
 /**
  * State and transitions for the System Design course app. Everything here is
@@ -21,10 +21,11 @@ import type { Lang } from "@/data/system-design/types";
  */
 
 export type Screen =
-  | "splash" | "onboard" | "home" | "course" | "progress" | "profile"
+  | "splash" | "onboard" | "commit" | "home" | "course" | "progress" | "profile"
   | "player" | "quiz" | "results" | "notifs" | "downloads" | "recap";
 export type Tab = "home" | "course" | "progress" | "profile";
 export type PlayerTab = "notes" | "transcript" | "discuss" | "lessons";
+/** "pre" is the retired course baseline; only the final assessment ("post") is taken now. */
 export type QuizKind = "pre" | "post";
 export type Answer = number | number[] | string;
 
@@ -43,6 +44,13 @@ export interface LessonProgress {
   /** The design attempt, and the self-check ticks after the walkthrough. */
   design?: string; checks?: boolean[];
   follow?: boolean[];
+  /**
+   * The lesson check ("Prove it"): 5 questions, 60% to pass. `post` holds the
+   * passing attempt's picks; `check` is the best score so far (0–100); the
+   * last attempt's picks stay in `checkPicks` for its results. A fail sets
+   * `failed`, and a retake opens once the video is watched again (`rewatched`).
+   */
+  check?: number; checkPicks?: number[]; tries?: number; failed?: boolean; rewatched?: boolean;
 }
 
 export interface CourseState {
@@ -115,7 +123,16 @@ export interface CourseState {
   toured: boolean;
   /** Local dates (YYYY-MM-DD) with any finished step: the streak. */
   activeDays: string[];
+  /** The promise made after the welcome: signed name and local date. */
+  commitment: { name: string; date: string } | null;
+  /** The streak pop-up is open; `popDay` is the last day it was shown (once a day, on the first pass). */
+  streakPop: boolean;
+  popDay: string;
 }
+
+/** The lesson check: questions per lesson and the share needed to pass. */
+export const CHECK_SIZE = 5;
+export const PASS_MARK = 0.6;
 
 export const LESSON_COUNT = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 export const ALL_IDS = MODULES.flatMap((m, mi) => m.lessons.map((_, li) => `${mi}-${li}`));
@@ -246,6 +263,7 @@ export function defaultState(now = Date.now()): CourseState {
     goal: 15, remind: "19:00", autoplay: false, quality: "auto", wifiOnly: true, streakRem: true, replyNotif: true,
     todaySec: 0, today: localDate(new Date(now)),
     toast: null, toastUntil: 0,
+    commitment: null, streakPop: false, popDay: "",
     lessons: {}, lang: "en", subs: true, subLang: "hinglish", subSize: "m", audio: "Hinglish", volume: 1, muted: false,
     toured: false, activeDays: [],
   };
@@ -253,21 +271,36 @@ export function defaultState(now = Date.now()): CourseState {
 
 /** Screens the app can open on with `?start=`, matching the design canvas frames. */
 export const START_SCREENS = [
-  "home", "course", "player", "pre", "post", "q", "results", "progress", "qc", "preresults", "mini", "transcript", "exit",
+  "home", "course", "player", "post", "q", "results", "progress", "qc", "mini", "transcript", "exit",
+  "commit", "commitdone", "streak", "lesson", "lessonpass", "lessonfail", "retake",
   "splash", "onboard", "onboard2", "profile", "notifs", "notifsempty", "downloads", "dlempty", "discuss", "recap", "offline", "videoerr",
 ] as const;
 export type StartScreen = (typeof START_SCREENS)[number];
 
 /** A preview state for one design frame. `q` picks the question for "q"; `seedPost` adds a finished post-assessment. */
 export function previewState(start: StartScreen, opts: { q?: number; seedPost?: boolean } = {}, now = Date.now()): CourseState {
-  const s: CourseState = { ...defaultState(now), screen: "home", onboarded: true, pre: [1, 0, 0, 1, 0, 0], done: ["0-0"], cur: "1-0" };
+  const s: CourseState = {
+    ...defaultState(now), screen: "home", onboarded: true, toured: true, done: ["0-0"], cur: "1-0",
+    lessons: { "0-0": { started: true, pre: [0, 0, 0], watched: true, read: true, post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 } },
+    commitment: { name: "Priya Sharma", date: localDate(new Date(now)) },
+  };
+  /** Day 1 opened past the video, with the check in some state. */
+  const atCheck = (p: Partial<LessonProgress>): CourseState => ({
+    ...s, screen: "player", visited: true, lessons: { ...s.lessons, "1-0": { started: true, pre: [0, 0, 0], watched: true, read: true, ...p } },
+  });
   if (opts.seedPost) s.post = [1, 1, 1, 1, 0, 1];
   switch (start) {
     case "course": return { ...s, screen: "course", tab: "course" };
     case "progress": return { ...s, screen: "progress", tab: "progress" };
     case "player": return { ...s, screen: "player", visited: true };
-    case "pre":
-    case "post": return { ...s, screen: "quiz", quiz: { kind: start, stage: "intro", idx: 0, answers: {} } };
+    case "post": return { ...s, screen: "quiz", quiz: { kind: "post", stage: "intro", idx: 0, answers: {} } };
+    case "commit": return { ...s, screen: "commit", commitment: null };
+    case "commitdone": return { ...s, screen: "commit" };
+    case "streak": return { ...s, activeDays: [localDate(new Date(now))], streakPop: true };
+    case "lesson": return atCheck({});
+    case "lessonpass": return atCheck({ post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 });
+    case "lessonfail": return atCheck({ check: 40, checkPicks: [0, 1, 1, 0, 2], tries: 1, failed: true });
+    case "retake": return atCheck({ check: 40, checkPicks: [0, 1, 1, 0, 2], tries: 1, failed: true, rewatched: true });
     case "q": {
       const i = Math.min(Math.max(opts.q ?? 0, 0), QUESTIONS.length - 1);
       const answers: Record<number, Answer> = {};
@@ -292,7 +325,6 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     case "transcript": return { ...s, screen: "player", visited: true, ptab: "transcript" };
     case "exit": return { ...s, screen: "quiz", quiz: { kind: "post", stage: "q", idx: 2, answers: { 0: 0, 1: [0], 2: 1 } }, confirmExit: true };
     case "qc": return { ...s, screen: "player", visited: true };
-    case "preresults": return { ...s, screen: "results", lastKind: "pre" };
     case "results": return { ...s, screen: "results", post: s.post ?? [1, 1, 1, 1, 0, 1], lastKind: "post" };
     default: return s;
   }
@@ -330,8 +362,9 @@ export function tick(s: CourseState, now = Date.now()): CourseState {
   return n;
 }
 
-export function openLesson(s: CourseState, id: string, now = Date.now()): CourseState {
+export function openLesson(s: CourseState, id: string, now = Date.now(), force = false): CourseState {
   if (isSoon(id)) return { ...s, ...toast(`${lesson(id).title.split(":")[0]} is coming soon`, now) };
+  if (!force && isLocked(s, id)) return { ...s, ...toast("Pass the previous lesson’s assessment to unlock this one", now, 2400) };
   const same = id === s.cur;
   return { ...s, screen: "player", cur: id, t: same ? s.t : 0, playing: same ? s.playing : false, visited: true, miniHide: null, ended: false, upNext: 0, qcOpen: false };
 }
@@ -466,28 +499,21 @@ export function badges(s: CourseState, now = Date.now()): Badge[] {
   const st = streak(s, now);
   return [
     { name: "First lesson", icon: "play", on: s.done.length > 0 },
-    { name: "Baseline set", icon: "target", on: s.pre.length > 0 },
+    { name: "First pass", icon: "target", on: Object.values(s.lessons).some((p) => !!p.post) },
     { name: "7-day streak", icon: "flame", on: st.longest >= 7 },
     { name: "Started right", icon: "zap", on: modDone(0) },
     { name: "Note taker", icon: "note", on: allNotes(s).length >= 3 },
-    { name: "+30 points", icon: "trending", on: scoreDelta(s) >= 30 },
+    { name: "Perfect score", icon: "trending", on: Object.values(s.lessons).some((p) => p.check === 100) },
     { name: "Builder", icon: "db", on: Object.values(s.lessons).some((p) => p.built !== undefined) },
     { name: "Course complete", icon: "award", on: s.done.length === LESSON_COUNT },
   ];
-}
-
-/** Post minus pre, in percentage points. 0 before the post-assessment. */
-export function scoreDelta(s: CourseState) {
-  if (!s.post) return 0;
-  const sum = (a: number[]) => a.reduce((x, y) => x + y, 0);
-  return Math.round(((sum(s.post) - sum(s.pre)) / QUESTIONS.length) * 100);
 }
 
 /** Fields kept in storage between visits. Preview switches and transient UI stay out. */
 const PERSISTED = [
   "onboarded", "cur", "t", "speed", "visited", "notes", "ptab", "openMod", "done", "pre", "post", "qcDone", "notifs", "threads", "voted",
   "dl", "dlProg", "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
-  "lessons", "lang", "subs", "subLang", "subSize", "audio", "volume", "muted", "toured", "activeDays",
+  "lessons", "lang", "subs", "subLang", "subSize", "audio", "volume", "muted", "toured", "activeDays", "commitment", "popDay",
 ] as const satisfies readonly (keyof CourseState)[];
 
 export function toStored(s: CourseState) {
@@ -520,7 +546,8 @@ export function migrateLegacy(s: CourseState, legacy: { day0?: LessonProgress | 
 /** `?lesson=<id>`: open straight into that lesson, skipping the splash and intro (links from Instagram land here). */
 export function deepLink(s: CourseState, id: string | null, now = Date.now()): CourseState {
   if (!id || !ALL_IDS.includes(id) || isSoon(id)) return s;
-  return openLesson({ ...s, onboarded: true, tab: "course" }, id, now);
+  // Shared links open their lesson even when it's still locked here.
+  return openLesson({ ...s, onboarded: true, tab: "course" }, id, now, true);
 }
 
 /** Clamped to the allowed range, in steps of 0.05 so the label never shows float noise. */
@@ -564,5 +591,60 @@ export function audioTracks(id: string) {
 export function audioTrack(s: CourseState, id = s.cur) {
   const all = audioTracks(id);
   return all.find((a) => a.lang === s.audio) ?? all[0];
+}
+
+/** Locked until the lesson before it is passed (or done). Lessons not out yet are handled as "coming soon". */
+export function isLocked(s: CourseState, id: string) {
+  const i = ALL_IDS.indexOf(id);
+  const prev = ALL_IDS[i - 1];
+  if (!prev || !dayOf(prev)) return false;
+  return !s.lessons[prev]?.post && !s.done.includes(prev);
+}
+
+/** A check attempt's score, 0–100. */
+export function checkPct(questions: ChoiceQuestion[], picks: number[]) {
+  if (!questions.length) return 0;
+  return Math.round((picks.filter((p, k) => questions[k]?.choices[p]?.best).length / questions.length) * 100);
+}
+
+export const passed = (pct: number) => pct >= PASS_MARK * 100;
+
+/**
+ * Grades a lesson check. A pass saves it as the lesson's "Prove it" and, the
+ * first time today, opens the streak pop-up. A fail asks for a rewatch first.
+ */
+export function submitCheck(s: CourseState, id: string, questions: ChoiceQuestion[], picks: number[], now = Date.now()): CourseState {
+  const pct = checkPct(questions, picks);
+  const was = s.lessons[id] ?? {};
+  const best = Math.max(was.check ?? 0, pct);
+  const tries = (was.tries ?? 0) + 1;
+  if (!passed(pct)) {
+    return updateLesson(s, id, { check: was.post ? best : pct, checkPicks: picks, tries, failed: !was.post, rewatched: false }, now);
+  }
+  const n = updateLesson(s, id, { post: picks, read: true, check: best, checkPicks: picks, tries, failed: false, rewatched: false }, now);
+  const today = localDate(new Date(now));
+  return n.popDay === today ? n : { ...n, streakPop: true, popDay: today };
+}
+
+/** After a fail, watching the video again opens the retake. */
+export function markRewatched(s: CourseState, id: string): CourseState {
+  const p = s.lessons[id];
+  return p?.failed && !p.rewatched ? { ...s, lessons: { ...s.lessons, [id]: { ...p, rewatched: true } } } : s;
+}
+
+/** Lessons with a check score, for the course list and the averages. */
+export function checkScores(s: CourseState) {
+  return ALL_IDS.filter((id) => s.lessons[id]?.check !== undefined).map((id) => ({ id, pct: s.lessons[id].check!, passed: !!s.lessons[id].post }));
+}
+
+/** The average check score as "75%", or "—" before any. */
+export function checkAverage(s: CourseState) {
+  const all = checkScores(s);
+  return all.length ? `${Math.round(all.reduce((a, x) => a + x.pct, 0) / all.length)}%` : "—";
+}
+
+/** Signs the commitment, dated today. */
+export function commit(s: CourseState, name: string, now = Date.now()): CourseState {
+  return { ...s, commitment: { name: name.trim(), date: localDate(new Date(now)) } };
 }
 

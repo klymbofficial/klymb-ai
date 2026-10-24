@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { QUESTIONS } from "../src/data/system-design/course-app";
 import {
   ALL_IDS, addNote, closeQuiz, completeNext, deepLink, defaultState, flowDone, fmt, fromStored, grade, isAnswered, isSoon, localDate,
-  migrateLegacy, miniActive, nextQuestion, openLesson, pickOption, previewState, scoreDelta, setAnswer, streak, tick, toStored, togglePlay,
+  migrateLegacy, miniActive, nextQuestion, openLesson, pickOption, previewState, setAnswer, streak, tick, toStored, togglePlay,
   updateLesson, type CourseState,
 } from "../src/lib/course-app";
 
@@ -49,18 +49,17 @@ test("multi-select toggles options on and off", () => {
   assert.deepEqual(s.quiz.answers[1], [2]);
 });
 
-test("finishing the post-assessment grades it and opens the comparison", () => {
-  let s: CourseState = { ...home(), pre: [1, 0, 0, 1, 0, 0], screen: "quiz", quiz: { kind: "post", stage: "q", idx: 0, answers: {} } };
+test("finishing the final assessment grades it and opens its results", () => {
+  let s: CourseState = { ...home(), screen: "quiz", quiz: { kind: "post", stage: "q", idx: 0, answers: {} } };
   const right: Record<number, Parameters<typeof setAnswer>[1]> = { 0: 0, 1: [0, 2], 2: 1, 3: [0, 1, 2, 3, 4], 4: "consistency vs availability", 5: 1 };
   for (let i = 0; i < QUESTIONS.length; i++) s = nextQuestion(setAnswer(s, right[i]));
   assert.equal(s.screen, "results");
   assert.equal(s.lastKind, "post");
   assert.deepEqual(s.post, [1, 1, 1, 1, 1, 1]);
-  assert.equal(scoreDelta(s), 67);
 });
 
 test("the timed question moves on by itself when time runs out", () => {
-  let s: CourseState = { ...home(), screen: "quiz", quiz: { kind: "pre", stage: "q", idx: 5, answers: {} }, timeLeft: 1 };
+  let s: CourseState = { ...home(), screen: "quiz", quiz: { kind: "post", stage: "q", idx: 5, answers: {} }, timeLeft: 1 };
   s = tick(s, NOW);
   assert.equal(s.screen, "results");
 });

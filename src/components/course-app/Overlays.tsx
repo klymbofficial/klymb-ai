@@ -1,10 +1,10 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { QUESTIONS, QUICK_CHECKS, WELCOME } from "@/data/system-design/course-app";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
-import { answerQuickCheck, closeQuickCheck, fmt, openLesson, quickCheckAt, startQuiz, type CourseState } from "@/lib/course-app";
+import { answerQuickCheck, closeQuickCheck, commit, fmt, localDate, openLesson, quickCheckAt, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "./icons";
 import { track } from "./track";
 import { GoogleButton, firstName, useCourseUser } from "./user";
@@ -47,7 +47,7 @@ function OverviewVideo() {
         controlsList="nodownload"
         onPlay={() => track("video_play", "overview")}
         onTimeUpdate={(e) => onTime(e.currentTarget)}
-        className="aspect-video w-full border-2 border-sd-ink bg-black"
+        className="aspect-video w-full rounded-xl border-2 border-sd-ink bg-black"
       >
         <source src={`${OVERVIEW}.mp4`} type="video/mp4" />
         <track kind="captions" src={`${OVERVIEW}.vtt`} srcLang="hi" label="Hinglish" default />
@@ -58,14 +58,11 @@ function OverviewVideo() {
 }
 
 /** Signed out: Google first (it saves progress to your name), Day 0 without signing in as the quiet option. Signed in: straight to Day 0. */
-function StartButtons({ user, startDay0, baseline }: { user: boolean; startDay0: () => void; baseline: () => void }) {
+function StartButtons({ user, startDay0 }: { user: boolean; startDay0: () => void }) {
   const link = "cursor-pointer self-center py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink lg:self-start";
   if (user) {
     return (
-      <div className="flex flex-col gap-1">
-        <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
-        <button type="button" onClick={baseline} className={link}>Or take the 6-question baseline first</button>
-      </div>
+      <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
     );
   }
   return (
@@ -82,8 +79,8 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
   const user = useCourseUser();
   const first = firstName(user);
   const done = (p: CourseState): CourseState => ({ ...p, onboarded: true });
-  const startDay0 = () => { track("welcome", null, null, { choice: "day0" }); act((p) => openLesson(done(p), "0-0")); };
-  const baseline = () => { track("welcome", null, null, { choice: "baseline" }); act((p) => startQuiz(done(p), "pre")); };
+  // The commitment comes first, once; then Day 0.
+  const startDay0 = () => { track("welcome", null, null, { choice: "day0" }); act((p) => (p.commitment ? openLesson(done(p), "0-0") : { ...done(p), screen: "commit" })); };
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-sd-bg px-5 pt-10 pb-8 lg:items-center lg:justify-center lg:p-10" role="dialog" aria-modal="true" aria-label="Welcome">
@@ -93,10 +90,10 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
           <StudyBuddy tone="light" size={96} message={`Hi${first ? ` ${first}` : ""}, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes.`} />
           <h1 className="m-0 text-[38px] leading-[1] tracking-[-0.04em] text-pretty lg:text-[60px]">System design, phone pe.</h1>
           <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Watch the 90-second overview of all 21 days. No experience needed: Day 0 starts from what system design even is.</p>
-          <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} baseline={baseline} /></div>
+          <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} /></div>
         </div>
         <OverviewVideo />
-        <ol className="sd-a-in m-0 grid list-none gap-px border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3" style={{ animationDuration: ".5s", animationDelay: "160ms" }}>
+        <ol className="sd-a-in m-0 grid list-none gap-px overflow-hidden rounded-xl border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3" style={{ animationDuration: ".5s", animationDelay: "160ms" }}>
           {WELCOME.map(([title, detail], i) => (
             <li key={title} className="flex flex-col gap-1 bg-sd-bg p-4">
               <span className="text-sm font-extrabold text-sd-accent">{String(i + 1).padStart(2, "0")}</span>
@@ -106,7 +103,7 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
           ))}
         </ol>
         <div className="sticky -bottom-8 -mx-5 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-8 lg:hidden">
-          <StartButtons user={!!user} startDay0={startDay0} baseline={baseline} />
+          <StartButtons user={!!user} startDay0={startDay0} />
         </div>
       </div>
     </div>
@@ -121,7 +118,7 @@ export function QuickCheckSheet({ s, act }: { s: CourseState; act: Act }) {
   useEffect(() => { first.current?.focus(); }, []);
   return (
     <div className="fixed inset-0 z-[70] flex flex-col items-stretch justify-end bg-sd-n-900/50 lg:items-center lg:justify-center">
-      <div role="dialog" aria-modal="true" aria-labelledby="sd-qc-q" className="sd-a-in sd-lg-shadow flex flex-col gap-3 border-t-[3px] border-sd-accent bg-sd-bg px-5 pt-[18px] pb-[34px] lg:w-[min(540px,90%)] lg:p-6" style={{ animationDuration: ".35s" }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="sd-qc-q" className="sd-a-in sd-lg-shadow flex flex-col gap-3 rounded-t-2xl border-t-[3px] border-sd-accent bg-sd-bg px-5 lg:rounded-2xl pt-[18px] pb-[34px] lg:w-[min(540px,90%)] lg:p-6" style={{ animationDuration: ".35s" }}>
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-extrabold tracking-[0.1em] text-sd-accent-700 uppercase">Quick check · {fmt(quickCheckAt(s.cur))}</span>
           <span className="sd-tag sd-tag-neutral">Not graded</span>
@@ -137,7 +134,7 @@ export function QuickCheckSheet({ s, act }: { s: CourseState; act: Act }) {
               onClick={() => act((p) => answerQuickCheck(p, i))}
               aria-disabled={picked !== null}
               className={clsx(
-                "flex min-h-12 cursor-pointer items-center gap-3 border-2 px-3 py-[11px] text-left text-[15px] transition-[background-color,opacity] duration-250",
+                "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border-2 px-3 py-[11px] text-left text-[15px] transition-[background-color,opacity] duration-250",
                 st === "ok" ? "border-sd-ink bg-sd-ink text-sd-bg" : st === "bad" ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider",
                 st === "dim" && "opacity-45",
               )}
@@ -188,8 +185,168 @@ export function LeaveQuizDialog({ s, act }: { s: CourseState; act: Act }) {
 
 export function Toast({ text }: { text: string }) {
   return (
-    <div role="status" className="sd-a-in sd-shadow-lg fixed top-3 right-3 left-3 z-[80] flex items-center gap-2.5 bg-sd-ink px-3.5 py-3 text-[13px] font-semibold text-sd-bg lg:top-5 lg:right-6 lg:left-auto lg:w-[380px]" style={{ animationDuration: ".35s" }}>
+    <div role="status" className="sd-a-in sd-shadow-lg fixed top-3 right-3 left-3 z-[80] flex items-center gap-2.5 rounded-xl bg-sd-ink px-3.5 py-3 text-[13px] font-semibold text-sd-bg lg:top-5 lg:right-6 lg:left-auto lg:w-[380px]" style={{ animationDuration: ".35s" }}>
       <span className="flex text-sd-accent-400"><Icon name="check" size={16} /></span>{text}
     </div>
   );
 }
+
+const PLEDGES = (goal: number): { icon: "shield" | "flame"; title: string; body: string }[] => [
+  { icon: "shield", title: "I’ll learn honestly", body: "No looking up answers during assessments. An honest score shows exactly what to rewatch." },
+  { icon: "flame", title: "I’ll practise every day", body: `At least one lesson or quick check a day. ${goal} minutes is enough.` },
+];
+const HOLD_MS = 1200;
+
+/** After the welcome: two promises, a signature, and a press-and-hold to make it official. Then Day 0. */
+export function Commitment({ s, act }: { s: CourseState; act: Act }) {
+  const user = useCourseUser();
+  const [pledge, setPledge] = useState([false, false]);
+  const [name, setName] = useState(user?.name ?? "");
+  const [holding, setHolding] = useState(false);
+  const timer = useRef(0);
+  const done = !!s.commitment;
+  const can = pledge.every(Boolean) && name.trim().length > 1;
+  const down = () => {
+    if (!can || done) return;
+    window.clearTimeout(timer.current);
+    setHolding(true);
+    timer.current = window.setTimeout(() => { setHolding(false); act((p) => commit(p, name)); track("welcome", null, null, { choice: "commit" }); }, HOLD_MS);
+  };
+  const up = () => { window.clearTimeout(timer.current); setHolding(false); };
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const start = () => act((p) => ({ ...openLesson({ ...p, onboarded: true }, "0-0"), toast: "Commitment made. Day 0 starts now.", toastUntil: Date.now() + 2600 }));
+  const signed = s.commitment ? new Date(`${s.commitment.date}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
+
+  return (
+    <div className="sd-a-screen fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-sd-bg px-5 pt-14 pb-7 lg:items-center lg:justify-center lg:p-10" role="dialog" aria-modal="true" aria-label="Make a commitment">
+      <div className="flex w-full flex-1 flex-col gap-4 lg:max-w-[560px] lg:flex-none">
+        {!done ? (
+          <>
+            <span className="sd-kicker text-sd-accent-700">Before you start</span>
+            <h1 className="m-0 text-[34px] leading-[1.02] tracking-[-0.03em] text-pretty lg:text-[52px]">Make a commitment to yourself</h1>
+            <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Two promises. Keep them and the course will work for you.</p>
+            <div className="flex flex-col gap-2.5" role="group" aria-label="Promises">
+              {PLEDGES(s.goal).map((pl, i) => {
+                const on = pledge[i];
+                return (
+                  <button
+                    key={pl.title}
+                    type="button"
+                    role="checkbox"
+                    aria-checked={on}
+                    onClick={() => setPledge((p) => p.map((x, k) => (k === i ? !x : x)))}
+                    className={clsx("sd-a-in grid cursor-pointer grid-cols-[28px_1fr] items-start gap-3 rounded-xl border-2 p-3.5 text-left transition-colors duration-200", on ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider")}
+                    style={{ animationDuration: ".45s", animationDelay: `${120 + i * 90}ms` }}
+                  >
+                    <span className={clsx("flex size-[26px] items-center justify-center rounded-[7px] border-2 text-sd-bg transition-colors duration-200", on ? "border-sd-accent bg-sd-accent" : "border-sd-n-400")}>{on && <Icon name="check" size={14} stroke={3.5} />}</span>
+                    <span className="flex flex-col gap-[3px]">
+                      <span className="flex items-center gap-1.5 text-base font-extrabold"><span className="flex text-sd-accent"><Icon name={pl.icon} size={18} /></span>{pl.title}</span>
+                      <span className="text-[13px] leading-[1.45] text-sd-n-700">{pl.body}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-semibold">Sign with your name</span>
+              <input className="sd-input min-h-12 text-lg font-bold" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="name" />
+            </label>
+            <div className="mt-auto flex flex-col gap-2 lg:mt-2">
+              <button
+                type="button"
+                disabled={!can}
+                onPointerDown={down}
+                onPointerUp={up}
+                onPointerLeave={up}
+                onPointerCancel={up}
+                onKeyDown={(e) => { if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); down(); } }}
+                onKeyUp={(e) => { if (e.key === " " || e.key === "Enter") up(); }}
+                onContextMenu={(e) => e.preventDefault()}
+                className="sd-btn sd-btn-primary sd-btn-block relative h-14 touch-none overflow-hidden text-base select-none"
+              >
+                <span className={clsx("absolute inset-y-0 left-0 bg-sd-accent-900", holding ? "w-full transition-[width] duration-[1200ms] ease-linear" : "w-0 transition-[width] duration-200 ease-out")} />
+                <span className="relative flex items-center gap-2"><Icon name="check" />{holding ? "Keep holding…" : "Press and hold to commit"}</span>
+              </button>
+              <span className="text-xs text-sd-n-700">{can ? "Hold for about a second to make it official." : "Tick both promises and sign to continue."}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-1 flex-col justify-center gap-3.5 lg:flex-none">
+              <span className="sd-a-pop flex size-[88px] items-center justify-center rounded-full bg-sd-accent text-sd-bg" style={{ animationDuration: ".55s" }}><Icon name="check" size={40} /></span>
+              <h1 className="sd-a-in m-0 text-[34px] leading-[1.02] tracking-[-0.03em] lg:text-[52px]" style={{ animationDelay: "200ms" }}>You’re committed, {s.commitment!.name.split(" ")[0]}.</h1>
+              <p className="sd-a-in m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]" style={{ animationDelay: "300ms" }}>Honest answers and a little practice every day. Your streak starts with today’s first lesson.</p>
+              <div className="sd-a-in flex flex-col gap-0.5 rounded-xl border-2 border-dashed border-sd-divider px-3.5 py-3" style={{ animationDelay: "400ms" }}>
+                <span className="text-xl font-extrabold italic">{s.commitment!.name}</span>
+                <span className="text-xs text-sd-n-700">Signed {signed}</span>
+              </div>
+            </div>
+            <button type="button" onClick={start} className="sd-a-in sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-base" style={{ animationDelay: "500ms" }}>Start learning<Icon name="arrowR" /></button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const WEEK = ["M", "T", "W", "T", "F", "S", "S"];
+
+/** The first pass of the day: the flame, the new streak count, and today ticked in this week's row. */
+export function StreakPop({ s, act }: { s: CourseState; act: Act }) {
+  const close = () => act((p) => ({ ...p, streakPop: false }));
+  const st = streak(s);
+  const btn = useRef<HTMLButtonElement>(null);
+  useEffect(() => { btn.current?.focus(); }, []);
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const days = WEEK.map((label, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = localDate(d);
+    const today = key === localDate(now);
+    return { label, today, past: !today && d < now && s.activeDays.includes(key), future: d > now && !today };
+  });
+  return (
+    <div className="sd-a-fade fixed inset-0 z-[75] flex items-end justify-center bg-sd-ink/55 p-4 lg:items-center" onClick={close} onKeyDown={(e) => { if (e.key === "Escape") close(); }}>
+      <div role="dialog" aria-modal="true" aria-label="Streak updated" onClick={(e) => e.stopPropagation()} className="sd-a-sheet sd-shadow-lg flex w-full max-w-[400px] flex-col gap-4 rounded-2xl bg-sd-bg p-5">
+        <div className="flex items-center gap-3.5">
+          <div className="sd-a-flame-big flex size-14 flex-none items-center justify-center rounded-full bg-sd-accent text-sd-bg"><span className="sd-a-flicker flex"><Icon name="flame" size={30} /></span></div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-extrabold tracking-[0.1em] text-sd-accent-700 uppercase">Streak +1</span>
+            <span className="text-[28px] leading-none font-extrabold tracking-[-0.02em]"><Roll n={st.current} delay={0.5} /> day streak</span>
+          </div>
+        </div>
+        <div className="text-sm leading-[1.45]">Today’s task is done. Come back tomorrow to keep it going.</div>
+        <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
+          {days.map((d, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5">
+              <div
+                className={clsx(
+                  "flex size-[38px] items-center justify-center rounded-[10px] text-sd-bg",
+                  d.today ? "sd-a-tickbox border-2 border-sd-accent bg-sd-accent" : d.past ? "sd-a-pop bg-sd-accent" : "sd-a-pop border-2 border-dashed border-sd-n-400",
+                )}
+                style={d.today ? undefined : { animationDuration: ".35s", animationDelay: `${250 + i * 60}ms` }}
+              >
+                {d.past ? <Icon name="check" size={16} stroke={3} /> : d.today ? <span className="sd-a-check flex"><Icon name="check" size={22} stroke={3.5} /></span> : null}
+              </div>
+              <span className={clsx("text-[11px]", d.today ? "font-extrabold text-sd-accent-700" : "font-semibold text-sd-n-700")}>{d.today ? "Today" : d.label}</span>
+            </div>
+          ))}
+        </div>
+        <button ref={btn} type="button" onClick={close} className="sd-a-rise sd-btn sd-btn-primary sd-btn-block h-12">Keep going</button>
+      </div>
+    </div>
+  );
+}
+
+/** A number that rolls up from the one before it, like an odometer. */
+export function Roll({ n, delay = 0.1 }: { n: number; delay?: number }) {
+  return (
+    <span className="inline-grid overflow-hidden align-top">
+      <span className="sd-roll-out [grid-area:1/1]" style={{ animationDelay: `${delay}s` }} aria-hidden="true">{Math.max(0, n - 1)}</span>
+      <span className="sd-roll-in [grid-area:1/1]" style={{ animationDelay: `${delay + 0.15}s` }}>{n}</span>
+    </span>
+  );
+}
+

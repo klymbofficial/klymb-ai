@@ -2,29 +2,25 @@
 
 import clsx from "clsx";
 import { DIAGRAMS, QUESTIONS, TIMED_SECONDS } from "@/data/system-design/course-app";
-import { closeQuiz, isAnswered, nextQuestion, pad, pct, pickOption, setAnswer, type CourseState } from "@/lib/course-app";
+import { closeQuiz, isAnswered, nextQuestion, pad, pickOption, setAnswer, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { BackButton, Bar, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
 
-export function QuizIntro({ s, act }: { s: CourseState; act: Act }) {
-  const pre = s.quiz.kind === "pre";
+export function QuizIntro({ act }: { s: CourseState; act: Act }) {
   const start = () => act((p) => ({ ...p, quiz: { ...p.quiz, stage: "q", idx: 0 }, timeLeft: TIMED_SECONDS }));
   return (
     <div className="sd-a-screen flex flex-1 max-w-[880px] flex-col lg:flex-none lg:gap-5">
       <div className="px-3 pt-1 lg:p-0"><BackButton kind="close" onClick={() => act(closeQuiz)} /></div>
       <div className="flex flex-col gap-3.5 px-5 pt-2 lg:contents">
-        <div className="sd-kicker text-sd-accent-700">{pre ? "Pre-assessment" : "Post-assessment"}</div>
-        <h1 className="m-0 text-[40px] leading-[1.02] tracking-[-0.03em] lg:text-[64px] lg:leading-[0.98] lg:tracking-[-0.04em]">{pre ? "Set your baseline" : "See how far you’ve come"}</h1>
+        <div className="sd-kicker text-sd-accent-700">Final assessment</div>
+        <h1 className="m-0 text-[40px] leading-[1.02] tracking-[-0.03em] lg:text-[64px] lg:leading-[0.98] lg:tracking-[-0.04em]">Final assessment</h1>
         <p className="m-0 max-w-[620px] text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">
-          {pre
-            ? "Answer what you can. This score doesn’t lock anything. We compare it with your post-assessment so you can see what the course taught you."
-            : "The same six topics as your pre-assessment. When you finish, you’ll see your before and after side by side."}
+          {QUESTIONS.length} questions across the whole course. You’ll see how you did on each topic at the end.
         </p>
         <div className="flex gap-2">
-          <span className="sd-tag sd-tag-neutral">6 questions</span>
+          <span className="sd-tag sd-tag-neutral">{QUESTIONS.length} questions</span>
           <span className="sd-tag sd-tag-neutral">About 8 min</span>
-          {!pre && <span className="sd-tag sd-tag-accent">Baseline {pct(s.pre)}</span>}
         </div>
       </div>
       <div className="mx-5 mt-[22px] border-t-2 border-sd-divider lg:mx-0 lg:mt-0 lg:grid lg:grid-cols-3 lg:border-l lg:border-l-sd-divider">
@@ -59,7 +55,7 @@ function ChoiceOptions({ s, act, anim }: { s: CourseState; act: Act; anim: strin
             role={multi ? "checkbox" : "radio"}
             aria-checked={sel}
             onClick={() => act((p) => pickOption(p, i))}
-            className={clsx(anim, "flex min-h-[52px] cursor-pointer items-center gap-3 border-2 p-3 text-left text-[15px] hover:border-sd-accent lg:min-h-[72px] lg:gap-3.5 lg:p-4 lg:text-base", sel ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider")}
+            className={clsx(anim, "flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-left text-[15px] hover:border-sd-accent lg:min-h-[72px] lg:gap-3.5 lg:p-4 lg:text-base", sel ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider")}
             style={stagger(i, 60, 120)}
           >
             <span className={clsx("flex size-7 flex-none items-center justify-center border-[1.5px] text-[13px] font-extrabold lg:size-8 lg:text-sm", sel ? "border-sd-accent bg-sd-accent text-sd-bg" : "border-sd-divider")}>
@@ -87,7 +83,7 @@ function DiagramOptions({ s, act, anim }: { s: CourseState; act: Act; anim: stri
             aria-checked={sel}
             aria-label={`${String.fromCharCode(65 + i)}: ${dg.caption}`}
             onClick={() => act((p) => setAnswer(p, i))}
-            className={clsx(anim, "flex min-h-[200px] cursor-pointer flex-col items-center border-2 px-1.5 pt-2.5 pb-3 hover:border-sd-accent lg:min-h-[260px] lg:px-3 lg:pt-3.5 lg:pb-4", sel ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider")}
+            className={clsx(anim, "flex min-h-[200px] cursor-pointer flex-col items-center rounded-lg border-2 px-1.5 pt-2.5 pb-3 hover:border-sd-accent lg:min-h-[260px] lg:px-3 lg:pt-3.5 lg:pb-4", sel ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider")}
             style={stagger(i, 80, 120)}
           >
             <span className={clsx("mb-2.5 self-start text-sm font-extrabold lg:mb-4 lg:text-lg", sel && "text-sd-accent")}>{String.fromCharCode(65 + i)}</span>
@@ -96,7 +92,7 @@ function DiagramOptions({ s, act, anim }: { s: CourseState; act: Act; anim: stri
                 {ri > 0 && <div className="h-3.5 w-0.5 bg-sd-ink lg:h-5" />}
                 <div className="flex gap-1 lg:gap-2">
                   {row.map((n) => (
-                    <div key={n} className={clsx("min-w-10 border-[1.5px] border-sd-ink px-[5px] py-1.5 text-[10px] font-extrabold lg:min-w-16 lg:border-2 lg:px-3 lg:py-[9px] lg:text-[13px]", ri === 0 ? "bg-sd-ink text-sd-bg" : "bg-sd-bg")}>{n}</div>
+                    <div key={n} className={clsx("min-w-10 rounded-xl border-[1.5px] border-sd-ink px-[5px] py-1.5 text-[10px] font-extrabold lg:min-w-16 lg:border-2 lg:px-3 lg:py-[9px] lg:text-[13px]", ri === 0 ? "bg-sd-ink text-sd-bg" : "bg-sd-bg")}>{n}</div>
                   ))}
                 </div>
               </div>
@@ -123,7 +119,7 @@ function OrderSteps({ s, act, anim }: { s: CourseState; act: Act; anim: string }
     <div className="flex flex-col gap-2 lg:max-w-[640px]">
       <div className="text-xs text-sd-n-700 lg:text-[13px]">Use the arrows to move each step.</div>
       {order.map((v, i) => (
-        <div key={v} className={clsx(anim, "grid grid-cols-[28px_1fr_40px_40px] items-center gap-1.5 border-2 border-sd-divider bg-sd-surface py-1.5 pr-1.5 pl-3 lg:grid-cols-[32px_1fr_40px_40px] lg:gap-2 lg:pl-3.5")} style={stagger(i, 50, 120)}>
+        <div key={v} className={clsx(anim, "grid grid-cols-[28px_1fr_40px_40px] items-center gap-1.5 rounded-xl border-2 border-sd-divider bg-sd-surface py-1.5 pr-1.5 pl-3 lg:grid-cols-[32px_1fr_40px_40px] lg:gap-2 lg:pl-3.5")} style={stagger(i, 50, 120)}>
           <span className="text-base font-extrabold text-sd-accent lg:text-lg">{i + 1}</span>
           <span className="text-sm leading-[1.3] lg:text-[15px]">{q.items[v]}</span>
           <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} aria-label="Move up" className="sd-btn sd-btn-secondary sd-btn-icon size-10"><Icon name="up" size={16} /></button>
@@ -135,7 +131,7 @@ function OrderSteps({ s, act, anim }: { s: CourseState; act: Act; anim: string }
 }
 
 export function QuizQuestion({ s, act }: { s: CourseState; act: Act }) {
-  const { idx, answers, kind } = s.quiz;
+  const { idx, answers } = s.quiz;
   const q = QUESTIONS[idx];
   const a = answers[idx];
   // Alternating the keyframe name restarts the slide-in on every new question.
@@ -147,11 +143,11 @@ export function QuizQuestion({ s, act }: { s: CourseState; act: Act }) {
     <div className="sd-a-screen flex flex-1 max-w-[880px] flex-col lg:flex-none lg:gap-5">
       <div className="flex items-center gap-2 px-3 pt-1 pb-2 lg:gap-4 lg:p-0">
         <BackButton kind="close" onClick={() => act(closeQuiz)} />
-        <span className="flex-1 text-xs font-semibold tracking-[0.08em] uppercase">{kind === "pre" ? "Pre-assessment" : "Post-assessment"}</span>
+        <span className="flex-1 text-xs font-semibold tracking-[0.08em] uppercase">Final assessment</span>
         <span className="pr-2 text-[15px] font-extrabold lg:p-0 lg:text-lg">{idx + 1} / 6</span>
       </div>
       <div className="grid grid-cols-6 gap-[3px] px-5 lg:gap-1 lg:px-0" aria-hidden="true">
-        {QUESTIONS.map((_, i) => <div key={i} className={clsx("h-[5px] transition-colors duration-400 lg:h-1.5", i < idx ? "bg-sd-accent" : i === idx ? "bg-sd-ink" : "bg-sd-n-300")} />)}
+        {QUESTIONS.map((_, i) => <div key={i} className={clsx("h-[5px] rounded-full transition-colors duration-400 lg:h-1.5", i < idx ? "bg-sd-accent" : i === idx ? "bg-sd-ink" : "bg-sd-n-300")} />)}
       </div>
       <div className="flex flex-col gap-3 px-5 pt-5 lg:contents">
         <div className="flex gap-1.5 lg:mt-2"><span className="sd-tag sd-tag-accent font-semibold">{q.typeLabel}</span><span className="sd-tag sd-tag-neutral">{q.topic}</span></div>

@@ -2,7 +2,9 @@
 
 import clsx from "clsx";
 import { MODULES } from "@/data/system-design/course-app";
-import { LESSON_COUNT, isSoon, moduleIds, moduleMinutes, openLesson, pad, pct, startQuiz, type CourseState } from "@/lib/course-app";
+import {
+  ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, checkScores, isSoon, moduleIds, moduleMinutes, openLesson, pad, pct, startQuiz, type CourseState,
+} from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Bar, Duration, LessonMark, lessonView, stagger } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -19,18 +21,27 @@ export function moduleViews(s: CourseState) {
   });
 }
 
-function AssessmentRow({ kind, s, act }: { kind: "pre" | "post"; s: CourseState; act: Act }) {
-  const pre = kind === "pre";
-  const taken = pre ? s.pre.length > 0 : !!s.post;
-  const go = () => act((p) => (taken ? { ...p, screen: "results", lastKind: kind } : startQuiz(p, kind)));
+/** Where the lesson checks stand: the latest one attempted, or the first lesson if none yet. */
+export function lastCheckLesson(s: CourseState) {
+  const scored = checkScores(s);
+  return scored.length ? scored[scored.length - 1].id : ALL_IDS[0];
+}
+
+function AssessmentRow({ kind, s, act }: { kind: "lessons" | "final"; s: CourseState; act: Act }) {
+  const lessons = kind === "lessons";
+  const scored = checkScores(s);
+  const go = () => act((p) => (lessons ? openLesson(p, lastCheckLesson(p)) : p.post ? { ...p, screen: "results", lastKind: "post" } : startQuiz(p, "post")));
+  const sub = lessons
+    ? `${scored.filter((x) => x.passed).length} passed · ${Math.round(PASS_MARK * 100)}% to pass`
+    : s.post ? `Done · ${pct(s.post)}` : "6 questions across the course · after Day 21";
   return (
-    <button type="button" onClick={go} className="flex cursor-pointer items-center gap-3 bg-sd-surface p-3.5 text-left hover:bg-sd-n-300">
-      <span className={clsx("flex size-9 flex-none items-center justify-center text-sd-bg", pre ? "bg-sd-ink" : "bg-sd-accent")}><Icon name={pre ? "target" : "trending"} /></span>
+    <button type="button" onClick={go} className="flex cursor-pointer items-center gap-3 rounded-lg bg-sd-surface p-3.5 text-left hover:bg-sd-n-300">
+      <span className={clsx("flex size-9 flex-none items-center justify-center rounded-lg text-sd-bg", lessons ? "bg-sd-ink" : "bg-sd-accent")}><Icon name={lessons ? "target" : "trending"} /></span>
       <span className="flex flex-1 flex-col">
-        <span className="text-[15px] font-extrabold">{pre ? "Pre-assessment" : "Post-assessment"}</span>
-        <span className="text-xs text-sd-n-700">{pre ? (taken ? `Baseline set · ${pct(s.pre)}` : "Not taken yet · 6 questions") : s.post ? `Done · ${pct(s.post)}` : "Not taken yet · best after Day 21"}</span>
+        <span className="text-[15px] font-extrabold">{lessons ? "Lesson assessments" : "Final assessment"}</span>
+        <span className="text-xs text-sd-n-700">{sub}</span>
       </span>
-      {taken ? <span className="sd-tag sd-tag-neutral">Done</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
+      {lessons ? <span className="sd-tag sd-tag-neutral">{checkAverage(s)} avg</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
     </button>
   );
 }
@@ -76,12 +87,12 @@ export function Course({ s, act }: { s: CourseState; act: Act }) {
                           type="button"
                           onClick={() => act((p) => openLesson(p, id))}
                           className={clsx(
-                            "grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 px-2 py-[9px] text-left text-sm hover:bg-sd-accent-100",
+                            "grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 rounded-lg px-2 py-[9px] text-left text-sm hover:bg-sd-accent-100",
                             "lg:min-h-24 lg:grid-cols-[auto_1fr] lg:grid-rows-[auto_1fr] lg:items-start lg:p-3 lg:outline lg:-outline-offset-1 lg:outline-sd-divider",
                             v.cur ? "bg-sd-accent-100" : "bg-transparent",
                           )}
                         >
-                          <LessonMark done={v.done} cur={v.cur} />
+                          <LessonMark done={v.done} cur={v.cur} locked={v.locked} />
                           <span className={clsx("lg:order-3 lg:col-span-2 lg:leading-[1.3]", v.cur && "font-extrabold", v.dim && "opacity-45")}>{v.title}</span>
                           <span className="lg:order-2 lg:justify-self-end"><Duration v={v} /></span>
                         </button>
@@ -105,8 +116,8 @@ export function Course({ s, act }: { s: CourseState; act: Act }) {
           <span className="text-[13px]">{doneCount} of {LESSON_COUNT} lessons</span>
           <Bar value={coursePct} grow className="h-1.5" style={{ animationDelay: "150ms", animationDuration: ".9s" }} />
         </div>
-        <div className="order-3 flex flex-col lg:order-none"><AssessmentRow kind="pre" s={s} act={act} /></div>
-        <div className="order-5 flex flex-col lg:order-none"><AssessmentRow kind="post" s={s} act={act} /></div>
+        <div className="order-3 flex flex-col lg:order-none"><AssessmentRow kind="lessons" s={s} act={act} /></div>
+        <div className="order-5 flex flex-col lg:order-none"><AssessmentRow kind="final" s={s} act={act} /></div>
       </div>
     </div>
   );

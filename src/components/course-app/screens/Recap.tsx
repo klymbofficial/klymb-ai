@@ -41,7 +41,7 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
   return (
     <div className="sd-a-screen box-border flex flex-1 max-w-[960px] flex-col gap-5 px-5 pb-6 lg:flex-none lg:p-0">
       <div className="-mx-2 lg:mx-0"><BackButton kind="close" onClick={() => act((p) => ({ ...p, screen: "course", tab: "course" }))} /></div>
-      <div {...parallax} className="sd-a-pop flex flex-col gap-2 overflow-hidden bg-sd-accent p-5 text-sd-bg lg:p-7" style={{ animationDuration: ".6s" }}>
+      <div {...parallax} className="sd-a-pop flex flex-col gap-2 overflow-hidden rounded-xl bg-sd-accent p-5 text-sd-bg lg:p-7" style={{ animationDuration: ".6s" }}>
         <span className="sd-kicker">Module {pad(rm + 1)} complete</span>
         <span className="sd-near text-[40px] leading-[0.95] font-extrabold tracking-[-0.04em] lg:text-[64px]">{mod.title}</span>
       </div>
@@ -62,7 +62,7 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
         </div>
       </div>
       {badge && (
-        <div className="sd-a-pop flex items-center gap-3 bg-sd-ink px-3.5 py-3 text-sd-bg" style={{ animationDelay: "600ms" }}>
+        <div className="sd-a-pop flex items-center gap-3 rounded-xl bg-sd-ink px-3.5 py-3 text-sd-bg" style={{ animationDelay: "600ms" }}>
           <Icon name={badge.icon} size={22} /><span className="text-[15px] font-extrabold">Badge earned: {badge.name}</span>
         </div>
       )}

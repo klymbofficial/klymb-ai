@@ -38,7 +38,7 @@ export function DesignIt({
       <h3 className="m-0 text-[22px] tracking-[-0.02em] lg:text-[26px]">{task.title}</h3>
       <div>
         <h6 className="sd-h6 mb-1.5">{ui.brief}</h6>
-        <p className="m-0 bg-sd-surface px-3.5 py-3 text-[15px] leading-[1.45]">{task.brief}</p>
+        <p className="m-0 rounded-xl bg-sd-surface px-3.5 py-3 text-[15px] leading-[1.45]">{task.brief}</p>
       </div>
       <div>
         <h6 className="sd-h6 mb-1.5">{ui.constraints}</h6>
@@ -56,7 +56,7 @@ export function DesignIt({
         </div>
       ) : (
         <div className="sd-a-in flex flex-col gap-4">
-          <details className="bg-sd-surface px-3.5 py-2.5 text-sm">
+          <details className="rounded-xl bg-sd-surface px-3.5 py-2.5 text-sm">
             <summary className="cursor-pointer font-extrabold">{ui.saved}</summary>
             <p className="m-0 mt-2 whitespace-pre-wrap">{saved}</p>
           </details>
@@ -64,7 +64,7 @@ export function DesignIt({
             <h6 className="sd-h6 mb-2">{ui.walkthrough}</h6>
             <div className="flex flex-col gap-3">
               {task.walkthrough.map((w, k) => (
-                <div key={w.heading} className={clsx("p-4", k % 2 ? "bg-sd-surface" : "border border-sd-divider")}>
+                <div key={w.heading} className={clsx("rounded-xl p-4", k % 2 ? "bg-sd-surface" : "border border-sd-divider")}>
                   <span className="text-[17px] font-extrabold"><span className="text-sd-accent">{String(k + 1).padStart(2, "0")}</span> {w.heading}</span>
                   <ul className="m-0 mt-1.5 flex list-disc flex-col gap-1 pl-5 text-[15px] leading-[1.45] marker:text-sd-accent">{w.points.map((p) => <li key={p}>{p}</li>)}</ul>
                 </div>

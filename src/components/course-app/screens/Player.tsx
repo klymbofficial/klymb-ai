@@ -1,11 +1,11 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef, useState, type MouseEvent, type RefObject } from "react";
+import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
 import {
   ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, quickCheckAt,
-  retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
+  markRewatched, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { DayStart, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
@@ -13,7 +13,7 @@ import { Tour } from "../lesson/Tour";
 import { track } from "../track";
 import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
-import { ControlBar, Osd, PlayerSettings, StatusLine, SUB_SIZE_CLASS, canSubtitle, useFullscreen, useOsd, usePlayerKeys } from "./PlayerControls";
+import { ControlRow, SUB_SIZE_CLASS, VideoBar, canSubtitle, useMenu, usePlayerKeys } from "./PlayerControls";
 
 /** Placeholder transcript for lessons that don't have a written one yet. */
 function transcriptFor(s: CourseState, id: string): [number, string][] {
@@ -39,13 +39,12 @@ function transcriptFor(s: CourseState, id: string): [number, string][] {
  * The lesson video on the dark grid: the 16:9 cut when there is one, else the
  * 9:16 one. Its own controls are hidden; the player's buttons drive it.
  */
-function Video({ s, act, subs, box }: { s: CourseState; act: Act; subs?: boolean; box: RefObject<HTMLDivElement | null> }) {
+function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean; bar: ReactNode }) {
   const day = dayOf(s.cur)!;
   const voice = audioTrack(s)!;
   const wide = !!voice.wide;
   const poster = wide ? day.video.wide?.poster ?? day.video.poster : day.video.poster;
   const ref = useRef<HTMLVideoElement>(null);
-  const osd = useOsd(s);
   // Watch-through milestones already reported for this lesson's video.
   const marks = useRef<{ id: string; seen: Set<number> }>({ id: "", seen: new Set() });
   const errOffline = s.offline && !s.vidErr;
@@ -71,14 +70,18 @@ function Video({ s, act, subs, box }: { s: CourseState; act: Act; subs?: boolean
     }
     const seen = v.duration > 0 && t / v.duration >= 0.85;
     act((p) => {
-      if (Math.floor(p.t) === Math.floor(t) && (!seen || p.lessons[p.cur]?.watched)) return p;
+      const lp = p.lessons[p.cur];
+      const owed = seen && (!lp?.watched || (lp.failed && !lp.rewatched));
+      if (Math.floor(p.t) === Math.floor(t) && !owed) return p;
       const n = { ...p, t };
-      return seen && !p.lessons[p.cur]?.watched ? updateLesson(n, p.cur, { watched: true }) : n;
+      if (!seen) return n;
+      // Watching it again after a missed check opens the retake.
+      return markRewatched(lp?.watched ? n : updateLesson(n, p.cur, { watched: true }), p.cur);
     });
   };
 
   return (
-    <div ref={box} id="lesson-watch" className={clsx("sd-grid sd-fs @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
+    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden rounded-xl [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
         <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
@@ -111,12 +114,16 @@ function Video({ s, act, subs, box }: { s: CourseState; act: Act; subs?: boolean
         onTimeUpdate={(e) => onTime(e.currentTarget)}
         onPlay={() => { track("video_play", s.cur, "watch", { at: Math.round(s.t) }); act((p) => (p.playing ? p : { ...p, playing: true })); }}
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
-        onEnded={() => { act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true })); goTo("reveal", 400); }}
+        onEnded={() => {
+          const retake = !!s.lessons[s.cur]?.failed;
+          act((p) => ({ ...markRewatched(updateLesson(p, p.cur, { watched: true }), p.cur), playing: false, ended: true }));
+          goTo(retake ? "prove" : "reveal", 400);
+        }}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
         className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
       />
       {subs && <Subtitles s={s} />}
-      <Osd osd={osd} />
+      {bar}
     </div>
   );
 }
@@ -126,7 +133,7 @@ function Subtitles({ s }: { s: CourseState }) {
   const cur = lineAt(subtitleLines(s.cur, s.subLang), s.t);
   if (!cur) return null;
   return (
-    <div aria-live="off" lang={s.subLang === "en" ? "en" : "hi-Latn"} className="pointer-events-none absolute inset-x-0 bottom-[5%] z-[2] flex justify-center">
+    <div aria-live="off" lang={s.subLang === "en" ? "en" : "hi-Latn"} className="pointer-events-none absolute inset-x-0 bottom-[100px] z-[2] flex justify-center lg:bottom-[5%]">
       <span className={clsx("max-w-[86%] bg-black/75 px-[0.5em] py-[0.2em] text-center leading-[1.4] font-semibold text-white", SUB_SIZE_CLASS[s.subSize])}>{cur}</span>
     </div>
   );
@@ -166,7 +173,7 @@ function Scrubber({ s, act }: { s: CourseState; act: Act }) {
       {hasQuickCheck(s.cur) && !s.qcDone.includes(s.cur) && (
         <div className="absolute top-1 -ml-1.5 size-3 rotate-45 border-[2.5px] border-sd-accent bg-sd-bg lg:top-[5px] lg:-ml-[7px] lg:size-3.5" style={{ left: `${((cp / d) * 100).toFixed(2)}%` }} />
       )}
-      <div className="absolute -ml-1.5 size-3 border-2 border-sd-bg bg-sd-accent lg:-ml-[7px] lg:size-3.5" style={{ left: cur }} />
+      <div className="absolute -ml-1.5 size-3 rounded-full border-2 border-sd-bg bg-sd-accent lg:-ml-[7px] lg:size-3.5" style={{ left: cur }} />
     </div>
   );
 }
@@ -228,7 +235,7 @@ function ModuleLessons({ s, act }: { s: CourseState; act: Act }) {
         const v = lessonView(s, id);
         return (
           <button key={id} type="button" onClick={() => act((p) => openLesson(p, id))} className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 border-b border-sd-divider px-2 py-[11px] text-left text-sm", v.cur && "bg-sd-accent-100")}>
-            <LessonMark done={v.done} cur={v.cur} />
+            <LessonMark done={v.done} cur={v.cur} locked={v.locked} />
             <span className={clsx(v.cur && "font-extrabold", v.dim && "opacity-45")}>{v.title}</span>
             <Duration v={v} />
           </button>
@@ -254,9 +261,8 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
   ];
   const showVideo = !day || !!lp.pre;
   const subsOn = !!day && canSubtitle(s) && s.subs;
-  const [settings, setSettings] = useState(false);
-  const fs = useFullscreen();
-  usePlayerKeys(act, fs.toggle, showVideo && !!day && !s.qcOpen);
+  const menu = useMenu();
+  usePlayerKeys(act, showVideo && !!day && !s.qcOpen);
 
   return (
     <div className="sd-a-screen flex flex-1 max-w-[1200px] flex-col lg:flex-none lg:gap-4">
@@ -280,12 +286,10 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
         <div className="flex flex-col">
           {showVideo ? (
             <>
-              <Video s={s} act={act} subs={subsOn} box={fs.box} />
+              <Video s={s} act={act} subs={subsOn} bar={<VideoBar s={s} act={act} ui={menu} />} />
               <div className="px-5 lg:px-0">
-                <Scrubber s={s} act={act} />
-                <ControlBar s={s} act={act} settings={settings} onSettings={() => setSettings((o) => !o)} fs={fs.on} onFs={fs.toggle} />
-                <StatusLine s={s} qc={qc} />
-                {settings && <PlayerSettings s={s} act={act} onClose={() => setSettings(false)} />}
+                <div className="hidden lg:block"><Scrubber s={s} act={act} /></div>
+                <ControlRow s={s} act={act} ui={menu} qc={qc} />
               </div>
             </>
           ) : (
@@ -309,7 +313,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
           </div>
         </div>
 
-        <div data-tour="tabs" className="mt-4 flex flex-col lg:mt-0 lg:border-2 lg:border-sd-divider">
+        <div data-tour="tabs" className="mt-4 flex flex-col lg:mt-0 lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
           <Segmented
             value={s.ptab === "discuss" ? "notes" : s.ptab}
             options={tabs}

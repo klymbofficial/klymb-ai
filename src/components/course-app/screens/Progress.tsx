@@ -33,7 +33,7 @@ export function Progress({ s }: { s: CourseState }) {
     <div className="sd-a-screen flex max-w-[1120px] flex-col gap-[22px] px-5 pt-2 pb-7 lg:gap-7 lg:p-0">
       <h2 className="m-0 text-[30px] tracking-[-0.02em] lg:border-b-2 lg:border-sd-divider lg:pb-4 lg:text-[42px] lg:tracking-[-0.03em]">Progress</h2>
       <div className="flex flex-col gap-[22px] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:items-start lg:gap-8">
-        <div {...parallax} className="flex flex-col gap-0.5 bg-sd-accent px-[18px] pt-[18px] pb-4 text-sd-bg lg:p-[22px]">
+        <div {...parallax} className="flex flex-col gap-0.5 overflow-hidden rounded-xl bg-sd-accent px-[18px] pt-[18px] pb-4 text-sd-bg lg:p-[22px]">
           <div className="flex items-start justify-between">
             <span className="sd-near inline-block text-8xl leading-[0.85] font-extrabold tracking-[-0.05em] lg:text-[128px]" aria-label={`${st.current}`}>{shown}</span>
             <Icon name="flame" size={40} />
@@ -50,7 +50,7 @@ export function Progress({ s }: { s: CourseState }) {
                 key={i}
                 aria-hidden="true"
                 className={clsx(
-                  "sd-a-pop aspect-square lg:aspect-auto lg:h-[30px]",
+                  "sd-a-pop aspect-square rounded-lg lg:aspect-auto lg:h-[30px]",
                   h === "future" && "border-[1.5px] border-dashed border-sd-divider",
                   h === "on" && "bg-sd-accent",
                   h === "off" && "bg-sd-n-300",
@@ -65,9 +65,13 @@ export function Progress({ s }: { s: CourseState }) {
         <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Badges</h6><span className="text-xs text-sd-n-700">{b.filter((x) => x.on).length} of 8</span></div>
         <div className="grid grid-cols-4 gap-1.5 lg:grid-cols-8 lg:gap-2">
           {b.map((x, i) => (
-            <div key={x.name} className={clsx("sd-a-pop flex aspect-square flex-col justify-between border-[1.5px] p-2 lg:p-3", x.on ? "border-solid border-sd-ink bg-sd-ink text-sd-bg" : "border-dashed border-sd-n-400 text-sd-n-600")} style={stagger(i, 60, 300)}>
-              <Icon name={x.on ? x.icon : "lock"} size={22} />
-              <span className="text-[11px] leading-[1.15] font-extrabold lg:text-[13px]">{x.name}<span className="sr-only">{x.on ? ", earned" : ", locked"}</span></span>
+            <div key={x.name} className="sd-a-pop flex flex-col items-center gap-1.5 py-1 text-center" style={stagger(i, 60, 300)}>
+              <div className={clsx("size-[62px] flex-none rounded-full p-1 lg:size-[72px]", x.on ? "sd-medal-ring" : "bg-sd-n-300")}>
+                <div className={clsx("flex size-full items-center justify-center rounded-full", x.on ? "sd-medal-core text-white" : "border-2 border-dashed border-sd-n-400 bg-sd-bg text-sd-n-500")}>
+                  <Icon name={x.on ? x.icon : "lock"} size={24} />
+                </div>
+              </div>
+              <span className={clsx("text-[11px] leading-[1.2] font-bold lg:text-[13px]", x.on ? "text-sd-ink" : "text-sd-n-600")}>{x.name}<span className="sr-only">{x.on ? ", earned" : ", locked"}</span></span>
             </div>
           ))}
         </div>

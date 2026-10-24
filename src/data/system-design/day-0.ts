@@ -138,6 +138,16 @@ const en: DayCopy = {
         { text: "Every user now sees a slower first load", why: "Only the first request after the cache expires is slow. Everyone after that, for 10 minutes, gets the fast copy." },
       ],
     },
+    {
+      id: "d0-post-5",
+      scenario: "Lunch rush. One of your 4 app servers crashes, and the people it was serving start seeing errors.",
+      prompt: "What should catch this on its own?",
+      choices: [
+        { text: "The load balancer’s health checks: it stops sending requests to the dead server", why: "That’s the manager at the door noticing a cook has gone home. The other 3 servers take the orders. Trade-off: they run hotter until you replace the fourth, so keep some headroom.", best: true },
+        { text: "Move everything to one much bigger server", why: "One big server is one big point of failure. When it crashes, everyone sees errors, not a quarter of them." },
+        { text: "Show users a \"please retry\" message", why: "Kinder than a raw error, but a retry can land on the same dead server. The fix is to stop sending people there." },
+      ],
+    },
   ],
 
   estimates: [
@@ -398,6 +408,16 @@ const hi: DayCopy = {
         { text: "Price ya \"sold out\" badle toh dikhne mein 10 minute tak lag sakte hain", why: "Har cache ka yahi deal hai: freshness ke badle speed. Menu ke liye theek. Stock ke liye time chhota rakho ya badalte hi cache clear karo.", best: true },
         { text: "Ab database ko zyada kaam karna padega", why: "Ulta: cache database se reads hata leta hai. Wahi toh uska kaam hai." },
         { text: "Har user ko pehla load slow milega", why: "Sirf cache expire hone ke baad wali pehli request slow hoti hai. Uske baad 10 minute tak sabko fast copy milti hai." },
+      ],
+    },
+    {
+      id: "d0-post-5",
+      scenario: "Lunch rush. Tumhare 4 app servers mein se ek crash ho gaya, aur uske users ko errors dikhne lage.",
+      prompt: "Isko apne aap kaun pakdega?",
+      choices: [
+        { text: "Load balancer ke health checks: woh dead server ko requests bhejna band kar deta hai", why: "Yeh darwaze wala manager hai jo dekh leta hai ki ek cook ghar chala gaya. Baaki 3 servers orders le lete hain. Trade-off: jab tak chautha wapas nahi aata, woh zyada load uthate hain, toh thodi extra capacity rakho.", best: true },
+        { text: "Sab kuch ek bahut bade server pe le jao", why: "Ek bada server matlab failure ka ek bada point. Woh crash hua toh sabko errors, sirf ek chauthai ko nahi." },
+        { text: "Users ko \"please retry\" message dikhao", why: "Raw error se achha hai, par retry phir se usi dead server pe ja sakta hai. Asli fix hai wahan bhejna band karna." },
       ],
     },
   ],

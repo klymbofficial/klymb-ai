@@ -3,7 +3,8 @@
 import clsx from "clsx";
 import Image from "next/image";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
-import { LESSON_COUNT, dayOf, fmt, isSoon, lesson, lessonDay, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
+import { LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
+import { lastCheckLesson } from "./Course";
 import { lessonSteps } from "../lesson/Practice";
 import { GoogleButton, firstName, useCourseUser } from "../user";
 import { Icon } from "../icons";
@@ -34,7 +35,7 @@ export function BellButton({ s, act }: { s: CourseState; act: Act }) {
   return (
     <button type="button" onClick={() => act((p) => ({ ...p, screen: "notifs" }))} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`} className="sd-btn sd-btn-secondary sd-btn-icon relative h-[34px]">
       <Icon name="bell" size={16} />
-      {unread > 0 && <span className="absolute -top-[7px] -right-[7px] h-[18px] min-w-[18px] bg-sd-accent px-1 text-left text-[10px] leading-[18px] font-extrabold text-sd-bg">{unread}</span>}
+      {unread > 0 && <span className="absolute -top-[7px] -right-[7px] h-[18px] min-w-[18px] rounded-full bg-sd-accent px-1 text-left text-[10px] leading-[18px] font-extrabold text-sd-bg">{unread}</span>}
     </button>
   );
 }
@@ -43,7 +44,7 @@ export function GoalCard({ s }: { s: CourseState }) {
   const gm = Math.floor(s.todaySec / 60);
   const met = s.todaySec >= s.goal * 60;
   return (
-    <div className="sd-a-in grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 bg-sd-surface px-3.5 py-3" style={{ animationDelay: "50ms" }}>
+    <div className="sd-a-in grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1.5 rounded-xl bg-sd-surface px-3.5 py-3" style={{ animationDelay: "50ms" }}>
       <span className="text-sm font-extrabold">Today’s goal · {Math.min(gm, s.goal)} / {s.goal} min</span>
       <span className="text-xs font-semibold text-sd-accent-700">{met ? "Goal met" : `${s.goal - gm} min to go`}</span>
       <Bar value={(s.todaySec / (s.goal * 60)) * 100} className="col-span-full h-1.5" />
@@ -71,7 +72,6 @@ function kamranSays(s: CourseState, first: string | null) {
 export function Home({ s, act }: { s: CourseState; act: Act }) {
   const user = useCourseUser();
   const c = lesson(s.cur);
-  const preP = pct(s.pre);
   const postP = s.post ? pct(s.post) : null;
   const doneCount = s.done.length;
   const coursePct = `${Math.round((doneCount / LESSON_COUNT) * 100)}%`;
@@ -79,13 +79,13 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
   const week = thisWeek(s);
   const hello = greeting();
   const path = [
+    { num: "01", title: "Video lessons", sub: "Day 0 + 21 days of lessons", value: `${doneCount}/${LESSON_COUNT}`, go: () => act((p) => ({ ...p, screen: "course", tab: "course" })) },
     {
-      num: "01", title: "Pre-assessment", sub: s.pre.length ? "Your starting point" : "6 questions · not taken yet", value: preP,
-      go: () => act((p) => (p.pre.length ? { ...p, screen: "results", lastKind: "pre" } : startQuiz(p, "pre"))),
+      num: "02", title: "Lesson assessments", sub: `5 questions each · ${Math.round(PASS_MARK * 100)}% to pass`, value: checkAverage(s),
+      go: () => act((p) => openLesson(p, lastCheckLesson(p))),
     },
-    { num: "02", title: "Course", sub: "Day 0 + 21 days of lessons", value: `${doneCount}/${LESSON_COUNT}`, go: () => act((p) => ({ ...p, screen: "course", tab: "course" })) },
     {
-      num: "03", title: "Post-assessment", sub: s.post ? "Compare with your baseline" : "Best after Day 21", value: postP ?? "—",
+      num: "03", title: "Final assessment", sub: s.post ? "Done" : "After Day 21", value: postP ?? "—",
       go: () => act((p) => (p.post ? { ...p, screen: "results", lastKind: "post" } : startQuiz(p, "post"))),
     },
   ];
@@ -121,7 +121,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
           type="button"
           onClick={() => act((p) => openLesson(p, p.cur))}
           {...parallax}
-          className="sd-a-in sd-hover-lift order-2 flex cursor-pointer flex-col overflow-hidden bg-sd-surface p-0 text-left lg:order-1"
+          className="sd-a-in sd-hover-lift order-2 flex cursor-pointer flex-col overflow-hidden rounded-xl bg-sd-surface p-0 text-left lg:order-1"
           style={{ animationDuration: ".6s", animationDelay: "100ms" }}
         >
           <div className="sd-grid relative flex h-[184px] w-full flex-col justify-between px-4 py-3.5 [--grid:23px] lg:aspect-video lg:h-auto lg:px-6 lg:py-[22px] lg:[--grid:28px]">
@@ -130,7 +130,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
             </div>
             <div className="flex items-end justify-between gap-3 lg:gap-4">
               <div className="sd-near max-w-[250px] text-2xl leading-[1.1] font-extrabold tracking-[-0.02em] lg:max-w-[460px] lg:text-[40px] lg:leading-[1.02] lg:tracking-[-0.03em]">{c.title}</div>
-              <div className="sd-mid flex size-12 flex-none items-center justify-center bg-sd-accent text-sd-bg lg:size-16"><Icon name="play" /></div>
+              <div className="sd-mid flex size-12 flex-none items-center justify-center rounded-lg bg-sd-accent text-sd-bg lg:size-16"><Icon name="play" /></div>
             </div>
           </div>
           <Bar value={(s.t / c.secs) * 100} className="h-1 w-full" />
@@ -168,7 +168,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
               {week.map(({ l, done, today }, i) => {
                 return (
                   <div key={i} className="flex flex-col gap-1">
-                    <div className={clsx("sd-a-pop flex aspect-square items-center justify-center text-sd-bg", done ? "bg-sd-accent" : "border-[1.5px] border-dashed border-sd-divider")} style={stagger(i, 50, 350)}>
+                    <div className={clsx("sd-a-pop flex aspect-square items-center justify-center rounded-lg text-sd-bg", done ? "bg-sd-accent" : "border-[1.5px] border-dashed border-sd-divider")} style={stagger(i, 50, 350)}>
                       {done && <Icon name="check" size={14} stroke={3} />}
                     </div>
                     <span className={clsx("text-[11px]", today && "font-extrabold")}>{today ? "Today" : l}</span>

@@ -166,6 +166,16 @@ const en: DayCopy = {
         { text: "It was a mistake; you should have planned for exactly 6x", why: "Forecasts are never exact. Planning right at the forecast means any surprise knocks you over. Headroom is the point." },
       ],
     },
+    {
+      id: "post-5",
+      scenario: "Before the sale you load-tested the web servers at 5x. Nobody tested the payment service.",
+      prompt: "What’s the risk?",
+      choices: [
+        { text: "Payments become the weakest link: the sale stops at whatever payments can handle", why: "Every order passes through the whole chain. If payments hold at 2x, the sale holds at 2x, however strong the web servers are. Test every box an order touches.", best: true },
+        { text: "None: if the web servers hold, everything behind them holds", why: "The web servers are only the front door. An order still needs the cart, stock, payment and warehouse behind them." },
+        { text: "Only the payment page slows down; orders still go through", why: "No payment, no order. A slow payment step is a slow sale." },
+      ],
+    },
   ],
 
   estimates: [
@@ -484,6 +494,16 @@ const hi: DayCopy = {
         { text: "Kuch ghante khaali servers ka kharcha; worth it, kyunki crash se sales aur bharosa dono jaate hain", why: "Pre-scaling paise ke badle safety hai. Ek raat ke spare servers 2014 jaisi sorry email ke saamne saste hain. Peak ke baad wapas scale down karo.", best: true },
         { text: "Kuch nahi: khaali servers ka kharcha nahi hota", why: "Cloud servers ghante ke hisaab se bill hote hain, busy hon ya nahi. Kharcha asli hai; bas risk se chhota hai." },
         { text: "Galti thi; exactly 6x ka plan karna chahiye tha", why: "Forecast kabhi exact nahi hota. Bilkul forecast pe plan kiya toh koi bhi surprise gira dega. Headroom hi toh point hai." },
+      ],
+    },
+    {
+      id: "post-5",
+      scenario: "Sale se pehle tumne web servers ko 5x par load test kiya. Payment service ko kisi ne test nahi kiya.",
+      prompt: "Risk kya hai?",
+      choices: [
+        { text: "Payments sabse kamzor kadi ban jaate hain: sale wahi ruk jaati hai jahan payments ruk jaayein", why: "Har order poori chain se guzarta hai. Payments 2x pe ruke, toh sale bhi 2x pe rukegi, web servers kitne bhi strong hon. Order jis bhi box ko chhoota hai, sab test karo.", best: true },
+        { text: "Koi nahi: web servers chal gaye toh peeche sab chalega", why: "Web servers sirf darwaza hain. Order ko peeche cart, stock, payment aur warehouse bhi chahiye." },
+        { text: "Sirf payment page slow hoga, orders phir bhi ho jaayenge", why: "Payment nahi, toh order nahi. Slow payment matlab slow sale." },
       ],
     },
   ],
