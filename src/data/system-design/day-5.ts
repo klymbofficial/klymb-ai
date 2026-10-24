@@ -140,6 +140,16 @@ const en: DayCopy = {
         { text: "Losing data if a replica dies", why: "The primary still has everything. A dead replica just stops serving reads." },
       ],
     },
+    {
+      id: "d5-post-5",
+      scenario: "A slow report runs every hour on the primary database, and checkout slows down whenever it runs.",
+      prompt: "Best move?",
+      choices: [
+        { text: "Run the report on a read replica, or an analytics copy", why: "Reports are reads. Keep the primary for writes and checkout. Trade-off: the report can be a few seconds behind, which is fine for a report.", best: true },
+        { text: "Add an index on every column the report uses", why: "It may speed up the report, but every index slows the writes checkout depends on." },
+        { text: "Run it once a day instead", why: "Fewer slowdowns, but still one every day, and the numbers go stale." },
+      ],
+    },
   ],
 
   estimates: [
@@ -423,6 +433,16 @@ const hi: DayCopy = {
         { text: "Thode purane reads: replica primary se thoda peeche ho sakta hai", why: "Browsing ke liye theek, balance ya checkout ke address ke liye nahi. Isiliye read-your-writes hai.", best: true },
         { text: "Primary pe slow writes", why: "Writes pehle jaise primary pe; replicas unhe alag se copy karte hain." },
         { text: "Replica mare toh data khona", why: "Primary ke paas sab hai. Mara replica bas reads dena band karta hai." },
+      ],
+    },
+    {
+      id: "d5-post-5",
+      scenario: "Ek slow report har ghante primary database pe chalti hai, aur jab chalti hai checkout slow ho jaata hai.",
+      prompt: "Best move?",
+      choices: [
+        { text: "Report read replica, ya analytics copy pe chalao", why: "Reports reads hain. Primary writes aur checkout ke liye rakho. Trade-off: report kuch second peeche ho sakti hai, report ke liye theek.", best: true },
+        { text: "Report ke har column pe index lagao", why: "Report shayad tez ho, par har index un writes ko slow karta hai jin pe checkout tika hai." },
+        { text: "Din mein ek baar chalao", why: "Slowdown kam, par phir bhi roz ek, aur numbers purane." },
       ],
     },
   ],

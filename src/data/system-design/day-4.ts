@@ -140,6 +140,16 @@ const en: DayCopy = {
         { text: "Nothing: NoSQL is SQL plus scale", why: "Every store gives something up. Here it's joins, ad-hoc queries and strict transactions." },
       ],
     },
+    {
+      id: "d4-post-5",
+      scenario: "A shopping cart: users add and remove items many times, losing a cart now and then is annoying but not a disaster, and it's always read by user ID.",
+      prompt: "What fits best?",
+      choices: [
+        { text: "A key-value store, keyed by user ID", why: "One key, one fast read, easy to scale. Trade-off: when the order is placed, write it to the relational orders database inside a transaction.", best: true },
+        { text: "The relational orders database, with a transaction for every cart change", why: "Safe, but heavy for data that changes all the time and can be rebuilt." },
+        { text: "A search index", why: "Built for finding records by words, not for fetching one user's cart." },
+      ],
+    },
   ],
 
   estimates: [
@@ -425,6 +435,16 @@ const hi: DayCopy = {
         { text: "Joins aur strict transactions: \"is user ke dosto ke likes\" ab poochna mushkil", why: "Write scale mila, flexible queries gayi. Jo sawaal chahiye unka plan pehle, ya analytics ke liye alag copy.", best: true },
         { text: "Speed: NoSQL SQL se slow hai", why: "Apne designed access pattern pe aksar bahut tez. Keemat flexibility hai, speed nahi." },
         { text: "Kuch nahi: NoSQL matlab SQL plus scale", why: "Har store kuch chhodta hai. Yahan joins, ad-hoc queries aur strict transactions." },
+      ],
+    },
+    {
+      id: "d4-post-5",
+      scenario: "Shopping cart: users baar baar items daalte aur hatate hain, kabhi cart kho jaaye toh pareshani hai par aafat nahi, aur hamesha user ID se padha jaata hai.",
+      prompt: "Sabse achha fit kya hai?",
+      choices: [
+        { text: "User ID se keyed key-value store", why: "Ek key, ek tez read, scale karna aasaan. Trade-off: order place hote hi use relational orders database mein transaction ke andar likho.", best: true },
+        { text: "Relational orders database, har cart change pe transaction", why: "Safe, par us data ke liye bhaari jo hamesha badalta hai aur dobara ban sakta hai." },
+        { text: "Search index", why: "Shabdon se records dhoondhne ke liye bana hai, ek user ka cart laane ke liye nahi." },
       ],
     },
   ],

@@ -139,6 +139,16 @@ const en: DayCopy = {
         { text: "The stream pauses and reconnects", why: "That's exactly what short segments are designed to avoid." },
       ],
     },
+    {
+      id: "d3-post-5",
+      scenario: "Profile photos are served straight from object storage in Mumbai. Pages load slowly for users in the US.",
+      prompt: "Simplest fix?",
+      choices: [
+        { text: "Put a CDN in front of object storage, so photos are cached near each user", why: "Same idea as video: serve from the edge. Trade-off: when someone changes their photo, the old one can show until the cache expires or is cleared.", best: true },
+        { text: "Copy the whole storage to a US data centre", why: "It works, but you run and pay for two full copies. A CDN caches just what's popular, automatically." },
+        { text: "Store the photos in the database instead", why: "That moves the bytes, not the distance, and big files slow the database down." },
+      ],
+    },
   ],
 
   estimates: [
@@ -425,6 +435,16 @@ const hi: DayCopy = {
         { text: "Agle segment se player kam quality laata hai", why: "Yahi adaptive bitrate hai: har segment ek naya choice. Trade-off: thodi der picture halki, par freeze nahi.", best: true },
         { text: "Server samajh ke chhoti file bhejne lagta hai", why: "HLS ya DASH mein player decide karta hai. Server bas har quality offer karta hai." },
         { text: "Stream ruk ke dobara connect hota hai", why: "Chhote segments isi se bachane ke liye bane hain." },
+      ],
+    },
+    {
+      id: "d3-post-5",
+      scenario: "Profile photos seedha Mumbai ke object storage se aati hain. US ke users ke liye pages slow load hote hain.",
+      prompt: "Sabse simple fix?",
+      choices: [
+        { text: "Object storage ke aage CDN lagao, taaki photos har user ke paas cache hon", why: "Video wala hi idea: edge se serve karo. Trade-off: koi photo badle toh cache expire ya clear hone tak purani dikh sakti hai.", best: true },
+        { text: "Poora storage US ke data centre mein copy karo", why: "Chalta hai, par do poori copies chalani aur bharni padti hain. CDN sirf popular cheezein apne aap cache karta hai." },
+        { text: "Photos database mein rakho", why: "Isse bytes shift hote hain, doori nahi, aur badi files database ko slow karti hain." },
       ],
     },
   ],

@@ -140,6 +140,16 @@ const en: DayCopy = {
         { text: "Security: sticky sessions are easier to hack", why: "Not by themselves. The question is where the session state lives, not how secure it is." },
       ],
     },
+    {
+      id: "d2-post-5",
+      scenario: "A celebrity's live stream sends a sudden spike. The load balancer is fine, but every server is at 95% CPU.",
+      prompt: "What actually helps right now?",
+      choices: [
+        { text: "Add servers behind the load balancer, and switch off non-essential features until they're up", why: "A balancer can only spread load across the servers it has. More servers, or less work per request, is the fix. Trade-off: new servers take minutes, so shed load meanwhile.", best: true },
+        { text: "Switch the algorithm from round robin to least connections", why: "Smarter spreading helps when servers are uneven. When every server is full, there's nothing to spread to." },
+        { text: "Add a second load balancer", why: "That protects you if the balancer fails, not when the servers run out of capacity." },
+      ],
+    },
   ],
 
   estimates: [
@@ -427,6 +437,16 @@ const hi: DayCopy = {
         { text: "Barabar load aur safe failover: ek server bhaari users se bhar sakta hai, aur woh gira toh unka session gaya", why: "Sticky sessions jaldi lag jaate hain. Keemat theek tab dikhti hai jab traffic peak pe ho ya server gire.", best: true },
         { text: "Speed: sticky sessions se har request slow hoti hai", why: "Aksar ulta: server ki memory mein user ka data pehle se hota hai. Keemat balance aur failover hai, speed nahi." },
         { text: "Security: sticky sessions hack karna aasaan", why: "Apne aap mein nahi. Sawaal yeh hai ki session state kahan rehta hai, security ka nahi." },
+      ],
+    },
+    {
+      id: "d2-post-5",
+      scenario: "Ek celebrity ke live stream se achanak spike. Load balancer theek hai, par har server 95% CPU pe hai.",
+      prompt: "Abhi asal mein kya madad karega?",
+      choices: [
+        { text: "Load balancer ke peeche aur servers jodo, aur jab tak woh aayein, extra features band karo", why: "Balancer sirf unhi servers mein load baant sakta hai jo uske paas hain. Aur servers, ya har request pe kam kaam, yahi fix hai. Trade-off: naye servers minutes lete hain, tab tak load kam karo.", best: true },
+        { text: "Algorithm round robin se least connections pe badlo", why: "Behtar baantna tab kaam aata hai jab servers uneven hon. Jab har server bhara hai, baantne ki jagah hi nahi." },
+        { text: "Doosra load balancer jodo", why: "Isse balancer gire toh bachav hota hai, servers ki capacity khatam hone se nahi." },
       ],
     },
   ],
