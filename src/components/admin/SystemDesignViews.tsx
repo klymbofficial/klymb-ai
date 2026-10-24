@@ -56,6 +56,7 @@ export function PlainWords({ data, days }: { data: Data; days: number }) {
   const t = data.totals;
   const lines: string[] = [];
   lines.push(`In the last ${days} days, ${t.visitors} ${t.visitors === 1 ? "person" : "people"} opened the course. ${t.started} pressed Start on a day and ${t.completedAny} finished one. ${t.signedIn} signed in with Google.`);
+  if (data.overview.played) lines.push(`Overview video: ${data.overview.played} played it, ${data.overview.finished} watched to the end.`);
   for (const l of data.lessons) {
     const opened = l.funnel[0].value;
     if (!opened) { lines.push(`Day ${l.day} (${l.app}): nobody has opened it yet.`); continue; }

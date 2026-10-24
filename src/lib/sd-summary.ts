@@ -164,6 +164,10 @@ export function summarise(events: SdEventRow[], feedback: SdFeedbackRow[], days:
     tour: count(events.filter((e) => e.event === "tour"), (e) => (e.props?.action === "finished" ? "Finished the tour" : `Skipped at stop ${e.props?.at}`)),
     subsOff: new Set(events.filter((e) => e.event === "subs" && e.props?.on === false).map((e) => e.anon_id)).size,
     shares: events.filter((e) => e.event === "share").length,
+    overview: {
+      played: new Set(events.filter((e) => e.event === "video_play" && e.lesson === "overview").map((e) => e.anon_id)).size,
+      finished: new Set(events.filter((e) => e.event === "video_progress" && e.lesson === "overview" && Number(e.props?.pct) >= 100).map((e) => e.anon_id)).size,
+    },
     signins: count(events.filter((e) => e.event === "signin"), (e) => ({ welcome: "Welcome screen", "day-done": "End of a day", home: "Home", profile: "Profile", recap: "Module complete" })[String(e.props?.where)] ?? "Other"),
     comments: feedback.filter((f) => f.improve).slice(0, 60),
     learners,

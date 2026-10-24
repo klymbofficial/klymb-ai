@@ -27,6 +27,36 @@ export function Splash({ act }: { act: Act }) {
   );
 }
 
+const OVERVIEW = "/videos/system-design/overview";
+
+/** The 90-second course overview: native controls, Hinglish captions on by default (CC turns them off). */
+function OverviewVideo() {
+  const seen = useRef(new Set<number>());
+  const onTime = (v: HTMLVideoElement) => {
+    if (!v.duration) return;
+    const pct = Math.min(100, Math.floor((v.currentTime / v.duration) * 4) * 25);
+    if (pct > 0 && !seen.current.has(pct)) { seen.current.add(pct); track("video_progress", "overview", null, { pct }); }
+  };
+  return (
+    <figure className="sd-a-side m-0 flex flex-col gap-2" style={{ animationDuration: ".5s", animationDelay: "80ms" }}>
+      <video
+        controls
+        playsInline
+        preload="none"
+        poster={`${OVERVIEW}-poster.jpg`}
+        controlsList="nodownload"
+        onPlay={() => track("video_play", "overview")}
+        onTimeUpdate={(e) => onTime(e.currentTarget)}
+        className="aspect-video w-full border-2 border-sd-ink bg-black"
+      >
+        <source src={`${OVERVIEW}.mp4`} type="video/mp4" />
+        <track kind="captions" src={`${OVERVIEW}.vtt`} srcLang="hi" label="Hinglish" default />
+      </video>
+      <figcaption className="text-xs text-sd-n-700">What you’ll learn in 21 days · 1:26 · Hinglish, with captions</figcaption>
+    </figure>
+  );
+}
+
 /** Signed out: Google first (it saves progress to your name), Day 0 without signing in as the quiet option. Signed in: straight to Day 0. */
 function StartButtons({ user, startDay0, baseline }: { user: boolean; startDay0: () => void; baseline: () => void }) {
   const link = "cursor-pointer self-center py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink lg:self-start";
@@ -62,10 +92,11 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
           <span className="sd-kicker text-sd-accent-700">Klymb.ai · System Design in 21 Days</span>
           <StudyBuddy tone="light" size={96} message={`Hi${first ? ` ${first}` : ""}, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes.`} />
           <h1 className="m-0 text-[38px] leading-[1] tracking-[-0.04em] text-pretty lg:text-[60px]">System design, phone pe.</h1>
-          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Here’s what you get, every day for 21 days. No experience needed: Day 0 starts from what system design even is.</p>
+          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Watch the 90-second overview of all 21 days. No experience needed: Day 0 starts from what system design even is.</p>
           <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} baseline={baseline} /></div>
         </div>
-        <ol className="sd-a-side m-0 grid list-none gap-px border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2" style={{ animationDuration: ".5s", animationDelay: "80ms" }}>
+        <OverviewVideo />
+        <ol className="sd-a-in m-0 grid list-none gap-px border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3" style={{ animationDuration: ".5s", animationDelay: "160ms" }}>
           {WELCOME.map(([title, detail], i) => (
             <li key={title} className="flex flex-col gap-1 bg-sd-bg p-4">
               <span className="text-sm font-extrabold text-sd-accent">{String(i + 1).padStart(2, "0")}</span>
