@@ -273,6 +273,33 @@ function Done({ text, next }: { text: string; next?: { label: string; key: StepK
   );
 }
 
+/** The optional "go deeper" reference, in the side column next to Notes and Transcript. Closed until opened. */
+export function DeeperBox({ s, day }: { s: CourseState; day: Day }) {
+  const ui = UI[s.lang];
+  const ex = day.copy[s.lang].explain;
+  if (!ex?.optional) return null;
+  return (
+    <details className="group mx-5 overflow-hidden rounded-xl border-2 border-sd-divider lg:mx-0">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-4 py-3 hover:bg-sd-surface [&::-webkit-details-marker]:hidden">
+        <span className="flex flex-col gap-0.5">
+          <span className="sd-kicker text-sd-n-700">{ui.deeper}</span>
+          <span className="text-[15px] leading-[1.25] font-extrabold">{ex.title}</span>
+        </span>
+        <Icon name="down" size={18} className="mt-1 block flex-none transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="flex flex-col gap-3 border-t-2 border-sd-divider px-4 py-4">
+        {ex.items.map((x) => (
+          <div key={x.term} className="flex flex-col gap-0.5">
+            <span className="text-sm font-extrabold">{x.term}</span>
+            <span className="text-[13px] leading-[1.45] text-sd-n-800">{x.what}</span>
+            <span className="text-xs text-sd-n-700">e.g. {x.example}</span>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function Explain({ items }: { items: NonNullable<DayCopy["explain"]>["items"] }) {
   return (
     <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
@@ -466,15 +493,6 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
         <Unlocked s={s} act={act} id={id} day={day} c={c} ui={ui} />
       </Step>
 
-      {c.explain?.optional && (
-        <details className="group mt-6 text-sm">
-          <summary className="flex cursor-pointer list-none flex-wrap items-center gap-1.5 font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink [&::-webkit-details-marker]:hidden">
-            {ui.deeper} {c.explain.title}
-            <Icon name="down" size={14} className="block flex-none transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="mt-3"><Explain items={c.explain.items} /></div>
-        </details>
-      )}
     </div>
   );
 }

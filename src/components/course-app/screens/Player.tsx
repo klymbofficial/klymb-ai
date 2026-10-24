@@ -8,7 +8,7 @@ import {
   addRewatch, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { DayStart, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
+import { DayStart, DeeperBox, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
 import { Tour } from "../lesson/Tour";
 import { track } from "../track";
 import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
@@ -318,7 +318,8 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
           </div>
         </div>
 
-        <div data-tour="tabs" className="mt-4 flex flex-col lg:mt-0 lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
+        <div className="mt-4 flex flex-col gap-4 lg:mt-0">
+        <div data-tour="tabs" className="flex flex-col lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
           <Segmented
             value={s.ptab === "discuss" ? "notes" : s.ptab}
             options={tabs}
@@ -329,6 +330,8 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
           {s.ptab !== "transcript" && s.ptab !== "lessons" && <Notes s={s} act={act} />}
           {s.ptab === "transcript" && <Transcript s={s} act={act} />}
           {s.ptab === "lessons" && <ModuleLessons s={s} act={act} />}
+        </div>
+        {day && <DeeperBox s={s} day={day} />}
         </div>
       </div>
 

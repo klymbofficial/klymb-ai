@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { QUESTIONS } from "../src/data/system-design/course-app";
+import { LESSON_DAYS, QUESTIONS } from "../src/data/system-design/course-app";
 import {
   ALL_IDS, addNote, closeQuiz, completeNext, deepLink, defaultState, flowDone, fmt, fromStored, grade, isAnswered, isSoon, localDate,
   migrateLegacy, miniActive, nextQuestion, openLesson, pickOption, previewState, setAnswer, streak, tick, toStored, togglePlay,
@@ -104,17 +104,37 @@ test("finishing Day 0 completes the Start here module and opens the recap", () =
   assert.deepEqual(s.done, ["0-0"]);
 });
 
+/** Every step of a built lesson done, whatever steps that lesson has. */
+function fullProgress(id: string) {
+  const c = LESSON_DAYS[id].copy.en;
+  return {
+    pre: c.pre.map(() => 0), watched: true, post: c.post.map(() => 0),
+    ...(c.estimates?.length ? { est: c.estimates.map((e) => e.answer) } : {}),
+    ...(c.build ? { built: 0 } : {}),
+    ...(c.design ? { design: "A full attempt at the design problem." } : {}),
+    ...(c.followUps?.length ? { follow: c.followUps.map(() => true) } : {}),
+  };
+}
+const LAST_BUILT = ALL_IDS.filter((id) => !isSoon(id)).at(-1)!;
+const FIRST_SOON = ALL_IDS.find((id) => isSoon(id))!;
+
 test("finishing a lesson whose next day isn't out yet goes home", () => {
-  const s0 = updateLesson({ ...home(), screen: "player", cur: "1-0" }, "1-0", { pre: [0, 0, 0], watched: true, post: [0, 0, 0, 0], est: [267, 30000, 267], built: 1, design: "Waiting room, atomic stock counter, queue payments.", follow: [true, true, true, true] }, NOW);
+  const s0 = updateLesson({ ...home(), screen: "player", cur: LAST_BUILT }, LAST_BUILT, fullProgress(LAST_BUILT), NOW);
   const s = completeNext(s0, false, NOW);
-  assert.ok(s.done.includes("1-0"));
+  assert.ok(s.done.includes(LAST_BUILT));
   assert.equal(s.screen, "home");
   assert.match(s.toast ?? "", /coming soon/);
 });
 
+test("every built day can be finished from start to end", () => {
+  for (const id of Object.keys(LESSON_DAYS)) {
+    assert.equal(flowDone(updateLesson(home(), id, fullProgress(id), NOW), id), true, id);
+  }
+});
+
 test("coming-soon lessons don't open", () => {
-  assert.equal(isSoon("1-1"), true);
-  const s = openLesson(home(), "1-1", NOW);
+  assert.equal(isSoon(FIRST_SOON), true);
+  const s = openLesson(home(), FIRST_SOON, NOW);
   assert.equal(s.screen, "home");
   assert.match(s.toast ?? "", /coming soon/);
 });
@@ -156,7 +176,7 @@ test("?lesson= opens straight into a lesson; unknown or coming-soon ids are igno
   assert.equal(s.screen, "player");
   assert.equal(s.cur, "1-0");
   assert.equal(s.onboarded, true);
-  assert.equal(deepLink(defaultState(NOW), "1-3", NOW).screen, "splash");
+  assert.equal(deepLink(defaultState(NOW), FIRST_SOON, NOW).screen, "splash");
   assert.equal(deepLink(defaultState(NOW), "9-9", NOW).screen, "splash");
 });
 
