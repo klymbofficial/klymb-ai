@@ -252,6 +252,14 @@ const en: DayCopy = {
     },
   ],
 
+  faq: [
+    { q: "Do I need to be good at coding before I learn system design?", a: "You need to have built something, not to be an expert. System design is about choosing the parts and connecting them — which database, how many servers, what happens when one dies. The code comes after the boxes are right." },
+    { q: "Is a “server” a machine or a program?", a: "In a design diagram it is one box that runs your app’s code. Underneath it may be a physical machine, a virtual one, a container or a function someone else runs for you. “Add more servers” means add more of whatever that box is." },
+    { q: "A cache and a CDN both keep copies. What is the difference?", a: "A cache sits next to your servers and saves them work. A CDN sits near your users and saves them distance. A cache fixes slow work; a CDN fixes a long trip." },
+    { q: "Why put anything in a queue? Why not just do the work?", a: "Because some work is slow and nobody is waiting for it: the SMS, the invoice, assigning a rider. Queue it and the customer sees “order confirmed” in a second while the slow part finishes on its own." },
+    { q: "Do I really have to memorise the seven steps?", a: "Yes, and it is the cheapest thing to memorise in this course. Requirements, estimates, API, data model, high-level design, deep dive, bottlenecks. In an interview it stops you freezing: you always know what comes next." },
+  ],
+
   interview: [
     "System design is choosing an app's parts and connecting them so crores of people can use it, fast, even when something breaks.",
     "The parts: load balancer, servers, cache, database, queue and CDN, plus DNS to find them.",
@@ -522,6 +530,14 @@ const hi: DayCopy = {
       say: "\"Har order ke saath idempotency key jaati hai, toh retry ya double tap pe naya order nahi banta, wahi order wapas milta hai.\"",
       deeper: "Days 9 aur 13",
     },
+  ],
+
+  faq: [
+    { q: "System design seekhne se pehle coding achhi aani chahiye?", a: "Expert hona zaroori nahi, bas kuch banaya hona chahiye. System design matlab parts chunna aur jodna — kaunsa database, kitne servers, ek toot jaye toh kya. Code baad mein aata hai, pehle boxes sahi hone chahiye." },
+    { q: "“Server” machine hai ya program?", a: "Diagram mein yeh ek box hai jo tumhare app ka code chalata hai. Neeche woh physical machine ho sakti hai, virtual, container, ya koi aur ka chalaya hua function. “Aur servers lagao” matlab us box ke aur copies lagao." },
+    { q: "Cache aur CDN dono copy rakhte hain, farak kya hai?", a: "Cache tumhare servers ke paas baithta hai aur unka kaam bachata hai. CDN users ke paas baithta hai aur unki doori bachata hai. Cache slow kaam theek karta hai, CDN lamba safar." },
+    { q: "Queue ki kya zaroorat, kaam seedha kyun na kar lein?", a: "Kyunki kuch kaam slow hai aur uska koi intezaar nahi kar raha: SMS, invoice, rider assign karna. Queue mein daalo, customer ko ek second mein “order confirmed” mil jaata hai aur slow hissa peeche chalta rehta hai." },
+    { q: "Saat steps yaad karne hi padenge?", a: "Haan, aur is poore course mein yaad karne ki sabse sasti cheez yahi hai. Requirements, estimates, API, data model, high-level design, deep dive, bottlenecks. Interview mein yeh tumhe atakne nahi deta: agla kadam hamesha pata hota hai." },
   ],
 
   interview: [

@@ -105,7 +105,9 @@ const MENU_TITLE: Record<MenuKey, string> = { speed: "Speed", audio: "Audio", cc
 const audioCode = (lang?: string) => (lang ? (lang === "Hinglish" ? "HGL" : lang.slice(0, 2).toUpperCase()) : "");
 const ccName = (s: CourseState) => (s.subLang === "en" ? "English" : "Hinglish");
 
-const barBtn = "flex h-11 w-9 flex-none sm:w-10 cursor-pointer items-center justify-center rounded-lg p-0 text-white hover:bg-white/16";
+const barBase = "flex h-11 flex-none cursor-pointer items-center justify-center rounded-lg p-0 text-white hover:bg-white/16";
+/** Under 360px the icon buttons narrow and the time drops its total, so the whole row, Fullscreen included, fits a 320px phone. */
+const barBtn = `${barBase} w-9 max-[359px]:w-8 sm:w-10`;
 
 /**
  * Mobile: the controls sit on the video, YouTube-style. A scrubber, then play,
@@ -144,9 +146,9 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
         <button type="button" onClick={() => act(togglePlay)} aria-label={s.playing ? "Pause" : "Play"} className={barBtn}><Icon name={s.playing ? "pause" : "play"} size={22} /></button>
         <button type="button" onClick={() => act(back10)} aria-label="Back 10 seconds" className={barBtn}><Icon name="rotL" /></button>
         <button type="button" onClick={() => act(fwd10)} aria-label="Forward 10 seconds" className={barBtn}><Icon name="rotR" /></button>
-        <span className="pl-1 text-xs font-semibold whitespace-nowrap tabular-nums">{fmt(s.t)} / {fmt(d)}</span>
+        <span className="pl-1 text-xs font-semibold whitespace-nowrap tabular-nums">{fmt(s.t)}<span className="max-[359px]:hidden"> / {fmt(d)}</span></span>
         <span className="flex-1" />
-        <button type="button" onClick={() => ui.toggle("speed")} aria-label={`Playback speed ${speedLabel(s.speed)}`} aria-expanded={ui.menu === "speed"} className={clsx(barBtn, "w-11 text-[13px] font-extrabold")}>{speedLabel(s.speed)}</button>
+        <button type="button" onClick={() => ui.toggle("speed")} aria-label={`Playback speed ${speedLabel(s.speed)}`} aria-expanded={ui.menu === "speed"} className={clsx(barBase, "w-11 text-[13px] font-extrabold sm:w-10")}>{speedLabel(s.speed)}</button>
         <button type="button" onClick={() => ui.toggle("audio")} aria-label="Audio language" aria-expanded={ui.menu === "audio"} className={barBtn}><Icon name="headphones" /></button>
         {subOk && (
           <button type="button" onClick={() => ui.toggle("cc")} aria-label="Captions" aria-expanded={ui.menu === "cc"} className={clsx(barBtn, "text-xs font-extrabold")}>

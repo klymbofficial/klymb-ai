@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { checkPct, dayOf, type CourseState, type LessonProgress } from "@/lib/course-app";
+import { checkPct, dayOf, lessonSteps, type CourseState, type LessonProgress } from "@/lib/course-app";
 import type { SdEvent } from "@/lib/sd-events";
-import { inRange, lessonSteps } from "./lesson/Practice";
+import { inRange } from "./lesson/Practice";
 
 /*
  * Course activity for the admin: what each learner opened, which steps they
@@ -53,10 +53,9 @@ const join = (a: (number | boolean)[]) => a.map((x) => (typeof x === "boolean" ?
 function stepProps(s: CourseState, id: string, key: keyof LessonProgress, p: LessonProgress): Props {
   const c = dayOf(id)?.copy[s.lang];
   if (!c) return {};
-  if (key === "pre" || key === "post") {
-    const qs = key === "pre" ? c.pre : c.post;
-    const picks = p[key] ?? [];
-    return { qs: qs.map((q) => q.id).join(","), picks: join(picks), score: qs.filter((q, i) => q.choices[picks[i]]?.best).length, of: qs.length };
+  if (key === "post") {
+    const picks = p.post ?? [];
+    return { qs: c.post.map((q) => q.id).join(","), picks: join(picks), score: c.post.filter((q, i) => q.choices[picks[i]]?.best).length, of: c.post.length };
   }
   if (key === "est") return { vals: join(p.est ?? []), inRange: inRange(c.estimates ?? [], p.est ?? []), of: c.estimates?.length ?? 0 };
   if (key === "built") return { wrong: p.built ?? 0 };
@@ -66,7 +65,7 @@ function stepProps(s: CourseState, id: string, key: keyof LessonProgress, p: Les
   return {};
 }
 
-const STEP_FIELDS: (keyof LessonProgress)[] = ["started", "pre", "watched", "read", "post", "est", "built", "design", "checks", "follow"];
+const STEP_FIELDS: (keyof LessonProgress)[] = ["watched", "read", "post", "est", "built", "design", "checks", "follow"];
 
 /** Watches the course state and reports what changed. Off in design previews. */
 export function useActivity(s: CourseState, ready: boolean, preview: boolean) {

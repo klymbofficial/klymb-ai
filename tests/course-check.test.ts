@@ -124,7 +124,7 @@ test("after a miss, only real playback opens the retake: skipping to the end doe
 });
 
 test("learners already in a lesson keep it when the checks arrive", () => {
-  const s: CourseState = { ...home(), cur: "1-0", lessons: { "1-0": { started: true } } };
+  const s: CourseState = { ...home(), cur: "1-0", lessons: { "1-0": { watched: true } } };
   assert.equal(isLocked(s, "1-0"), false);
   assert.equal(isLocked({ ...home(), cur: "0-0" }, "1-0"), true);
 });

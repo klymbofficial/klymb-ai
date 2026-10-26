@@ -100,6 +100,8 @@ export interface DayCopy {
   design?: DesignAttempt;
   followUps?: FollowUp[];
   interview: string[];
+  /** The doubts this day actually raises, answered. Shown in the lesson's Q&A tab. */
+  faq: { q: string; a: string }[];
   cheatsheet: { title: string; points: string[] };
   linkedin: string;
   nextDay: string;

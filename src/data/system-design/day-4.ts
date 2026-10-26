@@ -277,6 +277,14 @@ const en: DayCopy = {
     },
   ],
 
+  faq: [
+    { q: "Is NoSQL just a faster SQL?", a: "No, it is a different trade. You give up joins and some consistency guarantees and get easy horizontal scale in return. If your answer is “it is faster”, the follow-up will show that it isn’t — for the thing you used it for." },
+    { q: "What does a transaction actually guarantee?", a: "That several writes land together or not at all. Money leaving one account and entering another is one unit of work: no state exists where it left but never arrived. That is the whole reason wallets sit in SQL." },
+    { q: "How do I choose a partition key?", a: "From how you read the data, not how you write it. The key should appear in almost every query and should spread traffic evenly. A key like “country” looks tidy and puts most of India on one partition." },
+    { q: "Can one app use both kinds?", a: "It should, and saying so is usually the strongest answer. Balances in SQL, the feed and the likes in a scale-out store, sessions in a cache. Interviewers want a database chosen per job, not one picked for everything." },
+    { q: "When is eventual consistency actually fine?", a: "When a stale read costs nothing: a like count, a view count, a follower list. Never where someone can act on the old number — a balance, stock left in a sale, a seat on a flight." },
+  ],
+
   interview: [
     "Ask how the data is read and written: queries, volume, and how wrong it may be.",
     "Money, orders, bookings: a relational database with transactions.",
@@ -572,6 +580,14 @@ const hi: DayCopy = {
       say: "\"Har account ka ek home region writes ke liye, doosre mein standby: paison ke liye pehle correctness.\"",
       deeper: "Day 17",
     },
+  ],
+
+  faq: [
+    { q: "NoSQL matlab tez SQL?", a: "Nahi, yeh ek alag sauda hai. Joins aur kuch consistency guarantees chhodte ho, badle mein horizontal scale aasaan ho jaata hai. Agar jawab “yeh tez hai” hai, toh agla sawaal dikha dega ki jis kaam ke liye laga diya, uske liye tez nahi hai." },
+    { q: "Transaction guarantee kya karta hai?", a: "Yeh ki kai writes ya toh saath mein hote hain ya bilkul nahi. Ek account se paisa nikalna aur doosre mein daalna ek hi kaam hai: aisi koi haalat nahi banti jahan paisa nikal gaya par pahuncha nahi. Wallet SQL mein isi liye rehta hai." },
+    { q: "Partition key kaise chunein?", a: "Data kaise padhte ho uske hisaab se, likhne ke hisaab se nahi. Key lagbhag har query mein honi chahiye aur traffic barabar baantni chahiye. “Country” jaisi key saaf lagti hai aur poore India ko ek partition pe daal deti hai." },
+    { q: "Ek app dono use kar sakta hai?", a: "Karna hi chahiye, aur yahi aam taur pe sabse mazboot jawab hai. Balance SQL mein, feed aur likes scale-out store mein, session cache mein. Interviewer har kaam ke liye chuna hua database sunna chahta hai, sab ke liye ek nahi." },
+    { q: "Eventual consistency kab chalti hai?", a: "Jab purana data padhne ka koi nuksaan na ho: like count, view count, follower list. Wahan kabhi nahi jahan koi us purane number pe action le le — balance, sale mein bacha stock, flight ki seat." },
   ],
 
   interview: [

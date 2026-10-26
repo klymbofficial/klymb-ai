@@ -158,7 +158,7 @@ export function Toggle({ on, onClick, label, sub }: { on: boolean; onClick: () =
   );
 }
 
-export function Segmented<T extends string | number>({ value, options, onChange, className, itemClass = "px-2.5 py-2 text-[13px]" }: { value: T; options: [T, string][]; onChange: (v: T) => void; className?: string; itemClass?: string }) {
+export function Segmented<T extends string | number>({ value, options, onChange, className, itemClass = "px-2.5 py-2 text-left text-[13px]" }: { value: T; options: [T, string][]; onChange: (v: T) => void; className?: string; itemClass?: string }) {
   return (
     <div role="radiogroup" className={clsx("grid overflow-hidden rounded-lg border border-sd-divider", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map(([v, label]) => (
@@ -168,7 +168,7 @@ export function Segmented<T extends string | number>({ value, options, onChange,
           role="radio"
           aria-checked={value === v}
           onClick={() => onChange(v)}
-          className={clsx("cursor-pointer truncate text-left font-semibold transition-colors duration-200", itemClass, value === v ? "bg-sd-ink text-sd-bg" : "bg-transparent")}
+          className={clsx("cursor-pointer truncate font-semibold transition-colors duration-200", itemClass, value === v ? "bg-sd-ink text-sd-bg" : "bg-transparent")}
         >
           {label}
         </button>
