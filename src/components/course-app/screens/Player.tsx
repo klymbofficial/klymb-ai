@@ -3,12 +3,12 @@
 import clsx from "clsx";
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
-import type { Day } from "@/data/system-design/types";
 import {
   ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
   addRewatch, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
+import { Community } from "../lesson/Community";
 import { DayHeader, LangSwitch, LessonPath, LessonStage } from "../lesson/Practice";
 import { Tour } from "../lesson/Tour";
 import { track } from "../track";
@@ -265,24 +265,6 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
-/** The doubts this day raises, answered. Closed until opened, like a FAQ. */
-function Qna({ s, day }: { s: CourseState; day: Day }) {
-  const faq = day.copy[s.lang].faq;
-  return (
-    <div className="flex flex-col px-5 py-3.5 lg:max-h-[440px] lg:overflow-y-auto lg:px-3.5 lg:pt-2">
-      {faq.map((x) => (
-        <details key={x.q} className="group border-b border-sd-divider">
-          <summary className="flex cursor-pointer list-none items-start justify-between gap-2.5 py-3 text-sm leading-[1.35] font-extrabold [&::-webkit-details-marker]:hidden">
-            {x.q}
-            <Icon name="down" size={16} className="mt-0.5 block flex-none transition-transform group-open:rotate-180" />
-          </summary>
-          <p className="m-0 pb-3 text-[13px] leading-[1.5] text-sd-n-800">{x.a}</p>
-        </details>
-      ))}
-    </div>
-  );
-}
-
 export function Player({ s, act }: { s: CourseState; act: Act }) {
   const c = lesson(s.cur);
   const day = dayOf(s.cur);
@@ -359,7 +341,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
             itemClass="px-1 py-[9px] text-center text-[12px] sm:px-2 sm:text-[13px] lg:px-1.5 lg:py-[11px] lg:text-xs"
           />
           {s.ptab === "lessons" && <CourseLessons s={s} act={act} />}
-          {s.ptab === "qna" && day && <Qna s={s} day={day} />}
+          {s.ptab === "qna" && day && <Community key={s.cur} lesson={s.cur} day={day} lang={s.lang} />}
           {s.ptab === "notes" && <Notes s={s} act={act} />}
           {s.ptab === "transcript" && <Transcript s={s} act={act} />}
         </div>
