@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Mic } from "lucide-react";
 import { signOutLearner } from "./actions";
 import { auth } from "@/auth";
 import { Appear } from "@/components/motion/Appear";
@@ -18,6 +19,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
+import { topicsFor } from "@/lib/coach/topics";
 import { requireLearner } from "@/lib/learner/data";
 import { cohortDayDate } from "@/lib/learn";
 import { getCurriculum } from "@/data/curricula";
@@ -154,6 +156,30 @@ export default async function LearnHomePage() {
         </Appear>
 
         <Achievements days={days.filter((d) => d.submitted).length} name={learner.name} course={track.name} slug={learner.track} />
+
+        {/* The spoken practice, where a learner will actually look for it:
+            the course page they open every day, not a menu. */}
+        {topicsFor(learner.track).length > 0 && (
+          <Appear className="mt-12">
+            <section className="flex flex-wrap items-center justify-between gap-5 rounded-card bg-night px-6 py-6 text-paper shadow-card">
+              <div className="flex items-start gap-4">
+                <span aria-hidden="true" className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-white/10 text-red-soft">
+                  <Mic className="size-5" />
+                </span>
+                <div>
+                  <h2 className="display text-xl">Practise out loud, five minutes</h2>
+                  <p className="mt-1 max-w-lg text-sm text-white/60">
+                    The voice coach asks one question at a time on a single topic, and files what it heard for your reviewer.
+                    Interviews are spoken: reading an answer is not practising it.
+                  </p>
+                </div>
+              </div>
+              <ButtonLink href="/learn/coach" variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+                Start a session
+              </ButtonLink>
+            </section>
+          </Appear>
+        )}
 
         <Appear className="mt-14">
           <section aria-labelledby="evidence">

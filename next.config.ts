@@ -39,6 +39,9 @@ const csp = [
     "https://stats.g.doubleclick.net",
     "https://*.razorpay.com",
     isDev ? "ws: http://localhost:*" : "",
+    // Nothing for the voice coach: the browser posts its WebRTC offer to
+    // /api/coach/session on this origin, and the media connection that
+    // follows is not a fetch, so no CSP directive governs it.
   ]
     .filter(Boolean)
     .join(" "),
@@ -62,8 +65,17 @@ const securityHeaders = [
   // Legacy equivalent of frame-ancestors, for older browsers.
   { key: "X-Frame-Options", value: "DENY" },
   {
+    /**
+     * The microphone is open to this origin alone, for the voice coach
+     * (/learn/coach). It cannot be scoped to that one path: a second
+     * Permissions-Policy header does not replace the first, the two are
+     * intersected, so a closed global policy would keep the coach muted
+     * however the page is served. What still stands between a script and the
+     * microphone is the browser's own permission prompt, frame-ancestors
+     * 'none' and the script-src above — nothing third-party runs here.
+     */
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+    value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()",
   },
 ];
 

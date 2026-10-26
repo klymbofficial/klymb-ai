@@ -46,6 +46,7 @@ for how the schema and its role are set up.
 | Registration throttle, keyed by a salted hash of the caller's IP | `src/lib/rate-limit.ts`, `src/lib/fingerprint.ts` |
 | Server-side allowlists and length caps on every submitted field | `src/lib/validation.ts` |
 | CSP, nosniff, Referrer-Policy, Permissions-Policy, frame-ancestors | `next.config.ts` |
+| The voice provider's API key stays on the server; the browser is handed no credential at all, not even a short-lived one | `src/lib/coach/realtime.ts`, `src/app/api/coach/session` |
 
 **Content Security Policy.** These hosts must stay allowlisted or something breaks:
 `www.googletagmanager.com` (analytics script), `www.google-analytics.com` and `*.analytics.google.com`
@@ -97,6 +98,58 @@ development only, for React Refresh.
 - [ ] Privacy Policy, Terms and Refund Policy pages..
 
 Ethical guardrails used throughout: no fake testimonials, learner counts, seat counters or countdowns, and no guaranteed-job claims.
+
+## Voice coach
+
+`/learn/coach` is a five-minute spoken placement check on one topic, over
+OpenAI's Realtime API. Speech to speech, so there is no transcribe → think →
+speak chain in the middle: that chain is where the seconds go, and a
+conversation that pauses for two seconds after every sentence is not one.
+Set `OPENAI_API_KEY` to switch it on; without it the page says so and the rest
+of the course is unaffected.
+
+| Piece | Where |
+| --- | --- |
+| Topics, openers and the skills each session covers | `src/lib/coach/topics.ts` |
+| What the coach is told, its two tools, and the session handed to the provider | `src/lib/coach/prompt.ts` |
+| The provider call. The API key lives here and nowhere else | `src/lib/coach/realtime.ts` |
+| Opens a call: authorises, records the session, relays the WebRTC offer | `src/app/api/coach/session` |
+| Writes what the coach recorded while it was talking | `src/app/api/coach/evidence` |
+| The WebRTC session in the browser: connection, barge-in, captions, levels | `src/components/coach/useVoiceSession.ts` |
+| The orb, driven by the real audio levels | `src/components/coach/Orb.tsx` |
+| Tables for the sessions and their evidence | `db/migrations/0006_coach.sql` |
+
+**No credential reaches the browser.** OpenAI documents two routes: mint a
+short-lived client secret for the browser, or relay the SDP server-side. This
+takes the second, because the session's instructions carry the learner's name,
+track and what an earlier session found — binding those to a credential a
+browser holds means handing over both. It is the shape `/api/video` already
+uses for the course videos: the signing key stays on the server, and the
+browser only ever gets what it produced.
+
+**Grading is kept off the conversational path.** The coach calls
+`record_skill_evidence` as it talks and is acknowledged immediately, with the
+database write happening behind that; the next question is asked while the row
+is being written. Nothing it records unlocks a day, releases a fee or decides a
+placement — it is a model's judgement relayed by the learner's own browser, so
+it is evidence a reviewer reads next to the deliverables and nothing more.
+
+**Nothing is recorded.** The captions are on screen only, and no migration
+adds a column for a transcript. A recording of someone practising for
+interviews is a liability with no reader.
+
+**The microphone had to be allowed.** `Permissions-Policy` shipped
+`microphone=()`, which blocks `getUserMedia` outright; it is now
+`microphone=(self)`. It cannot be scoped to the one path — a second
+`Permissions-Policy` header is intersected with the first, not replaced — so
+what stands between a script and the microphone is the browser's own prompt,
+`frame-ancestors 'none'` and a `script-src` with no third parties on it.
+
+**First reply is measured, not promised.** The browser times the gap between
+the learner finishing and the first word back and stores it on the session
+(`first_reply_ms`); the target is one to two seconds. It is on the screen under
+the orb and on each row of the learner's history, so the claim can be checked
+rather than assumed.
 
 ## Project structure
 
