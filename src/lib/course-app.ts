@@ -123,6 +123,8 @@ export interface CourseState {
   muted: boolean;
   /** Saw (or skipped) Kamran's tour of the lesson screen. */
   toured: boolean;
+  /** The lesson check is open full screen (not saved: a reload returns to the page). */
+  checkFull: boolean;
   /** Local dates (YYYY-MM-DD) with any finished step: the streak. */
   activeDays: string[];
   /** The promise made after the welcome: signed name and local date. */
@@ -267,7 +269,7 @@ export function defaultState(now = Date.now()): CourseState {
     toast: null, toastUntil: 0,
     commitment: null, streakPop: false, popDay: "",
     lessons: {}, lang: "en", subs: true, subLang: "hinglish", subSize: "m", audio: "Hinglish", volume: 1, muted: false,
-    toured: false, activeDays: [],
+    toured: false, checkFull: false, activeDays: [],
   };
 }
 

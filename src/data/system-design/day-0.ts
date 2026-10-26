@@ -557,8 +557,8 @@ export const dayZero: Day = {
   copy: { en, hi },
   sources: [],
   video: {
-    src: "/videos/system-design/day-0.mp4", poster: "/videos/system-design/day-0-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-0-wide.mp4", poster: "/videos/system-design/day-0-wide-poster.jpg" },
+    src: "/api/video/day-0.mp4", poster: "/videos/system-design/day-0-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/api/video/day-0-wide.mp4", poster: "/videos/system-design/day-0-wide-poster.jpg" },
   },
   nextHref: "/system-design/day-1",
 };

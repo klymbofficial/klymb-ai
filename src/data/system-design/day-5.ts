@@ -607,8 +607,8 @@ export const dayFive: Day = {
     { label: "Myntra EORS-10 results: 9 million items, 7,100+ orders per minute (Punekar News, June 2019)", href: "https://www.punekarnews.in/?p=39734" },
   ],
   video: {
-    src: "/videos/system-design/day-5-wide.mp4", poster: "/videos/system-design/day-5-wide-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-5-wide.mp4", poster: "/videos/system-design/day-5-wide-poster.jpg" },
+    src: "/api/video/day-5-wide.mp4", poster: "/videos/system-design/day-5-wide-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/api/video/day-5-wide.mp4", poster: "/videos/system-design/day-5-wide-poster.jpg" },
   },
   prevHref: "/system-design/day-4",
 };

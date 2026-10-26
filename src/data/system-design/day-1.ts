@@ -681,8 +681,8 @@ export const dayOne: Day = {
     { label: "BOOM: Flipkart issues apology for Big Billion Day fiasco (2014)", href: "https://www.boomlive.in/flipkart-issues-apology-big-billion-day-fiasco/" },
   ],
   video: {
-    src: "/videos/system-design/day-1.mp4", poster: "/videos/system-design/day-1-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-1-wide.mp4", poster: "/videos/system-design/day-1-wide-poster.jpg" },
+    src: "/api/video/day-1.mp4", poster: "/videos/system-design/day-1-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/api/video/day-1-wide.mp4", poster: "/videos/system-design/day-1-wide-poster.jpg" },
   },
   prevHref: "/system-design/day-0",
 };

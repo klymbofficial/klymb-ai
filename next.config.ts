@@ -15,6 +15,7 @@ const isDev = process.env.NODE_ENV === "development";
  *   i.ytimg.com                 YouTube thumbnails on learner day pages
  *   *.googleusercontent.com     Google profile images on signed-in accounts
  *   *.razorpay.com              Razorpay Checkout: its script, its payment frame and its API
+ *   *.r2.cloudflarestorage.com  System Design videos, played from signed R2 links
  *
  * 'unsafe-inline' on script-src is required by Next.js, which inlines a small
  * bootstrap and the flight payload; a nonce would mean giving up static
@@ -27,6 +28,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://i.ytimg.com https://*.googleusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://*.razorpay.com",
   "font-src 'self' data:",
+  "media-src 'self' https://*.r2.cloudflarestorage.com",
   [
     "connect-src 'self'",
     "https://*.supabase.co",
@@ -47,8 +49,11 @@ const csp = [
   // Sign-in posts to Google; nothing else may be a form target.
   "form-action 'self' https://accounts.google.com",
   "object-src 'none'",
-  "upgrade-insecure-requests",
-].join("; ");
+  // Production is HTTPS already; on http://localhost it would break same-origin redirects.
+  isDev ? "" : "upgrade-insecure-requests",
+]
+  .filter(Boolean)
+  .join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },

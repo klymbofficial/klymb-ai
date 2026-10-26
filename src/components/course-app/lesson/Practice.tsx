@@ -441,7 +441,7 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       {!p.watched && <p className="m-0 mb-1 border-l-[3px] border-sd-accent pl-3 text-sm text-sd-n-800">{ui.watchFirst}</p>}
 
       <Step id="reveal" n={num("reveal")} lead={ui.leads.reveal} title={ui.reveal} sub={c.revealSub} locked={!open("reveal")} lockedText={ui.locked}>
-        <Reveal c={c} ui={ui} pre={p.pre ?? []} read={!!p.read || !!p.post} onRead={() => set({ read: true }, "prove")} />
+        <Reveal c={c} ui={ui} pre={p.pre ?? []} read={!!p.read || !!p.post} onRead={() => { set({ read: true }); act((q) => ({ ...q, checkFull: true })); }} />
       </Step>
 
       <Step id="prove" n={num("prove")} lead={ui.leads.prove} title={ui.prove} sub={ui.proveSub} locked={!open("prove")} lockedText={ui.locked}>
@@ -454,8 +454,8 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
           questions={c.post}
           hasNext={!!nextLesson && !isSoon(nextLesson)}
           next={nextOf("prove").label}
-          onPass={() => goTo(after("prove"), 250)}
-          onRewatch={() => { act((q) => ({ ...q, t: 0, playing: true, ended: false, upNext: 0 })); goTo("watch", 0); }}
+          onPass={() => { act((q) => ({ ...q, checkFull: false })); goTo(after("prove"), 250); }}
+          onRewatch={() => { act((q) => ({ ...q, checkFull: false, t: 0, playing: true, ended: false, upNext: 0 })); goTo("watch", 0); }}
         />
       </Step>
 

@@ -616,8 +616,8 @@ export const dayTwo: Day = {
     { label: "The News Minute: 9,500 orders per minute on Swiggy, NYE 2021", href: "https://www.thenewsminute.com/news/two-million-order-9-pm-5500-minute-how-indians-used-swiggy-nye-159385" },
   ],
   video: {
-    src: "/videos/system-design/day-2-wide.mp4", poster: "/videos/system-design/day-2-wide-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-2-wide.mp4", poster: "/videos/system-design/day-2-wide-poster.jpg" },
+    src: "/api/video/day-2-wide.mp4", poster: "/videos/system-design/day-2-wide-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/api/video/day-2-wide.mp4", poster: "/videos/system-design/day-2-wide-poster.jpg" },
   },
   prevHref: "/system-design/day-1",
 };

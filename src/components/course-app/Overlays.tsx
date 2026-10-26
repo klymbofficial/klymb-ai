@@ -49,7 +49,7 @@ function OverviewVideo() {
         onTimeUpdate={(e) => onTime(e.currentTarget)}
         className="aspect-video w-full rounded-xl border-2 border-sd-ink bg-black"
       >
-        <source src={`${OVERVIEW}.mp4`} type="video/mp4" />
+        <source src="/api/video/overview.mp4" type="video/mp4" />
         <track kind="captions" src={`${OVERVIEW}.vtt`} srcLang="hi" label="Hinglish" default />
       </video>
       <figcaption className="text-xs text-sd-n-700">What you’ll learn in 21 days · 1:26 · Hinglish, with captions</figcaption>

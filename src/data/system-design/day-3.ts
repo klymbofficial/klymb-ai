@@ -613,8 +613,8 @@ export const dayThree: Day = {
     { label: "Hotstar press release: 18.6 million concurrent viewers, IPL 2019 final (StreamingMedia)", href: "https://www.streamingmedia.com/PressRelease/With-18.6-Million-Simultaneous-Viewers-Streaming-VIVO-IPL-Hotstar-Shatters-Viewership-Record-Again_49306.aspx" },
   ],
   video: {
-    src: "/videos/system-design/day-3-wide.mp4", poster: "/videos/system-design/day-3-wide-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-3-wide.mp4", poster: "/videos/system-design/day-3-wide-poster.jpg" },
+    src: "/api/video/day-3-wide.mp4", poster: "/videos/system-design/day-3-wide-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/api/video/day-3-wide.mp4", poster: "/videos/system-design/day-3-wide-poster.jpg" },
   },
   prevHref: "/system-design/day-2",
 };

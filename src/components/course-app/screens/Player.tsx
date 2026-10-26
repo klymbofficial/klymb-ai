@@ -121,7 +121,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
         onEnded={() => {
           const retake = !!s.lessons[s.cur]?.failed;
-          act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true }));
+          act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true, checkFull: retake }));
           goTo(retake ? "prove" : "reveal", 400);
         }}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}

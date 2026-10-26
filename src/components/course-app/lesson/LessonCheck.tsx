@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import type { Lang, Question } from "@/data/system-design/types";
 import { CHECK_SIZE, PASS_MARK, checkPct, passed, submitCheck, type CourseState, type LessonProgress } from "@/lib/course-app";
 import { shuffledOrder } from "@/lib/shuffle";
@@ -22,6 +23,7 @@ const UI = {
     answer: "Answer", yours: "You picked", skipped: "Skipped",
     rewatch: "Rewatch the lesson", rewatchFirst: "Watch the video again to unlock the retake.", continue: "Continue",
     results: "Results", tries: (n: number) => `Attempt ${n}`, passedWith: (n: number) => `Passed with ${n}%`, see: "See answers",
+    close: "Close", leave: "Leave the assessment? Your answers so far won’t be saved.",
   },
   hi: {
     kicker: "Lesson assessment", title: "Dekho kitna samjha",
@@ -33,6 +35,7 @@ const UI = {
     answer: "Jawab", yours: "Tumne chuna", skipped: "Skip kiya",
     rewatch: "Lesson dobara dekho", rewatchFirst: "Retake kholne ke liye video phir se dekho.", continue: "Aage chalo",
     results: "Results", tries: (n: number) => `Attempt ${n}`, passedWith: (n: number) => `${n}% se pass`, see: "Jawab dekho",
+    close: "Band karo", leave: "Assessment chhodna hai? Ab tak ke jawab save nahi honge.",
   },
 };
 
@@ -144,8 +147,9 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
   const [stage, setStage] = useState<"intro" | "q" | "result" | "passed">(p.failed ? "result" : p.post ? "passed" : "intro");
   const tries = p.tries ?? 0;
 
+  let content: React.ReactNode;
   if (stage === "q") {
-    return (
+    content = (
       <Questions
         key={`${s.lang}-${tries}`}
         questions={questions}
@@ -153,10 +157,8 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
         onDone={(picks) => { act((q) => submitCheck(q, id, questions, picks)); setStage("result"); }}
       />
     );
-  }
-
-  if (stage === "passed" && p.post) {
-    return (
+  } else if (stage === "passed" && p.post) {
+    content = (
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="flex items-center gap-2 text-sm font-extrabold">
           <span className="flex size-6 items-center justify-center rounded-md bg-sd-ink text-sd-bg"><Icon name="check" size={14} stroke={3} /></span>
@@ -168,11 +170,9 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
         </span>
       </div>
     );
-  }
-
-  if (stage === "result" && p.checkPicks) {
+  } else if (stage === "result" && p.checkPicks) {
     const ok = !!p.post && !p.failed;
-    return (
+    content = (
       <Results questions={questions} lang={s.lang} picks={p.checkPicks} hasNext={hasNext}>
         {ok && <button type="button" onClick={() => { setStage("passed"); onPass(); }} className="sd-btn sd-btn-primary h-12 justify-between gap-3 px-4">{ui.continue}<Icon name="arrowR" /></button>}
         {!ok && !p.rewatched && (
@@ -185,9 +185,8 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
         {tries > 1 && <span className="text-xs text-sd-n-700">{ui.tries(tries)}</span>}
       </Results>
     );
-  }
-
-  return (
+  } else {
+    content = (
     <div className="flex flex-col gap-3.5 rounded-xl bg-sd-surface p-4 lg:p-5">
       <span className="sd-kicker text-sd-accent-700">{ui.kicker}</span>
       <h3 className="m-0 text-[26px] leading-[1.05] tracking-[-0.03em] lg:text-[32px]">{ui.title}</h3>
@@ -201,5 +200,42 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
         {p.failed ? ui.retake : ui.start}<Icon name="arrowR" />
       </button>
     </div>
+    );
+  }
+
+  const full = s.checkFull && stage !== "passed";
+  const close = () => {
+    if (stage === "q" && !window.confirm(ui.leave)) return;
+    act((q) => ({ ...q, checkFull: false }));
+    if (stage === "q") setStage(p.failed ? "result" : p.post ? "passed" : "intro");
+  };
+  if (!full) {
+    // On the page: a compact card. Starting it opens the check full screen.
+    if (stage === "passed") return content;
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-sd-surface p-4">
+        <span className="flex flex-col">
+          <span className="sd-kicker text-sd-accent-700">{ui.kicker}</span>
+          <span className="text-[17px] font-extrabold">{p.failed ? ui.failed : ui.title}</span>
+          <span className="text-xs text-sd-n-700">{ui.count} · {ui.mark}</span>
+        </span>
+        <button type="button" onClick={() => { if (stage === "intro" && !p.failed) setStage("q"); act((q) => ({ ...q, checkFull: true })); }} className="sd-btn sd-btn-primary h-11 gap-2">
+          {p.failed ? (p.rewatched ? ui.retake : ui.results) : stage === "result" ? ui.results : ui.start}<Icon name="arrowR" size={16} />
+        </button>
+      </div>
+    );
+  }
+  // Full screen: nothing else on the page until the check is done.
+  return createPortal(
+    <div className="sd-app fixed inset-0 z-[72] flex flex-col bg-sd-bg" role="dialog" aria-modal="true" aria-label={ui.kicker}>
+      <div className="flex flex-none items-center justify-between gap-3 border-b-2 border-sd-divider px-4 py-3 lg:px-8">
+        <span className="min-w-0 truncate text-xs font-extrabold tracking-[0.08em] uppercase">{ui.kicker} · {title}</span>
+        <button type="button" onClick={close} aria-label={ui.close} className="sd-btn sd-btn-secondary h-9 gap-1.5 px-3 text-xs"><Icon name="x" size={14} />{ui.close}</button>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-[720px] px-5 py-6 lg:py-10">{content}</div>
+      </div>
+    </div>,
+    document.body,
   );
 }

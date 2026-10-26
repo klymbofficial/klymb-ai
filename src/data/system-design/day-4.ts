@@ -611,8 +611,8 @@ export const dayFour: Day = {
     { label: "Discord engineering blog: How Discord Stores Trillions of Messages (March 2023)", href: "https://discord.com/blog/how-discord-stores-trillions-of-messages" },
   ],
   video: {
-    src: "/videos/system-design/day-4-wide.mp4", poster: "/videos/system-design/day-4-wide-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-4-wide.mp4", poster: "/videos/system-design/day-4-wide-poster.jpg" },
+    src: "/api/video/day-4-wide.mp4", poster: "/videos/system-design/day-4-wide-poster.jpg", minutes: 3, lang: "Hinglish",
+    wide: { src: "/api/video/day-4-wide.mp4", poster: "/videos/system-design/day-4-wide-poster.jpg" },
   },
   prevHref: "/system-design/day-3",
 };
