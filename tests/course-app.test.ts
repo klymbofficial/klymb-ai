@@ -2,15 +2,15 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { LESSON_DAYS, QUESTIONS } from "../src/data/system-design/course-app";
 import {
-  ALL_IDS, addNote, closeQuiz, completeNext, deepLink, defaultState, flowDone, fmt, fromStored, grade, isAnswered, isSoon, localDate,
-  migrateLegacy, miniActive, nextQuestion, openLesson, pickOption, previewState, setAnswer, streak, tick, toStored, togglePlay,
+  ALL_IDS, addNote, closeQuiz, completeNext, deepLink, defaultState, flowDone, fmt, fromStored, grade, isAnswered, isSoon, lessonSteps, localDate,
+  migrateLegacy, miniActive, nextQuestion, openLesson, pickOption, previewState, setAnswer, stageFor, streak, tick, toStored, togglePlay,
   updateLesson, type CourseState,
 } from "../src/lib/course-app";
 
 const NOW = new Date(2026, 9, 21, 9, 0, 0).getTime();
 const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
 /** Day 0 with every practice step done. */
-const day0Done = (s: CourseState) => updateLesson(s, "0-0", { pre: [0, 0, 0], watched: true, built: 0, post: [0, 0, 0, 0], est: [1200, 12, 700], follow: [true, true, false, true] }, NOW);
+const day0Done = (s: CourseState) => updateLesson(s, "0-0", { watched: true, built: 0, post: [0, 0, 0, 0], est: [1200, 12, 700], follow: [true, true, false, true] }, NOW);
 
 test("fmt pads minutes and seconds and never goes negative", () => {
   assert.equal(fmt(0), "00:00");
@@ -104,11 +104,36 @@ test("finishing Day 0 completes the Start here module and opens the recap", () =
   assert.deepEqual(s.done, ["0-0"]);
 });
 
+test("a lesson opens on the step it still has to do, and the next one on its video", () => {
+  const fresh = openLesson(home(), "0-0", NOW);
+  assert.equal(fresh.stage, "watch", "nothing done yet");
+
+  const watched = openLesson(updateLesson(home(), "0-0", { watched: true }, NOW), "0-0", NOW);
+  assert.equal(watched.stage, "prove", "the video is done, so the assessment is next");
+
+  const read = openLesson(updateLesson(home(), "0-0", { watched: true, read: true }, NOW), "0-0", NOW);
+  assert.equal(read.stage, "prove", "learn is read, the assessment still stands");
+
+  const passed = openLesson(updateLesson(home(), "0-0", { watched: true, post: [0, 0, 0, 0, 0] }, NOW), "0-0", NOW);
+  assert.equal(passed.stage, "estimate", "past the assessment, on to the practice");
+
+  const on = completeNext(day0Done({ ...home(), screen: "player", cur: "0-0", stage: "done" }), false, NOW);
+  assert.equal(on.stage, "watch", "Day 1 starts on its own video, not Day 0's last step");
+  assert.equal(on.checkBusy, false);
+});
+
+test("the step bar never opens a step the lesson hasn't reached", () => {
+  const s = updateLesson(home(), "0-0", { watched: true }, NOW);
+  const steps = lessonSteps(s, "0-0", LESSON_DAYS["0-0"]);
+  assert.deepEqual(steps.filter((x) => x.open).map((x) => x.key), ["watch", "reveal", "prove"]);
+  assert.equal(stageFor(s, "0-0"), "prove");
+});
+
 /** Every step of a built lesson done, whatever steps that lesson has. */
 function fullProgress(id: string) {
   const c = LESSON_DAYS[id].copy.en;
   return {
-    pre: c.pre.map(() => 0), watched: true, post: c.post.map(() => 0),
+    watched: true, post: c.post.map(() => 0),
     ...(c.estimates?.length ? { est: c.estimates.map((e) => e.answer) } : {}),
     ...(c.build ? { built: 0 } : {}),
     ...(c.design ? { design: "A full attempt at the design problem." } : {}),
@@ -152,18 +177,17 @@ test("notes are pinned to the current lesson and moment", () => {
   assert.equal(s.draft, "");
 });
 
-test("a first visit has no sample learner, notifications or Q&A", () => {
+test("a first visit has no sample learner and no notifications", () => {
   const s = defaultState(NOW);
   assert.deepEqual(s.done, []);
   assert.deepEqual(s.pre, []);
   assert.deepEqual(s.notifs, []);
-  assert.deepEqual(s.threads, {});
   assert.equal(s.cur, "0-0");
   assert.equal(streak(s, NOW).current, 0);
 });
 
 test("a finished step counts today; the streak runs back through consecutive days", () => {
-  const s = updateLesson(home(), "0-0", { pre: [0, 0, 0] }, NOW);
+  const s = updateLesson(home(), "0-0", { watched: true }, NOW);
   assert.deepEqual(s.activeDays, [localDate(new Date(NOW))]);
   const day = (n: number) => localDate(new Date(NOW - n * 86_400_000));
   assert.deepEqual(streak({ ...s, activeDays: [day(0), day(1), day(2), day(5)] }, NOW), { current: 3, longest: 3, today: true });
@@ -182,11 +206,11 @@ test("?lesson= opens straight into a lesson; unknown or coming-soon ids are igno
 
 test("progress from the old Day pages carries over once", () => {
   const s = migrateLegacy(defaultState(NOW), { day0: { pre: [0, 1, 0], watched: true }, day1: null, lang: "hi" }, NOW);
-  assert.deepEqual(s.lessons["0-0"], { pre: [0, 1, 0], watched: true });
+  assert.deepEqual(s.lessons["0-0"], { watched: true }, "the retired opening quiz is dropped");
   assert.equal(s.lessons["1-0"], undefined);
   assert.equal(s.lang, "hi");
-  const again = migrateLegacy(s, { day0: { pre: [2, 2, 2] } }, NOW);
-  assert.deepEqual(again.lessons["0-0"].pre, [0, 1, 0], "existing progress wins");
+  const again = migrateLegacy(s, { day0: { watched: false, post: [0, 0, 0, 0, 0] } }, NOW);
+  assert.deepEqual(again.lessons["0-0"], { watched: true }, "existing progress wins");
 });
 
 test("saved progress round-trips, and today's minutes reset on a new day", () => {

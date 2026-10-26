@@ -4,11 +4,12 @@ import clsx from "clsx";
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
 import {
-  ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, quickCheckAt,
+  ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
   addRewatch, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { DayStart, DeeperBox, LangSwitch, LessonPath, Practice, YourCall, goTo } from "../lesson/Practice";
+import { Community } from "../lesson/Community";
+import { DayHeader, LangSwitch, LessonPath, LessonStage } from "../lesson/Practice";
 import { Tour } from "../lesson/Tour";
 import { track } from "../track";
 import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
@@ -119,11 +120,11 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
         onTimeUpdate={(e) => onTime(e.currentTarget)}
         onPlay={() => { track("video_play", s.cur, "watch", { at: Math.round(s.t) }); act((p) => (p.playing ? p : { ...p, playing: true })); }}
         onPause={() => act((p) => (p.playing ? { ...p, playing: false } : p))}
-        onEnded={() => {
-          const retake = !!s.lessons[s.cur]?.failed;
-          act((p) => ({ ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true, checkFull: retake }));
-          goTo(retake ? "prove" : "reveal", 400);
-        }}
+        onEnded={() => act((p) => {
+          const n = { ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true };
+          // A lesson already passed just ends; otherwise the assessment takes the column.
+          return n.lessons[n.cur]?.post ? n : { ...n, stage: "prove" as const };
+        })}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
         className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
       />
@@ -233,19 +234,33 @@ function Transcript({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
-function ModuleLessons({ s, act }: { s: CourseState; act: Act }) {
+/** Every lesson of the course, by module, with the current one scrolled into view. */
+function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
+  const here = useRef<HTMLButtonElement>(null);
+  useEffect(() => { here.current?.scrollIntoView({ block: "nearest" }); }, []);
   return (
-    <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
-      {moduleIds(lesson(s.cur).mi).map((id) => {
-        const v = lessonView(s, id);
-        return (
-          <button key={id} type="button" onClick={() => act((p) => openLesson(p, id))} className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 border-b border-sd-divider px-2 py-[11px] text-left text-sm", v.cur && "bg-sd-accent-100")}>
-            <LessonMark done={v.done} cur={v.cur} locked={v.locked} />
-            <span className={clsx(v.cur && "font-extrabold", v.dim && "opacity-45")}>{v.title}</span>
-            <Duration v={v} />
-          </button>
-        );
-      })}
+    <div className="flex max-h-[380px] flex-col overflow-y-auto px-5 py-3.5 lg:max-h-[440px] lg:px-3.5 lg:pt-2">
+      {MODULES.map((m, mi) => (
+        <div key={m.title} className="flex flex-col">
+          <h6 className="sd-h6 mt-3 mb-1 first:mt-0">{pad(mi + 1)} · {m.title}</h6>
+          {moduleIds(mi).map((id) => {
+            const v = lessonView(s, id);
+            return (
+              <button
+                key={id}
+                ref={v.cur ? here : undefined}
+                type="button"
+                onClick={() => act((p) => openLesson(p, id))}
+                className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 border-b border-sd-divider px-2 py-[11px] text-left text-sm scroll-mt-10 hover:bg-sd-accent-100", v.cur && "bg-sd-accent-100")}
+              >
+                <LessonMark done={v.done} cur={v.cur} locked={v.locked} />
+                <span className={clsx("min-w-0", v.cur && "font-extrabold", v.dim && "opacity-45")}>{lessonDay(id)} · {v.title}</span>
+                <Duration v={v} />
+              </button>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -260,24 +275,28 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
   const done = flowDone(s, s.cur);
   const completeLabel = nextId ? "Mark complete · next lesson" : "Mark complete";
   const tabs: [PlayerTab, string][] = [
+    ["lessons", "Lessons"],
+    ["qna", "Q&A"],
     ["notes", `Notes (${(s.notes[s.cur] ?? []).length})`],
     ["transcript", "Transcript"],
-    ["lessons", "Lessons"],
   ];
-  const showVideo = !day || !!lp.pre;
+  // The lesson has been begun once any step is saved; only then is there progress to restart.
+  const begun = Object.keys(lp).length > 0;
+  // The video holds the column on the "watch" step, and for lessons with no content yet.
+  const watching = !day || s.stage === "watch";
   const subsOn = !!day && canSubtitle(s) && s.subs;
   const menu = useMenu();
-  usePlayerKeys(act, showVideo && !!day && !s.qcOpen);
+  usePlayerKeys(act, !!day && !s.qcOpen);
 
   return (
     <div className="sd-a-screen flex flex-1 max-w-[1200px] flex-col lg:flex-none lg:gap-4">
       <div className="flex items-center gap-2 px-3 pt-1 pb-2.5 lg:p-0">
         <BackButton onClick={() => act((p) => ({ ...p, screen: p.tab, playing: false }))} />
         <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-[0.08em] uppercase">{lessonDay(s.cur)} · {c.m.title}</span>
-        {day && lp.pre && (
+        {day && begun && (
           <button
             type="button"
-            onClick={() => { if (window.confirm("Start this lesson again from the first question?")) { act((p) => ({ ...updateLesson(p, p.cur, null), t: 0, playing: false, ended: false, done: p.done.filter((x) => x !== p.cur) })); goTo("call", 50); } }}
+            onClick={() => { if (window.confirm("Start this lesson again from the beginning?")) act((p) => ({ ...updateLesson(p, p.cur, null), t: 0, playing: false, ended: false, stage: "watch", checkBusy: false, done: p.done.filter((x) => x !== p.cur) })); }}
             className="sd-btn sd-btn-secondary h-[34px] flex-none gap-1.5 px-2.5 text-xs"
           >
             <Icon name="rotL" size={14} /><span className="hidden sm:inline">Restart</span>
@@ -285,12 +304,13 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
         )}
         {day && <LangSwitch s={s} act={act} />}
       </div>
-      {day && <LessonPath s={s} id={s.cur} day={day} />}
+      {day && <LessonPath s={s} act={act} id={s.cur} day={day} />}
 
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
-        <div className="flex flex-col">
-          {showVideo ? (
+      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-x-8">
+        <div className="flex flex-col lg:col-start-1 lg:row-start-1">
+          {watching ? (
             <>
+              {day && <div className="px-5 lg:px-0"><DayHeader s={s} day={day} /></div>}
               <Video s={s} act={act} subs={subsOn} bar={<VideoBar s={s} act={act} ui={menu} />} />
               <div className="px-5 lg:px-0">
                 <div className="hidden lg:block"><Scrubber s={s} act={act} /></div>
@@ -298,10 +318,10 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
               </div>
             </>
           ) : (
-            <div className="px-5 lg:px-0">{lp.started ? <YourCall s={s} act={act} id={s.cur} day={day!} /> : <DayStart s={s} act={act} id={s.cur} day={day!} />}</div>
+            <div className="px-5 pt-1 lg:px-0"><LessonStage s={s} act={act} id={s.cur} day={day!} /></div>
           )}
           <div className="px-5 lg:px-0">
-            <div className={clsx("lg:hidden", !showVideo && "mt-4")}>
+            <div className="lg:hidden">
               <h3 className="m-0 mb-0.5 text-[22px] tracking-[-0.02em]">{c.title}</h3>
               <div className="mb-1 text-[13px] text-sd-n-700">{pos} · {c.dur}</div>
             </div>
@@ -309,30 +329,23 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
               <div><h2 className="m-0 text-[30px] tracking-[-0.02em]">{c.title}</h2><div className="text-sm text-sd-n-700">{pos} · {c.dur}</div></div>
               {done && <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>}
             </div>
-            {day && lp.watched && !lp.read && !lp.post && (
-              <button type="button" onClick={() => goTo("reveal", 0)} className="sd-a-in mt-4 flex w-full cursor-pointer items-center justify-between gap-3 bg-sd-ink px-4 py-3 text-left text-sd-bg">
-                <span className="text-sm font-extrabold">Video done. Next: what really happens</span><Icon name="down" size={18} />
-              </button>
-            )}
-            {day && showVideo && <Practice s={s} act={act} id={s.cur} day={day} />}
           </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-4 lg:mt-0">
-        <div data-tour="tabs" className="flex flex-col lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
+        <div data-tour="tabs" className="mt-4 flex flex-col lg:col-start-2 lg:row-start-1 lg:mt-0 lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
           <Segmented
-            value={s.ptab === "discuss" ? "notes" : s.ptab}
-            options={tabs}
+            value={s.ptab}
+            options={day ? tabs : tabs.filter(([v]) => v !== "qna")}
             onChange={(v) => act((p) => ({ ...p, ptab: v }))}
             className="mx-5 lg:mx-0 lg:border-0 lg:border-b-2"
-            itemClass="px-3 py-[9px] text-[13px] lg:px-2.5 lg:py-[11px] lg:text-xs"
+            itemClass="px-1 py-[9px] text-center text-[12px] sm:px-2 sm:text-[13px] lg:px-1.5 lg:py-[11px] lg:text-xs"
           />
-          {s.ptab !== "transcript" && s.ptab !== "lessons" && <Notes s={s} act={act} />}
+          {s.ptab === "lessons" && <CourseLessons s={s} act={act} />}
+          {s.ptab === "qna" && day && <Community key={s.cur} lesson={s.cur} day={day} lang={s.lang} />}
+          {s.ptab === "notes" && <Notes s={s} act={act} />}
           {s.ptab === "transcript" && <Transcript s={s} act={act} />}
-          {s.ptab === "lessons" && <ModuleLessons s={s} act={act} />}
         </div>
-        {day && <DeeperBox s={s} day={day} />}
-        </div>
+
       </div>
 
       {done && (

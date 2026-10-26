@@ -275,6 +275,14 @@ const en: DayCopy = {
     },
   ],
 
+  faq: [
+    { q: "If indexes make reads fast, why not index every column?", a: "Because every index is another structure to update on every insert, update and delete, plus disk and memory. Index what you filter and sort by; the rest is a tax you pay on every write and never collect on." },
+    { q: "What order do columns go in a composite index?", a: "Equality first, range last. For WHERE brand = ? AND price < ? the index is (brand, price). Put price first and the database can no longer use the brand part of it." },
+    { q: "Will read replicas fix slow writes?", a: "No. Replicas copy the primary’s writes — they add read capacity and nothing else. Slow writes are fixed with better indexes, smaller transactions, or partitioning the data." },
+    { q: "What does replication lag break first?", a: "Read-your-writes. Someone saves a new address, the next page reads a replica that has not caught up, and they see the old one and save it again. Send reads that follow a write to the primary for a few seconds." },
+    { q: "Why read the query plan before adding hardware?", a: "Because a missing index is usually a hundred times the difference, and a bigger machine is maybe two. The plan tells you whether the database is scanning the whole table or jumping straight to the rows." },
+  ],
+
   interview: [
     "Clarify: how read-heavy is it, which filters and sorts, how fresh must it be?",
     "Read the query plan; add composite indexes that match the filters, equality columns first.",
@@ -568,6 +576,14 @@ const hi: DayCopy = {
       say: "\"Chhota cache time, change pe cache clear, aur checkout pe primary ka price.\"",
       deeper: "Day 3",
     },
+  ],
+
+  faq: [
+    { q: "Index se reads tez hote hain toh har column pe index kyun na lagayein?", a: "Kyunki har index ek aur structure hai jo har insert, update aur delete pe update hota hai, upar se disk aur memory. Jinpe filter aur sort karte ho unpe index lagao; baaki har write pe lagne wala tax hai jiska fayda kabhi nahi milta." },
+    { q: "Composite index mein columns ka order kya ho?", a: "Equality pehle, range baad mein. WHERE brand = ? AND price < ? ke liye index (brand, price) hoga. Price pehle rakh diya toh database brand wala hissa use hi nahi kar paata." },
+    { q: "Read replicas se slow writes theek honge?", a: "Nahi. Replicas primary ke writes copy karte hain — woh sirf read capacity badhate hain, aur kuch nahi. Slow writes behtar indexes, chhote transactions, ya partitioning se theek hote hain." },
+    { q: "Replication lag sabse pehle kya todta hai?", a: "Read-your-writes. Kisi ne naya address save kiya, agla page aise replica se padhta hai jo abhi peeche hai, usey purana dikhta hai aur woh dobara save kar deta hai. Write ke turant baad wali reads kuch second ke liye primary pe bhejo." },
+    { q: "Hardware badhane se pehle query plan kyun padhein?", a: "Kyunki missing index aam taur pe sau guna ka farak hai, aur badi machine shayad do guna. Plan batata hai ki database poori table scan kar raha hai ya seedha rows pe ja raha hai." },
   ],
 
   interview: [
