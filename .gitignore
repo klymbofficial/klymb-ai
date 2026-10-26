@@ -41,5 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# lesson media — large binaries, kept in Cloudflare R2, not here.
+# git stores every version of an mp4 whole, so a re-encode is a permanent
+# new copy. See src/lib/media.ts; upload with `npm run media:upload`.
+/media
+
 # local editor / agent tooling
 .claude/

@@ -3,6 +3,7 @@
  * Every claim about Flipkart is from the public sources in `sources`; keep it that way.
  */
 
+import { posterUrl, videoUrl } from "@/lib/media";
 import type { Day, DayCopy } from "./types";
 
 const en: DayCopy = {
@@ -661,8 +662,8 @@ export const dayOne: Day = {
     { label: "BOOM: Flipkart issues apology for Big Billion Day fiasco (2014)", href: "https://www.boomlive.in/flipkart-issues-apology-big-billion-day-fiasco/" },
   ],
   video: {
-    src: "/videos/system-design/day-1.mp4", poster: "/videos/system-design/day-1-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-1-wide.mp4", poster: "/videos/system-design/day-1-wide-poster.jpg" },
+    src: videoUrl("system-design/day-1.mp4"), poster: posterUrl("system-design/day-1-poster.jpg"), minutes: 3, lang: "Hinglish",
+    wide: { src: videoUrl("system-design/day-1-wide.mp4"), poster: posterUrl("system-design/day-1-wide-poster.jpg") },
   },
   prevHref: "/system-design/day-0",
 };

@@ -98,6 +98,46 @@ development only, for React Refresh.
 
 Ethical guardrails used throughout: no fake testimonials, learner counts, seat counters or countdowns, and no guaranteed-job claims.
 
+## Lesson media
+
+Lesson videos are **not** in this repo. Git stores an mp4 whole and cannot
+delta-compress it, so every re-encode leaves a permanent multi-megabyte blob
+in history; at 21 days of portrait and wide cuts that is roughly a third of a
+gigabyte in every clone. They live in a private Cloudflare R2 bucket.
+
+```bash
+# put the new cuts in media/system-design/, then
+npm run media:upload                      # everything under media/
+npm run media:upload system-design/day-2  # or just one day's keys
+```
+
+`media/` is gitignored and is the local staging area, not the source of truth —
+the bucket is. A new day needs no commit and no redeploy, only an upload.
+
+| Piece | Where |
+| --- | --- |
+| `src/lib/media.ts` | Builds the two kinds of URL: `videoUrl()` through the app, `posterUrl()` off the bucket |
+| `src/lib/media-sign.ts` | SigV4 query signing, checked against AWS's published example |
+| `src/app/api/media/[...key]` | The only way in: checks the key, decides access, then redirects to a URL signed for the hour |
+| `scripts/upload-media.ts` | `npm run media:upload` |
+
+Videos go through `/api/media` so the bucket can stay private: the route checks
+the key, decides whether the request may have the file, then redirects to a
+signed URL. From there the browser sends its own range requests straight to R2,
+so seeking costs nothing after the first hop.
+
+That decision — `allowed()` in the route — currently lets **everyone** through,
+and that is deliberate: every System Design lesson is free, `tracks.ts` prices
+all tracks at 0, the course app has no payment gate, and sign-in is offered
+only to save progress, so a check here would lock out the people the course is
+for. What the route buys while the gate is open is that it stays the only way
+in — nothing in the bucket is addressable around it — so when days 2-20 become
+paid, `allowed()` is the single place that has to learn about it and no
+already-public URL survives the change.
+
+Posters skip all of this and are served straight off the bucket's public
+domain; a thumbnail is not the product.
+
 ## Project structure
 
 ```

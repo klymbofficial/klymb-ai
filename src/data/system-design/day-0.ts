@@ -2,6 +2,7 @@
  * Day 0 of "System Design in 21 Days": start here. What system design is, told as
  * Raju's dhaba growing up and then mapped onto a real app. No company claims.
  */
+import { posterUrl, videoUrl } from "@/lib/media";
 import type { Day, DayCopy } from "./types";
 
 const en: DayCopy = {
@@ -537,8 +538,8 @@ export const dayZero: Day = {
   copy: { en, hi },
   sources: [],
   video: {
-    src: "/videos/system-design/day-0.mp4", poster: "/videos/system-design/day-0-poster.jpg", minutes: 3, lang: "Hinglish",
-    wide: { src: "/videos/system-design/day-0-wide.mp4", poster: "/videos/system-design/day-0-wide-poster.jpg" },
+    src: videoUrl("system-design/day-0.mp4"), poster: posterUrl("system-design/day-0-poster.jpg"), minutes: 3, lang: "Hinglish",
+    wide: { src: videoUrl("system-design/day-0-wide.mp4"), poster: posterUrl("system-design/day-0-wide-poster.jpg") },
   },
   nextHref: "/system-design/day-1",
 };
