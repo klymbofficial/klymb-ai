@@ -48,7 +48,7 @@ function Questions({ questions, lang, onDone }: { questions: Question[]; lang: L
   const go = (n: number[]) => (last ? onDone(n) : setI(i + 1));
   const anim = i % 2 ? "sd-a-side" : "sd-a-side-b";
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <span className="sd-kicker text-sd-accent-700">{ui.kicker}</span>
         <span className="text-[15px] font-extrabold">{i + 1} / {questions.length}</span>
@@ -79,7 +79,7 @@ function Questions({ questions, lang, onDone }: { questions: Question[]; lang: L
           })}
         </div>
       </div>
-      <div className="mt-1 flex gap-2">
+      <div className="mt-auto flex gap-2 pt-4">
         <button type="button" onClick={() => go(picks)} className="sd-btn sd-btn-secondary h-[52px] w-24 justify-start">{ui.skip}</button>
         <button type="button" onClick={() => go(picks)} disabled={picks[i] === undefined} className="sd-btn sd-btn-primary h-[52px] flex-1 justify-between text-base lg:max-w-[260px]">
           {last ? ui.finish : ui.next}<Icon name="arrowR" />
@@ -188,7 +188,7 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
     );
   } else {
     content = (
-    <div className="flex flex-col gap-3.5 rounded-xl bg-sd-surface p-4 lg:p-5">
+    <div className="my-auto flex flex-col gap-3.5 rounded-xl bg-sd-surface p-4 lg:my-0 lg:p-5">
       <span className="sd-kicker text-sd-accent-700">{ui.kicker}</span>
       <h3 className="m-0 text-[26px] leading-[1.05] tracking-[-0.03em] lg:text-[32px]">{ui.title}</h3>
       <p className="m-0 text-[15px] text-pretty text-sd-n-800">{ui.intro(title)}</p>
