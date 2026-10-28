@@ -17,7 +17,7 @@ async function send(method: "POST" | "DELETE", url: string, body?: unknown): Pro
     const j = (await res.json().catch(() => null)) as { error?: string } | null;
     return j?.error ?? "Something went wrong. Try again.";
   } catch {
-    return "You look offline. Try again when you’re back.";
+    return navigator.onLine ? "Couldn’t reach the server. Try again in a minute." : "You look offline. Try again when you’re back.";
   }
 }
 
@@ -109,7 +109,8 @@ function Thread({ q, feed, onReply, onRemove }: { q: QnaQuestion; feed: QnaFeed;
  */
 export function Community({ lesson, day, lang }: { lesson: string; day: Day; lang: "en" | "hi" }) {
   const [feed, setFeed] = useState<QnaFeed | null>(null);
-  const [failed, setFailed] = useState(false);
+  /** What went wrong, in the server's own words where it gave them: "offline" is a guess, and usually the wrong one. */
+  const [failed, setFailed] = useState<string | null>(null);
   // Bumped after a post or a removal, so the feed reloads straight away rather than on the next tick.
   const [version, setVersion] = useState(0);
   const reload = () => setVersion((v) => v + 1);
@@ -118,9 +119,13 @@ export function Community({ lesson, day, lang }: { lesson: string; day: Day; lan
   useEffect(() => {
     let live = true;
     const load = () => fetch(url, { cache: "no-store" })
-      .then((res) => (res.ok ? (res.json() as Promise<QnaFeed>) : Promise.reject(new Error(String(res.status)))))
-      .then((f) => { if (live) { setFeed(f); setFailed(false); } })
-      .catch(() => { if (live) setFailed(true); });
+      .then(async (res) => {
+        const body = (await res.json().catch(() => null)) as (QnaFeed & { error?: string }) | null;
+        if (!res.ok) throw new Error(body?.error || "Couldn’t load the questions. Try again in a minute.");
+        return body as QnaFeed;
+      })
+      .then((f) => { if (live) { setFeed(f); setFailed(null); } })
+      .catch((e: Error) => { if (live) setFailed(navigator.onLine ? e.message : "You look offline. The questions will load when you’re back."); });
     load();
     const id = window.setInterval(() => { if (document.visibilityState === "visible") load(); }, REFRESH_MS);
     return () => { live = false; window.clearInterval(id); };
@@ -141,7 +146,7 @@ export function Community({ lesson, day, lang }: { lesson: string; day: Day; lan
   return (
     <div className="flex flex-col px-5 py-3.5 lg:max-h-[560px] lg:overflow-y-auto lg:px-3.5 lg:pt-3">
       {!feed && !failed && <div className="py-3 text-[13px] text-sd-n-700">Loading questions…</div>}
-      {failed && !feed && <div className="py-3 text-[13px] text-sd-n-700">Couldn’t load the questions. They’ll appear when you’re back online.</div>}
+      {failed && !feed && <div role="alert" className="py-3 text-[13px] text-sd-n-700">{failed}</div>}
       {feed && (feed.canPost
         ? <Composer placeholder="Ask a question about this lesson" cta="Ask" onPost={(t) => post(t)} />
         : (
