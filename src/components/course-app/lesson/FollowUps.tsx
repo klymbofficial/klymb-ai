@@ -48,7 +48,7 @@ export function FollowUps({ items, lang, onDone }: { items: FollowUp[]; lang: La
   }
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       <div className="flex items-center justify-between">
         <span className="sd-kicker text-sd-accent-700">{ui.label} · {i + 1} / {items.length}</span>
         <span className="flex gap-1" aria-hidden="true">
@@ -62,12 +62,12 @@ export function FollowUps({ items, lang, onDone }: { items: FollowUp[]; lang: La
       </div>
 
       {!open ? (
-        <div className="mt-4 flex flex-col items-start gap-3">
+        <div className="mt-auto flex flex-col items-start gap-3 pt-4">
           <span className="text-sm text-sd-n-800">{ui.think}</span>
           <button type="button" onClick={() => setOpen(true)} className="sd-btn sd-btn-secondary h-11">{ui.show}</button>
         </div>
       ) : (
-        <div className="sd-a-in mt-4 flex flex-col gap-3" style={{ animationDuration: ".35s" }}>
+        <div className="sd-a-in mt-auto flex flex-col gap-3 pt-4" style={{ animationDuration: ".35s" }}>
           <div className="border-t-2 border-sd-divider">
             {f.answer.map((a, k) => (
               <div key={a} className="grid grid-cols-[32px_1fr] gap-2.5 border-b border-sd-divider py-2.5 text-[15px] leading-[1.45]">

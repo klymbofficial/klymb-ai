@@ -125,7 +125,7 @@ export function DayHeader({ s, day }: { s: CourseState; day: Day }) {
 /** The step on show: its number and name, then the step itself. */
 function Step({ n, title, sub, children }: { n: number; title: string; sub?: string; children?: ReactNode }) {
   return (
-    <section className="sd-a-in flex flex-col" aria-label={title}>
+    <section className="sd-a-in flex flex-1 flex-col" aria-label={title}>
       <div className="grid grid-cols-[40px_1fr] items-start gap-2.5 border-b border-sd-divider pb-3">
         <span className="text-[22px] leading-none font-extrabold text-sd-accent">{pad(n)}</span>
         <div className="flex flex-col">
@@ -133,7 +133,8 @@ function Step({ n, title, sub, children }: { n: number; title: string; sub?: str
           {sub && <span className="text-xs text-sd-n-700">{sub}</span>}
         </div>
       </div>
-      <div className="pt-4">{children}</div>
+      {/* The step owns the phone's screen, so its body stretches and short steps drop their action to the foot of it. */}
+      <div className="flex flex-1 flex-col pt-4">{children}</div>
     </section>
   );
 }
@@ -273,7 +274,7 @@ export function LessonStage({ s, act, id, day }: { s: CourseState; act: Act; id:
   const nextLesson = ALL_IDS[ALL_IDS.indexOf(id) + 1];
 
   return (
-    <div data-tour="practice" className="flex flex-col">
+    <div data-tour="practice" className="flex flex-1 flex-col">
       {at === "reveal" && (
         <Step n={num} title={ui.reveal} sub={c.revealSub}>
           <Reveal c={c} ui={ui} read={!!p.read || !!p.post} onRead={() => set({ read: true }, "prove")} />

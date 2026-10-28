@@ -34,7 +34,7 @@ export function EstimateQuiz({ items, lang, onDone }: { items: Estimate[]; lang:
   const next = () => { if (last) onDone(answers); else { setI(i + 1); setDraft(""); } };
 
   return (
-    <div key={q.id} className="sd-a-side flex flex-col gap-3">
+    <div key={q.id} className="sd-a-side flex flex-1 flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="sd-kicker text-sd-accent-700">{ui.label} · {i + 1} / {items.length}</span>
         <span className="flex gap-1" aria-hidden="true">
@@ -45,20 +45,22 @@ export function EstimateQuiz({ items, lang, onDone }: { items: Estimate[]; lang:
         {q.given.map((g) => <li key={g}>{g}</li>)}
       </ul>
       <h3 className="m-0 text-[22px] tracking-[-0.02em] lg:text-[26px]">{q.prompt}</h3>
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="text"
-          inputMode="decimal"
-          disabled={checked}
-          value={checked ? fmtN(mine) : draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") check(); }}
-          placeholder={ui.placeholder}
-          aria-label={`${q.prompt} (${q.unit})`}
-          className="sd-input min-h-12 w-44 text-lg font-extrabold"
-        />
-        <span className="text-sm font-semibold text-sd-n-700">{q.unit}</span>
-        {!checked && <button type="button" onClick={check} disabled={!draft.trim() || !Number.isFinite(value)} className="sd-btn sd-btn-primary h-12">{ui.check}</button>}
+      <div className="mt-auto flex flex-col gap-2 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            inputMode="decimal"
+            disabled={checked}
+            value={checked ? fmtN(mine) : draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") check(); }}
+            placeholder={ui.placeholder}
+            aria-label={`${q.prompt} (${q.unit})`}
+            className="sd-input min-h-12 min-w-0 flex-1 text-lg font-extrabold sm:w-44 sm:flex-none"
+          />
+          <span className="flex-none text-sm font-semibold text-sd-n-700">{q.unit}</span>
+        </div>
+        {!checked && <button type="button" onClick={check} disabled={!draft.trim() || !Number.isFinite(value)} className="sd-btn sd-btn-primary h-12 justify-center sm:w-auto">{ui.check}</button>}
       </div>
       {checked && (
         <div className="sd-a-in flex flex-col gap-3" style={{ animationDuration: ".3s" }}>

@@ -308,7 +308,7 @@ export function defaultState(now = Date.now()): CourseState {
 /** Screens the app can open on with `?start=`, matching the design canvas frames. */
 export const START_SCREENS = [
   "home", "course", "player", "post", "q", "results", "progress", "qc", "mini", "transcript", "exit",
-  "commit", "commitdone", "streak", "lesson", "lessonpass", "lessonfail", "retake",
+  "commit", "commitdone", "streak", "lesson", "lessonpass", "lessonfail", "retake", "estimate",
   "splash", "onboard", "onboard2", "profile", "notifs", "notifsempty", "downloads", "dlempty", "discuss", "recap", "offline", "videoerr",
 ] as const;
 export type StartScreen = (typeof START_SCREENS)[number];
@@ -337,6 +337,7 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     case "lessonpass": return atCheck({ post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 });
     case "lessonfail": return atCheck({ check: 40, checkPicks: [0, 1, 1, 0, 2], tries: 1, failed: true });
     case "retake": return atCheck({ check: 40, checkPicks: [0, 1, 1, 0, 2], tries: 1, failed: true, rewatched: true });
+    case "estimate": return { ...atCheck({ post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 }), stage: "estimate" };
     case "q": {
       const i = Math.min(Math.max(opts.q ?? 0, 0), QUESTIONS.length - 1);
       const answers: Record<number, Answer> = {};

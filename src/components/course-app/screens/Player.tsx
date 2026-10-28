@@ -317,13 +317,16 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
               </div>
             </>
           ) : (
-            <div className="px-5 pt-1 lg:px-0"><LessonStage s={s} act={act} id={s.cur} day={day!} /></div>
+            <div className="sd-step-screen flex flex-col px-5 pt-1 lg:px-0"><LessonStage s={s} act={act} id={s.cur} day={day!} /></div>
           )}
           <div className="px-5 lg:px-0">
-            <div className="lg:hidden">
-              <h3 className="m-0 mb-0.5 text-[22px] tracking-[-0.02em]">{c.title}</h3>
-              <div className="mb-1 text-[13px] text-sd-n-700">{pos} · {c.dur}</div>
-            </div>
+            {/* On a phone the step already fills the screen, and its header says where you are; the video needs the title. */}
+            {watching && (
+              <div className="lg:hidden">
+                <h3 className="m-0 mb-0.5 text-[22px] tracking-[-0.02em]">{c.title}</h3>
+                <div className="mb-1 text-[13px] text-sd-n-700">{pos} · {c.dur}</div>
+              </div>
+            )}
             <div className="mt-5 hidden flex-wrap items-end justify-between gap-4 border-t-2 border-sd-divider pt-4 lg:flex">
               <div><h2 className="m-0 text-[30px] tracking-[-0.02em]">{c.title}</h2><div className="text-sm text-sd-n-700">{pos} · {c.dur}</div></div>
               {done && <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>}
