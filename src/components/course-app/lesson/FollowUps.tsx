@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import type { FollowUp, Lang } from "@/data/system-design/types";
+import { pad } from "@/lib/course-app";
 import { Icon } from "../icons";
 
 const UI = {
@@ -15,29 +16,31 @@ const UI = {
  * One at a time: think, reveal the model answer, then mark honestly whether
  * you'd have said it. The marks are the learner's own weak-spot list.
  */
-export function FollowUps({ items, lang, onDone }: { items: FollowUp[]; lang: Lang; onDone: (marks: boolean[]) => void }) {
+export function FollowUps({ items, lang, idx, onIdx, onDone }: {
+  items: FollowUp[]; lang: Lang; idx: number; onIdx: (i: number) => void; onDone: (marks: boolean[]) => void;
+}) {
   const ui = UI[lang];
-  const [i, setI] = useState(0);
   const [open, setOpen] = useState(false);
   const [marks, setMarks] = useState<boolean[]>([]);
+  const i = Math.min(idx, items.length - 1);
   const f = items[i];
   const finished = marks.length === items.length;
 
   const mark = (had: boolean) => {
     const next = [...marks, had];
     setMarks(next);
-    if (i < items.length - 1) { setI(i + 1); setOpen(false); }
+    if (i < items.length - 1) { setOpen(false); onIdx(i + 1); }
   };
 
   if (finished) {
     const n = marks.filter(Boolean).length;
     return (
       <div className="sd-a-in flex flex-col gap-3">
-        <span className="bg-sd-ink px-3.5 py-3 text-[15px] font-extrabold text-sd-bg">{ui.result(n, items.length)}</span>
+        <span className="rounded-xl bg-sd-ink px-3.5 py-3 text-[15px] font-extrabold text-sd-bg">{ui.result(n, items.length)}</span>
         <div className="border-t-2 border-sd-divider">
           {items.map((x, k) => (
             <div key={x.q} className="grid grid-cols-[28px_1fr] items-start gap-2.5 border-b border-sd-divider py-2.5 text-sm">
-              <span className={clsx("flex size-6 items-center justify-center border-[1.5px]", marks[k] ? "border-sd-ink bg-sd-ink text-sd-bg" : "border-sd-accent text-sd-accent")}><Icon name={marks[k] ? "check" : "x"} size={14} stroke={3} /></span>
+              <span className={clsx("flex size-6 items-center justify-center rounded-md border-[1.5px]", marks[k] ? "border-sd-ink bg-sd-ink text-sd-bg" : "border-sd-accent text-sd-accent")}><Icon name={marks[k] ? "check" : "x"} size={14} stroke={3} /></span>
               <span>{x.q}</span>
             </div>
           ))}
@@ -50,15 +53,15 @@ export function FollowUps({ items, lang, onDone }: { items: FollowUp[]; lang: La
   return (
     <div>
       <div className="flex items-center justify-between">
-        <span className="sd-kicker text-sd-accent-700">{ui.label} · {i + 1} / {items.length}</span>
+        <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase text-sd-accent-700">{ui.label} · {i + 1} / {items.length}</span>
         <span className="flex gap-1" aria-hidden="true">
           {items.map((x, k) => <span key={x.q} className={clsx("h-[5px] w-6 rounded-full", k < i ? "bg-sd-accent" : k === i ? "bg-sd-ink" : "bg-sd-n-300")} />)}
         </span>
       </div>
 
       <div key={i} className="sd-a-side mt-3 grid grid-cols-[40px_1fr] gap-2.5">
-        <span aria-hidden="true" className="flex size-10 items-center justify-center bg-sd-ink text-sd-bg"><Icon name="msg" /></span>
-        <p className="m-0 bg-sd-ink px-4 py-3 text-[17px] leading-[1.35] font-extrabold text-sd-bg">{f.q}</p>
+        <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-lg bg-sd-ink text-sd-bg"><Icon name="msg" /></span>
+        <p className="m-0 rounded-[4px_12px_12px_12px] bg-sd-ink px-4 py-3 text-[17px] leading-[1.35] font-extrabold text-sd-bg">{f.q}</p>
       </div>
 
       {!open ? (
@@ -71,12 +74,12 @@ export function FollowUps({ items, lang, onDone }: { items: FollowUp[]; lang: La
           <div className="border-t-2 border-sd-divider">
             {f.answer.map((a, k) => (
               <div key={a} className="grid grid-cols-[32px_1fr] gap-2.5 border-b border-sd-divider py-2.5 text-[15px] leading-[1.45]">
-                <span className="font-extrabold text-sd-accent">{String(k + 1).padStart(2, "0")}</span><span>{a}</span>
+                <span className="font-extrabold text-sd-accent">{pad(k + 1)}</span><span>{a}</span>
               </div>
             ))}
           </div>
-          <div className="border-l-[3px] border-sd-accent bg-sd-accent-100 px-4 py-3">
-            <span className="sd-kicker text-sd-accent-700">{ui.say}</span>
+          <div className="rounded-r-xl border-l-[3px] border-sd-accent bg-sd-accent-100 px-4 py-3">
+            <span className="text-[11px] font-extrabold tracking-[0.1em] uppercase text-sd-accent-700">{ui.say}</span>
             <p className="m-0 mt-1 text-[15px] font-semibold">{f.say}</p>
           </div>
           {f.deeper && <span className="text-xs text-sd-n-700">{ui.deeper}: {f.deeper}</span>}

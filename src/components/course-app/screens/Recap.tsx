@@ -39,7 +39,7 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
   const n = moduleIds(rm).length;
 
   return (
-    <div className="sd-a-screen box-border flex flex-1 max-w-[960px] flex-col gap-5 px-5 pb-6 lg:flex-none lg:p-0">
+    <div className="sd-a-screen box-border flex flex-1 max-w-[960px] flex-col gap-5 px-5 pb-6 lg:p-0">
       <div className="-mx-2 lg:mx-0"><BackButton kind="close" onClick={() => act((p) => ({ ...p, screen: "course", tab: "course" }))} /></div>
       <div {...parallax} className="sd-a-pop flex flex-col gap-2 overflow-hidden rounded-xl bg-sd-accent p-5 text-sd-bg lg:p-7" style={{ animationDuration: ".6s" }}>
         <span className="sd-kicker">Module {pad(rm + 1)} complete</span>
@@ -63,11 +63,13 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
       </div>
       {badge && (
         <div className="sd-a-pop flex items-center gap-3 rounded-xl bg-sd-ink px-3.5 py-3 text-sd-bg" style={{ animationDelay: "600ms" }}>
-          <Icon name={badge.icon} size={22} /><span className="text-[15px] font-extrabold">Badge earned: {badge.name}</span>
+          <span aria-hidden="true" className="size-11 flex-none rounded-full p-[3px]" style={{ background: "conic-gradient(from 210deg,#fbdcdd,#c4454b,#5a0307,#f0868b,#fbdcdd)" }}>
+            <span className="flex size-full items-center justify-center rounded-full text-white" style={{ background: "radial-gradient(circle at 35% 30%,#c4454b,#5a0307 72%)" }}><Icon name={badge.icon} size={20} /></span>
+          </span><span className="text-[15px] font-extrabold">Badge earned: {badge.name}</span>
         </div>
       )}
       {badge && <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} className="sd-btn sd-btn-secondary min-h-11 self-start px-4">Download and share your badge <Icon name="arrowR" size={16} /></button>}
-      <div className="mt-auto flex flex-col gap-2 lg:mt-0 lg:max-w-[440px]">
+      <div className="mt-auto flex flex-col gap-2 lg:max-w-[280px]">
         <button type="button" onClick={goNext} className="sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-[15px]">{next ? `Start Module ${pad(rm + 2)}: ${next.title}` : "Take the post-assessment"}<Icon name="arrowR" /></button>
         <button type="button" onClick={review} className="sd-btn sd-btn-secondary sd-btn-block h-12">Review your notes</button>
       </div>

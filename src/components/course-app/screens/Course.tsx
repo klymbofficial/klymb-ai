@@ -21,16 +21,15 @@ export function moduleViews(s: CourseState) {
   });
 }
 
-/** Where the lesson checks stand: the latest one attempted, or the first lesson if none yet. */
-export function lastCheckLesson(s: CourseState) {
-  const scored = checkScores(s);
-  return scored.length ? scored[scored.length - 1].id : ALL_IDS[0];
+/** The next lesson still to finish, which is what "Lesson checks" opens. */
+export function firstOpenLesson(s: CourseState) {
+  return ALL_IDS.find((id) => !s.done.includes(id) && !isSoon(id)) ?? ALL_IDS[0];
 }
 
 function AssessmentRow({ kind, s, act }: { kind: "lessons" | "final"; s: CourseState; act: Act }) {
   const lessons = kind === "lessons";
   const scored = checkScores(s);
-  const go = () => act((p) => (lessons ? openLesson(p, lastCheckLesson(p)) : p.post ? { ...p, screen: "results", lastKind: "post" } : startQuiz(p, "post")));
+  const go = () => act((p) => (lessons ? openLesson(p, firstOpenLesson(p)) : p.post ? { ...p, screen: "results", lastKind: "post" } : startQuiz(p, "post")));
   const sub = lessons
     ? `${scored.filter((x) => x.passed).length} passed · ${Math.round(PASS_MARK * 100)}% to pass`
     : s.post ? `Done · ${pct(s.post)}` : "6 questions across the course · after Day 21";
@@ -38,10 +37,10 @@ function AssessmentRow({ kind, s, act }: { kind: "lessons" | "final"; s: CourseS
     <button type="button" onClick={go} className="flex cursor-pointer items-center gap-3 rounded-lg bg-sd-surface p-3.5 text-left hover:bg-sd-n-300">
       <span className={clsx("flex size-9 flex-none items-center justify-center rounded-lg text-sd-bg", lessons ? "bg-sd-ink" : "bg-sd-accent")}><Icon name={lessons ? "target" : "trending"} /></span>
       <span className="flex flex-1 flex-col">
-        <span className="text-[15px] font-extrabold">{lessons ? "Lesson assessments" : "Final assessment"}</span>
+        <span className="text-[15px] font-extrabold">{lessons ? "Lesson checks" : "Final assessment"}</span>
         <span className="text-xs text-sd-n-700">{sub}</span>
       </span>
-      {lessons ? <span className="sd-tag sd-tag-neutral">{checkAverage(s)} avg</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
+      {lessons ? <span className="sd-tag sd-tag-neutral rounded-md">{checkAverage(s)} avg</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
     </button>
   );
 }
@@ -56,7 +55,7 @@ export function Course({ s, act }: { s: CourseState; act: Act }) {
       <div className="contents lg:block">
         <div className="order-1 lg:border-b-2 lg:border-sd-divider lg:pb-4">
           <h2 className="m-0 text-[30px] tracking-[-0.02em] lg:text-[42px] lg:tracking-[-0.03em]">Course</h2>
-          <div className="text-[13px] text-sd-n-700 lg:text-sm">System Design in 21 Days · Day 0 + {LESSON_COUNT - 1} days · {MODULES.length} modules</div>
+          <div className="text-[13px] text-sd-n-700 lg:text-sm">{LESSON_COUNT} lessons · {MODULES.length} modules</div>
         </div>
         <div className="order-4 border-t-2 border-sd-divider lg:border-t-0">
           {mods.map((m) => {

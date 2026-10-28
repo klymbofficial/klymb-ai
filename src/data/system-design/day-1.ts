@@ -7,17 +7,17 @@ import type { Day, DayCopy } from "./types";
 
 const en: DayCopy = {
   hookLines: [
-    "Flipkart's first Big Billion Day.",
+    "Flipkart’s first Big Billion Day.",
     "The site buckled. Errors. Deals sold out in seconds.",
     "Then both founders emailed every customer to say sorry.",
   ],
-  question: "The sale is coming back next year. You're the engineer. What do you do?",
+  question: "The sale is coming back next year. You’re the engineer. What do you do?",
 
   pre: [
     {
       id: "pre-1",
       scenario: "The sale is 2 weeks away. Traffic at midnight is forecast to hit ~8x normal.",
-      prompt: "What's the FIRST thing you do?",
+      prompt: "What’s the FIRST thing you do?",
       choices: [
         {
           text: "Put capacity above the forecast in place early, and test at even more load than that",
@@ -29,8 +29,8 @@ const en: DayCopy = {
           why: "Auto-scaling matters, but new servers take minutes to boot and warm up. The midnight spike arrives in seconds.",
         },
         {
-          text: "Add rate limiting so too many people can't get in",
-          why: "Not wrong, real systems use it. But it's protection, not the plan. Capacity first, then limits.",
+          text: "Add rate limiting so too many people can’t get in",
+          why: "Not wrong, real systems use it. But it’s protection, not the plan. Capacity first, then limits.",
         },
         {
           text: "Get one huge, most powerful server",
@@ -45,7 +45,7 @@ const en: DayCopy = {
       choices: [
         {
           text: "The systems behind them: stock database, payments, warehouse. The weakest link breaks first",
-          why: "A chain is only as strong as its weakest link. Flipkart said as much in 2015: high QPS means nothing if the warehouse can't pack.",
+          why: "A chain is only as strong as its weakest link. Flipkart said as much in 2015: high QPS means nothing if the warehouse can’t pack.",
           best: true,
         },
         {
@@ -65,12 +65,12 @@ const en: DayCopy = {
       choices: [
         {
           text: "Let in as many as you can serve, show the rest a queue / 'please wait' page",
-          why: "That's graceful degradation: the system stays up and the people inside finish their orders. Trade-off: some people wait and a few leave, but nobody gets a broken checkout.",
+          why: "That’s graceful degradation: the system stays up and the people inside finish their orders. Trade-off: some people wait and a few leave, but nobody gets a broken checkout.",
           best: true,
         },
         {
           text: "Let everyone in and see what happens",
-          why: "Under overload everything gets slow for everyone, then errors. That's what happened in 2014.",
+          why: "Under overload everything gets slow for everyone, then errors. That’s what happened in 2014.",
         },
         {
           text: "Add more servers right now",
@@ -87,7 +87,7 @@ const en: DayCopy = {
     { when: "~4 months before", what: "Preparation starts. Most of the last two months before code freeze go to infrastructure." },
     { when: "~1 month of tests", what: "Stress runs at 5x the projected numbers, across all systems." },
     { when: "Before launch", what: "Systems throttled slightly below the limits they had survived in tests." },
-    { when: "On the order path", what: "An async queue so no order message is lost, and orders piped by each downstream system's capacity." },
+    { when: "On the order path", what: "An async queue so no order message is lost, and orders piped by each downstream system’s capacity." },
     { when: "When things fail", what: "Fallbacks, hot-standby nodes, replication. Sold-out items marked out of stock immediately." },
     { when: "During the sale", what: "Recalibrated alerts, live dashboards, playbooks and tiger teams on 24x7 shifts." },
   ],
@@ -124,7 +124,7 @@ const en: DayCopy = {
       prompt: "What kind of load is this?",
       choices: [
         { text: "Predictable: same time every day, known in advance", why: "The spike is fast, but its time is fixed. So capacity should be ready by 9:45.", best: true },
-        { text: "Sudden: it arrives in seconds", why: "Speed doesn't decide the type. Do you know in advance? Yes, 10 AM every day." },
+        { text: "Sudden: it arrives in seconds", why: "Speed doesn’t decide the type. Do you know in advance? Yes, 10 AM every day." },
         { text: "Sudden, because the number of users changes every day", why: "The size varies a little, but the time never does: 10 AM, every day. Known time means predictable, so you can prepare." },
       ],
     },
@@ -134,22 +134,22 @@ const en: DayCopy = {
       prompt: "Best move?",
       choices: [
         {
-          text: "Waiting queue + per-user limit; process bookings at the database's pace",
+          text: "Waiting queue + per-user limit; process bookings at the database’s pace",
           why: "Give the database only what it can handle. Trade-off: people wait in line, but bookings stay correct and fair.",
           best: true,
         },
-        { text: "Send every request to the database, it'll sort it out", why: "An overloaded database gets slow for everyone, and it's the first thing to break." },
-        { text: "Add read replicas of the booking database", why: "Replicas help reads, like searching trains. But a booking is a write and must go to the main database. Copies don't add write capacity." },
+        { text: "Send every request to the database, it’ll sort it out", why: "An overloaded database gets slow for everyone, and it’s the first thing to break." },
+        { text: "Add read replicas of the booking database", why: "Replicas help reads, like searching trains. But a booking is a write and must go to the main database. Copies don’t add write capacity." },
       ],
     },
     {
       id: "post-3",
-      scenario: "A cricketer tweets a small app's link with no warning. 50x traffic in 5 minutes.",
+      scenario: "A cricketer tweets a small app’s link with no warning. 50x traffic in 5 minutes.",
       prompt: "First line of defence?",
       choices: [
         {
           text: "Rate limit + serve what you can from cache + auto-scale on",
-          why: "Sudden load: the time to pre-scale has passed. Protect, degrade, and hold on while you scale. Trade-off: some users see \"try again in a minute\" or a slightly old page, but the app stays up.",
+          why: "Sudden load: the time to pre-scale has passed. Protect, degrade, and hold on while you scale. Trade-off: some users see “try again in a minute” or a slightly old page, but the app stays up.",
           best: true,
         },
         { text: "Pre-scale", why: "Pre-scaling needs advance notice. There was no warning here." },
@@ -162,7 +162,7 @@ const en: DayCopy = {
       prompt: "What did that safety cost, and was it worth it?",
       choices: [
         { text: "A few hours of idle servers; worth it, because a crash costs sales and trust", why: "Pre-scaling trades money for safety. Spare servers for a night are cheap next to a 2014-style apology email. Scale back down after the peak.", best: true },
-        { text: "Nothing: idle servers cost nothing", why: "Cloud servers bill by the hour, busy or not. The cost is real; it's just smaller than the risk." },
+        { text: "Nothing: idle servers cost nothing", why: "Cloud servers bill by the hour, busy or not. The cost is real; it’s just smaller than the risk." },
         { text: "It was a mistake; you should have planned for exactly 6x", why: "Forecasts are never exact. Planning right at the forecast means any surprise knocks you over. Headroom is the point." },
       ],
     },
@@ -195,7 +195,7 @@ const en: DayCopy = {
       unit: "orders",
       answer: 30000,
       tolerance: 0.15,
-      working: ["The queue grows by 1,500 − 1,000 = 500 a second", "500 × 60 = 30,000 waiting", "It only drains once arrivals drop below 1,000/s. Show \"processing\", and add a second provider."],
+      working: ["The queue grows by 1,500 − 1,000 = 500 a second", "500 × 60 = 30,000 waiting", "It only drains once arrivals drop below 1,000/s. Show “processing”, and add a second provider."],
     },
     {
       id: "d1-est-3",
@@ -204,7 +204,7 @@ const en: DayCopy = {
       unit: "Gbps",
       answer: 267,
       tolerance: 0.3,
-      working: ["10 lakh × 2 MB = 20 lakh MB = 2,000 GB in a minute", "2,000 GB ÷ 60 s ≈ 33 GB a second", "× 8 bits ≈ 267 Gbps. That's why images live on a CDN across many cities, not on your servers."],
+      working: ["10 lakh × 2 MB = 20 lakh MB = 2,000 GB in a minute", "2,000 GB ÷ 60 s ≈ 33 GB a second", "× 8 bits ≈ 267 Gbps. That’s why images live on a CDN across many cities, not on your servers."],
     },
   ],
 
@@ -237,7 +237,7 @@ const en: DayCopy = {
 
   design: {
     title: "The 1,000-phone flash sale",
-    brief: "At 12:00 PM a flash sale opens: 1,000 phones at a huge discount. About 10 lakh people are waiting on the page. Design the system from the \"Buy\" tap to the confirmed order.",
+    brief: "At 12:00 PM a flash sale opens: 1,000 phones at a huge discount. About 10 lakh people are waiting on the page. Design the system from the “Buy” tap to the confirmed order.",
     constraints: [
       "10 lakh users, most tapping in the first 10 seconds",
       "Exactly 1,000 phones: never sell 1,001",
@@ -246,17 +246,17 @@ const en: DayCopy = {
     ],
     minChars: 120,
     walkthrough: [
-      { heading: "Requirements and numbers", points: ["Core path: tap Buy → reserve a phone → pay → confirm. Reviews and recommendations can switch off.", "10 lakh taps in ~10 seconds ≈ 1 lakh requests a second. Only 1,000 can win, so 99.9% should get a fast \"sold out\", not a slow error."] },
-      { heading: "Let in only what you can sell", points: ["A waiting room in front admits users in batches, a little more than the stock left.", "Rate limit per user and device, so bots and refresh-spammers don't push out real buyers.", "Serve the sale page from a CDN, so loading it never touches your servers."] },
-      { heading: "Never oversell", points: ["Keep one stock counter in a fast in-memory store and change it atomically: \"reserve if count > 0\" as a single step.", "A reservation holds a phone for, say, 5 minutes. If payment doesn't finish, the phone goes back.", "Once the counter hits 0, answer \"sold out\" from the cache without touching the database."] },
-      { heading: "Payments at the partner's pace", points: ["Only reserved users reach payment: about 1,000 calls, well under 2,000 a second.", "One idempotency key per reservation, so a retry or double tap never charges twice.", "If the partner fails, release the phone, tell the user honestly, and reconcile payments afterwards."] },
-      { heading: "Trade-offs to say out loud", points: ["Exact stock at checkout (correct, slightly slower); a few-seconds-stale \"left\" count on the page (fast).", "A waiting room is less exciting than a free-for-all, but it's fair and it survives.", "Expiring reservations mean a phone can reappear after \"sold out\". Say so in the UI."] },
+      { heading: "Requirements and numbers", points: ["Core path: tap Buy → reserve a phone → pay → confirm. Reviews and recommendations can switch off.", "10 lakh taps in ~10 seconds ≈ 1 lakh requests a second. Only 1,000 can win, so 99.9% should get a fast “sold out”, not a slow error."] },
+      { heading: "Let in only what you can sell", points: ["A waiting room in front admits users in batches, a little more than the stock left.", "Rate limit per user and device, so bots and refresh-spammers don’t push out real buyers.", "Serve the sale page from a CDN, so loading it never touches your servers."] },
+      { heading: "Never oversell", points: ["Keep one stock counter in a fast in-memory store and change it atomically: “reserve if count > 0” as a single step.", "A reservation holds a phone for, say, 5 minutes. If payment doesn’t finish, the phone goes back.", "Once the counter hits 0, answer “sold out” from the cache without touching the database."] },
+      { heading: "Payments at the partner’s pace", points: ["Only reserved users reach payment: about 1,000 calls, well under 2,000 a second.", "One idempotency key per reservation, so a retry or double tap never charges twice.", "If the partner fails, release the phone, tell the user honestly, and reconcile payments afterwards."] },
+      { heading: "Trade-offs to say out loud", points: ["Exact stock at checkout (correct, slightly slower); a few-seconds-stale “left” count on the page (fast).", "A waiting room is less exciting than a free-for-all, but it’s fair and it survives.", "Expiring reservations mean a phone can reappear after “sold out”. Say so in the UI."] },
     ],
     checklist: [
       "I estimated the peak (around 1 lakh requests a second)",
       "I protected the system up front: waiting room, rate limit or CDN",
-      "I used one atomic stock counter, so it can't oversell",
-      "I kept payment calls under the partner's limit",
+      "I used one atomic stock counter, so it can’t oversell",
+      "I kept payment calls under the partner’s limit",
       "I handled retries and double taps (idempotency)",
       "I named at least one trade-off",
     ],
@@ -264,47 +264,47 @@ const en: DayCopy = {
 
   followUps: [
     {
-      q: "\"You planned for 8x. At midnight it’s 15x. What now?\"",
+      q: "“You planned for 8x. At midnight it’s 15x. What now?”",
       answer: [
         "Protect the core path first: browse, cart, payment. Everything else can wait.",
         "Throttle at the tested limit and send the rest to a waiting room or queue, with a clear message.",
         "Switch off non-essential features (recommendations, reviews) to free capacity.",
         "Auto-scaling keeps adding servers in the background; the waiting room holds people until it catches up.",
       ],
-      say: "\"Admit what we can serve, queue the rest with a clear message, and switch off non-essentials to protect checkout while we scale.\"",
+      say: "“Admit what we can serve, queue the rest with a clear message, and switch off non-essentials to protect checkout while we scale.”",
       deeper: "Days 7 and 18",
     },
     {
-      q: "\"Your payment partner can only take 2,000 requests a second. Sale traffic is 10 times that. How do you design around it?\"",
+      q: "“Your payment partner can only take 2,000 requests a second. Sale traffic is 10 times that. How do you design around it?”",
       answer: [
         "Never send more than the partner can take: rate limit the calls to it.",
         "Queue payment requests and process them at the partner’s pace; show the user “processing”.",
         "Add a second payment provider and split traffic between them.",
         "Make every payment attempt idempotent, so a retry never charges twice.",
       ],
-      say: "\"Queue payment calls at the partner’s rate, show a processing state, spread across providers, and make every attempt idempotent.\"",
+      say: "“Queue payment calls at the partner’s rate, show a processing state, spread across providers, and make every attempt idempotent.”",
       deeper: "Days 8 and 13",
     },
     {
-      q: "\"How would you know the system is about to break, before users do?\"",
+      q: "“How would you know the system is about to break, before users do?”",
       answer: [
         "Know the limits first: load tests tell you where each system breaks.",
         "Watch the signs live: requests per second, the slowest response times, error rate, queue length.",
         "Alert well before the limit (say at 70%), not when it’s already down.",
         "Keep a playbook for each alert, so the team acts in minutes.",
       ],
-      say: "\"Load-test to know the limits, put the key signals on a dashboard, alert well below the limit, and keep a playbook for each alert.\"",
+      say: "“Load-test to know the limits, put the key signals on a dashboard, alert well below the limit, and keep a playbook for each alert.”",
       deeper: "Day 18",
     },
     {
-      q: "\"Now marketing wants the \u2018X left\u2019 badge on every product page to be exact, to the phone. What changes?\"",
+      q: "“Now marketing wants the \u2018X left\u2019 badge on every product page to be exact, to the phone. What changes?”",
       answer: [
         "Exact on every view means every page view reads the one stock counter: lakhs of reads a second on your most critical store.",
-        "Push back first: \"Few left\", updated every few seconds, is honest and costs almost nothing.",
+        "Push back first: “Few left”, updated every few seconds, is honest and costs almost nothing.",
         "If it must be exact: keep the counter in a fast in-memory store, push changes over a live connection, and keep these reads off the database.",
-        "Checkout must always be exact. The badge doesn't have to be.",
+        "Checkout must always be exact. The badge doesn’t have to be.",
       ],
-      say: "\"Checkout stays strongly consistent; the badge can be a few seconds stale. If it must be exact, it reads an in-memory counter, never the database.\"",
+      say: "“Checkout stays strongly consistent; the badge can be a few seconds stale. If it must be exact, it reads an in-memory counter, never the database.”",
       deeper: "Days 10 and 16",
     },
   ],
@@ -321,7 +321,7 @@ const en: DayCopy = {
     "Predictable: forecast → pre-scale → load test well above the forecast → code freeze.",
     "Check the whole chain: web, cache, DB, payments, inventory. Weakest link first.",
     "If the forecast breaks: rate limit, queue / waiting room, switch off non-essential features.",
-    "Sudden load: auto-scale + cache + rate limit, because there's no time to pre-scale.",
+    "Sudden load: auto-scale + cache + rate limit, because there’s no time to pre-scale.",
   ],
 
   cheatsheet: {
@@ -337,7 +337,7 @@ const en: DayCopy = {
   },
 
   linkedin:
-    "Day 1/21 of System Design with Klymb.\n\nFlipkart's first Big Billion Day (2014) buckled under load. For 2015 they started ~4 months early and ran stress tests at 5x the projected traffic for about a month.\n\nWhat I learned: first ask whether the load is predictable. If you know when the peak comes, pre-scale and test well above it. If you don't, auto-scale, rate limit, queue and degrade. Good systems do both.\n\n#SystemDesign #Klymb",
+    "Day 1/21 of System Design with Klymb.\n\nFlipkart’s first Big Billion Day (2014) buckled under load. For 2015 they started ~4 months early and ran stress tests at 5x the projected traffic for about a month.\n\nWhat I learned: first ask whether the load is predictable. If you know when the peak comes, pre-scale and test well above it. If you don’t, auto-scale, rate limit, queue and degrade. Good systems do both.\n\n#SystemDesign #Klymb",
 
   nextDay: "Swiggy dinner rush: everyone orders at 8 PM. How do you spread the load?",
 };
@@ -486,7 +486,7 @@ const hi: DayCopy = {
       choices: [
         {
           text: "Rate limit + jo cache se serve ho sake woh cache se + auto-scale on",
-          why: "Sudden load: pre-scale ka time nikal chuka. Protect karo, degrade karo, aur scale hone tak tik ke raho. Trade-off: kuch users ko \"ek minute baad try karo\" ya thoda purana page dikhega, par app chalta rahega.",
+          why: "Sudden load: pre-scale ka time nikal chuka. Protect karo, degrade karo, aur scale hone tak tik ke raho. Trade-off: kuch users ko “ek minute baad try karo” ya thoda purana page dikhega, par app chalta rahega.",
           best: true,
         },
         { text: "Pre-scale kar do", why: "Pre-scaling ke liye pehle se pata hona chahiye. Yahan warning hi nahi mili." },
@@ -532,7 +532,7 @@ const hi: DayCopy = {
       unit: "orders",
       answer: 30000,
       tolerance: 0.15,
-      working: ["Queue har second 1,500 − 1,000 = 500 badhti hai", "500 × 60 = 30,000 wait mein", "Yeh tabhi khaali hogi jab orders 1,000/s se neeche aayein. \"Processing\" dikhao, aur doosra provider jodo."],
+      working: ["Queue har second 1,500 − 1,000 = 500 badhti hai", "500 × 60 = 30,000 wait mein", "Yeh tabhi khaali hogi jab orders 1,000/s se neeche aayein. “Processing” dikhao, aur doosra provider jodo."],
     },
     {
       id: "d1-est-3",
@@ -574,7 +574,7 @@ const hi: DayCopy = {
 
   design: {
     title: "1,000 phones ki flash sale",
-    brief: "Dopahar 12:00 baje flash sale khulti hai: 1,000 phones bhaari discount pe. Lagbhag 10 lakh log page pe wait kar rahe hain. \"Buy\" tap se confirmed order tak system design karo.",
+    brief: "Dopahar 12:00 baje flash sale khulti hai: 1,000 phones bhaari discount pe. Lagbhag 10 lakh log page pe wait kar rahe hain. “Buy” tap se confirmed order tak system design karo.",
     constraints: [
       "10 lakh users, zyada tar pehle 10 second mein tap karenge",
       "Exactly 1,000 phones: 1,001 kabhi nahi bikna chahiye",
@@ -583,11 +583,11 @@ const hi: DayCopy = {
     ],
     minChars: 120,
     walkthrough: [
-      { heading: "Requirements aur numbers", points: ["Core path: Buy tap → phone reserve → pay → confirm. Reviews aur recommendations band ho sakte hain.", "10 lakh taps ~10 second mein ≈ 1 lakh requests per second. Jeetenge sirf 1,000, toh 99.9% ko tez \"sold out\" milna chahiye, slow error nahi."] },
+      { heading: "Requirements aur numbers", points: ["Core path: Buy tap → phone reserve → pay → confirm. Reviews aur recommendations band ho sakte hain.", "10 lakh taps ~10 second mein ≈ 1 lakh requests per second. Jeetenge sirf 1,000, toh 99.9% ko tez “sold out” milna chahiye, slow error nahi."] },
       { heading: "Utna hi andar lo jitna bech sako", points: ["Aage ek waiting room jo users ko batches mein andar le, bache stock se thoda zyada.", "Per user aur device rate limit, taaki bots aur refresh-spammers asli buyers ko na dhakel dein.", "Sale page CDN se, taaki use load karna tumhare servers tak pahunche hi nahi."] },
-      { heading: "Kabhi oversell nahi", points: ["Ek hi stock counter, fast in-memory store mein, aur use atomically badlo: \"count > 0 ho toh reserve\" ek hi step mein.", "Reservation phone ko lagbhag 5 minute pakad ke rakhta hai. Payment poora nahi hua toh phone wapas stock mein.", "Counter 0 hote hi \"sold out\" cache se do, database ko chhue bina."] },
+      { heading: "Kabhi oversell nahi", points: ["Ek hi stock counter, fast in-memory store mein, aur use atomically badlo: “count > 0 ho toh reserve” ek hi step mein.", "Reservation phone ko lagbhag 5 minute pakad ke rakhta hai. Payment poora nahi hua toh phone wapas stock mein.", "Counter 0 hote hi “sold out” cache se do, database ko chhue bina."] },
       { heading: "Payments partner ki speed se", points: ["Sirf reserved users payment tak pahunchte hain: lagbhag 1,000 calls, 2,000 per second se kaafi neeche.", "Har reservation ki ek idempotency key, taaki retry ya double tap pe do baar paisa na kate.", "Partner fail ho toh phone release karo, user ko saaf batao, aur baad mein payments reconcile karo."] },
-      { heading: "Trade-offs jo bolke batao", points: ["Checkout pe exact stock (sahi, thoda slow); page pe \"left\" count kuch second purana (fast).", "Waiting room free-for-all jitna exciting nahi, par fair hai aur tikta hai.", "Expire hone wale reservations se \"sold out\" ke baad phone wapas dikh sakta hai. UI mein batao."] },
+      { heading: "Trade-offs jo bolke batao", points: ["Checkout pe exact stock (sahi, thoda slow); page pe “left” count kuch second purana (fast).", "Waiting room free-for-all jitna exciting nahi, par fair hai aur tikta hai.", "Expire hone wale reservations se “sold out” ke baad phone wapas dikh sakta hai. UI mein batao."] },
     ],
     checklist: [
       "Maine peak estimate kiya (lagbhag 1 lakh requests per second)",
@@ -601,47 +601,47 @@ const hi: DayCopy = {
 
   followUps: [
     {
-      q: "\"Tumne 8x ka plan kiya. Midnight pe 15x aa gaya. Ab?\"",
+      q: "“Tumne 8x ka plan kiya. Midnight pe 15x aa gaya. Ab?”",
       answer: [
         "Pehle core path bachao: browse, cart, payment. Baaki sab ruk sakta hai.",
         "Tested limit pe throttle karo, baaki ko waiting room ya queue mein bhejo, saaf message ke saath.",
         "Faltu features (recommendations, reviews) band karo taaki capacity bache.",
         "Auto-scaling peeche servers jodta rahe; waiting room tab tak logon ko sambhale.",
       ],
-      say: "\"Jitna serve kar sakte hain utna andar, baaki saaf message ke saath queue mein, aur scale hone tak checkout bachane ke liye extras band.\"",
+      say: "“Jitna serve kar sakte hain utna andar, baaki saaf message ke saath queue mein, aur scale hone tak checkout bachane ke liye extras band.”",
       deeper: "Days 7 aur 18",
     },
     {
-      q: "\"Payment partner sirf 2,000 requests per second le sakta hai. Sale traffic usse 10 guna hai. Kaise design karoge?\"",
+      q: "“Payment partner sirf 2,000 requests per second le sakta hai. Sale traffic usse 10 guna hai. Kaise design karoge?”",
       answer: [
         "Partner ki limit se zyada kabhi mat bhejo: uski calls pe rate limit.",
         "Payment requests queue mein, partner ki speed se process; user ko “processing” dikhao.",
         "Doosra payment provider jodo aur traffic baanto.",
         "Har payment attempt idempotent rakho, taaki retry pe do baar paise na kate.",
       ],
-      say: "\"Payment calls partner ki speed se queue mein, processing state dikhao, providers mein baanto, aur har attempt idempotent.\"",
+      say: "“Payment calls partner ki speed se queue mein, processing state dikhao, providers mein baanto, aur har attempt idempotent.”",
       deeper: "Days 8 aur 13",
     },
     {
-      q: "\"Users se pehle tumhe kaise pata chalega ki system tootne wala hai?\"",
+      q: "“Users se pehle tumhe kaise pata chalega ki system tootne wala hai?”",
       answer: [
         "Pehle limits jaano: load tests batate hain har system kahan tootta hai.",
         "Live signs dekho: requests per second, sabse slow responses, error rate, queue length.",
         "Limit se kaafi pehle alert (jaise 70% pe), gir jaane ke baad nahi.",
         "Har alert ke liye playbook ready, taaki team minutes mein act kare.",
       ],
-      say: "\"Load test se limits jaano, key signals dashboard pe, limit se kaafi neeche alert, aur har alert ka playbook.\"",
+      say: "“Load test se limits jaano, key signals dashboard pe, limit se kaafi neeche alert, aur har alert ka playbook.”",
       deeper: "Day 18",
     },
     {
-      q: "\"Ab marketing chahti hai ki har product page pe \u2018X left\u2019 badge bilkul exact ho, ek ek phone tak. Kya badlega?\"",
+      q: "“Ab marketing chahti hai ki har product page pe \u2018X left\u2019 badge bilkul exact ho, ek ek phone tak. Kya badlega?”",
       answer: [
         "Har view pe exact matlab har page view ek hi stock counter padhega: tumhare sabse critical store pe lakhon reads per second.",
-        "Pehle push back karo: \"Few left\", har kuch second mein update, honest hai aur lagbhag free hai.",
+        "Pehle push back karo: “Few left”, har kuch second mein update, honest hai aur lagbhag free hai.",
         "Exact chahiye hi toh: counter fast in-memory store mein, changes live connection pe push, aur yeh reads database se door.",
         "Checkout hamesha exact hona chahiye. Badge ko zaroorat nahi.",
       ],
-      say: "\"Checkout strongly consistent rahega; badge kuch second purana chal sakta hai. Exact chahiye toh in-memory counter se padhega, database se kabhi nahi.\"",
+      say: "“Checkout strongly consistent rahega; badge kuch second purana chal sakta hai. Exact chahiye toh in-memory counter se padhega, database se kabhi nahi.”",
       deeper: "Days 10 aur 16",
     },
   ],

@@ -32,7 +32,7 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
   const ctaLabel = "Back to home";
 
   const recList = recs.length > 0 && (
-    <div className="mx-5 mt-[22px] lg:mx-0 lg:mt-2">
+    <div className="mx-5 mt-[22px] lg:mx-0 lg:mt-3">
       <h6 className="sd-h6 mb-2">Still worth reviewing</h6>
       <div className="border-t-2 border-sd-divider">
         {recs.map((r) => (
@@ -48,20 +48,18 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
   );
 
   return (
-    <div className="sd-a-screen flex flex-1 max-w-[1040px] flex-col lg:flex-none lg:gap-5">
+    <div className="sd-a-screen flex flex-1 max-w-[1040px] flex-col lg:flex-1 lg:gap-5">
       <div className="px-3 pt-1 lg:p-0"><BackButton kind="close" onClick={close} /></div>
-      <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
-        <div className="flex flex-col lg:gap-3">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-10 lg:gap-y-[22px]">
+        <div className="flex flex-col lg:gap-2.5">
           <div className="px-5 pt-1 lg:contents">
             <div className="sd-kicker text-sd-accent-700">Final assessment results</div>
             <div className="mt-1.5 text-[104px] leading-[0.9] font-extrabold tracking-[-0.05em] lg:mt-0 lg:text-[160px] lg:leading-[0.85]" aria-label={`${resPct}%`}>{shown}%</div>
-            <div className="mt-2.5 text-[15px] lg:mt-0 lg:text-[17px]">{res.reduce((x, y) => x + y, 0)} of {QUESTIONS.length} correct</div>
+            <div className="mt-2.5 text-[16px] lg:mt-0 lg:text-[17px]">{res.reduce((x, y) => x + y, 0)} of {QUESTIONS.length} correct</div>
           </div>
           <div className="hidden lg:block">{recList}</div>
-          <div className="mt-2 hidden lg:block">
-            <button type="button" onClick={cta} className="sd-btn sd-btn-primary h-[52px] w-[280px] justify-between text-base">{ctaLabel}<Icon name="arrowR" /></button>
-          </div>
         </div>
+        <div className="lg:hidden">{recList}</div>
         <div className="mx-5 mt-[22px] lg:mx-0 lg:mt-0">
           <div className="grid grid-cols-[1fr_64px] gap-2 border-b-2 border-sd-divider pb-2 text-[11px] tracking-[0.08em] text-sd-n-700 uppercase lg:grid-cols-[1fr_72px]">
             <span>Topic</span><span>Result</span>
@@ -74,7 +72,9 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
           ))}
         </div>
       </div>
-      <div className="lg:hidden">{recList}</div>
+      <div className="mt-auto hidden pt-6 lg:block">
+        <button type="button" onClick={cta} className="sd-btn sd-btn-primary h-[52px] w-full max-w-[280px] justify-between text-base">{ctaLabel}<Icon name="arrowR" /></button>
+      </div>
       <div className="mt-auto flex flex-col gap-2 px-5 py-4 lg:hidden">
         <button type="button" onClick={cta} className="sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-base">{ctaLabel}<Icon name="arrowR" /></button>
       </div>

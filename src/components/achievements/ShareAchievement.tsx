@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { achievementCaption, achievementPng, achievementSvg, type Achievement } from "@/lib/achievement";
 
-export function ShareAchievement({ badge, course, courseUrl, initialName = "", imageSrc }: {
+export function ShareAchievement({ badge, course, courseUrl, initialName = "", imageSrc, variant = "default", posterIcon }: {
   badge: Achievement; course: string; courseUrl: string; initialName?: string; imageSrc?: string;
+  /** "poster" is the course app's badge card: the artwork beside a download and share panel. */
+  variant?: "default" | "poster"; posterIcon?: ReactNode;
 }) {
   const id = useId();
   const [name, setName] = useState(initialName);
@@ -41,6 +43,49 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
     } finally {
       setBusy(false);
     }
+  }
+
+  if (variant === "poster") {
+    const posterButton = "inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-extrabold transition-opacity hover:opacity-85 disabled:cursor-wait disabled:opacity-60";
+    return (
+      <div className="grid min-w-0 items-start gap-5 rounded-xl border-2 border-current p-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))" }}>
+        <div className="mx-auto flex aspect-[4/5] w-full max-w-[320px] flex-col justify-between gap-3 rounded-xl p-5 text-[#f3f2f2]" style={{ background: "var(--sd-accent)" }}>
+          <span className="text-xs font-extrabold tracking-[.1em] uppercase">Klymb.ai · Badge earned</span>
+          <div className="size-24 flex-none rounded-full p-[5px]" style={{ background: "conic-gradient(from 210deg, #fbdcdd, #f0868b, #fff2ef, #f3b3b6, #fbdcdd)" }}>
+            <div className="flex size-full items-center justify-center rounded-full text-white" style={{ background: "radial-gradient(circle at 35% 30%, #c4454b, #5a0307 72%)", boxShadow: "inset 0 -6px 12px rgba(0,0,0,.3), inset 0 4px 8px rgba(255,255,255,.3)" }}>{posterIcon}</div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[34px] leading-none font-extrabold tracking-[-.03em]">{badge.name}</span>
+            <span className="text-sm leading-[1.4]">{badge.description}</span>
+          </div>
+          <div className="flex flex-col gap-0.5 border-t border-white/35 pt-2.5">
+            <span className="text-[15px] font-extrabold">{name || "Your name"}</span>
+            <span className="text-xs">{course} · klymb.ai</span>
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-col gap-3">
+          <span className="text-[22px] leading-[1.1] font-extrabold tracking-[-.02em]">Share your badge</span>
+          <label htmlFor={`${id}-poster-name`} className="flex flex-col gap-1.5 text-[13px] font-bold">
+            Name
+            <input id={`${id}-poster-name`} value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" className="sd-input min-h-11" />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={download} disabled={busy} className={`${posterButton} border border-current`}>{busy ? "Creating image…" : "Download"}</button>
+            <a
+              href="https://www.linkedin.com/feed/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${posterButton} bg-[#83050b] text-[#f3f2f2]`}
+              onClick={() => { navigator.clipboard?.writeText(caption).then(() => setStatus("Caption copied. Attach the badge image to your post.")).catch(() => setStatus("Open LinkedIn and paste the caption from the downloaded badge.")); }}
+            >
+              Share on LinkedIn
+            </a>
+          </div>
+          <p role="status" aria-live="polite" className="m-0 text-[13px]">{status}</p>
+          <p className="m-0 text-xs text-sd-n-700">This celebrates recorded learning activity. It is not a professional certification.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

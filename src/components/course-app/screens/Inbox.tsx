@@ -39,7 +39,7 @@ export function Notifications({ s, act }: { s: CourseState; act: Act }) {
                       <span className="text-[13px] leading-[1.4] text-sd-n-800">{n.body}</span>
                       <span className="text-xs text-sd-n-700">{n.time}</span>
                     </span>
-                    {n.unread && <span className="mt-1.5 size-2 bg-sd-accent"><span className="sr-only">Unread</span></span>}
+                    {n.unread && <span className="mt-1.5 size-2 rounded-full bg-sd-accent"><span className="sr-only">Unread</span></span>}
                   </button>
                 ))}
               </div>
@@ -50,8 +50,9 @@ export function Notifications({ s, act }: { s: CourseState; act: Act }) {
       ) : (
         <EmptyState
           icon="bell"
-          title="You’re all caught up"
-          body="Replies to your questions, streak reminders and new modules will show up here."
+          titleClass="text-[28px] tracking-[-0.03em]"
+          title="All caught up"
+          body="Replies, reminders and new days show up here."
           action={<button type="button" onClick={back} className="sd-btn sd-btn-primary h-11 gap-2">Back to learning<Icon name="arrowR" size={16} /></button>}
         />
       )}
@@ -73,7 +74,7 @@ export function Downloads({ s, act }: { s: CourseState; act: Act }) {
       <div className="flex flex-col gap-1.5 rounded-xl bg-sd-surface p-3.5">
         <div className="flex justify-between text-[13px]"><span className="font-extrabold">{used} MB used by Klymb</span><span>{s.dl.length} lessons</span></div>
         <Bar value={(used / STORAGE_MB) * 100} className="h-1.5" />
-        <span className="text-xs text-sd-n-700">Downloaded lessons play offline and stay for 30 days.</span>
+        <span className="text-xs text-sd-n-700">Play offline for 30 days.</span>
       </div>
       {canDlMod && (
         <div>
@@ -102,7 +103,7 @@ export function Downloads({ s, act }: { s: CourseState; act: Act }) {
         <EmptyState
           icon="download"
           title="No downloads yet"
-          body="Download lessons to watch without internet, on a flight or a commute."
+          body="Watch lessons without internet."
           action={<button type="button" onClick={() => act((p) => ({ ...p, screen: "course", tab: "course" }))} className="sd-btn sd-btn-primary h-11 gap-2">Browse the course<Icon name="arrowR" size={16} /></button>}
         />
       )}

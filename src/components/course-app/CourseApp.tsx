@@ -55,8 +55,7 @@ function MiniPlayer({ s, act, className }: { s: CourseState; act: Act; className
   );
 }
 
-/** The notifications inbox comes back once there is a backend to send them. */
-const INBOX = false;
+const INBOX = true;
 
 function Sidebar({ s, act }: { s: CourseState; act: Act }) {
   const unread = s.notifs.filter((n) => n.unread).length;
@@ -151,7 +150,7 @@ export function CourseApp({ user = null }: { user?: CourseUser | null }) {
         {s.offline && (
           <div className="sd-a-in mb-2 flex flex-none items-center gap-2.5 bg-sd-ink px-5 py-2.5 text-[13px] text-sd-bg lg:mb-5 lg:px-4" style={{ animationDuration: ".3s" }} role="status">
             <span className="flex text-sd-accent-400"><Icon name="wifiOff" size={16} /></span>
-            <span className="flex-1">You’re offline. Downloaded lessons still play.</span>
+            <span className="flex-1">Offline. Downloads still play.</span>
             <button type="button" onClick={() => act((p) => ({ ...p, screen: "downloads" }))} className="sd-btn sd-btn-on-dark h-[30px]">Downloads</button>
           </div>
         )}
