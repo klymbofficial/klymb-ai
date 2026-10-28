@@ -3,12 +3,16 @@
 import clsx from "clsx";
 import { useRef, useState } from "react";
 import type { BuildTask, Lang } from "@/data/system-design/types";
+import { pad } from "@/lib/course-app";
 import { Icon } from "../icons";
 
 const UI = {
-  en: { tray: "Boxes", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try, no wrong drops.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`, next: "Continue", picked: "Now tap the slot where it goes", hint: "Drag a box up to the slot that does its job, or tap a box, then a slot" },
-  hi: { tray: "Boxes", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein, bina galti.", tries: (n: number) => `Raaste mein ${n} galat drop.`, next: "Aage badho", picked: "Ab woh slot tap karo jahan yeh jaayega", hint: "Box ko upar uske kaam wale slot pe drag karo, ya box tap karo, phir slot" },
+  en: { tray: "Moves", left: (n: number) => `${n} left`, wrong: "Not there.", built: "Built!", clean: "First try.", tries: (n: number) => `${n} wrong ${n === 1 ? "drop" : "drops"}.`, next: "Continue", picked: "Now tap its slot", hint: "Drag a box to its slot, or tap box then slot" },
+  hi: { tray: "Moves", left: (n: number) => `${n} baaki`, wrong: "Yahan nahi.", built: "Ban gaya!", clean: "Pehli baar mein.", tries: (n: number) => `${n} galat drop.`, next: "Aage badho", picked: "Ab woh slot tap karo", hint: "Box ko slot pe drag karo, ya box tap karo phir slot" },
 };
+
+/** The night's three phases; extra rows in a task fall back to a number. */
+const PHASES = ["Before the sale", "At 12:00 AM", "When it breaks"];
 
 /**
  * Drag a box from the tray onto the slot whose job it does, or tap a box and
@@ -93,20 +97,24 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
   const fresh = Object.keys(placed).length === 0 && wrong === 0 && !holding;
 
   return (
-    <div>
-      <h3 className="m-0 text-[22px] tracking-[-0.02em] lg:text-[26px]">{task.title}</h3>
-      <p className="m-0 mt-1 text-sm text-sd-n-800">{task.intro}</p>
+    <div className="flex flex-1 flex-col">
+      <h3 className="m-0 text-[26px] leading-[1.05] tracking-[-0.03em] text-balance lg:text-[34px]">{task.title}</h3>
+      <p className="m-0 mt-2 text-[15px] text-pretty text-sd-n-800">{task.intro}</p>
 
-      {/* the diagram */}
-      <div ref={board} className="sd-grid mt-4 rounded-xl p-3 [--grid:20px] lg:p-5 lg:[--grid:26px]">
-        <div className="mx-auto w-max rounded-lg border-2 border-sd-bg bg-sd-bg px-4 py-2 text-sm font-extrabold text-sd-ink">{task.given}</div>
+      <div ref={board} className="mt-4 grid grid-cols-1 gap-4 border-t-2 border-sd-ink pt-3.5 lg:grid-cols-3">
         {task.rows.map((row, r) => (
-          <div key={r}>
-            <div className="mx-auto h-4 w-0.5 bg-white/40" aria-hidden="true" />
-            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` }}>
+          <div key={r} className="flex min-w-0 flex-col gap-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[11px] font-extrabold tracking-[0.12em] uppercase text-sd-accent">{pad(r + 1)}</span>
+              <span className="text-[15px] font-extrabold tracking-[-0.01em]">{PHASES[r] ?? `Phase ${r + 1}`}</span>
+            </div>
+            <div className="relative flex flex-col gap-1.5 pl-4">
+              <span aria-hidden="true" className="absolute top-1.5 bottom-1.5 left-1 w-0.5 bg-sd-n-300" />
               {row.map((sid) => {
                 const got = placed[sid];
                 const bad = miss?.slot === sid;
+                const [when, ...rest] = task.slots[sid].role.split(": ");
+                const what = rest.join(": ") || task.slots[sid].role;
                 return (
                   <button
                     key={sid}
@@ -115,16 +123,24 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                     onClick={() => picked && drop(picked, sid)}
                     aria-label={got ? `${label(got)}: ${task.slots[sid].role}` : task.slots[sid].role}
                     className={clsx(
-                      "min-h-[72px] cursor-pointer rounded-lg border-2 px-2 py-2 text-center transition-[border-color,background-color,transform] duration-200",
-                      got && "border-sd-accent bg-sd-accent",
-                      !got && !bad && !holding && "border-dashed border-white/40 bg-transparent",
-                      !got && !bad && holding && over !== sid && "border-dashed border-sd-accent-400 bg-sd-accent/10 hover:border-solid hover:bg-sd-accent/25",
-                      bad && !drag && "animate-[shake_.35s] border-sd-accent-400 bg-sd-accent/20",
-                      !got && over === sid && "scale-[1.03] border-solid border-sd-accent-400 bg-sd-accent/25",
+                      "relative flex min-h-12 cursor-pointer flex-col justify-center gap-px rounded-lg border-[1.5px] px-3 py-1.5 text-left transition-colors duration-200",
+                      got && "border-sd-ink bg-sd-ink",
+                      !got && !bad && !holding && "border-dashed border-sd-n-400 bg-transparent",
+                      !got && !bad && holding && over !== sid && "border-solid border-sd-accent bg-sd-accent-100 hover:bg-sd-accent-100",
+                      bad && !drag && "animate-[shake_.35s] border-solid border-sd-accent bg-sd-accent-100",
+                      !got && over === sid && "border-solid border-sd-accent bg-sd-accent-100",
                     )}
                   >
-                    {got && <span className="flex items-center justify-center gap-1 text-[13px] font-extrabold text-sd-bg"><Icon name="check" size={14} stroke={3} />{label(got)}</span>}
-                    <span className={clsx("block text-[11px] leading-snug", got ? "text-sd-bg/85" : "text-white/80")}>{task.slots[sid].role}</span>
+                    <span
+                      aria-hidden="true"
+                      className={clsx("absolute top-1/2 -left-4 -mt-[5px] size-2.5 rounded-full border-2", got ? "border-sd-ink bg-sd-ink" : "border-sd-n-400 bg-sd-bg")}
+                    />
+                    <span className={clsx("text-[10px] font-extrabold tracking-[0.08em] uppercase", got ? "text-sd-accent-400" : "text-sd-accent-700")}>{when}</span>
+                    {got ? (
+                      <span className="flex items-center gap-1 text-sm leading-[1.25] font-extrabold text-sd-bg"><Icon name="check" size={14} stroke={3} />{label(got)}</span>
+                    ) : (
+                      <span className="text-[13px] leading-[1.3] text-sd-n-700">{what}</span>
+                    )}
                   </button>
                 );
               })}
@@ -133,8 +149,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
         ))}
       </div>
 
-      {/* feedback */}
-      <p role="status" aria-live="polite" className="m-0 mt-3 mb-3 min-h-[2.5rem] text-sm">
+      <p role="status" aria-live="polite" className="m-0 mt-2.5 mb-1.5 min-h-[1.6em] text-sm">
         {missChip ? (
           <span className="text-sd-accent-700"><b>{ui.wrong}</b> {missChip.label} = {missChip.does}.</span>
         ) : picked ? (
@@ -147,39 +162,49 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
         ) : null}
       </p>
 
-      {/* the tray */}
-      {!done ? (
-        <div>
-          <h6 className="sd-h6 m-0">{ui.tray} · {ui.left(slotIds.length - Object.keys(placed).length)}</h6>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {tray.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onPointerDown={onDown(c.id)}
-                onPointerMove={onMove}
-                onPointerUp={(e) => finish(e.clientX, e.clientY)}
-                onLostPointerCapture={() => finish()}
-                onPointerCancel={() => finish()}
-                className={clsx(
-                  "flex cursor-grab touch-none items-center gap-1.5 rounded-lg border-2 border-sd-ink px-3 py-2.5 text-sm font-extrabold transition-[transform,box-shadow] duration-150 select-none hover:-translate-y-0.5 hover:shadow-[0_3px_0_var(--sd-ink)] active:cursor-grabbing",
-                  picked === c.id ? "bg-sd-ink text-sd-bg" : "bg-sd-bg",
-                  drag?.id === c.id && "opacity-40",
-                )}
-              >
-                <span aria-hidden="true" className="grid grid-cols-2 gap-[2px] opacity-50">{[0, 1, 2, 3, 4, 5].map((k) => <span key={k} className="size-[3px] bg-current" />)}</span>
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="sd-a-pop flex flex-col gap-1.5 bg-sd-ink p-4 text-sd-bg">
-          <span className="text-[17px] font-extrabold">{ui.built} {wrong === 0 ? ui.clean : ui.tries(wrong)}</span>
-          <span className="text-sm text-sd-bg/85">{task.done}</span>
-          <button type="button" onClick={() => onDone(wrong)} className="sd-btn sd-btn-primary mt-2 h-11 self-start gap-2">{ui.next}<Icon name="arrowR" size={16} /></button>
+      {done && (
+        <div className="sd-a-in mt-2 flex flex-col gap-1.5 border-t-2 border-sd-ink pt-4">
+          <span className="text-[22px] leading-[1.15] font-extrabold tracking-[-0.02em]">{ui.built} {wrong === 0 ? ui.clean : ui.tries(wrong)}</span>
+          <span className="text-[15px] text-sd-n-800">{task.done}</span>
         </div>
       )}
+
+      <div className="sticky bottom-0 z-[4] -mx-5 mt-auto border-t border-sd-divider bg-sd-bg px-5 pt-2.5 pb-4 shadow-[0_-10px_20px_-14px_rgba(32,30,29,.25)] lg:mx-0 lg:px-10 lg:pt-3.5 lg:pb-[18px]">
+        {!done && (
+          <div className="mb-2.5 border-b border-sd-divider pt-0.5 pb-2.5">
+            <h6 className="m-0 flex justify-between border-t border-sd-divider pt-3 text-[11px] font-extrabold tracking-[0.12em] uppercase">
+              <span>{ui.tray}</span>
+              <span className="text-sd-n-600">{ui.left(slotIds.length - Object.keys(placed).length)}</span>
+            </h6>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {tray.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onPointerDown={onDown(c.id)}
+                  onPointerMove={onMove}
+                  onPointerUp={(e) => finish(e.clientX, e.clientY)}
+                  onLostPointerCapture={() => finish()}
+                  onPointerCancel={() => finish()}
+                  className={clsx(
+                    "flex min-h-11 cursor-grab touch-none items-center gap-1.5 rounded-lg border-[1.5px] border-sd-ink px-3 py-2 text-sm font-bold transition-colors select-none hover:bg-sd-accent-100 active:cursor-grabbing",
+                    picked === c.id ? "bg-sd-ink text-sd-bg" : "bg-sd-bg",
+                    drag?.id === c.id && "opacity-40",
+                  )}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          <span className="flex-1" />
+          <button type="button" onClick={() => onDone(wrong)} disabled={!done} className="sd-btn sd-btn-primary h-[52px] flex-1 max-w-[280px] justify-between rounded-[10px] px-[18px] text-base">
+            {ui.next}<Icon name="arrowR" size={18} />
+          </button>
+        </div>
+      </div>
 
       {drag && (
         <div aria-hidden="true" className="sd-shadow-lg pointer-events-none fixed z-[80] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-sd-ink bg-sd-ink px-3.5 py-2.5 text-sm font-extrabold text-sd-bg" style={{ left: drag.x, top: drag.y }}>

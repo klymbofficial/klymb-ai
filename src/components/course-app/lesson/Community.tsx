@@ -37,7 +37,7 @@ function Composer({ placeholder, cta, onPost, autoFocus }: { placeholder: string
     <div className="flex flex-col gap-1.5">
       <div className="flex items-end gap-2">
         <textarea
-          className="sd-input !min-h-11 lg:!min-h-10"
+          className="sd-input !min-h-11"
           rows={1}
           value={text}
           maxLength={QNA_MAX}
@@ -47,7 +47,7 @@ function Composer({ placeholder, cta, onPost, autoFocus }: { placeholder: string
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void post(); } }}
         />
-        <button type="button" onClick={() => void post()} disabled={!text.trim() || busy} className="sd-btn sd-btn-primary h-11 flex-none lg:h-10">{cta}</button>
+        <button type="button" onClick={() => void post()} disabled={!text.trim() || busy} className="sd-btn sd-btn-primary h-11 flex-none">{cta}</button>
       </div>
       {err && <span role="alert" className="text-[13px] font-semibold text-sd-accent-700">{err}</span>}
     </div>
@@ -141,19 +141,19 @@ export function Community({ lesson, day, lang }: { lesson: string; day: Day; lan
   return (
     <div className="flex flex-col px-5 py-3.5 lg:max-h-[560px] lg:overflow-y-auto lg:px-3.5 lg:pt-3">
       {!feed && !failed && <div className="py-3 text-[13px] text-sd-n-700">Loading questions…</div>}
-      {failed && !feed && <div className="py-3 text-[13px] text-sd-n-700">Couldn’t load the questions. They’ll appear when you’re back online.</div>}
+      {failed && !feed && <div className="py-3 text-[13px] text-sd-n-700">Couldn’t load. They’ll appear when you’re online.</div>}
       {feed && (feed.canPost
         ? <Composer placeholder="Ask a question about this lesson" cta="Ask" onPost={(t) => post(t)} />
         : (
           <div className="flex flex-col gap-2 rounded-lg bg-sd-surface p-3">
-            <span className="text-[13px] text-sd-n-800">Sign in to ask a question or reply.</span>
+            <span className="text-[13px] text-sd-n-800">Sign in to ask or reply.</span>
             <GoogleButton lesson={lesson} where="qna" />
           </div>
         ))}
       {feed && (
         <div className="mt-1 flex flex-col">
           {feed.questions.map((q) => <Thread key={q.id} q={q} feed={feed} onReply={(parent, t) => post(t, parent)} onRemove={(id) => void remove(id)} />)}
-          {!feed.questions.length && <div className="py-3 text-[13px] text-sd-n-700">No questions yet. Ask the first one.</div>}
+          {!feed.questions.length && <div className="py-3 text-[13px] text-sd-n-700">No questions yet.</div>}
         </div>
       )}
       {faq.length > 0 && (

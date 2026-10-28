@@ -12,17 +12,18 @@ const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboard
 /** Day 0 with every practice step done. */
 const day0Done = (s: CourseState) => updateLesson(s, "0-0", { watched: true, built: 0, post: [0, 0, 0, 0], est: [1200, 12, 700], follow: [true, true, false, true] }, NOW);
 
-test("fmt pads minutes and seconds and never goes negative", () => {
-  assert.equal(fmt(0), "00:00");
+test("fmt shows m:ss and never goes negative", () => {
+  assert.equal(fmt(0), "0:00");
   assert.equal(fmt(754.9), "12:34");
-  assert.equal(fmt(-5), "00:00");
+  assert.equal(fmt(65), "1:05");
+  assert.equal(fmt(-5), "0:00");
 });
 
 test("grading each question type", () => {
   const [mcq, multi, diagram, order, text, timed] = QUESTIONS;
   assert.equal(grade(mcq, 0), 1);
   assert.equal(grade(mcq, 1), 0);
-  assert.equal(grade(multi, [2, 0]), 1);
+  assert.equal(grade(multi, [3, 0]), 1);
   assert.equal(grade(multi, [0]), 0);
   assert.equal(grade(diagram, 1), 1);
   assert.equal(grade(order, undefined), 0, "the shuffled starting order is wrong");
@@ -51,7 +52,7 @@ test("multi-select toggles options on and off", () => {
 
 test("finishing the final assessment grades it and opens its results", () => {
   let s: CourseState = { ...home(), screen: "quiz", quiz: { kind: "post", stage: "q", idx: 0, answers: {} } };
-  const right: Record<number, Parameters<typeof setAnswer>[1]> = { 0: 0, 1: [0, 2], 2: 1, 3: [0, 1, 2, 3, 4], 4: "consistency vs availability", 5: 1 };
+  const right: Record<number, Parameters<typeof setAnswer>[1]> = { 0: 0, 1: [0, 3], 2: 1, 3: [0, 1, 2, 3, 4], 4: "consistency vs availability", 5: 1 };
   for (let i = 0; i < QUESTIONS.length; i++) s = nextQuestion(setAnswer(s, right[i]));
   assert.equal(s.screen, "results");
   assert.equal(s.lastKind, "post");
@@ -177,11 +178,12 @@ test("notes are pinned to the current lesson and moment", () => {
   assert.equal(s.draft, "");
 });
 
-test("a first visit has no sample learner and no notifications", () => {
+test("a first visit has no sample learner, but the inbox opens with the sample notifications", () => {
   const s = defaultState(NOW);
   assert.deepEqual(s.done, []);
   assert.deepEqual(s.pre, []);
-  assert.deepEqual(s.notifs, []);
+  assert.equal(s.notifs.length, 5);
+  assert.equal(s.notifs.filter((n) => n.unread).length, 2);
   assert.equal(s.cur, "0-0");
   assert.equal(streak(s, NOW).current, 0);
 });

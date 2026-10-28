@@ -76,11 +76,11 @@ export function ScreenTitle({ children, aside, sub }: { children: ReactNode; asi
   );
 }
 
-export function EmptyState({ icon, title, body, action }: { icon: IconName; title: string; body: string; action: ReactNode }) {
+export function EmptyState({ icon, title, body, action, titleClass = "text-2xl tracking-[-0.02em]" }: { icon: IconName; title: string; body: string; action: ReactNode; titleClass?: string }) {
   return (
     <div className="sd-a-in flex flex-col gap-3 py-7">
       <span className="flex size-[72px] items-center justify-center rounded-xl border-2 border-dashed border-sd-n-500 text-sd-n-700"><Icon name={icon} size={40} /></span>
-      <h3 className="m-0 text-2xl tracking-[-0.02em]">{title}</h3>
+      <h3 className={clsx("m-0", titleClass)}>{title}</h3>
       <p className="m-0 max-w-[380px] text-sm text-pretty text-sd-n-800">{body}</p>
       <div>{action}</div>
     </div>
@@ -151,8 +151,8 @@ export function Toggle({ on, onClick, label, sub }: { on: boolean; onClick: () =
         <span className="text-[15px] font-semibold">{label}</span>
         {sub && <span className="text-xs text-sd-n-700">{sub}</span>}
       </span>
-      <span className={clsx("h-6 w-11 flex-none p-[3px] transition-colors duration-200", on ? "bg-sd-accent" : "bg-sd-n-400")}>
-        <span className={clsx("block size-[18px] bg-sd-bg transition-transform duration-200", on && "translate-x-5")} />
+      <span className={clsx("h-6 w-11 flex-none rounded-full p-[3px] transition-colors duration-200", on ? "bg-sd-accent" : "bg-sd-n-400")}>
+        <span className={clsx("block size-[18px] rounded-full bg-sd-bg transition-transform duration-200", on && "translate-x-5")} />
       </span>
     </button>
   );

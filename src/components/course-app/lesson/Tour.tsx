@@ -13,18 +13,18 @@ type Stop = { target: string; text: string };
 
 const STOPS: Record<CourseState["lang"], Stop[]> = {
   en: [
-    { target: '[data-tour="path"]', text: "This bar is today’s path. Each step opens after the one before it, and tapping one brings it up here — nothing to scroll." },
-    { target: "#lesson-watch", text: "Every day starts with a short story video. Want subtitles? Tap CC." },
-    { target: '[data-tour="practice"] | [data-tour="path"]', text: "When the video ends, the assessment takes its place right here. After that come practice, design and the interviewer’s follow-ups, one at a time." },
-    { target: '[data-tour="tabs"]', text: "Every lesson of the course is listed here, with answers to the day’s common doubts, your notes and the transcript." },
-    { target: "", text: "That’s the tour. You can replay it from Profile any time. Chalo, let’s start!" },
+    { target: "", text: "Two parts each day: watch the video, then pass the assessment." },
+    { target: "#lesson-watch", text: "Every day starts with a short story video. Tap CC for subtitles." },
+    { target: "", text: "After the video, the assessment opens here. Score 60% to move on." },
+    { target: '[data-tour="tabs"]', text: "All lessons, common doubts, your notes and the transcript." },
+    { target: "", text: "That’s it. Replay it from Profile. Chalo, let’s start!" },
   ],
   hi: [
-    { target: '[data-tour="path"]', text: "Yeh bar aaj ka raasta hai. Har step pichle ke baad khulta hai, aur koi bhi step tap karoge toh wahi yahan khul jayega — scroll karne ki zaroorat nahi." },
-    { target: "#lesson-watch", text: "Har din ek chhoti story video se shuru hota hai. Subtitles chahiye? CC dabao." },
-    { target: '[data-tour="practice"] | [data-tour="path"]', text: "Video khatam hote hi assessment usi jagah aa jaata hai. Uske baad practice, design aur interviewer ke follow-ups, ek-ek karke." },
-    { target: '[data-tour="tabs"]', text: "Course ke saare lessons yahan hain, saath mein aaj ke aam sawaalon ke jawab, tumhare notes aur transcript." },
-    { target: "", text: "Bas itna hi. Profile se yeh tour kabhi bhi dobara dekh sakte ho. Chalo, shuru karte hain!" },
+    { target: "", text: "Har din do cheezein: video dekho, phir assessment pass karo." },
+    { target: "#lesson-watch", text: "Har din ek chhoti story video se shuru hota hai. Subtitles ke liye CC dabao." },
+    { target: "", text: "Video ke baad assessment yahan khulta hai. Aage badhne ke liye 60% score karo." },
+    { target: '[data-tour="tabs"]', text: "Course ke saare lessons, aam sawaalon ke jawab, tumhare notes aur transcript." },
+    { target: "", text: "Bas itna hi. Profile se dobara dekh sakte ho. Chalo, shuru karte hain!" },
   ],
 };
 
@@ -34,7 +34,7 @@ const STOPS: Record<CourseState["lang"], Stop[]> = {
  */
 export function Tour({ s, act }: { s: CourseState; act: Act }) {
   const stops = STOPS[s.lang];
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(s.tourStep ?? 0);
   // The highlighted rect, tagged with the stop it belongs to so a stale one never shows.
   const [seen, setSeen] = useState<{ i: number; rect: DOMRect } | null>(null);
   const stop = stops[i];
@@ -63,17 +63,17 @@ export function Tour({ s, act }: { s: CourseState; act: Act }) {
       {box ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed border-[3px] border-sd-accent transition-all duration-300"
-          style={{ left: box.left - 6, top: box.top - 6, width: box.width + 12, height: box.height + 12, boxShadow: "0 0 0 9999px rgba(20,18,17,.55)" }}
+          className="pointer-events-none fixed border-[3px] border-sd-accent-400 transition-all duration-300"
+          style={{ left: box.left - 3, top: box.top - 3, width: box.width + 6, height: box.height + 6, boxShadow: "0 0 0 9999px rgba(20,18,17,.55)" }}
         />
       ) : (
         <div aria-hidden="true" className="fixed inset-0 bg-[rgba(20,18,17,.55)]" />
       )}
       <div className={`fixed inset-x-3 flex justify-center ${bubbleTop ? "top-3" : "bottom-3"} lg:inset-x-6`}>
         <div key={i} className="sd-a-in flex w-full max-w-[560px] items-end gap-2" style={{ animationDuration: ".3s" }}>
-          <Mascot directions="/mascots/kamran-directions.webp" reactions="/mascots/kamran-reactions.webp" size={84} label="Kamran" className="shrink-0 drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]" />
-          <div className="sd-shadow-lg flex flex-1 flex-col gap-3 bg-sd-bg p-4">
-            <p aria-live="polite" className="m-0 text-[15px] leading-[1.45] font-semibold">{stop.text}</p>
+          <Mascot directions="/mascots/kamran-directions.webp" reactions="/mascots/kamran-reactions.webp" size={64} label="Kamran" className="shrink-0 drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)]" />
+          <div className="sd-shadow-lg flex flex-1 flex-col gap-3 rounded-xl bg-sd-bg p-4">
+            <p aria-live="polite" className="m-0 text-[17px] leading-[1.4] font-bold tracking-[-.01em] [text-wrap:pretty]">{stop.text}</p>
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-extrabold text-sd-n-700">{i + 1} / {stops.length}</span>
               <div className="flex gap-2">

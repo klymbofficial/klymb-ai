@@ -10,29 +10,30 @@ import type { Act } from "../useCourseApp";
 export function QuizIntro({ act }: { s: CourseState; act: Act }) {
   const start = () => act((p) => ({ ...p, quiz: { ...p.quiz, stage: "q", idx: 0 }, timeLeft: TIMED_SECONDS }));
   return (
-    <div className="sd-a-screen flex flex-1 max-w-[880px] flex-col lg:flex-none lg:gap-5">
+    <div className="sd-a-screen flex flex-1 max-w-[880px] flex-col lg:gap-5">
       <div className="px-3 pt-1 lg:p-0"><BackButton kind="close" onClick={() => act(closeQuiz)} /></div>
       <div className="flex flex-col gap-3.5 px-5 pt-2 lg:contents">
-        <div className="sd-kicker text-sd-accent-700">Final assessment</div>
+        <div className="sd-kicker text-sd-accent-700">After Day 21 · Whole course</div>
         <h1 className="m-0 text-[40px] leading-[1.02] tracking-[-0.03em] lg:text-[64px] lg:leading-[0.98] lg:tracking-[-0.04em]">Final assessment</h1>
         <p className="m-0 max-w-[620px] text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">
-          {QUESTIONS.length} questions across the whole course. You’ll see how you did on each topic at the end.
+          {QUESTIONS.length} questions across the whole course. You’ll see how you did on each topic at the end, with the lesson to rewatch for anything you missed.
         </p>
         <div className="flex gap-2">
           <span className="sd-tag sd-tag-neutral">{QUESTIONS.length} questions</span>
           <span className="sd-tag sd-tag-neutral">About 8 min</span>
+          <span className="sd-tag sd-tag-neutral">1 timed</span>
         </div>
       </div>
       <div className="mx-5 mt-[22px] border-t-2 border-sd-divider lg:mx-0 lg:mt-0 lg:grid lg:grid-cols-3 lg:border-l lg:border-l-sd-divider">
         {QUESTIONS.map((q, i) => (
           <div key={i} className="grid grid-cols-[32px_1fr_auto] items-center gap-2.5 border-b border-sd-divider py-[11px] lg:flex lg:flex-col lg:items-start lg:gap-1 lg:border-r lg:p-4">
-            <span className="text-[15px] font-extrabold text-sd-accent lg:text-[22px]">{pad(i + 1)}</span>
+            <span className="text-[18px] font-extrabold text-sd-accent">{pad(i + 1)}</span>
             <span className="text-sm font-semibold lg:text-[15px]">{q.typeLabel}</span>
             <span className="text-xs text-sd-n-700">{q.topic}</span>
           </div>
         ))}
       </div>
-      <div className="mt-auto px-5 py-4 lg:mt-0 lg:p-0">
+      <div className="mt-auto px-5 py-4 lg:p-0">
         <button type="button" onClick={start} className="sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-base lg:w-[280px]">Start assessment <Icon name="arrowR" /></button>
       </div>
     </div>
@@ -58,7 +59,7 @@ function ChoiceOptions({ s, act, anim }: { s: CourseState; act: Act; anim: strin
             className={clsx(anim, "flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border-2 p-3 text-left text-[15px] hover:border-sd-accent lg:min-h-[72px] lg:gap-3.5 lg:p-4 lg:text-base", sel ? "border-sd-accent bg-sd-accent-100" : "border-sd-divider")}
             style={stagger(i, 60, 120)}
           >
-            <span className={clsx("flex size-7 flex-none items-center justify-center border-[1.5px] text-[13px] font-extrabold lg:size-8 lg:text-sm", sel ? "border-sd-accent bg-sd-accent text-sd-bg" : "border-sd-divider")}>
+            <span className={clsx("flex size-7 flex-none items-center justify-center border-[1.5px] text-[13px] font-extrabold lg:size-8 lg:text-sm", multi ? "rounded-md" : "rounded-full", sel ? "border-sd-accent bg-sd-accent text-sd-bg" : "border-sd-divider")}>
               {multi ? sel && <Icon name="check" size={14} stroke={3} /> : String.fromCharCode(65 + i)}
             </span>
             <span>{o}</span>
@@ -140,11 +141,11 @@ export function QuizQuestion({ s, act }: { s: CourseState; act: Act }) {
   const text = typeof a === "string" ? a : "";
 
   return (
-    <div className="sd-a-screen flex flex-1 max-w-[880px] flex-col lg:flex-none lg:gap-5">
+    <div className="sd-a-screen flex flex-1 max-w-[880px] flex-col lg:gap-5">
       <div className="flex items-center gap-2 px-3 pt-1 pb-2 lg:gap-4 lg:p-0">
         <BackButton kind="close" onClick={() => act(closeQuiz)} />
         <span className="flex-1 text-xs font-semibold tracking-[0.08em] uppercase">Final assessment</span>
-        <span className="pr-2 text-[15px] font-extrabold lg:p-0 lg:text-lg">{idx + 1} / 6</span>
+        <span className="pr-2 text-[17px] font-extrabold lg:p-0 lg:text-lg">{idx + 1} / 6</span>
       </div>
       <div className="grid grid-cols-6 gap-[3px] px-5 lg:gap-1 lg:px-0" aria-hidden="true">
         {QUESTIONS.map((_, i) => <div key={i} className={clsx("h-[5px] rounded-full transition-colors duration-400 lg:h-1.5", i < idx ? "bg-sd-accent" : i === idx ? "bg-sd-ink" : "bg-sd-n-300")} />)}
@@ -171,7 +172,7 @@ export function QuizQuestion({ s, act }: { s: CourseState; act: Act }) {
           </div>
         )}
       </div>
-      <div className="sticky bottom-0 mt-auto flex gap-2 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-4 lg:static lg:mt-0 lg:px-0 lg:pt-4 lg:pb-0">
+      <div className="sticky bottom-0 mt-auto flex gap-2 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-4 lg:px-0 lg:pt-4 lg:pb-0">
         <button type="button" onClick={() => act(nextQuestion)} className="sd-btn sd-btn-secondary h-[52px] w-24 justify-start lg:h-12 lg:w-[110px]">Skip</button>
         <button type="button" onClick={() => act(nextQuestion)} disabled={!isAnswered(q, a)} className="sd-btn sd-btn-primary h-[52px] flex-1 justify-between text-base lg:h-12 lg:w-[220px] lg:flex-none">
           {last ? "Finish" : "Next"}<Icon name="arrowR" />

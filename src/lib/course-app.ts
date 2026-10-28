@@ -115,6 +115,8 @@ export interface CourseState {
   muted: boolean;
   /** Saw (or skipped) Kamran's tour of the lesson screen. */
   toured: boolean;
+  /** Preview only: which tour stop `?start=tourN` opens on. */
+  tourStep?: number;
   /**
    * Which step the lesson's main column is showing. One step at a time, in
    * place of the video: nothing scrolls, and finishing one opens the next.
@@ -122,6 +124,12 @@ export interface CourseState {
   stage: StepKey;
   /** The assessment is mid-attempt, so stepping away would lose it (not saved: a reload returns to the video). */
   checkBusy: boolean;
+  /** Where the lesson assessment is: the intro card, the questions, the results, or the passed row. */
+  checkStage: CheckStage;
+  /** Question the assessment is on, and the estimate / follow-up the practice is on: the N in "N / 14". */
+  checkIdx: number;
+  estIdx: number;
+  fuIdx: number;
   /** Local dates (YYYY-MM-DD) with any finished step: the streak. */
   activeDays: string[];
   /** The promise made after the welcome: signed name and local date. */
@@ -136,6 +144,35 @@ export const score = (questions: ChoiceQuestion[], picks: number[]) =>
   picks.filter((p, k) => questions[k]?.choices[p]?.best).length;
 
 export type StepKey = "watch" | "reveal" | "prove" | "estimate" | "build" | "design" | "follow" | "done";
+
+export type CheckStage = "intro" | "q" | "result" | "passed";
+
+/** The assessment view a lesson opens on: the results after a miss, the passed row after a pass, else the intro. */
+export function checkStageFor(p?: LessonProgress): CheckStage {
+  if (p?.failed) return "result";
+  if (p?.post) return "passed";
+  return "intro";
+}
+
+/** Everything in the day's assessment is numbered out of 14: the check, the estimates, the build, the design, the follow-ups. */
+export const ASSESSMENT_TOTAL = 14;
+
+/**
+ * The big "N / 14" in the assessment header. The check's questions are 1–5,
+ * estimates 6–8, build 9, design 10, follow-ups 11–14. Zero while the part is
+ * done, on the intro card, and on the results: no counter to show there.
+ */
+export function assessmentStep(s: CourseState, id: string): number {
+  const p: LessonProgress = s.lessons[id] ?? {};
+  switch (s.stage) {
+    case "prove": return s.checkStage === "q" ? s.checkIdx + 1 : 0;
+    case "estimate": return p.est ? 0 : 6 + s.estIdx;
+    case "build": return p.built === undefined ? 9 : 0;
+    case "design": return p.design ? 0 : 10;
+    case "follow": return p.follow ? 0 : 11 + Math.min(s.fuIdx, 3);
+    default: return 0;
+  }
+}
 
 /** The lesson's steps in order: watch → learn → prove it → estimate → build it → design it → follow-ups → done. Each opens when the one before it is done. */
 export function lessonSteps(s: CourseState, id: string, day: Day) {
@@ -190,7 +227,7 @@ export const sec = (d: string) => {
 };
 export const fmt = (s: number) => {
   const v = Math.max(0, Math.floor(s));
-  return `${String(Math.floor(v / 60)).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`;
+  return `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`;
 };
 export const pad = (n: number) => String(n).padStart(2, "0");
 export const pct = (a: number[]) => (a.length ? `${Math.round((a.reduce((x, y) => x + y, 0) / a.length) * 100)}%` : "—");
@@ -199,13 +236,13 @@ export const localDate = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMont
 export function lesson(id: string) {
   const [mi, li] = id.split("-").map(Number);
   const m = MODULES[mi];
-  return { mi, li, m, title: m.lessons[li][0], dur: m.lessons[li][1], secs: sec(m.lessons[li][1]), code: `${pad(mi + 1)}.${li + 1}` };
+  return { mi, li, m, title: m.lessons[li][0], dur: m.lessons[li][1], secs: sec(m.lessons[li][1]), code: `D${ALL_IDS.indexOf(id)}` };
 }
 
 export const moduleIds = (mi: number) => MODULES[mi].lessons.map((_, li) => `${mi}-${li}`);
 export const moduleMinutes = (mi: number) => Math.round(MODULES[mi].lessons.reduce((a, l) => a + sec(l[1]), 0) / 60);
 /** Each lesson's quick check sits at 45% of the video. */
-export const quickCheckAt = (id: string) => Math.round(lesson(id).secs * 0.45);
+export const quickCheckAt = (id: string) => Math.round(lesson(id).secs * 0.44);
 export const isDownloaded = (s: CourseState, id: string) => s.dl.some((x) => x.id === id);
 /** The lesson can't play: a simulated load error, or offline without a download. */
 export const blocked = (s: CourseState) => s.vidErr || (s.offline && !isDownloaded(s, s.cur));
@@ -300,8 +337,8 @@ export function defaultState(now = Date.now()): CourseState {
     todaySec: 0, today: localDate(new Date(now)),
     toast: null, toastUntil: 0,
     commitment: null, streakPop: false, popDay: "",
-    lessons: {}, lang: "en", subs: true, subLang: "hinglish", subSize: "m", audio: "Hinglish", volume: 1, muted: false,
-    toured: false, stage: "watch", checkBusy: false, activeDays: [],
+    lessons: {}, lang: "en", subs: false, subLang: "en", subSize: "m", audio: "Hinglish", volume: 1, muted: false,
+    toured: false, stage: "watch", checkBusy: false, checkStage: "intro", checkIdx: 0, estIdx: 0, fuIdx: 0, activeDays: [],
   };
 }
 
@@ -310,6 +347,8 @@ export const START_SCREENS = [
   "home", "course", "player", "post", "q", "results", "progress", "qc", "mini", "transcript", "exit",
   "commit", "commitdone", "streak", "lesson", "lessonpass", "lessonfail", "retake",
   "splash", "onboard", "onboard2", "profile", "notifs", "notifsempty", "downloads", "dlempty", "discuss", "recap", "offline", "videoerr",
+  "tour1", "tour2", "tour3", "tour4", "tour5", "playing", "paused", "tabqna", "tabnotes", "tabtranscript", "notesempty", "vidoffline",
+  "learn", "checkintro", "checkq", "checkpass", "checkfail", "checkpassed", "estq", "build", "builddone", "design", "designwalk", "followq", "followdone", "daydone",
 ] as const;
 export type StartScreen = (typeof START_SCREENS)[number];
 
@@ -319,16 +358,22 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     ...defaultState(now), screen: "home", onboarded: true, toured: true, done: ["0-0"], cur: "1-0",
     lessons: { "0-0": { watched: true, read: true, post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 } },
     commitment: { name: "Priya Sharma", date: localDate(new Date(now)) },
+    dl: [{ id: "0-0", size: 38 }, { id: "1-0", size: 31 }],
   };
   /** Day 1 opened past the video, with the check in some state. These frames are about the check, so the column shows it. */
   const atCheck = (p: Partial<LessonProgress>): CourseState => ({
-    ...s, screen: "player", visited: true, stage: "prove", lessons: { ...s.lessons, "1-0": { watched: true, read: true, ...p } },
+    ...s, screen: "player", visited: true, stage: "prove", checkStage: checkStageFor(p), lessons: { ...s.lessons, "1-0": { watched: true, read: true, ...p } },
+  });
+  /** Day 1 past the assessment, so the practice stages have something to stand on. */
+  const passed: LessonProgress = { watched: true, read: true, post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1, est: [260, 30000, 250] };
+  const atStage = (stage: StepKey, p: Partial<LessonProgress> = {}): CourseState => ({
+    ...s, screen: "player", visited: true, stage, lessons: { ...s.lessons, "1-0": { ...passed, ...p } },
   });
   if (opts.seedPost) s.post = [1, 1, 1, 1, 0, 1];
   switch (start) {
-    case "course": return { ...s, screen: "course", tab: "course" };
+    case "course": return { ...s, screen: "course", tab: "course", openMod: lesson(s.cur).mi };
     case "progress": return { ...s, screen: "progress", tab: "progress" };
-    case "player": return { ...s, screen: "player", visited: true };
+    case "player": return { ...s, screen: "player", visited: true, notes: { "1-0": [{ t: 52, text: "Predictable = known date. Pre-scale weeks ahead." }, { t: 131, text: "Auto-scaling takes minutes; spikes take seconds" }] } };
     case "post": return { ...s, screen: "quiz", quiz: { kind: "post", stage: "intro", idx: 0, answers: {} } };
     case "commit": return { ...s, screen: "commit", commitment: null };
     case "commitdone": return { ...s, screen: "commit" };
@@ -353,14 +398,44 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     case "notifsempty": return { ...s, screen: "notifs", notifs: [] };
     case "downloads": return { ...s, screen: "downloads", dlProg: { "2-2": 40 } };
     case "dlempty": return { ...s, screen: "downloads", dl: [] };
-    case "recap": return { ...s, screen: "recap", recapMod: 0, done: ["0-0"], cur: "1-0", t: 0 };
+    case "recap": return { ...s, screen: "recap", recapMod: 0, done: ["0-0"], cur: "1-0", t: 0, notes: { "0-0": [{ t: 40, text: "Every app = boxes talking to each other" }] } };
     case "offline": return { ...s, screen: "course", tab: "course", offline: true };
-    case "videoerr": return { ...s, screen: "player", visited: true, vidErr: true };
+    case "videoerr": return { ...s, screen: "player", visited: true, t: 96, vidErr: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
+    case "vidoffline": return { ...s, screen: "player", visited: true, t: 96, offline: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
     case "mini": return { ...s, visited: true, playing: true };
     case "transcript": return { ...s, screen: "player", visited: true, ptab: "transcript" };
+    case "tour1": return { ...s, screen: "player", visited: true, toured: false, tourStep: 0 };
+    case "tour2": return { ...s, screen: "player", visited: true, toured: false, tourStep: 1 };
+    case "tour3": return { ...s, screen: "player", visited: true, toured: false, tourStep: 2 };
+    case "tour4": return { ...s, screen: "player", visited: true, toured: false, tourStep: 3 };
+    case "tour5": return { ...s, screen: "player", visited: true, toured: false, tourStep: 4 };
+    case "playing": return { ...s, screen: "player", visited: true, t: 96, playing: true, subs: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
+    case "paused": return { ...s, screen: "player", visited: true, t: 96, subs: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
+    case "tabqna": return { ...s, screen: "player", visited: true, ptab: "qna" };
+    case "tabtranscript": return { ...s, screen: "player", visited: true, ptab: "transcript", t: 96, lessons: { ...s.lessons, "1-0": { watched: true } } };
+    case "tabnotes": return {
+      ...s, screen: "player", visited: true, ptab: "notes", t: 96, draft: "Throttle below the tested limit",
+      lessons: { ...s.lessons, "1-0": { watched: true } },
+      notes: { "1-0": [{ t: 52, text: "Predictable = known date. Pre-scale weeks ahead." }, { t: 131, text: "Auto-scaling takes minutes; spikes take seconds" }] },
+    };
+    case "notesempty": return { ...s, screen: "player", visited: true, ptab: "notes", notes: {} };
     case "exit": return { ...s, screen: "quiz", quiz: { kind: "post", stage: "q", idx: 2, answers: { 0: 0, 1: [0], 2: 1 } }, confirmExit: true };
-    case "qc": return { ...s, screen: "player", visited: true };
+    case "qc": return { ...s, screen: "player", visited: true, t: quickCheckAt("1-0"), qcOpen: true };
     case "results": return { ...s, screen: "results", post: s.post ?? [1, 1, 1, 1, 0, 1], lastKind: "post" };
+    case "learn": return { ...s, screen: "player", visited: true, stage: "reveal", t: 190, ended: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
+    case "checkintro": return atCheck({});
+    case "checkq": return { ...atCheck({}), checkStage: "q", checkIdx: 1, checkBusy: true };
+    case "checkpass": return { ...atCheck({ check: 80, post: [0, 0, 0, 1, 0], checkPicks: [0, 0, 0, 1, 0], tries: 1 }), checkStage: "result" };
+    case "checkfail": return { ...atCheck({ check: 40, post: undefined, checkPicks: [0, 1, 1, 0, 2], tries: 1, failed: true }), checkStage: "result" };
+    case "checkpassed": return { ...atCheck({ check: 80, post: [0, 0, 0, 1, 0], checkPicks: [0, 0, 0, 1, 0], tries: 1 }), checkStage: "passed" };
+    case "estq": return { ...atStage("estimate", { est: undefined }), estIdx: 0 };
+    case "build": return atStage("build");
+    case "builddone": return atStage("build", { built: 1 });
+    case "design": return atStage("design", { built: 0 });
+    case "designwalk": return atStage("design", { built: 0, design: "Waiting room in front so only a bit more than the stock gets in. One stock counter in Redis, decremented atomically, so we never sell 1,001. Payments through a queue at under 2,000/s, with an idempotency key per reservation. Trade-off: the “left” badge can be a few seconds stale." });
+    case "followq": return { ...atStage("follow", { built: 0, design: "Waiting room in front, then one atomic stock counter so we never sell 1,001." }), fuIdx: 1 };
+    case "followdone": return atStage("follow", { built: 0, design: "Waiting room in front, then one atomic stock counter so we never sell 1,001.", follow: [true, false, true, true] });
+    case "daydone": return atStage("done", { built: 0, design: "Waiting room in front, then one atomic stock counter so we never sell 1,001.", follow: [true, false, true, true] });
     default: return s;
   }
 }
@@ -387,6 +462,10 @@ export function tick(s: CourseState, now = Date.now()): CourseState {
 
   // The <video> element moves the playhead; here we only count today's minutes while it plays.
   if (n.screen === "player" && n.playing && !blocked(n)) set({ todaySec: n.todaySec + n.speed });
+  // The quick check is ungraded: it pauses the video once, partway through.
+  if (n.screen === "player" && n.playing && !n.qcOpen && hasQuickCheck(n.cur) && !n.qcDone.includes(n.cur) && n.t >= quickCheckAt(n.cur)) {
+    set({ qcOpen: true, playing: false });
+  }
 
   if (n.toast && now > n.toastUntil) set({ toast: null });
 
@@ -401,7 +480,10 @@ export function openLesson(s: CourseState, id: string, now = Date.now(), force =
   if (isSoon(id)) return { ...s, ...toast(`${lesson(id).title.split(":")[0]} is coming soon`, now) };
   if (!force && isLocked(s, id)) return { ...s, ...toast("Pass the previous lesson’s assessment to unlock this one", now, 2400) };
   const same = id === s.cur;
-  return { ...s, screen: "player", cur: id, t: same ? s.t : 0, playing: same ? s.playing : false, visited: true, miniHide: null, ended: false, upNext: 0, qcOpen: false, stage: stageFor(s, id), checkBusy: false };
+  return {
+    ...s, screen: "player", cur: id, t: same ? s.t : 0, playing: same ? s.playing : false, visited: true, miniHide: null, ended: false, upNext: 0, qcOpen: false,
+    stage: stageFor(s, id), checkBusy: false, checkStage: checkStageFor(s.lessons[id]), checkIdx: 0, estIdx: 0, fuIdx: 0,
+  };
 }
 
 /** Marks the current lesson done and moves on: to the next lesson, or to the recap when a module is finished. */
@@ -412,7 +494,7 @@ export function completeNext(s: CourseState, auto: boolean, now = Date.now()): C
   const cmi = lesson(s.cur).mi;
   const t = toast(`Lesson complete. ${s.todaySec >= s.goal * 60 ? "Daily goal met." : "Counts toward today’s goal."}`, now);
   // The next lesson starts on its video, not on the step this one finished on.
-  const reset = { ended: false, upNext: 0, qcOpen: false, stage: "watch" as StepKey, checkBusy: false };
+  const reset = { ended: false, upNext: 0, qcOpen: false, stage: "watch" as StepKey, checkBusy: false, checkStage: "intro" as CheckStage, checkIdx: 0, estIdx: 0, fuIdx: 0 };
   if (moduleIds(cmi).every((id) => done.includes(id)) && (!nextId || lesson(nextId).mi !== cmi)) {
     return { ...s, ...reset, done, cur: nextId ?? s.cur, t: 0, playing: false, screen: "recap", recapMod: cmi, openMod: nextId ? lesson(nextId).mi : cmi };
   }
@@ -453,7 +535,7 @@ export function openNotification(s: CourseState, n: Notif): CourseState {
   switch (n.go) {
     case "player": return openLesson(base, base.cur);
     case "progress": return { ...base, screen: "progress", tab: "progress" };
-    case "course": return { ...base, screen: "course", tab: "course", openMod: 3 };
+    case "course": return { ...base, screen: "course", tab: "course", openMod: lesson(base.cur).mi };
     case "preresults": return { ...base, screen: "results", lastKind: "pre" };
   }
 }
