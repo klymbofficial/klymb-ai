@@ -24,8 +24,7 @@ const UI = {
     yourCall: "Your call", path: "Today’s path", stepOf: (n: number, of: number) => `Step ${n} of ${of}`,
     locked: "Finish the step before",
     reveal: "What really happens", build: "Build it yourself", prove: "Prove it", follow: "Interviewer follow-ups", unlocked: "Day complete",
-    proveSub: "5 questions · 60% to pass · answers at the end", yours: "Your answer vs the best move", you: "You", best: "Best", concept: "Today’s idea",
-    watchFirst: "Watch the video first. Everything below opens after it.",
+    yours: "Your answer vs the best move", you: "You", best: "Best", concept: "Today’s idea",
     built: (n: number) => (n === 0 ? "Built on the first try." : `Built, with ${n} wrong ${n === 1 ? "drop" : "drops"} on the way.`),
     followed: (n: number, of: number) => `You had ${n} of ${of} follow-ups covered.`,
     proved: (n: number, of: number) => `You got ${n} of ${of} right.`,
@@ -34,17 +33,8 @@ const UI = {
     reference: "Optional reference",
     before: (a: number, aOf: number, b: number, bOf: number) => `Your call ${a}/${aOf} → Prove it ${b}/${bOf}`,
     deeper: "Want to go deeper?",
-    leads: {
-      reveal: "You’ve seen the story. Now: what really happened, and the one idea behind it.",
-      prove: "Same idea, new situations. Let’s see if it sticks.",
-      estimate: "Interviewers love numbers. Rough maths is enough, no calculator needed.",
-      build: "Now put the pieces together yourself.",
-      design: "Time for a full problem. Try it your way first; the model answer opens after.",
-      follow: "The interviewer changes the rules. How do you adapt?",
-      done: "That’s the day. Here’s what to keep.",
-    } as Partial<Record<StepKey, string>>,
     plan: {
-      call: "Answer 3 quick questions. No marks lost, it’s just your call",
+      call: "Answer 3 quick questions, no marks lost",
       watch: "Watch a short story video",
       reveal: "See what really happened, and the idea behind it",
       prove: "New situations, same idea",
@@ -58,7 +48,6 @@ const UI = {
     dayStart: (day: number, min: number) => `Day ${day} · about ${min} minutes`, today: "Today you’ll", start: (day: number) => `Start Day ${day}`,
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes", share: "Share on LinkedIn",
-    shareNote: "Download the image, then post. The text is copied for you: paste it, attach the image, done.",
     download: "Download image", post: "Copy text and open LinkedIn", copied: "Copied. Paste it in LinkedIn",
     complete: "Mark complete", redo: "Do this lesson again",
   },
@@ -67,8 +56,7 @@ const UI = {
     yourCall: "Your call", path: "Aaj ka raasta", stepOf: (n: number, of: number) => `Step ${n} / ${of}`,
     locked: "Pichla step poora karo",
     reveal: "Asal mein kya hota hai", build: "Khud banao", prove: "Prove it", follow: "Interviewer follow-ups", unlocked: "Day complete",
-    proveSub: "5 sawaal · 60% se pass · jawab end mein", yours: "Tumhara answer vs best move", you: "Tum", best: "Best", concept: "Aaj ka idea",
-    watchFirst: "Pehle video dekho. Neeche sab uske baad khulega.",
+    yours: "Tumhara answer vs best move", you: "Tum", best: "Best", concept: "Aaj ka idea",
     built: (n: number) => (n === 0 ? "Pehli baar mein ban gaya." : `Ban gaya, raaste mein ${n} galat drop.`),
     followed: (n: number, of: number) => `${of} mein se ${n} follow-ups aate the.`,
     proved: (n: number, of: number) => `${of} mein se ${n} sahi.`,
@@ -77,17 +65,8 @@ const UI = {
     reference: "Optional reference",
     before: (a: number, aOf: number, b: number, bOf: number) => `Your call ${a}/${aOf} → Prove it ${b}/${bOf}`,
     deeper: "Aur gehraai mein jaana hai?",
-    leads: {
-      reveal: "Story dekh li. Ab: asal mein kya hua, aur uske peeche ka ek idea.",
-      prove: "Wahi idea, nayi situations. Dekhte hain yaad raha ya nahi.",
-      estimate: "Interviewers ko numbers pasand hain. Rough hisaab kaafi hai, calculator nahi chahiye.",
-      build: "Ab pieces khud jodo.",
-      design: "Ab ek poora problem. Pehle apne tareeke se try karo; model answer uske baad khulega.",
-      follow: "Interviewer rules badal deta hai. Tum kaise adapt karoge?",
-      done: "Aaj ka din ho gaya. Yeh yaad rakhna hai.",
-    } as Partial<Record<StepKey, string>>,
     plan: {
-      call: "3 chhote sawaal. Koi marks nahi katenge, bas tumhara call",
+      call: "3 chhote sawaal, koi marks nahi katenge",
       watch: "Ek chhota story video",
       reveal: "Asal mein kya hua, aur uske peeche ka idea",
       prove: "Nayi situations, wahi idea",
@@ -101,7 +80,6 @@ const UI = {
     dayStart: (day: number, min: number) => `Day ${day} · lagbhag ${min} minute`, today: "Aaj tum", start: (day: number) => `Day ${day} shuru karo`,
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo", share: "LinkedIn par share karo",
-    shareNote: "Image download karo, phir post karo. Text copy ho jayega: paste karo, image lagao, ho gaya.",
     download: "Image download karo", post: "Text copy karo, LinkedIn kholo", copied: "Copied. LinkedIn mein paste karo",
     complete: "Mark complete", redo: "Yeh lesson phir se karo",
   },
@@ -243,7 +221,7 @@ export function YourCall({ s, act, id, day }: { s: CourseState; act: Act; id: st
   );
 }
 
-function Step({ id, n, title, sub, lead, locked, lockedText, children }: { id: StepKey; n: number; title: string; sub?: string; lead?: string; locked: boolean; lockedText: string; children?: ReactNode }) {
+function Step({ id, n, title, sub, locked, lockedText, children }: { id: StepKey; n: number; title: string; sub?: string; locked: boolean; lockedText: string; children?: ReactNode }) {
   return (
     <section id={`lesson-${id}`} className={clsx("scroll-mt-16 border-b border-sd-divider py-4", locked && "opacity-55")} aria-label={title}>
       <div className="grid grid-cols-[40px_1fr] items-start gap-2.5">
@@ -254,10 +232,7 @@ function Step({ id, n, title, sub, lead, locked, lockedText, children }: { id: S
         </div>
       </div>
       {!locked && children && (
-        <div className="mt-3.5 lg:pl-[50px]">
-          {lead && <p className="m-0 mb-4 border-l-[3px] border-sd-accent pl-3 text-[15px] leading-[1.45] font-semibold text-pretty text-sd-n-800">{lead}</p>}
-          {children}
-        </div>
+        <div className="mt-3.5 lg:pl-[50px]">{children}</div>
       )}
     </section>
   );
@@ -406,8 +381,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
         <div className="flex flex-col gap-2 rounded-xl bg-sd-surface p-4 text-[15px] leading-[1.45]">{c.interview.map((l, i) => <span key={l}><b className="text-sd-accent">{i + 1}.</b> {l}</span>)}</div>
       </div>
       <div>
-        <h6 className="sd-h6 mb-1">{ui.share}</h6>
-        <span className="mb-3 block text-sm text-sd-n-800">{ui.shareNote}</span>
+        <h6 className="sd-h6 mb-2">{ui.share}</h6>
         {/* eslint-disable-next-line @next/next/no-img-element -- the same file the learner downloads */}
         <img src={image} alt={c.cheatsheet.title} width={1080} height={1350} className="w-full max-w-[420px] border border-sd-divider" />
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -438,13 +412,11 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
 
   return (
     <div data-tour="practice" className="mt-6 lg:mt-8">
-      {!p.watched && <p className="m-0 mb-1 border-l-[3px] border-sd-accent pl-3 text-sm text-sd-n-800">{ui.watchFirst}</p>}
-
-      <Step id="reveal" n={num("reveal")} lead={ui.leads.reveal} title={ui.reveal} sub={c.revealSub} locked={!open("reveal")} lockedText={ui.locked}>
+      <Step id="reveal" n={num("reveal")} title={ui.reveal} sub={c.revealSub} locked={!open("reveal")} lockedText={ui.locked}>
         <Reveal c={c} ui={ui} pre={p.pre ?? []} read={!!p.read || !!p.post} onRead={() => { set({ read: true }); act((q) => ({ ...q, checkFull: true })); }} />
       </Step>
 
-      <Step id="prove" n={num("prove")} lead={ui.leads.prove} title={ui.prove} sub={ui.proveSub} locked={!open("prove")} lockedText={ui.locked}>
+      <Step id="prove" n={num("prove")} title={ui.prove} locked={!open("prove")} lockedText={ui.locked}>
         <LessonCheck
           key={id}
           s={s}
@@ -460,7 +432,7 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       </Step>
 
       {c.estimates?.length ? (
-        <Step id="estimate" n={num("estimate")} lead={ui.leads.estimate} title={ui.estimate} sub={ui.estimateSub} locked={!open("estimate")} lockedText={ui.locked}>
+        <Step id="estimate" n={num("estimate")} title={ui.estimate} sub={ui.estimateSub} locked={!open("estimate")} lockedText={ui.locked}>
           {p.est
             ? <Done text={ui.estimated(inRange(c.estimates, p.est), c.estimates.length)} next={nextOf("estimate")} />
             : <EstimateQuiz key={s.lang} items={c.estimates} lang={s.lang} onDone={(est) => set({ est }, after("estimate"))} />}
@@ -468,7 +440,7 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       ) : null}
 
       {c.build && (
-        <Step id="build" n={num("build")} lead={ui.leads.build} title={ui.build} sub={c.build.title} locked={!open("build")} lockedText={ui.locked}>
+        <Step id="build" n={num("build")} title={ui.build} sub={c.build.title} locked={!open("build")} lockedText={ui.locked}>
           {p.built !== undefined
             ? <Done text={ui.built(p.built)} next={nextOf("build")} />
             : <DiagramBuilder key={s.lang} task={c.build} lang={s.lang} onDone={(built) => set({ built }, after("build"))} />}
@@ -476,20 +448,20 @@ export function Practice({ s, act, id, day }: { s: CourseState; act: Act; id: st
       )}
 
       {c.design && (
-        <Step id="design" n={num("design")} lead={ui.leads.design} title={ui.design} sub={ui.designSub} locked={!open("design")} lockedText={ui.locked}>
+        <Step id="design" n={num("design")} title={ui.design} sub={ui.designSub} locked={!open("design")} lockedText={ui.locked}>
           <DesignIt key={s.lang} task={c.design} lang={s.lang} saved={p.design} checks={p.checks} onSave={(design) => set({ design })} onChecks={(checks) => set({ checks })} onContinue={() => goTo(after("design"), 0)} />
         </Step>
       )}
 
       {c.followUps?.length ? (
-        <Step id="follow" n={num("follow")} lead={ui.leads.follow} title={ui.follow} sub={`${c.followUps.length} “what if” questions`} locked={!open("follow")} lockedText={ui.locked}>
+        <Step id="follow" n={num("follow")} title={ui.follow} sub={`${c.followUps.length} “what if” questions`} locked={!open("follow")} lockedText={ui.locked}>
           {p.follow
             ? <Done text={ui.followed(p.follow.filter(Boolean).length, p.follow.length)} next={nextOf("follow")} />
             : <FollowUps key={s.lang} items={c.followUps} lang={s.lang} onDone={(follow) => set({ follow }, "done")} />}
         </Step>
       ) : null}
 
-      <Step id="done" n={num("done")} lead={ui.leads.done} title={ui.unlocked} sub={c.cheatsheet.title} locked={!open("done")} lockedText={ui.locked}>
+      <Step id="done" n={num("done")} title={ui.unlocked} sub={c.cheatsheet.title} locked={!open("done")} lockedText={ui.locked}>
         <Unlocked s={s} act={act} id={id} day={day} c={c} ui={ui} />
       </Step>
 

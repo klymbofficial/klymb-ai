@@ -89,7 +89,7 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
           <span className="sd-kicker text-sd-accent-700">Klymb.ai · System Design in 21 Days</span>
           <StudyBuddy tone="light" size={96} message={`Hi${first ? ` ${first}` : ""}, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes.`} />
           <h1 className="m-0 text-[38px] leading-[1] tracking-[-0.04em] text-pretty lg:text-[60px]">System design, phone pe.</h1>
-          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Watch the 90-second overview of all 21 days. No experience needed: Day 0 starts from what system design even is.</p>
+          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">No experience needed: Day 0 starts from what system design even is.</p>
           <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} /></div>
         </div>
         <OverviewVideo />
@@ -267,7 +267,7 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
                 <span className={clsx("absolute inset-y-0 left-0 bg-sd-accent-900", holding ? "w-full transition-[width] duration-[1200ms] ease-linear" : "w-0 transition-[width] duration-200 ease-out")} />
                 <span className="relative flex items-center gap-2"><Icon name="check" />{holding ? "Keep holding…" : "Press and hold to commit"}</span>
               </button>
-              <span className="text-xs text-sd-n-700">{can ? "Hold for about a second to make it official." : "Tick both promises and sign to continue."}</span>
+              {!can && <span className="text-xs text-sd-n-700">Tick both promises and sign to continue.</span>}
             </div>
           </>
         ) : (
@@ -317,7 +317,6 @@ export function StreakPop({ s, act }: { s: CourseState; act: Act }) {
             <span className="text-[28px] leading-none font-extrabold tracking-[-0.02em]"><Roll n={st.current} delay={0.5} /> day streak</span>
           </div>
         </div>
-        <div className="text-sm leading-[1.45]">Today’s task is done. Come back tomorrow to keep it going.</div>
         <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
           {days.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5">

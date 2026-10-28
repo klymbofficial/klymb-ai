@@ -65,8 +65,8 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
 
   const onTime = (v: HTMLVideoElement) => {
     const t = v.currentTime;
-    // Real playback since the last update; a seek makes the gap too big to count.
-    const played = !v.paused && last.current.id === s.cur ? (t - last.current.t) / (v.playbackRate || 1) : 0;
+    // Video played since the last update; a seek makes the gap too big to count.
+    const played = !v.paused && last.current.id === s.cur ? t - last.current.t : 0;
     last.current = { id: s.cur, t };
     if (v.duration > 0) {
       if (marks.current.id !== s.cur) marks.current = { id: s.cur, seen: new Set() };
@@ -77,7 +77,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
     act((p) => {
       const lp = p.lessons[p.cur];
       // After a missed check, the retake opens once enough has actually been played again.
-      const base = lp?.failed && !lp.rewatched ? addRewatch(p, p.cur, played, v.duration) : p;
+      const base = lp?.failed && !lp.rewatched ? addRewatch(p, p.cur, played, v.duration, v.playbackRate) : p;
       const owed = seen && !lp?.watched;
       if (base === p && Math.floor(p.t) === Math.floor(t) && !owed) return p;
       const n = { ...base, t };
@@ -205,7 +205,6 @@ function Notes({ s, act }: { s: CourseState; act: Act }) {
             <span className="text-sm leading-[1.4]">{n.text}</span>
           </div>
         ))}
-        {!notes.length && <div className="py-3 text-[13px] text-sd-n-700">Notes you add are pinned to the moment in the video.</div>}
       </div>
     </div>
   );
@@ -255,7 +254,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
   const day = dayOf(s.cur);
   const lp = s.lessons[s.cur] ?? {};
   const nextId = ALL_IDS[ALL_IDS.indexOf(s.cur) + 1];
-  const pos = `${lessonDay(s.cur)} · Lesson ${c.li + 1} of ${c.m.lessons.length} · Module ${c.mi + 1} of ${MODULES.length}`;
+  const pos = `${c.m.lessons.length > 1 ? `Lesson ${c.li + 1} of ${c.m.lessons.length} · ` : ""}Module ${c.mi + 1} of ${MODULES.length}`;
   const qc = hasQuickCheck(s.cur) ? fmt(quickCheckAt(s.cur)) : null;
   const done = flowDone(s, s.cur);
   const completeLabel = nextId ? "Mark complete · next lesson" : "Mark complete";
