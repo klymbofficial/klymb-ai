@@ -81,7 +81,7 @@ const en: DayCopy = {
   ],
 
   revealTitle: "Flipkart, Big Billion Day 2015",
-  revealSub: "your answer vs Flipkart",
+  revealSub: "what Flipkart actually did, then the standard pattern",
   sourceNote: "Source: Flipkart Stories (links at the bottom)",
   reveal: [
     { when: "~4 months before", what: "Preparation starts. Most of the last two months before code freeze go to infrastructure." },
@@ -309,6 +309,13 @@ const en: DayCopy = {
     },
   ],
 
+  faq: [
+    { q: "If I have auto-scaling, why pre-scale at all?", a: "Auto-scaling reacts in minutes: machines boot, warm up, join the pool. A sale spike arrives in seconds. By the time the new servers are ready the deal is gone and customers have already seen errors. A known peak is warmed before it, not during it." },
+    { q: "How much headroom should the load test cover?", a: "A multiple of the forecast, not the forecast. Teams usually take two to three times, because the forecast is a guess and traffic never arrives evenly. Test the whole path too — one slow downstream service sets your real capacity." },
+    { q: "Isn’t rate limiting just turning customers away?", a: "It is, and it is the kinder option. Without it everyone gets a slow, failing site. With it most people get a working site and some get “try again in a moment”. Throttle a little below what you actually tested." },
+    { q: "What does “degrade gracefully” mean in practice?", a: "Switch off the parts nobody buys with: recommendations, reviews, the live counter. Keep search, cart and payment alive. Decide that list before the sale, because nobody makes good calls at 2 a.m. with the site on fire." },
+  ],
+
   interview: [
     "First ask: is this load predictable? (Do we know the date and time?)",
     "Predictable: forecast → pre-scale → load test well above the forecast → code freeze.",
@@ -411,7 +418,7 @@ const hi: DayCopy = {
   ],
 
   revealTitle: "Flipkart, Big Billion Day 2015",
-  revealSub: "tumhara answer vs Flipkart",
+  revealSub: "Flipkart ne asal mein kya kiya, phir standard pattern",
   sourceNote: "Source: Flipkart Stories (links neeche hain)",
   reveal: [
     { when: "~4 mahine pehle", what: "Taiyaari shuru. Code freeze se pehle ke aakhri do mahine zyada tar infrastructure par gaye." },
@@ -637,6 +644,13 @@ const hi: DayCopy = {
       say: "\"Checkout strongly consistent rahega; badge kuch second purana chal sakta hai. Exact chahiye toh in-memory counter se padhega, database se kabhi nahi.\"",
       deeper: "Days 10 aur 16",
     },
+  ],
+
+  faq: [
+    { q: "Auto-scaling hai toh pre-scale karne ki zaroorat kya hai?", a: "Auto-scaling minutes mein react karta hai: machine boot hoti hai, warm hoti hai, pool mein judti hai. Sale ka spike seconds mein aata hai. Jab tak naye servers taiyaar honge, deal khatam aur customers ko errors mil chuke honge. Jo peak pata hai, woh pehle se warm hota hai." },
+    { q: "Load test kitne traffic pe karna chahiye?", a: "Forecast ka multiple, sirf forecast nahi. Log aam taur pe do se teen guna lete hain, kyunki forecast ek andaaza hai aur traffic barabar nahi aata. Poora raasta test karo — ek slow downstream service hi tumhari asli capacity tay karti hai." },
+    { q: "Rate limiting matlab customers ko bhaga dena hi hua na?", a: "Haan, aur yahi behtar option hai. Bina iske sabko slow aur girta hua site milta hai. Iske saath zyada logon ko chalta hua site milta hai aur kuch ko “thodi der mein try karo”. Jitna test kiya hai, throttle usse thoda neeche rakho." },
+    { q: "“Degrade” asal mein kya karna hota hai?", a: "Woh hisse band karo jinse koi kharidta nahi: recommendations, reviews, live counter. Search, cart aur payment chalu rakho. Yeh list sale se pehle banao, kyunki raat 2 baje jalte hue site pe achhe faisle nahi hote." },
   ],
 
   interview: [

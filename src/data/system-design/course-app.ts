@@ -374,7 +374,7 @@ export const TRANSCRIPTS: Record<string, [number, string][]> = {
 
 
 export type NotifType = "reply" | "streak" | "badge" | "module" | "assess";
-export type NotifTarget = "discuss" | "player" | "progress" | "course" | "preresults";
+export type NotifTarget = "player" | "progress" | "course" | "preresults";
 
 export interface Notif {
   id: number;
@@ -389,12 +389,6 @@ export interface Notif {
 
 /** No notifications until there is a backend to send them. */
 export const NOTIFICATIONS: Notif[] = [];
-
-export interface Reply { name: string; ini: string; ago: string; inst: boolean; text: string }
-export interface Thread { id: string; name: string; ini: string; ago: string; t: number; text: string; votes: number; replies: Reply[] }
-
-/** Lesson Q&A needs a backend; none yet. */
-export const THREADS: Record<string, Thread[]> = {};
 
 /** The welcome screen: what the course gives you, before Day 0. [title, detail] */
 export const WELCOME: [string, string][] = [
