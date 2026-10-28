@@ -47,7 +47,7 @@ export function Progress({ s }: { s: CourseState }) {
             <Icon name="flame" size={40} />
           </div>
           <div className="mt-2 text-xl font-extrabold lg:mt-2.5 lg:text-2xl">day streak</div>
-          <div className="text-[13px] lg:text-sm">{st.current ? `Longest: ${st.longest} ${st.longest === 1 ? "day" : "days"}. One lesson a day keeps it going.` : "Finish one lesson step today to start your streak."}</div>
+          <div className="text-[13px] lg:text-sm">{st.current ? `Longest: ${st.longest} ${st.longest === 1 ? "day" : "days"}` : "Finish one lesson step today to start your streak."}</div>
         </div>
         <div>
           <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Last 5 weeks</h6><span className="text-xs text-sd-n-700">{active} active</span></div>
@@ -71,7 +71,7 @@ export function Progress({ s }: { s: CourseState }) {
       </div>
       <div>
         <div className="mb-2 flex items-baseline justify-between"><h6 className="sd-h6">Badges</h6><span className="text-xs text-sd-n-700">{earned.length} of {b.length}</span></div>
-        <p className="mb-3 text-sm text-sd-n-700">{earned.length ? "Choose an earned badge to download and share your progress." : "Finish your first lesson or pass a lesson assessment to unlock a badge you can share."}</p>
+        {!earned.length && <p className="mb-3 text-sm text-sd-n-700">Finish your first lesson or pass a lesson assessment to unlock a badge you can share.</p>}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {b.map((x, i) => (
             <button type="button" key={x.name} disabled={!x.on} aria-pressed={x.on && shareBadge?.name === x.name} title={x.description} onClick={() => setSelected(x.name)} className={clsx("sd-a-pop flex flex-col items-center gap-1.5 rounded-xl py-1 text-center", x.on && "cursor-pointer", x.on && shareBadge?.name === x.name && "outline-2 outline-offset-2 outline-sd-accent")} style={stagger(i, 60, 300)}>

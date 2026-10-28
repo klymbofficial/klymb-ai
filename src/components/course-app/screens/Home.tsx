@@ -47,7 +47,6 @@ export function GoalCard({ s }: { s: CourseState }) {
       <span className="text-sm font-extrabold">Today’s goal · {Math.min(gm, s.goal)} / {s.goal} min</span>
       <span className="text-xs font-semibold text-sd-accent-700">{met ? "Goal met" : `${s.goal - gm} min to go`}</span>
       <Bar value={(s.todaySec / (s.goal * 60)) * 100} className="col-span-full h-1.5" />
-      <span className="col-span-full text-xs text-sd-n-700">{streak(s).today ? "Your streak is safe today." : "One lesson today keeps your streak going."}</span>
     </div>
   );
 }

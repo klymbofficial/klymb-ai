@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { LESSON_DAYS } from "../src/data/system-design/course-app";
 import {
-  CHECK_SIZE, START_SCREENS, addRewatch, badges, checkAverage, checkPct, commit, deepLink, defaultState, flowDone, fromStored, isLocked, markRewatched,
+  CHECK_SIZE, SPEED_PRESETS, START_SCREENS, addRewatch, badges, checkAverage, checkPct, commit, deepLink, defaultState, flowDone, fromStored, isLocked, markRewatched,
   openLesson, previewState, submitCheck, toStored, updateLesson, type CourseState,
 } from "../src/lib/course-app";
 
@@ -121,6 +121,27 @@ test("after a miss, only real playback opens the retake: skipping to the end doe
   // A second miss starts the count again.
   const again = submitCheck(s, "0-0", qs, picks(3), NOW);
   assert.equal(again.lessons["0-0"].rewatchSec, 0);
+});
+
+test("rewatching the whole video opens the retake at every playback speed", () => {
+  const DUR = 100;
+  // One time update every 250ms of wall clock, so a tick covers 0.25 * rate of video.
+  for (const rate of SPEED_PRESETS) {
+    let s = submitCheck(home(), "0-0", qs, picks(3), NOW);
+    const tick = 0.25 * rate;
+    for (let played = 0; played < DUR; played += tick) s = addRewatch(s, "0-0", tick, DUR, rate);
+    assert.equal(s.lessons["0-0"].rewatched, true, `${rate}x: watching it all should open the retake`);
+  }
+});
+
+test("a seek is still not playback, at any speed", () => {
+  const DUR = 100;
+  for (const rate of SPEED_PRESETS) {
+    const failed = submitCheck(home(), "0-0", qs, picks(3), NOW);
+    // The +10s button and the scrubber jump far further than one tick ever does.
+    assert.equal(addRewatch(failed, "0-0", 10, DUR, rate).lessons["0-0"].rewatchSec ?? 0, 0, `${rate}x: a 10s jump is not playback`);
+    assert.equal(addRewatch(failed, "0-0", 90, DUR, rate).lessons["0-0"].rewatched, false, `${rate}x: skipping to the end does not open the retake`);
+  }
 });
 
 test("learners already in a lesson keep it when the checks arrive", () => {

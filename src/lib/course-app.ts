@@ -668,13 +668,15 @@ export function submitCheck(s: CourseState, id: string, questions: ChoiceQuestio
 export const REWATCH_SHARE = 0.85;
 
 /**
- * Counts seconds played after a missed check. Only real playback counts:
+ * Counts video played again after a missed check. Only real playback counts:
  * the caller passes the gap between two time updates, and a jump (a seek or
- * a skip) is too large to be playback, so it adds nothing.
+ * a skip) is too large to be playback, so it adds nothing. `played` and
+ * `duration` are both video time, so the share means the same at every speed;
+ * the cap on one tick scales with the speed it was played at.
  */
-export function addRewatch(s: CourseState, id: string, played: number, duration: number): CourseState {
+export function addRewatch(s: CourseState, id: string, played: number, duration: number, rate = 1): CourseState {
   const p = s.lessons[id];
-  if (!p?.failed || p.rewatched || !(duration > 0) || !(played > 0) || played > 2) return s;
+  if (!p?.failed || p.rewatched || !(duration > 0) || !(played > 0) || played > 2 * Math.max(1, rate)) return s;
   const sec = (p.rewatchSec ?? 0) + played;
   const n = { ...s, lessons: { ...s.lessons, [id]: { ...p, rewatchSec: sec } } };
   return sec >= duration * REWATCH_SHARE ? markRewatched(n, id) : n;

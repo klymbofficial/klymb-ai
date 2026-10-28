@@ -17,9 +17,8 @@ const UI = {
     steps: { call: "Your call", watch: "Watch", reveal: "What really happens", build: "Build it", prove: "Prove it", follow: "Follow-ups", done: "Unlocked" } as Record<StepKey, string>,
     interview: "Interview question",
     start: "You answer first →",
-    startNote: "Video comes after. Your answer comes first.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `You picked ${n} best moves. Now watch the story.`,
+    preDone: (n: number) => `You picked ${n} best moves.`,
     s2: "Watch the story", s2Sub: (m: number, l: string) => `~${m} min · voiced in ${l}`,
     watched: "Watched it → reveal", watchHint: "Finish the video to unlock the reveal",
     s3: "What really happens",
@@ -35,7 +34,6 @@ const UI = {
     streak: "Streak: 1 day",
     interviewMode: "Interview mode · 2 min answer",
     share: "Share on LinkedIn",
-    shareNote: "Download the infographic, then post. The text is copied for you: paste it, attach the image, done.",
     download: "Download infographic", post: "Copy text & open LinkedIn", copied: "Copied ✓ Paste it in LinkedIn",
     next: (n: number) => `Next · Day ${n}`, open: "Open →", redo: (n: number) => `Do Day ${n} again`, sources: "Sources",
     newHere: "New to system design? Start with Day 0 →",
@@ -44,9 +42,8 @@ const UI = {
     steps: { call: "Your call", watch: "Watch", reveal: "Asal mein kya hua", build: "Build it", prove: "Prove it", follow: "Follow-ups", done: "Unlocked" } as Record<StepKey, string>,
     interview: "Interview question",
     start: "Pehle tum batao →",
-    startNote: "Video baad mein. Pehle tumhara answer.",
     s1: "Your call", s1Sub: "2 min · 3 scenarios",
-    preDone: (n: number) => `Tumne ${n} best moves pakde. Ab story dekho.`,
+    preDone: (n: number) => `Tumne ${n} best moves pakde.`,
     s2: "Story dekho", s2Sub: (m: number, l: string) => `~${m} min · ${l}`,
     watched: "Dekh liya → reveal", watchHint: "Video poora dekho, reveal khul jayega",
     s3: "Asal mein kya hua",
@@ -62,7 +59,6 @@ const UI = {
     streak: "Streak: 1 day",
     interviewMode: "Interview mode · 2 min answer",
     share: "LinkedIn par share karo",
-    shareNote: "Infographic download karo, phir post karo. Text copy ho jayega: paste karo, image lagao, ho gaya.",
     download: "Infographic download karo", post: "Text copy karo & LinkedIn kholo", copied: "Copied ✓ LinkedIn mein paste karo",
     next: (n: number) => `Agla · Day ${n}`, open: "Kholo →", redo: (n: number) => `Day ${n} phir se karo`, sources: "Sources",
     newHere: "System design mein naye ho? Day 0 se shuru karo →",
@@ -231,7 +227,6 @@ function Hook({ day, c, ui, onStart }: { day: Day; c: DayCopy; ui: Ui; onStart: 
         <button type="button" onClick={onStart} className="mt-7 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3.5 text-sm font-extrabold text-ink transition-transform active:scale-[0.97]">
           {ui.start}
         </button>
-        <p className="mt-3 text-xs text-white/50">{ui.startNote}</p>
         {day.prevHref && (
           <Link href={day.prevHref} className="mt-5 inline-block text-sm font-bold text-red-soft underline underline-offset-4">{ui.newHere}</Link>
         )}
@@ -408,7 +403,6 @@ function Unlocked({
 
       <div>
         <p className="text-sm font-extrabold uppercase tracking-wider text-muted">{ui.share}</p>
-        <p className="mt-1 text-sm text-muted">{ui.shareNote}</p>
         {/* eslint-disable-next-line @next/next/no-img-element -- the same file the learner downloads */}
         <img src={image} alt={c.cheatsheet.title} width={1080} height={1350} className="mt-3 w-full rounded-xl shadow-card" />
         <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-surface/70 p-4 font-sans text-sm leading-relaxed">{c.linkedin}</pre>

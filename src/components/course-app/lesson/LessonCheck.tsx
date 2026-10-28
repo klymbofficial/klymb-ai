@@ -14,10 +14,10 @@ const PASS = Math.round(PASS_MARK * 100);
 const UI = {
   en: {
     kicker: "Lesson assessment", title: "Check what you learned",
-    intro: (t: string) => `Five questions on “${t}”. Score ${PASS}% to unlock the next lesson. You’ll see the answers and explanations at the end.`,
+    intro: `Score ${PASS}% to unlock the next lesson. Answers and explanations come at the end.`,
     count: `${CHECK_SIZE} questions`, time: "About 5 min", mark: `Pass mark ${PASS}%`, start: "Start assessment", retake: "Retake assessment",
     skip: "Skip", next: "Next", finish: "Finish", of: (n: number, t: number) => `${n} of ${t} correct`,
-    passed: "Passed", passedBody: (next: boolean) => (next ? `Next lesson unlocked. Pass mark is ${PASS}%.` : `Pass mark is ${PASS}%.`),
+    passed: "Passed", passedBody: (next: boolean) => (next ? "Next lesson unlocked." : `Pass mark is ${PASS}%.`),
     failed: "Not passed yet", failedBody: `You need ${PASS}% to unlock the next lesson. Rewatch the lesson, then retake the assessment.`,
     answer: "Answer", yours: "You picked", skipped: "Skipped",
     rewatch: "Rewatch the lesson", rewatchFirst: "Watch the video again to unlock the retake.", continue: "Continue",
@@ -26,10 +26,10 @@ const UI = {
   },
   hi: {
     kicker: "Lesson assessment", title: "Dekho kitna samjha",
-    intro: (t: string) => `“${t}” pe paanch sawaal. Agla lesson kholne ke liye ${PASS}% chahiye. Jawab aur explanation end mein milenge.`,
+    intro: `Agla lesson kholne ke liye ${PASS}% chahiye. Jawab aur explanation end mein milenge.`,
     count: `${CHECK_SIZE} sawaal`, time: "Lagbhag 5 min", mark: `Pass mark ${PASS}%`, start: "Assessment shuru karo", retake: "Assessment dobara do",
     skip: "Skip", next: "Next", finish: "Finish", of: (n: number, t: number) => `${t} mein se ${n} sahi`,
-    passed: "Pass", passedBody: (next: boolean) => (next ? `Agla lesson khul gaya. Pass mark ${PASS}% hai.` : `Pass mark ${PASS}% hai.`),
+    passed: "Pass", passedBody: (next: boolean) => (next ? "Agla lesson khul gaya." : `Pass mark ${PASS}% hai.`),
     failed: "Abhi pass nahi", failedBody: `Agla lesson kholne ke liye ${PASS}% chahiye. Lesson dobara dekho, phir assessment do.`,
     answer: "Jawab", yours: "Tumne chuna", skipped: "Skip kiya",
     rewatch: "Lesson dobara dekho", rewatchFirst: "Retake kholne ke liye video phir se dekho.", continue: "Aage chalo",
@@ -191,7 +191,7 @@ export function LessonCheck({ s, act, id, title, questions, hasNext, next, onPas
     <div className="flex flex-col gap-3.5 rounded-xl bg-sd-surface p-4 lg:p-5">
       <span className="sd-kicker text-sd-accent-700">{ui.kicker}</span>
       <h3 className="m-0 text-[26px] leading-[1.05] tracking-[-0.03em] lg:text-[32px]">{ui.title}</h3>
-      <p className="m-0 text-[15px] text-pretty text-sd-n-800">{ui.intro(title)}</p>
+      <p className="m-0 text-[15px] text-pretty text-sd-n-800">{ui.intro}</p>
       <div className="flex flex-wrap gap-2">
         <span className="sd-tag sd-tag-neutral">{ui.count}</span>
         <span className="sd-tag sd-tag-neutral">{ui.time}</span>

@@ -32,7 +32,6 @@ const UI = {
     savePrompt: (day: number) => `Day ${day} done! Sign in so it’s saved to your name, on any phone or laptop, and your streak keeps counting.`,
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes", share: "Share on LinkedIn",
-    shareNote: "Download the image, then post. The text is copied for you: paste it, attach the image, done.",
     download: "Download image", post: "Copy text and open LinkedIn", copied: "Copied. Paste it in LinkedIn",
     complete: "Mark complete", redo: "Do this lesson again",
   },
@@ -50,7 +49,6 @@ const UI = {
     savePrompt: (day: number) => `Day ${day} ho gaya! Sign in karo taaki yeh tumhare naam pe save ho, kisi bhi phone ya laptop pe, aur streak chalti rahe.`,
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo", share: "LinkedIn par share karo",
-    shareNote: "Image download karo, phir post karo. Text copy ho jayega: paste karo, image lagao, ho gaya.",
     download: "Image download karo", post: "Text copy karo, LinkedIn kholo", copied: "Copied. LinkedIn mein paste karo",
     complete: "Mark complete", redo: "Yeh lesson phir se karo",
   },
@@ -240,8 +238,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
         <div className="flex flex-col gap-2 rounded-xl bg-sd-surface p-4 text-[15px] leading-[1.45]">{c.interview.map((l, i) => <span key={l}><b className="text-sd-accent">{i + 1}.</b> {l}</span>)}</div>
       </div>
       <div>
-        <h6 className="sd-h6 mb-1">{ui.share}</h6>
-        <span className="mb-3 block text-sm text-sd-n-800">{ui.shareNote}</span>
+        <h6 className="sd-h6 mb-2">{ui.share}</h6>
         {/* eslint-disable-next-line @next/next/no-img-element -- the same file the learner downloads */}
         <img src={image} alt={c.cheatsheet.title} width={1080} height={1350} className="w-full max-w-[420px] border border-sd-divider" />
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
