@@ -166,7 +166,7 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
     <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
       {MODULES.map((m, mi) => (
         <div key={m.title} className="flex flex-col">
-          <h6 className="sd-h6 mt-3 mb-1 first:mt-0">{pad(mi + 1)} · {m.title}</h6>
+          <h6 className="sd-h6 mt-6 mb-2.5 first:mt-0">{pad(mi + 1)} · {m.title}</h6>
           {moduleIds(mi).map((id) => {
             const v = lessonView(s, id);
             return (
