@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import type { DesignAttempt, Lang } from "@/data/system-design/types";
 import { Icon } from "../icons";
+import { useScrollTop } from "../ui";
 
 const UI = {
   en: {
@@ -32,6 +33,7 @@ export function DesignIt({
   const [text, setText] = useState(saved ?? "");
   const left = Math.max(0, task.minChars - text.trim().length);
   const ticks = checks ?? task.checklist.map(() => false);
+  useScrollTop(!!saved);
 
   return (
     <div className="flex flex-col gap-4">

@@ -22,6 +22,11 @@ export const parallax = {
   },
 };
 
+/** The app scrolls inside one container. A page that swaps its content in place, from state of its own, calls this to open at the top. */
+export function useScrollTop(page: unknown) {
+  useEffect(() => { document.querySelector("[data-sd-scroll]")?.scrollTo({ top: 0 }); }, [page]);
+}
+
 /** Counts up from 0 to `to` over a second, easing out. Jumps straight there with reduced motion. */
 export function useCountUp(to: number) {
   const [v, setV] = useState(0);

@@ -132,13 +132,13 @@ export function CourseApp({ user = null }: { user?: CourseUser | null }) {
     return () => root.classList.remove("sd-locked");
   }, []);
 
-  // Every screen opens at the top.
+  // Every page opens at the top: a new screen, the next quiz question, the next step of a lesson or question of its check.
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
     el.scrollTop = 0;
     el.style.setProperty("--sy", "0");
-  }, [s.screen, s.quiz.stage]);
+  }, [s.screen, s.quiz.stage, s.quiz.idx, s.cur, s.stage, s.checkStage, s.checkIdx, s.estIdx, s.fuIdx]);
 
   if (!ready) return <div className="sd-app h-dvh" />;
 
@@ -151,6 +151,7 @@ export function CourseApp({ user = null }: { user?: CourseUser | null }) {
       <Sidebar s={s} act={act} />
       <div
         ref={scroller}
+        data-sd-scroll
         onScroll={(e) => e.currentTarget.style.setProperty("--sy", String(Math.round(e.currentTarget.scrollTop)))}
         className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pt-[max(8px,env(safe-area-inset-top))] lg:h-dvh lg:px-10 lg:pt-7 lg:pb-10"
       >

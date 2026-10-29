@@ -158,12 +158,21 @@ function Notes({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
-/** Every lesson of the course, by module, with the current one scrolled into view. */
+/** Every lesson of the course, by module, with the current one scrolled into view in the panel it sits in. */
 function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
+  const list = useRef<HTMLDivElement>(null);
   const here = useRef<HTMLButtonElement>(null);
-  useEffect(() => { here.current?.scrollIntoView({ block: "nearest" }); }, []);
+  useEffect(() => {
+    const row = here.current;
+    const box = list.current?.parentElement;
+    if (!row || !box) return;
+    // The panel only: scrollIntoView would also move the page behind it, so a lesson step opened with this list
+    // below it (the day's last page, say) would land halfway down the page instead of at the top.
+    const offset = row.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop;
+    box.scrollTop = offset - (box.clientHeight - row.offsetHeight) / 2;
+  }, []);
   return (
-    <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
+    <div ref={list} className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
       {MODULES.map((m, mi) => (
         <div key={m.title} className="flex flex-col">
           <h6 className="sd-h6 mt-3 mb-1 first:mt-0">{pad(mi + 1)} · {m.title}</h6>
@@ -175,7 +184,7 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
                 ref={v.cur ? here : undefined}
                 type="button"
                 onClick={() => act((p) => openLesson(p, id))}
-                className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 border-b border-sd-divider px-2 py-[11px] text-left text-sm scroll-mt-10 hover:bg-sd-accent-100", v.cur && "bg-sd-accent-100")}
+                className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 border-b border-sd-divider px-2 py-[11px] text-left text-sm hover:bg-sd-accent-100", v.cur && "bg-sd-accent-100")}
               >
                 <LessonMark done={v.done} cur={v.cur} locked={v.locked} />
                 <span className={clsx("min-w-0", v.cur && "font-extrabold", v.dim && "opacity-45")}>{lessonDay(id)} · {v.title}</span>
