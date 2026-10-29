@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { Day, DayCopy } from "@/data/system-design/types";
 import { ALL_IDS, ASSESSMENT_TOTAL, assessmentStep, completeNext, isSoon, lessonSteps, pad, score, updateLesson, type CourseState, type LessonProgress, type StepKey } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { Segmented, stagger } from "../ui";
+import { stagger } from "../ui";
 import type { Act } from "../useCourseApp";
 import { DesignIt } from "./DesignIt";
 import { DiagramBuilder } from "./DiagramBuilder";
@@ -58,18 +58,6 @@ type Ui = (typeof UI)["en"];
 /** How many estimates landed within tolerance. */
 export function inRange(items: { answer: number; tolerance: number }[], mine: number[]) {
   return items.filter((q, i) => mine[i] !== undefined && Math.abs(mine[i] / q.answer - 1) <= q.tolerance).length;
-}
-
-export function LangSwitch({ s, act }: { s: CourseState; act: Act }) {
-  return (
-    <Segmented
-      value={s.lang}
-      options={[["en", "English"], ["hi", "Hinglish"]]}
-      onChange={(lang) => act((p) => ({ ...p, lang }))}
-      className="w-[148px] flex-none lg:w-[180px]"
-      itemClass="px-2.5 py-1.5 text-xs text-center"
-    />
-  );
 }
 
 /**

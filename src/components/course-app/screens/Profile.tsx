@@ -35,7 +35,6 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
   const tog = (k: BoolKey, label: string, sub?: string) => <Row><Toggle on={s[k]} onClick={flip(k)} label={label} sub={sub} /></Row>;
   const st = streak(s);
   const initials = user?.name ? user.name.trim().split(/\s+/).map((x) => x[0]).slice(0, 2).join("") : null;
-  const dlSub = s.dl.length ? `${s.dl.length} ${s.dl.length === 1 ? "lesson" : "lessons"} · ${s.dl.reduce((a, x) => a + x.size, 0)} MB` : "Watch offline";
   const groups: [string, ReactNode][] = [
     ["Learning", <>
       <Row><Label label="Lesson language" sub="For questions and cheatsheets." /><Segmented value={s.lang} options={[["en", "English"], ["hi", "Hinglish"]]} onChange={(lang) => act((p) => ({ ...p, lang }))} /></Row>
@@ -44,7 +43,6 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
     </>],
     ["This device", <>
       <Row>{user ? <Label label="Signed in" sub={user.email} /> : <div className="flex w-full flex-col gap-2"><Label label="Not signed in" sub="Sign in to keep your progress." /><GoogleButton where="profile" lesson={s.cur} className="h-11 border-2 border-sd-ink sm:max-w-[320px]" /></div>}</Row>
-      <Row><LinkRow label="Downloads" sub={dlSub} onClick={() => act((p) => ({ ...p, screen: "downloads" }))} /></Row>
       <Row><LinkRow label="Replay Kamran’s tour" sub="The lesson screen in 5 stops." onClick={() => act((p) => ({ ...openLesson(p, dayOf(p.cur) ? p.cur : "0-0"), toured: false }))} /></Row>
       <Row><LinkRow label="Start over" sub="Clears progress, notes and scores on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
     </>],

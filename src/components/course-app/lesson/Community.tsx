@@ -139,9 +139,9 @@ export function Community({ lesson, day, lang }: { lesson: string; day: Day; lan
 
   const faq = day.copy[lang].faq;
   return (
-    <div className="flex flex-col px-5 py-3.5 lg:max-h-[560px] lg:overflow-y-auto lg:px-3.5 lg:pt-3">
+    <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-3">
+      {/* No error text when the chat can't be reached: the common questions below still answer, and the feed retries on its own. */}
       {!feed && !failed && <div className="py-3 text-[13px] text-sd-n-700">Loading questions…</div>}
-      {failed && !feed && <div className="py-3 text-[13px] text-sd-n-700">Couldn’t load. They’ll appear when you’re online.</div>}
       {feed && (feed.canPost
         ? <Composer placeholder="Ask a question about this lesson" cta="Ask" onPost={(t) => post(t)} />
         : (

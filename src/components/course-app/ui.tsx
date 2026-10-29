@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
-import { fmt, isDownloaded, isLocked, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
+import { fmt, isLocked, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
 
 /** Animation delay for the i-th item of a staggered list. */
 export const stagger = (i: number, step: number, base: number): CSSProperties => ({ animationDelay: `${base + i * step}ms` });
@@ -100,7 +100,7 @@ export function Stats({ items, className, cellClass = "py-1.5", valueClass = "te
   );
 }
 
-/** What a lesson row shows: done, current (with time left), or not started; dimmed when offline and not downloaded. */
+/** What a lesson row shows: done, current (with time left), or not started; dimmed when offline. */
 export function lessonView(s: CourseState, id: string) {
   const l = lesson(id);
   const done = s.done.includes(id);
@@ -118,8 +118,7 @@ export function lessonView(s: CourseState, id: string) {
     /** The lesson check's score, and whether that score is a miss waiting for a retake. */
     score: p?.check,
     failed: !!p?.failed,
-    downloaded: isDownloaded(s, id),
-    dim: soon || locked || (s.offline && !isDownloaded(s, id)),
+    dim: soon || locked || s.offline,
     dur: soon ? "Soon" : cur && !done && s.t > 0 ? `${fmt(sec(l.dur) - s.t)} left` : l.dur,
   };
 }
@@ -135,7 +134,6 @@ export function LessonMark({ done, cur, locked }: { done: boolean; cur: boolean;
 export function Duration({ v }: { v: ReturnType<typeof lessonView> }) {
   return (
     <span className="flex items-center gap-1 text-xs text-sd-n-700">
-      {v.downloaded && <Icon name="download" size={12} stroke={2.5} />}
       {v.dur}
       {v.score !== undefined && (
         <span className={clsx("rounded-md px-1.5 py-px font-bold", v.failed ? "bg-sd-accent-100 text-sd-accent-700" : "bg-sd-n-300 text-sd-ink")} title={v.failed ? "Not passed yet" : "Lesson assessment score"}>{v.score}%</span>
