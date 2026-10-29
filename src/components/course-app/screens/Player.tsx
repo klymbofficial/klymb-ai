@@ -175,7 +175,7 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
                 ref={v.cur ? here : undefined}
                 type="button"
                 onClick={() => act((p) => openLesson(p, id))}
-                className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 border-b border-sd-divider px-2 py-[11px] text-left text-sm scroll-mt-10 hover:bg-sd-accent-100", v.cur && "bg-sd-accent-100")}
+                className={clsx("grid cursor-pointer grid-cols-[24px_1fr_auto] items-center gap-2.5 px-2 py-[11px] text-left text-sm scroll-mt-10 hover:bg-sd-accent-100", v.cur && "bg-sd-accent-100")}
               >
                 <LessonMark done={v.done} cur={v.cur} locked={v.locked} />
                 <span className={clsx("min-w-0", v.cur && "font-extrabold", v.dim && "opacity-45")}>{lessonDay(id)} · {v.title}</span>
