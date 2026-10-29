@@ -1,9 +1,9 @@
 "use client";
 
 import clsx from "clsx";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { QUESTIONS, QUICK_CHECKS, WELCOME } from "@/data/system-design/course-app";
-import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { answerQuickCheck, closeQuickCheck, commit, fmt, localDate, openLesson, quickCheckAt, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "./icons";
 import { track } from "./track";
@@ -29,9 +29,10 @@ export function Splash({ act }: { act: Act }) {
 
 const OVERVIEW = "/videos/system-design/overview";
 
-/** The 90-second course overview: native controls, Hinglish captions on by default (CC turns them off). */
+/** The 90-second course overview. The poster plays it on tap, then native controls take over. */
 function OverviewVideo() {
   const seen = useRef(new Set<number>());
+  const [started, setStarted] = useState(false);
   const onTime = (v: HTMLVideoElement) => {
     if (!v.duration) return;
     const pct = Math.min(100, Math.floor((v.currentTime / v.duration) * 4) * 25);
@@ -39,37 +40,52 @@ function OverviewVideo() {
   };
   return (
     <figure className="sd-a-side m-0 flex flex-col gap-2" style={{ animationDuration: ".5s", animationDelay: "80ms" }}>
-      <video
-        controls
-        playsInline
-        preload="none"
-        poster={`${OVERVIEW}-poster.jpg`}
-        controlsList="nodownload"
-        onPlay={() => track("video_play", "overview")}
-        onTimeUpdate={(e) => onTime(e.currentTarget)}
-        className="aspect-video w-full rounded-xl border-2 border-sd-ink bg-black"
-      >
-        <source src="/api/video/overview.mp4" type="video/mp4" />
-        <track kind="captions" src={`${OVERVIEW}.vtt`} srcLang="hi" label="Hinglish" default />
-      </video>
-      <figcaption className="text-xs text-sd-n-700">What you’ll learn in 21 days · 1:26 · Hinglish, with captions</figcaption>
+      {started ? (
+        <video
+          controls
+          autoPlay
+          playsInline
+          preload="none"
+          poster={`${OVERVIEW}-poster.jpg`}
+          controlsList="nodownload"
+          onPlay={() => track("video_play", "overview")}
+          onTimeUpdate={(e) => onTime(e.currentTarget)}
+          className="aspect-video w-full rounded-xl border-2 border-sd-ink bg-black"
+        >
+          <source src="/api/video/overview.mp4" type="video/mp4" />
+          <track kind="captions" src={`${OVERVIEW}.vtt`} srcLang="hi" label="Hinglish" default />
+        </video>
+      ) : (
+        <button type="button" onClick={() => { setStarted(true); track("video_play", "overview"); }} aria-label="Play the course overview" className="relative aspect-video w-full cursor-pointer overflow-hidden rounded-xl border-2 border-sd-ink bg-black">
+          <Image src={`${OVERVIEW}-poster.jpg`} alt="Course overview video" fill sizes="(min-width: 1024px) 560px, 100vw" className="object-cover" />
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="flex size-[60px] items-center justify-center rounded-xl bg-sd-accent-400 text-sd-ink shadow-[0_8px_24px_rgba(0,0,0,.35)]"><Icon name="play" size={26} /></span>
+          </span>
+          <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/75 to-transparent px-3 py-2 text-xs font-semibold text-white">
+            <span>0:00 / 1:26</span>
+            <span className="h-[3px] flex-1 rounded-full bg-white/35" />
+            <span className="rounded border-[1.5px] border-white px-1 py-px text-[10px] font-extrabold">CC</span>
+          </span>
+        </button>
+      )}
+      <figcaption className="text-xs text-sd-n-700">Course overview · 1:26 · Hinglish, CC</figcaption>
     </figure>
   );
 }
 
 /** Signed out: Google first (it saves progress to your name), Day 0 without signing in as the quiet option. Signed in: straight to Day 0. */
 function StartButtons({ user, startDay0 }: { user: boolean; startDay0: () => void }) {
-  const link = "cursor-pointer self-center py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink lg:self-start";
+  const link = "cursor-pointer self-start border-0 bg-transparent px-0 py-1.5 text-sm font-semibold text-sd-n-700 underline underline-offset-4 hover:text-sd-ink";
   if (user) {
     return (
-      <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-[56px] justify-between text-[16px]">Start Day 0<Icon name="arrowR" /></button>
+      <button type="button" onClick={startDay0} className="sd-btn sd-btn-primary h-14 justify-between text-base">Start Day 0<Icon name="arrowR" /></button>
     );
   }
   return (
     <div className="flex flex-col gap-1.5">
-      <GoogleButton lesson="0-0" where="welcome" label="Continue with Google" className="h-[56px] border-2 border-sd-ink text-[16px]" />
-      <span className="text-center text-xs text-sd-n-700 lg:text-left">Saves your progress and streak to your name.</span>
-      <button type="button" onClick={startDay0} className={link}>Or try Day 0 without signing in</button>
+      <GoogleButton lesson="0-0" where="welcome" label="Continue with Google" className="h-14 border-2 border-sd-ink text-base" />
+      <span className="text-xs text-sd-n-700">Saves your progress.</span>
+      <button type="button" onClick={startDay0} className={link}>Try Day 0 first</button>
     </div>
   );
 }
@@ -86,19 +102,22 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
     <div className="fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-sd-bg px-5 pt-10 pb-8 lg:items-center lg:justify-center lg:p-10" role="dialog" aria-modal="true" aria-label="Welcome">
       <div className="flex w-full flex-col gap-6 lg:grid lg:max-w-[1080px] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">
         <div className="sd-a-side-b flex flex-col gap-5" style={{ animationDuration: ".5s" }}>
-          <span className="sd-kicker text-sd-accent-700">Klymb.ai · System Design in 21 Days</span>
-          <StudyBuddy tone="light" size={96} message={`Hi${first ? ` ${first}` : ""}, I’m Kamran. I’ll walk you through it. Day 0 takes about 12 minutes.`} />
-          <h1 className="m-0 text-[38px] leading-[1] tracking-[-0.04em] text-pretty lg:text-[60px]">System design, phone pe.</h1>
-          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Watch the 90-second overview of all 21 days. No experience needed: Day 0 starts from what system design even is.</p>
+          <span className="sd-kicker text-sd-accent-700">System Design · 21 days</span>
+          <div className="flex items-center gap-3">
+            <Image src="/mascots/kamran-excited-v2.png" alt="Kamran, your study buddy" width={56} height={56} className="size-14 flex-none object-contain" />
+            <p className="m-0 text-sm leading-[1.4] text-sd-n-800">Hi{first ? ` ${first}` : ""}, I’m Kamran. Day 0 takes about 12 minutes.</p>
+          </div>
+          <h1 className="m-0 text-[38px] leading-[.95] tracking-[-0.045em] text-balance lg:text-[60px]">System design, phone pe.</h1>
+          <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">No experience needed. Day 0 starts from the basics.</p>
           <div className="hidden max-w-[360px] lg:block"><StartButtons user={!!user} startDay0={startDay0} /></div>
         </div>
         <OverviewVideo />
-        <ol className="sd-a-in m-0 grid list-none gap-px overflow-hidden rounded-xl border-2 border-sd-ink bg-sd-ink p-0 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-3" style={{ animationDuration: ".5s", animationDelay: "160ms" }}>
+        <ol className="sd-a-in m-0 grid list-none grid-cols-1 gap-0 border-t-2 border-sd-ink p-0 md:grid-cols-3 md:gap-x-6 lg:col-span-2" style={{ animationDuration: ".5s", animationDelay: "160ms" }}>
           {WELCOME.map(([title, detail], i) => (
-            <li key={title} className="flex flex-col gap-1 bg-sd-bg p-4">
-              <span className="text-sm font-extrabold text-sd-accent">{String(i + 1).padStart(2, "0")}</span>
-              <span className="text-[16px] leading-[1.2] font-extrabold">{title}</span>
-              <span className="text-[13px] leading-[1.4] text-sd-n-800">{detail}</span>
+            <li key={title} className="grid grid-cols-[28px_1fr] gap-x-2 gap-y-0.5 border-b border-sd-divider py-3.5">
+              <span className="text-[13px] leading-[1.5] font-extrabold text-sd-accent">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-base leading-[1.3] font-extrabold">{title}</span>
+              <span className="col-start-2 text-[13px] leading-[1.4] text-sd-n-700">{detail}</span>
             </li>
           ))}
         </ol>
@@ -192,8 +211,8 @@ export function Toast({ text }: { text: string }) {
 }
 
 const PLEDGES = (goal: number): { icon: "shield" | "flame"; title: string; body: string }[] => [
-  { icon: "shield", title: "I’ll learn honestly", body: "No looking up answers during assessments. An honest score shows exactly what to rewatch." },
-  { icon: "flame", title: "I’ll practise every day", body: `At least one lesson or quick check a day. ${goal} minutes is enough.` },
+  { icon: "shield", title: "I’ll learn honestly", body: "No looking up answers. An honest score shows what to rewatch." },
+  { icon: "flame", title: "I’ll practise every day", body: `One lesson a day. ${goal} minutes is enough.` },
 ];
 const HOLD_MS = 1200;
 
@@ -214,7 +233,7 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
   };
   const up = () => { window.clearTimeout(timer.current); setHolding(false); };
   useEffect(() => () => window.clearTimeout(timer.current), []);
-  const start = () => act((p) => ({ ...openLesson({ ...p, onboarded: true }, "0-0"), toast: "Commitment made. Day 0 starts now.", toastUntil: Date.now() + 2600 }));
+  const start = () => act((p) => openLesson({ ...p, onboarded: true }, "0-0"));
   const signed = s.commitment ? new Date(`${s.commitment.date}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
 
   return (
@@ -223,8 +242,7 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
         {!done ? (
           <>
             <span className="sd-kicker text-sd-accent-700">Before you start</span>
-            <h1 className="m-0 text-[34px] leading-[1.02] tracking-[-0.03em] text-pretty lg:text-[52px]">Make a commitment to yourself</h1>
-            <p className="m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]">Two promises. Keep them and the course will work for you.</p>
+            <h1 className="m-0 mb-1 text-[34px] leading-[.98] tracking-[-0.04em] text-balance lg:text-[52px]">Make two promises.</h1>
             <div className="flex flex-col gap-2.5" role="group" aria-label="Promises">
               {PLEDGES(s.goal).map((pl, i) => {
                 const on = pledge[i];
@@ -248,8 +266,8 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
               })}
             </div>
             <label className="flex flex-col gap-1.5">
-              <span className="text-[13px] font-semibold">Sign with your name</span>
-              <input className="sd-input min-h-12 text-lg font-bold" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" autoComplete="name" />
+              <span className="text-[13px] font-bold">Sign</span>
+              <input className="sd-input min-h-12 text-lg font-bold" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" autoComplete="name" />
             </label>
             <div className="mt-auto flex flex-col gap-2 lg:mt-2">
               <button
@@ -265,9 +283,9 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
                 className="sd-btn sd-btn-primary sd-btn-block relative h-14 touch-none overflow-hidden text-base select-none"
               >
                 <span className={clsx("absolute inset-y-0 left-0 bg-sd-accent-900", holding ? "w-full transition-[width] duration-[1200ms] ease-linear" : "w-0 transition-[width] duration-200 ease-out")} />
-                <span className="relative flex items-center gap-2"><Icon name="check" />{holding ? "Keep holding…" : "Press and hold to commit"}</span>
+                <span className="relative flex items-center gap-2"><Icon name="check" />{holding ? "Keep holding…" : "Hold to commit"}</span>
               </button>
-              <span className="text-xs text-sd-n-700">{can ? "Hold for about a second to make it official." : "Tick both promises and sign to continue."}</span>
+              <span className="text-xs text-sd-n-700">{can ? "Hold for a second." : "Tick both and sign."}</span>
             </div>
           </>
         ) : (
@@ -275,13 +293,13 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
             <div className="flex flex-1 flex-col justify-center gap-3.5 lg:flex-none">
               <span className="sd-a-pop flex size-[88px] items-center justify-center rounded-full bg-sd-accent text-sd-bg" style={{ animationDuration: ".55s" }}><Icon name="check" size={40} /></span>
               <h1 className="sd-a-in m-0 text-[34px] leading-[1.02] tracking-[-0.03em] lg:text-[52px]" style={{ animationDelay: "200ms" }}>You’re committed, {s.commitment!.name.split(" ")[0]}.</h1>
-              <p className="sd-a-in m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]" style={{ animationDelay: "300ms" }}>Honest answers and a little practice every day. Your streak starts with today’s first lesson.</p>
+              <p className="sd-a-in m-0 text-[15px] text-pretty text-sd-n-800 lg:text-[17px]" style={{ animationDelay: "300ms" }}>Your streak starts with today’s lesson.</p>
               <div className="sd-a-in flex flex-col gap-0.5 rounded-xl border-2 border-dashed border-sd-divider px-3.5 py-3" style={{ animationDelay: "400ms" }}>
                 <span className="text-xl font-extrabold italic">{s.commitment!.name}</span>
                 <span className="text-xs text-sd-n-700">Signed {signed}</span>
               </div>
             </div>
-            <button type="button" onClick={start} className="sd-a-in sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-base" style={{ animationDelay: "500ms" }}>Start learning<Icon name="arrowR" /></button>
+            <button type="button" onClick={start} className="sd-a-in sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-base" style={{ animationDelay: "500ms" }}>Start Day 0<Icon name="arrowR" /></button>
           </>
         )}
       </div>
@@ -317,7 +335,6 @@ export function StreakPop({ s, act }: { s: CourseState; act: Act }) {
             <span className="text-[28px] leading-none font-extrabold tracking-[-0.02em]"><Roll n={st.current} delay={0.5} /> day streak</span>
           </div>
         </div>
-        <div className="text-sm leading-[1.45]">Today’s task is done. Come back tomorrow to keep it going.</div>
         <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
           {days.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5">

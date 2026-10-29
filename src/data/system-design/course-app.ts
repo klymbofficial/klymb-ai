@@ -77,12 +77,12 @@ export type Question =
 
 /** The pre- and post-assessment ask the same six questions, one of each type. */
 export const QUESTIONS: Question[] = [
-  { type: "mcq", typeLabel: "Multiple choice", topic: "Scaling", prompt: "A service gets 95% reads and 5% writes. What do you add first?", options: ["Read replicas and a cache", "Shard the write database", "A message queue in front of writes", "A bigger single server"], ans: 0 },
-  { type: "multi", typeLabel: "Select all", topic: "Statelessness", prompt: "Which changes let a web service scale horizontally? Select all that apply.", options: ["Store sessions in a shared store like Redis", "Keep uploads on each server’s local disk", "Put instances behind a load balancer", "Hold counters in each server’s memory"], ans: [0, 2] },
-  { type: "diagram", typeLabel: "Pick the diagram", topic: "Reliability", prompt: "Which setup keeps accepting writes if one database node fails?", ans: 1 },
-  { type: "order", typeLabel: "Order the steps", topic: "Caching", prompt: "Put a cached read request in order, first to last.", items: ["DNS resolves the domain", "Load balancer picks a server", "App server handles the request", "Cache is checked", "Database is queried on a miss"], start: [2, 0, 4, 1, 3] },
-  { type: "text", typeLabel: "Short answer", topic: "Consistency", prompt: "During a network partition, what does the CAP theorem make you choose between?" },
-  { type: "timed", typeLabel: "Timed · 30s", topic: "Estimation", prompt: "10M daily users each make 20 requests. Roughly what is the average QPS?", options: ["~230", "~2,300", "~23,000", "~230,000"], ans: 1 },
+  { type: "mcq", typeLabel: "Multiple choice", topic: "Scaling", prompt: "A service gets 10× more reads than writes. What helps most first?", options: ["Add read replicas and a cache", "Shard the database by user", "Add a message queue in front", "Move to one bigger server"], ans: 0 },
+  { type: "multi", typeLabel: "Multi-select", topic: "Load balancing", prompt: "Which make app servers safe to add or remove behind a load balancer? Pick all that apply.", options: ["Sessions in a shared store", "Uploaded files on local disk", "An in-memory counter on each server", "No user state kept on the server"], ans: [0, 3] },
+  { type: "diagram", typeLabel: "Pick the architecture", topic: "Availability", prompt: "Which design keeps taking orders if one database node dies?", ans: 1 },
+  { type: "order", typeLabel: "Order the steps", topic: "Request flow", prompt: "Put a read that misses the cache in order.", items: ["DNS lookup", "Load balancer", "App server", "Cache (miss)", "Database"], start: [1, 3, 0, 4, 2] },
+  { type: "text", typeLabel: "Short answer", topic: "Trade-offs", prompt: "In a sentence or two: during a network partition, what does CAP make you choose between?" },
+  { type: "timed", typeLabel: "Timed · 30 seconds", topic: "Estimation", prompt: "1 crore daily users each make 20 requests. Roughly what’s the average requests per second?", options: ["About 230", "About 2,300", "About 23,000", "About 2,30,000"], ans: 1 },
 ];
 
 /** Seconds allowed for the timed question. */
@@ -90,24 +90,31 @@ export const TIMED_SECONDS = 30;
 
 /** Options for the "pick the diagram" question. Row 0 is the app tier. */
 export const DIAGRAMS: { caption: string; rows: string[][] }[] = [
-  { caption: "Single database", rows: [["App"], ["DB"]] },
-  { caption: "Primary + replica, auto-failover", rows: [["App"], ["Primary", "Replica"]] },
-  { caption: "Cache in front of one DB", rows: [["App"], ["Cache"], ["DB"]] },
+  { caption: "One app server, one database", rows: [["App"], ["DB"]] },
+  { caption: "Primary and replica, automatic failover", rows: [["LB"], ["App", "App"], ["Primary", "Replica"]] },
+  { caption: "A cache in front of one database", rows: [["App"], ["Cache"], ["DB"]] },
 ];
 
 export interface QuickCheck { q: string; opts: string[]; ans: number; why: string }
 
 /** Ungraded in-video questions, by lesson id. None of the lessons has one yet. */
-export const QUICK_CHECKS: Record<string, QuickCheck> = {};
+export const QUICK_CHECKS: Record<string, QuickCheck> = {
+  "1-0": {
+    q: "Midnight traffic is forecast at 8× normal. What kind of load is this?",
+    opts: ["Sudden: it arrives in seconds", "Predictable: you know the date and time", "Neither: it depends on the servers"],
+    ans: 1,
+    why: "You know when it comes, so you can prepare: pre-scale and test above the forecast before midnight.",
+  },
+};
 
 /** The lesson recommended for each assessment topic the learner missed. Lesson ids are "module-lesson", zero-based. */
 export const REVIEW_LESSON: Record<string, string> = {
   Scaling: "1-4",
-  Statelessness: "1-1",
-  Reliability: "3-3",
-  Caching: "1-2",
-  Consistency: "3-2",
-  Estimation: "0-0",
+  "Load balancing": "1-1",
+  Availability: "1-3",
+  "Request flow": "0-0",
+  "Trade-offs": "1-3",
+  Estimation: "1-0",
 };
 
 /** Written transcripts, [seconds, line]: the lesson video's own captions. */
@@ -387,8 +394,14 @@ export interface Notif {
   go: NotifTarget;
 }
 
-/** No notifications until there is a backend to send them. */
-export const NOTIFICATIONS: Notif[] = [];
+/** The inbox's messages. Until there is a backend to send them, these are the examples the design ships with. */
+export const NOTIFICATIONS: Notif[] = [
+  { id: 1, type: "reply", title: "Klymb team replied", body: "“If I have auto-scaling, why pre-scale at all?”", time: "12 min ago", group: "Today", unread: true, go: "player" },
+  { id: 2, type: "streak", title: "Your 6-day streak is waiting", body: "One lesson step keeps it.", time: "2 h ago", group: "Today", unread: true, go: "progress" },
+  { id: 3, type: "badge", title: "Badge earned: First pass", body: "First lesson check passed.", time: "Yesterday", group: "Earlier", unread: false, go: "progress" },
+  { id: 4, type: "module", title: "Day 5 is out", body: "Myntra sale: indexing and read replicas · 15 min", time: "2 days ago", group: "Earlier", unread: false, go: "course" },
+  { id: 5, type: "assess", title: "Your retake is open", body: "Day 0 rewatched. Try again.", time: "4 days ago", group: "Earlier", unread: false, go: "player" },
+];
 
 /** The welcome screen: what the course gives you, before Day 0. [title, detail] */
 export const WELCOME: [string, string][] = [

@@ -1,40 +1,20 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
-import type { Day } from "@/data/system-design/types";
 import {
-  ALL_IDS, addNote, audioTrack, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
+  ALL_IDS, addNote, assessmentStep, audioTrack, checkStageFor, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
   addRewatch, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
-import { DayHeader, LangSwitch, LessonPath, LessonStage } from "../lesson/Practice";
+import { Community } from "../lesson/Community";
+import { LessonStage } from "../lesson/Practice";
 import { Tour } from "../lesson/Tour";
 import { track } from "../track";
-import { BackButton, Duration, LessonMark, Segmented, lessonView } from "../ui";
+import { BackButton, Duration, LessonMark, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
-import { ControlRow, SUB_SIZE_CLASS, VideoBar, canSubtitle, useMenu, usePlayerKeys } from "./PlayerControls";
-
-/** Placeholder transcript for lessons that don't have a written one yet. */
-function transcriptFor(s: CourseState, id: string): [number, string][] {
-  const mine = subtitleLines(id, s.subLang);
-  if (mine.length) return mine;
-  const written = subtitleLines(id, "hinglish");
-  if (written.length) return written;
-  const c = lesson(id);
-  const d = c.secs;
-  const [a, b, z] = c.m.flow;
-  return [
-    [0, `What this lesson covers: ${c.title.toLowerCase()}.`],
-    [Math.round(d * 0.12), `First, the problem ${c.m.title.toLowerCase()} solves.`],
-    [Math.round(d * 0.25), `How ${a} hands work to ${b}.`],
-    [Math.round(d * 0.4), `Where ${b} becomes the bottleneck.`],
-    [Math.round(d * 0.55), `Scaling ${z} without losing correctness.`],
-    [Math.round(d * 0.7), "Trade-offs to say out loud in an interview."],
-    [Math.round(d * 0.88), "Recap and what comes next."],
-  ];
-}
+import { SUB_SIZE_CLASS, VideoBar, canSubtitle, useMenu, usePlayerKeys } from "./PlayerControls";
 
 /**
  * The lesson video on the dark grid: the 16:9 cut when there is one, else the
@@ -66,8 +46,8 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
 
   const onTime = (v: HTMLVideoElement) => {
     const t = v.currentTime;
-    // Real playback since the last update; a seek makes the gap too big to count.
-    const played = !v.paused && last.current.id === s.cur ? (t - last.current.t) / (v.playbackRate || 1) : 0;
+    // Video played since the last update; a seek makes the gap too big to count.
+    const played = !v.paused && last.current.id === s.cur ? t - last.current.t : 0;
     last.current = { id: s.cur, t };
     if (v.duration > 0) {
       if (marks.current.id !== s.cur) marks.current = { id: s.cur, seen: new Set() };
@@ -78,7 +58,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
     act((p) => {
       const lp = p.lessons[p.cur];
       // After a missed check, the retake opens once enough has actually been played again.
-      const base = lp?.failed && !lp.rewatched ? addRewatch(p, p.cur, played, v.duration) : p;
+      const base = lp?.failed && !lp.rewatched ? addRewatch(p, p.cur, played, v.duration, v.playbackRate) : p;
       const owed = seen && !lp?.watched;
       if (base === p && Math.floor(p.t) === Math.floor(t) && !owed) return p;
       const n = { ...base, t };
@@ -87,16 +67,16 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
   };
 
   return (
-    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden rounded-xl [--grid:23px] lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
+    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden rounded-none [--grid:23px] lg:rounded-xl lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
         <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
           <span className="text-xl leading-[1.1] font-extrabold lg:text-[32px]">{errOffline ? "You’re offline" : "This video didn’t load"}</span>
           <span className="max-w-[520px] text-[13px] leading-[1.4] lg:text-[15px]">
-            {errOffline ? "Lessons need a connection for now. Reconnect and it picks up where you left off." : `It may be your connection or our servers. Your place is saved at ${fmt(s.t)}.`}
+            {errOffline ? "Reconnect to keep watching." : `Your place is saved at ${fmt(s.t)}.`}
           </span>
           <div className="mt-1 flex gap-2">
-            <button type="button" onClick={() => act((p) => retryVideo(p))} className="sd-btn sd-btn-primary h-10"><Icon name="rotR" size={16} />Try again</button>
+            <button type="button" onClick={() => act((p) => retryVideo(p))} className="sd-btn h-10 border-0 bg-sd-accent-400 text-sd-ink hover:bg-sd-accent-300"><Icon name="rotR" size={16} />Try again</button>
           </div>
         </div>
       )}
@@ -123,12 +103,17 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
         onEnded={() => act((p) => {
           const n = { ...updateLesson(p, p.cur, { watched: true }), playing: false, ended: true };
           // A lesson already passed just ends; otherwise the assessment takes the column.
-          return n.lessons[n.cur]?.post ? n : { ...n, stage: "prove" as const };
+          return n.lessons[n.cur]?.post ? n : { ...n, stage: "prove" as const, checkStage: checkStageFor(n.lessons[n.cur]) };
         })}
         onError={() => act((p) => ({ ...p, vidErr: true, playing: false }))}
         className={clsx("block cursor-pointer bg-black", wide ? "aspect-video w-full" : "aspect-[9/16] h-[min(68dvh,560px)] max-w-full lg:h-[640px]")}
       />
       {subs && <Subtitles s={s} />}
+      {!s.playing && !s.vidErr && !errOffline && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-black/18">
+          <span className="sd-a-pop flex size-16 items-center justify-center rounded-xl bg-sd-accent-400 text-sd-ink shadow-[0_8px_24px_rgba(0,0,0,.35)]"><Icon name="play" size={28} /></span>
+        </div>
+      )}
       {bar}
     </div>
   );
@@ -139,47 +124,8 @@ function Subtitles({ s }: { s: CourseState }) {
   const cur = lineAt(subtitleLines(s.cur, s.subLang), s.t);
   if (!cur) return null;
   return (
-    <div aria-live="off" lang={s.subLang === "en" ? "en" : "hi-Latn"} className="pointer-events-none absolute inset-x-0 bottom-[100px] z-[2] flex justify-center lg:bottom-[5%]">
+    <div aria-live="off" lang={s.subLang === "en" ? "en" : "hi-Latn"} className="pointer-events-none absolute inset-x-0 bottom-[84px] z-[2] flex justify-center">
       <span className={clsx("max-w-[86%] bg-black/75 px-[0.5em] py-[0.2em] text-center leading-[1.4] font-semibold text-white", SUB_SIZE_CLASS[s.subSize])}>{cur}</span>
-    </div>
-  );
-}
-
-function Scrubber({ s, act }: { s: CourseState; act: Act }) {
-  const d = lesson(s.cur).secs;
-  const cur = `${((s.t / d) * 100).toFixed(2)}%`;
-  const cp = quickCheckAt(s.cur);
-  const notes = (s.notes[s.cur] ?? []).filter((n) => n.t <= d);
-  const seek = (e: MouseEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    act((p) => seekTo(p, f * d));
-  };
-  return (
-    <div
-      onClick={seek}
-      role="slider"
-      tabIndex={0}
-      aria-label="Seek"
-      aria-valuemin={0}
-      aria-valuemax={d}
-      aria-valuenow={Math.round(s.t)}
-      aria-valuetext={`${fmt(s.t)} of ${fmt(d)}`}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowLeft") act((p) => seekTo(p, p.t - 5));
-        else if (e.key === "ArrowRight") act((p) => seekTo(p, p.t + 5));
-        else return;
-        e.preventDefault();
-      }}
-      className="relative flex h-[22px] cursor-pointer items-center lg:mt-1.5 lg:h-6"
-    >
-      <div className="absolute inset-x-0 h-1 bg-sd-n-300" />
-      <div className="absolute left-0 h-1 bg-sd-accent" style={{ width: cur }} />
-      {notes.map((n, i) => <div key={i} className="absolute top-[3px] -ml-px h-4 w-[3px] bg-sd-ink lg:h-[18px]" style={{ left: `${((n.t / d) * 100).toFixed(2)}%` }} />)}
-      {hasQuickCheck(s.cur) && !s.qcDone.includes(s.cur) && (
-        <div className="absolute top-1 -ml-1.5 size-3 rotate-45 border-[2.5px] border-sd-accent bg-sd-bg lg:top-[5px] lg:-ml-[7px] lg:size-3.5" style={{ left: `${((cp / d) * 100).toFixed(2)}%` }} />
-      )}
-      <div className="absolute -ml-1.5 size-3 rounded-full border-2 border-sd-bg bg-sd-accent lg:-ml-[7px] lg:size-3.5" style={{ left: cur }} />
     </div>
   );
 }
@@ -190,14 +136,14 @@ function Notes({ s, act }: { s: CourseState; act: Act }) {
     <div className="flex flex-col gap-3 px-5 py-3.5 lg:p-3.5">
       <div className="flex gap-2">
         <input
-          className="sd-input min-h-11 lg:min-h-10"
+          className="sd-input min-h-11"
           value={s.draft}
           aria-label="Note"
           onChange={(e) => act((p) => ({ ...p, draft: e.target.value }))}
           onKeyDown={(e) => { if (e.key === "Enter") act((p) => addNote(p)); }}
           placeholder={`Add a note at ${fmt(s.t)}`}
         />
-        <button type="button" onClick={() => act((p) => addNote(p))} disabled={!s.draft.trim()} className="sd-btn sd-btn-primary h-11 flex-none lg:h-10"><Icon name="plus" size={16} />Add</button>
+        <button type="button" onClick={() => act((p) => addNote(p))} disabled={!s.draft.trim()} className="sd-btn sd-btn-primary h-11 flex-none"><Icon name="plus" size={16} />Add</button>
       </div>
       <div className="flex flex-col border-t-2 border-sd-divider lg:border-t-0">
         {notes.map((n, i) => (
@@ -206,30 +152,8 @@ function Notes({ s, act }: { s: CourseState; act: Act }) {
             <span className="text-sm leading-[1.4]">{n.text}</span>
           </div>
         ))}
-        {!notes.length && <div className="py-3 text-[13px] text-sd-n-700">Notes you add are pinned to the moment in the video.</div>}
+        {!notes.length && <div className="py-3 text-[13px] text-sd-n-700">Notes are pinned to the video time.</div>}
       </div>
-    </div>
-  );
-}
-
-function Transcript({ s, act }: { s: CourseState; act: Act }) {
-  const tl = transcriptFor(s, s.cur);
-  let ai = 0;
-  tl.forEach(([t], i) => { if (s.t >= t) ai = i; });
-  return (
-    <div className="flex flex-col px-5 pt-2 pb-3.5 lg:max-h-[440px] lg:overflow-y-auto lg:px-3.5">
-      {tl.map(([t, text], i) => (
-        <button
-          key={t}
-          type="button"
-          onClick={() => act((p) => seekTo(p, t))}
-          aria-current={i === ai ? "true" : undefined}
-          className={clsx("grid cursor-pointer grid-cols-[48px_1fr] gap-2.5 border-l-[3px] px-2 py-[9px] text-left text-sm leading-[1.45] transition-colors duration-300 hover:bg-sd-accent-100", i === ai ? "border-sd-accent bg-sd-accent-100" : "border-transparent")}
-        >
-          <span className="pt-0.5 text-xs font-extrabold text-sd-accent-700">{fmt(t)}</span>
-          <span className={clsx(i < ai && "opacity-60", i === ai && "font-semibold")}>{text}</span>
-        </button>
-      ))}
     </div>
   );
 }
@@ -239,7 +163,7 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
   const here = useRef<HTMLButtonElement>(null);
   useEffect(() => { here.current?.scrollIntoView({ block: "nearest" }); }, []);
   return (
-    <div className="flex max-h-[380px] flex-col overflow-y-auto px-5 py-3.5 lg:max-h-[440px] lg:px-3.5 lg:pt-2">
+    <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
       {MODULES.map((m, mi) => (
         <div key={m.title} className="flex flex-col">
           <h6 className="sd-h6 mt-6 mb-2.5 first:mt-0">{pad(mi + 1)} · {m.title}</h6>
@@ -265,30 +189,10 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
-/** The doubts this day raises, answered. Closed until opened, like a FAQ. */
-function Qna({ s, day }: { s: CourseState; day: Day }) {
-  const faq = day.copy[s.lang].faq;
-  return (
-    <div className="flex flex-col px-5 py-3.5 lg:max-h-[440px] lg:overflow-y-auto lg:px-3.5 lg:pt-2">
-      {faq.map((x) => (
-        <details key={x.q} className="group border-b border-sd-divider">
-          <summary className="flex cursor-pointer list-none items-start justify-between gap-2.5 py-3 text-sm leading-[1.35] font-extrabold [&::-webkit-details-marker]:hidden">
-            {x.q}
-            <Icon name="down" size={16} className="mt-0.5 block flex-none transition-transform group-open:rotate-180" />
-          </summary>
-          <p className="m-0 pb-3 text-[13px] leading-[1.5] text-sd-n-800">{x.a}</p>
-        </details>
-      ))}
-    </div>
-  );
-}
-
 export function Player({ s, act }: { s: CourseState; act: Act }) {
   const c = lesson(s.cur);
   const day = dayOf(s.cur);
-  const lp = s.lessons[s.cur] ?? {};
   const nextId = ALL_IDS[ALL_IDS.indexOf(s.cur) + 1];
-  const pos = `${lessonDay(s.cur)} · Lesson ${c.li + 1} of ${c.m.lessons.length} · Module ${c.mi + 1} of ${MODULES.length}`;
   const qc = hasQuickCheck(s.cur) ? fmt(quickCheckAt(s.cur)) : null;
   const done = flowDone(s, s.cur);
   const completeLabel = nextId ? "Mark complete · next lesson" : "Mark complete";
@@ -296,12 +200,14 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
     ["lessons", "Lessons"],
     ["qna", "Q&A"],
     ["notes", `Notes (${(s.notes[s.cur] ?? []).length})`],
-    ["transcript", "Transcript"],
   ];
-  // The lesson has been begun once any step is saved; only then is there progress to restart.
-  const begun = Object.keys(lp).length > 0;
+  const shownTabs = day ? tabs : tabs.filter(([v]) => v !== "qna");
   // The video holds the column on the "watch" step, and for lessons with no content yet.
   const watching = !day || s.stage === "watch";
+  // The assessment takes the whole column: from the questions on, and while the estimates, build,
+  // design and follow-ups are being worked through, the lesson title and the side panel step aside.
+  const inAs = s.stage === "prove" && s.checkStage !== "intro";
+  const hideChrome = inAs || assessmentStep(s, s.cur) > 0;
   const subsOn = !!day && canSubtitle(s) && s.subs;
   const menu = useMenu();
   usePlayerKeys(act, !!day && !s.qcOpen);
@@ -311,58 +217,63 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
       <div className="flex items-center gap-2 px-3 pt-1 pb-2.5 lg:p-0">
         <BackButton onClick={() => act((p) => ({ ...p, screen: p.tab, playing: false }))} />
         <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-[0.08em] uppercase">{lessonDay(s.cur)} · {c.m.title}</span>
-        {day && begun && (
-          <button
-            type="button"
-            onClick={() => { if (window.confirm("Start this lesson again from the beginning?")) act((p) => ({ ...updateLesson(p, p.cur, null), t: 0, playing: false, ended: false, stage: "watch", checkBusy: false, done: p.done.filter((x) => x !== p.cur) })); }}
-            className="sd-btn sd-btn-secondary h-[34px] flex-none gap-1.5 px-2.5 text-xs"
-          >
-            <Icon name="rotL" size={14} /><span className="hidden sm:inline">Restart</span>
-          </button>
-        )}
-        {day && <LangSwitch s={s} act={act} />}
       </div>
-      {day && <LessonPath s={s} act={act} id={s.cur} day={day} />}
 
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-x-8">
-        <div className="flex flex-col lg:col-start-1 lg:row-start-1">
+      <div className={clsx("flex flex-1 flex-col lg:grid lg:items-start lg:gap-x-8", hideChrome ? "lg:grid-cols-[minmax(0,820px)]" : "lg:grid-cols-[minmax(0,1fr)_340px]")}>
+        <div className="flex flex-1 flex-col lg:col-start-1 lg:row-start-1">
           {watching ? (
             <>
-              {day && <div className="px-5 lg:px-0"><DayHeader s={s} day={day} /></div>}
               <Video s={s} act={act} subs={subsOn} bar={<VideoBar s={s} act={act} ui={menu} />} />
-              <div className="px-5 lg:px-0">
-                <div className="hidden lg:block"><Scrubber s={s} act={act} /></div>
-                <ControlRow s={s} act={act} ui={menu} qc={qc} />
+              <div className="mt-2.5 flex flex-wrap items-center gap-2 px-5 lg:px-0">
+                {qc && (
+                  <span className="sd-tag sd-tag-neutral gap-1.5 rounded-md">
+                    <span className="size-2 rotate-45 border-2 border-sd-accent" />Quick check at {qc}
+                  </span>
+                )}
+                <span className="sd-tag sd-tag-neutral rounded-md">{s.audio} audio</span>
               </div>
             </>
           ) : (
-            <div className="px-5 pt-1 lg:px-0"><LessonStage s={s} act={act} id={s.cur} day={day!} /></div>
+            <div className="flex flex-1 flex-col px-5 pt-1 lg:px-0"><LessonStage s={s} act={act} id={s.cur} day={day!} /></div>
           )}
-          <div className="px-5 lg:px-0">
-            <div className="lg:hidden">
-              <h3 className="m-0 mb-0.5 text-[22px] tracking-[-0.02em]">{c.title}</h3>
-              <div className="mb-1 text-[13px] text-sd-n-700">{pos} · {c.dur}</div>
+          {!hideChrome && (
+            <div className="px-5 lg:px-0">
+              <div className="lg:hidden">
+                <h3 className="m-0 mt-4 mb-0.5 text-[22px] tracking-[-0.02em]">{c.title}</h3>
+              </div>
+              <div className="mt-5 hidden flex-wrap items-end justify-between gap-4 border-t-2 border-sd-divider pt-4 lg:flex">
+                <h2 className="m-0 text-[30px] tracking-[-0.02em]">{c.title}</h2>
+                {done && <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>}
+              </div>
             </div>
-            <div className="mt-5 hidden flex-wrap items-end justify-between gap-4 border-t-2 border-sd-divider pt-4 lg:flex">
-              <div><h2 className="m-0 text-[30px] tracking-[-0.02em]">{c.title}</h2><div className="text-sm text-sd-n-700">{pos} · {c.dur}</div></div>
-              {done && <button type="button" onClick={() => act((p) => completeNext(p, false))} className="sd-btn sd-btn-primary h-11 gap-2"><Icon name="check" size={16} />{completeLabel}</button>}
-            </div>
-          </div>
+          )}
         </div>
 
-        <div data-tour="tabs" className="mt-4 flex flex-col lg:col-start-2 lg:row-start-1 lg:mt-0 lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
-          <Segmented
-            value={s.ptab}
-            options={day ? tabs : tabs.filter(([v]) => v !== "qna")}
-            onChange={(v) => act((p) => ({ ...p, ptab: v }))}
-            className="mx-5 lg:mx-0 lg:border-0 lg:border-b-2"
-            itemClass="px-1 py-[9px] text-center text-[12px] sm:px-2 sm:text-[13px] lg:px-1.5 lg:py-[11px] lg:text-xs"
-          />
-          {s.ptab === "lessons" && <CourseLessons s={s} act={act} />}
-          {s.ptab === "qna" && day && <Qna s={s} day={day} />}
-          {s.ptab === "notes" && <Notes s={s} act={act} />}
-          {s.ptab === "transcript" && <Transcript s={s} act={act} />}
-        </div>
+        {!hideChrome && <div data-tour="tabs" className="mt-4 flex flex-col lg:col-start-2 lg:row-start-1 lg:mt-0 lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
+          <div role="tablist" aria-label="Lesson panel" className="mx-5 grid gap-0.5 rounded-xl bg-[#ebe5db] p-1 shadow-[inset_0_1px_2px_rgba(32,30,29,.08)] lg:mx-0" style={{ gridTemplateColumns: `repeat(${shownTabs.length}, minmax(0, 1fr))` }}>
+            {shownTabs.map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={s.ptab === v}
+                onClick={() => act((p) => ({ ...p, ptab: v }))}
+                className={clsx(
+                  "h-9 cursor-pointer overflow-hidden rounded-[9px] px-1 text-[13px] text-ellipsis whitespace-nowrap transition-colors duration-200",
+                  s.ptab === v ? "bg-[#fffdf9] font-extrabold text-sd-ink shadow-[0_1px_2px_rgba(32,30,29,.12),0_2px_8px_-2px_rgba(32,30,29,.12)]" : "font-semibold text-sd-n-700 hover:text-sd-ink",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {/* One height for every tab, so switching never changes the page's length and the tabs stay where they are. */}
+          <div className="h-[440px] overflow-y-auto overscroll-contain lg:h-[560px]">
+            {s.ptab === "lessons" && <CourseLessons s={s} act={act} />}
+            {s.ptab === "qna" && day && <Community key={s.cur} lesson={s.cur} day={day} lang={s.lang} />}
+            {s.ptab === "notes" && <Notes s={s} act={act} />}
+          </div>
+        </div>}
 
       </div>
 

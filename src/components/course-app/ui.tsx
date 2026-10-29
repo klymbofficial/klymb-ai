@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
-import { fmt, isDownloaded, isLocked, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
+import { fmt, isLocked, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
 
 /** Animation delay for the i-th item of a staggered list. */
 export const stagger = (i: number, step: number, base: number): CSSProperties => ({ animationDelay: `${base + i * step}ms` });
@@ -76,11 +76,11 @@ export function ScreenTitle({ children, aside, sub }: { children: ReactNode; asi
   );
 }
 
-export function EmptyState({ icon, title, body, action }: { icon: IconName; title: string; body: string; action: ReactNode }) {
+export function EmptyState({ icon, title, body, action, titleClass = "text-2xl tracking-[-0.02em]" }: { icon: IconName; title: string; body: string; action: ReactNode; titleClass?: string }) {
   return (
     <div className="sd-a-in flex flex-col gap-3 py-7">
       <span className="flex size-[72px] items-center justify-center rounded-xl border-2 border-dashed border-sd-n-500 text-sd-n-700"><Icon name={icon} size={40} /></span>
-      <h3 className="m-0 text-2xl tracking-[-0.02em]">{title}</h3>
+      <h3 className={clsx("m-0", titleClass)}>{title}</h3>
       <p className="m-0 max-w-[380px] text-sm text-pretty text-sd-n-800">{body}</p>
       <div>{action}</div>
     </div>
@@ -100,7 +100,7 @@ export function Stats({ items, className, cellClass = "py-1.5", valueClass = "te
   );
 }
 
-/** What a lesson row shows: done, current (with time left), or not started; dimmed when offline and not downloaded. */
+/** What a lesson row shows: done, current (with time left), or not started; dimmed when offline. */
 export function lessonView(s: CourseState, id: string) {
   const l = lesson(id);
   const done = s.done.includes(id);
@@ -118,8 +118,7 @@ export function lessonView(s: CourseState, id: string) {
     /** The lesson check's score, and whether that score is a miss waiting for a retake. */
     score: p?.check,
     failed: !!p?.failed,
-    downloaded: isDownloaded(s, id),
-    dim: soon || locked || (s.offline && !isDownloaded(s, id)),
+    dim: soon || locked || s.offline,
     dur: soon ? "Soon" : cur && !done && s.t > 0 ? `${fmt(sec(l.dur) - s.t)} left` : l.dur,
   };
 }
@@ -135,7 +134,6 @@ export function LessonMark({ done, cur, locked }: { done: boolean; cur: boolean;
 export function Duration({ v }: { v: ReturnType<typeof lessonView> }) {
   return (
     <span className="flex items-center gap-1 text-xs text-sd-n-700">
-      {v.downloaded && <Icon name="download" size={12} stroke={2.5} />}
       {v.dur}
       {v.score !== undefined && (
         <span className={clsx("rounded-md px-1.5 py-px font-bold", v.failed ? "bg-sd-accent-100 text-sd-accent-700" : "bg-sd-n-300 text-sd-ink")} title={v.failed ? "Not passed yet" : "Lesson assessment score"}>{v.score}%</span>
@@ -151,8 +149,8 @@ export function Toggle({ on, onClick, label, sub }: { on: boolean; onClick: () =
         <span className="text-[15px] font-semibold">{label}</span>
         {sub && <span className="text-xs text-sd-n-700">{sub}</span>}
       </span>
-      <span className={clsx("h-6 w-11 flex-none p-[3px] transition-colors duration-200", on ? "bg-sd-accent" : "bg-sd-n-400")}>
-        <span className={clsx("block size-[18px] bg-sd-bg transition-transform duration-200", on && "translate-x-5")} />
+      <span className={clsx("h-6 w-11 flex-none rounded-full p-[3px] transition-colors duration-200", on ? "bg-sd-accent" : "bg-sd-n-400")}>
+        <span className={clsx("block size-[18px] rounded-full bg-sd-bg transition-transform duration-200", on && "translate-x-5")} />
       </span>
     </button>
   );

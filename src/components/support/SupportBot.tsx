@@ -39,6 +39,42 @@ type Draft = Msg extends infer M ? (M extends Msg ? Omit<M, "id"> : never) : nev
 let seq = 0;
 const nextId = () => ++seq;
 
+/** The launcher is size-16; EDGE keeps it, and the open panel, off the screen's edges. */
+const LAUNCHER = 64;
+const EDGE = 8;
+/** Pointer travel before a press on the launcher becomes a drag rather than a tap. */
+const DRAG_SLOP = 6;
+const POS_KEY = "klymb:kamran-pos";
+
+interface Pos { x: number; y: number }
+interface Box { left: number; top: number; right: number; bottom: number }
+/** Where the open panel sits, in px from the screen's top-left. */
+interface Place { left: number; top: number; width: number; height: number; origin: string }
+
+/** Keeps the launcher's top-left where the whole button stays on screen. */
+const clampPos = (p: Pos): Pos => ({
+  x: Math.min(Math.max(p.x, EDGE), Math.max(EDGE, window.innerWidth - LAUNCHER - EDGE)),
+  y: Math.min(Math.max(p.y, EDGE), Math.max(EDGE, window.innerHeight - LAUNCHER - EDGE)),
+});
+
+const boxAt = (p: Pos): Box => ({ left: p.x, top: p.y, right: p.x + LAUNCHER, bottom: p.y + LAUNCHER });
+
+/** The panel opens above or below the launcher, whichever side has more room, and is pulled in from the screen's edges. */
+function placePanel(l: Box): Place {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const gap = 12;
+  const width = Math.min(384, vw - 32);
+  const above = l.top - gap - EDGE;
+  const below = vh - l.bottom - gap - EDGE;
+  const up = above >= below;
+  const height = Math.max(Math.min(608, up ? above : below), Math.min(240, vh - 2 * EDGE));
+  const left = Math.min(Math.max(l.right - width, 16), vw - width - 16);
+  const top = Math.min(Math.max(up ? l.top - gap - height : l.bottom + gap, EDGE), vh - height - EDGE);
+  const origin = `${up ? "bottom" : "top"} ${(l.left + l.right) / 2 > left + width / 2 ? "right" : "left"}`;
+  return { left, top, width, height, origin };
+}
+
 /**
  * Kamran, the support bot. Smart FAQ, no AI: type a question (English or
  * Hinglish, typos forgiven) or browse topics. Signed-in learners get a
@@ -56,6 +92,12 @@ export function SupportBot() {
   const lastQuestion = useRef("");
   const scroller = useRef<HTMLDivElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
+  // Where the learner has dragged the launcher (its top-left); null leaves it in its home corner.
+  const [pos, setPos] = useState<Pos | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
+  const drag = useRef<{ id: number; dx: number; dy: number; sx: number; sy: number; moved: boolean } | null>(null);
+  // A drag ends in a click on the launcher; this lets the click know to do nothing.
+  const dragged = useRef(false);
   const learner = pathname.startsWith("/learn");
 
   const topics = useMemo(() => {
@@ -86,7 +128,68 @@ export function SupportBot() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // The spot the learner last left the launcher in, kept on this device.
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(POS_KEY) ?? "null") as Pos | null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after hydration
+      if (saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)) setPos(clampPos(saved));
+    } catch { /* private mode or a bad value: stay in the corner */ }
+  }, []);
+
+  // A rotated or resized screen can leave the launcher, or the open panel, out of bounds.
+  useEffect(() => {
+    const onResize = () => {
+      const next = pos ? clampPos(pos) : null;
+      if (next && pos && (next.x !== pos.x || next.y !== pos.y)) setPos(next);
+      if (open && launcher.current) setPlace(placePanel(next ? boxAt(next) : launcher.current.getBoundingClientRect()));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [pos, open]);
+
   if (pathname.startsWith("/admin") || (SITE_CLOSED && !learner)) return null;
+
+  /** Moves the launcher, and the panel with it if it is open. `save` keeps the spot for next time. */
+  const moveTo = (p: Pos, save = false) => {
+    setPos(p);
+    if (open) setPlace(placePanel(boxAt(p)));
+    if (!save) return;
+    try { localStorage.setItem(POS_KEY, JSON.stringify(p)); } catch { /* not saved: it resets next visit */ }
+  };
+
+  const onLauncherDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    dragged.current = false;
+    drag.current = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top, sx: e.clientX, sy: e.clientY, moved: false };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onLauncherMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < DRAG_SLOP) return;
+    d.moved = true;
+    moveTo(clampPos({ x: e.clientX - d.dx, y: e.clientY - d.dy }));
+  };
+  const onLauncherUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    drag.current = null;
+    if (!d.moved) return;
+    dragged.current = e.type === "pointerup";
+    if (pos) moveTo(pos, true);
+  };
+  /** Shift + arrow keys move the launcher for anyone not dragging. */
+  const onLauncherKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    const step = 24;
+    const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
+    const dy = e.key === "ArrowUp" ? -step : e.key === "ArrowDown" ? step : 0;
+    if (!e.shiftKey || (!dx && !dy)) return;
+    e.preventDefault();
+    const r = e.currentTarget.getBoundingClientRect();
+    moveTo(clampPos({ x: r.left + dx, y: r.top + dy }), true);
+  };
 
   const greeting = (): Msg[] => [
     { id: nextId(), from: "kamran", kind: "text", lines: [learner ? "Hi! Stuck on something? Type your question, or pick a topic." : "Hi, I'm Kamran. Ask me anything about Klymb and how the 30 days work."] },
@@ -147,22 +250,19 @@ export function SupportBot() {
   const close = () => setOpen(false);
   const restart = () => { setMsgs(greeting()); lastQuestion.current = ""; };
 
-  // The wrapper never takes taps: only the open panel and the launcher do, so the
-  // closed panel's invisible box can't cover buttons underneath it.
+  // Only the open panel and the launcher take taps, so the closed panel's invisible
+  // box can't cover buttons underneath it. Both are fixed to the screen on their own:
+  // the launcher can be dragged anywhere, and the panel follows it.
+  const onLeft = !!pos && pos.x + LAUNCHER / 2 < window.innerWidth / 2;
   return (
-    <div
-      className={clsx(
-        "pointer-events-none fixed right-4 z-[60] flex flex-col items-end gap-3 sm:right-6",
-        // The System Design app has a tab bar and mini player along the bottom.
-        pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6",
-      )}
-    >
+    <>
       <div
         role="dialog"
         aria-label="Help from Kamran"
         aria-hidden={!open}
+        style={place ? { left: place.left, top: place.top, width: place.width, height: place.height, transformOrigin: place.origin } : undefined}
         className={clsx(
-          "flex h-[min(38rem,calc(100dvh-7rem))] w-[min(24rem,calc(100vw-2rem))] origin-bottom-right flex-col overflow-hidden rounded-[1.25rem] bg-card shadow-[0_24px_60px_rgba(32,30,29,0.22)] ring-1 ring-line/40",
+          "pointer-events-none fixed z-[60] flex flex-col overflow-hidden rounded-[1.25rem] bg-card shadow-[0_24px_60px_rgba(32,30,29,0.22)] ring-1 ring-line/40",
           "transition-[opacity,transform,visibility] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
           open ? "pointer-events-auto scale-100 opacity-100" : "invisible scale-95 opacity-0",
         )}
@@ -286,21 +386,36 @@ export function SupportBot() {
         ref={launcher}
         type="button"
         onClick={() => {
+          // The tap that ends a drag is not a request to open or close.
+          if (dragged.current) { dragged.current = false; return; }
           if (!open && !msgs.length) setMsgs(greeting());
+          if (!open && launcher.current) setPlace(placePanel(launcher.current.getBoundingClientRect()));
           setOpen(!open);
         }}
+        onPointerDown={onLauncherDown}
+        onPointerMove={onLauncherMove}
+        onPointerUp={onLauncherUp}
+        onPointerCancel={onLauncherUp}
+        onKeyDown={onLauncherKey}
+        // Inline, because the site's own `touch-action: manipulation` on buttons outranks a utility class.
+        style={{ touchAction: "none", ...(pos && { left: pos.x, top: pos.y }) }}
         aria-expanded={open}
         aria-label={open ? "Close help" : "Help: ask Kamran"}
-        className="group pointer-events-auto relative grid size-16 place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 hover:-translate-y-0.5 active:scale-95"
+        className={clsx(
+          "group pointer-events-auto fixed z-[60] grid size-16 cursor-grab place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 select-none hover:-translate-y-0.5 active:scale-95 active:cursor-grabbing",
+          // Home corner, until it is moved. The System Design app has a tab bar and mini player along the bottom.
+          !pos && "right-4 sm:right-6",
+          !pos && (pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6"),
+        )}
       >
-        <Image src="/mascots/kamran-excited-v2.png" alt="" width={64} height={64} className="size-16 rounded-full object-cover" />
+        <Image src="/mascots/kamran-excited-v2.png" alt="" width={64} height={64} draggable={false} className="size-16 rounded-full object-cover" />
         {!open && (
-          <span className="pointer-events-none absolute right-full mr-3 hidden whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white shadow-card group-hover:block sm:block">
+          <span className={clsx("pointer-events-none absolute hidden whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white shadow-card group-hover:block sm:block", onLeft ? "left-full ml-3" : "right-full mr-3")}>
             Need help?
           </span>
         )}
       </button>
-    </div>
+    </>
   );
 }
 

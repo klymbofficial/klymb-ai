@@ -9,7 +9,7 @@ import { Icon, type IconName } from "./icons";
 import { Commitment, LeaveQuizDialog, Onboarding, QuickCheckSheet, Splash, StreakPop, Toast } from "./Overlays";
 import { Course } from "./screens/Course";
 import { Home } from "./screens/Home";
-import { Downloads, Notifications } from "./screens/Inbox";
+import { Notifications } from "./screens/Inbox";
 import { Player } from "./screens/Player";
 import { Profile } from "./screens/Profile";
 import { Progress } from "./screens/Progress";
@@ -31,7 +31,6 @@ function Screen({ s, act }: { s: CourseState; act: Act }) {
     case "quiz": return s.quiz.stage === "intro" ? <QuizIntro s={s} act={act} /> : <QuizQuestion key={s.quiz.kind} s={s} act={act} />;
     case "results": return <Results key={s.lastKind} s={s} act={act} />;
     case "notifs": return <Notifications s={s} act={act} />;
-    case "downloads": return <Downloads s={s} act={act} />;
     case "recap": return <Recap s={s} act={act} />;
     default: return null;
   }
@@ -55,8 +54,7 @@ function MiniPlayer({ s, act, className }: { s: CourseState; act: Act; className
   );
 }
 
-/** The notifications inbox comes back once there is a backend to send them. */
-const INBOX = false;
+const INBOX = true;
 
 function Sidebar({ s, act }: { s: CourseState; act: Act }) {
   const unread = s.notifs.filter((n) => n.unread).length;
@@ -107,7 +105,7 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
             type="button"
             aria-current={on ? "page" : undefined}
             onClick={() => act((p) => ({ ...p, screen: k, tab: k, confirmExit: false }))}
-            className={clsx("-mt-0.5 flex cursor-pointer flex-col items-start gap-1 border-t-[3px] px-3 pt-2.5 pb-1.5 text-xs font-extrabold hover:bg-sd-accent-100", on ? "border-sd-accent text-sd-accent" : "border-transparent")}
+            className={clsx("flex cursor-pointer flex-col items-start gap-1 px-3 pt-3 pb-1.5 text-xs font-extrabold hover:bg-sd-accent-100", on && "text-sd-accent")}
           >
             <Icon name={icon} size={22} /><span>{label}</span>
           </button>
@@ -125,6 +123,14 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
 export function CourseApp({ user = null }: { user?: CourseUser | null }) {
   const { s, act, ready } = useCourseApp();
   const scroller = useRef<HTMLDivElement>(null);
+
+  // The app is one screen tall and scrolls inside. If the page behind it could scroll too, phone browsers would
+  // slide the whole app up as their bars collapse, leaving a gap under the tab bar.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("sd-locked");
+    return () => root.classList.remove("sd-locked");
+  }, []);
 
   // Every screen opens at the top.
   useEffect(() => {
@@ -146,13 +152,12 @@ export function CourseApp({ user = null }: { user?: CourseUser | null }) {
       <div
         ref={scroller}
         onScroll={(e) => e.currentTarget.style.setProperty("--sy", String(Math.round(e.currentTarget.scrollTop)))}
-        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto pt-[max(8px,env(safe-area-inset-top))] lg:h-dvh lg:px-10 lg:pt-7 lg:pb-10"
+        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pt-[max(8px,env(safe-area-inset-top))] lg:h-dvh lg:px-10 lg:pt-7 lg:pb-10"
       >
         {s.offline && (
           <div className="sd-a-in mb-2 flex flex-none items-center gap-2.5 bg-sd-ink px-5 py-2.5 text-[13px] text-sd-bg lg:mb-5 lg:px-4" style={{ animationDuration: ".3s" }} role="status">
             <span className="flex text-sd-accent-400"><Icon name="wifiOff" size={16} /></span>
-            <span className="flex-1">You’re offline. Downloaded lessons still play.</span>
-            <button type="button" onClick={() => act((p) => ({ ...p, screen: "downloads" }))} className="sd-btn sd-btn-on-dark h-[30px]">Downloads</button>
+            <span className="flex-1">You’re offline. Reconnect to keep watching.</span>
           </div>
         )}
         <main id="sd-main" className="flex flex-1 flex-col">
