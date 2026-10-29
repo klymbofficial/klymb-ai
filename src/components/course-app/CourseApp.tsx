@@ -105,7 +105,7 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
             type="button"
             aria-current={on ? "page" : undefined}
             onClick={() => act((p) => ({ ...p, screen: k, tab: k, confirmExit: false }))}
-            className={clsx("-mt-0.5 flex cursor-pointer flex-col items-start gap-1 border-t-[3px] px-3 pt-2.5 pb-1.5 text-xs font-extrabold hover:bg-sd-accent-100", on ? "border-sd-accent text-sd-accent" : "border-transparent")}
+            className={clsx("flex cursor-pointer flex-col items-start gap-1 px-3 pt-3 pb-1.5 text-xs font-extrabold hover:bg-sd-accent-100", on && "text-sd-accent")}
           >
             <Icon name={icon} size={22} /><span>{label}</span>
           </button>
