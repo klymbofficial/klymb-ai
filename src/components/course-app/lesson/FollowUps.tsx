@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { FollowUp, Lang } from "@/data/system-design/types";
 import { pad } from "@/lib/course-app";
 import { Icon } from "../icons";
+import { useScrollTop } from "../ui";
 
 const UI = {
   en: { label: "Interviewer", think: "Think of your answer first. Then check it.", show: "Show model answer", say: "Say this", deeper: "Deeper in", had: "I'd have said this", missed: "I'd have missed this", result: (n: number, of: number) => `You had ${n} of ${of} follow-ups covered.`, next: "Finish the day" },
@@ -25,6 +26,7 @@ export function FollowUps({ items, lang, idx, onIdx, onDone }: {
   const i = Math.min(idx, items.length - 1);
   const f = items[i];
   const finished = marks.length === items.length;
+  useScrollTop(finished);
 
   const mark = (had: boolean) => {
     const next = [...marks, had];
