@@ -229,6 +229,14 @@ test("saved progress round-trips, and today's minutes reset on a new day", () =>
   assert.equal(tomorrow.today, localDate(new Date(NOW + 86_400_000)));
 });
 
+test("progress saved by an older version, with downloads in it, still loads", () => {
+  const raw = { ...JSON.parse(JSON.stringify(toStored(home()))), dl: [{ id: "0-0", size: 38 }], dlProg: { "1-0": 40 }, onboarded: true };
+  const s = fromStored(raw, NOW);
+  assert.equal(s.screen, "home");
+  assert.equal("dl" in s, false, "downloads are no longer part of the state");
+  assert.equal("dl" in toStored(s), false);
+});
+
 test("a first visit starts on the splash screen", () => {
   assert.equal(fromStored(null, NOW).screen, "splash");
   assert.equal(fromStored({ onboarded: false }, NOW).screen, "splash");

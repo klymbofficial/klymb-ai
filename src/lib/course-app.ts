@@ -20,9 +20,9 @@ import type { Day, Lang, Question as ChoiceQuestion } from "@/data/system-design
 
 export type Screen =
   | "splash" | "onboard" | "commit" | "home" | "course" | "progress" | "profile"
-  | "player" | "quiz" | "results" | "notifs" | "downloads" | "recap";
+  | "player" | "quiz" | "results" | "notifs" | "recap";
 export type Tab = "home" | "course" | "progress" | "profile";
-export type PlayerTab = "lessons" | "qna" | "notes" | "transcript";
+export type PlayerTab = "lessons" | "qna" | "notes";
 /** "pre" is the retired course baseline; only the final assessment ("post") is taken now. */
 export type QuizKind = "pre" | "post";
 export type Answer = number | number[] | string;
@@ -83,8 +83,6 @@ export interface CourseState {
   qcPick: number | null;
   qcDone: string[];
   notifs: Notif[];
-  dl: { id: string; size: number }[];
-  dlProg: Record<string, number>;
   offline: boolean;
   vidErr: boolean;
   recapMod: number;
@@ -209,8 +207,6 @@ export const PASS_MARK = 0.6;
 
 export const LESSON_COUNT = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 export const ALL_IDS = MODULES.flatMap((m, mi) => m.lessons.map((_, li) => `${mi}-${li}`));
-/** Downloads have a 2 GB allowance. */
-export const STORAGE_MB = 2048;
 /** Playback speed: preset steps, and the range the fine control allows. */
 export const SPEED_PRESETS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 export const SPEED_MIN = 0.5;
@@ -243,9 +239,8 @@ export const moduleIds = (mi: number) => MODULES[mi].lessons.map((_, li) => `${m
 export const moduleMinutes = (mi: number) => Math.round(MODULES[mi].lessons.reduce((a, l) => a + sec(l[1]), 0) / 60);
 /** Each lesson's quick check sits at 45% of the video. */
 export const quickCheckAt = (id: string) => Math.round(lesson(id).secs * 0.44);
-export const isDownloaded = (s: CourseState, id: string) => s.dl.some((x) => x.id === id);
-/** The lesson can't play: a simulated load error, or offline without a download. */
-export const blocked = (s: CourseState) => s.vidErr || (s.offline && !isDownloaded(s, s.cur));
+/** The lesson can't play: a simulated load error, or offline. */
+export const blocked = (s: CourseState) => s.vidErr || s.offline;
 export const miniActive = (s: CourseState) => MINI_PLAYER && s.visited && TAB_SCREENS.includes(s.screen) && s.miniHide !== s.cur;
 export const allNotes = (s: CourseState) => Object.values(s.notes).flat();
 
@@ -331,7 +326,6 @@ export function defaultState(now = Date.now()): CourseState {
     pre: [], post: null, lastKind: "pre",
     qcOpen: false, qcPick: null, qcDone: [],
     notifs: NOTIFICATIONS,
-    dl: [], dlProg: {},
     offline: false, vidErr: false, recapMod: 0,
     goal: 15, remind: "19:00", autoplay: false, quality: "auto", wifiOnly: true, streakRem: true, replyNotif: true,
     todaySec: 0, today: localDate(new Date(now)),
@@ -344,10 +338,10 @@ export function defaultState(now = Date.now()): CourseState {
 
 /** Screens the app can open on with `?start=`, matching the design canvas frames. */
 export const START_SCREENS = [
-  "home", "course", "player", "post", "q", "results", "progress", "qc", "mini", "transcript", "exit",
+  "home", "course", "player", "post", "q", "results", "progress", "qc", "mini", "exit",
   "commit", "commitdone", "streak", "lesson", "lessonpass", "lessonfail", "retake",
-  "splash", "onboard", "onboard2", "profile", "notifs", "notifsempty", "downloads", "dlempty", "discuss", "recap", "offline", "videoerr",
-  "tour1", "tour2", "tour3", "tour4", "tour5", "playing", "paused", "tabqna", "tabnotes", "tabtranscript", "notesempty", "vidoffline",
+  "splash", "onboard", "onboard2", "profile", "notifs", "notifsempty", "discuss", "recap", "offline", "videoerr",
+  "tour1", "tour2", "tour3", "tour4", "tour5", "playing", "paused", "tabqna", "tabnotes", "notesempty", "vidoffline",
   "learn", "checkintro", "checkq", "checkpass", "checkfail", "checkpassed", "estq", "build", "builddone", "design", "designwalk", "followq", "followdone", "daydone",
 ] as const;
 export type StartScreen = (typeof START_SCREENS)[number];
@@ -358,7 +352,6 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     ...defaultState(now), screen: "home", onboarded: true, toured: true, done: ["0-0"], cur: "1-0",
     lessons: { "0-0": { watched: true, read: true, post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 } },
     commitment: { name: "Priya Sharma", date: localDate(new Date(now)) },
-    dl: [{ id: "0-0", size: 38 }, { id: "1-0", size: 31 }],
   };
   /** Day 1 opened past the video, with the check in some state. These frames are about the check, so the column shows it. */
   const atCheck = (p: Partial<LessonProgress>): CourseState => ({
@@ -396,14 +389,11 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     case "profile": return { ...s, screen: "profile", tab: "profile" };
     case "notifs": return { ...s, screen: "notifs" };
     case "notifsempty": return { ...s, screen: "notifs", notifs: [] };
-    case "downloads": return { ...s, screen: "downloads", dlProg: { "2-2": 40 } };
-    case "dlempty": return { ...s, screen: "downloads", dl: [] };
     case "recap": return { ...s, screen: "recap", recapMod: 0, done: ["0-0"], cur: "1-0", t: 0, notes: { "0-0": [{ t: 40, text: "Every app = boxes talking to each other" }] } };
     case "offline": return { ...s, screen: "course", tab: "course", offline: true };
     case "videoerr": return { ...s, screen: "player", visited: true, t: 96, vidErr: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
     case "vidoffline": return { ...s, screen: "player", visited: true, t: 96, offline: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
     case "mini": return { ...s, visited: true, playing: true };
-    case "transcript": return { ...s, screen: "player", visited: true, ptab: "transcript" };
     case "tour1": return { ...s, screen: "player", visited: true, toured: false, tourStep: 0 };
     case "tour2": return { ...s, screen: "player", visited: true, toured: false, tourStep: 1 };
     case "tour3": return { ...s, screen: "player", visited: true, toured: false, tourStep: 2 };
@@ -412,7 +402,6 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
     case "playing": return { ...s, screen: "player", visited: true, t: 96, playing: true, subs: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
     case "paused": return { ...s, screen: "player", visited: true, t: 96, subs: true, lessons: { ...s.lessons, "1-0": { watched: true } } };
     case "tabqna": return { ...s, screen: "player", visited: true, ptab: "qna" };
-    case "tabtranscript": return { ...s, screen: "player", visited: true, ptab: "transcript", t: 96, lessons: { ...s.lessons, "1-0": { watched: true } } };
     case "tabnotes": return {
       ...s, screen: "player", visited: true, ptab: "notes", t: 96, draft: "Throttle below the tested limit",
       lessons: { ...s.lessons, "1-0": { watched: true } },
@@ -440,25 +429,12 @@ export function previewState(start: StartScreen, opts: { q?: number; seedPost?: 
   }
 }
 
-/** Advances one second: splash, downloads, today's minutes, toasts and the timed question. */
+/** Advances one second: splash, today's minutes, toasts and the timed question. */
 export function tick(s: CourseState, now = Date.now()): CourseState {
   let n = s;
   const set = (p: Partial<CourseState>) => { n = { ...n, ...p }; };
 
   if (n.screen === "splash" && n.splashUntil && now > n.splashUntil) set({ screen: "onboard", onb: 0 });
-
-  if (Object.keys(n.dlProg).length && !n.offline) {
-    const dlProg = { ...n.dlProg };
-    const dl = [...n.dl];
-    for (const id of Object.keys(dlProg)) {
-      dlProg[id] = Math.min(100, dlProg[id] + 9);
-      if (dlProg[id] >= 100) {
-        delete dlProg[id];
-        dl.push({ id, size: 80 + ((id.charCodeAt(0) * 37 + id.charCodeAt(2) * 13) % 70) });
-      }
-    }
-    set({ dlProg, dl });
-  }
 
   // The <video> element moves the playhead; here we only count today's minutes while it plays.
   if (n.screen === "player" && n.playing && !blocked(n)) set({ todaySec: n.todaySec + n.speed });
@@ -558,29 +534,6 @@ export function addNote(s: CourseState, now = Date.now()): CourseState {
   return { ...s, notes: { ...s.notes, [s.cur]: [...(s.notes[s.cur] ?? []), { t: s.t, text }] }, draft: "", ...toast(`Note pinned at ${fmt(s.t)}`, now, 2200) };
 }
 
-export function toggleDownload(s: CourseState, now = Date.now()): CourseState {
-  if (isDownloaded(s, s.cur)) return { ...s, dl: s.dl.filter((y) => y.id !== s.cur), ...toast("Removed from downloads", now, 2000) };
-  if (s.cur in s.dlProg) return s;
-  return { ...s, dlProg: { ...s.dlProg, [s.cur]: 0 } };
-}
-
-export function removeDownload(s: CourseState, id: string, now = Date.now()): CourseState {
-  const dlProg = { ...s.dlProg };
-  delete dlProg[id];
-  return { ...s, dl: s.dl.filter((y) => y.id !== id), dlProg, ...toast("Removed from downloads", now, 2000) };
-}
-
-/** Lessons of the current module not yet downloaded or downloading. */
-export function missingDownloads(s: CourseState) {
-  return moduleIds(lesson(s.cur).mi).filter((id) => !isDownloaded(s, id) && !(id in s.dlProg));
-}
-
-export function downloadModule(s: CourseState): CourseState {
-  const dlProg = { ...s.dlProg };
-  for (const id of missingDownloads(s)) dlProg[id] = 0;
-  return { ...s, dlProg };
-}
-
 export function retryVideo(s: CourseState, now = Date.now()): CourseState {
   if (s.vidErr) return { ...s, vidErr: false, ...toast(`Video loaded. Picking up at ${fmt(s.t)}`, now, 2200) };
   return { ...s, ...toast("Still offline", now, 1800) };
@@ -622,7 +575,7 @@ export function badges(s: CourseState, now = Date.now()): Badge[] {
 /** Fields kept in storage between visits. Preview switches and transient UI stay out. */
 const PERSISTED = [
   "onboarded", "cur", "t", "speed", "visited", "notes", "openMod", "done", "pre", "post", "qcDone", "notifs",
-  "dl", "dlProg", "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
+  "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
   "lessons", "lang", "subs", "subLang", "subSize", "audio", "volume", "muted", "toured", "activeDays", "commitment", "popDay",
 ] as const satisfies readonly (keyof CourseState)[];
 

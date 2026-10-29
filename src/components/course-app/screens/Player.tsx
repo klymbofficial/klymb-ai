@@ -4,34 +4,17 @@ import clsx from "clsx";
 import { useEffect, useRef, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
 import {
-  ALL_IDS, addNote, assessmentStep, audioTrack, checkStageFor, completeNext, dayOf, flowDone, fmt, hasQuickCheck, isDownloaded, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
-  addRewatch, retryVideo, seekTo, subtitleLines, toggleDownload, togglePlay, updateLesson, type CourseState, type PlayerTab,
+  ALL_IDS, addNote, assessmentStep, audioTrack, checkStageFor, completeNext, dayOf, flowDone, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
+  addRewatch, retryVideo, seekTo, subtitleLines, togglePlay, updateLesson, type CourseState, type PlayerTab,
 } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { Community } from "../lesson/Community";
-import { LangSwitch, LessonStage } from "../lesson/Practice";
+import { LessonStage } from "../lesson/Practice";
 import { Tour } from "../lesson/Tour";
 import { track } from "../track";
 import { BackButton, Duration, LessonMark, lessonView } from "../ui";
 import type { Act } from "../useCourseApp";
 import { SUB_SIZE_CLASS, VideoBar, canSubtitle, useMenu, usePlayerKeys } from "./PlayerControls";
-
-/** The lesson's transcript: one line per beat of the video, generated from the module's flow. */
-function transcriptFor(id: string): [number, string][] {
-  const c = lesson(id);
-  const d = c.secs;
-  const [a, b, z] = c.m.flow;
-  const mod = c.m.title.toLowerCase().replace(/^week \d · /, "");
-  return [
-    [0, `What this lesson covers: ${c.title.toLowerCase()}.`],
-    [Math.round(d * 0.12), `First, the problem ${mod} solves.`],
-    [Math.round(d * 0.25), `How ${a} hands work to ${b}.`],
-    [Math.round(d * 0.4), `Where ${b} becomes the bottleneck.`],
-    [Math.round(d * 0.55), `Scaling ${z} without losing correctness.`],
-    [Math.round(d * 0.7), "Trade-offs to say out loud in an interview."],
-    [Math.round(d * 0.88), "Recap and what comes next."],
-  ];
-}
 
 /**
  * The lesson video on the dark grid: the 16:9 cut when there is one, else the
@@ -175,34 +158,12 @@ function Notes({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
-function Transcript({ s, act }: { s: CourseState; act: Act }) {
-  const tl = transcriptFor(s.cur);
-  let ai = 0;
-  tl.forEach(([t], i) => { if (s.t >= t) ai = i; });
-  return (
-    <div className="flex flex-col px-5 pt-2 pb-3.5 lg:max-h-[440px] lg:overflow-y-auto lg:px-3.5">
-      {tl.map(([t, text], i) => (
-        <button
-          key={t}
-          type="button"
-          onClick={() => act((p) => seekTo(p, t))}
-          aria-current={i === ai ? "true" : undefined}
-          className={clsx("grid cursor-pointer grid-cols-[48px_1fr] gap-2.5 border-l-[3px] px-2 py-[9px] text-left text-sm leading-[1.45] transition-colors duration-300 hover:bg-sd-accent-100", i === ai ? "border-sd-accent bg-sd-accent-100" : "border-transparent")}
-        >
-          <span className="pt-0.5 text-xs font-extrabold text-sd-accent-700">{fmt(t)}</span>
-          <span className={clsx(i < ai && "opacity-60", i === ai && "font-semibold")}>{text}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 /** Every lesson of the course, by module, with the current one scrolled into view. */
 function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
   const here = useRef<HTMLButtonElement>(null);
   useEffect(() => { here.current?.scrollIntoView({ block: "nearest" }); }, []);
   return (
-    <div className="flex max-h-[440px] flex-col overflow-y-auto px-5 py-3.5 lg:px-3.5 lg:pt-2">
+    <div className="flex flex-col px-5 py-3.5 lg:px-3.5 lg:pt-2">
       {MODULES.map((m, mi) => (
         <div key={m.title} className="flex flex-col">
           <h6 className="sd-h6 mt-3 mb-1 first:mt-0">{pad(mi + 1)} · {m.title}</h6>
@@ -231,7 +192,6 @@ function CourseLessons({ s, act }: { s: CourseState; act: Act }) {
 export function Player({ s, act }: { s: CourseState; act: Act }) {
   const c = lesson(s.cur);
   const day = dayOf(s.cur);
-  const lp = s.lessons[s.cur] ?? {};
   const nextId = ALL_IDS[ALL_IDS.indexOf(s.cur) + 1];
   const qc = hasQuickCheck(s.cur) ? fmt(quickCheckAt(s.cur)) : null;
   const done = flowDone(s, s.cur);
@@ -240,10 +200,8 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
     ["lessons", "Lessons"],
     ["qna", "Q&A"],
     ["notes", `Notes (${(s.notes[s.cur] ?? []).length})`],
-    ["transcript", "Transcript"],
   ];
-  // The lesson has been begun once any step is saved; only then is there progress to restart.
-  const begun = Object.keys(lp).length > 0;
+  const shownTabs = day ? tabs : tabs.filter(([v]) => v !== "qna");
   // The video holds the column on the "watch" step, and for lessons with no content yet.
   const watching = !day || s.stage === "watch";
   // The assessment takes the whole column: from the questions on, and while the estimates, build,
@@ -259,16 +217,6 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
       <div className="flex items-center gap-2 px-3 pt-1 pb-2.5 lg:p-0">
         <BackButton onClick={() => act((p) => ({ ...p, screen: p.tab, playing: false }))} />
         <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-[0.08em] uppercase">{lessonDay(s.cur)} · {c.m.title}</span>
-        {day && begun && (
-          <button
-            type="button"
-            onClick={() => { if (window.confirm("Start this lesson again from the beginning?")) act((p) => ({ ...updateLesson(p, p.cur, null), t: 0, playing: false, ended: false, stage: "watch", checkBusy: false, done: p.done.filter((x) => x !== p.cur) })); }}
-            className="sd-btn sd-btn-secondary h-[34px] flex-none gap-1.5 px-2.5 text-xs"
-          >
-            <Icon name="rotL" size={14} /><span className="hidden sm:inline">Restart</span>
-          </button>
-        )}
-        {day && <LangSwitch s={s} act={act} />}
       </div>
 
       <div className={clsx("flex flex-1 flex-col lg:grid lg:items-start lg:gap-x-8", hideChrome ? "lg:grid-cols-[minmax(0,820px)]" : "lg:grid-cols-[minmax(0,1fr)_340px]")}>
@@ -283,12 +231,6 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
                   </span>
                 )}
                 <span className="sd-tag sd-tag-neutral rounded-md">{s.audio} audio</span>
-                <span className="flex-1" />
-                {day && (
-                  <button type="button" onClick={() => act(toggleDownload)} className="sd-btn sd-btn-secondary h-[34px] gap-1.5 px-2.5 text-xs">
-                    <Icon name="download" size={14} />{isDownloaded(s, s.cur) ? "Downloaded" : "Download"}
-                  </button>
-                )}
               </div>
             </>
           ) : (
@@ -308,8 +250,8 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
         </div>
 
         {!hideChrome && <div data-tour="tabs" className="mt-4 flex flex-col lg:col-start-2 lg:row-start-1 lg:mt-0 lg:overflow-hidden lg:rounded-xl lg:border-2 lg:border-sd-divider">
-          <div role="tablist" aria-label="Lesson panel" className="mx-5 grid grid-cols-4 gap-0.5 rounded-xl bg-[#ebe5db] p-1 shadow-[inset_0_1px_2px_rgba(32,30,29,.08)] lg:mx-0">
-            {(day ? tabs : tabs.filter(([v]) => v !== "qna")).map(([v, label]) => (
+          <div role="tablist" aria-label="Lesson panel" className="mx-5 grid gap-0.5 rounded-xl bg-[#ebe5db] p-1 shadow-[inset_0_1px_2px_rgba(32,30,29,.08)] lg:mx-0" style={{ gridTemplateColumns: `repeat(${shownTabs.length}, minmax(0, 1fr))` }}>
+            {shownTabs.map(([v, label]) => (
               <button
                 key={v}
                 type="button"
@@ -325,10 +267,12 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
               </button>
             ))}
           </div>
-          {s.ptab === "lessons" && <CourseLessons s={s} act={act} />}
-          {s.ptab === "qna" && day && <Community key={s.cur} lesson={s.cur} day={day} lang={s.lang} />}
-          {s.ptab === "notes" && <Notes s={s} act={act} />}
-          {s.ptab === "transcript" && <Transcript s={s} act={act} />}
+          {/* One height for every tab, so switching never changes the page's length and the tabs stay where they are. */}
+          <div className="h-[440px] overflow-y-auto overscroll-contain lg:h-[560px]">
+            {s.ptab === "lessons" && <CourseLessons s={s} act={act} />}
+            {s.ptab === "qna" && day && <Community key={s.cur} lesson={s.cur} day={day} lang={s.lang} />}
+            {s.ptab === "notes" && <Notes s={s} act={act} />}
+          </div>
         </div>}
 
       </div>

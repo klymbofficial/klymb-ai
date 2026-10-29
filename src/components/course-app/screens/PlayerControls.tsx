@@ -26,10 +26,6 @@ const toggleSubs = (p: CourseState): CourseState => ({ ...p, subs: !p.subs });
 const toggleMute = (p: CourseState): CourseState => ({ ...p, muted: !p.muted, volume: p.muted && p.volume === 0 ? 0.5 : p.volume });
 
 /**
- * Player shortcuts while a lesson video is on screen. Space is handled with
- * the app's other keys; ←/→ belong to the focused scrubber.
- */
-/**
  * Fullscreen for the lesson video. The whole player box goes fullscreen so the
  * design's own controls come with it; iPhone Safari can only fullscreen a
  * <video>, so it falls back to the native player there.
@@ -42,6 +38,21 @@ export function toggleFullscreen() {
   else video?.webkitEnterFullscreen?.();
 }
 
+/** Whether the lesson video is full screen right now, for the button's icon and label. */
+function useFullscreen() {
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const sync = () => setFull(document.fullscreenElement?.id === "lesson-watch");
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
+  return full;
+}
+
+/**
+ * Player shortcuts while a lesson video is on screen. Space is handled with
+ * the app's other keys; ←/→ belong to the focused scrubber.
+ */
 export function usePlayerKeys(act: Act, active: boolean) {
   useEffect(() => {
     if (!active) return;
@@ -126,6 +137,7 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
   const opts = options(s, act, () => ui.setMenu(null));
   const open = ui.menu;
   const subOk = canSubtitle(s);
+  const full = useFullscreen();
   const seek = (e: MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     act((p) => seekTo(p, Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * d));
@@ -172,7 +184,7 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
             <span className={clsx("rounded border-[1.5px] border-white px-[5px] py-0.5", s.subs ? "border-sd-accent-400 bg-sd-accent-400 text-sd-ink" : "bg-transparent")}>CC</span>
           </button>
         )}
-        <button type="button" onClick={toggleFullscreen} aria-label="Fullscreen" className={clsx(barBtn, "hidden lg:flex")}><Icon name="fullscreen" /></button>
+        <button type="button" onClick={toggleFullscreen} aria-label={full ? "Exit full screen" : "Full screen"} className={barBtn}><Icon name={full ? "exitFullscreen" : "fullscreen"} /></button>
       </div>
     </div>
   );

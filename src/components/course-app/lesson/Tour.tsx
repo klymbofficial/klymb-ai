@@ -16,14 +16,14 @@ const STOPS: Record<CourseState["lang"], Stop[]> = {
     { target: "", text: "Two parts each day: watch the video, then pass the assessment." },
     { target: "#lesson-watch", text: "Every day starts with a short story video. Tap CC for subtitles." },
     { target: "", text: "After the video, the assessment opens here. Score 60% to move on." },
-    { target: '[data-tour="tabs"]', text: "All lessons, common doubts, your notes and the transcript." },
+    { target: '[data-tour="tabs"]', text: "All lessons, questions and your notes." },
     { target: "", text: "That’s it. Replay it from Profile. Chalo, let’s start!" },
   ],
   hi: [
     { target: "", text: "Har din do cheezein: video dekho, phir assessment pass karo." },
     { target: "#lesson-watch", text: "Har din ek chhoti story video se shuru hota hai. Subtitles ke liye CC dabao." },
     { target: "", text: "Video ke baad assessment yahan khulta hai. Aage badhne ke liye 60% score karo." },
-    { target: '[data-tour="tabs"]', text: "Course ke saare lessons, aam sawaalon ke jawab, tumhare notes aur transcript." },
+    { target: '[data-tour="tabs"]', text: "Course ke saare lessons, sawaal aur tumhare notes." },
     { target: "", text: "Bas itna hi. Profile se dobara dekh sakte ho. Chalo, shuru karte hain!" },
   ],
 };
