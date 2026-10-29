@@ -14,7 +14,8 @@ import { Feedback } from "./Feedback";
 import { FollowUps } from "./FollowUps";
 import { LessonCheck } from "./LessonCheck";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
-import { fetchImage, pasteKey, shareOnLinkedIn, useShareImage } from "@/lib/linkedin-share";
+import { useLinkedInPost } from "@/components/share/LinkedInPost";
+import { fetchImage, pasteKey, useShareImage, type LinkedInShare } from "@/lib/linkedin-share";
 import { track } from "../track";
 import { GoogleButton, useCourseUser } from "../user";
 
@@ -34,7 +35,7 @@ const UI = {
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes", share: "Share on LinkedIn",
     download: "Download image", post: "Post on LinkedIn",
-    posted: { app: "Sent to LinkedIn. Tap Post there.", pasted: (key: string) => `Text is in. Press ${key} in the post to add the image, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
+    posted: { posted: "Posted on LinkedIn.", app: "Sent to LinkedIn. Tap Post there.", pasted: (key: string) => `Text is in. Press ${key} in the post to add the image, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
     complete: "Mark complete", redo: "Do this lesson again",
   },
   hi: {
@@ -52,7 +53,7 @@ const UI = {
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo", share: "LinkedIn par share karo",
     download: "Image download karo", post: "LinkedIn pe post karo",
-    posted: { app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (key: string) => `Text aa gaya. Post mein ${key} dabao, image aa jayegi. Phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
+    posted: { posted: "LinkedIn pe post ho gaya.", app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (key: string) => `Text aa gaya. Post mein ${key} dabao, image aa jayegi. Phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
     complete: "Mark complete", redo: "Yeh lesson phir se karo",
   },
 };
@@ -160,10 +161,13 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
   const image = `/images/system-design/day-${day.day}-linkedin-${s.lang}.png`;
   const file = `klymb-system-design-day-${day.day}.png`;
   const shareImage = useShareImage(image, file, () => fetchImage(image));
-  const share = async () => {
+  const linkedIn = useLinkedInPost({
+    text: c.linkedin, image: shareImage, alt: c.cheatsheet.title, lang: s.lang, returnTo: `/learn/system-design?lesson=${id}`,
+    onShared: (how: LinkedInShare) => setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted(pasteKey()) : ui.posted[how]),
+  });
+  const share = () => {
     track("share", id, "done", { kind: "linkedin" });
-    const how = await shareOnLinkedIn(c.linkedin, shareImage());
-    setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted(pasteKey()) : ui.posted[how]);
+    linkedIn.share();
   };
   return (
     <div className="flex flex-col gap-6">
@@ -199,6 +203,8 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
           <button type="button" onClick={share} className="sd-btn sd-btn-primary h-11">{ui.post}</button>
         </div>
         <p role="status" aria-live="polite" className="m-0 mt-2 text-[13px] empty:hidden">{posted}</p>
+        {linkedIn.connect}
+        {linkedIn.dialog}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" onClick={() => act((q) => completeNext(q, false))} className="sd-btn sd-btn-primary h-12 gap-2"><Icon name="check" size={16} />{ui.complete}</button>
