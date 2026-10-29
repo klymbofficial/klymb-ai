@@ -95,8 +95,9 @@ what it did, which is the quickest way to see whether the cron is alive.
 
 **`course.maintenance()`** deletes rate-limit attempts older than a day (in
 bounded batches, so it never takes a long lock), creates the `sd_events`
-partitions for the next couple of months, and drops the ones that have aged
-out.
+partitions for the next couple of months, drops the ones that have aged
+out, and deletes LinkedIn connections whose 60-day token has expired
+(`0008_linkedin.sql` redefines it to add that last step).
 
 **`course.sd_events` is partitioned by month.** It is the only table whose
 growth is driven by visitors rather than enrolments — a free 21-day course
