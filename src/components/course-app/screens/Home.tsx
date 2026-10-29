@@ -3,9 +3,8 @@
 import clsx from "clsx";
 import Image from "next/image";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
-import { LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
+import { LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, lessonSteps, localDate, openLesson, pct, startQuiz, streak, type CourseState } from "@/lib/course-app";
 import { lastCheckLesson } from "./Course";
-import { lessonSteps } from "../lesson/Practice";
 import { GoogleButton, firstName, useCourseUser } from "../user";
 import { Icon } from "../icons";
 import { Bar, parallax, stagger } from "../ui";
@@ -53,7 +52,7 @@ export function GoalCard({ s }: { s: CourseState }) {
   );
 }
 
-const STEP_NAME: Record<string, string> = { call: "Your call", watch: "the video", reveal: "Learn", prove: "Prove it", estimate: "Estimate", build: "Build it", design: "Design it", follow: "the follow-ups", done: "the finish" };
+const STEP_NAME: Record<string, string> = { watch: "the video", reveal: "Learn", prove: "Prove it", estimate: "Estimate", build: "Build it", design: "Design it", follow: "the follow-ups", done: "the finish" };
 
 /** Kamran's line on Home: one thing about where the learner is right now. */
 function kamranSays(s: CourseState, first: string | null) {

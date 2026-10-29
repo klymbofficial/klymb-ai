@@ -279,6 +279,14 @@ const en: DayCopy = {
     },
   ],
 
+  faq: [
+    { q: "Round robin or least connections — which should I say?", a: "Least connections, when requests take different amounts of time, which is most real apps. Round robin is blind: it keeps handing work to a server already stuck on something slow." },
+    { q: "What is consistent hashing actually for?", a: "Keeping a user on the same server without reshuffling everyone when the server count changes. Plain hash % N moves almost every user when N changes; consistent hashing moves only the share belonging to the server you added or removed." },
+    { q: "Why does everyone insist servers stay stateless?", a: "Because if the session lives in one server’s memory, that user has to come back to that exact server — and when it dies they are logged out. Put sessions in a shared store and any server can answer anyone." },
+    { q: "Doesn’t the load balancer become the single point of failure?", a: "It does if you run one. Run at least two, in different zones, with DNS or a floating address in front. “Never one of anything” is the whole lesson." },
+    { q: "What makes a health check a good one?", a: "It does a little real work — reads a row, calls the dependency — instead of answering “I am alive”. A server can accept connections while its database connection pool is dead, and a shallow check keeps sending it traffic." },
+  ],
+
   interview: [
     "Clarify first: how many requests a second, how many servers, and is anything stored on the servers?",
     "Put a pair of load balancers in front, across zones, with DNS pointing at them.",
@@ -576,6 +584,14 @@ const hi: DayCopy = {
       say: "\"Affinity sach mein chahiye toh consistent hashing, sessions phir bhi shared store mein, aur failover chhodne se pehle measure.\"",
       deeper: "Days 3 aur 6",
     },
+  ],
+
+  faq: [
+    { q: "Round robin ya least connections — kya bolun?", a: "Least connections, jab requests alag-alag time leti hain — aur asli apps mein yahi hota hai. Round robin andha hai: jo server pehle se slow kaam mein phansa hai, usey bhi barabar kaam deta rehta hai." },
+    { q: "Consistent hashing kis kaam ki hai?", a: "User ko ek hi server pe rakhne ke liye, bina sab ko shuffle kiye jab server count badle. Seedha hash % N mein N badalte hi lagbhag har user shift ho jaata hai; consistent hashing sirf utne users hilati hai jitne us server ke the jo joda ya hataya gaya." },
+    { q: "Sab log “servers stateless rakho” kyun bolte hain?", a: "Kyunki session ek server ki memory mein hai, toh us user ko hamesha wahi server chahiye — aur woh gira toh user logout. Session shared store mein daalo, phir koi bhi server kisi ko bhi jawab de sakta hai." },
+    { q: "Load balancer khud single point of failure nahi ban jaata?", a: "Ek hi chalaoge toh banta hai. Kam se kam do rakho, alag zones mein, aage DNS ya floating address. Poora sabak yahi hai: “kisi cheez ka ek nahi”." },
+    { q: "Achha health check kaisa hota hai?", a: "Jo thoda asli kaam karta hai — ek row padhta hai, dependency ko call karta hai — na ki sirf “main zinda hoon” bolta hai. Server connections le sakta hai jabki uska database pool mar chuka ho, aur halka check usey traffic bhejta rehta hai." },
   ],
 
   interview: [

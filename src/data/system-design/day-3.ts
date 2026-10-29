@@ -278,6 +278,13 @@ const en: DayCopy = {
     },
   ],
 
+  faq: [
+    { q: "Why not keep the video file in the database?", a: "Databases are built for small rows you query, not gigabytes you stream. Put the file in object storage and keep only its address in the row. Backups, replication and query performance all stay sane that way." },
+    { q: "What does adaptive bitrate actually do?", a: "It cuts the video into pieces of a few seconds, each available at several qualities. The player picks the next piece from the speed it just measured — so a weak signal drops to 240p instead of freezing." },
+    { q: "Why convert one video into many versions instead of one good one?", a: "Because a phone on patchy mobile data and a laptop on fibre cannot play the same file. You pay for the conversion once, in the background, and every viewer gets a version that fits their connection and screen." },
+    { q: "What counts as a good cache hit ratio?", a: "For popular video, high — most teams want 90% or more at the edge, because every miss is a trip back to the origin. And when many viewers miss the same segment at once, coalesce them so the origin is asked once, not a thousand times." },
+  ],
+
   interview: [
     "Clarify: upload sizes, views a day, live or on demand, which devices.",
     "Upload in resumable chunks straight to object storage; details in the database.",
@@ -574,6 +581,13 @@ const hi: DayCopy = {
       say: "\"Pata hue start se pehle warm aur scale, misses coalesce, aur kam quality se shuru karke upar.\"",
       deeper: "Day 1",
     },
+  ],
+
+  faq: [
+    { q: "Video file database mein kyun nahi rakh sakte?", a: "Database chhoti rows ke liye bana hai jinpe query chalti hai, gigabytes stream karne ke liye nahi. File object storage mein rakho aur row mein sirf uska address. Backup, replication aur query speed, sab theek rehte hain." },
+    { q: "Adaptive bitrate karta kya hai?", a: "Video ko kuch-kuch second ke tukdon mein kaatta hai, har tukda kai qualities mein. Player abhi jo speed naapi hai uske hisaab se agla tukda chunta hai — isliye kamzor network pe video rukti nahi, 240p pe aa jaati hai." },
+    { q: "Ek achhi file ke bajaye kai versions kyun banate hain?", a: "Kyunki kharab mobile data wala phone aur fibre wala laptop ek hi file nahi chala sakte. Conversion ka kharcha ek baar, background mein, aur har viewer ko uske network aur screen ke hisaab ka version." },
+    { q: "Cache hit ratio kitna achha maana jaata hai?", a: "Popular video ke liye zyada — log edge pe 90% ya usse upar chahte hain, kyunki har miss matlab origin tak ka chakkar. Aur jab ek hi segment pe bahut saare misses aayein, unhe mila do taaki origin se woh ek hi baar mangwaya jaye, hazaar baar nahi." },
   ],
 
   interview: [

@@ -13,17 +13,17 @@ type Stop = { target: string; text: string };
 
 const STOPS: Record<CourseState["lang"], Stop[]> = {
   en: [
-    { target: '[data-tour="path"]', text: "This bar is today’s path. Each step opens after the one before it, and you can tap a finished one to go back." },
-    { target: "#lesson-start, #lesson-call, #lesson-watch", text: "Every day starts here: you make your call first, then watch a 3-minute story. Want subtitles? Tap CC." },
-    { target: '[data-tour="practice"] | [data-tour="path"]', text: "Under the video: learn what really happened, practise, design, and face the interviewer’s follow-ups. Finish one and I’ll scroll you to the next." },
-    { target: '[data-tour="tabs"]', text: "Notes pin to the moment in the video. The transcript lets you jump to any line." },
+    { target: '[data-tour="path"]', text: "This bar is today’s path. Each step opens after the one before it, and tapping one brings it up here — nothing to scroll." },
+    { target: "#lesson-watch", text: "Every day starts with a short story video. Want subtitles? Tap CC." },
+    { target: '[data-tour="practice"] | [data-tour="path"]', text: "When the video ends, the assessment takes its place right here. After that come practice, design and the interviewer’s follow-ups, one at a time." },
+    { target: '[data-tour="tabs"]', text: "Every lesson of the course is listed here, with answers to the day’s common doubts, your notes and the transcript." },
     { target: "", text: "That’s the tour. You can replay it from Profile any time. Chalo, let’s start!" },
   ],
   hi: [
-    { target: '[data-tour="path"]', text: "Yeh bar aaj ka raasta hai. Har step pichle ke baad khulta hai, aur poora hua step tap karke wapas ja sakte ho." },
-    { target: "#lesson-start, #lesson-call, #lesson-watch", text: "Har din yahan se shuru: pehle tumhara call, phir 3 minute ki story. Subtitles chahiye? CC dabao." },
-    { target: '[data-tour="practice"] | [data-tour="path"]', text: "Video ke neeche: asal mein kya hua, practice, design, aur interviewer ke follow-ups. Ek khatam karo, main agle pe le chalunga." },
-    { target: '[data-tour="tabs"]', text: "Notes video ke us moment pe pin hote hain. Transcript se kisi bhi line pe jump karo." },
+    { target: '[data-tour="path"]', text: "Yeh bar aaj ka raasta hai. Har step pichle ke baad khulta hai, aur koi bhi step tap karoge toh wahi yahan khul jayega — scroll karne ki zaroorat nahi." },
+    { target: "#lesson-watch", text: "Har din ek chhoti story video se shuru hota hai. Subtitles chahiye? CC dabao." },
+    { target: '[data-tour="practice"] | [data-tour="path"]', text: "Video khatam hote hi assessment usi jagah aa jaata hai. Uske baad practice, design aur interviewer ke follow-ups, ek-ek karke." },
+    { target: '[data-tour="tabs"]', text: "Course ke saare lessons yahan hain, saath mein aaj ke aam sawaalon ke jawab, tumhare notes aur transcript." },
     { target: "", text: "Bas itna hi. Profile se yeh tour kabhi bhi dobara dekh sakte ho. Chalo, shuru karte hain!" },
   ],
 };
