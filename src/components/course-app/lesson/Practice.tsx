@@ -14,6 +14,7 @@ import { Feedback } from "./Feedback";
 import { FollowUps } from "./FollowUps";
 import { LessonCheck } from "./LessonCheck";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
+import { fetchImage, pasteKey, shareOnLinkedIn, useShareImage } from "@/lib/linkedin-share";
 import { track } from "../track";
 import { GoogleButton, useCourseUser } from "../user";
 
@@ -32,7 +33,8 @@ const UI = {
     savePrompt: (day: number) => `Day ${day} done! Sign in so it’s saved to your name, on any phone or laptop, and your streak keeps counting.`,
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes", share: "Share on LinkedIn",
-    download: "Download image", post: "Copy text and open LinkedIn", copied: "Copied. Paste it in LinkedIn",
+    download: "Download image", post: "Post on LinkedIn",
+    posted: { app: "Sent to LinkedIn. Tap Post there.", pasted: (key: string) => `Text is in. Press ${key} in the post to add the image, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
     complete: "Mark complete", redo: "Do this lesson again",
   },
   hi: {
@@ -49,7 +51,8 @@ const UI = {
     savePrompt: (day: number) => `Day ${day} ho gaya! Sign in karo taaki yeh tumhare naam pe save ho, kisi bhi phone ya laptop pe, aur streak chalti rahe.`,
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo", share: "LinkedIn par share karo",
-    download: "Image download karo", post: "Text copy karo, LinkedIn kholo", copied: "Copied. LinkedIn mein paste karo",
+    download: "Image download karo", post: "LinkedIn pe post karo",
+    posted: { app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (key: string) => `Text aa gaya. Post mein ${key} dabao, image aa jayegi. Phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
     complete: "Mark complete", redo: "Yeh lesson phir se karo",
   },
 };
@@ -151,15 +154,16 @@ function Reveal({ c, ui, read, onRead }: { c: DayCopy; ui: Ui; read: boolean; on
 }
 
 function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: string; day: Day; c: DayCopy; ui: Ui }) {
-  const [copied, setCopied] = useState(false);
+  const [posted, setPosted] = useState("");
   const user = useCourseUser();
   const p = s.lessons[id] ?? {};
   const image = `/images/system-design/day-${day.day}-linkedin-${s.lang}.png`;
-  // LinkedIn's share link prefills the text but can't carry an image, so the text also goes on the clipboard.
+  const file = `klymb-system-design-day-${day.day}.png`;
+  const shareImage = useShareImage(image, file, () => fetchImage(image));
   const share = async () => {
     track("share", id, "done", { kind: "linkedin" });
-    try { await navigator.clipboard.writeText(c.linkedin); setCopied(true); } catch { /* blocked: the prefill still works */ }
-    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(c.linkedin)}`, "_blank", "noopener,noreferrer");
+    const how = await shareOnLinkedIn(c.linkedin, shareImage());
+    setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted(pasteKey()) : ui.posted[how]);
   };
   return (
     <div className="flex flex-col gap-6">
@@ -191,9 +195,10 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
         {/* eslint-disable-next-line @next/next/no-img-element -- the same file the learner downloads */}
         <img src={image} alt={c.cheatsheet.title} width={1080} height={1350} className="w-full max-w-[420px] border border-sd-divider" />
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-          <a href={image} download={`klymb-system-design-day-${day.day}.png`} onClick={() => track("share", id, "done", { kind: "image" })} className="sd-btn sd-btn-secondary h-11 gap-2"><Icon name="download" size={16} />{ui.download}</a>
-          <button type="button" onClick={share} className="sd-btn sd-btn-primary h-11">{copied ? ui.copied : ui.post}</button>
+          <a href={image} download={file} onClick={() => track("share", id, "done", { kind: "image" })} className="sd-btn sd-btn-secondary h-11 gap-2"><Icon name="download" size={16} />{ui.download}</a>
+          <button type="button" onClick={share} className="sd-btn sd-btn-primary h-11">{ui.post}</button>
         </div>
+        <p role="status" aria-live="polite" className="m-0 mt-2 text-[13px] empty:hidden">{posted}</p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <button type="button" onClick={() => act((q) => completeNext(q, false))} className="sd-btn sd-btn-primary h-12 gap-2"><Icon name="check" size={16} />{ui.complete}</button>

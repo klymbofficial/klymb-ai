@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useId, useState, type ReactNode } from "react";
 import { achievementCaption, achievementPng, achievementSvg, type Achievement } from "@/lib/achievement";
+import { fetchImage, pasteKey, shareOnLinkedIn, useShareImage } from "@/lib/linkedin-share";
 
 export function ShareAchievement({ badge, course, courseUrl, initialName = "", imageSrc, variant = "default", posterIcon }: {
   badge: Achievement; course: string; courseUrl: string; initialName?: string; imageSrc?: string;
@@ -15,24 +16,19 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
   const [status, setStatus] = useState("");
   const svg = achievementSvg(badge, name, course);
   const caption = achievementCaption(badge, course, courseUrl);
+  const file = `klymb-${badge.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`;
+  const loadImage = () => (imageSrc ? fetchImage(imageSrc) : achievementPng(svg));
+  const shareImage = useShareImage(imageSrc ?? svg, file, loadImage);
   const button = "inline-flex min-h-11 items-center justify-center border border-current px-4 py-2 text-sm font-bold transition-opacity hover:opacity-75 focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-wait disabled:opacity-60";
 
   async function download() {
     setBusy(true);
     setStatus("");
     try {
-      let blob: Blob;
-      if (imageSrc) {
-        const response = await fetch(imageSrc);
-        if (!response.ok) throw new Error("Badge image unavailable");
-        blob = await response.blob();
-      } else {
-        blob = await achievementPng(svg);
-      }
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(await loadImage());
       const link = document.createElement("a");
       link.href = url;
-      link.download = `klymb-${badge.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`;
+      link.download = file;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -43,6 +39,13 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
     } finally {
       setBusy(false);
     }
+  }
+
+  async function post() {
+    const how = await shareOnLinkedIn(caption, shareImage());
+    if (how === "app") setStatus("Sent to LinkedIn. Tap Post there.");
+    if (how === "pasted") setStatus(`Caption is in. Press ${pasteKey()} in the post to add your badge, then tap Post.`);
+    if (how === "text") setStatus("Caption is in. Attach the downloaded badge, then tap Post.");
   }
 
   if (variant === "poster") {
@@ -71,15 +74,7 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
           </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={download} disabled={busy} className={`${posterButton} border border-current`}>{busy ? "Creating image…" : "Download"}</button>
-            <a
-              href="https://www.linkedin.com/feed/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${posterButton} bg-[#83050b] text-[#f3f2f2]`}
-              onClick={() => { navigator.clipboard?.writeText(caption).then(() => setStatus("Caption copied. Attach the badge image to your post.")).catch(() => setStatus("Open LinkedIn and paste the caption from the downloaded badge.")); }}
-            >
-              Share on LinkedIn
-            </a>
+            <button type="button" onClick={post} className={`${posterButton} bg-[#83050b] text-[#f3f2f2]`}>Share on LinkedIn</button>
           </div>
           <p role="status" aria-live="polite" className="m-0 text-[13px]">{status}</p>
           <p className="m-0 text-xs text-sd-n-700">This celebrates recorded learning activity. It is not a professional certification.</p>
@@ -102,9 +97,9 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
             try { await navigator.clipboard.writeText(caption); setStatus("Caption copied. Paste it into your LinkedIn post."); }
             catch { setStatus("Select and copy the caption below manually."); }
           }}>Copy caption</button>
-          <a href="https://www.linkedin.com/feed/" target="_blank" rel="noopener noreferrer" className={`${button} text-[#0a66c2]`}>Open LinkedIn <span className="sr-only">in a new tab</span>↗</a>
+          <button type="button" onClick={post} className={`${button} text-[#0a66c2]`}>Post on LinkedIn</button>
         </div>
-        <p className="text-xs">Download your badge, copy the caption, then open LinkedIn and attach the image to a new post.</p>
+        <p className="text-xs">Post on LinkedIn puts your badge and caption into a new post, ready for you to tap Post.</p>
         <label htmlFor={`${id}-caption`} className="text-sm font-semibold">Your LinkedIn caption</label>
         <textarea id={`${id}-caption`} readOnly value={caption} rows={7} className="w-full resize-y border border-current/30 bg-transparent p-3 text-sm" />
         <p role="status" aria-live="polite" className="text-sm">{status}</p>
