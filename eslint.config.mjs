@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Local design references and screenshot tooling (not checked in).
     ".context/**",
+    // Local worktrees, each a full copy of the repo (not checked in).
+    ".claude/**",
   ]),
 ]);
 
