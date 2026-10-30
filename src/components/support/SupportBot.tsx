@@ -262,9 +262,9 @@ export function SupportBot() {
         aria-hidden={!open}
         style={place ? { left: place.left, top: place.top, width: place.width, height: place.height, transformOrigin: place.origin } : undefined}
         className={clsx(
-          "pointer-events-none fixed z-[60] flex flex-col overflow-hidden rounded-[1.25rem] bg-card shadow-[0_24px_60px_rgba(32,30,29,0.22)] ring-1 ring-line/40",
+          "fixed z-[60] flex flex-col overflow-hidden rounded-[1.25rem] bg-card shadow-[0_24px_60px_rgba(32,30,29,0.22)] ring-1 ring-line/40",
           "transition-[opacity,transform,visibility] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          open ? "pointer-events-auto scale-100 opacity-100" : "invisible scale-95 opacity-0",
+          open ? "pointer-events-auto scale-100 opacity-100" : "pointer-events-none invisible scale-95 opacity-0",
         )}
       >
         <div className="flex items-center gap-3 bg-gradient-to-br from-red via-red-press to-[#2a0204] px-4 py-3 text-white">
