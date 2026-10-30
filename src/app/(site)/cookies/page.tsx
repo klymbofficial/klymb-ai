@@ -33,6 +33,7 @@ export default function CookiePolicyPage() {
           rows={[
             ["Auth.js session cookie", "Keeps you signed in to your learner or admin account. Set only after you sign in, and not readable by page scripts."],
             ["klymb_consent", "Set only if you turn analytics off, so we remember that on later visits. Lasts 180 days."],
+            ["klymb_li_state", "Set only while you connect LinkedIn, so we can check that LinkedIn's reply belongs to the request you started. Not readable by page scripts, and deleted when you come back, or after 10 minutes."],
           ]}
         />
       </Section>

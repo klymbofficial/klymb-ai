@@ -54,8 +54,8 @@ export const grievance = {
 } as const;
 
 export const policyVersion = {
-  version: "2026-10-07",
-  effective: "7 October 2026",
+  version: "2026-10-29",
+  effective: "29 October 2026",
 } as const;
 
 /**
@@ -89,6 +89,7 @@ export const dataPoints = {
     ["Account", "Your Google account email, name and profile image, through Google sign-in"],
     ["Evidence accounts", "The GitHub username and LinkedIn profile you declare, so submitted links can be checked as yours"],
     ["Coursework", "Daily submissions, deliverable links, your notes, knowledge-check answers, checkpoint LinkedIn post links, assessment scores and reviewer feedback"],
+    ["LinkedIn posting (optional)", "Only if you connect LinkedIn to post in one tap: an access token that lets us publish posts you confirm, your LinkedIn member ID and display name, and when that permission expires. The token and ID are stored encrypted. We never read your feed, connections, messages or email, and nothing is posted unless you tap Post"],
     ["Technical logs", "IP address, request time, path, status and browser type, processed by our hosting provider to serve pages and keep the service secure"],
     ["Analytics", "Aggregate usage measured with Google Analytics 4, on by default and switchable off at /cookies; cookieless page-view and page-speed counts from Vercel"],
   ],
@@ -96,5 +97,6 @@ export const dataPoints = {
     ["Vercel", "Website hosting, technical logs, and cookieless web analytics and speed insights", "United States and global edge network"],
     ["Supabase", "Database holding registrations, learner records and submissions", "Tokyo, Japan"],
     ["Google", "Sign-in (OAuth) and Google Analytics 4", "Global"],
+    ["LinkedIn", "Publishing the posts you confirm, with their image, to your own LinkedIn feed, only if you connect it", "Global"],
   ],
 } as const;

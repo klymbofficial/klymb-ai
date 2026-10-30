@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useId, useState, type ReactNode } from "react";
 import { achievementCaption, achievementPng, achievementSvg, type Achievement } from "@/lib/achievement";
-import { fetchImage, pasteKey, shareOnLinkedIn, useShareImage } from "@/lib/linkedin-share";
+import { useLinkedInPost } from "@/components/share/LinkedInPost";
+import { fetchImage, pasteKey, useShareImage } from "@/lib/linkedin-share";
 
 export function ShareAchievement({ badge, course, courseUrl, initialName = "", imageSrc, variant = "default", posterIcon }: {
   badge: Achievement; course: string; courseUrl: string; initialName?: string; imageSrc?: string;
@@ -41,12 +42,15 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
     }
   }
 
-  async function post() {
-    const how = await shareOnLinkedIn(caption, shareImage());
-    if (how === "app") setStatus("Sent to LinkedIn. Tap Post there.");
-    if (how === "pasted") setStatus(`Caption is in. Press ${pasteKey()} in the post to add your badge, then tap Post.`);
-    if (how === "text") setStatus("Caption is in. Attach the downloaded badge, then tap Post.");
-  }
+  const linkedIn = useLinkedInPost({
+    text: caption, image: shareImage, alt: imageSrc ? `${badge.name} Klymb.ai badge` : `${badge.name} achievement badge for ${name || "a proud learner"}`,
+    onShared: (how) => {
+      if (how === "posted") setStatus("Posted on LinkedIn.");
+      if (how === "app") setStatus("Sent to LinkedIn. Tap Post there.");
+      if (how === "pasted") setStatus(`Caption is in. Press ${pasteKey()} in the post to add your badge, then tap Post.`);
+      if (how === "text") setStatus("Caption is in. Attach the downloaded badge, then tap Post.");
+    },
+  });
 
   if (variant === "poster") {
     const posterButton = "inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-extrabold transition-opacity hover:opacity-85 disabled:cursor-wait disabled:opacity-60";
@@ -74,8 +78,10 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
           </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={download} disabled={busy} className={`${posterButton} border border-current`}>{busy ? "Creating image…" : "Download"}</button>
-            <button type="button" onClick={post} className={`${posterButton} bg-[#83050b] text-[#f3f2f2]`}>Share on LinkedIn</button>
+            <button type="button" onClick={linkedIn.share} className={`${posterButton} bg-[#83050b] text-[#f3f2f2]`}>Share on LinkedIn</button>
           </div>
+          {linkedIn.connect}
+          {linkedIn.dialog}
           <p role="status" aria-live="polite" className="m-0 text-[13px]">{status}</p>
           <p className="m-0 text-xs text-sd-n-700">This celebrates recorded learning activity. It is not a professional certification.</p>
         </div>
@@ -97,9 +103,11 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
             try { await navigator.clipboard.writeText(caption); setStatus("Caption copied. Paste it into your LinkedIn post."); }
             catch { setStatus("Select and copy the caption below manually."); }
           }}>Copy caption</button>
-          <button type="button" onClick={post} className={`${button} text-[#0a66c2]`}>Post on LinkedIn</button>
+          <button type="button" onClick={linkedIn.share} className={`${button} text-[#0a66c2]`}>Post on LinkedIn</button>
         </div>
         <p className="text-xs">Post on LinkedIn puts your badge and caption into a new post, ready for you to tap Post.</p>
+        {linkedIn.connect}
+        {linkedIn.dialog}
         <label htmlFor={`${id}-caption`} className="text-sm font-semibold">Your LinkedIn caption</label>
         <textarea id={`${id}-caption`} readOnly value={caption} rows={7} className="w-full resize-y border border-current/30 bg-transparent p-3 text-sm" />
         <p role="status" aria-live="polite" className="text-sm">{status}</p>

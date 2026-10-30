@@ -54,6 +54,7 @@ export default function PrivacyPage() {
           <li>Reserving your cohort place and giving you access to the daily programme</li>
           <li>Storing your submissions so reviewers can score them and give feedback</li>
           <li>Checking that submitted GitHub and LinkedIn links belong to the account you declared</li>
+          <li>If you connect LinkedIn: publishing a lesson or badge post to your own feed when you tap Post, after you have seen its image and text</li>
           <li>Emailing or calling you about your registration, your cohort and your results</li>
           <li>Keeping the service secure, and preventing abuse of the registration form</li>
           <li>Understanding, in aggregate, how the site is used, unless you have turned analytics off</li>
@@ -98,6 +99,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Registrations that do not enroll:</strong> kept for 24 months, so we can tell you when a track opens, then deleted.</li>
           <li><strong>Learner records and submissions:</strong> kept for 24 months after the cohort ends, so results and feedback remain available to you.</li>
+          <li><strong>LinkedIn connection:</strong> kept until you disconnect it or LinkedIn&apos;s 60-day permission runs out, then deleted. Posts you published stay on LinkedIn, under your control there.</li>
           <li><strong>Technical logs:</strong> kept for the short period our hosting provider retains them.</li>
           <li><strong>Records we must keep:</strong> {HIDE_MONEY ? "consent records" : "proof of refund decisions and consent records"}, kept as long as needed for tax, accounting or a dispute.</li>
         </ul>
@@ -109,6 +111,8 @@ export default function PrivacyPage() {
           <li><strong>Correction:</strong> have inaccurate or incomplete data corrected.</li>
           <li><strong>Erasure:</strong> ask us to delete your account and data, subject to records we must keep.</li>
           <li><strong>Withdraw consent:</strong> stop marketing contact, or turn analytics cookies off at any time.</li>
+          <li><strong>Disconnect LinkedIn:</strong> tap Disconnect in the Post to LinkedIn step and we delete the token straight away. To remove Klymb.ai from your LinkedIn account as well, use LinkedIn&apos;s{" "}
+            <a href="https://www.linkedin.com/psettings/permitted-services" target="_blank" rel="noopener noreferrer">permitted services</a> settings.</li>
           <li><strong>Grievance:</strong> complain to our Grievance Officer, whatever else you have done. We acknowledge in {grievance.acknowledgeWithin} and aim to resolve in {grievance.resolveWithin}, and you may escalate to the Data Protection Board of India.</li>
           <li><strong>Nomination:</strong> nominate someone to exercise these rights if you die or become incapacitated.</li>
         </ul>
@@ -124,6 +128,7 @@ export default function PrivacyPage() {
           <li>Access rules live in the database: a learner can only read their own record, and the public can only add a registration, never read one.</li>
           <li>Administrative access is limited to an allowlist of email addresses, checked on every request.</li>
           <li>Keys and secrets are stored as server configuration, never in the browser.</li>
+          <li>A LinkedIn connection is encrypted before it is stored, and the token never reaches the browser.</li>
         </ul>
         <p>
           If a personal data breach occurs, we will notify the Data Protection Board of India and affected users as

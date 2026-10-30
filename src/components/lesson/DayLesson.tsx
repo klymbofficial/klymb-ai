@@ -8,7 +8,8 @@ import { DiagramBuilder } from "@/components/lesson/DiagramBuilder";
 import { FollowUps } from "@/components/lesson/FollowUps";
 import { LessonQuiz, score } from "@/components/lesson/LessonQuiz";
 import type { Day, DayCopy, Lang } from "@/data/system-design/types";
-import { fetchImage, pasteKey, shareOnLinkedIn, useShareImage } from "@/lib/linkedin-share";
+import { useLinkedInPost } from "@/components/share/LinkedInPost";
+import { fetchImage, pasteKey, useShareImage, type LinkedInShare } from "@/lib/linkedin-share";
 
 interface Progress { pre?: number[]; watched?: boolean; built?: number; post?: number[]; follow?: boolean[] }
 type StepKey = "call" | "watch" | "reveal" | "build" | "prove" | "follow" | "done";
@@ -36,7 +37,7 @@ const UI = {
     interviewMode: "Interview mode · 2 min answer",
     share: "Share on LinkedIn",
     download: "Download infographic", post: "Post on LinkedIn",
-    posted: { app: "Sent to LinkedIn. Tap Post there.", pasted: (key: string) => `Text is in. Press ${key} in the post to add the image, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
+    posted: { posted: "Posted on LinkedIn.", app: "Sent to LinkedIn. Tap Post there.", pasted: (key: string) => `Text is in. Press ${key} in the post to add the image, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
     next: (n: number) => `Next · Day ${n}`, open: "Open →", redo: (n: number) => `Do Day ${n} again`, sources: "Sources",
     newHere: "New to system design? Start with Day 0 →",
   },
@@ -62,7 +63,7 @@ const UI = {
     interviewMode: "Interview mode · 2 min answer",
     share: "LinkedIn par share karo",
     download: "Infographic download karo", post: "LinkedIn pe post karo",
-    posted: { app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (key: string) => `Text aa gaya. Post mein ${key} dabao, image aa jayegi. Phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
+    posted: { posted: "LinkedIn pe post ho gaya.", app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (key: string) => `Text aa gaya. Post mein ${key} dabao, image aa jayegi. Phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
     next: (n: number) => `Agla · Day ${n}`, open: "Kholo →", redo: (n: number) => `Day ${n} phir se karo`, sources: "Sources",
     newHere: "System design mein naye ho? Day 0 se shuru karo →",
   },
@@ -372,11 +373,10 @@ function Unlocked({
   const image = `/images/system-design/day-${day.day}-linkedin-${lang}.png`;
   const file = `klymb-system-design-day-${day.day}.png`;
   const shareImage = useShareImage(image, file, () => fetchImage(image));
-
-  const share = async () => {
-    const how = await shareOnLinkedIn(c.linkedin, shareImage());
-    setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted(pasteKey()) : ui.posted[how]);
-  };
+  const linkedIn = useLinkedInPost({
+    text: c.linkedin, image: shareImage, alt: c.cheatsheet.title, lang,
+    onShared: (how: LinkedInShare) => setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted(pasteKey()) : ui.posted[how]),
+  });
 
   return (
     <div className="space-y-6">
@@ -413,11 +413,13 @@ function Unlocked({
           <a href={image} download={file} className="rounded-lg border-2 border-ink px-5 py-3 text-center text-sm font-bold transition-transform active:scale-[0.97]">
             {ui.download}
           </a>
-          <button type="button" onClick={share} className="rounded-lg bg-[#0a66c2] px-5 py-3 text-sm font-bold text-white transition-transform active:scale-[0.97]">
+          <button type="button" onClick={linkedIn.share} className="rounded-lg bg-[#0a66c2] px-5 py-3 text-sm font-bold text-white transition-transform active:scale-[0.97]">
             {ui.post}
           </button>
         </div>
         <p role="status" aria-live="polite" className="mt-2 text-sm empty:hidden">{posted}</p>
+        {linkedIn.connect}
+        {linkedIn.dialog}
       </div>
 
       {day.nextHref ? (

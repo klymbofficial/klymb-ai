@@ -47,6 +47,7 @@ for how the schema and its role are set up.
 | Server-side allowlists and length caps on every submitted field | `src/lib/validation.ts` |
 | CSP, nosniff, Referrer-Policy, Permissions-Policy, frame-ancestors | `next.config.ts` |
 | The voice provider's API key stays on the server; the browser is handed no credential at all, not even a short-lived one | `src/lib/coach/realtime.ts`, `src/app/api/coach/session` |
+| LinkedIn tokens are sealed (AES-256-GCM, bound to the learner's email) and never reach the browser; the OAuth state is signed, expiring and tied to the signed-in learner | `src/lib/linkedin/oauth.ts`, `db/migrations/0008_linkedin.sql` |
 
 **Content Security Policy.** These hosts must stay allowlisted or something breaks:
 `www.googletagmanager.com` (analytics script), `www.google-analytics.com` and `*.analytics.google.com`
@@ -62,7 +63,8 @@ development only, for React Refresh.
 1. Push this repo to GitHub.
 2. In Vercel, choose **Add New → Project** and import the repo. The Next.js preset is detected automatically (build command `npm run build`).
 3. Set the environment variables from `.env.example` — at minimum `DATABASE_URL`,
-   `AUTH_SECRET`, `AUTH_URL` and the Google OAuth pair — then deploy.
+   `AUTH_SECRET`, `AUTH_URL` and the Google OAuth pair, plus the LinkedIn pair for
+   one-tap posting (see [LinkedIn posting](#linkedin-posting)) — then deploy.
 
 ## Routes
 
@@ -150,6 +152,58 @@ the learner finishing and the first word back and stores it on the session
 (`first_reply_ms`); the target is one to two seconds. It is on the screen under
 the orb and on each row of the learner's history, so the claim can be checked
 rather than assumed.
+
+## LinkedIn posting
+
+Learners share a 1080×1350 image and a caption when they finish a lesson or earn a
+badge. Without setup, **Post on LinkedIn** uses the phone's share sheet, or on a
+computer opens a prefilled LinkedIn post with the image on the clipboard. With a
+LinkedIn developer app connected, a signed-in learner taps **Post in one tap:
+connect LinkedIn** once; after that, **Post on LinkedIn** shows the image and text
+(editable), and one tap on **Post** publishes both to their feed through LinkedIn's
+API. If the API fails, the same step offers the share sheet / prefilled post instead.
+
+| Piece | Where |
+| --- | --- |
+| OAuth URL, code exchange, Images API upload, Posts API, text escaping | `src/lib/linkedin/api.ts` |
+| Signed state cookie (CSRF), token sealing, redirect URI | `src/lib/linkedin/oauth.ts` |
+| The stored connection | `src/lib/linkedin/store.ts`, `db/migrations/0008_linkedin.sql` |
+| Status and disconnect, connect, callback, post (10 an hour per learner) | `src/app/api/linkedin/` |
+| The button behaviour and the confirm step | `src/components/share/LinkedInPost.tsx`, `src/lib/linkedin-share.ts` |
+
+### Setting up the LinkedIn app (by hand, once)
+
+1. **Create the app** at [linkedin.com/developers/apps](https://www.linkedin.com/developers/apps/new),
+   signed in as someone who administers the Klymb.ai LinkedIn Page. Name it *Klymb.ai*,
+   pick the Klymb.ai Page, set the privacy policy URL to `https://klymb.ai/privacy`
+   and upload the logo (learners see both on LinkedIn's consent screen).
+2. **Verify the app**: *Settings → Verify*, and have a Page admin approve the link.
+3. **Add the products**: on the *Products* tab, request **Sign In with LinkedIn using
+   OpenID Connect** and **Share on LinkedIn**. Both are self-serve and are granted at
+   once. The *Auth* tab should then list the scopes `openid`, `profile` and
+   `w_member_social`, which is all the app asks for.
+4. **Add the redirect URLs** on the *Auth* tab, exactly:
+   `https://klymb.ai/api/linkedin/callback` and, for local work,
+   `http://localhost:3000/api/linkedin/callback`. The URL is built from `AUTH_URL`
+   when it is set, so it must match that origin. Preview deployments have their own
+   hosts and are not registered, so connecting doesn't work on them.
+5. **Copy the credentials** from the *Auth* tab into Vercel (and `.env.local`):
+   `LINKEDIN_CLIENT_ID` and `LINKEDIN_CLIENT_SECRET` (the primary client secret). Redeploy.
+6. **Apply the migration**: `npm run db:migrate` adds `course.linkedin_connections`.
+7. **Check it**: sign in on the System Design course, finish a lesson, tap the connect
+   link, approve on LinkedIn, and post. The post appears on your own feed.
+
+**Keep in mind**
+
+- Tokens last **60 days**. LinkedIn gives refresh tokens to approved partners only, so
+  after that the learner taps connect again (LinkedIn skips the consent screen if they're
+  still signed in there). The hourly `course.maintenance()` deletes expired connections.
+- `LINKEDIN_API_VERSION` (YYYYMM, default in `src/lib/linkedin/api.ts`) must be a version
+  LinkedIn still serves; each lasts about a year. Bump it before the current one is sunset.
+- Tokens are sealed with a key derived from `AUTH_SECRET`. Rotating that secret makes every
+  stored token unreadable: learners just connect again.
+- LinkedIn documents no way for an app to revoke a member's token. **Disconnect** deletes
+  ours; a learner can remove Klymb.ai entirely in LinkedIn's *permitted services* settings.
 
 ## Project structure
 
