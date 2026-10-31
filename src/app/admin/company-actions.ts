@@ -103,9 +103,10 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
   const sql = db();
   if (!sql) return UNAVAILABLE;
   const { data: c, error: readError } = await sql.row<{
-    name: string; seat_count: number; members: number; has_hr: boolean; is_learner: boolean; member_of: string | null;
+    name: string; logo_url: string | null; brand_color: string | null;
+    seat_count: number; members: number; has_hr: boolean; is_learner: boolean; member_of: string | null;
   }>`
-    select c.name, c.seat_count,
+    select c.name, c.logo_url, c.brand_color, c.seat_count,
            (select count(*)::int from course.company_members m where m.company_id = c.id and m.removed_at is null) as members,
            exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null) as has_hr,
            exists (select 1 from course.learners l where l.email = ${email.value}) as is_learner,
@@ -139,7 +140,10 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
   await logAdmin(admin, "company.hr_add", id, { email: email.value, ...(name ? { name } : {}) });
 
   // Adding them has worked by now; the email is a courtesy and never undoes it.
-  const sent = await sendCompanyInvite({ email: email.value, name, companyName: c.name, role: "hr" });
+  const sent = await sendCompanyInvite({
+    email: email.value, name, role: "hr",
+    company: { name: c.name, logoUrl: c.logo_url, brandColor: c.brand_color },
+  });
 
   revalidatePath("/admin/companies");
   return {

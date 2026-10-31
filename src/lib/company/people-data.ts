@@ -143,12 +143,12 @@ export async function insertPeople(sql: Db, companyId: string, people: PlannedPe
 
 /** The person HR is acting on, in this company, whether removed or not. */
 export async function loadPerson(sql: Db, companyId: string, email: string) {
-  const { data, error } = await sql.row<{ email: string; role: string; team_id: string | null; removed_at: string | null }>`
-    select email, role, team_id, removed_at from course.company_members
+  const { data, error } = await sql.row<{ email: string; name: string | null; role: string; team_id: string | null; removed_at: string | null }>`
+    select email, name, role, team_id, removed_at from course.company_members
      where email = ${email} and company_id = ${companyId}::uuid
   `;
   if (error) return undefined;
-  return data ? { email: data.email, role: data.role, teamId: data.team_id, removed: data.removed_at !== null } : null;
+  return data ? { email: data.email, name: data.name, role: data.role, teamId: data.team_id, removed: data.removed_at !== null } : null;
 }
 
 export async function activeHrCount(sql: Db, companyId: string): Promise<number | null> {

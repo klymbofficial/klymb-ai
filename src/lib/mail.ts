@@ -1,4 +1,5 @@
 import "server-only";
+import { inviteSenderName, readableBrandColor, type CompanyBrand } from "@/lib/company/brand";
 import { HIDE_MONEY } from "@/lib/site-status";
 
 /**
@@ -8,7 +9,7 @@ import { HIDE_MONEY } from "@/lib/site-status";
  * Brevo). Without them nothing is sent and callers carry on: an email must
  * never be the reason a payment fails to record.
  */
-export async function sendMail({ to, subject, html, text, replyTo }: { to: { email: string; name?: string }; subject: string; html: string; text: string; replyTo?: string }) {
+export async function sendMail({ to, subject, html, text, replyTo, fromName = "Klymb.ai" }: { to: { email: string; name?: string }; subject: string; html: string; text: string; replyTo?: string; fromName?: string }) {
   const apiKey = process.env.BREVO_API_KEY;
   const from = process.env.MAIL_FROM;
   if (!apiKey || !from) return { ok: false as const, reason: "not configured" };
@@ -17,7 +18,8 @@ export async function sendMail({ to, subject, html, text, replyTo }: { to: { ema
     method: "POST",
     headers: { "api-key": apiKey, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      sender: { email: from, name: "Klymb.ai" },
+      // The address is always Klymb's verified one; only the display name changes (e.g. "Acme via Klymb.ai").
+      sender: { email: from, name: fromName },
       to: [to],
       replyTo: { email: replyTo || process.env.MAIL_REPLY_TO || from },
       subject,
@@ -42,31 +44,66 @@ const wordmark = (site: string, color: string) =>
 const row = (k: string, v: string) =>
   `<tr><td style="padding:10px 0;color:${C.muted};font-size:14px;border-bottom:1px solid ${C.line}">${k}</td><td style="padding:10px 0;text-align:right;font-weight:700;font-size:14px;color:${C.ink};border-bottom:1px solid ${C.line}">${esc(v)}</td></tr>`;
 
-const step = (n: number, title: string, body: string) =>
-  `<tr><td style="padding:0 14px 16px 0;vertical-align:top;width:30px"><div style="width:28px;height:28px;border-radius:14px;background:${C.maroon};color:#fff;font-weight:800;font-size:13px;line-height:28px;text-align:center">${n}</div></td><td style="padding:0 0 16px;vertical-align:top"><div style="font-weight:700;font-size:15px;color:${C.ink}">${title}</div><div style="font-size:13px;line-height:1.55;color:${C.muted};margin-top:2px">${body}</div></td></tr>`;
+const step = (n: number, title: string, body: string, accent: string = C.maroon) =>
+  `<tr><td style="padding:0 14px 16px 0;vertical-align:top;width:30px"><div style="width:28px;height:28px;border-radius:14px;background:${accent};color:#fff;font-weight:800;font-size:13px;line-height:28px;text-align:center">${n}</div></td><td style="padding:0 0 16px;vertical-align:top"><div style="font-weight:700;font-size:15px;color:${C.ink}">${title}</div><div style="font-size:13px;line-height:1.55;color:${C.muted};margin-top:2px">${body}</div></td></tr>`;
 
-const button = (href: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="border-radius:999px;background:${C.maroon}"><a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">${label} &rarr;</a></td></tr></table>`;
+const button = (href: string, label: string, accent: string = C.maroon) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="border-radius:999px;background:${accent}"><a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">${label} &rarr;</a></td></tr></table>`;
 
-const sectionTitle = (t: string) =>
-  `<div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${C.maroon};margin-bottom:14px">${t}</div>`;
+const sectionTitle = (t: string, accent: string = C.maroon) =>
+  `<div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${accent};margin-bottom:14px">${t}</div>`;
 
-/** The shared frame: maroon header (logo, eyebrow, headline), white body sections, linked footer. */
-function layout(o: { site: string; preview: string; eyebrow: string; title: string; intro: string; sections: string[]; supportEmail: string }) {
+/** A company's look for emails sent on its behalf. `color` is already checked to be readable under white text. */
+interface MailBrand { name: string; logoUrl: string | null; color: string }
+
+/** The header's top row: Klymb's icon and wordmark, or the company's logo and name. */
+function headerMark(site: string, brand?: MailBrand) {
+  if (!brand) {
+    return `<td style="padding-right:12px;vertical-align:middle"><img src="${site}/email/klymb-icon.png" width="34" height="34" alt="" style="display:block;border:0;border-radius:9px"></td>
+    <td style="vertical-align:middle;font-size:19px">${wordmark(site, "#ffffff")}</td>`;
+  }
+  const logo = brand.logoUrl
+    ? `<td style="padding-right:12px;vertical-align:middle"><img src="${esc(brand.logoUrl)}" height="34" alt="${esc(brand.name)}" style="display:block;border:0;border-radius:6px;background:#ffffff;max-width:140px;height:34px"></td>`
+    : "";
+  return `${logo}<td style="vertical-align:middle;font-size:19px;font-weight:900;letter-spacing:-0.3px;color:#ffffff">${esc(brand.name)}</td>`;
+}
+
+/** The footer under the card: Klymb's links, or a short "sent by Klymb.ai" line for a company's email. */
+function footer(site: string, brand?: MailBrand) {
+  if (brand) {
+    return `<span style="color:#8a8785">Sent for ${esc(brand.name)} by</span> ${wordmark(site, C.ink)}<br>
+  <a href="${site}/contact" style="color:#8a8785">Contact</a><br>
+  Klymb.ai, a programme of Creators Enterprises Private Limited`;
+  }
+  return `${wordmark(site, C.ink)}<br>
+  <a href="${site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${site}/contact" style="color:#8a8785">Contact</a><br>
+  Klymb.ai, a programme of Creators Enterprises Private Limited`;
+}
+
+/**
+ * The shared frame: maroon header (logo, eyebrow, headline), white body
+ * sections, linked footer. With a brand, the header and footer are the company's.
+ */
+function layout(o: { site: string; preview: string; eyebrow: string; title: string; intro: string; sections: string[]; supportEmail: string; brand?: MailBrand }) {
   const body = o.sections.map((sec) => `<tr><td style="background:#ffffff;padding:24px 30px 8px">${sec}</td></tr>`).join("");
+  const headerBg = o.brand
+    ? `background:${o.brand.color}`
+    : `background:${C.maroon};background-image:linear-gradient(135deg,#a50d16,${C.maroon} 55%,#4a0206)`;
+  // On a company's color, translucent white reads on any hue; Klymb's pinks only suit maroon.
+  const eyebrowColor = o.brand ? "rgba(255,255,255,0.78)" : "#ffd0cd";
+  const introColor = o.brand ? "rgba(255,255,255,0.9)" : "#ffe4e2";
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"></head>
 <body style="margin:0;background:${C.paper};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(o.preview)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td style="background:${C.maroon};background-image:linear-gradient(135deg,#a50d16,${C.maroon} 55%,#4a0206);border-radius:18px 18px 0 0;padding:26px 30px 30px">
+<tr><td style="${headerBg};border-radius:18px 18px 0 0;padding:26px 30px 30px">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    <td style="padding-right:12px;vertical-align:middle"><img src="${o.site}/email/klymb-icon.png" width="34" height="34" alt="" style="display:block;border:0;border-radius:9px"></td>
-    <td style="vertical-align:middle;font-size:19px">${wordmark(o.site, "#ffffff")}</td>
+    ${headerMark(o.site, o.brand)}
   </tr></table>
-  <div style="margin-top:26px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#ffd0cd">${o.eyebrow}</div>
+  <div style="margin-top:26px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${eyebrowColor}">${o.eyebrow}</div>
   <div style="margin-top:6px;font-size:30px;line-height:1.15;font-weight:900;color:#fff;letter-spacing:-0.5px">${o.title}</div>
-  <div style="margin-top:8px;font-size:15px;line-height:1.55;color:#ffe4e2">${o.intro}</div>
+  <div style="margin-top:8px;font-size:15px;line-height:1.55;color:${introColor}">${o.intro}</div>
 </td></tr>
 ${body}
 <tr><td style="background:#ffffff;border-radius:0 0 18px 18px;padding:6px 30px 28px">
@@ -75,9 +112,7 @@ ${body}
   </div>
 </td></tr>
 <tr><td align="center" style="padding:22px 10px 0;font-size:12px;line-height:1.7;color:#8a8785">
-  ${wordmark(o.site, C.ink)}<br>
-  <a href="${o.site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${o.site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${o.site}/contact" style="color:#8a8785">Contact</a><br>
-  Klymb.ai, a programme of Creators Enterprises Private Limited
+  ${footer(o.site, o.brand)}
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -238,4 +273,46 @@ export function noteEmail(p: { subject: string; preview: string; eyebrow: string
     ],
   });
   return { subject: p.subject, html, text };
+}
+
+/**
+ * "You've been added" for a company member, in the company's look: their
+ * logo and name in the header, their color where it is readable, and their
+ * name in the sender ("Acme via Klymb.ai"). The sending address stays Klymb's.
+ */
+export function companyInviteEmail(p: { email: string; name: string | null; role: "hr" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const company = p.company.name;
+  const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
+  const brand: MailBrand = { name: company, logoUrl: p.company.logoUrl, color: accent };
+  const signIn = `${p.siteUrl}/org/sign-in`;
+
+  const subject = p.resend ? `Reminder: you've been added to ${company} on Klymb.ai` : `You've been added to ${company} on Klymb.ai`;
+  const intro = p.role === "hr" ? `You've been added as an HR contact for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
+  const steps = [
+    { title: "Open the sign-in page", body: `Go to ${signIn}.` },
+    { title: "Use this email", body: `Enter ${p.email}. We'll email you a 6-digit code: no password needed.` },
+  ];
+  const text = [
+    p.name ? `Hi ${p.name},` : "Hi,", "",
+    intro, "",
+    "Getting started",
+    ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
+    `Sign in: ${signIn}`, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "",
+    `Sent for ${company} by Klymb.ai`,
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail, brand,
+    preview: p.role === "hr" ? `You're the HR contact for ${company}.` : `${company} has given you a place on Klymb.ai.`,
+    eyebrow: p.resend ? "A reminder" : "You're invited",
+    title: p.name ? `Welcome, ${esc(p.name)}.` : "Welcome aboard.",
+    intro: esc(intro),
+    sections: [
+      `${sectionTitle("Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
+      </table>${button(esc(signIn), "Sign in", accent)}`,
+    ],
+  });
+  return { subject, html, text, fromName: inviteSenderName(company) };
 }

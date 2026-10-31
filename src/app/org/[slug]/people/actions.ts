@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { hrFor } from "@/lib/company/auth";
-import { sendCompanyInvite } from "@/lib/company/invite";
+import { RESEND_LIMITS, type CompanyBrand } from "@/lib/company/brand";
+import { loadCompanyBrand, sendCompanyInvite } from "@/lib/company/invite";
 import { MAX_CSV_BYTES, planAdd, readPeopleCsv, removeBlocked, tidyName, type AddRole, type PlannedPerson, type RowError } from "@/lib/company/people";
 import { activeHrCount, insertPeople, loadAddContext, loadPerson, removePersonRow } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export type PeopleResult =
   | { ok: true; message: string }
@@ -42,7 +44,7 @@ async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0]): 
     return { ok: false, message: "Nobody was added: seats or people changed meanwhile. Reload the page and try again." };
   }
 
-  invite(plan.add, hr.companyName);
+  invite(plan.add, hr.companyId, hr.companyName);
   revalidatePath(`/org/${slug}/people`);
   revalidatePath(`/org/${slug}/teams`);
   const back = plan.add.filter((p) => p.returning).length;
@@ -55,10 +57,17 @@ async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0]): 
 }
 
 /** Invites go out after the response, so a big upload doesn't wait on the mailer. */
-function invite(people: PlannedPerson[], companyName: string) {
+function invite(people: PlannedPerson[], companyId: string, companyName: string) {
   after(async () => {
-    for (const p of people) await sendCompanyInvite({ email: p.email, name: p.name, companyName, role: p.role });
+    const company = await brandOf(companyId, companyName);
+    for (const p of people) await sendCompanyInvite({ email: p.email, name: p.name, company, role: p.role });
   });
+}
+
+/** The company's look for its emails; just its name if the rest can't be read, so the invite still goes. */
+async function brandOf(companyId: string, companyName: string): Promise<CompanyBrand> {
+  const sql = db();
+  return (sql && (await loadCompanyBrand(sql, companyId))) || { name: companyName, logoUrl: null, brandColor: null };
 }
 
 /** 1.8: one person, as an employee or another HR person. */
@@ -104,4 +113,35 @@ export async function removePerson(slug: string, rawEmail: string): Promise<Peop
   revalidatePath(`/org/${slug}/people`);
   revalidatePath(`/org/${slug}/teams`);
   return { ok: true, message: `${email} was removed. Their access has ended and their seat is free.` };
+}
+
+/**
+ * Sends someone's invite again, for when the first one went to spam or got
+ * deleted. Active people only. Limited per person and per HR person, so the
+ * button can't be used to flood an inbox.
+ */
+export async function resendInvite(slug: string, rawEmail: string): Promise<PeopleResult> {
+  const hr = await hrFor(slug);
+  if (!hr) return NOT_ALLOWED;
+  const email = normaliseEmail(rawEmail);
+  if (!email) return { ok: false, message: "That person isn't in your company." };
+  const sql = db();
+  if (!sql) return UNAVAILABLE;
+
+  const target = await loadPerson(sql, hr.companyId, email);
+  if (target === undefined) return UNAVAILABLE;
+  if (!target || target.removed) return { ok: false, message: "That person isn't in your company." };
+
+  const perPerson = await checkRateLimit("company_invite_resend", { ...RESEND_LIMITS.perPerson, identity: `${hr.companyId}:${email}` });
+  if (!perPerson.allowed) return { ok: false, message: `An invite was just sent to ${email}. Wait ${RESEND_LIMITS.perPerson.windowMinutes} minutes before sending another.` };
+  const perHr = await checkRateLimit("company_invite_resend_hr", { ...RESEND_LIMITS.perHr, identity: hr.email });
+  if (!perHr.allowed) return { ok: false, message: "You've resent a lot of invites in the last hour. Please try again later." };
+
+  const sent = await sendCompanyInvite({
+    email, name: target.name, role: target.role === "hr" ? "hr" : "employee", resend: true,
+    company: await brandOf(hr.companyId, hr.companyName),
+  });
+  return sent
+    ? { ok: true, message: `The invite was sent to ${email} again.` }
+    : { ok: false, message: `The invite to ${email} couldn't be sent just now. Tell them to sign in at klymb.ai/org/sign-in with this email.` };
 }

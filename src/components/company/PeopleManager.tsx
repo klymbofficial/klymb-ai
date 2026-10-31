@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { addPerson, removePerson, uploadPeople, type PeopleResult } from "@/app/org/[slug]/people/actions";
+import { addPerson, removePerson, resendInvite, uploadPeople, type PeopleResult } from "@/app/org/[slug]/people/actions";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
 import type { CompanyPeople, PersonRow } from "@/lib/company/people-data";
 
@@ -151,17 +151,23 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
 }
 
 function ActiveList({ slug, me, people }: { slug: string; me: string; people: PersonRow[] }) {
-  const [busy, setBusy] = useState<string | null>(null);
+  // Which row is working, and on what, so only that row's button says so.
+  const [busy, setBusy] = useState<{ email: string; what: "remove" | "resend" } | null>(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
 
-  async function remove(p: PersonRow) {
-    const who = p.name ? `${p.name} (${p.email})` : p.email;
-    if (!window.confirm(`Remove ${who}?\n\nTheir access ends now and their seat frees up. Their progress is kept, and you can add them back later.`)) return;
-    setBusy(p.email);
+  async function act(p: PersonRow, what: "remove" | "resend") {
+    setBusy({ email: p.email, what });
     setResult(null);
-    setResult(await removePerson(slug, p.email));
+    setResult(await (what === "remove" ? removePerson(slug, p.email) : resendInvite(slug, p.email)));
     setBusy(null);
   }
+
+  function remove(p: PersonRow) {
+    const who = p.name ? `${p.name} (${p.email})` : p.email;
+    if (!window.confirm(`Remove ${who}?\n\nTheir access ends now and their seat frees up. Their progress is kept, and you can add them back later.`)) return;
+    return act(p, "remove");
+  }
+  const working = (p: PersonRow, what: "remove" | "resend") => busy?.email === p.email && busy.what === what;
 
   return (
     <section aria-labelledby="active-people" className="flex flex-col gap-3">
@@ -189,9 +195,14 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
                     {p.email === me ? (
                       <span className="text-xs text-muted">You</span>
                     ) : (
-                      <button type="button" onClick={() => remove(p)} disabled={busy !== null} className="text-xs font-bold text-error underline underline-offset-2 disabled:opacity-50">
-                        {busy === p.email ? "Removing…" : "Remove"}
-                      </button>
+                      <span className="inline-flex gap-4 whitespace-nowrap">
+                        <button type="button" onClick={() => act(p, "resend")} disabled={busy !== null} className="text-xs font-bold underline underline-offset-2 disabled:opacity-50">
+                          {working(p, "resend") ? "Sending…" : "Resend invite"}
+                        </button>
+                        <button type="button" onClick={() => remove(p)} disabled={busy !== null} className="text-xs font-bold text-error underline underline-offset-2 disabled:opacity-50">
+                          {working(p, "remove") ? "Removing…" : "Remove"}
+                        </button>
+                      </span>
                     )}
                   </td>
                 </tr>
