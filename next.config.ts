@@ -97,6 +97,8 @@ const nextConfig: NextConfig = {
       { source: "/:path*", headers: securityHeaders },
       // The service worker must always be re-checked, or an old one outlives a deploy.
       { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] },
+      // Font file names carry their version (src/app/fonts.css), so they never change in place.
+      { source: "/fonts/:file*.woff2", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
     ];
   },
   /**
