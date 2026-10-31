@@ -9,8 +9,9 @@ import type { CodeStore } from "@/lib/company/signin-code";
 export function codeStore(sql: Pick<Db, "row" | "run">): CodeStore {
   return {
     async isMember(email) {
+      // Removed members can't get a code.
       const { data, error } = await sql.row<{ email: string }>`
-        select email from course.company_members where email = ${email}
+        select email from course.company_members where email = ${email} and removed_at is null
       `;
       if (error) return null;
       return data !== null;
@@ -28,10 +29,12 @@ export function codeStore(sql: Pick<Db, "row" | "run">): CodeStore {
 
     async takeAttempt(email, maxAttempts, now) {
       // One statement, so two guesses at once can't both get the last try.
+      // A code sent before the person was removed stops working too.
       const { data, error } = await sql.row<{ code_hash: string }>`
         update course.company_signin_codes
            set attempts = attempts + 1
          where email = ${email} and attempts < ${maxAttempts} and expires_at > ${now.toISOString()}
+           and exists (select 1 from course.company_members m where m.email = ${email} and m.removed_at is null)
         returning code_hash
       `;
       return error ? null : (data?.code_hash ?? null);

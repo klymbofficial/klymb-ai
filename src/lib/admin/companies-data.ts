@@ -22,12 +22,12 @@ export async function getCompanies(): Promise<CompanyRow[] | null> {
   if (!sql) return null;
   const { data, error } = await sql.rows<CompanyRow>`
     select c.id, c.slug, c.name, c.brand_color, c.logo_url, c.seat_count, c.created_at,
-           (select count(*)::int from course.company_members m where m.company_id = c.id) as members,
+           (select count(*)::int from course.company_members m where m.company_id = c.id and m.removed_at is null) as members,
            hr.email as hr_email, hr.name as hr_name
       from course.companies c
       left join lateral (
         select m.email, m.name from course.company_members m
-         where m.company_id = c.id and m.role = 'hr'
+         where m.company_id = c.id and m.role = 'hr' and m.removed_at is null
          order by m.added_at
          limit 1
       ) hr on true

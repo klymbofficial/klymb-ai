@@ -51,3 +51,12 @@ export async function requireCompany(slug: string, roles?: readonly CompanyRole[
   if (!allowCompany(member, slug, roles)) notFound();
   return member;
 }
+
+/**
+ * For server actions on HR pages: the signed-in HR person of this company,
+ * or null. Actions answer null with an error message rather than a 404.
+ */
+export async function hrFor(slug: unknown): Promise<CompanyMember | null> {
+  const member = await getMember();
+  return allowCompany(member, slug, ["hr"]) ? member : null;
+}

@@ -152,8 +152,9 @@ test("the page itself requires an admin", () => {
 test("the HR insert re-checks seats, existing HR and learners in the same statement", () => {
   const insert = actions.slice(actions.indexOf("insert into course.company_members"));
   const statement = insert.slice(0, insert.indexOf("`"));
-  assert.match(statement, /< c\.seat_count/);
-  assert.match(statement, /not exists \(select 1 from course\.company_members m where m\.company_id = c\.id and m\.role = 'hr'\)/);
+  // Removed people (1.11) neither hold a seat nor count as the company's HR.
+  assert.match(statement, /m\.company_id = c\.id and m\.removed_at is null\) < c\.seat_count/);
+  assert.match(statement, /not exists \(select 1 from course\.company_members m where m\.company_id = c\.id and m\.role = 'hr' and m\.removed_at is null\)/);
   assert.match(statement, /not exists \(select 1 from course\.learners l where l\.email = /);
 });
 

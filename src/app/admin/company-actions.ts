@@ -1,13 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { site } from "@/data/config";
-import { grievance } from "@/data/legal";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { brandColor, companyName, companySlug, firstHrBlocked, hrEmail, logoUrl, personName, seatCount } from "@/lib/admin/companies";
+import { sendCompanyInvite } from "@/lib/company/invite";
 import { db } from "@/lib/db/client";
-import { noteEmail, sendMail } from "@/lib/mail";
 
 export type CompanyResult = { ok: true; message?: string } | { ok: false; message: string };
 
@@ -57,7 +55,7 @@ export async function updateCompanySettings(
   if (!sql) return UNAVAILABLE;
   const { data: current, error: readError } = await sql.row<{ members: number; logo_url: string | null; brand_color: string | null; seat_count: number }>`
     select c.logo_url, c.brand_color, c.seat_count,
-           (select count(*)::int from course.company_members m where m.company_id = c.id) as members
+           (select count(*)::int from course.company_members m where m.company_id = c.id and m.removed_at is null) as members
       from course.companies c where c.id = ${id}
   `;
   if (readError) return UNAVAILABLE;
@@ -71,7 +69,7 @@ export async function updateCompanySettings(
     update course.companies
        set logo_url = ${logo.value}, brand_color = ${color.value}, seat_count = ${seats.value}
      where id = ${id}
-       and ${seats.value} >= (select count(*) from course.company_members m where m.company_id = ${id})
+       and ${seats.value} >= (select count(*) from course.company_members m where m.company_id = ${id} and m.removed_at is null)
   `;
   if (error) {
     console.error("company update failed:", error.code, error.message);
@@ -108,8 +106,8 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
     name: string; seat_count: number; members: number; has_hr: boolean; is_learner: boolean; member_of: string | null;
   }>`
     select c.name, c.seat_count,
-           (select count(*)::int from course.company_members m where m.company_id = c.id) as members,
-           exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr') as has_hr,
+           (select count(*)::int from course.company_members m where m.company_id = c.id and m.removed_at is null) as members,
+           exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null) as has_hr,
            exists (select 1 from course.learners l where l.email = ${email.value}) as is_learner,
            (select o.slug from course.company_members m join course.companies o on o.id = m.company_id
              where m.email = ${email.value}) as member_of
@@ -128,8 +126,8 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
     select ${email.value}, c.id, 'hr', ${name}
       from course.companies c
      where c.id = ${id}
-       and (select count(*) from course.company_members m where m.company_id = c.id) < c.seat_count
-       and not exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr')
+       and (select count(*) from course.company_members m where m.company_id = c.id and m.removed_at is null) < c.seat_count
+       and not exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null)
        and not exists (select 1 from course.learners l where l.email = ${email.value})
   `;
   if (error?.code === "23505") return { ok: false, message: "That email already belongs to a company. A person can only be in one." };
@@ -141,28 +139,12 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
   await logAdmin(admin, "company.hr_add", id, { email: email.value, ...(name ? { name } : {}) });
 
   // Adding them has worked by now; the email is a courtesy and never undoes it.
-  const mail = noteEmail({
-    subject: `You've been added to ${c.name} on Klymb.ai`,
-    preview: `You're the HR contact for ${c.name}.`,
-    eyebrow: "You're invited",
-    title: name ? `Welcome, ${name}.` : "Welcome to Klymb.ai.",
-    intro: `You've been added as the HR contact for ${c.name} on Klymb.ai.`,
-    heading: "Getting started",
-    points: [
-      { title: "Open the sign-in page", body: `Go to ${site.url}/org/sign-in.` },
-      { title: "Use this email", body: `Enter ${email.value}. We'll email you a 6-digit code: no password needed.` },
-    ],
-    cta: { href: `${site.url}/org/sign-in`, label: "Sign in" },
-    siteUrl: site.url,
-    supportEmail: grievance.email,
-  });
-  const sent = await sendMail({ to: { email: email.value, ...(name ? { name } : {}) }, ...mail });
-  if (!sent.ok) console.error("company HR invite email failed:", sent.reason);
+  const sent = await sendCompanyInvite({ email: email.value, name, companyName: c.name, role: "hr" });
 
   revalidatePath("/admin/companies");
   return {
     ok: true,
-    message: sent.ok
+    message: sent
       ? `${email.value} is the HR person and has been emailed how to sign in.`
       : `${email.value} is the HR person. The invite email couldn't be sent, so tell them to sign in at /org/sign-in.`,
   };

@@ -7,7 +7,8 @@ import type { MemberRow } from "@/lib/company/access";
  * test can run this exact query against a real Postgres.
  *
  * Exact match only: ILIKE would treat % and _ in a stored row as wildcards.
- * A query error gives null, so the check fails closed.
+ * A removed member (removed_at set) is nobody, so removal ends access on
+ * their next request. A query error gives null, so the check fails closed.
  */
 export function memberLookup(sql: Pick<Db, "row">) {
   return async (email: string): Promise<MemberRow | null> => {
@@ -15,7 +16,7 @@ export function memberLookup(sql: Pick<Db, "row">) {
       select m.email, m.role, m.team_id, c.id as company_id, c.slug as company_slug, c.name as company_name
         from course.company_members m
         join course.companies c on c.id = m.company_id
-       where m.email = ${email}
+       where m.email = ${email} and m.removed_at is null
     `;
     return error ? null : data;
   };
