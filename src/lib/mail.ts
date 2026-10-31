@@ -191,6 +191,33 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
   return { subject, html, text };
 }
 
+/**
+ * A company member's sign-in code. The code stays out of the subject and
+ * preview, so it doesn't show on a locked phone's notifications.
+ */
+export function signInCodeEmail(p: { code: string; minutes: number; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "Your Klymb.ai sign-in code";
+  const text = [
+    "Your Klymb.ai sign-in code is:", "", p.code, "",
+    `It works once and expires in ${p.minutes} minutes.`,
+    "If you didn't ask for it, you can ignore this email: nobody can sign in without the code.", "",
+    "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: "Here is the code you asked for.",
+    eyebrow: "Sign in",
+    title: "Your sign-in code",
+    intro: `Enter this code on the sign-in page. It works once and expires in ${p.minutes} minutes.`,
+    sections: [
+      `<div style="margin:6px 0 18px;padding:18px;border-radius:12px;background:${C.paper};text-align:center;font-size:34px;font-weight:900;letter-spacing:10px;color:${C.ink};font-family:ui-monospace,Menlo,Consolas,monospace">${esc(p.code)}</div>
+      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">If you didn't ask for this code, you can ignore this email: nobody can sign in without it.</div>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
 /** A short branded note: a heading, an intro, numbered points and an optional button. */
 export function noteEmail(p: { subject: string; preview: string; eyebrow: string; title: string; intro: string; heading: string; points: { title: string; body: string }[]; cta?: { href: string; label: string }; closing?: string; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

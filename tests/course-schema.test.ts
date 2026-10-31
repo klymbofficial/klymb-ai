@@ -30,8 +30,8 @@ const TABLES = [
 ];
 /** Added by 0003 when the System Design course landed on main. */
 const SD_TABLES = ["sd_events", "sd_feedback"];
-/** Added by 0010 for companies (B2B). */
-const COMPANY_TABLES = ["companies", "teams", "company_members"];
+/** Added by 0010 for companies (B2B), and 0011 for their sign-in codes. */
+const COMPANY_TABLES = ["companies", "teams", "company_members", "company_signin_codes"];
 
 test("migrations are ordered and uniquely numbered", () => {
   const numbers = files.map((f) => f.slice(0, 4));
