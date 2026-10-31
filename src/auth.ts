@@ -42,8 +42,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // How this session signed in. A code sign-in is never marked verified,
       // so everything that uses verifiedEmailFrom (admin, the learner course)
       // ignores it; only company pages accept it, via companyEmailFrom.
-      if (params.account?.provider === "email-code") token.signInMethod = "email-code";
-      else if (params.profile) token.signInMethod = "google";
+      if (params.account?.provider === "email-code") {
+        token.signInMethod = "email-code";
+        // Said outright, not left to the default: a code proves the mailbox to
+        // company pages only, never to admin.
+        token.emailIsVerified = false;
+      } else if (params.profile) {
+        token.signInMethod = "google";
+      }
       // A fresh Google sign-in gets its own session id and takes the learner's device slot.
       if (params.profile) {
         const sid = randomUUID();
@@ -78,11 +84,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 export function verifiedEmailFrom(session: Session | null): string | null {
   if (!session?.user) return null;
   if (session.user.emailIsVerified !== true) return null;
+  // A code sign-in never counts here, even if a flag were somehow set.
+  if (session.user.signInMethod === "email-code") return null;
   return normaliseEmail(session.user.email);
 }
 
 export async function currentEmail(): Promise<string | null> {
   return verifiedEmailFrom(await auth());
+}
+
+/**
+ * The identity Klymb admin authorises against: Google only.
+ *
+ * A Google-verified email whose session says it came from Google, or which
+ * predates the field (sessions from before company sign-in existed, when
+ * Google was the only way in). Any other method, the company email code
+ * included, is refused, so being invited to a company never opens the admin.
+ */
+export function adminEmailFrom(session: Session | null): string | null {
+  const method = session?.user?.signInMethod;
+  if (method !== undefined && method !== "google") return null;
+  return verifiedEmailFrom(session);
+}
+
+export async function currentAdminEmail(): Promise<string | null> {
+  return adminEmailFrom(await auth());
 }
 
 /**
