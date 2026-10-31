@@ -26,7 +26,11 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://i.ytimg.com https://*.googleusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://*.razorpay.com",
+  // Any https image: company logos are links an admin pastes from the
+  // company's own site (/admin/companies), so the hosts can't be listed.
+  // Images can't run code; scripts, frames and connections stay locked to
+  // the hosts named here.
+  "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self' https://*.r2.cloudflarestorage.com",
   [
@@ -93,6 +97,8 @@ const nextConfig: NextConfig = {
       { source: "/:path*", headers: securityHeaders },
       // The service worker must always be re-checked, or an old one outlives a deploy.
       { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] },
+      // Font file names carry their version (src/app/fonts.css), so they never change in place.
+      { source: "/fonts/:file*.woff2", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
     ];
   },
   /**

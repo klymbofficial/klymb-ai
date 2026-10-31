@@ -14,6 +14,9 @@ const LABELS: Record<string, string> = {
   "admin.add": "Added an admin",
   "admin.remove": "Removed an admin",
   "ticket.status": "Updated a support request",
+  "company.create": "Created a company",
+  "company.update": "Changed company settings",
+  "company.hr_add": "Added a company's first HR person",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;

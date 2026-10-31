@@ -30,6 +30,8 @@ const TABLES = [
 ];
 /** Added by 0003 when the System Design course landed on main. */
 const SD_TABLES = ["sd_events", "sd_feedback"];
+/** Added by 0010 for companies (B2B), and 0011 for their sign-in codes. */
+const COMPANY_TABLES = ["companies", "teams", "company_members", "company_signin_codes"];
 
 test("migrations are ordered and uniquely numbered", () => {
   const numbers = files.map((f) => f.slice(0, 4));
@@ -39,7 +41,7 @@ test("migrations are ordered and uniquely numbered", () => {
 
 test("every table is created in the course schema", () => {
   assert.match(init, /create schema if not exists course/);
-  for (const table of [...TABLES, ...SD_TABLES]) {
+  for (const table of [...TABLES, ...SD_TABLES, ...COMPANY_TABLES]) {
     assert.match(all, new RegExp(`create table if not exists course\\.${table} \\(`), `${table} is missing`);
   }
 });

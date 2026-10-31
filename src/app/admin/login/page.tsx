@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 import { Wordmark } from "@/components/layout/Wordmark";
-import { currentEmail } from "@/auth";
+import { currentAdminEmail } from "@/auth";
 import { getAdmin } from "@/lib/admin/auth";
 
 export const metadata: Metadata = { title: "Admin sign-in", robots: { index: false, follow: false } };
@@ -12,8 +12,9 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: P
   const { error } = await searchParams;
   if (await getAdmin()) redirect("/admin");
 
-  // Signed in, but not on the allowlist: say so plainly instead of looping.
-  const signedInAs = await currentEmail();
+  // Signed in with Google, but not on the allowlist: say so plainly instead of
+  // looping. A company code sign-in gets the Google button instead.
+  const signedInAs = await currentAdminEmail();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">

@@ -43,3 +43,5 @@ next-env.d.ts
 
 # local editor / agent tooling
 .claude/
+AGENTS.md
+CLAUDE.md
