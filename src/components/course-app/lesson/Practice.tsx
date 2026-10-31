@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useState } from "react";
 import type { Day, DayCopy } from "@/data/system-design/types";
-import { ALL_IDS, ASSESSMENT_TOTAL, assessmentStep, completeNext, isSoon, lessonSteps, pad, score, updateLesson, type CourseState, type LessonProgress, type StepKey } from "@/lib/course-app";
+import { ALL_IDS, ASSESSMENT_TOTAL, assessmentStep, completeNext, isPaywalled, isSoon, lessonSteps, pad, score, updateLesson, type CourseState, type LessonProgress, type StepKey } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { stagger } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -172,7 +172,7 @@ function Unlocked({ s, act, id, day, c, ui }: { s: CourseState; act: Act; id: st
   return (
     <div className="flex flex-col gap-6">
       <div className="sd-a-pop flex items-end justify-between rounded-xl bg-sd-accent p-4 text-sd-bg">
-        <div className="flex flex-col"><span className="sd-kicker">Day {day.day} complete</span><span className="text-[22px] font-extrabold tracking-[-0.02em]">{ui.scored(score(c.post, p.post ?? []), c.post.length)}</span></div>
+        <div className="flex flex-col"><span className="sd-kicker">Day {day.day} complete</span><span className="text-[22px] font-extrabold tracking-[-0.02em]">{ui.scored(score(p.review?.[s.lang] ?? c.post, p.post ?? []), c.post.length)}</span></div>
         <Icon name="flame" size={32} />
       </div>
       {!user && (
@@ -245,7 +245,7 @@ export function LessonStage({ s, act, id, day }: { s: CourseState; act: Act; id:
             act={act}
             id={id}
             questions={c.post}
-            hasNext={!!nextLesson && !isSoon(nextLesson)}
+            hasNext={!!nextLesson && !isSoon(nextLesson) && !isPaywalled(nextLesson)}
             onPass={() => go(after("prove"))}
             onRewatch={() => act((q) => ({ ...q, stage: "watch", checkBusy: false, checkStage: "intro", t: 0, playing: true, ended: false, upNext: 0 }))}
           />

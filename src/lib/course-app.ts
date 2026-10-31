@@ -1,15 +1,13 @@
 import {
-  LESSON_DAYS,
+  BUILT_LESSONS,
   MODULES,
   NOTIFICATIONS,
   QUESTIONS,
-  QUICK_CHECKS,
-  TRANSCRIPTS,
   TIMED_SECONDS,
   type Notif,
   type Question,
+  type QuickCheck,
 } from "@/data/system-design/course-app";
-import { SUBTITLES_EN } from "@/data/system-design/subtitles-en";
 import type { Day, Lang, Question as ChoiceQuestion } from "@/data/system-design/types";
 
 /**
@@ -47,6 +45,8 @@ export interface LessonProgress {
    * `failed`, and a retake opens once the video is watched again (`rewatched`).
    */
   check?: number; checkPicks?: number[]; tries?: number; failed?: boolean; rewatched?: boolean;
+  /** The answers and why, from the server once an attempt is graded. The lesson itself doesn't carry them. */
+  review?: Record<Lang, ChoiceQuestion[]>;
   /** Seconds of video actually played since the last miss; skipping ahead does not count. */
   rewatchSec?: number;
 }
@@ -135,6 +135,8 @@ export interface CourseState {
   /** The streak pop-up is open; `popDay` is the last day it was shown (once a day, on the first pass). */
   streakPop: boolean;
   popDay: string;
+  /** A lesson this viewer hasn't bought was asked for: the offer is showing. */
+  paywall: boolean;
 }
 
 /** How many of `picks` landed on the best choice. */
@@ -246,10 +248,23 @@ export const allNotes = (s: CourseState) => Object.values(s.notes).flat();
 
 /** The mini player needs a video that keeps playing off the lesson screen; lessons stop when you leave for now. */
 export const MINI_PLAYER = false;
-/** The lesson's full content, or undefined while it's coming soon. */
-export const dayOf = (id: string) => LESSON_DAYS[id];
-export const isSoon = (id: string) => !LESSON_DAYS[id];
-export const hasQuickCheck = (id: string) => id in QUICK_CHECKS;
+/** One lesson as the server hands it to the app. */
+export interface LessonContent { day: Day; subtitles: Record<SubLang, [number, string][]>; quickCheck?: QuickCheck }
+
+let content: Record<string, LessonContent> = {};
+/**
+ * The lessons this viewer may open, from the server, set once on mount in the
+ * browser. Paid lessons aren't in the bundle, so this is the only way they arrive.
+ */
+export const setLessons = (lessons: Record<string, LessonContent>) => { content = lessons; };
+
+/** The lesson's full content, or undefined while it's coming soon or unpaid. */
+export const dayOf = (id: string) => content[id]?.day;
+export const isSoon = (id: string) => !BUILT_LESSONS.includes(id);
+/** Out, but this viewer hasn't bought it. */
+export const isPaywalled = (id: string) => !isSoon(id) && !content[id];
+export const quickCheckOf = (id: string) => content[id]?.quickCheck;
+export const hasQuickCheck = (id: string) => !!quickCheckOf(id);
 export const lessonDay = (id: string) => { const d = dayOf(id); return d ? `Day ${d.day}` : `Day ${ALL_IDS.indexOf(id)}`; };
 
 /** Every step of the lesson is finished: video, learn, prove it, build (if any), follow-ups (if any). */
@@ -330,7 +345,7 @@ export function defaultState(now = Date.now()): CourseState {
     goal: 15, remind: "19:00", autoplay: false, quality: "auto", wifiOnly: true, streakRem: true, replyNotif: true,
     todaySec: 0, today: localDate(new Date(now)),
     toast: null, toastUntil: 0,
-    commitment: null, streakPop: false, popDay: "",
+    commitment: null, streakPop: false, popDay: "", paywall: false,
     lessons: {}, lang: "en", subs: false, subLang: "en", subSize: "m", audio: "Hinglish", volume: 1, muted: false,
     toured: false, stage: "watch", checkBusy: false, checkStage: "intro", checkIdx: 0, estIdx: 0, fuIdx: 0, activeDays: [],
   };
@@ -454,6 +469,7 @@ export function tick(s: CourseState, now = Date.now()): CourseState {
 
 export function openLesson(s: CourseState, id: string, now = Date.now(), force = false): CourseState {
   if (isSoon(id)) return { ...s, ...toast(`${lesson(id).title.split(":")[0]} is coming soon`, now) };
+  if (isPaywalled(id)) return { ...s, playing: false, paywall: true };
   if (!force && isLocked(s, id)) return { ...s, ...toast("Pass the previous lesson’s assessment to unlock this one", now, 2400) };
   const same = id === s.cur;
   return {
@@ -475,6 +491,7 @@ export function completeNext(s: CourseState, auto: boolean, now = Date.now()): C
     return { ...s, ...reset, done, cur: nextId ?? s.cur, t: 0, playing: false, screen: "recap", recapMod: cmi, openMod: nextId ? lesson(nextId).mi : cmi };
   }
   if (nextId && isSoon(nextId)) return { ...s, ...reset, ...toast(`Done! ${lesson(nextId).title.split(":")[0]} is coming soon.`, now), done, playing: false, screen: "home", tab: "home" };
+  if (nextId && isPaywalled(nextId)) return { ...s, ...reset, done, cur: nextId, t: 0, playing: false, screen: "home", tab: "home", paywall: true };
   if (nextId) return { ...s, ...reset, ...t, done, cur: nextId, t: 0, playing: auto, openMod: lesson(nextId).mi };
   return { ...s, ...reset, ...t, done };
 }
@@ -615,10 +632,21 @@ export function migrateLegacy(s: CourseState, legacy: { day0?: LegacyProgress | 
 /** `?lesson=<id>`: open straight into that lesson, skipping the splash and intro (links from Instagram land here). */
 export function deepLink(s: CourseState, id: string | null, now = Date.now()): CourseState {
   if (!id || !ALL_IDS.includes(id) || isSoon(id)) return s;
+  if (isPaywalled(id)) return { ...s, onboarded: true, screen: "course", tab: "course", paywall: true };
   // Back from "Continue with Google" on the welcome, or a first visit: the commitment comes before Day 0.
   if (id === "0-0" && !s.commitment && s.done.length === 0) return { ...s, onboarded: true, tab: "course", cur: id, screen: "commit" };
   // Shared links open their lesson even when it's still locked here.
   return openLesson({ ...s, onboarded: true, tab: "course" }, id, now, true);
+}
+
+/** A seat holder this device hasn't seen: no welcome to sit through, just the promises, once. */
+export function startEnrolled(s: CourseState): CourseState {
+  return { ...s, onboarded: true, screen: s.commitment ? "home" : "commit", tab: "home" };
+}
+
+/** Back from a successful payment. */
+export function afterPayment(s: CourseState, now = Date.now()): CourseState {
+  return { ...startEnrolled(s), ...toast("Payment received. Your seat is confirmed.", now, 4000) };
 }
 
 /** Clamped to the allowed range, in steps of 0.05 so the label never shows float noise. */
@@ -638,7 +666,7 @@ export const speedLabel = (v: number) => `${Number(v.toFixed(2))}×`;
 
 /** Subtitle lines for a lesson in a language, or none. Hinglish are the video's own captions. */
 export function subtitleLines(id: string, lang: SubLang): [number, string][] {
-  return (lang === "en" ? SUBTITLES_EN[id] : TRANSCRIPTS[id]) ?? [];
+  return content[id]?.subtitles[lang] ?? [];
 }
 
 /** Languages a lesson has subtitles in. */

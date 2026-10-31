@@ -55,7 +55,8 @@ function stepProps(s: CourseState, id: string, key: keyof LessonProgress, p: Les
   if (!c) return {};
   if (key === "post") {
     const picks = p.post ?? [];
-    return { qs: c.post.map((q) => q.id).join(","), picks: join(picks), score: c.post.filter((q, i) => q.choices[picks[i]]?.best).length, of: c.post.length };
+    const graded = p.review?.[s.lang] ?? c.post;
+    return { qs: c.post.map((q) => q.id).join(","), picks: join(picks), score: graded.filter((q, i) => q.choices[picks[i]]?.best).length, of: c.post.length };
   }
   if (key === "est") return { vals: join(p.est ?? []), inRange: inRange(c.estimates ?? [], p.est ?? []), of: c.estimates?.length ?? 0 };
   if (key === "built") return { wrong: p.built ?? 0 };
@@ -107,7 +108,8 @@ export function useActivity(s: CourseState, ready: boolean, preview: boolean) {
     // Every lesson-check attempt, passes and misses alike.
     for (const [id, p] of Object.entries(s.lessons)) {
       if (p.tries && p.tries !== before.lessons[id]?.tries) {
-        const qs = dayOf(id)?.copy[s.lang].post ?? [];
+        // The lesson carries no answers: the review that came back with the grade does.
+        const qs = p.review?.[s.lang] ?? dayOf(id)?.copy[s.lang].post ?? [];
         track("step_done", id, "check", { qs: qs.map((q) => q.id).join(","), picks: join(p.checkPicks ?? []), pct: checkPct(qs, p.checkPicks ?? []), passed: !p.failed && !!p.post, try: p.tries });
       }
     }

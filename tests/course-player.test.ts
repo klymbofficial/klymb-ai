@@ -1,11 +1,15 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { TRANSCRIPTS } from "../src/data/system-design/course-app";
+import { TRANSCRIPTS } from "../src/data/system-design/lessons";
+import { lessonContent } from "../src/lib/sd-lessons";
 import { SUBTITLES_EN } from "../src/data/system-design/subtitles-en";
 import {
   SPEED_MAX, SPEED_MIN, audioTrack, audioTracks, defaultState, fromStored, lineAt, setSpeed, speedLabel, stepSpeed, subtitleLangs,
-  subtitleLines, toStored, type CourseState,
+  setLessons, subtitleLines, toStored, type CourseState,
 } from "../src/lib/course-app";
+
+// The app gets its lessons from the server; these tests take the full set, as a seat holder does.
+setLessons(lessonContent(true));
 
 const NOW = new Date(2026, 9, 21, 9, 0, 0).getTime();
 const base = (): CourseState => ({ ...defaultState(NOW), screen: "player", onboarded: true });

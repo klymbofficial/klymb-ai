@@ -1,11 +1,16 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { LESSON_DAYS, QUESTIONS } from "../src/data/system-design/course-app";
+import { QUESTIONS } from "../src/data/system-design/course-app";
+import { LESSON_DAYS } from "../src/data/system-design/lessons";
+import { lessonContent } from "../src/lib/sd-lessons";
 import {
   ALL_IDS, addNote, closeQuiz, completeNext, deepLink, defaultState, flowDone, fmt, fromStored, grade, isAnswered, isSoon, lessonSteps, localDate,
   migrateLegacy, miniActive, nextQuestion, openLesson, pickOption, previewState, setAnswer, stageFor, streak, tick, toStored, togglePlay,
-  updateLesson, type CourseState,
+  setLessons, updateLesson, type CourseState,
 } from "../src/lib/course-app";
+
+// The app gets its lessons from the server; these tests take the full set, as a seat holder does.
+setLessons(lessonContent(true));
 
 const NOW = new Date(2026, 9, 21, 9, 0, 0).getTime();
 const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
@@ -264,8 +269,7 @@ test("course activity events are cut down to known names and short, flat values"
 
 test("the admin summary counts each learner once per step and finds where they stopped", async () => {
   const { summarise } = await import("../src/lib/sd-summary");
-  const { LESSON_DAYS } = await import("../src/data/system-design/course-app");
-  const ev = (anon: string, event: string, step: string | null, props: Record<string, unknown> = {}, lesson = "0-0") =>
+    const ev = (anon: string, event: string, step: string | null, props: Record<string, unknown> = {}, lesson = "0-0") =>
     ({ created_at: new Date(NOW).toISOString(), anon_id: anon, email: null, event, lesson, step, props, lang: "en", device: "phone" });
   const best = LESSON_DAYS["0-0"].copy.en.pre.map((q) => q.choices.findIndex((c) => c.best));
   const events = [
