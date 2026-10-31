@@ -7,11 +7,13 @@ import { BarList } from "@/components/charts/BarList";
 import { rangeDays, RANGES } from "@/lib/admin/analytics";
 import { requireAdmin } from "@/lib/admin/auth";
 import { getSdAnalytics, getSdLearner } from "@/lib/admin/system-design";
+import { trailLines, type Tone } from "@/lib/admin/sd-event-words";
 import { Chip, DayView, Panel, PlainWords, pct } from "@/components/admin/SystemDesignViews";
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dayName = (lesson: string | null) => (lesson === "0-0" ? "Day 0" : lesson === "1-0" ? "Day 1" : lesson ?? "");
 
+const TONE: Record<Tone, string> = { learn: "bg-sky-500", win: "bg-emerald-500", miss: "bg-red-500", nav: "bg-line", setting: "bg-amber-500" };
 
 /** One learner's whole trail through the course, oldest first. */
 async function LearnerTrail({ anon }: { anon: string }) {
@@ -19,31 +21,21 @@ async function LearnerTrail({ anon }: { anon: string }) {
   const who = events.find((e) => e.email)?.email ?? `Anonymous ${anon.slice(0, 8)}`;
   return (
     <>
-      <PageTitle eyebrow="System Design · one learner" title={who} intro={`${events.length} events. Times are IST.`} actions={<Link href="/admin/system-design" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Back to all learners</Link>} />
+      <PageTitle eyebrow="System Design · one learner" title={who} intro="Everything they did, oldest first. Green = a win, red = a miss, blue = learning, grey = moving around. Times are IST." actions={<Link href="/admin/system-design" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Back to all learners</Link>} />
       {!events.length ? (
         <EmptyState title="Nothing recorded" body="This learner has no activity in the course." />
       ) : (
         <ol className="card divide-y divide-line/25 overflow-hidden">
-          {events.map((e, i) => {
-            const p = e.props ?? {};
-            const detail =
-              e.event === "step_done" && (e.step === "pre" || e.step === "post") ? `score ${p.score}/${p.of}` :
-              e.event === "step_done" && e.step === "est" ? `${p.inRange}/${p.of} estimates in range (${p.vals})` :
-              e.event === "step_done" && e.step === "built" ? `${p.wrong} wrong drops` :
-              e.event === "step_done" && e.step === "design" ? `${p.chars} characters written` :
-              e.event === "step_done" && e.step === "follow" ? `had ${p.covered}/${p.of} covered` :
-              e.event === "video_progress" ? `${p.pct}% of the video` :
-              e.event === "ping" ? `on ${e.step}, video at ${p.t}s` :
-              e.event === "screen" ? String(p.screen ?? "") :
-              Object.entries(p).map(([k, v]) => `${k}: ${v}`).join(", ");
-            return (
-              <li key={i} className="grid grid-cols-[120px_90px_1fr] gap-3 px-5 py-2.5 text-sm max-sm:grid-cols-[1fr_auto]">
-                <span className="text-muted">{when(e.created_at)}</span>
-                <span className="font-bold">{dayName(e.lesson)}</span>
-                <span className="max-sm:col-span-2"><b>{e.event === "step_done" ? `Finished ${e.step}` : e.event.replace("_", " ")}</b> {detail && <span className="text-muted">· {detail}</span>}</span>
-              </li>
-            );
-          })}
+          {trailLines(events).map((l, i) => (
+            <li key={i} className="grid grid-cols-[150px_70px_1fr] items-baseline gap-3 px-5 py-2.5 text-sm max-sm:grid-cols-[1fr_auto]">
+              <span className="text-muted">{when(l.at)}{l.until && when(l.until) !== when(l.at) ? ` – ${when(l.until).split(", ").pop()}` : ""}</span>
+              <span className="font-bold">{dayName(l.lesson === "overview" ? null : l.lesson)}</span>
+              <span className="flex items-baseline gap-2 max-sm:col-span-2">
+                <span aria-hidden className={`size-2 shrink-0 translate-y-[-1px] rounded-full ${TONE[l.tone]}`} />
+                <span><span className={l.tone === "nav" ? "text-muted" : "font-semibold"}>{l.text}</span>{l.detail && <span className="text-muted"> · {l.detail}</span>}</span>
+              </span>
+            </li>
+          ))}
         </ol>
       )}
     </>
