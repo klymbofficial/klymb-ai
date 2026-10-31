@@ -78,6 +78,15 @@ export function hasRole(member: CompanyMember | null, roles: readonly CompanyRol
   return member !== null && roles.includes(member.role);
 }
 
+/**
+ * The decision requireCompany makes: a member of the company in the URL,
+ * and, when roles are given, holding one of them.
+ */
+export function allowCompany(member: CompanyMember | null, slug: unknown, roles?: readonly CompanyRole[]): member is CompanyMember {
+  if (!belongsTo(member, slug)) return false;
+  return roles === undefined || hasRole(member, roles);
+}
+
 /** Who a data row belongs to. */
 export interface Subject {
   companyId: string;

@@ -2,7 +2,8 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { currentEmail } from "@/auth";
-import { belongsTo, hasRole, resolveMember, type CompanyMember, type CompanyRole, type MemberRow } from "@/lib/company/access";
+import { allowCompany, resolveMember, type CompanyMember, type CompanyRole } from "@/lib/company/access";
+import { memberLookup } from "@/lib/company/lookup";
 import { db } from "@/lib/db/client";
 
 /**
@@ -20,22 +21,17 @@ import { db } from "@/lib/db/client";
  * Anything a viewer may not see is a 404, not a 403, so a URL can't be used
  * to find out which companies exist.
  *
+ * This file only joins tested pieces together: verifiedEmailFrom
+ * (tests/auth-identity.test.ts), resolveMember and allowCompany
+ * (tests/company-access.test.ts) and memberLookup
+ * (tests/company-access-db.test.ts).
+ *
  * `cache` memoises it for one request only, as with getAdmin.
  */
 export const getMember = cache(async (): Promise<CompanyMember | null> => {
   const sql = db();
   if (!sql) return null;
-
-  return resolveMember(await currentEmail(), async (email) => {
-    // Exact match only: ILIKE would treat % and _ in a stored row as wildcards.
-    const { data, error } = await sql.row<MemberRow>`
-      select m.email, m.role, m.team_id, c.id as company_id, c.slug as company_slug, c.name as company_name
-        from course.company_members m
-        join course.companies c on c.id = m.company_id
-       where m.email = ${email}
-    `;
-    return error ? null : data;
-  });
+  return resolveMember(await currentEmail(), memberLookup(sql));
 });
 
 /** Any company member. Everyone else gets a 404. */
@@ -51,7 +47,6 @@ export async function requireMember(): Promise<CompanyMember> {
  */
 export async function requireCompany(slug: string, roles?: readonly CompanyRole[]): Promise<CompanyMember> {
   const member = await getMember();
-  if (!belongsTo(member, slug)) notFound();
-  if (roles && !hasRole(member, roles)) notFound();
+  if (!allowCompany(member, slug, roles)) notFound();
   return member;
 }

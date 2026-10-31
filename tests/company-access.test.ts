@@ -1,7 +1,10 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import type { Db } from "../src/lib/db/client";
+import { memberLookup } from "../src/lib/company/lookup";
 import {
+  allowCompany,
   belongsTo,
   canSee,
   canSeeTeam,
@@ -121,6 +124,59 @@ test("role-only pages turn away the other roles", async () => {
   assert.equal(hasRole(await member("eng-head@acme.com"), ["hr"]), false);
   assert.equal(hasRole(await member("dev@acme.com"), ["hr", "head"]), false);
   assert.equal(hasRole(null, ["hr", "head", "employee"]), false);
+});
+
+// ── The server check (requireCompany) ───────────────────────
+// requireCompany is getMember + allowCompany, and getMember is
+// resolveMember(verified email, memberLookup(db)). These run that same chain
+// with the database faked.
+
+/** A fake database whose one query answers from `table`, or fails. */
+function fakeDb(opts: { fail?: boolean; seen?: { text: string; values: unknown[] }[] } = {}): Pick<Db, "row"> {
+  return {
+    async row<T>(strings: TemplateStringsArray, ...values: unknown[]) {
+      opts.seen?.push({ text: strings.join("$"), values });
+      if (opts.fail) return { data: null, error: Object.assign(new Error("connection reset"), { code: "08006" }) };
+      return { data: (table.find((r) => r.email === values[0]) ?? null) as T | null, error: null };
+    },
+  };
+}
+
+const check = async (email: unknown, slug: unknown, roles?: ("hr" | "head" | "employee")[], db = fakeDb()) =>
+  allowCompany(await resolveMember(email, memberLookup(db)), slug, roles);
+
+test("server check: a member gets their own company, and only theirs", async () => {
+  assert.equal(await check("dev@acme.com", "acme"), true);
+  assert.equal(await check("dev@acme.com", "globex"), false);
+  assert.equal(await check("hr@globex.com", "acme"), false);
+});
+
+test("server check: role-only pages within your own company", async () => {
+  assert.equal(await check("hr@acme.com", "acme", ["hr"]), true);
+  assert.equal(await check("eng-head@acme.com", "acme", ["hr"]), false);
+  assert.equal(await check("dev@acme.com", "acme", ["hr", "head"]), false);
+  // The right role in the wrong company is still refused.
+  assert.equal(await check("hr@globex.com", "acme", ["hr"]), false);
+});
+
+test("server check: signed out or not a member is refused", async () => {
+  assert.equal(await check(null, "acme"), false);
+  assert.equal(await check("stranger@acme.com", "acme"), false);
+});
+
+test("server check: a database error refuses everyone (fails closed)", async () => {
+  const down = fakeDb({ fail: true });
+  for (const r of table) assert.equal(await check(r.email, r.company_slug, undefined, down), false, r.email);
+});
+
+test("the lookup asks by exact email, as a parameter, never pasted into the SQL", async () => {
+  const seen: { text: string; values: unknown[] }[] = [];
+  await check("dev@acme.com", "acme", undefined, fakeDb({ seen }));
+  assert.equal(seen.length, 1);
+  assert.deepEqual(seen[0].values, ["dev@acme.com"]);
+  assert.match(seen[0].text, /where m\.email = \$/);
+  assert.doesNotMatch(seen[0].text, /ilike|like/i);
+  assert.doesNotMatch(seen[0].text, /dev@acme\.com/);
 });
 
 // ── Whose data a member may see ─────────────────────────────
