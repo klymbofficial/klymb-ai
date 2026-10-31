@@ -1,12 +1,6 @@
-import type { Metadata } from "next";
-import { DayLesson } from "@/components/lesson/DayLesson";
-import { dayOne } from "@/data/system-design/day-1";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Day 1 · Big Billion Day | System Design in 21 Days",
-  description: "Flipkart's first Big Billion Day buckled. How would you prepare for the next one? Answer first, then watch what really happened.",
-};
-
+/** Day 0 is the free lesson; Day 1 onwards is in the full course. */
 export default function SystemDesignDayOne() {
-  return <DayLesson day={dayOne} />;
+  redirect("/system-design");
 }

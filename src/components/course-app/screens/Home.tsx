@@ -52,6 +52,7 @@ function kamranSays(s: CourseState, first: string | null) {
   if (isSoon(s.cur)) return `All released days done. ${name} is coming soon.`;
   const p = s.lessons[s.cur];
   const day = dayOf(s.cur);
+  if (!day) return `${hi}${name} is in the full course.`;
   if (!s.done.length && !p) return `Hi${first ? ` ${first}` : ""}, I’m Kamran. ${name} takes about ${day.minutes} minutes.`;
   if (!p) return `${hi}${name} takes about ${day.minutes} minutes.`;
   const next = lessonSteps(s, s.cur, day).find((x) => !x.done);

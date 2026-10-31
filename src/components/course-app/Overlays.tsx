@@ -2,9 +2,10 @@
 
 import clsx from "clsx";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { QUESTIONS, QUICK_CHECKS, WELCOME } from "@/data/system-design/course-app";
-import { answerQuickCheck, closeQuickCheck, commit, fmt, localDate, openLesson, quickCheckAt, streak, type CourseState } from "@/lib/course-app";
+import { QUESTIONS, WELCOME } from "@/data/system-design/course-app";
+import { answerQuickCheck, closeQuickCheck, commit, fmt, lessonDay, localDate, openLesson, quickCheckAt, quickCheckOf, streak, type CourseState } from "@/lib/course-app";
 import { Icon } from "./icons";
 import { track } from "./track";
 import { GoogleButton, firstName, useCourseUser } from "./user";
@@ -131,7 +132,7 @@ export function Onboarding({ act }: { s: CourseState; act: Act }) {
 
 /** The ungraded in-video question: a bottom sheet on mobile, a centred card on web. */
 export function QuickCheckSheet({ s, act }: { s: CourseState; act: Act }) {
-  const qc = QUICK_CHECKS[s.cur];
+  const qc = quickCheckOf(s.cur)!;
   const picked = s.qcPick;
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => { first.current?.focus(); }, []);
@@ -179,6 +180,24 @@ export function QuickCheckSheet({ s, act }: { s: CourseState; act: Act }) {
         ) : (
           <button type="button" onClick={() => act((p) => closeQuickCheck(p, "skip"))} className="sd-btn sd-btn-ghost self-start">Skip for now</button>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** A lesson this viewer hasn't bought: what the full course gives, and the way to the offer. */
+export function PaywallSheet({ s, act }: { s: CourseState; act: Act }) {
+  const offer = useRef<HTMLAnchorElement>(null);
+  useEffect(() => { offer.current?.focus(); }, []);
+  const close = () => act((p) => ({ ...p, paywall: false }));
+  return (
+    <div className="fixed inset-0 z-[70] flex flex-col items-stretch justify-end bg-sd-n-900/50 lg:items-center lg:justify-center" onKeyDown={(e) => { if (e.key === "Escape") close(); }}>
+      <div role="dialog" aria-modal="true" aria-labelledby="sd-pay-t" className="sd-a-in sd-lg-shadow flex flex-col gap-3 rounded-t-2xl border-t-[3px] border-sd-accent bg-sd-bg px-5 pt-[18px] pb-[34px] lg:w-[min(480px,90%)] lg:rounded-2xl lg:p-6" style={{ animationDuration: ".35s" }}>
+        <span className="sd-kicker text-sd-accent-700">{lessonDay(s.cur)}</span>
+        <h3 id="sd-pay-t" className="m-0 text-2xl leading-[1.15] tracking-[-0.02em] text-balance">This lesson is in the full course.</h3>
+        <p className="m-0 text-[15px] leading-[1.45] text-pretty text-sd-n-800">Day 0 is free. The full course opens every lesson, and you get 100% of your money back when you finish it.</p>
+        <Link ref={offer} href="/system-design" className="sd-btn sd-btn-primary mt-1 h-[52px] justify-between text-base">See the offer<Icon name="arrowR" /></Link>
+        <button type="button" onClick={close} className="sd-btn sd-btn-ghost self-start">Not now</button>
       </div>
     </div>
   );

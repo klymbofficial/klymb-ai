@@ -1,6 +1,6 @@
 /**
  * English subtitles for the Hinglish lesson videos, timed to the same lines as
- * TRANSCRIPTS in course-app.ts. Translated from those captions; have a
+ * TRANSCRIPTS in lessons.ts. Translated from those captions; have a
  * native speaker check them before relying on them.
  */
 export const SUBTITLES_EN: Record<string, [number, string][]> = {

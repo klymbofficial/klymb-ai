@@ -1,10 +1,14 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { LESSON_DAYS } from "../src/data/system-design/course-app";
+import { LESSON_DAYS } from "../src/data/system-design/lessons";
+import { lessonContent } from "../src/lib/sd-lessons";
 import {
   CHECK_SIZE, SPEED_PRESETS, START_SCREENS, addRewatch, badges, checkAverage, checkPct, commit, deepLink, defaultState, flowDone, fromStored, isLocked, markRewatched,
-  openLesson, previewState, submitCheck, toStored, updateLesson, type CourseState,
+  openLesson, previewState, submitCheck, toStored, setLessons, updateLesson, type CourseState,
 } from "../src/lib/course-app";
+
+// The app gets its lessons from the server; these tests take the full set, as a seat holder does.
+setLessons(lessonContent(true));
 
 const NOW = new Date(2026, 9, 24, 9, 0, 0).getTime();
 const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
