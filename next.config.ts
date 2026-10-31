@@ -26,7 +26,11 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://i.ytimg.com https://*.googleusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://*.razorpay.com",
+  // Any https image: company logos are links an admin pastes from the
+  // company's own site (/admin/companies), so the hosts can't be listed.
+  // Images can't run code; scripts, frames and connections stay locked to
+  // the hosts named here.
+  "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "media-src 'self' https://*.r2.cloudflarestorage.com",
   [
