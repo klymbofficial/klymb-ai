@@ -112,11 +112,11 @@ export function RegistrationForm({
   return (
     <>
       <div className={bare ? "" : "rounded-card bg-card p-6 shadow-card sm:p-8"}>
-      {/* Names the cohort being joined, and follows the track picker below. */}
+      {/* Names the track being started, and follows the track picker below. */}
       {titled && (
         <>
           <h2 className="text-2xl font-bold text-balance">
-            Register for the {chosenTrack ? <span className="text-red-deep">{chosenTrack.name}</span> : null} cohort
+            Start the {chosenTrack ? <span className="text-red-deep">{chosenTrack.name}</span> : null} track
           </h2>
           <p className="mt-1 mb-6 text-sm text-muted">Takes a minute. Registering with Google fills in your details.</p>
         </>
@@ -173,14 +173,14 @@ export function RegistrationForm({
           (public, about 30 seconds), then paste its link here.
         </p>
         <p className="mt-3 rounded-lg border border-red-strong/25 bg-red-strong/5 px-3 py-2.5 text-xs leading-relaxed text-ink/85">
-          <strong className="font-bold text-red-strong">Important:</strong> this repository will be used throughout the cohort for verification. Make sure you type it correctly.
+          <strong className="font-bold text-red-strong">Important:</strong> this repository will be used throughout your 30 days for verification. Make sure you type it correctly.
         </p>
         <div className="mt-3 flex items-start gap-3">
           <input id="repoConfirm" type="checkbox" checked={data.repoConfirm} onChange={(e) => set("repoConfirm", e.target.checked)}
             aria-invalid={!!errors.repoConfirm} aria-describedby={errors.repoConfirm ? "repoConfirm-error" : undefined}
             className="mt-0.5 size-4 shrink-0 accent-red-strong" />
           <label htmlFor="repoConfirm" className="text-xs leading-relaxed text-ink/80">
-            I have provided the correct GitHub repository URL, which will be used throughout the cohort for verification.
+            I have provided the correct GitHub repository URL, which will be used throughout my 30 days for verification.
           </label>
         </div>
         {errors.repoConfirm && <p id="repoConfirm-error" className="mt-1.5 text-xs font-medium text-error">{errors.repoConfirm}</p>}
@@ -218,7 +218,7 @@ export function RegistrationForm({
               Register with Google
             </button>
           )}
-          <Button type="submit" soft arrow disabled={pending} aria-busy={pending} className="rounded-full px-8! py-3!">{pending ? "Saving…" : "Register"}</Button>
+          <Button type="submit" soft arrow disabled={pending} aria-busy={pending} className="rounded-full px-8! py-3!">{pending ? "Saving…" : "Start this track"}</Button>
         </div>
         {!HIDE_MONEY && <p className="mt-3 text-center text-xs text-muted">You pay on the next screen, after registering.</p>}
       </div>

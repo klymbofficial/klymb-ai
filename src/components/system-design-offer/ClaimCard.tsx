@@ -280,7 +280,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           ) : (
             <form action={courseSignIn} onSubmit={(e) => { if (inApp) { e.preventDefault(); setBlocked(true); } }} className="text-xs leading-[1.4] text-[#605d5d]">
               <input type="hidden" name="lesson" value="" />
-              Next you&apos;ll sign in with Google. That account holds your seat. <button type="submit" className="cursor-pointer border-0 bg-transparent p-0 font-bold text-ink underline underline-offset-2">Already bought? Sign in</button>
+              Next you&apos;ll sign in with Google. That account holds your seat. <button type="submit" className="cursor-pointer border-0 bg-transparent p-0 font-bold text-ink underline underline-offset-2">Already bought? Log in</button>
             </form>
           )}
         </div>

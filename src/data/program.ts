@@ -6,10 +6,10 @@ export const brand = {
   tagline: "Get ready for the AI era in 30 days.",
 };
 
+// One link per job: the catalogue, and one place that explains the 30 days.
 const allNavLinks = [
-  { label: "Program", href: "/program" },
   { label: "Career Tracks", href: "/tracks" },
-  { label: "How It Works", href: "/#how-it-works" },
+  { label: "How It Works", href: "/program" },
   { label: "Pricing", href: "/#pricing" },
 ];
 export const navLinks = HIDE_MONEY ? allNavLinks.filter((l) => l.href !== "/#pricing") : allNavLinks;
@@ -21,8 +21,8 @@ export const hero = {
     "Choose your target role, solve real workplace problems every day, complete weekly assessments and prepare for interviews with a structured career track.",
   /** The working professional's first question, answered in the hero. */
   timeLine: "1–2 hrs a day, in your own time. Start any day.",
-  primaryCta: { label: "Choose My Career Track", href: "/tracks" },
-  secondaryCta: { label: "See How the 30 Days Work", href: "/#how-it-works" },
+  primaryCta: { label: "Choose your track", href: "/tracks" },
+  secondaryCta: { label: "See how the 30 days work", href: "/#how-it-works" },
 };
 
 /** The story beat under the hero. */
@@ -212,16 +212,16 @@ export const faqs: Faq[] = [
 ];
 
 export const urgency = {
-  headline: "The next cohort closes before your role does.",
+  headline: "Start any day. Your role is already changing.",
   support: "Secure your place and build the capability your next company is actively seeking.",
 };
 
 export const footerLinks = {
   program: [
     { label: "Career Tracks", href: "/tracks" },
-    { label: "Program", href: "/program" },
+    { label: "How It Works", href: "/program" },
     { label: "Register", href: "/register" },
-    { label: "Learner sign-in", href: "/learn/login" },
+    { label: "Log in", href: "/learn/login" },
   ],
   company: [
     { label: "Contact", href: "/contact" },

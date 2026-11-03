@@ -76,7 +76,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
             <p>
               {signedIn
                 ? "Day 1 is open. Start whenever you are ready."
-                : <>Continue with the Google account for <strong className="font-bold text-white">{email}</strong> to open Day 1 and start today.</>}
+                : <>Continue with the Google account for <strong className="font-bold text-white">{email}</strong>: your dashboard opens with Day 1 ready to start.</>}
             </p>
           </>
         ) : track?.available && !track.contentLive ? (
@@ -108,10 +108,12 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
         </>
       )}
 
-      {/* Straight into the course: already signed in, or one Google step that
-          lands on Day 1, never a separate sign-in page. */}
+      {/* Straight into the course: already signed in, Day 1 itself; otherwise one
+          Google step to the dashboard, never a separate sign-in page. The
+          dashboard, not Day 1, because a different Google account lands on
+          its "not enrolled" explanation there. */}
       {enrolled && signedIn && (
-        <ButtonLink href="/learn" soft arrow className="mt-8 rounded-full px-7">
+        <ButtonLink href="/learn/day/1" soft arrow className="mt-8 rounded-full px-7">
           Start Day 1
         </ButtonLink>
       )}
@@ -122,7 +124,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
             className="inline-flex items-center gap-3 rounded-full bg-white px-7 py-3 text-sm font-bold text-ink transition-colors hover:bg-paper"
           >
             <GoogleMark />
-            Continue with Google to start Day 1
+            Continue with Google
           </button>
         </form>
       )}

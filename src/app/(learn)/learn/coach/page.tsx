@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { ArrowLeft, Lock, Mic } from "lucide-react";
 import { auth } from "@/auth";
 import { VoiceCoach } from "@/components/coach/VoiceCoach";
@@ -29,7 +29,7 @@ export const metadata: Metadata = { title: "Voice coach", robots: { index: false
  */
 export default async function CoachPage() {
   const state = await requireLearner();
-  if (state.state === "not-enrolled") notFound();
+  if (state.state === "not-enrolled") redirect("/learn");
 
   const { learner, submissions } = state;
   const track = getTrack(learner.track);
@@ -39,7 +39,7 @@ export default async function CoachPage() {
   if (!track || !topics.length) {
     return (
       <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={submissions.map((s) => s.day)} current="coach" />
         <div className="mx-auto max-w-xl px-4 py-20 text-center">
           <h1 className="display text-3xl">The voice coach is not open on your track yet</h1>
           <p className="mt-3 text-muted">
@@ -57,7 +57,7 @@ export default async function CoachPage() {
     const price = priceNow(track.price);
     return (
       <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={submissions.map((s) => s.day)} current="coach" />
         <div className="mx-auto max-w-xl px-4 py-16 text-center sm:py-24">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-red-tint text-red-deep">
             <Lock aria-hidden="true" className="size-6" />
@@ -94,7 +94,7 @@ export default async function CoachPage() {
 
   return (
     <>
-      <LearnerTopBar name={learner.name} image={session?.user?.image} />
+      <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={submissions.map((s) => s.day)} current="coach" />
 
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-8 sm:py-14">
         <Appear>
@@ -163,7 +163,7 @@ function BackLink() {
       className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink"
     >
       <ArrowLeft aria-hidden="true" className="size-4" />
-      Back to my cohort
+      Back to dashboard
     </Link>
   );
 }

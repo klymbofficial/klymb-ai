@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { dayActionLabel } from "@/lib/day-lock";
 
 export interface BoardDay {
   day: number;
@@ -200,10 +201,9 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
           href={`/learn/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
           className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-card px-6 py-3.5 font-bold text-ink transition-colors hover:bg-white"
         >
-          {active.submitted ? "Review this day"
-            : active.lock === "previous" ? `Go to Day ${active.day - 1}`
+          {active.lock === "previous" ? `Go to Day ${active.day - 1}`
             : active.lock === "pay" ? "Unlock the full course"
-            : "Start learning"} <span aria-hidden="true">›</span>
+            : dayActionLabel(active.day, active.submitted)} <span aria-hidden="true">›</span>
         </Link>
       </section>
     </div>

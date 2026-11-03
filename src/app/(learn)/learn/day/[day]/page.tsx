@@ -65,7 +65,8 @@ export default async function LearnDayPage({
     viewer = { id: "preview", name: admin.name ?? "Admin", email: admin.email, track: preview, submissions: [] };
   } else {
     const state = await requireLearner();
-    if (state.state === "not-enrolled") notFound();
+    // Signed in with an account that has no track: the dashboard explains, a 404 would not.
+    if (state.state === "not-enrolled") redirect("/learn");
     viewer = { ...state.learner, submissions: state.submissions };
   }
   const q = preview ? `?track=${preview}` : "";
@@ -86,7 +87,7 @@ export default async function LearnDayPage({
     const prev = courseDays.find((d) => d.day === dayNumber - 1);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
         <DayLocked day={dayNumber} title={entry.title} previousDay={dayNumber - 1} previousTitle={prev?.title ?? ""} />
       </div>
     );
@@ -94,7 +95,7 @@ export default async function LearnDayPage({
   if (lock === "pay") {
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
         <DayPaywall email={viewer.email} track={track} day={dayNumber} title={entry.title} />
       </div>
     );
@@ -106,7 +107,7 @@ export default async function LearnDayPage({
     console.warn("day_view limit hit:", viewer.email);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
         <div className="mx-auto max-w-md px-6 py-24 text-center">
           <h1 className="display text-3xl">Take a short break</h1>
           <p className="mt-3 text-muted">You&apos;ve opened a lot of course pages in the last hour. Come back in a little while and everything will be here.</p>
@@ -130,7 +131,7 @@ export default async function LearnDayPage({
 
   return (
     <div className="bg-card">
-      <LearnerTopBar name={viewer.name} image={session?.user?.image} />
+      <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
       {preview && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line/30 bg-ink px-6 py-2.5 text-sm text-white">
           <span className="font-bold">Admin preview · read-only</span>
@@ -147,7 +148,7 @@ export default async function LearnDayPage({
         <aside className="border-line/25 bg-paper px-6 pt-4 pb-8 lg:border-r">
           <div className="lg:sticky lg:top-4">
             <Link href="/learn" className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink/80 underline underline-offset-4 transition-colors hover:text-red-deep">
-              <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to Dashboard
+              <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to dashboard
             </Link>
             <p className="mt-5 font-heading text-2xl font-bold">{getTrack(viewer.track)?.name}</p>
             <p className="mt-1 text-sm text-muted">Week {entry.week} - {percent}% complete</p>

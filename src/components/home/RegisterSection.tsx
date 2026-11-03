@@ -60,7 +60,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
 
         <Appear className="relative">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">
-            {track ? `${track.name} cohort` : "30-day cohort"}
+            {track ? `${track.name} track` : "30-day track"}
           </p>
           <h1 id="register-title" className="display display-soft mt-3 max-w-2xl text-[clamp(1.8rem,2.3vw,2.6rem)] text-white">
             {track ? <>From {track.name} to <span className="text-red-soft">{track.becomes}</span>, in 30 days.</> : "30 days. Real work. A portfolio that gets you hired."}

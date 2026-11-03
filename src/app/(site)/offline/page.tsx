@@ -14,7 +14,7 @@ export default function OfflinePage() {
         opened your dashboard online. Anything you submit now is kept and sent when you reconnect.
       </p>
       <div className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
-        <Link href="/learn" className="underline underline-offset-4">My cohort</Link>
+        <Link href="/learn" className="underline underline-offset-4">Dashboard</Link>
         <Link href="/" className="underline underline-offset-4">Home</Link>
         <Link href="/tracks" className="underline underline-offset-4">Career tracks</Link>
       </div>

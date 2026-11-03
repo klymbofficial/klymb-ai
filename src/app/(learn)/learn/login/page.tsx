@@ -8,7 +8,7 @@ import { getLearnerState, redirectCourseBuyer } from "@/lib/learner/data";
 import { inAppBrowser } from "@/lib/sd-offer";
 import { continueOnThisDevice, signOutLearner } from "@/app/(learn)/learn/actions";
 
-export const metadata: Metadata = { title: "Learner sign-in", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Log in", robots: { index: false, follow: false } };
 
 export default async function LearnerLoginPage({ searchParams }: { searchParams: Promise<{ error?: string; welcome?: string }> }) {
   const { error, welcome } = await searchParams;
@@ -23,7 +23,7 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Wordmark className="text-2xl" />
-          <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Learner sign-in</p>
+          <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Log in</p>
         </div>
         <div className="card p-6 sm:p-8">
           {blocked ? (

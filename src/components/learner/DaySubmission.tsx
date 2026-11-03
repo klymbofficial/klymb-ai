@@ -103,8 +103,11 @@ export function DaySubmission({
                 className="relative flex flex-wrap items-center gap-4"
               >
                 <Celebrate burstKey={burst} />
-                <p role="status" className="text-sm font-bold text-red-deep">{queued ? "Saved on this device. It sends when you are back online." : burst ? `Day ${day} done. Nice work.` : "Saved. You can update it any time."}</p>
-                {nextDay && <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>}
+                <p role="status" className="text-sm font-bold text-red-deep">{queued ? "Saved on this device. It sends when you are back online." : burst ? (nextDay ? `Day ${day} done. Nice work.` : `Day ${day} done. Your track is complete.`) : "Saved. You can update it any time."}</p>
+                {/* Always somewhere to go: the next day, or back to the dashboard once the last one is in. */}
+                {nextDay
+                  ? <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>
+                  : <ButtonLink href="/learn" arrow>Back to dashboard</ButtonLink>}
               </motion.div>
             )}
           </AnimatePresence>

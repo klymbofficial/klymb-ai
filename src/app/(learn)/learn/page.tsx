@@ -11,7 +11,7 @@ import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { hasPaid } from "@/lib/access";
-import { dayLockFor } from "@/lib/day-lock";
+import { dayActionLabel, dayLockFor, nextDayFor } from "@/lib/day-lock";
 import { ProgressRing } from "@/components/learner/ProgressRing";
 import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
 import { Wordmark } from "@/components/layout/Wordmark";
@@ -24,7 +24,7 @@ import { requireLearner } from "@/lib/learner/data";
 import { cohortDayDate } from "@/lib/learn";
 import { getCurriculum } from "@/data/curricula";
 
-export const metadata: Metadata = { title: "My cohort", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
 export default async function LearnHomePage() {
   const state = await requireLearner();
@@ -35,13 +35,13 @@ export default async function LearnHomePage() {
         <Wordmark className="text-2xl" />
         <h1 className="display mt-8 text-3xl">You are signed in, but not enrolled yet</h1>
         <p className="mt-3 text-muted">
-          We could not find a course or cohort place for <strong className="text-ink">{state.email}</strong>. If you paid or
+          We could not find a course or track for <strong className="text-ink">{state.email}</strong>. If you paid or
           registered with a different Google account, sign out and use that one: otherwise write to {contact.email} and we
           will sort it out.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ButtonLink href="/system-design" arrow>See System Design</ButtonLink>
-          <ButtonLink href="/register?track=project-manager" variant="secondary">Register for the cohort</ButtonLink>
+          <ButtonLink href="/tracks" variant="secondary">Choose your track</ButtonLink>
           <form action={signOutLearner}>
             <button type="submit" className="rounded-lg border border-line/50 px-5 py-3 text-sm font-bold hover:bg-ink hover:text-paper">
               Sign out
@@ -62,13 +62,13 @@ export default async function LearnHomePage() {
   if (!track.contentLive || !curriculum) {
     return (
       <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} current="dashboard" />
         <PaymentNotice email={learner.email} track={track} />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
           <h1 className="display mt-4 text-4xl text-balance">Your place is reserved. Day 1 opens soon.</h1>
           <p className="mt-4 text-muted">
-            The {track.name} course is being finished for this cohort. We will email{" "}
+            The {track.name} course is being finished. We will email{" "}
             <strong className="text-ink">{learner.email}</strong> the moment Day 1 is ready: nothing is lost by waiting,
             and your 30 days start from that day.
           </p>
@@ -96,7 +96,10 @@ export default async function LearnHomePage() {
     lock: ((l) => (l === "open" ? undefined : l))(dayLockFor({ day: d.day, price: track.price, paid, submittedDays: doneDays })),
   }));
 
-  const nextDay = days.find((d) => !d.submitted) ?? days[days.length - 1];
+  // Null once every day is in: the track is complete, and nothing is "up next".
+  const next = nextDayFor(doneDays, days.length);
+  const nextDay = days.find((d) => d.day === next);
+  const coach = topicsFor(learner.track).length > 0;
   // Streak: consecutive submitted days counting back from the latest one done.
   let streak = 0;
   for (let d = Math.max(0, ...doneDays); d >= 1 && doneDays.has(d); d--) streak++;
@@ -104,13 +107,13 @@ export default async function LearnHomePage() {
   const buddyMessage =
     doneDays.size === days.length ? `All 30 days done, ${firstName}. Proud of you.`
     : doneDays.size === 0 ? `Hi ${firstName}, I'm Kamran. Day 1 is ready when you are.`
-    : streak >= 3 ? `${streak} days in a row! Day ${nextDay.day} next.`
-    : `Welcome back, ${firstName}. Day ${nextDay.day} is waiting.`;
+    : streak >= 3 ? `${streak} days in a row! Day ${nextDay?.day} next.`
+    : `Welcome back, ${firstName}. Day ${nextDay?.day} is waiting.`;
 
   return (
     <>
-      <LearnerTopBar name={learner.name} image={session?.user?.image} />
-        <PaymentNotice email={learner.email} track={track} />
+      <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={[...doneDays]} current="dashboard" />
+      <PaymentNotice email={learner.email} track={track} />
 
       {/* Deep red, lit from the top left and falling to near-black on the
           right; one soft glow drifts slowly behind the text. */}
@@ -122,11 +125,11 @@ export default async function LearnHomePage() {
               <StudyBuddy message={buddyMessage} />
             </Appear>
             <Appear y={14}>
-              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} cohort</h1>
+              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} track</h1>
             </Appear>
             <Appear y={14} delay={0.08}>
               <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/80">
-                {formatDate(learner.cohort_start)}
+                Started {formatDate(learner.cohort_start)}
               </p>
             </Appear>
           </div>
@@ -137,15 +140,30 @@ export default async function LearnHomePage() {
 
           <Appear y={14} delay={0.16}>
             <div className="flex flex-wrap items-center gap-5 rounded-card bg-black/25 px-6 py-4 ring-1 ring-white/10 backdrop-blur-sm transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-black/30">
-              <div className="min-w-0">
-                <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">
-                  Up next · Day {nextDay.day}
-                </p>
-                <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
-              </div>
-              <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
-                Open Day {nextDay.day}
-              </ButtonLink>
+              {nextDay ? (
+                <>
+                  <div className="min-w-0">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">
+                      Up next · Day {nextDay.day}
+                    </p>
+                    <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
+                  </div>
+                  <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+                    {dayActionLabel(nextDay.day, false)}
+                  </ButtonLink>
+                </>
+              ) : (
+                <>
+                  <div className="min-w-0">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">Track complete</p>
+                    <p className="mt-1 text-lg font-extrabold">All {days.length} days submitted</p>
+                  </div>
+                  {/* What is left is practice and looking back: the coach if this track has one, else the days themselves. */}
+                  <ButtonLink href={coach ? "/learn/coach" : "#your-30-days"} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+                    {coach ? "Practise with the voice coach" : "Review your days"}
+                  </ButtonLink>
+                </>
+              )}
             </div>
           </Appear>
         </div>
@@ -154,14 +172,14 @@ export default async function LearnHomePage() {
       <CourseOfflineCache days={days.length} />
       <div className="mx-auto max-w-[96rem] px-4 py-10 sm:px-8">
         <Appear>
-          <CohortBoard days={days} initialDay={nextDay.day} />
+          <CohortBoard days={days} initialDay={nextDay?.day ?? days[days.length - 1].day} />
         </Appear>
 
         <Achievements days={days.filter((d) => d.submitted).length} name={learner.name} course={track.name} slug={learner.track} />
 
         {/* The spoken practice, where a learner will actually look for it:
             the course page they open every day, not a menu. */}
-        {topicsFor(learner.track).length > 0 && (
+        {coach && (
           <Appear className="mt-12">
             <section className="flex flex-wrap items-center justify-between gap-5 rounded-card bg-night px-6 py-6 text-paper shadow-card">
               <div className="flex items-start gap-4">
@@ -193,7 +211,7 @@ export default async function LearnHomePage() {
             />
           </section>
           <p className="mt-8 text-xs text-muted">
-            Questions about the cohort? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>
+            Questions about your track? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>
           </p>
         </Appear>
       </div>
