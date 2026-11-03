@@ -22,7 +22,10 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
             <Image src="/brand/klymb-logo.svg" alt="" width={104} height={16} priority className="h-4 w-auto [filter:brightness(0)_invert(1)_sepia(.2)]" />
           </Link>
           <IntroVideo />
-          <h1 className="m-0 mt-2 text-[44px] leading-[.9] font-extrabold tracking-[-.055em] text-balance text-[#fbf6ee] lg:text-[clamp(48px,5.6cqw,80px)]">System design, <span className="text-[#f0868b]">phone pe.</span></h1>
+          <span className="mt-2 inline-flex items-center gap-2 self-start rounded-full border border-[rgba(240,134,139,.5)] bg-[rgba(240,134,139,.14)] px-3 py-1.5 text-[11px] font-extrabold tracking-[.1em] whitespace-nowrap text-[#f6a3a7] uppercase">
+            <span className="size-[7px] rounded-full bg-[#f0868b] shadow-[0_0_10px_2px_rgba(240,134,139,.8)]" />Limited seats only
+          </span>
+          <h1 className="m-0 text-[44px] leading-[.9] font-extrabold tracking-[-.055em] text-balance text-[#fbf6ee] lg:text-[clamp(48px,5.6cqw,80px)]">System design, <span className="text-[#f0868b]">phone pe.</span></h1>
           <p className="m-0 max-w-[30rem] text-[15px] leading-[1.45] text-pretty text-[#d9cfc2] lg:text-lg">System design, explained with real examples.<br />Built for interviews.</p>
           <dl className="m-0 hidden grid-cols-3 gap-4 border-t border-[rgba(246,239,228,.18)] pt-[18px] lg:grid">
             {SD_STATS.map(([value, label]) => (
