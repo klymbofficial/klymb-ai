@@ -8,7 +8,7 @@ import { OfferView } from "@/components/system-design-offer/OfferView";
 import { hasCourseAccess } from "@/lib/access";
 import { db } from "@/lib/db/client";
 import { inviterFor } from "@/lib/referrals";
-import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferOpen, sdOfferState, type SdRole } from "@/lib/sd-offer";
+import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const description = "System design, explained with real examples. Built for interviews.";
 
@@ -17,10 +17,10 @@ type Params = { utm_campaign?: string; signin?: string; claim?: string; ref?: st
 /** Who sent this link. The preview and the page both ask, so it's one query. */
 const invitedByOf = cache(async (ref: string | null) => (ref ? inviterFor(ref) : null));
 
-/** What a shared link says before it's opened: who sent it, and the sale only while it runs. */
+/** What a shared link says before it's opened: who sent it, and the course. */
 export async function generateMetadata({ searchParams }: { searchParams: Promise<Params> }): Promise<Metadata> {
   const invitedBy = await invitedByOf(refOf((await searchParams).ref));
-  const title = invitedBy ? `${invitedBy} invited you to System Design` : sdOfferOpen() ? "System Design · Early Diwali offer" : "System Design";
+  const title = invitedBy ? `${invitedBy} invited you to System Design` : "System Design";
   return { title, description, openGraph: { title, description }, twitter: { title, description } };
 }
 
