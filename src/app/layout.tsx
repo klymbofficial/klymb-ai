@@ -4,15 +4,19 @@ import { Analytics } from "@/components/legal/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SupportBot } from "@/components/support/SupportBot";
-import { Archivo, Inter } from "next/font/google";
+import { preload } from "react-dom";
 import { site } from "@/data/config";
+import "./fonts.css";
 import "./globals.css";
 
 /** Set NEXT_PUBLIC_GA_ID to switch analytics on; unset means no tracking script at all. */
 const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
-const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"] });
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+/**
+ * The latin files of both fonts, preloaded as next/font/google did. The
+ * fonts themselves are declared in ./fonts.css, served from public/fonts.
+ */
+const PRELOAD_FONTS = ["/fonts/archivo-v25-latin.woff2", "/fonts/inter-v20-latin.woff2"];
 
 const description =
   "A 30-day job-readiness program with five career tracks: QA Engineer, L1/L2 Support, Project Manager, Junior Developer and Reporting Analyst.";
@@ -41,8 +45,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#f3f2f2" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  for (const href of PRELOAD_FONTS) preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   return (
-    <html lang="en" className={`${archivo.variable} ${inter.variable} antialiased`}>
+    <html lang="en" className="antialiased">
       <body className="min-h-screen">
         {children}
         <ServiceWorkerRegister />

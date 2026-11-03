@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { currentEmail } from "@/auth";
+import { currentAdminEmail } from "@/auth";
 import { resolveAdmin, type AdminIdentity } from "@/lib/admin/access";
 import { db } from "@/lib/db/client";
 
@@ -23,7 +23,8 @@ export const getAdmin = cache(async (): Promise<AdminSession | null> => {
   const sql = db();
   if (!sql) return null;
 
-  return resolveAdmin(await currentEmail(), async (email) => {
+  // Google sign-ins only: see adminEmailFrom.
+  return resolveAdmin(await currentAdminEmail(), async (email) => {
     // Exact match only: ILIKE would treat % and _ in a stored row as wildcards.
     const { data } = await sql.row<{ email: string; name: string | null }>`
       select email, name from course.admin_users where email = ${email}
