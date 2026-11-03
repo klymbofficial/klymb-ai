@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Appear } from "@/components/motion/Appear";
-import { Lights } from "@/components/system-design-offer/OfferBackdrop";
 import { BUILT_LESSONS } from "@/data/system-design/course-app";
 import { LESSON_COUNT } from "@/lib/course-app";
 import { formatINR } from "@/lib/format";
@@ -25,18 +24,12 @@ export function SystemDesignFeature() {
             className="pointer-events-none absolute inset-0"
             style={{ background: "radial-gradient(60% 70% at 8% 0%,rgba(201,162,74,.2),transparent 70%),radial-gradient(55% 80% at 100% 40%,rgba(131,5,11,.55),transparent 70%)" }}
           />
-          {offer.open && (
-            <>
-              <Lights count={10} className="lg:hidden" />
-              <Lights count={26} className="hidden lg:block" />
-            </>
-          )}
 
           <div className="relative grid grid-cols-[minmax(0,1fr)] gap-8 px-6 pt-14 pb-7 sm:px-12 sm:pt-16 sm:pb-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-14 lg:px-16 lg:pt-20 lg:pb-16">
             <div>
               <p className="flex flex-wrap items-center gap-2 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">
                 <span className="size-[7px] rounded-full bg-[#e7c97a] shadow-[0_0_10px_2px_rgba(231,201,122,.8)]" />
-                {offer.open ? "New course · Early Diwali offer" : "New course"}
+                New course
               </p>
               <h2 id="sd-feature-title" className="display mt-4 text-[clamp(2.25rem,4.6vw,3.75rem)] leading-[.98] text-[#fbf6ee]">
                 System design, <span className="text-[#f0868b]">phone pe.</span>

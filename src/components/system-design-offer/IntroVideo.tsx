@@ -29,9 +29,9 @@ export function IntroVideo() {
   };
 
   return (
-    <figure id="course-intro" className="m-0 flex scroll-mt-6 flex-col gap-2">
+    <figure id="course-intro" className="m-0 flex flex-col gap-2">
       <div className="relative">
-        <video ref={video} controls playsInline preload="none" poster={POSTER} controlsList="nodownload" onVolumeChange={(e) => setMuted(e.currentTarget.muted)} className="block aspect-video w-full rounded-xl border border-[rgba(246,239,228,.18)] bg-black">
+        <video ref={video} controls playsInline preload="none" poster={POSTER} controlsList="nodownload" onVolumeChange={(e) => setMuted(e.currentTarget.muted)} className="block aspect-video w-full rounded-xl border border-[rgba(246,239,228,.18)] bg-black shadow-[0_30px_80px_-20px_rgba(0,0,0,.6)] lg:rounded-2xl">
           <source src="/api/video/overview-21day.mp4" type="video/mp4" />
         </video>
         {muted && (

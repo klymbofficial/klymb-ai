@@ -7,12 +7,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { courseSignIn } from "@/app/(course)/learn/system-design/actions";
 import { offerSignIn, offerSwitchAccount } from "@/app/(course)/system-design/actions";
-import { BUILT_LESSONS } from "@/data/system-design/course-app";
 import { FINAL_MARK } from "@/lib/sd-pace";
-import { LESSON_COUNT } from "@/lib/course-app";
 import { formatINR } from "@/lib/format";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
-import { SD_REFERRAL, claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
+import { claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -184,7 +182,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#e7c97a_1.2px,transparent_1.6px)] [background-size:16px_16px] opacity-[.18]" />
           <div className="relative flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-extrabold tracking-[.12em] text-[#f3d48a] uppercase">{offer.discounted ? (offer.open ? "Diwali price · full course" : "Your locked price · full course") : "Full course"}</span>
+              <span className="text-[11px] font-extrabold tracking-[.12em] text-[#f3d48a] uppercase">{offer.discounted && !offer.open ? "Your locked price · full course" : "Full course"}</span>
               <div className="flex items-baseline gap-3">
                 <span className="text-[52px] leading-[.9] font-extrabold tracking-[-.05em] lg:text-[64px]">{formatINR(offer.price)}</span>
                 {offer.discounted && <span className="text-xl font-bold text-[rgba(251,246,238,.7)] line-through decoration-[#f0868b] decoration-2">{formatINR(offer.full)}</span>}
@@ -272,14 +270,6 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           <p className="m-0 flex items-start gap-2.5 rounded-[10px] bg-[rgba(201,162,74,.16)] px-3 py-2.5 text-[13px] leading-[1.4] text-pretty">
             <span aria-hidden="true" className="flex-none font-extrabold text-[#8a6a1c]">100%</span>
             <span><b>100% back if you finish on schedule.</b> One lesson a day, no missed days, and {FINAL_MARK}% or higher on the final assessment. Start any day you like. <Link href="/refund-policy" className="text-[#605d5d] underline underline-offset-2">T&amp;C apply.</Link></span>
-          </p>
-          <p className="m-0 flex items-start gap-2.5 rounded-[10px] bg-[rgba(201,162,74,.16)] px-3 py-2.5 text-[13px] leading-[1.4] text-pretty">
-            <span aria-hidden="true" className="flex-none font-extrabold text-[#8a6a1c]">{SD_REFERRAL.friends} friends</span>
-            <span>Get {SD_REFERRAL.friends} friends to buy within {SD_REFERRAL.days} days of your purchase and get 100% of your money back. You keep the course. <Link href="/refund-policy" className="text-[#605d5d] underline underline-offset-2">T&amp;C apply.</Link></span>
-          </p>
-          <p className="m-0 flex items-start gap-2.5 rounded-[10px] bg-[rgba(201,162,74,.16)] px-3 py-2.5 text-[13px] leading-[1.4] text-pretty">
-            <span aria-hidden="true" className="flex-none font-extrabold text-[#8a6a1c]">{BUILT_LESSONS.length}/{LESSON_COUNT}</span>
-            <span>Early access: {BUILT_LESSONS.length} of the {LESSON_COUNT} lessons are live today. The rest are added as they&apos;re ready, at no extra cost.</span>
           </p>
           {email ? (
             <form action={offerSwitchAccount} className="text-xs leading-[1.4] text-[#605d5d]">
