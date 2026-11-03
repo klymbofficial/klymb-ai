@@ -17,6 +17,8 @@ interface Me {
   name: string;
   email: string;
   track: string;
+  /** The track's slug, for its own page. */
+  slug: string;
   day: number;
   submitted: number;
   streak: number;
@@ -435,7 +437,7 @@ function personalLine(id: string, me: Me | null): { text: string; action?: Suppo
     case "profile":
     case "not-mine":
       return me.missing.length
-        ? { text: `You still need to add your ${me.missing.join(" and ")} on your dashboard.`, action: { label: "Add it now", href: "/learn" } }
+        ? { text: `You still need to add your ${me.missing.join(" and ")} on your dashboard.`, action: { label: "Add it now", href: `/learn/tracks/${me.slug}` } }
         : { text: "Your GitHub and LinkedIn are both added. ✓" };
     case "feedback":
       return me.rework.length ? { text: `Day ${me.rework.join(", Day ")} ${me.rework.length > 1 ? "are" : "is"} marked Needs rework.`, action: { label: dayActionLabel(me.rework[0], true), href: `/learn/day/${me.rework[0]}` } } : null;

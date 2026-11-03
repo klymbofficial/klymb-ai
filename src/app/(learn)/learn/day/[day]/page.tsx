@@ -147,8 +147,8 @@ export default async function LearnDayPage({
       <div className="grid lg:grid-cols-[322px_1fr]">
         <aside className="border-line/25 bg-paper px-6 pt-4 pb-8 lg:border-r">
           <div className="lg:sticky lg:top-4">
-            <Link href="/learn" className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink/80 underline underline-offset-4 transition-colors hover:text-red-deep">
-              <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to dashboard
+            <Link href={preview ? "/admin/courses" : `/learn/tracks/${viewer.track}`} className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink/80 underline underline-offset-4 transition-colors hover:text-red-deep">
+              <ArrowLeft aria-hidden="true" className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" /> Back to track
             </Link>
             <p className="mt-5 font-heading text-2xl font-bold">{getTrack(viewer.track)?.name}</p>
             <p className="mt-1 text-sm text-muted">Week {entry.week} - {percent}% complete</p>

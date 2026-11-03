@@ -25,6 +25,7 @@ export async function GET() {
     name: learner.name.split(" ")[0],
     email: learner.email,
     track: track?.name ?? learner.track,
+    slug: learner.track,
     day,
     submitted: doneSet.size,
     streak: streakEnding(doneSet, Math.max(...done, 0)),

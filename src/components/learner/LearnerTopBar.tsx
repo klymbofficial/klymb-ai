@@ -2,6 +2,9 @@ import { allFree, getTrack } from "@/data/tracks";
 import Image from "next/image";
 import Link from "next/link";
 import { signOutLearner } from "@/app/(learn)/learn/actions";
+import { currentEmail } from "@/auth";
+import { hasCourseAccess } from "@/lib/access";
+import { SD_COURSE } from "@/lib/sd-offer";
 import { getCurriculum } from "@/data/curricula";
 import { topicsFor } from "@/lib/coach/topics";
 import { nextDayFor } from "@/lib/day-lock";
@@ -9,14 +12,15 @@ import { ReminderBell } from "@/components/pwa/ReminderBell";
 import { AdminLink } from "@/components/layout/AdminLink";
 
 /** Which page is open, so its link reads as current: a day page passes its day number. */
-export type LearnerPlace = "dashboard" | "coach" | number;
+export type LearnerPlace = "dashboard" | "track" | "coach" | number;
 
 /**
- * The signed-in bar shared by the dashboard, the day pages and the coach.
- * Its links are the learner's own places, never the sales pages: those would
- * only send an enrolled learner round to /learn again.
+ * The signed-in bar shared by the dashboard, the track page, the day pages and
+ * the coach. Its links are the learner's own places, never the sales pages:
+ * those would only send an enrolled learner round to /learn again. A System
+ * Design buyer also gets that course here, so the two are one click apart.
  */
-export function LearnerTopBar({
+export async function LearnerTopBar({
   name, image, track, submittedDays = [], current,
 }: { name: string; image?: string | null; track?: string; submittedDays?: number[]; current?: LearnerPlace }) {
   const initials = name
@@ -29,10 +33,15 @@ export function LearnerTopBar({
   // The day link only once the track's days exist, and only while one is left to do.
   const curriculum = track && getTrack(track)?.contentLive ? getCurriculum(track) : undefined;
   const today = curriculum ? nextDayFor(submittedDays, curriculum.days.length) : null;
+  const email = await currentEmail();
+  const systemDesign = !!email && (await hasCourseAccess(email, SD_COURSE));
+  const trackName = track ? getTrack(track)?.name : undefined;
   const links = [
     { label: "Dashboard", href: "/learn", on: current === "dashboard" },
+    ...(track && trackName ? [{ label: trackName, href: `/learn/tracks/${track}`, on: current === "track" }] : []),
     ...(today ? [{ label: `Today: Day ${today}`, href: `/learn/day/${today}`, on: current === today }] : []),
     ...(track && topicsFor(track).length > 0 ? [{ label: "Voice coach", href: "/learn/coach", on: current === "coach" }] : []),
+    ...(systemDesign ? [{ label: "System Design", href: "/learn/system-design", on: false }] : []),
   ];
 
   return (

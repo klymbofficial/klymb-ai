@@ -15,15 +15,12 @@ import { HowItWorksStatic } from "@/components/home/HowItWorksStatic";
 import { Pricing } from "@/components/home/Pricing";
 import { TwoWays } from "@/components/home/TwoWays";
 import { StatementBand } from "@/components/home/StatementBand";
-import { redirect } from "next/navigation";
 import { statement } from "@/data/program";
-import { getLearnerState, redirectCourseBuyer } from "@/lib/learner/data";
+import { redirectToDashboard } from "@/lib/learner/courses";
 
 export default async function HomePage() {
-  // A signed-in learner wants their course or cohort, not the sales page.
-  await redirectCourseBuyer();
-  const learner = await getLearnerState();
-  if (learner.state === "enrolled") redirect("/learn");
+  // A signed-in learner wants their courses, not the sales page.
+  await redirectToDashboard();
 
   return (
     <>

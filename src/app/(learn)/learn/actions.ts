@@ -121,6 +121,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   }
 
   revalidatePath("/learn");
+  revalidatePath(`/learn/tracks/${state.learner.track}`);
   revalidatePath(`/learn/day/${day}`);
   return { ok: true };
 }
@@ -178,7 +179,7 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
     return { error: "That could not be saved right now." };
   }
 
-  revalidatePath("/learn");
+  revalidatePath(`/learn/tracks/${state.learner.track}`);
   return { saved: true };
 }
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LearnerLoginForm } from "@/components/learner/LearnerLoginForm";
 import { Wordmark } from "@/components/layout/Wordmark";
-import { getLearnerState, redirectCourseBuyer } from "@/lib/learner/data";
+import { getLearnerState } from "@/lib/learner/data";
 import { inAppBrowser } from "@/lib/sd-offer";
 import { continueOnThisDevice, signOutLearner } from "@/app/(learn)/learn/actions";
 
@@ -12,7 +12,6 @@ export const metadata: Metadata = { title: "Log in", robots: { index: false, fol
 
 export default async function LearnerLoginPage({ searchParams }: { searchParams: Promise<{ error?: string; welcome?: string }> }) {
   const { error, welcome } = await searchParams;
-  await redirectCourseBuyer();
   const state = await getLearnerState();
   // Another device holds this learner's slot: stay here and explain, never loop back to /learn.
   const blocked = state.state === "other-device" || error === "device" || error === "takeover-limit";

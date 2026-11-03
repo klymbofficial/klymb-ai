@@ -3,6 +3,7 @@
 import "./course-app.css";
 import clsx from "clsx";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { TAB_SCREENS, fmt, hasQuickCheck, lesson, miniActive, openLesson, streak, togglePlay, type CourseState, type LessonContent, type Tab } from "@/lib/course-app";
 import type { ReferralStanding } from "@/lib/sd-offer";
@@ -67,7 +68,11 @@ function Sidebar({ s, act }: { s: CourseState; act: Act }) {
   const st = streak(s);
   return (
     <aside className="hidden h-dvh flex-col gap-7 overflow-y-auto border-r-2 border-sd-divider py-6 lg:flex">
-      <div className="px-6"><Image src="/brand/klymb-logo.svg" alt="Klymb.ai" width={117} height={18} className="h-[18px] w-auto" priority /></div>
+      {/* The way out to every course on the dashboard, a track included. */}
+      <div className="flex flex-col gap-2 px-6">
+        <Link href="/learn" aria-label="Klymb.ai dashboard" className="self-start"><Image src="/brand/klymb-logo.svg" alt="" width={117} height={18} className="h-[18px] w-auto" priority /></Link>
+        <Link href="/learn" className="self-start text-xs font-bold text-sd-n-700 underline underline-offset-2 hover:text-sd-ink">← All my courses</Link>
+      </div>
       <div className="px-6">
         <div className="text-[11px] font-semibold tracking-[0.1em] text-sd-accent-700 uppercase">Course</div>
         <div className="text-[17px] font-extrabold">System Design Essentials</div>

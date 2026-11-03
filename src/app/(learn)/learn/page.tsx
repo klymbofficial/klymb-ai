@@ -1,219 +1,190 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { Mic } from "lucide-react";
-import { signOutLearner } from "./actions";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Appear } from "@/components/motion/Appear";
-import { CohortBoard, type BoardDay } from "@/components/learner/CohortBoard";
-import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
-import { Achievements } from "@/components/learner/Achievements";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
-import { PaymentNotice } from "@/components/learner/PaymentNotice";
-import { StudyBuddy } from "@/components/learner/StudyBuddy";
-import { hasPaid } from "@/lib/access";
-import { dayActionLabel, dayLockFor, nextDayFor } from "@/lib/day-lock";
-import { ProgressRing } from "@/components/learner/ProgressRing";
-import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
-import { Wordmark } from "@/components/layout/Wordmark";
 import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
-import { getTrack } from "@/data/tracks";
-import { formatDate } from "@/lib/format";
-import { topicsFor } from "@/lib/coach/topics";
-import { requireLearner } from "@/lib/learner/data";
-import { cohortDayDate } from "@/lib/learn";
 import { getCurriculum } from "@/data/curricula";
+import { trackImages } from "@/data/track-images";
+import { getTrack } from "@/data/tracks";
+import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
+import { getLearnerState } from "@/lib/learner/data";
+import { systemDesignSeat, type SystemDesignSeat } from "@/lib/learner/courses";
+import type { Learner, Submission } from "@/lib/learner/data";
 
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
-export default async function LearnHomePage() {
-  const state = await requireLearner();
+/** A thin bar for "how far through", the same on every card. */
+function Bar({ done, total, light }: { done: number; total: number; light?: boolean }) {
+  const percent = total ? Math.round((done / total) * 100) : 0;
+  return (
+    <div className={`h-1.5 overflow-hidden rounded-full ${light ? "bg-white/15" : "bg-line/20"}`} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done} aria-label={`${done} of ${total}`}>
+      <div className={`h-full rounded-full ${light ? "bg-[#e7c97a]" : "bg-red-strong"}`} style={{ width: `${Math.max(2, percent)}%` }} />
+    </div>
+  );
+}
 
-  if (state.state === "not-enrolled") {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <Wordmark className="text-2xl" />
-        <h1 className="display mt-8 text-3xl">You are signed in, but not enrolled yet</h1>
-        <p className="mt-3 text-muted">
-          We could not find a course or track for <strong className="text-ink">{state.email}</strong>. If you paid or
-          registered with a different Google account, sign out and use that one: otherwise write to {contact.email} and we
-          will sort it out.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <ButtonLink href="/system-design" arrow>See System Design</ButtonLink>
-          <ButtonLink href="/tracks" variant="secondary">Choose your track</ButtonLink>
-          <form action={signOutLearner}>
-            <button type="submit" className="rounded-lg border border-line/50 px-5 py-3 text-sm font-bold hover:bg-ink hover:text-paper">
-              Sign out
-            </button>
-          </form>
+function TrackCard({ learner, submissions }: { learner: Learner; submissions: Submission[] }) {
+  const track = getTrack(learner.track)!;
+  const curriculum = track.contentLive ? getCurriculum(learner.track) : undefined;
+  const home = `/learn/tracks/${learner.track}`;
+  const total = curriculum?.days.length ?? 30;
+  const done = new Set(submissions.map((s) => s.day)).size;
+  const next = curriculum ? nextDayFor(submissions.map((s) => s.day), total) : null;
+  const nextTitle = next ? curriculum?.days.find((d) => d.day === next)?.title : undefined;
+  const image = trackImages[learner.track];
+
+  return (
+    <article className="card flex flex-col overflow-hidden">
+      <Link href={home} className="relative block aspect-[16/7] overflow-hidden bg-surface">
+        <Image src={image.src} alt="" fill sizes="(min-width: 1024px) 40vw, 100vw" placeholder="blur" className="object-cover" />
+        <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <span className="absolute top-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">Career track</span>
+      </Link>
+      <div className="flex flex-1 flex-col gap-4 p-6">
+        <div>
+          <h2 className="display text-2xl"><Link href={home} className="hover:text-red-deep">{track.name}</Link></h2>
+          <p className="mt-1 text-sm text-muted">
+            {!curriculum ? "Your place is reserved. Day 1 opens soon."
+              : next ? <>Up next · Day {next}{nextTitle ? `: ${nextTitle}` : ""}</>
+              : "Track complete. All 30 days submitted."}
+          </p>
+        </div>
+        {curriculum && (
+          <div>
+            <Bar done={done} total={total} />
+            <p className="mt-2 text-xs font-bold text-muted nums">{done} of {total} days submitted</p>
+          </div>
+        )}
+        <div className="mt-auto flex flex-wrap items-center gap-4">
+          {curriculum && next
+            ? <ButtonLink href={`/learn/day/${next}`} arrow className="rounded-md px-5 py-2.5 text-xs">{dayActionLabel(next, false)}</ButtonLink>
+            : <ButtonLink href={home} arrow className="rounded-md px-5 py-2.5 text-xs">Open track</ButtonLink>}
+          {curriculum && next && <Link href={home} className="text-sm font-semibold underline underline-offset-4 hover:text-red-deep">Open track</Link>}
         </div>
       </div>
-    );
-  }
+    </article>
+  );
+}
 
-  const { learner, submissions } = state;
-  const track = getTrack(learner.track)!;
-  const session = await auth();
-
-  // Each track has its own 30 days. A track whose course is not built yet
-  // gets a holding page, never someone else's days.
-  const curriculum = getCurriculum(learner.track);
-  if (!track.contentLive || !curriculum) {
-    return (
-      <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} current="dashboard" />
-        <PaymentNotice email={learner.email} track={track} />
-        <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
-          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
-          <h1 className="display mt-4 text-4xl text-balance">Your place is reserved. Day 1 opens soon.</h1>
-          <p className="mt-4 text-muted">
-            The {track.name} course is being finished. We will email{" "}
-            <strong className="text-ink">{learner.email}</strong> the moment Day 1 is ready: nothing is lost by waiting,
-            and your 30 days start from that day.
-          </p>
-          <p className="mt-6 text-sm text-muted">
-            Questions? <Link href={`mailto:${contact.email}`} className="font-semibold underline underline-offset-2">{contact.email}</Link>
-          </p>
+/** In the System Design course's own night-sky look, so it reads as its own product. */
+function SystemDesignCard({ seat }: { seat: SystemDesignSeat }) {
+  const action = seat.finished ? "Open the course" : seat.passed === 0 ? "Start the course" : "Continue the course";
+  return (
+    <article className="relative flex flex-col overflow-hidden rounded-card bg-[#1a1716] text-[#f6efe4] shadow-card">
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 80% at 0% 0%,rgba(201,162,74,.2),transparent 70%),radial-gradient(60% 80% at 100% 100%,rgba(131,5,11,.5),transparent 70%)" }} />
+      <div className="relative flex flex-1 flex-col gap-4 p-6">
+        <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">Course</p>
+        <div>
+          <h2 className="display text-2xl text-[#fbf6ee]">System Design</h2>
+          <p className="mt-1 text-sm text-[#d9cfc2]">{seat.finished ? "Course complete. Every lesson and the final passed." : "One short lesson a day, built for interviews."}</p>
         </div>
-      </>
-    );
-  }
-  const doneDays = new Set(submissions.map((s) => s.day));
-  const paid = track.price > 0 ? await hasPaid(learner.email, learner.track) : true;
+        {/* Progress sits with the button at the foot, level with the track card's beside it. */}
+        <div className="mt-auto flex flex-col gap-4">
+          <div>
+            <Bar done={seat.passed} total={seat.total} light />
+            <p className="mt-2 text-xs font-bold text-[#b9ad9f] nums">{seat.passed} of {seat.total} lessons passed</p>
+          </div>
+          <Link href="/learn/system-design" className="group inline-flex items-center gap-2 self-start rounded-md bg-[#fbf6ee] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-[#83050b] transition-colors hover:bg-white">
+            {action} <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
 
-  const days: BoardDay[] = curriculum.days.map((d) => ({
-    day: d.day,
-    week: d.week,
-    weekName: curriculum.modules.find((m) => m.week === d.week)?.name ?? "",
-    title: d.title,
-    points: d.points,
-    estimateMinutes: d.estimateMinutes,
-    kind: d.kind,
-    date: cohortDayDate(learner.cohort_start, d.day),
-    submitted: doneDays.has(d.day),
-    // Same rules as the day page: in order, and Days 2+ need a paid seat on a paid track.
-    lock: ((l) => (l === "open" ? undefined : l))(dayLockFor({ day: d.day, price: track.price, paid, submittedDays: doneDays })),
-  }));
+/** A course they don't have yet: what it is and where to look. */
+function AddCard({ eyebrow, title, body, href, cta }: { eyebrow: string; title: string; body: string; href: string; cta: string }) {
+  return (
+    <article className="flex flex-col gap-3 rounded-card border-2 border-dashed border-line/50 p-6">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{eyebrow}</p>
+      <h3 className="text-lg font-extrabold">{title}</h3>
+      <p className="text-sm text-muted">{body}</p>
+      <ButtonLink href={href} variant="secondary" arrow className="mt-auto self-start rounded-md px-4 py-2 text-xs">{cta}</ButtonLink>
+    </article>
+  );
+}
 
-  // Null once every day is in: the track is complete, and nothing is "up next".
-  const next = nextDayFor(doneDays, days.length);
-  const nextDay = days.find((d) => d.day === next);
-  const coach = topicsFor(learner.track).length > 0;
-  // Streak: consecutive submitted days counting back from the latest one done.
-  let streak = 0;
-  for (let d = Math.max(0, ...doneDays); d >= 1 && doneDays.has(d); d--) streak++;
-  const firstName = learner.name.split(" ")[0] || "there";
-  const buddyMessage =
-    doneDays.size === days.length ? `All 30 days done, ${firstName}. Proud of you.`
-    : doneDays.size === 0 ? `Hi ${firstName}, I'm Kamran. Day 1 is ready when you are.`
-    : streak >= 3 ? `${streak} days in a row! Day ${nextDay?.day} next.`
-    : `Welcome back, ${firstName}. Day ${nextDay?.day} is waiting.`;
+/**
+ * The dashboard: every course this person has, each with how far they are
+ * and the one next step, and the courses they could add. Each card leads to
+ * that course's own place: a track's page, or the System Design app.
+ */
+export default async function DashboardPage() {
+  const state = await getLearnerState();
+  if (state.state === "signed-out") redirect("/learn/login");
+  if (state.state === "other-device") redirect("/learn/login?error=device");
+
+  const session = await auth();
+  const email = state.state === "enrolled" ? state.learner.email : state.email;
+  const learner = state.state === "enrolled" ? state.learner : null;
+  const seat = await systemDesignSeat(email);
+  const name = learner?.name || session?.user?.name || email.split("@")[0];
+  const firstName = name.split(" ")[0];
+  const none = !learner && !seat;
 
   return (
     <>
-      <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={[...doneDays]} current="dashboard" />
-      <PaymentNotice email={learner.email} track={track} />
+      <LearnerTopBar
+        name={name}
+        image={session?.user?.image}
+        track={learner?.track}
+        submittedDays={state.state === "enrolled" ? state.submissions.map((s) => s.day) : []}
+        current="dashboard"
+      />
 
-      {/* Deep red, lit from the top left and falling to near-black on the
-          right; one soft glow drifts slowly behind the text. */}
-      <div className="relative overflow-hidden bg-linear-to-br from-red via-red-press to-[#2a0204] text-white">
-        <span aria-hidden="true" className="glow-drift pointer-events-none absolute -top-40 -left-24 size-[32rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.14),transparent)]" />
-        <div className="relative mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-6 px-4 py-10 sm:px-8 sm:py-14">
-          <div>
-            <Appear y={10} className="mb-5">
-              <StudyBuddy message={buddyMessage} />
-            </Appear>
-            <Appear y={14}>
-              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} track</h1>
-            </Appear>
-            <Appear y={14} delay={0.08}>
-              <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/80">
-                Started {formatDate(learner.cohort_start)}
-              </p>
-            </Appear>
-          </div>
-
-          <Appear y={14} delay={0.12}>
-            <ProgressRing done={doneDays.size} total={days.length} streak={streak} />
-          </Appear>
-
-          <Appear y={14} delay={0.16}>
-            <div className="flex flex-wrap items-center gap-5 rounded-card bg-black/25 px-6 py-4 ring-1 ring-white/10 backdrop-blur-sm transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-black/30">
-              {nextDay ? (
-                <>
-                  <div className="min-w-0">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">
-                      Up next · Day {nextDay.day}
-                    </p>
-                    <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
-                  </div>
-                  <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
-                    {dayActionLabel(nextDay.day, false)}
-                  </ButtonLink>
-                </>
-              ) : (
-                <>
-                  <div className="min-w-0">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">Track complete</p>
-                    <p className="mt-1 text-lg font-extrabold">All {days.length} days submitted</p>
-                  </div>
-                  {/* What is left is practice and looking back: the coach if this track has one, else the days themselves. */}
-                  <ButtonLink href={coach ? "/learn/coach" : "#your-30-days"} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
-                    {coach ? "Practise with the voice coach" : "Review your days"}
-                  </ButtonLink>
-                </>
-              )}
-            </div>
-          </Appear>
-        </div>
-      </div>
-
-      <CourseOfflineCache days={days.length} />
-      <div className="mx-auto max-w-[96rem] px-4 py-10 sm:px-8">
-        <Appear>
-          <CohortBoard days={days} initialDay={nextDay?.day ?? days[days.length - 1].day} />
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-8 sm:py-14">
+        <Appear y={12}>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">Dashboard</p>
+          <h1 className="display mt-3 text-[clamp(1.9rem,4vw,2.75rem)]">{none ? `Welcome, ${firstName}` : `Your courses, ${firstName}`}</h1>
+          {none && (
+            <p className="mt-3 max-w-2xl text-muted">
+              There&apos;s no course on <strong className="text-ink">{email}</strong> yet. Pick one below. If you paid or
+              registered with a different Google account, log out and use that one, or write to {contact.email}.
+            </p>
+          )}
         </Appear>
 
-        <Achievements days={days.filter((d) => d.submitted).length} name={learner.name} course={track.name} slug={learner.track} />
-
-        {/* The spoken practice, where a learner will actually look for it:
-            the course page they open every day, not a menu. */}
-        {coach && (
-          <Appear className="mt-12">
-            <section className="flex flex-wrap items-center justify-between gap-5 rounded-card bg-night px-6 py-6 text-paper shadow-card">
-              <div className="flex items-start gap-4">
-                <span aria-hidden="true" className="mt-0.5 grid size-11 shrink-0 place-items-center rounded-full bg-white/10 text-red-soft">
-                  <Mic className="size-5" />
-                </span>
-                <div>
-                  <h2 className="display text-xl">Practise out loud, five minutes</h2>
-                  <p className="mt-1 max-w-lg text-sm text-white/60">
-                    The voice coach asks one question at a time on a single topic, and files what it heard for your reviewer.
-                    Interviews are spoken: reading an answer is not practising it.
-                  </p>
-                </div>
-              </div>
-              <ButtonLink href="/learn/coach" variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
-                Start a session
-              </ButtonLink>
-            </section>
+        {!none && (
+          <Appear y={12} delay={0.06} className="mt-8 grid gap-6 lg:grid-cols-2">
+            {learner && <TrackCard learner={learner} submissions={state.state === "enrolled" ? state.submissions : []} />}
+            {seat && <SystemDesignCard seat={seat} />}
           </Appear>
         )}
 
-        <Appear className="mt-14">
-          <section aria-labelledby="evidence">
-            <EvidenceProfile
-              githubUsername={learner.github_username}
-              linkedinSlug={learner.linkedin_slug}
-              githubUrl={learner.github_url}
-              linkedinUrl={learner.linkedin_url}
-            />
-          </section>
-          <p className="mt-8 text-xs text-muted">
-            Questions about your track? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>
-          </p>
-        </Appear>
+        {(!learner || !seat) && (
+          <Appear y={12} delay={0.12} className="mt-12">
+            <h2 className="text-xl font-extrabold">{none ? "Start a course" : "Add a course"}</h2>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              {!learner && (
+                <AddCard
+                  eyebrow="Career tracks"
+                  title="30 days for one role"
+                  body="One real workplace problem a day, weekly checkpoints and interview prep for the job you want."
+                  href="/tracks"
+                  cta="Choose your track"
+                />
+              )}
+              {!seat && (
+                <AddCard
+                  eyebrow="Course"
+                  title="System Design"
+                  body="Short daily lessons on your phone, built for system design interviews."
+                  href="/system-design"
+                  cta="See System Design"
+                />
+              )}
+            </div>
+          </Appear>
+        )}
+
+        <p className="mt-14 text-xs text-muted">
+          Questions? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>
+        </p>
       </div>
     </>
   );

@@ -45,7 +45,7 @@ export default async function CoachPage() {
           <p className="mt-3 text-muted">
             It is being written track by track. Write to {contact.email} if you would like yours next.
           </p>
-          <BackLink />
+          <BackLink track={learner.track} />
         </div>
       </>
     );
@@ -77,7 +77,7 @@ export default async function CoachPage() {
             <p className="display text-4xl tabular-nums">{formatINR(price)}</p>
             <PayButton email={learner.email} price={price} tone="light" />
           </div>
-          <BackLink />
+          <BackLink track={learner.track} />
         </div>
       </>
     );
@@ -150,20 +150,20 @@ export default async function CoachPage() {
           </section>
         )}
 
-        <BackLink />
+        <BackLink track={learner.track} />
       </div>
     </>
   );
 }
 
-function BackLink() {
+function BackLink({ track }: { track: string }) {
   return (
     <Link
-      href="/learn"
+      href={`/learn/tracks/${track}`}
       className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink"
     >
       <ArrowLeft aria-hidden="true" className="size-4" />
-      Back to dashboard
+      Back to track
     </Link>
   );
 }
