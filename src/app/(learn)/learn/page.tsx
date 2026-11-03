@@ -9,9 +9,11 @@ import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
 import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
-import { getTrack } from "@/data/tracks";
+import { getTrack, tracks } from "@/data/tracks";
+import { platformLink, platformPrograms, type PlatformProgram } from "@/data/platform-programs";
+import type { Track } from "@/types/program";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
-import { getLearnerState } from "@/lib/learner/data";
+import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
 import { systemDesignSeat, type SystemDesignSeat } from "@/lib/learner/courses";
 import type { Learner, Submission } from "@/lib/learner/data";
 
@@ -61,7 +63,7 @@ function TrackCard({ learner, submissions }: { learner: Learner; submissions: Su
         )}
         <div className="mt-auto flex flex-wrap items-center gap-4">
           {curriculum && next
-            ? <ButtonLink href={`/learn/day/${next}`} arrow className="rounded-md px-5 py-2.5 text-xs">{dayActionLabel(next, false)}</ButtonLink>
+            ? <ButtonLink href={`${home}/day/${next}`} arrow className="rounded-md px-5 py-2.5 text-xs">{dayActionLabel(next, false)}</ButtonLink>
             : <ButtonLink href={home} arrow className="rounded-md px-5 py-2.5 text-xs">Open track</ButtonLink>}
           {curriculum && next && <Link href={home} className="text-sm font-semibold underline underline-offset-4 hover:text-red-deep">Open track</Link>}
         </div>
@@ -97,22 +99,61 @@ function SystemDesignCard({ seat }: { seat: SystemDesignSeat }) {
   );
 }
 
-/** A course they don't have yet: what it is and where to look. */
-function AddCard({ eyebrow, title, body, href, cta }: { eyebrow: string; title: string; body: string; href: string; cta: string }) {
+/** A track they could add: its photo and one line, the page to read, and the way to start. */
+function MoreTrackCard({ track }: { track: Track }) {
+  const image = trackImages[track.slug];
   return (
-    <article className="flex flex-col gap-3 rounded-card border-2 border-dashed border-line/50 p-6">
-      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{eyebrow}</p>
-      <h3 className="text-lg font-extrabold">{title}</h3>
-      <p className="text-sm text-muted">{body}</p>
-      <ButtonLink href={href} variant="secondary" arrow className="mt-auto self-start rounded-md px-4 py-2 text-xs">{cta}</ButtonLink>
+    <article className="card flex flex-col overflow-hidden">
+      <Link href={`/tracks/${track.slug}`} className="relative block aspect-[16/7] overflow-hidden bg-surface">
+        <Image src={image.src} alt="" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw" placeholder="blur" className="object-cover" />
+      </Link>
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Career track · 30 days</p>
+        <h3 className="text-lg font-extrabold">{track.name}</h3>
+        <p className="text-sm text-muted">{track.description}</p>
+        <div className="mt-auto flex flex-wrap items-center gap-4 pt-1">
+          <ButtonLink href={`/register?track=${track.slug}`} arrow className="rounded-md px-4 py-2 text-xs">Start this track</ButtonLink>
+          <Link href={`/tracks/${track.slug}`} className="text-sm font-semibold underline underline-offset-4 hover:text-red-deep">View track</Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/** System Design, for someone who hasn't got it. */
+function MoreSystemDesignCard() {
+  return (
+    <article className="relative flex flex-col gap-3 overflow-hidden rounded-card bg-[#1a1716] p-5 text-[#f6efe4] shadow-card">
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 80% at 0% 0%,rgba(201,162,74,.2),transparent 70%)" }} />
+      <p className="relative text-xs font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">Course · 21 days</p>
+      <h3 className="relative text-lg font-extrabold text-[#fbf6ee]">System Design</h3>
+      <p className="relative text-sm text-[#d9cfc2]">Short daily lessons on your phone, built for system design interviews.</p>
+      <Link href="/system-design" className="group relative mt-auto inline-flex items-center gap-2 self-start rounded-md bg-[#fbf6ee] px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-[#83050b] transition-colors hover:bg-white">
+        See System Design <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
+      </Link>
+    </article>
+  );
+}
+
+/** An app.klymb.ai program: it opens there, in a new tab. */
+function PlatformCard({ program }: { program: PlatformProgram }) {
+  return (
+    <article className="flex flex-col gap-3 rounded-card border border-line/40 bg-card p-5">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">app.klymb.ai · {program.kind}</p>
+      <h3 className="text-lg font-extrabold">{program.title}</h3>
+      <p className="text-sm text-muted">{program.line}</p>
+      {program.note && <p className="text-xs font-bold text-red-deep">{program.note}</p>}
+      <a href={platformLink(program.path)} target="_blank" rel="noopener" className="mt-auto self-start pt-1 text-sm font-bold underline underline-offset-4 hover:text-red-deep">
+        Open on app.klymb.ai<span aria-hidden="true"> ↗</span><span className="sr-only"> (opens in a new tab)</span>
+      </a>
     </article>
   );
 }
 
 /**
  * The dashboard: every course this person has, each with how far they are
- * and the one next step, and the courses they could add. Each card leads to
- * that course's own place: a track's page, or the System Design app.
+ * and the one next step; then every course they don't have yet, tracks and
+ * System Design here, and app.klymb.ai's programs, which open there.
  */
 export default async function DashboardPage() {
   const state = await getLearnerState();
@@ -121,11 +162,12 @@ export default async function DashboardPage() {
 
   const session = await auth();
   const email = state.state === "enrolled" ? state.learner.email : state.email;
-  const learner = state.state === "enrolled" ? state.learner : null;
-  const seat = await systemDesignSeat(email);
-  const name = learner?.name || session?.user?.name || email.split("@")[0];
+  const [places, seat] = await Promise.all([getLearnerTracks(), systemDesignSeat(email)]);
+  const name = places[0]?.learner.name || session?.user?.name || email.split("@")[0];
   const firstName = name.split(" ")[0];
-  const none = !learner && !seat;
+  const none = !places.length && !seat;
+  const mine = new Set(places.map((p) => p.learner.track));
+  const moreTracks = tracks.filter((t) => !mine.has(t.slug));
 
   return (
     <>
@@ -145,36 +187,28 @@ export default async function DashboardPage() {
 
         {!none && (
           <Appear y={12} delay={0.06} className="mt-8 grid gap-6 lg:grid-cols-2">
-            {learner && <TrackCard learner={learner} submissions={state.state === "enrolled" ? state.submissions : []} />}
+            {places.map((p) => <TrackCard key={p.learner.id} learner={p.learner} submissions={p.submissions} />)}
             {seat && <SystemDesignCard seat={seat} />}
           </Appear>
         )}
 
-        {(!learner || !seat) && (
-          <Appear y={12} delay={0.12} className="mt-12">
-            <h2 className="text-xl font-extrabold">{none ? "Start a course" : "Add a course"}</h2>
-            <div className="mt-5 grid gap-5 sm:grid-cols-2">
-              {!learner && (
-                <AddCard
-                  eyebrow="Career tracks"
-                  title="30 days for one role"
-                  body="One real workplace problem a day, weekly checkpoints and interview prep for the job you want."
-                  href="/tracks"
-                  cta="Choose your track"
-                />
-              )}
-              {!seat && (
-                <AddCard
-                  eyebrow="Course"
-                  title="System Design"
-                  body="Short daily lessons on your phone, built for system design interviews."
-                  href="/system-design"
-                  cta="See System Design"
-                />
-              )}
+        {(moreTracks.length > 0 || !seat) && (
+          <Appear y={12} delay={0.12} className="mt-14">
+            <h2 className="text-xl font-extrabold">{none ? "Start a course" : "More courses"}</h2>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {moreTracks.map((t) => <MoreTrackCard key={t.slug} track={t} />)}
+              {!seat && <MoreSystemDesignCard />}
             </div>
           </Appear>
         )}
+
+        <Appear y={12} delay={0.16} className="mt-14">
+          <h2 className="text-xl font-extrabold">On app.klymb.ai</h2>
+          <p className="mt-1 text-sm text-muted">Programs on our community platform. They open there, with its own sign-in.</p>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {platformPrograms.map((p) => <PlatformCard key={p.path} program={p} />)}
+          </div>
+        </Appear>
 
         <p className="mt-14 text-xs text-muted">
           Questions? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>

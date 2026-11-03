@@ -1,6 +1,6 @@
 import "server-only";
 import { type Db, db } from "@/lib/db/client";
-import { type EnrolmentClient } from "@/lib/learner/enrolment";
+import { type EnrolmentClient, type ProfileLinks } from "@/lib/learner/enrolment";
 
 /**
  * The real EnrolmentClient. Kept apart from enrolment.ts so the enrolment rule
@@ -8,19 +8,30 @@ import { type EnrolmentClient } from "@/lib/learner/enrolment";
  */
 export function enrolmentClient(sql: Db): EnrolmentClient {
   return {
-    async findLearner(email) {
+    async findLearner(email, track) {
       const { data } = await sql.row<{ id: string }>`
-        select id from course.learners where email = ${email}
+        select id from course.learners where email = ${email} and track = ${track}
+      `;
+      return data;
+    },
+    async findProfileLinks(email) {
+      // The most recently updated links among their tracks.
+      const { data } = await sql.row<ProfileLinks>`
+        select github_username, github_url, linkedin_slug, linkedin_url from course.learners
+         where email = ${email} and (github_username is not null or linkedin_slug is not null)
+         order by created_at desc
+         limit 1
       `;
       return data;
     },
     findPlatformUserId: (email) => platformUserId(sql, email),
     async insertLearner(values) {
       const { error } = await sql.run`
-        insert into course.learners (email, name, track, cohort_start, user_id, github_username, github_url)
+        insert into course.learners (email, name, track, cohort_start, user_id, github_username, github_url, linkedin_slug, linkedin_url)
         values (
           ${values.email}, ${values.name}, ${values.track}, ${values.cohort_start},
-          ${values.user_id ?? null}, ${values.github_username ?? null}, ${values.github_url ?? null}
+          ${values.user_id ?? null}, ${values.github_username ?? null}, ${values.github_url ?? null},
+          ${values.linkedin_slug ?? null}, ${values.linkedin_url ?? null}
         )
       `;
       return { error };

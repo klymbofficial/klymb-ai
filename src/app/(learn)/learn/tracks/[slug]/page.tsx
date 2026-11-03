@@ -37,6 +37,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
   if ((await params).slug !== state.learner.track) redirect("/learn");
 
   const { learner, submissions } = state;
+  const home = `/learn/tracks/${learner.track}`;
   const track = getTrack(learner.track)!;
   const session = await auth();
 
@@ -132,7 +133,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
                     </p>
                     <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
                   </div>
-                  <ButtonLink href={`/learn/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+                  <ButtonLink href={`${home}/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
                     {dayActionLabel(nextDay.day, false)}
                   </ButtonLink>
                 </>
@@ -143,7 +144,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
                     <p className="mt-1 text-lg font-extrabold">All {days.length} days submitted</p>
                   </div>
                   {/* What is left is practice and looking back: the coach if this track has one, else the days themselves. */}
-                  <ButtonLink href={coach ? "/learn/coach" : "#your-30-days"} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+                  <ButtonLink href={coach ? `${home}/coach` : "#your-30-days"} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
                     {coach ? "Practise with the voice coach" : "Review your days"}
                   </ButtonLink>
                 </>
@@ -153,10 +154,10 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
         </div>
       </div>
 
-      <CourseOfflineCache days={days.length} home={`/learn/tracks/${learner.track}`} />
+      <CourseOfflineCache days={days.length} home={home} />
       <div className="mx-auto max-w-[96rem] px-4 py-10 sm:px-8">
         <Appear>
-          <CohortBoard days={days} initialDay={nextDay?.day ?? days[days.length - 1].day} />
+          <CohortBoard base={home} days={days} initialDay={nextDay?.day ?? days[days.length - 1].day} />
         </Appear>
 
         <Achievements days={days.filter((d) => d.submitted).length} name={learner.name} course={track.name} slug={learner.track} />
@@ -178,7 +179,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
                   </p>
                 </div>
               </div>
-              <ButtonLink href="/learn/coach" variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+              <ButtonLink href={`${home}/coach`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
                 Start a session
               </ButtonLink>
             </section>
@@ -188,6 +189,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
         <Appear className="mt-14">
           <section aria-labelledby="evidence">
             <EvidenceProfile
+              track={learner.track}
               githubUsername={learner.github_username}
               linkedinSlug={learner.linkedin_slug}
               githubUrl={learner.github_url}

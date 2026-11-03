@@ -104,7 +104,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
       {track?.available && track.price > 0 && (
         <>
           <p className="mt-6 text-sm text-white/75">Day 1 is free. Pay when you&apos;re ready to unlock Days 2 to 30.</p>
-          <PayButton email={email} price={priceNow(track.price)} />
+          <PayButton email={email} track={track.slug} price={priceNow(track.price)} />
         </>
       )}
 
@@ -113,7 +113,7 @@ export function RegistrationSuccess({ enrolled, duplicate, email, track, signedI
           dashboard, not Day 1, because a different Google account lands on
           its "not enrolled" explanation there. */}
       {enrolled && signedIn && (
-        <ButtonLink href="/learn/day/1" soft arrow className="mt-8 rounded-full px-7">
+        <ButtonLink href={track ? `/learn/tracks/${track.slug}/day/1` : "/learn"} soft arrow className="mt-8 rounded-full px-7">
           Start Day 1
         </ButtonLink>
       )}

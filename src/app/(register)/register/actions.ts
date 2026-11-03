@@ -79,13 +79,15 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   const duplicate = error?.code === UNIQUE_VIOLATION;
 
   if (duplicate) {
-    // Already registered: keep their latest answers rather than the first ones.
+    // Already registered for this track: keep their latest answers rather
+    // than the first ones. Only this track's row: another track they are on
+    // keeps its own repository.
     await sql.run`
       update course.registrations
-         set name = ${data.name}, phone = ${data.phone}, track = ${data.track},
+         set name = ${data.name}, phone = ${data.phone},
              job_role = ${data.currentRole}, experience = ${data.experience},
              linkedin = ${data.linkedin || null}, github = ${data.github || null}
-       where email = ${data.email} and cohort_start = ${cohort.startDate}
+       where email = ${data.email} and track = ${data.track} and cohort_start = ${cohort.startDate}
     `;
   }
 

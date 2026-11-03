@@ -44,9 +44,11 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
     }
   }
 
-  // Authorisation: the submission is written for the signed-in learner only.
-  const state = await getLearnerState();
-  if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled in a cohort." };
+  // Authorisation: the submission is written for the signed-in learner only,
+  // on the track the form names (older queued submits carry none: their most recent).
+  const trackField = formData.get("track");
+  const state = await getLearnerState(typeof trackField === "string" && trackField ? trackField : undefined);
+  if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled on this track." };
   // Same rules as the page, enforced here too: days in order, Days 2+ paid.
   const lock = await dayLock({
     email: state.learner.email,
@@ -122,7 +124,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
 
   revalidatePath("/learn");
   revalidatePath(`/learn/tracks/${state.learner.track}`);
-  revalidatePath(`/learn/day/${day}`);
+  revalidatePath(`/learn/tracks/${state.learner.track}/day/${day}`);
   return { ok: true };
 }
 
@@ -148,8 +150,9 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
   if (!github) return { error: "That does not look like a GitHub profile. Paste https://github.com/your-username, or just your username." };
   if (!linkedin) return { error: "That does not look like a LinkedIn profile. Paste https://www.linkedin.com/in/yourname." };
 
-  const state = await getLearnerState();
-  if (state.state !== "enrolled") return { error: "You are not enrolled in a cohort." };
+  const trackField = formData.get("track");
+  const state = await getLearnerState(typeof trackField === "string" && trackField ? trackField : undefined);
+  if (state.state !== "enrolled") return { error: "You are not enrolled on this track." };
 
   // Locked once work is submitted: switching to someone else's account would
   // make their repository look like yours. The team can change it on request.
@@ -206,7 +209,7 @@ export async function continueOnThisDevice() {
   // Tell the old device right away (it re-checks and leaves within a second).
   const sql = db();
   const { data: learner } = sql
-    ? await sql.row<{ id: string }>`select id from course.learners where email = ${email}`
+    ? await sql.row<{ id: string }>`select id from course.learners where email = ${email} order by created_at limit 1`
     : { data: null };
   if (learner?.id) await broadcastTakeover(learner.id);
   redirect("/learn");

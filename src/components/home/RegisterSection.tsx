@@ -37,7 +37,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
       <div className="relative isolate flex flex-col gap-5 overflow-hidden bg-red-muted p-6 text-white sm:p-10 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:px-10 lg:py-8 [&>*]:shrink-0">
         {/* The track's photograph behind everything, tinted brand maroon so the type stays readable. */}
         <Image
-          key={track?.slug ?? "default"}
+          key={`photo-${track?.slug ?? "default"}`}
           src={track ? trackImages[track.slug].src : teamLaptop}
           alt="" aria-hidden="true" fill priority placeholder="blur" sizes="(min-width: 1024px) 40vw, 100vw"
           className="pointer-events-none -z-20 animate-[fade-in_600ms_cubic-bezier(0.23,1,0.32,1)] object-cover"

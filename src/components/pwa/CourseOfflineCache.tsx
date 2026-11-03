@@ -11,7 +11,7 @@ const STATIC = "klymb-static-v2";
  * device, so the whole course opens offline. Skips anything that redirects,
  * so a signed-out sign-in page is never stored as a day.
  */
-/** `home` is the track's own page, saved with the dashboard and the days. */
+/** `home` is the track's own page, saved with the dashboard; its days sit under it. */
 export function CourseOfflineCache({ days, home }: { days: number; home?: string }) {
   useEffect(() => {
     if (!("caches" in window) || !navigator.serviceWorker?.controller || !navigator.onLine) return;
@@ -22,7 +22,7 @@ export function CourseOfflineCache({ days, home }: { days: number; home?: string
     const run = async () => {
       const learn = await caches.open(LEARN);
       const assets = new Set<string>();
-      const urls = ["/learn", ...(home ? [home] : []), ...Array.from({ length: days }, (_, i) => `/learn/day/${i + 1}`)];
+      const urls = ["/learn", ...(home ? [home] : []), ...Array.from({ length: days }, (_, i) => `${home ?? "/learn"}/day/${i + 1}`)];
       for (const url of urls) {
         try {
           const res = await fetch(url, { credentials: "same-origin", redirect: "follow" });

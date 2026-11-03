@@ -10,8 +10,8 @@ import { Celebrate } from "./Celebrate";
 import { submitOrQueue } from "@/lib/offlineQueue";
 
 export function DaySubmission({
-  day, checklist, submission, needsLinkedinPost, nextDay,
-}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean; nextDay?: number }) {
+  day, checklist, submission, needsLinkedinPost, nextDay, trackSlug,
+}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean; nextDay?: number; trackSlug: string }) {
   const [saved, setSaved] = useState(!!submission);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -54,6 +54,8 @@ export function DaySubmission({
       )}
 
       <form id={`day-form-${day}`} action={onSubmit} className="flex flex-1 flex-col gap-5">
+        {/* Which of their tracks this day belongs to; it travels with a queued offline submit too. */}
+        <input type="hidden" name="track" value={trackSlug} />
         <div>
           <label htmlFor={`url-${day}`} className="block text-[15px] font-semibold">Link to today&apos;s work</label>
           <p className="mt-1 text-xs text-muted">A file, folder or commit in your own GitHub repository, not the repository home. Each day needs its own link.</p>
@@ -106,7 +108,7 @@ export function DaySubmission({
                 <p role="status" className="text-sm font-bold text-red-deep">{queued ? "Saved on this device. It sends when you are back online." : burst ? (nextDay ? `Day ${day} done. Nice work.` : `Day ${day} done. Your track is complete.`) : "Saved. You can update it any time."}</p>
                 {/* Always somewhere to go: the next day, or back to the dashboard once the last one is in. */}
                 {nextDay
-                  ? <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>
+                  ? <ButtonLink href={`/learn/tracks/${trackSlug}/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>
                   : <ButtonLink href="/learn" arrow>Back to dashboard</ButtonLink>}
               </motion.div>
             )}

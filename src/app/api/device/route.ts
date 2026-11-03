@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const s = await getLearnerState();
   return NextResponse.json(
-    { state: s.state, ...(s.state === "enrolled" ? { channel: deviceChannel(s.learner.id) } : {}) },
+    { state: s.state, ...(s.state === "enrolled" ? { channel: deviceChannel(s.personId) } : {}) },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

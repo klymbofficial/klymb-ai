@@ -12,11 +12,12 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const { track } = await searchParams;
   const defaultTrack = trackSlugs.includes(track as TrackSlug) ? (track as TrackSlug) : undefined;
 
-  // Back from "Register with Google". Someone already enrolled has nothing to
-  // fill in: send them to their course rather than a form they have done.
+  // Back from "Register with Google". Someone already on this track has
+  // nothing to fill in: send them to it rather than a form they have done. A
+  // different track is a second place, so the form stays.
   const session = await auth();
   const email = verifiedEmailFrom(session);
-  if (email && (await getLearnerState()).state === "enrolled") redirect("/learn");
+  if (email && defaultTrack && (await getLearnerState(defaultTrack)).state === "enrolled") redirect(`/learn/tracks/${defaultTrack}`);
 
   const googleUser = email
     ? { email, name: session?.user?.name ?? "", image: session?.user?.image ?? null }

@@ -40,7 +40,7 @@ function formatLong(iso: string) {
  * Selecting a day is local state: nothing is saved until they open the day
  * itself, so a learner can look ahead without changing anything.
  */
-export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay: number }) {
+export function CohortBoard({ base, days, initialDay }: { /** The track's own address. */ base: string; days: BoardDay[]; initialDay: number }) {
   const [selected, setSelected] = useState(initialDay);
   const byDay = useMemo(() => new Map(days.map((d) => [d.day, d])), [days]);
   const active = byDay.get(selected) ?? days[0];
@@ -198,7 +198,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
         </dl>
 
         <Link
-          href={`/learn/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
+          href={`${base}/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
           className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-card px-6 py-3.5 font-bold text-ink transition-colors hover:bg-white"
         >
           {active.lock === "previous" ? `Go to Day ${active.day - 1}`

@@ -230,7 +230,7 @@ export function SupportBot() {
     setMsgs((m) => [...m, { id: nextId(), from: "you", text: q }]);
 
     const mine = me && /\b(my|mera|meri|mujhe|progress|kitne|streak|status)\b/i.test(q) && /\b(progress|day|streak|status|kahan|where|done|kitne)\b/i.test(q);
-    if (me && mine) return reply({ from: "kamran", kind: "text", lines: progressLines(me), action: { label: dayActionLabel(me.day, false), href: `/learn/day/${me.day}` } });
+    if (me && mine) return reply({ from: "kamran", kind: "text", lines: progressLines(me), action: { label: dayActionLabel(me.day, false), href: `/learn/tracks/${me.slug}/day/${me.day}` } });
 
     const hits = searchSupport(q, answers, 3);
     if (!hits.length) {
@@ -432,15 +432,15 @@ function personalLine(id: string, me: Me | null): { text: string; action?: Suppo
     case "locked":
     case "missed":
       if (me.lock === "pay") return { text: `${me.name}, Day ${me.day} needs payment to open.`, action: { label: "Open my dashboard", href: "/learn" } };
-      if (me.lock === "previous") return { text: `${me.name}, Day ${prev} isn't submitted yet, so Day ${me.day} is waiting for it.`, action: { label: dayActionLabel(prev, false), href: `/learn/day/${prev}` } };
-      return { text: `Good news ${me.name}: your next day, Day ${me.day}, is open now.`, action: { label: dayActionLabel(me.day, false), href: `/learn/day/${me.day}` } };
+      if (me.lock === "previous") return { text: `${me.name}, Day ${prev} isn't submitted yet, so Day ${me.day} is waiting for it.`, action: { label: dayActionLabel(prev, false), href: `/learn/tracks/${me.slug}/day/${prev}` } };
+      return { text: `Good news ${me.name}: your next day, Day ${me.day}, is open now.`, action: { label: dayActionLabel(me.day, false), href: `/learn/tracks/${me.slug}/day/${me.day}` } };
     case "profile":
     case "not-mine":
       return me.missing.length
         ? { text: `You still need to add your ${me.missing.join(" and ")} on your dashboard.`, action: { label: "Add it now", href: `/learn/tracks/${me.slug}` } }
         : { text: "Your GitHub and LinkedIn are both added. ✓" };
     case "feedback":
-      return me.rework.length ? { text: `Day ${me.rework.join(", Day ")} ${me.rework.length > 1 ? "are" : "is"} marked Needs rework.`, action: { label: dayActionLabel(me.rework[0], true), href: `/learn/day/${me.rework[0]}` } } : null;
+      return me.rework.length ? { text: `Day ${me.rework.join(", Day ")} ${me.rework.length > 1 ? "are" : "is"} marked Needs rework.`, action: { label: dayActionLabel(me.rework[0], true), href: `/learn/tracks/${me.slug}/day/${me.rework[0]}` } } : null;
     case "checkpoints": {
       const next = [7, 14, 21, 28].find((d) => d >= me.day);
       return next ? { text: `Your next checkpoint is Day ${next}${next === me.day ? ", which is today" : `, ${next - me.day} day${next - me.day > 1 ? "s" : ""} away`}.` } : null;
@@ -464,7 +464,7 @@ function progressLines(me: Me) {
 function ProgressCard({ me }: { me: Me }) {
   const pct = Math.round((me.submitted / 30) * 100);
   return (
-    <Link href={`/learn/day/${me.day}`} className="block rounded-2xl bg-card p-3.5 shadow-card ring-1 ring-line/30 transition-transform active:scale-[0.98]">
+    <Link href={`/learn/tracks/${me.slug}/day/${me.day}`} className="block rounded-2xl bg-card p-3.5 shadow-card ring-1 ring-line/30 transition-transform active:scale-[0.98]">
       <div className="flex items-baseline justify-between text-sm">
         <span className="font-extrabold text-ink">Day {me.day} of 30</span>
         <span className="text-xs font-semibold text-muted">{me.streak >= 2 ? `🔥 ${me.streak}-day streak` : `${me.submitted} submitted`}</span>

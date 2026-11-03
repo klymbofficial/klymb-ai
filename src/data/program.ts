@@ -171,9 +171,9 @@ export const faqs: Faq[] = [
       "No prior experience in the target role is required, but you should be comfortable using a computer daily and committing 1–2 hours a day. Some tracks recommend basic familiarity with the domain; each track page lists who it is for.",
   },
   {
-    question: "Can I change my track?",
+    question: "Can I take more than one track?",
     answer:
-      "Not after you enroll. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
+      "Yes. Start another track whenever you like: each one has its own 30 days, checkpoints and reviewer, and runs at its own pace beside the first. Nothing you have done on one track is lost by starting another, and your dashboard shows them all.",
   },
   {
     question: "What happens every day?",

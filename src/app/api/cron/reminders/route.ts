@@ -51,6 +51,7 @@ export async function GET(req: Request) {
     const submitted = new Set((done ?? []).filter((d) => d.learner_id === l.id).map((d) => d.day));
     const msg = buildReminder({
       slot,
+      track: l.track,
       name: String(l.name ?? "").split(" ")[0] || "there",
       day: day.day,
       title: day.title,
