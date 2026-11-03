@@ -87,7 +87,7 @@ export default async function LearnDayPage({
     const prev = courseDays.find((d) => d.day === dayNumber - 1);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
         <DayLocked day={dayNumber} title={entry.title} previousDay={dayNumber - 1} previousTitle={prev?.title ?? ""} />
       </div>
     );
@@ -95,7 +95,7 @@ export default async function LearnDayPage({
   if (lock === "pay") {
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
         <DayPaywall email={viewer.email} track={track} day={dayNumber} title={entry.title} />
       </div>
     );
@@ -107,7 +107,7 @@ export default async function LearnDayPage({
     console.warn("day_view limit hit:", viewer.email);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} />
         <div className="mx-auto max-w-md px-6 py-24 text-center">
           <h1 className="display text-3xl">Take a short break</h1>
           <p className="mt-3 text-muted">You&apos;ve opened a lot of course pages in the last hour. Come back in a little while and everything will be here.</p>
@@ -131,7 +131,7 @@ export default async function LearnDayPage({
 
   return (
     <div className="bg-card">
-      <LearnerTopBar name={viewer.name} image={session?.user?.image} track={viewer.track} submittedDays={viewer.submissions.map((s) => s.day)} current={dayNumber} />
+      <LearnerTopBar name={viewer.name} image={session?.user?.image} />
       {preview && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line/30 bg-ink px-6 py-2.5 text-sm text-white">
           <span className="font-bold">Admin preview · read-only</span>

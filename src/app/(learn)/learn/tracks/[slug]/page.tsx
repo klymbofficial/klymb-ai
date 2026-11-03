@@ -46,7 +46,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
   if (!track.contentLive || !curriculum) {
     return (
       <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} current="track" />
+        <LearnerTopBar name={learner.name} image={session?.user?.image} />
         <PaymentNotice email={learner.email} track={track} />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name} track</p>
@@ -96,7 +96,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
 
   return (
     <>
-      <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={[...doneDays]} current="track" />
+      <LearnerTopBar name={learner.name} image={session?.user?.image} />
       <PaymentNotice email={learner.email} track={track} />
 
       {/* Deep red, lit from the top left and falling to near-black on the

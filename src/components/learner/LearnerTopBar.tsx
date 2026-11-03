@@ -1,48 +1,17 @@
-import { allFree, getTrack } from "@/data/tracks";
-import Image from "next/image";
+import { allFree } from "@/data/tracks";
 import Link from "next/link";
-import { signOutLearner } from "@/app/(learn)/learn/actions";
 import { currentEmail } from "@/auth";
-import { hasCourseAccess } from "@/lib/access";
-import { SD_COURSE } from "@/lib/sd-offer";
-import { getCurriculum } from "@/data/curricula";
-import { topicsFor } from "@/lib/coach/topics";
-import { nextDayFor } from "@/lib/day-lock";
 import { ReminderBell } from "@/components/pwa/ReminderBell";
-import { AdminLink } from "@/components/layout/AdminLink";
-
-/** Which page is open, so its link reads as current: a day page passes its day number. */
-export type LearnerPlace = "dashboard" | "track" | "coach" | number;
+import { AccountMenu } from "./AccountMenu";
 
 /**
  * The signed-in bar shared by the dashboard, the track page, the day pages and
- * the coach. Its links are the learner's own places, never the sales pages:
- * those would only send an enrolled learner round to /learn again. A System
- * Design buyer also gets that course here, so the two are one click apart.
+ * the coach: the wordmark, which is the way back to the dashboard, and the
+ * account menu. Nothing between them: where to go next is each page's job,
+ * from the dashboard's course cards to a track's own up-next card.
  */
-export async function LearnerTopBar({
-  name, image, track, submittedDays = [], current,
-}: { name: string; image?: string | null; track?: string; submittedDays?: number[]; current?: LearnerPlace }) {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-
-  // The day link only once the track's days exist, and only while one is left to do.
-  const curriculum = track && getTrack(track)?.contentLive ? getCurriculum(track) : undefined;
-  const today = curriculum ? nextDayFor(submittedDays, curriculum.days.length) : null;
+export async function LearnerTopBar({ name, image }: { name: string; image?: string | null }) {
   const email = await currentEmail();
-  const systemDesign = !!email && (await hasCourseAccess(email, SD_COURSE));
-  const trackName = track ? getTrack(track)?.name : undefined;
-  const links = [
-    { label: "Dashboard", href: "/learn", on: current === "dashboard" },
-    ...(track && trackName ? [{ label: trackName, href: `/learn/tracks/${track}`, on: current === "track" }] : []),
-    ...(today ? [{ label: `Today: Day ${today}`, href: `/learn/day/${today}`, on: current === today }] : []),
-    ...(track && topicsFor(track).length > 0 ? [{ label: "Voice coach", href: "/learn/coach", on: current === "coach" }] : []),
-    ...(systemDesign ? [{ label: "System Design", href: "/learn/system-design", on: false }] : []),
-  ];
 
   return (
     <>
@@ -53,50 +22,13 @@ export async function LearnerTopBar({
       </div>
 
       <header className="border-b border-line/25 bg-card">
-        {/* Equal outer columns keep the nav at the true centre, whatever the
-            widths of the wordmark and the account block. On phones the links
-            drop to a second row rather than hiding. */}
-        <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 px-4 sm:px-8 lg:h-15 lg:grid-cols-[1fr_auto_1fr] lg:px-20">
-          <Link href="/learn" aria-label="Klymb.ai dashboard" className="display inline-flex h-15 items-center justify-self-start text-lg lg:h-auto">
+        <div className="flex h-15 items-center justify-between gap-4 px-4 sm:px-8 lg:px-20">
+          <Link href="/learn" aria-label="Klymb.ai dashboard" className="display inline-flex items-baseline text-lg">
             KLYMB<span className="text-red">.AI</span>
           </Link>
-
-          <nav aria-label="Learner" className="col-span-2 row-start-2 -mx-4 overflow-x-auto border-t border-line/25 px-4 sm:-mx-8 sm:px-8 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:mx-0 lg:border-0 lg:px-0">
-            <ul className="flex items-center gap-6 py-2.5 text-sm font-semibold whitespace-nowrap lg:gap-8 lg:py-0">
-              {links.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    aria-current={l.on ? "page" : undefined}
-                    className="transition-colors hover:text-red-deep aria-[current=page]:text-red-deep aria-[current=page]:underline aria-[current=page]:underline-offset-8"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div className="col-start-2 row-start-1 flex items-center gap-3 justify-self-end lg:col-start-3">
-            <AdminLink className="rounded-md border border-line/50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors hover:border-red-deep hover:text-red-deep" />
+          <div className="flex items-center gap-2">
             <ReminderBell />
-            {image ? (
-              <Image src={image} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
-            ) : (
-              <span aria-hidden="true" className="grid size-7 place-items-center rounded-full bg-surface text-xs font-extrabold">
-                {initials || "?"}
-              </span>
-            )}
-            <span className="hidden text-xs font-extrabold uppercase tracking-[0.04em] sm:inline">{name}</span>
-            {/* Quiet on purpose: the page's own next step is the button to see, not this one. */}
-            <form action={signOutLearner}>
-              <button
-                type="submit"
-                className="ml-2 rounded-md border border-line/50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors hover:border-red-deep hover:text-red-deep"
-              >
-                Log out
-              </button>
-            </form>
+            <AccountMenu name={name} email={email} image={image} />
           </div>
         </div>
       </header>

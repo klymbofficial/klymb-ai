@@ -129,13 +129,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <LearnerTopBar
-        name={name}
-        image={session?.user?.image}
-        track={learner?.track}
-        submittedDays={state.state === "enrolled" ? state.submissions.map((s) => s.day) : []}
-        current="dashboard"
-      />
+      <LearnerTopBar name={name} image={session?.user?.image} />
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-8 sm:py-14">
         <Appear y={12}>

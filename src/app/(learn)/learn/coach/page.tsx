@@ -39,7 +39,7 @@ export default async function CoachPage() {
   if (!track || !topics.length) {
     return (
       <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={submissions.map((s) => s.day)} current="coach" />
+        <LearnerTopBar name={learner.name} image={session?.user?.image} />
         <div className="mx-auto max-w-xl px-4 py-20 text-center">
           <h1 className="display text-3xl">The voice coach is not open on your track yet</h1>
           <p className="mt-3 text-muted">
@@ -57,7 +57,7 @@ export default async function CoachPage() {
     const price = priceNow(track.price);
     return (
       <>
-        <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={submissions.map((s) => s.day)} current="coach" />
+        <LearnerTopBar name={learner.name} image={session?.user?.image} />
         <div className="mx-auto max-w-xl px-4 py-16 text-center sm:py-24">
           <span className="mx-auto grid size-14 place-items-center rounded-full bg-red-tint text-red-deep">
             <Lock aria-hidden="true" className="size-6" />
@@ -94,7 +94,7 @@ export default async function CoachPage() {
 
   return (
     <>
-      <LearnerTopBar name={learner.name} image={session?.user?.image} track={learner.track} submittedDays={submissions.map((s) => s.day)} current="coach" />
+      <LearnerTopBar name={learner.name} image={session?.user?.image} />
 
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-8 sm:py-14">
         <Appear>
