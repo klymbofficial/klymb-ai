@@ -8,7 +8,8 @@ import { useEffect, useEffectEvent, useState } from "react";
  * Everyone else, and anyone the API fails, gets the share below. LinkedIn's web
  * link can fill in a post's text but never its image, so on a phone both go
  * through the share sheet into the LinkedIn app; on a computer the text rides
- * in the link and the image goes on the clipboard, one paste away.
+ * in the link and the image is downloaded, to attach with LinkedIn's photo icon.
+ * It goes on the clipboard too, but LinkedIn's post box can refuse a paste.
  */
 
 /** LinkedIn's new-post box with the text already in it. */
@@ -88,8 +89,18 @@ export function takePendingPost(key: string) {
   }
 }
 
-/** The paste shortcut on this computer, for telling the learner how to add the image. */
-export const pasteKey = () => (/Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘V" : "Ctrl+V");
+/** Saves the image to the learner's Downloads, so they can attach it in LinkedIn. */
+async function downloadImage(image: File | Promise<File>) {
+  try {
+    const file = await image;
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  } catch { /* the page's own download button still works */ }
+}
 
 /**
  * Hands the post to LinkedIn without the API. Call it straight from a tap: a
@@ -115,6 +126,7 @@ export async function shareOnLinkedIn(text: string, image: File | Promise<File>)
     await navigator.clipboard.write([new ClipboardItem({ "image/png": Promise.resolve(image) })]);
     pasted = true;
   } catch { /* this browser can't copy images: the text still goes */ }
+  await downloadImage(image);
   window.open(linkedInComposeUrl(text), "_blank", "noopener,noreferrer");
   return pasted ? "pasted" : "text";
 }
