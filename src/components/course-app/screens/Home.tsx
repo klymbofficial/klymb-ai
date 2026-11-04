@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, localDate, nextStep, openFinal, openLesson, paceNow, pct, streak, type CourseState } from "@/lib/course-app";
 import { paceMessage, type Pace } from "@/lib/sd-pace";
 import { firstOpenLesson } from "./Course";
+import { ReminderPrompt } from "../SdReminders";
 import { GoogleButton, firstName, useCourseUser } from "../user";
 import { Icon } from "../icons";
 import { OverviewVideo } from "../Overlays";
@@ -132,6 +133,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
       {pace && <PaceCard pace={pace} />}
 
       {referral?.state === "open" && <ReferralStrip r={referral} act={act} />}
+      {user && dayOf(s.cur) && <ReminderPrompt />}
 
       <button
         type="button"

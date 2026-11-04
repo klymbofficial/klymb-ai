@@ -112,3 +112,14 @@ export function emailFromToken(token: unknown, secret: string | undefined): stri
   const want = macOf(secret, email);
   return given.length === want.length && timingSafeEqual(given, want) ? email : null;
 }
+
+/** The notification beside the email. One a day, so it may sound. */
+export function sdReminderPush(lesson: { id: string; title: string; minutes: number } | null) {
+  return {
+    title: lesson ? "Your next lesson is waiting" : "Your final assessment is due",
+    body: lesson ? `${lesson.title} · ${lesson.minutes} min` : "Finish it to complete the course.",
+    url: `/learn/system-design${lesson ? `?lesson=${lesson.id}` : ""}`,
+    tag: "sd-reminder",
+    loud: true,
+  };
+}
