@@ -7,8 +7,8 @@ import { emptyBoard, gradeBoard, type Board } from "@/lib/canvas";
 import { Icon } from "../icons";
 
 const PARTS: Record<Lang, Record<CanvasPart, string>> = {
-  en: { client: "Client", lb: "Load balancer", server: "App server", cache: "Cache", database: "Database", queue: "Queue", worker: "Worker", storage: "Image store", cdn: "CDN", session: "Session store", replica: "Read replica", feed: "Feed store" },
-  hi: { client: "Client", lb: "Load balancer", server: "App server", cache: "Cache", database: "Database", queue: "Queue", worker: "Worker", storage: "Image store", cdn: "CDN", session: "Session store", replica: "Read replica", feed: "Feed store" },
+  en: { client: "Client", lb: "Load balancer", server: "App server", cache: "Cache", database: "Database", queue: "Queue", worker: "Worker", storage: "Image store", cdn: "CDN", session: "Session store", replica: "Read replica", feed: "Feed store", objects: "Object storage", model: "AI model", retrieval: "Retrieval", source: "Source store" },
+  hi: { client: "Client", lb: "Load balancer", server: "App server", cache: "Cache", database: "Database", queue: "Queue", worker: "Worker", storage: "Image store", cdn: "CDN", session: "Session store", replica: "Read replica", feed: "Feed store", objects: "Object storage", model: "AI model", retrieval: "Retrieval", source: "Source store" },
 };
 
 /** Each part keeps the colour the videos give it: client blue, server purple, database green. */
@@ -25,6 +25,10 @@ const TONE: Record<CanvasPart, string> = {
   session: "border-[#0d9488] bg-[#f0fdfa] text-[#115e59]",
   replica: "border-[#65a30d] bg-[#f7fee7] text-[#3f6212]",
   feed: "border-[#7c3aed] bg-[#faf5ff] text-[#5b21b6]",
+  objects: "border-[#0891b2] bg-[#ecfeff] text-[#155e75]",
+  model: "border-[#c026d3] bg-[#fdf4ff] text-[#86198f]",
+  retrieval: "border-[#4f46e5] bg-[#eef2ff] text-[#3730a3]",
+  source: "border-[#16a34a] bg-[#f0fdf4] text-[#166534]",
 };
 
 const UI = {

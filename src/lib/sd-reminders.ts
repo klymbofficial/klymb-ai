@@ -127,6 +127,18 @@ const PUSH_HOOKS: Record<string, { morning: string; topic: string; evening: stri
   "0-6": { morning: "Database bhaari ho gaya. Ab kya? 🤔", topic: "replication aur sharding mein farak", evening: "Address badla, purana kyun dikh raha hai?", eveningBody: "Replica ya shard?" },
   "1-1": { morning: "Ek service slow, poori app kyun ruke? 🤔", topic: "failure ke liye design kaise karte hain", evening: "Timeout aaya. Retry kar dein?", eveningBody: "Payment do baar na kat jaaye" },
   "1-3": { morning: "Ek post, 10 lakh followers. Kaise? 🤔", topic: "social feed kaise banti hai", evening: "Post pehle bhejein ya feed khulne par?", eveningBody: "Dono ka trade-off" },
+  "0-7": { morning: "Email slow hai. Screen kyun ruke? 🤔", topic: "queues aur background work", evening: "Same task do baar aaya. Ab?", eveningBody: "Duplicate email kaise rokoge?" },
+  "1-0": { morning: "“Design a URL shortener.” Pehla sentence? 🤔", topic: "interview ka repeatable framework", evening: "Blank whiteboard. Pehle 30 seconds mein kya bologe?", eveningBody: "Chhe steps ka framework" },
+  "1-2": { morning: "Order confirm. Message kaise pahunche? 🤔", topic: "notification system kaise banta hai", evening: "“Sent” ka matlab delivered hai?", eveningBody: "Teen alag statuses" },
+  "1-4": { morning: "Ek seat, do log. Kaun jeetega? 🤔", topic: "ticket booking mein double booking kaise rokte hain", evening: "Hold expire, phir payment aayi. Ab?", eveningBody: "Do baar confirm nahi kar sakte" },
+  "1-5": { morning: "Send dabaya, net gaya. Message kahan hai? 🤔", topic: "chat system kaise banta hai", evening: "Saved, delivered ya read?", eveningBody: "Retry par duplicate kaise rokoge?" },
+  "1-6": { morning: "Net slow, phir bhi video chalti hai. Kaise? 🤔", topic: "video streaming kaise kaam karti hai", evening: "Upload ho gaya. Video ready hai?", eveningBody: "Do lanes ka design" },
+  "1-7": { morning: "Blank board. Aaj pehla step aapka 🤔", topic: "ek poora system scratch se design karna", evening: "File-sharing service, aap kaise banaoge?", eveningBody: "Khud solve karo, phir milao" },
+  "2-0": { morning: "Kya AI ko aapka order pata hai? 🤔", topic: "simple AI assistant kaise banta hai", evening: "Model confident hai. Toh sahi hai?", eveningBody: "App aur model ka farak" },
+  "2-1": { morning: "Policy kal badli. AI ko kaise pata chale? 🤔", topic: "RAG aur hybrid search", evening: "Source mila. Toh answer sahi hai?", eveningBody: "Retrieval ki do lanes" },
+  "2-2": { morning: "“AI model slow hai.” Measure kiya? 🤔", topic: "AI ki latency, cost aur model choices", evening: "Traffic spike aur budget. Kya karoge?", eveningBody: "Speed, cost aur quality" },
+  "2-3": { morning: "Fast answer, par doosri company ka data? 🤔", topic: "AI quality, safety aur tenant isolation", evening: "Document bole “rules ignore karo”. Ab?", eveningBody: "Permissions model ke bahar" },
+  "2-4": { morning: "Aakhri din: poora AI assistant, aapka design 🤔", topic: "AI system design capstone", evening: "Capstone: model ke naam se shuru karoge?", eveningBody: "Apni har choice defend karo" },
 };
 
 /** Where a learner stands today, which decides how a notification speaks to them. */

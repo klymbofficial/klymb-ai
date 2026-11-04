@@ -132,7 +132,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                       aria-hidden="true"
                       className={clsx("absolute top-1/2 -left-4 -mt-[5px] size-2.5 rounded-full border-2", got ? "border-sd-ink bg-sd-ink" : "border-sd-n-400 bg-sd-bg")}
                     />
-                    <span className={clsx("text-[10px] font-extrabold tracking-[0.08em] uppercase", got ? "text-sd-accent-400" : "text-sd-accent-700")}>{when}</span>
+                    {(got || rest.length > 0) && <span className={clsx("text-[10px] font-extrabold tracking-[0.08em] uppercase", got ? "text-sd-accent-400" : "text-sd-accent-700")}>{when}</span>}
                     {got ? (
                       <span className="flex items-center gap-1 text-sm leading-[1.25] font-extrabold text-sd-bg"><Icon name="check" size={14} stroke={3} />{label(got)}</span>
                     ) : (

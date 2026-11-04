@@ -157,7 +157,7 @@ function fullProgress(id: string) {
 const LAST_BUILT = ALL_IDS.filter((id) => !isSoon(id)).at(-1)!;
 const FIRST_SOON = ALL_IDS.find((id) => isSoon(id))!;
 
-test("finishing a lesson whose next day isn't out yet goes home", () => {
+test("finishing a lesson whose next day isn't out yet goes home", { skip: !FIRST_SOON && "every day is out" }, () => {
   const s0 = updateLesson({ ...home(), screen: "player", cur: LAST_BUILT }, LAST_BUILT, fullProgress(LAST_BUILT), NOW);
   const s = completeNext(s0, false, NOW);
   assert.ok(s.done.includes(LAST_BUILT));
@@ -171,7 +171,7 @@ test("every built day can be finished from start to end", () => {
   }
 });
 
-test("coming-soon lessons don't open", () => {
+test("coming-soon lessons don't open", { skip: !FIRST_SOON && "every day is out" }, () => {
   assert.equal(isSoon(FIRST_SOON), true);
   const s = openLesson(home(), FIRST_SOON, NOW);
   assert.equal(s.screen, "home");
@@ -180,7 +180,8 @@ test("coming-soon lessons don't open", () => {
 
 test("the last lesson of the course stays put", () => {
   const last = ALL_IDS[ALL_IDS.length - 1];
-  const s = completeNext({ ...home(), screen: "player", cur: last, done: ALL_IDS.slice(0, -1) }, false, NOW);
+  const s0 = updateLesson({ ...home(), screen: "player", cur: last, done: ALL_IDS.slice(0, -1) }, last, fullProgress(last), NOW);
+  const s = completeNext(s0, false, NOW);
   assert.equal(s.screen, "recap");
   assert.equal(s.cur, last);
 });
