@@ -9,7 +9,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
 import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
-import { getTrack, tracks } from "@/data/tracks";
+import { challenges, getTrack, publicPath, tracks } from "@/data/tracks";
 import type { Track } from "@/types/program";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
@@ -43,7 +43,7 @@ function TrackCard({ learner, submissions }: { learner: Learner; submissions: Su
       <Link href={home} className="relative block aspect-[16/7] overflow-hidden bg-surface">
         <Image src={image.src} alt="" fill sizes="(min-width: 1024px) 40vw, 100vw" placeholder="blur" className="object-cover" />
         <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <span className="absolute top-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">Career track</span>
+        <span className="absolute top-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold uppercase tracking-wider text-red-deep">{track.kind === "challenge" ? `${total}-day challenge` : "Career track"}</span>
       </Link>
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div>
@@ -51,7 +51,7 @@ function TrackCard({ learner, submissions }: { learner: Learner; submissions: Su
           <p className="mt-1 text-sm text-muted">
             {!curriculum ? "Your place is reserved. Day 1 opens soon."
               : next ? <>Up next · Day {next}{nextTitle ? `: ${nextTitle}` : ""}</>
-              : "Track complete. All 30 days submitted."}
+              : `${track.kind === "challenge" ? "Challenge" : "Track"} complete. All ${total} days submitted.`}
           </p>
         </div>
         {curriculum && (
@@ -98,21 +98,21 @@ function SystemDesignCard({ seat }: { seat: SystemDesignSeat }) {
   );
 }
 
-/** A track they could add: its photo and one line, the page to read, and the way to start. */
+/** A track or challenge they could add: its picture and one line, the page to read, and the way to start. */
 function MoreTrackCard({ track }: { track: Track }) {
   const image = trackImages[track.slug];
   return (
     <article className="card flex flex-col overflow-hidden">
-      <Link href={`/tracks/${track.slug}`} className="relative block aspect-[16/7] overflow-hidden bg-surface">
+      <Link href={publicPath(track)} className="relative block aspect-[16/7] overflow-hidden bg-surface">
         <Image src={image.src} alt="" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw" placeholder="blur" className="object-cover" />
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-5">
-        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Career track · 30 days</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">{track.kind === "challenge" ? "Challenge · 60 days" : "Career track · 30 days"}</p>
         <h3 className="text-lg font-extrabold">{track.name}</h3>
         <p className="text-sm text-muted">{track.description}</p>
         <div className="mt-auto flex flex-wrap items-center gap-4 pt-1">
-          <ButtonLink href={`/register?track=${track.slug}`} arrow className="rounded-md px-4 py-2 text-xs">Start this track</ButtonLink>
-          <Link href={`/tracks/${track.slug}`} className="text-sm font-semibold underline underline-offset-4 hover:text-red-deep">View track</Link>
+          <ButtonLink href={`/register?track=${track.slug}`} arrow className="rounded-md px-4 py-2 text-xs">{track.kind === "challenge" ? "Start this challenge" : "Start this track"}</ButtonLink>
+          <Link href={publicPath(track)} className="text-sm font-semibold underline underline-offset-4 hover:text-red-deep">{track.kind === "challenge" ? "View challenge" : "View track"}</Link>
         </div>
       </div>
     </article>
@@ -150,7 +150,7 @@ export default async function DashboardPage() {
   const firstName = name.split(" ")[0];
   const none = !places.length && !seat;
   const mine = new Set(places.map((p) => p.learner.track));
-  const moreTracks = tracks.filter((t) => !mine.has(t.slug));
+  const moreTracks = [...tracks, ...challenges].filter((t) => !mine.has(t.slug));
 
   return (
     <>

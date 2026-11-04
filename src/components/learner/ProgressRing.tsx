@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 
-/** Days done out of 30, as a ring that draws itself on load, with the current streak beside it. */
+/** Days done out of the course's total, as a ring that draws itself on load, with the current streak beside it. */
 export function ProgressRing({ done, total, streak }: { done: number; total: number; streak: number }) {
   const reduced = useReducedMotion();
   const r = 26;

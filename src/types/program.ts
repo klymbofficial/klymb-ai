@@ -4,7 +4,12 @@ export type TrackSlug =
   | "project-manager"
   | "junior-developer"
   | "reporting-analyst"
-  | "ai-product-manager";
+  | "ai-product-manager"
+  // 60-day challenges: the same day engine, listed apart under /challenges.
+  | "claude"
+  | "artificial-intelligence"
+  | "software-engineering"
+  | "data-science";
 
 export type WeekNumber = 1 | 2 | 3 | 4;
 
@@ -41,6 +46,12 @@ export interface InterviewQuestion {
 export interface Track {
   slug: TrackSlug;
   name: string;
+  /**
+   * A 60-day challenge rather than a 30-day career track: it runs on the same
+   * learner app, but is listed under /challenges and skips the career-track
+   * pages (weeks, checkpoints, interview prep).
+   */
+  kind?: "challenge";
   /** Open for registration now. */
   available: boolean;
   /**

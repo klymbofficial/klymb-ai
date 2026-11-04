@@ -4,14 +4,19 @@ import { useState } from "react";
 import { ShareAchievement } from "@/components/achievements/ShareAchievement";
 import { site } from "@/data/config";
 
-const milestones = [
-  { days: 1, name: "First step", description: "Submitted my first day of coursework." },
-  { days: 7, name: "Seven days of progress", description: "Submitted seven days of coursework." },
-  { days: 15, name: "Halfway there", description: "Submitted fifteen days of coursework." },
-  { days: 30, name: "30-day finisher", description: "Submitted all thirty days of coursework." },
-];
+/** The four badges, scaled to the course: halfway and the finish follow its length (30 or 60 days). */
+function milestonesFor(total: number) {
+  const half = Math.ceil(total / 2);
+  return [
+    { days: 1, name: "First step", description: "Submitted my first day of coursework." },
+    { days: 7, name: "Seven days of progress", description: "Submitted seven days of coursework." },
+    { days: half, name: "Halfway there", description: `Submitted ${half} days of coursework.` },
+    { days: total, name: `${total}-day finisher`, description: `Submitted all ${total} days of coursework.` },
+  ];
+}
 
-export function Achievements({ days, name, course, slug }: { days: number; name: string; course: string; slug: string }) {
+export function Achievements({ days, total, name, course, courseUrl }: { days: number; total: number; name: string; course: string; /** Its public page, linked from the badge. */ courseUrl: string }) {
+  const milestones = milestonesFor(total);
   const [selected, setSelected] = useState<number | null>(null);
   const earned = milestones.filter((m) => days >= m.days);
   const badge = earned.find((m) => m.days === selected) ?? earned[earned.length - 1];
@@ -22,7 +27,7 @@ export function Achievements({ days, name, course, slug }: { days: number; name:
       <div className="my-5 flex flex-wrap gap-3" aria-label="Achievement badges">
         {milestones.map((m) => <button key={m.days} type="button" disabled={days < m.days} aria-pressed={badge?.days === m.days} onClick={() => setSelected(m.days)} className="min-h-11 rounded-md border border-line/40 px-4 py-3 text-sm font-bold enabled:cursor-pointer enabled:hover:border-ink disabled:opacity-60 aria-pressed:bg-ink aria-pressed:text-paper">{days >= m.days ? "✓" : "Locked:"} {m.name}</button>)}
       </div>
-      {badge && <ShareAchievement badge={badge} course={course} courseUrl={`${site.url}/tracks/${slug}`} initialName={name} />}
+      {badge && <ShareAchievement badge={badge} course={course} courseUrl={`${site.url}${courseUrl}`} initialName={name} />}
     </section>
   );
 }

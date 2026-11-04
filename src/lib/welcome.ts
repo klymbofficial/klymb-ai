@@ -3,7 +3,7 @@ import { site } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 import { offerOpen, priceNow } from "@/lib/offer";
-import { MAIL_SUPPORT, sendMail, welcomeEmail } from "@/lib/mail";
+import { challengeWelcomeEmail, MAIL_SUPPORT, sendMail, welcomeEmail } from "@/lib/mail";
 
 /**
  * The welcome email for a new registration. Called only when the registration
@@ -13,7 +13,9 @@ import { MAIL_SUPPORT, sendMail, welcomeEmail } from "@/lib/mail";
 export async function sendWelcome({ email, name, track }: { email: string; name: string; track: string }) {
   const t = getTrack(track);
   if (!t) return;
-  const mail = welcomeEmail({
+  const mail = t.kind === "challenge"
+    ? challengeWelcomeEmail({ name: name.split(" ")[0] || "there", challengeName: t.name, siteUrl: site.url, supportEmail: MAIL_SUPPORT })
+    : welcomeEmail({
     name: name.split(" ")[0] || "there",
     trackName: t.name,
     becomes: t.becomes,

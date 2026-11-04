@@ -21,6 +21,9 @@ import { contact } from "@/data/config";
 import { allTracks, getTrack } from "@/data/tracks";
 import { getAdmin } from "@/lib/admin/auth";
 import { LINKEDIN_POST_DAYS } from "@/lib/learner/evidence";
+import { Markdown } from "@/components/ui/Markdown";
+import { WeeklyQuiz } from "@/components/learner/WeeklyQuiz";
+import { bestQuizScores, publicQuiz } from "@/lib/challenge-quiz";
 import { requireLearner, type Submission } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
 import { DayLocked, DayPaywall } from "@/components/learner/DayPaywall";
@@ -129,6 +132,11 @@ export default async function LearnDayPage({
   }));
 
   const kindLabel = entry.kind === "build" ? "Required" : entry.kind === "assessment" ? "Assessment" : "Interview prep";
+  const isChallenge = track.kind === "challenge";
+  // A challenge's weekly quiz sits on the last day of its week.
+  const lastOfWeek = entry.day === Math.max(...courseDays.filter((d) => d.week === entry.week).map((d) => d.day));
+  const quiz = isChallenge && lastOfWeek ? publicQuiz(track.slug, entry.week) : undefined;
+  const best = quiz && !preview ? (await bestQuizScores(viewer.id))[entry.week] : undefined;
 
   return (
     <div className="bg-card">
@@ -222,8 +230,9 @@ export default async function LearnDayPage({
           {/* Six blocks in three rows, so each pair lines up across the two
               columns as the design lays them out. */}
           <div className="mt-12 grid gap-x-16 gap-y-16 xl:grid-cols-2">
-            <Section title="Mission" icon={Target}>
-              <p className="text-base leading-relaxed text-muted">{entry.mission}</p>
+            <Section title={entry.brief ? "Today's task" : "Mission"} icon={Target}>
+              {entry.mission && <p className="text-base leading-relaxed text-muted">{entry.mission}</p>}
+              {entry.brief && <Markdown text={entry.brief} className={`text-[15px] leading-relaxed text-ink/85 ${entry.mission ? "mt-4" : ""}`} />}
               {entry.concepts.length > 0 && (
                 <>
                   <p className="mt-6 text-sm font-semibold uppercase tracking-[0.02em] text-muted">Concepts to learn</p>
@@ -284,13 +293,55 @@ export default async function LearnDayPage({
               <DaySubmission
                 day={entry.day}
                 submission={submission}
-                needsLinkedinPost={LINKEDIN_POST_DAYS.includes(entry.day)}
+                needsLinkedinPost={isChallenge || LINKEDIN_POST_DAYS.includes(entry.day)}
                 nextDay={next?.day}
                 trackSlug={viewer.track}
               />
               )}
             </Section>
           </div>
+
+          {/* A challenge day's extras: the prompt to paste, the tool, the walkthrough, the post. */}
+          {(entry.prompt || entry.tool || entry.video || entry.linkedinTemplate) && (
+            <div className="mt-16 grid gap-x-16 gap-y-12 xl:grid-cols-2">
+              {entry.prompt && (
+                <Section title="The prompt" icon={Pencil}>
+                  <pre className="max-h-[28rem] overflow-auto rounded-lg bg-surface/60 p-4 text-sm leading-relaxed whitespace-pre-wrap">{entry.prompt}</pre>
+                </Section>
+              )}
+              {(entry.tool || entry.video) && (
+                <Section title="Tools for today" icon={Toolbox} delay={RIGHT}>
+                  {entry.tool && (
+                    <div>
+                      <p className="font-bold">{entry.tool.url ? <a href={entry.tool.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{entry.tool.name}</a> : entry.tool.name}</p>
+                      <p className="mt-1 text-[15px] text-muted">{entry.tool.description}</p>
+                    </div>
+                  )}
+                  {entry.video && (
+                    <a href={entry.video} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1.5 text-[15px] font-bold underline underline-offset-4 ${entry.tool ? "mt-5" : ""}`}>
+                      Watch the walkthrough<span aria-hidden="true"> ↗</span>
+                    </a>
+                  )}
+                </Section>
+              )}
+              {entry.linkedinTemplate && (
+                <Section title="Your LinkedIn post" icon={CloudUpload}>
+                  {entry.post && <p className="mb-3 text-[15px] text-muted">{entry.post}</p>}
+                  <p className="mb-2 text-sm text-muted">A starting point: make it yours, then paste the link to the post with your submission.</p>
+                  <pre className="max-h-[22rem] overflow-auto rounded-lg bg-surface/60 p-4 text-sm leading-relaxed whitespace-pre-wrap">{entry.linkedinTemplate}</pre>
+                </Section>
+              )}
+            </div>
+          )}
+
+          {quiz && (
+            <div className="mt-16">
+              <Section title="Weekly quiz" icon={SquareCheck}>
+                {preview && <p className="mb-5 rounded-lg bg-surface p-4 text-sm text-muted">Preview: submitting is refused, since you are not on this challenge.</p>}
+                <WeeklyQuiz track={track.slug} quiz={quiz} best={best} />
+              </Section>
+            </div>
+          )}
         </ContentGuard></main>
       </div>
     </div>

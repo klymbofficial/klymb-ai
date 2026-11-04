@@ -16,6 +16,8 @@ import { checkFreshPush } from "@/lib/learner/github";
 import { checkAnswers, checkPace, checkReusedLink, checkWorkLink } from "@/lib/learner/integrity";
 import { db } from "@/lib/db/client";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { gradeQuiz } from "@/lib/challenge-quiz";
+import type { QuizResult } from "@/lib/quiz-score";
 import { clamp, LIMITS, safeUrl } from "@/lib/validation";
 
 export type SubmitResult = { ok: true } | { ok: false; message: string };
@@ -27,7 +29,8 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const quizRaw = formData.get("quiz");
   const linkedinPost = clamp(formData.get("linkedin_post_url"), LIMITS.url);
 
-  if (!Number.isInteger(day) || day < 1 || day > 30) return { ok: false, message: "That is not a valid day." };
+  // 60 is the longest course (a challenge); the learner's own course length is checked below.
+  if (!Number.isInteger(day) || day < 1 || day > 60) return { ok: false, message: "That is not a valid day." };
   if (rawUrl && !url) {
     return { ok: false, message: "Enter a full link starting with https://, under 500 characters: or leave it blank." };
   }
@@ -49,6 +52,8 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const trackField = formData.get("track");
   const state = await getLearnerState(typeof trackField === "string" && trackField ? trackField : undefined);
   if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled on this track." };
+  if (!getCurriculumDay(state.learner.track, day)) return { ok: false, message: "That is not a valid day." };
+  const isChallenge = getTrack(state.learner.track)?.kind === "challenge";
   // Same rules as the page, enforced here too: days in order, Days 2+ paid.
   const lock = await dayLock({
     email: state.learner.email,
@@ -83,8 +88,9 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const pushError = await checkFreshPush(url!, state.learner.github_username!, previous);
   if (pushError) return { ok: false, message: pushError };
 
-  if (LINKEDIN_POST_DAYS.includes(day) && !linkedinPost && !submissionExists(state.submissions, day)) {
-    return { ok: false, message: "This checkpoint needs your LinkedIn post link as well: it is part of the evidence." };
+  // A challenge is built in public: every day's work goes up on LinkedIn.
+  if ((isChallenge || LINKEDIN_POST_DAYS.includes(day)) && !linkedinPost && !submissionExists(state.submissions, day)) {
+    return { ok: false, message: isChallenge ? "Add the link to today's LinkedIn post as well: posting every day is part of the challenge." : "This checkpoint needs your LinkedIn post link as well: it is part of the evidence." };
   }
 
   const sql = db();
@@ -221,4 +227,23 @@ export async function signOutLearner() {
   const email = normaliseEmail(session?.user?.email);
   if (email) await releaseDevice(email, session?.user?.sid);
   await signOut({ redirectTo: "/learn/login" });
+}
+
+/**
+ * A challenge's weekly quiz: scored here against the key, never in the
+ * browser, and recorded as one try. Answers are option indexes, in order.
+ */
+export async function submitQuiz(track: string, week: number, answers: number[]): Promise<{ ok: true; result: QuizResult } | { ok: false; message: string }> {
+  if (!Number.isInteger(week) || week < 1 || week > 9) return { ok: false, message: "That is not a valid week." };
+  if (!Array.isArray(answers) || answers.length > 50 || !answers.every((a) => Number.isInteger(a) && a >= 0 && a <= 3)) {
+    return { ok: false, message: "Answer every question first." };
+  }
+  const state = await getLearnerState(track);
+  if (state.state !== "enrolled" || getTrack(state.learner.track)?.kind !== "challenge") return { ok: false, message: "You are not on this challenge." };
+  const limit = await checkRateLimit("challenge_quiz", { limit: 30, windowMinutes: 60, identity: state.learner.id });
+  if (!limit.allowed) return { ok: false, message: "That is a lot of tries in an hour. Have a break and come back." };
+  const result = await gradeQuiz(state.learner.id, state.learner.track, week, answers);
+  if (!result) return { ok: false, message: "Answer every question first." };
+  revalidatePath(`/learn/tracks/${state.learner.track}`);
+  return { ok: true, result };
 }

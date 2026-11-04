@@ -9,6 +9,7 @@ export const brand = {
 // One link per job: the catalogue, and one place that explains the 30 days.
 const allNavLinks = [
   { label: "Career Tracks", href: "/tracks" },
+  { label: "Challenges", href: "/challenges" },
   { label: "How It Works", href: "/program" },
   { label: "Pricing", href: "/#pricing" },
 ];
@@ -219,6 +220,7 @@ export const urgency = {
 export const footerLinks = {
   program: [
     { label: "Career Tracks", href: "/tracks" },
+    { label: "60-day challenges", href: "/challenges" },
     { label: "How It Works", href: "/program" },
     { label: "Register", href: "/register" },
     { label: "Log in", href: "/learn/login" },

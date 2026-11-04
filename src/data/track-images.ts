@@ -6,6 +6,11 @@ import projectManager from "@/assets/tracks/project-manager.jpg";
 import qaEngineer from "@/assets/tracks/qa-engineer.jpg";
 import reportingAnalyst from "@/assets/tracks/reporting-analyst.jpg";
 import aiProductManager from "@/assets/track-page/presenting.jpg";
+// The challenges' own cover art.
+import claudeCover from "@/assets/challenges/cover-claude.webp";
+import aiCover from "@/assets/challenges/cover-ai.webp";
+import seCover from "@/assets/challenges/cover-se.webp";
+import dsCover from "@/assets/challenges/cover-ds.webp";
 
 /**
  * One photograph per track, used on its card and its page. Sources and the
@@ -19,4 +24,8 @@ export const trackImages: Record<TrackSlug, { src: StaticImageData; alt: string 
   "junior-developer": { src: juniorDeveloper, alt: "Colour-highlighted source code on a screen" },
   "reporting-analyst": { src: reportingAnalyst, alt: "An analytics dashboard of charts on a laptop" },
   "ai-product-manager": { src: aiProductManager, alt: "A product lead presenting to a team" },
+  claude: { src: claudeCover, alt: "Cover art for the Claude Challenge" },
+  "artificial-intelligence": { src: aiCover, alt: "Cover art for the Artificial Intelligence challenge" },
+  "software-engineering": { src: seCover, alt: "Cover art for the Software Engineering challenge" },
+  "data-science": { src: dsCover, alt: "Cover art for the Data Science challenge" },
 };

@@ -28,6 +28,29 @@ function week(
   };
 }
 
+/** A 60-day challenge: free, open, its 60 days built in, shown under /challenges. */
+function challenge(slug: TrackSlug, name: string, description: string, skills: string[], outcomes: string[]): Track {
+  return {
+    slug,
+    name,
+    kind: "challenge",
+    available: true,
+    contentLive: true,
+    price: 0,
+    becomes: "60-day challenge",
+    description,
+    whoItsFor: ["Students and freshers preparing for interviews", "Anyone who learns best by building every day"],
+    skills,
+    whatsChanging: "",
+    carryOver: [],
+    weeks: [],
+    projects: [],
+    outcomes,
+    interviewTopics: [],
+    interviewQuestions: [],
+  };
+}
+
 /** Every track, including invite-only ones. Use for lookups, enrolment and admin. */
 export const allTracks: Track[] = [
   {
@@ -379,10 +402,32 @@ export const allTracks: Track[] = [
       { category: "Behavioural", question: "Tell me about a time you stopped or narrowed a project because the evidence did not support it.", whatGoodLooksLike: "Clear evidence, the decision, the rejected alternative and what would have reversed it." },
     ],
   },
+
+  // ── 60-day challenges ─────────────────────────────────────
+  // The career-track fields that only the /tracks pages read (weeks,
+  // checkpoints, interview questions) are left empty.
+  challenge("claude", "Claude Challenge", "Master Claude AI in 60 days: one scoped task a day, shipped in public.",
+    ["Prompting", "Context engineering", "Artifacts", "Claude API", "Agents"],
+    ["Write prompts that work reliably", "Build apps and agents with Claude", "Ship a public build every day"]),
+  challenge("artificial-intelligence", "Artificial Intelligence", "Build with models, agents and data, one task a day for 60 days.",
+    ["Python", "LLMs", "RAG", "Agents", "Evaluation"],
+    ["Build and ship LLM-powered features end to end", "Design retrieval and agent workflows", "Evaluate and improve model quality"]),
+  challenge("software-engineering", "Software Engineering", "Ship real software, one task a day for 60 days.",
+    ["Python", "Data structures", "APIs", "SQL", "Testing"],
+    ["Build features from scratch", "Write clean, tested, reviewable code", "Solve the problems interviews ask"]),
+  challenge("data-science", "Data Science", "Turn raw data into real insight, one task a day for 60 days.",
+    ["Python", "Pandas", "SQL", "Statistics", "ML"],
+    ["Clean, explore and visualise real datasets", "Build and validate predictive models", "Communicate findings with clear stories"]),
 ];
 
-/** The tracks the public site lists. Invite-only tracks are left out. */
-export const tracks: Track[] = allTracks.filter((t) => t.listed !== false);
+/** The 30-day career tracks the public site lists. Invite-only tracks and the challenges are left out. */
+export const tracks: Track[] = allTracks.filter((t) => t.listed !== false && t.kind !== "challenge");
+
+/** The 60-day challenges, listed apart under /challenges. */
+export const challenges: Track[] = allTracks.filter((t) => t.kind === "challenge");
+
+/** A track's public page: the challenges have their own section. */
+export const publicPath = (t: Pick<Track, "slug" | "kind">) => (t.kind === "challenge" ? `/challenges/${t.slug}` : `/tracks/${t.slug}`);
 
 export function getTrack(slug: string): Track | undefined {
   return allTracks.find((t) => t.slug === slug);

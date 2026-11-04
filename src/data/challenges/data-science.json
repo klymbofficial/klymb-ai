@@ -1,0 +1,3020 @@
+{
+ "days": [
+  {
+   "day": 1,
+   "week": 1,
+   "kind": "build",
+   "title": "Python Fundamentals Bootcamp (Core Syntax)",
+   "mission": "Context: Strong Data Scientists are strong Python programmers.",
+   "points": 10,
+   "estimateMinutes": 45,
+   "tags": [
+    "Easy",
+    "python",
+    "basics"
+   ],
+   "objectives": [
+    "Understand Python syntax",
+    "Work with basic data types",
+    "Write simple scripts"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · tutorial",
+     "url": "https://docs.python.org/3/tutorial/"
+    }
+   ],
+   "quiz": [],
+   "brief": "Welcome to Day 1 🚀\n\n**Context:** Strong Data Scientists are strong Python programmers.\n\n**Real-World Impact:** Clean, efficient Python code directly impacts data pipelines and ML systems.\n\n**What to do:**\n- Learn and implement:\n  - Variables, data types (int, float, str, list, dict)\n  - Input/output\n  - Basic operators\n- Write a Python script that:\n  - Takes user input (name, age, salary)\n  - Calculates yearly salary\n  - Stores data in a dictionary\n\n**Submission:**\n- day1.py\n- GitHub repo `60-days-data-science`",
+   "linkedinTemplate": "🚀 Day 1/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Strengthen Python fundamentals as the foundation for data science.\n\n💻 What I Worked On Today: Practiced core Python syntax and examples for data science work.\n\nKey Learnings: A strong Python foundation is essential for data science.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 1/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 2,
+   "week": 1,
+   "kind": "build",
+   "title": "Python Control Flow & Functions",
+   "mission": "Context: Logic building is the backbone of problem-solving.",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Easy",
+    "python",
+    "loops",
+    "functions"
+   ],
+   "objectives": [
+    "Understand control flow",
+    "Write reusable functions",
+    "Apply logic to problems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "realpython.com",
+     "url": "https://realpython.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Context:** Logic building is the backbone of problem-solving.\n\n**Real-World Impact:** ML pipelines rely heavily on conditional logic and reusable functions.\n\n**What to do:**\n- Learn and implement:\n  - if-else conditions\n  - loops (for, while)\n  - functions\n- Build a program that:\n  - Takes student marks\n  - Classifies grades (Pass/Fail/Distinction)\n  - Uses functions to calculate average marks\n\n**Submission:**\n- day2.py pushed to GitHub",
+   "linkedinTemplate": "🚀 Day 2/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Build logic using Python control flow, loops, and functions.\n\n💻 What I Worked On Today: Solved problems with loops and wrote reusable functions.\n\nKey Learnings: Logic building is the backbone of problem-solving.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 2/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 3,
+   "week": 1,
+   "kind": "build",
+   "title": "Python Data Structures & File Handling",
+   "mission": "Context: Real data comes from files and complex structures.",
+   "points": 10,
+   "estimateMinutes": 75,
+   "tags": [
+    "Easy",
+    "python",
+    "file-handling"
+   ],
+   "objectives": [
+    "Master Python data structures",
+    "Read/write files",
+    "Process structured data"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · csv.html",
+     "url": "https://docs.python.org/3/library/csv.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Context:** Real data comes from files and complex structures.\n\n**Real-World Impact:** Data pipelines depend on reading/writing structured data.\n\n**What to do:**\n- Learn:\n  - Lists, tuples, sets, dictionaries\n  - File handling (read/write CSV or text)\n- Build a script that:\n  - Reads a CSV file of students\n  - Counts frequency of grades\n  - Outputs summary to a new file\n\n**Submission:**\n- day3.py\n- input/output file in repo",
+   "linkedinTemplate": "🚀 Day 3/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Work with Python data structures and file handling for real-world data.\n\n💻 What I Worked On Today: Used lists, dictionaries, and file I/O to manage data.\n\nKey Learnings: Real data comes from files and structures need to be organized.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 3/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 4,
+   "week": 1,
+   "kind": "build",
+   "title": "Project Setup + Dataset Selection",
+   "mission": "Context: Now we move into real Data Science work.",
+   "points": 10,
+   "estimateMinutes": 45,
+   "tags": [
+    "Easy",
+    "project",
+    "dataset"
+   ],
+   "objectives": [
+    "Start DS project lifecycle",
+    "Define real-world problem"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "kaggle.com · datasets",
+     "url": "https://www.kaggle.com/datasets"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Context:** Now we move into real Data Science work.\n\n**Real-World Impact:** Every DS project starts with defining a problem and collecting data.\n\n**What to do:**\n- Install libraries: numpy, pandas, matplotlib, seaborn\n- Create GitHub repo: `60-days-data-science`\n- Choose domain:\n  - Sales / Healthcare / Finance\n- Find dataset (Kaggle)\n- Write problem statement in README\n\n**Submission:**\n- GitHub repo + README",
+   "linkedinTemplate": "🚀 Day 4/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Set up a data science project and select the right dataset.\n\n💻 What I Worked On Today: Picked a dataset and organized the project for analysis.\n\nKey Learnings: Choosing the right dataset is the first key step in data science.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 4/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 5,
+   "week": 1,
+   "kind": "build",
+   "title": "Data Loading & Understanding",
+   "mission": "Context: Understanding your dataset is the first analytical step.",
+   "points": 10,
+   "estimateMinutes": 45,
+   "tags": [
+    "Easy",
+    "pandas",
+    "eda"
+   ],
+   "objectives": [
+    "Load and inspect data",
+    "Understand structure"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org",
+     "url": "https://pandas.pydata.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Context:** Understanding your dataset is the first analytical step.\n\n**Real-World Impact:** Misunderstanding data leads to wrong business decisions.\n\n**What to do:**\n- Load dataset using pandas\n- Print:\n  - shape\n  - columns\n  - head()\n- Identify target variable\n\n**Submission:**\n- notebook with dataset analysis",
+   "linkedinTemplate": "🚀 Day 5/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Load data and understand dataset structure and the target variable.\n\n💻 What I Worked On Today: Explored the dataset and identified the target outcome.\n\nKey Learnings: Understanding the data is the first analytical step.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 5/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 6,
+   "week": 1,
+   "kind": "build",
+   "title": "Data Cleaning & Preprocessing",
+   "mission": "Context: Real-world data is messy and incomplete.",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "data-cleaning"
+   ],
+   "objectives": [
+    "Clean messy data",
+    "Prepare dataset for analysis"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · docs",
+     "url": "https://pandas.pydata.org/docs/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Context:** Real-world data is messy and incomplete.\n\n**Real-World Impact:** Clean data = reliable insights.\n\n**What to do:**\n- Handle missing values\n- Remove duplicates\n- Fix data types\n- Create 2 new features\n\n**Submission:**\n- cleaned dataset + notebook",
+   "linkedinTemplate": "🚀 Day 6/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Clean real-world data and create new features for modeling.\n\n💻 What I Worked On Today: Cleaned messy data, handled missing values, and engineered features.\n\nKey Learnings: Good data preparation is essential before building models.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 6/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 7,
+   "week": 1,
+   "kind": "build",
+   "title": "EDA + Sprint 1 Review",
+   "mission": "Context: Understanding patterns is key before modeling.",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "eda",
+    "visualization"
+   ],
+   "objectives": [
+    "Perform EDA",
+    "Communicate insights",
+    "Reflect on learning"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "seaborn.pydata.org",
+     "url": "https://seaborn.pydata.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Context:** Understanding patterns is key before modeling.\n\n**Real-World Impact:** Businesses rely on insights from EDA.\n\n**What to do:**\n- Plot distributions\n- Identify patterns and outliers\n- Write 5 insights\n- Sprint Review:\n  - What you learned\n  - What challenges you faced\n\n**Submission:**\n- EDA notebook\n- LinkedIn sprint summary",
+   "linkedinTemplate": "🚀 Day 7/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Summarize the first data science sprint with exploratory data analysis and review.\n\n💻 What I Worked On Today: Completed initial EDA and reflected on the dataset insights.\n\nKey Learnings: Patterns discovered in EDA guide better modeling decisions.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 7/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #Python #DataScience #LearningInPublic"
+  },
+  {
+   "day": 8,
+   "week": 2,
+   "kind": "build",
+   "title": "Finding Hidden Patterns Through EDA",
+   "mission": "Phase: Data Understanding & Exploration",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "eda",
+    "data-analysis",
+    "visualization"
+   ],
+   "objectives": [
+    "Understand the purpose of EDA",
+    "Learn to visualize and interpret data",
+    "Identify patterns and anomalies",
+    "Communicate insights effectively"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · docs",
+     "url": "https://pandas.pydata.org/docs/"
+    },
+    {
+     "kind": "read",
+     "label": "seaborn.pydata.org",
+     "url": "https://seaborn.pydata.org/"
+    },
+    {
+     "kind": "read",
+     "label": "matplotlib.org",
+     "url": "https://matplotlib.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Data Understanding & Exploration\n\n**Context:** Day 8 focuses on understanding how Data Scientists extract insights from raw data using Exploratory Data Analysis (EDA).\n\n**Real-World Impact:** Businesses use EDA to identify customer behavior, detect anomalies, understand trends, and make data-driven decisions before building ML systems.\n\n**What to do:**\n- Load your selected dataset into a notebook\n- Generate summary statistics using pandas\n- Create visualizations for distributions and relationships\n- Identify patterns, trends, and anomalies\n- Write at least 5 business insights from the data\n\n**Submission:**\n- EDA notebook\n- Visualizations\n- README with insights\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 8/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Finding Hidden Patterns Through EDA\n\n🧠 What I explored:\n• How Data Scientists analyze raw datasets before modeling\n• Understanding feature relationships and distributions\n• Detecting trends, anomalies, and patterns visually\n• Extracting business insights from real-world data\n\n⚙️ What I worked on:\n• Performed Exploratory Data Analysis using pandas and seaborn\n• Created visualizations to understand feature behavior\n• Identified important variables impacting the dataset\n• Documented key insights and observations\n\n📌 Key Learnings:\n• EDA is where data starts telling a story.\n• Visualization often reveals patterns that raw numbers hide.\n• Understanding data deeply improves model performance later.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to analyze datasets and think like a Data Scientist instead of just a coder.\n\nGitHub Repo: {{github_link}}\n\n#DataScience #EDA #MachineLearning #Python #LearningInPublic #Klymb"
+  },
+  {
+   "day": 9,
+   "week": 2,
+   "kind": "build",
+   "title": "Cleaning Messy Real-World Data",
+   "mission": "Phase: Data Cleaning & Preparation",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "data-cleaning",
+    "preprocessing",
+    "pandas"
+   ],
+   "objectives": [
+    "Handle missing and inconsistent data",
+    "Understand data quality issues",
+    "Build reliable preprocessing workflows",
+    "Develop practical Data Science intuition"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · docs",
+     "url": "https://pandas.pydata.org/docs/"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · preprocessing.html",
+     "url": "https://scikit-learn.org/stable/modules/preprocessing.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Data Cleaning & Preparation\n\n**Context:** Day 9 focuses on handling incomplete, inconsistent, and noisy datasets - one of the most important real-world Data Science skills.\n\n**Real-World Impact:** Poor-quality data leads to inaccurate predictions and unreliable business decisions. Data cleaning is critical in every production system.\n\n**What to do:**\n- Identify missing values in your dataset\n- Handle null values using appropriate techniques\n- Detect duplicate records\n- Fix inconsistent data formats\n- Document every cleaning decision made\n\n**Submission:**\n- Cleaned dataset\n- Data cleaning notebook\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 9/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Cleaning Messy Real-World Data\n\n🧠 What I explored:\n• How poor-quality data affects ML systems\n• Detecting missing values and duplicates\n• Building cleaner and more reliable datasets\n• Making preprocessing decisions like a real Data Scientist\n\n⚙️ What I worked on:\n• Cleaned inconsistent and incomplete data\n• Handled missing values using different strategies\n• Removed duplicates and fixed formatting issues\n• Documented every preprocessing step carefully\n\n📌 Key Learnings:\n• Real-world datasets are never perfectly clean.\n• Good preprocessing often matters more than fancy models.\n• Reliable systems start with reliable data.\n\n🚀 Outcome:\nBy the end of today’s task, I became more confident handling real-world messy datasets and preparing them for Machine Learning.\n\nGitHub Repo: {{github_link}}\n\n#DataScience #DataCleaning #MachineLearning #Python #Klymb"
+  },
+  {
+   "day": 10,
+   "week": 2,
+   "kind": "build",
+   "title": "Transforming Raw Data into Better Signals",
+   "mission": "Phase: Feature Engineering",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "feature-engineering",
+    "preprocessing",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand feature engineering workflows",
+    "Prepare data for ML models",
+    "Improve feature quality",
+    "Learn practical preprocessing techniques"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · preprocessing.html",
+     "url": "https://scikit-learn.org/stable/modules/preprocessing.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Feature Engineering\n\n**Context:** Day 10 focuses on Feature Engineering - the process of creating better inputs for Machine Learning systems.\n\n**Real-World Impact:** Feature Engineering is one of the most impactful skills in Data Science and often improves performance more than changing algorithms.\n\n**What to do:**\n- Identify categorical and numerical features\n- Apply encoding techniques to categorical data\n- Scale numerical features\n- Create at least 2 new derived features\n- Compare model readiness before vs after feature engineering\n\n**Submission:**\n- Feature engineered dataset\n- Notebook explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 10/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Transforming Raw Data into Better Signals\n\n🧠 What I explored:\n• Why feature engineering is critical in ML\n• Converting raw variables into meaningful signals\n• Scaling and encoding techniques\n• Improving dataset quality before modeling\n\n⚙️ What I worked on:\n• Applied encoding and scaling techniques\n• Created new derived features\n• Improved dataset structure for ML readiness\n• Compared dataset quality before vs after transformation\n\n📌 Key Learnings:\n• Better features create better models.\n• Small preprocessing changes can significantly improve performance.\n• Feature engineering is both technical and creative.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of how Data Scientists prepare data for high-performing ML systems.\n\nGitHub Repo: {{github_link}}\n\n#FeatureEngineering #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 11,
+   "week": 2,
+   "kind": "build",
+   "title": "Building Your First ML Pipeline",
+   "mission": "Phase: Machine Learning Foundations",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "machine-learning",
+    "ml-pipeline",
+    "sklearn"
+   ],
+   "objectives": [
+    "Understand the ML workflow",
+    "Train baseline ML models",
+    "Generate and interpret predictions",
+    "Build practical ML intuition"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Machine Learning Foundations\n\n**Context:** Day 11 introduces the complete Machine Learning workflow from training data preparation to generating predictions.\n\n**Real-World Impact:** Every production ML system follows a pipeline structure for reproducibility, scalability, and reliability.\n\n**What to do:**\n- Split dataset into training and testing sets\n- Select a baseline ML algorithm\n- Train your first ML model\n- Generate predictions on test data\n- Analyze prediction quality\n\n**Submission:**\n- ML notebook\n- Prediction outputs\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 11/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building Your First ML Pipeline\n\n🧠 What I explored:\n• How ML systems are trained and evaluated\n• Splitting datasets for reliable testing\n• Building baseline predictive models\n• Understanding prediction workflows\n\n⚙️ What I worked on:\n• Built my first ML pipeline\n• Trained a baseline model\n• Generated predictions on unseen data\n• Evaluated prediction quality\n\n📌 Key Learnings:\n• Machine Learning is a workflow, not just a model.\n• Data splitting is critical for honest evaluation.\n• Building simple baseline systems creates strong foundations.\n\n🚀 Outcome:\nBy the end of today’s task, I understood how end-to-end ML systems are structured and tested.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #DataScience #Python #MLPipeline #Klymb"
+  },
+  {
+   "day": 12,
+   "week": 2,
+   "kind": "build",
+   "title": "Teaching Machines to Predict Numbers",
+   "mission": "Phase: Regression Modeling",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "regression",
+    "linear-regression",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand regression modeling",
+    "Interpret numerical predictions",
+    "Visualize model behavior",
+    "Analyze prediction quality"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · linear_model.html",
+     "url": "https://scikit-learn.org/stable/modules/linear_model.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Regression Modeling\n\n**Context:** Day 12 focuses on Regression Modeling - teaching machines to predict continuous numerical values from data patterns.\n\n**Real-World Impact:** Regression powers systems like sales forecasting, stock analysis, demand prediction, and pricing engines.\n\n**What to do:**\n- Train a Linear Regression model\n- Understand input vs output relationships\n- Visualize prediction lines and errors\n- Interpret model coefficients\n- Analyze prediction accuracy\n\n**Submission:**\n- Regression notebook\n- Prediction visualizations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 12/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Teaching Machines to Predict Numbers\n\n🧠 What I explored:\n• How regression models learn patterns from data\n• Predicting continuous numerical outcomes\n• Understanding prediction errors and coefficients\n• Visualizing ML predictions\n\n⚙️ What I worked on:\n• Built a Linear Regression model\n• Visualized predictions vs actual values\n• Interpreted feature importance through coefficients\n• Evaluated prediction performance\n\n📌 Key Learnings:\n• Regression models learn relationships between variables.\n• Visualization helps explain predictions clearly.\n• Understanding WHY a model predicts matters as much as accuracy.\n\n🚀 Outcome:\nBy the end of today’s task, I gained practical understanding of regression systems and numerical prediction workflows.\n\nGitHub Repo: {{github_link}}\n\n#Regression #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 13,
+   "week": 2,
+   "kind": "build",
+   "title": "Preventing Models from Memorizing Data",
+   "mission": "Phase: Model Optimization",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "regularization",
+    "overfitting",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand overfitting",
+    "Learn regularization techniques",
+    "Compare model behavior",
+    "Improve model generalization"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · linear_model.html",
+     "url": "https://scikit-learn.org/stable/modules/linear_model.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Model Optimization\n\n**Context:** Day 13 focuses on Overfitting and Regularization - teaching models to generalize instead of memorizing training data.\n\n**Real-World Impact:** Production ML systems fail when they overfit training data and cannot generalize to real-world scenarios.\n\n**What to do:**\n- Train a baseline model\n- Train Ridge and Lasso Regression models\n- Compare train vs test performance\n- Identify signs of overfitting\n- Document model behavior differences\n\n**Submission:**\n- Comparison notebook\n- Performance analysis\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 13/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Preventing Models from Memorizing Data\n\n🧠 What I explored:\n• Why models fail on unseen data\n• The difference between memorization and generalization\n• How regularization improves reliability\n• Comparing train vs test performance\n\n⚙️ What I worked on:\n• Trained Ridge and Lasso Regression models\n• Compared overfitting behavior\n• Evaluated generalization performance\n• Documented model differences and tradeoffs\n\n📌 Key Learnings:\n• High training accuracy alone means nothing.\n• Reliable ML systems generalize well.\n• Regularization helps reduce overfitting risk.\n\n🚀 Outcome:\nBy the end of today’s task, I gained deeper intuition about building more stable and reliable ML systems.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #Overfitting #DataScience #Python #Klymb"
+  },
+  {
+   "day": 14,
+   "week": 2,
+   "kind": "build",
+   "title": "Adapting Models to Changing Constraints",
+   "mission": "Phase: Sprint Review & Real-World Thinking",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "model-robustness",
+    "feature-importance",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Build adaptable ML systems",
+    "Understand feature dependency",
+    "Improve problem-solving under constraints",
+    "Think like a real-world engineer"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Review & Real-World Thinking\n\n**Context:** Day 14 introduces a real-world challenge twist where assumptions change and models must adapt.\n\n**Real-World Impact:** Real engineering projects constantly evolve - datasets change, important features disappear, and constraints shift unexpectedly.\n\n**What to do:**\n- Remove your most important feature from the dataset\n- Retrain your best-performing model\n- Compare performance before vs after\n- Analyze how the system adapts\n- Write a Sprint 2 reflection\n\n**Submission:**\n- Updated model notebook\n- Performance comparison\n- Sprint reflection\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Week 2 Complete 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Adapting Models to Changing Constraints\n\n🧠 What I explored:\n• How ML systems behave when assumptions change\n• Understanding feature importance and dependency\n• Adapting models to unexpected constraints\n• Improving engineering problem-solving skills\n\n⚙️ What I worked on:\n• Removed the most important feature from my dataset\n• Retrained and reevaluated my model\n• Compared performance differences\n• Documented system behavior and observations\n\n📌 Key Learnings:\n• Real-world ML systems must adapt constantly.\n• Strong models are resilient, not fragile.\n• Engineering is about iteration and adaptation.\n\n🚀 Outcome:\nBy the end of this sprint, I improved my ability to think critically about model robustness and real-world system behavior.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #DataScience #LearningInPublic #Klymb"
+  },
+  {
+   "day": 15,
+   "week": 3,
+   "kind": "build",
+   "title": "Predicting Customer Churn with Logistic Regression",
+   "mission": "Phase: Classification Foundations",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "classification",
+    "logistic-regression",
+    "customer-churn"
+   ],
+   "objectives": [
+    "Understand classification workflows",
+    "Train Logistic Regression models",
+    "Interpret prediction outcomes",
+    "Analyze business impact of model errors"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · linear_model.html",
+     "url": "https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression"
+    },
+    {
+     "kind": "read",
+     "label": "kaggle.com",
+     "url": "https://www.kaggle.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Classification Foundations\nDay 15 focuses on building classification systems that predict whether a customer is likely to leave a service.\n\n**Real-World Impact:** Subscription companies use churn prediction systems to identify at-risk customers and improve retention strategies before revenue is lost.\n\n**What to do:**\n- Load a customer churn dataset\n- Identify target and feature columns\n- Train a Logistic Regression classifier\n- Generate predictions on unseen data\n- Analyze false positives and false negatives\n- Document business implications of prediction errors\n\n**Submission:**\n- Classification notebook\n- Prediction results\n- Confusion matrix visualization\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 15/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Predicting Customer Churn with Logistic Regression\n\n🧠 What I explored:\n• How businesses predict customer retention risks\n• Building classification systems using Logistic Regression\n• Understanding prediction errors and business tradeoffs\n• Evaluating real-world ML decisions\n\n⚙️ What I worked on:\n• Trained a churn prediction model\n• Generated predictions on unseen customer data\n• Evaluated false positives and false negatives\n• Documented model performance insights\n\n📌 Key Learnings:\n• Classification systems drive real business decisions.\n• Prediction errors can have serious financial consequences.\n• Understanding WHY predictions fail matters as much as accuracy.\n\n🚀 Outcome:\nBy the end of today’s task, I gained practical experience building and evaluating real-world classification systems.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #Classification #DataScience #Python #Klymb"
+  },
+  {
+   "day": 16,
+   "week": 3,
+   "kind": "build",
+   "title": "Movie Recommendation Using K-Nearest Neighbors",
+   "mission": "Phase: Distance-Based Learning",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "knn",
+    "recommendation-system",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand distance-based learning",
+    "Build recommendation workflows",
+    "Tune hyperparameters",
+    "Evaluate similarity-based systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · neighbors.html",
+     "url": "https://scikit-learn.org/stable/modules/neighbors.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Distance-Based Learning\nDay 16 focuses on similarity-based Machine Learning systems using the K-Nearest Neighbors algorithm.\n\n**Real-World Impact:** Recommendation systems use similarity calculations to suggest movies, products, music, and content to millions of users daily.\n\n**What to do:**\n- Load a recommendation dataset\n- Train a KNN model\n- Experiment with different K values\n- Generate similarity-based recommendations\n- Compare recommendation quality across K values\n- Document which K performed best and why\n\n**Submission:**\n- Recommendation notebook\n- K comparison analysis\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 16/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Movie Recommendation Using K-Nearest Neighbors\n\n🧠 What I explored:\n• How recommendation systems work behind the scenes\n• Understanding similarity-based Machine Learning\n• The impact of distance metrics and K values\n• Building user-focused prediction systems\n\n⚙️ What I worked on:\n• Built a KNN recommendation system\n• Compared different K values\n• Generated personalized recommendations\n• Evaluated recommendation quality\n\n📌 Key Learnings:\n• Similarity drives modern recommendation systems.\n• Hyperparameters significantly impact predictions.\n• Distance-based learning is intuitive but powerful.\n\n🚀 Outcome:\nBy the end of today’s task, I understood how recommendation engines use similarity to generate predictions.\n\nGitHub Repo: {{github_link}}\n\n#KNN #RecommendationSystems #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 17,
+   "week": 3,
+   "kind": "build",
+   "title": "Loan Approval Prediction with Decision Trees",
+   "mission": "Phase: Decision-Based Learning",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "decision-tree",
+    "classification",
+    "finance"
+   ],
+   "objectives": [
+    "Understand tree-based models",
+    "Interpret decision paths",
+    "Analyze feature importance",
+    "Identify overfitting behavior"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · tree.html",
+     "url": "https://scikit-learn.org/stable/modules/tree.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Decision-Based Learning\nDay 17 focuses on decision-based Machine Learning systems using Decision Trees.\n\n**Real-World Impact:** Banks and financial institutions use decision-based systems to evaluate risk and automate loan approvals.\n\n**What to do:**\n- Train a Decision Tree classifier\n- Visualize the decision tree structure\n- Analyze feature importance\n- Identify potential overfitting\n- Explain how the model makes decisions\n\n**Submission:**\n- Decision Tree notebook\n- Tree visualization\n- Feature importance analysis\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 17/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Loan Approval Prediction with Decision Trees\n\n🧠 What I explored:\n• How decision-based systems mimic human reasoning\n• Understanding branching logic in ML models\n• Feature importance and decision paths\n• Risks of overfitting in tree models\n\n⚙️ What I worked on:\n• Trained and visualized a Decision Tree model\n• Analyzed feature importance\n• Evaluated model behavior and predictions\n• Interpreted decision-making logic\n\n📌 Key Learnings:\n• Decision Trees are interpretable and intuitive.\n• Tree depth impacts generalization.\n• Visualization improves model understanding.\n\n🚀 Outcome:\nBy the end of today’s task, I understood how decision-based ML systems make predictions and evaluate risk.\n\nGitHub Repo: {{github_link}}\n\n#DecisionTree #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 18,
+   "week": 3,
+   "kind": "build",
+   "title": "Fraud Detection Using Random Forest",
+   "mission": "Phase: Ensemble Learning",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "random-forest",
+    "ensemble-learning",
+    "fraud-detection"
+   ],
+   "objectives": [
+    "Understand ensemble learning",
+    "Improve prediction robustness",
+    "Analyze model stability",
+    "Compare ensemble vs single-model approaches"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · ensemble.html",
+     "url": "https://scikit-learn.org/stable/modules/ensemble.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Ensemble Learning\nDay 18 focuses on ensemble learning techniques using Random Forest models for fraud detection.\n\n**Real-World Impact:** Fraud detection systems protect banks, payment gateways, and e-commerce platforms from financial losses.\n\n**What to do:**\n- Train a Random Forest classifier\n- Compare results with Decision Trees\n- Analyze feature importance rankings\n- Evaluate model robustness\n- Document fraud detection challenges\n\n**Submission:**\n- Fraud detection notebook\n- Performance comparison\n- Feature importance report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 18/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Fraud Detection Using Random Forest\n\n🧠 What I explored:\n• How ensemble systems improve reliability\n• Fraud detection workflows in finance\n• Comparing Decision Trees vs Random Forests\n• Feature importance in fraud analysis\n\n⚙️ What I worked on:\n• Built a Random Forest fraud detection model\n• Compared ensemble vs single-tree performance\n• Evaluated prediction robustness\n• Analyzed important fraud indicators\n\n📌 Key Learnings:\n• Ensemble learning improves stability and performance.\n• Fraud detection requires reliable prediction systems.\n• Combining models reduces overfitting risk.\n\n🚀 Outcome:\nBy the end of today’s task, I gained practical experience building more reliable and scalable classification systems.\n\nGitHub Repo: {{github_link}}\n\n#RandomForest #FraudDetection #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 19,
+   "week": 3,
+   "kind": "build",
+   "title": "Boosting Model Performance with XGBoost",
+   "mission": "Phase: Advanced Ensemble Systems",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "xgboost",
+    "boosting",
+    "ensemble-learning"
+   ],
+   "objectives": [
+    "Understand boosting algorithms",
+    "Train advanced ensemble models",
+    "Compare ensemble techniques",
+    "Analyze performance optimization"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "xgboost.readthedocs.io",
+     "url": "https://xgboost.readthedocs.io/"
+    },
+    {
+     "kind": "read",
+     "label": "lightgbm.readthedocs.io",
+     "url": "https://lightgbm.readthedocs.io/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Advanced Ensemble Systems\nDay 19 focuses on Gradient Boosting techniques and high-performance predictive modeling.\n\n**Real-World Impact:** Gradient Boosting systems power many winning Kaggle solutions and production-level business prediction systems.\n\n**What to do:**\n- Install and configure XGBoost or LightGBM\n- Train a boosting model\n- Compare performance with Random Forest\n- Analyze training improvements\n- Document boosting advantages and tradeoffs\n\n**Submission:**\n- Boosting notebook\n- Performance comparison report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 19/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Boosting Model Performance with XGBoost\n\n🧠 What I explored:\n• How boosting systems improve weak learners\n• Why XGBoost dominates many ML competitions\n• Comparing ensemble learning strategies\n• Performance optimization in production ML systems\n\n⚙️ What I worked on:\n• Trained an XGBoost model\n• Compared results with Random Forest\n• Evaluated performance improvements\n• Documented tradeoffs and observations\n\n📌 Key Learnings:\n• Boosting focuses on correcting previous mistakes.\n• Small iterative improvements create strong systems.\n• Advanced ensemble methods require careful tuning.\n\n🚀 Outcome:\nBy the end of today’s task, I gained exposure to industry-grade boosting systems and advanced predictive modeling workflows.\n\nGitHub Repo: {{github_link}}\n\n#XGBoost #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 20,
+   "week": 3,
+   "kind": "build",
+   "title": "Why Accuracy Alone Can Mislead You",
+   "mission": "Phase: Model Evaluation",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "evaluation",
+    "metrics",
+    "classification"
+   ],
+   "objectives": [
+    "Understand evaluation metrics",
+    "Interpret confusion matrices",
+    "Compare model quality",
+    "Analyze imbalanced classification problems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · model_evaluation.html",
+     "url": "https://scikit-learn.org/stable/modules/model_evaluation.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Model Evaluation\nDay 20 focuses on evaluating Machine Learning systems using multiple performance metrics beyond accuracy.\n\n**Real-World Impact:** Production ML systems are evaluated using precision, recall, F1-score, and ROC-AUC to avoid misleading conclusions.\n\n**What to do:**\n- Evaluate all previous classification models\n- Calculate precision, recall, F1-score, and ROC-AUC\n- Generate confusion matrices\n- Compare model strengths and weaknesses\n- Document when accuracy becomes misleading\n\n**Submission:**\n- Evaluation notebook\n- Metrics comparison table\n- Confusion matrix visualizations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 20/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Why Accuracy Alone Can Mislead You\n\n🧠 What I explored:\n• Understanding evaluation metrics beyond accuracy\n• Precision, recall, F1-score, and ROC-AUC\n• Why confusion matrices matter in ML\n• Evaluating real-world classification systems\n\n⚙️ What I worked on:\n• Compared multiple ML models\n• Calculated advanced evaluation metrics\n• Visualized confusion matrices\n• Analyzed strengths and weaknesses of each system\n\n📌 Key Learnings:\n• Accuracy alone is often misleading.\n• Different metrics matter for different business problems.\n• Evaluation quality determines production reliability.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to evaluate Machine Learning systems critically and responsibly.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #Evaluation #DataScience #Python #Klymb"
+  },
+  {
+   "day": 21,
+   "week": 3,
+   "kind": "build",
+   "title": "Choosing the Best Model Like a Real Data Scientist",
+   "mission": "Phase: Sprint Review & Model Selection",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "model-selection",
+    "classification",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Compare ML systems critically",
+    "Select appropriate models for business problems",
+    "Communicate technical tradeoffs",
+    "Develop engineering decision-making skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Review & Model Selection\nDay 21 focuses on comparing and selecting the best Machine Learning system for a real-world business problem.\n\n**Real-World Impact:** Real Data Scientists are responsible for selecting reliable systems, balancing accuracy, interpretability, scalability, and business impact.\n\n**What to do:**\n- Compare all classification models built this week\n- Analyze strengths and weaknesses of each model\n- Select the best-performing model\n- Justify your selection using evaluation metrics\n- Write a Week 3 engineering reflection\n\n**Submission:**\n- Final comparison notebook\n- Best model analysis report\n- Sprint reflection\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Week 3 Complete 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Choosing the Best Model Like a Real Data Scientist\n\n🧠 What I explored:\n• Comparing classification systems critically\n• Balancing accuracy, reliability, and interpretability\n• Evaluating tradeoffs between ML models\n• Making engineering decisions using evidence\n\n⚙️ What I worked on:\n• Compared all models from this sprint\n• Evaluated strengths and weaknesses\n• Selected the best-performing system\n• Documented engineering decisions and tradeoffs\n\n📌 Key Learnings:\n• The best model depends on the business problem.\n• Model selection is about tradeoffs, not just accuracy.\n• Strong engineering decisions require evidence and reasoning.\n\n🚀 Outcome:\nBy the end of this sprint, I improved my ability to evaluate, compare, and select Machine Learning systems like a real Data Scientist.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #DataScience #ModelSelection #Python #Klymb"
+  },
+  {
+   "day": 22,
+   "week": 4,
+   "kind": "build",
+   "title": "Turning Raw Categories into Machine Learning Signals",
+   "mission": "Phase: Feature Engineering",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "feature-engineering",
+    "encoding",
+    "preprocessing"
+   ],
+   "objectives": [
+    "Understand categorical encoding techniques",
+    "Prepare datasets for ML models",
+    "Analyze the impact of preprocessing",
+    "Improve feature quality"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · preprocessing.html",
+     "url": "https://scikit-learn.org/stable/modules/preprocessing.html"
+    },
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · docs",
+     "url": "https://pandas.pydata.org/docs/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Feature Engineering\nDay 22 focuses on Feature Encoding - transforming categorical variables into numerical representations that Machine Learning systems can understand.\n\n**Real-World Impact:** E-commerce, finance, healthcare, and recommendation systems all rely on properly encoded categorical data to improve prediction quality.\n\n**What to do:**\n- Identify categorical columns in your dataset\n- Apply Label Encoding and One-Hot Encoding\n- Compare dataset structure before vs after encoding\n- Train a baseline model using encoded features\n- Analyze how encoding impacts model performance\n\n**Submission:**\n- Feature encoding notebook\n- Encoded dataset\n- Performance comparison report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 22/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Turning Raw Categories into Machine Learning Signals\n\n🧠 What I explored:\n• Why ML systems require numerical inputs\n• Feature encoding techniques for categorical variables\n• Comparing Label Encoding vs One-Hot Encoding\n• Improving dataset quality for predictive modeling\n\n⚙️ What I worked on:\n• Encoded categorical variables\n• Compared feature transformations\n• Trained models on transformed datasets\n• Analyzed preprocessing impact on predictions\n\n📌 Key Learnings:\n• ML systems cannot directly understand text categories.\n• Encoding quality impacts prediction reliability.\n• Feature preprocessing is critical in real-world pipelines.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of preparing structured data for Machine Learning systems.\n\nGitHub Repo: {{github_link}}\n\n#FeatureEngineering #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 23,
+   "week": 4,
+   "kind": "build",
+   "title": "Finding the Most Important Signals in Data",
+   "mission": "Phase: Feature Selection",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "feature-selection",
+    "machine-learning",
+    "preprocessing"
+   ],
+   "objectives": [
+    "Understand feature importance",
+    "Reduce model complexity",
+    "Improve interpretability",
+    "Analyze prediction signals"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · feature_selection.html",
+     "url": "https://scikit-learn.org/stable/modules/feature_selection.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Feature Selection\nDay 23 focuses on Feature Selection - identifying which variables contribute most to prediction quality.\n\n**Real-World Impact:** Real-world ML systems often fail due to noisy or irrelevant features that increase complexity without improving predictions.\n\n**What to do:**\n- Analyze feature correlations and importance\n- Remove low-impact or highly correlated features\n- Train models using selected features only\n- Compare performance before vs after feature selection\n- Document why selected features matter\n\n**Submission:**\n- Feature selection notebook\n- Importance visualizations\n- Comparison report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 23/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Finding the Most Important Signals in Data\n\n🧠 What I explored:\n• How feature importance impacts ML systems\n• Removing noisy and redundant variables\n• Improving interpretability and efficiency\n• Building cleaner predictive systems\n\n⚙️ What I worked on:\n• Analyzed feature importance scores\n• Removed weak or redundant variables\n• Compared model performance after feature selection\n• Documented meaningful prediction signals\n\n📌 Key Learnings:\n• More features do not always improve predictions.\n• Feature selection improves simplicity and efficiency.\n• Understanding signal quality matters more than quantity.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to identify meaningful patterns and reduce noise in datasets.\n\nGitHub Repo: {{github_link}}\n\n#FeatureSelection #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 24,
+   "week": 4,
+   "kind": "build",
+   "title": "Compressing Complex Data with PCA",
+   "mission": "Phase: Dimensionality Reduction",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "pca",
+    "dimensionality-reduction",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand dimensionality reduction",
+    "Simplify high-dimensional datasets",
+    "Visualize transformed data",
+    "Analyze variance retention"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · decomposition.html",
+     "url": "https://scikit-learn.org/stable/modules/decomposition.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Dimensionality Reduction\nDay 24 focuses on Principal Component Analysis (PCA) - reducing feature dimensions while preserving useful information.\n\n**Real-World Impact:** High-dimensional datasets increase computational complexity and can reduce model performance. PCA helps simplify systems while retaining important patterns.\n\n**What to do:**\n- Apply PCA to your dataset\n- Reduce dimensions to 2 or 3 components\n- Visualize transformed data\n- Compare performance before vs after PCA\n- Analyze explained variance ratios\n\n**Submission:**\n- PCA notebook\n- Visualization plots\n- Variance analysis report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 24/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Compressing Complex Data with PCA\n\n🧠 What I explored:\n• Why high-dimensional data creates challenges\n• How PCA compresses information efficiently\n• Visualizing transformed feature spaces\n• Understanding explained variance\n\n⚙️ What I worked on:\n• Applied PCA to reduce dimensions\n• Visualized transformed datasets\n• Compared performance before vs after reduction\n• Analyzed variance preservation\n\n📌 Key Learnings:\n• PCA simplifies datasets while retaining patterns.\n• Dimensionality impacts model efficiency.\n• Visualization becomes easier after reduction.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of simplifying complex datasets for scalable Machine Learning systems.\n\nGitHub Repo: {{github_link}}\n\n#PCA #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 25,
+   "week": 4,
+   "kind": "build",
+   "title": "Building Reliable Models with Cross-Validation",
+   "mission": "Phase: Model Validation",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "cross-validation",
+    "evaluation",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand model validation techniques",
+    "Improve evaluation reliability",
+    "Analyze generalization behavior",
+    "Compare validation strategies"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · cross_validation.html",
+     "url": "https://scikit-learn.org/stable/modules/cross_validation.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Model Validation\nDay 25 focuses on Cross-Validation techniques to evaluate how consistently a Machine Learning model performs across multiple data splits.\n\n**Real-World Impact:** Production systems require reliable evaluation methods to ensure predictions generalize well to unseen real-world data.\n\n**What to do:**\n- Apply k-fold cross-validation\n- Evaluate multiple models using cross-validation scores\n- Compare train-test split vs cross-validation results\n- Analyze model stability\n- Document reliability observations\n\n**Submission:**\n- Cross-validation notebook\n- Performance comparison report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 25/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building Reliable Models with Cross-Validation\n\n🧠 What I explored:\n• Why a single train-test split can be misleading\n• Understanding k-fold cross-validation\n• Evaluating model consistency across splits\n• Measuring prediction reliability\n\n⚙️ What I worked on:\n• Applied cross-validation workflows\n• Compared multiple model performances\n• Evaluated stability across data splits\n• Documented validation observations\n\n📌 Key Learnings:\n• Reliable evaluation improves trust in ML systems.\n• Cross-validation reduces evaluation bias.\n• Consistency matters as much as accuracy.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to validate Machine Learning systems more reliably.\n\nGitHub Repo: {{github_link}}\n\n#CrossValidation #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 26,
+   "week": 4,
+   "kind": "build",
+   "title": "Optimizing ML Systems with Hyperparameter Tuning",
+   "mission": "Phase: Model Optimization",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "hyperparameter-tuning",
+    "optimization",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand hyperparameter tuning",
+    "Improve model performance",
+    "Analyze optimization tradeoffs",
+    "Build stronger predictive systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · grid_search.html",
+     "url": "https://scikit-learn.org/stable/modules/grid_search.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Model Optimization\nDay 26 focuses on Hyperparameter Tuning - systematically improving Machine Learning performance through parameter optimization.\n\n**Real-World Impact:** Production ML systems are rarely deployed using default settings. Optimization improves reliability, efficiency, and predictive performance.\n\n**What to do:**\n- Select a high-performing model from previous tasks\n- Apply GridSearchCV or RandomizedSearchCV\n- Tune key hyperparameters\n- Compare tuned vs untuned performance\n- Document optimization tradeoffs\n\n**Submission:**\n- Hyperparameter tuning notebook\n- Best parameter report\n- Performance comparison\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 26/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Optimizing ML Systems with Hyperparameter Tuning\n\n🧠 What I explored:\n• Why default model settings are rarely optimal\n• Hyperparameter optimization workflows\n• Comparing tuned vs untuned systems\n• Balancing performance improvements and complexity\n\n⚙️ What I worked on:\n• Tuned model hyperparameters\n• Used GridSearchCV/RandomizedSearchCV\n• Improved prediction performance\n• Documented optimization tradeoffs\n\n📌 Key Learnings:\n• Small parameter changes can dramatically improve performance.\n• Optimization requires experimentation and patience.\n• Tuning is critical for production-quality ML systems.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to optimize Machine Learning systems systematically.\n\nGitHub Repo: {{github_link}}\n\n#HyperparameterTuning #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 27,
+   "week": 4,
+   "kind": "build",
+   "title": "Understanding Bias vs Variance in ML Systems",
+   "mission": "Phase: Model Generalization",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "bias-variance",
+    "generalization",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand underfitting and overfitting",
+    "Analyze model complexity",
+    "Improve generalization behavior",
+    "Interpret learning curves"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · learning_curve.html",
+     "url": "https://scikit-learn.org/stable/modules/learning_curve.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Model Generalization\nDay 27 focuses on understanding the Bias-Variance Tradeoff and how it affects Machine Learning reliability.\n\n**Real-World Impact:** Every production ML system balances underfitting and overfitting. Engineers must understand this tradeoff to build robust systems.\n\n**What to do:**\n- Compare training vs validation performance\n- Identify signs of underfitting and overfitting\n- Adjust model complexity\n- Visualize learning behavior\n- Document generalization observations\n\n**Submission:**\n- Bias-variance analysis notebook\n- Learning curve visualizations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 27/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Understanding Bias vs Variance in ML Systems\n\n🧠 What I explored:\n• Why some models memorize while others oversimplify\n• Understanding underfitting vs overfitting\n• Analyzing learning curves and model complexity\n• Improving system generalization\n\n⚙️ What I worked on:\n• Compared training vs validation performance\n• Identified bias and variance issues\n• Adjusted model complexity\n• Visualized learning behavior\n\n📌 Key Learnings:\n• Reliable systems balance simplicity and flexibility.\n• Overfitting reduces real-world performance.\n• Generalization matters more than memorization.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of how Machine Learning systems learn and generalize.\n\nGitHub Repo: {{github_link}}\n\n#BiasVariance #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 28,
+   "week": 4,
+   "kind": "build",
+   "title": "Building Your Most Optimized ML System Yet",
+   "mission": "Phase: Sprint Review & Optimization",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "ml-pipeline",
+    "optimization",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Combine ML optimization techniques",
+    "Build scalable pipelines",
+    "Improve engineering decision-making",
+    "Develop production-oriented thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · compose.html",
+     "url": "https://scikit-learn.org/stable/modules/compose.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Review & Optimization\nDay 28 focuses on combining all optimization and preprocessing techniques into one high-performing Machine Learning pipeline.\n\n**Real-World Impact:** Production-level Data Science systems combine preprocessing, validation, feature engineering, and optimization into reproducible workflows.\n\n**What to do:**\n- Combine feature engineering, validation, and tuning workflows\n- Build your best-performing ML pipeline\n- Compare pipeline performance with earlier models\n- Document engineering tradeoffs\n- Write a Week 4 optimization reflection\n\n**Submission:**\n- Optimized ML pipeline notebook\n- Final performance report\n- Sprint reflection\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Week 4 Complete 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building Your Most Optimized ML System Yet\n\n🧠 What I explored:\n• Combining preprocessing, validation, and optimization\n• Building scalable ML workflows\n• Engineering tradeoffs in production systems\n• Comparing optimized vs baseline pipelines\n\n⚙️ What I worked on:\n• Built a complete optimized ML pipeline\n• Combined feature engineering and tuning workflows\n• Evaluated performance improvements\n• Documented engineering decisions and observations\n\n📌 Key Learnings:\n• High-performing ML systems require multiple optimization layers.\n• Pipelines improve scalability and reproducibility.\n• Production-quality systems are engineered, not guessed.\n\n🚀 Outcome:\nBy the end of this sprint, I improved my ability to build optimized, scalable, and production-oriented ML systems.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #DataScience #MLPipeline #Python #Klymb"
+  },
+  {
+   "day": 29,
+   "week": 5,
+   "kind": "build",
+   "title": "Understanding Customer Types with K-Means Clustering",
+   "mission": "Phase: Customer Segmentation",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "kmeans",
+    "clustering",
+    "customer-segmentation"
+   ],
+   "objectives": [
+    "Understand unsupervised learning",
+    "Build customer segmentation systems",
+    "Interpret clustering behavior",
+    "Generate business insights from clusters"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · clustering.html",
+     "url": "https://scikit-learn.org/stable/modules/clustering.html"
+    },
+    {
+     "kind": "read",
+     "label": "seaborn.pydata.org",
+     "url": "https://seaborn.pydata.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Customer Segmentation\nDay 29 focuses on customer segmentation using unsupervised learning techniques to identify hidden customer groups.\n\n**Real-World Impact:** Businesses use customer segmentation to personalize marketing campaigns, improve retention, and optimize business strategies.\n\n**What to do:**\n- Load customer behavior dataset\n- Select relevant numerical features\n- Apply K-Means clustering\n- Experiment with different cluster counts\n- Visualize customer segments\n- Describe the business characteristics of each cluster\n\n**Submission:**\n- Customer segmentation notebook\n- Cluster visualization plots\n- Business insight report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 29/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Understanding Customer Types with K-Means Clustering\n\n🧠 What I explored:\n• How businesses group customers using data\n• Understanding unsupervised learning systems\n• Visualizing customer segments\n• Extracting business insights from clustering\n\n⚙️ What I worked on:\n• Built a customer segmentation model\n• Applied K-Means clustering\n• Visualized customer groups\n• Analyzed business behavior patterns\n\n📌 Key Learnings:\n• Similar customers naturally form hidden groups.\n• Segmentation helps businesses personalize experiences.\n• Unsupervised learning reveals patterns without labels.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of customer segmentation and unsupervised learning workflows.\n\nGitHub Repo: {{github_link}}\n\n#Clustering #MachineLearning #DataScience #Python #Klymb"
+  },
+  {
+   "day": 30,
+   "week": 5,
+   "kind": "build",
+   "title": "Finding the Ideal Number of Customer Segments",
+   "mission": "Phase: Clustering Optimization",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "clustering",
+    "optimization",
+    "unsupervised-learning"
+   ],
+   "objectives": [
+    "Optimize clustering models",
+    "Evaluate cluster quality",
+    "Interpret segmentation strategies",
+    "Improve unsupervised learning systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · clustering.html",
+     "url": "https://scikit-learn.org/stable/modules/clustering.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Clustering Optimization\nDay 30 focuses on optimizing clustering systems using the Elbow Method and Silhouette Score.\n\n**Real-World Impact:** Poor segmentation strategies can lead to ineffective marketing campaigns and weak customer targeting.\n\n**What to do:**\n- Apply Elbow Method to determine optimal K\n- Calculate Silhouette Scores\n- Compare clustering quality across multiple K values\n- Visualize clustering improvements\n- Document final business segmentation strategy\n\n**Submission:**\n- Clustering optimization notebook\n- Elbow and Silhouette visualizations\n- Segmentation strategy report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 30/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Finding the Ideal Number of Customer Segments\n\n🧠 What I explored:\n• Why choosing the right number of clusters matters\n• Understanding clustering quality metrics\n• Optimizing customer segmentation systems\n• Improving business targeting strategies\n\n⚙️ What I worked on:\n• Applied the Elbow Method\n• Calculated Silhouette Scores\n• Compared clustering strategies\n• Improved customer segmentation quality\n\n📌 Key Learnings:\n• Clustering quality impacts business insights.\n• Optimization improves segmentation reliability.\n• Data-driven decisions improve targeting strategies.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to optimize and evaluate unsupervised learning systems.\n\nGitHub Repo: {{github_link}}\n\n#CustomerSegmentation #Clustering #DataScience #Klymb"
+  },
+  {
+   "day": 31,
+   "week": 5,
+   "kind": "build",
+   "title": "Building Customer Personas from Behavioral Data",
+   "mission": "Phase: Advanced Customer Insights",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "customer-personas",
+    "analytics",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Translate data into business insights",
+    "Interpret customer behavior",
+    "Improve analytical storytelling",
+    "Connect ML outputs to business strategy"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    },
+    {
+     "kind": "read",
+     "label": "matplotlib.org",
+     "url": "https://matplotlib.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Advanced Customer Insights\nDay 31 focuses on transforming clustering outputs into meaningful customer personas for business decision-making.\n\n**Real-World Impact:** Businesses use customer personas to improve retention, target promotions, and personalize user experiences.\n\n**What to do:**\n- Analyze customer clusters in detail\n- Assign business-friendly persona names\n- Create a persona summary table\n- Visualize spending and engagement patterns\n- Recommend strategies for each customer persona\n\n**Submission:**\n- Persona analysis notebook\n- Customer persona report\n- Business strategy recommendations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 31/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building Customer Personas from Behavioral Data\n\n🧠 What I explored:\n• Turning ML outputs into business decisions\n• Understanding customer behavior patterns\n• Creating actionable customer personas\n• Connecting analytics with strategy\n\n⚙️ What I worked on:\n• Built customer personas from clustering outputs\n• Visualized customer behavior patterns\n• Generated retention and engagement recommendations\n• Documented business insights\n\n📌 Key Learnings:\n• Data becomes valuable when translated into business action.\n• Customer personas improve personalization.\n• Analytical storytelling is a core Data Science skill.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to transform ML outputs into business intelligence.\n\nGitHub Repo: {{github_link}}\n\n#CustomerAnalytics #BusinessIntelligence #DataScience #Klymb"
+  },
+  {
+   "day": 32,
+   "week": 5,
+   "kind": "build",
+   "title": "Building a Personalized Product Recommendation Engine",
+   "mission": "Phase: Recommendation Systems",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "recommendation-system",
+    "personalization",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand recommendation systems",
+    "Calculate similarity metrics",
+    "Personalize customer experiences",
+    "Build engagement-focused ML systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · metrics.html",
+     "url": "https://scikit-learn.org/stable/modules/metrics.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Recommendation Systems\nDay 32 focuses on recommendation systems that personalize product suggestions based on customer similarity.\n\n**Real-World Impact:** Platforms like Amazon, Netflix, and Spotify use recommendation systems to increase engagement and revenue.\n\n**What to do:**\n- Build a similarity-based recommendation system\n- Calculate customer similarity scores\n- Recommend products or services\n- Evaluate recommendation relevance\n- Document personalization strategies\n\n**Submission:**\n- Recommendation engine notebook\n- Similarity analysis\n- Recommendation outputs\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 32/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building a Personalized Product Recommendation Engine\n\n🧠 What I explored:\n• How recommendation systems personalize experiences\n• Similarity-based Machine Learning workflows\n• Improving customer engagement through recommendations\n• Building user-focused predictive systems\n\n⚙️ What I worked on:\n• Built a recommendation engine\n• Calculated customer similarity scores\n• Generated personalized suggestions\n• Evaluated recommendation quality\n\n📌 Key Learnings:\n• Recommendation systems drive modern digital platforms.\n• Similarity metrics improve personalization.\n• Engagement increases when systems feel personalized.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of recommendation systems and personalization workflows.\n\nGitHub Repo: {{github_link}}\n\n#RecommendationSystem #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 33,
+   "week": 5,
+   "kind": "build",
+   "title": "Detecting Unusual Customer Behavior",
+   "mission": "Phase: Anomaly Detection",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "anomaly-detection",
+    "risk-analysis",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand anomaly detection workflows",
+    "Identify unusual behavior patterns",
+    "Analyze business risks",
+    "Build risk-focused analytics systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · outlier_detection.html",
+     "url": "https://scikit-learn.org/stable/modules/outlier_detection.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Anomaly Detection\nDay 33 focuses on anomaly detection systems that identify unusual customer behavior patterns.\n\n**Real-World Impact:** Businesses use anomaly detection to identify fraud, suspicious activity, unusual spending, and operational risks.\n\n**What to do:**\n- Identify abnormal customer patterns\n- Apply anomaly detection techniques\n- Visualize anomalies in the dataset\n- Compare normal vs suspicious behavior\n- Document possible business risks\n\n**Submission:**\n- Anomaly detection notebook\n- Visualization report\n- Business risk analysis\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 33/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Detecting Unusual Customer Behavior\n\n🧠 What I explored:\n• How businesses detect suspicious behavior\n• Understanding anomaly detection systems\n• Identifying hidden risks in datasets\n• Comparing normal vs abnormal patterns\n\n⚙️ What I worked on:\n• Built an anomaly detection workflow\n• Visualized suspicious customer activity\n• Compared behavioral patterns\n• Documented business risks and insights\n\n📌 Key Learnings:\n• Anomaly detection improves business security and monitoring.\n• Hidden risks often appear as unusual patterns.\n• Data Science systems help businesses react proactively.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to identify unusual behavior and build risk-focused analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#AnomalyDetection #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 34,
+   "week": 5,
+   "kind": "build",
+   "title": "Designing Executive-Level Customer Dashboards",
+   "mission": "Phase: Business Intelligence Dashboards",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "dashboard",
+    "business-intelligence",
+    "visualization"
+   ],
+   "objectives": [
+    "Build business dashboards",
+    "Improve data storytelling",
+    "Visualize business KPIs",
+    "Design executive-friendly analytics systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Business Intelligence Dashboards\nDay 34 focuses on building interactive business dashboards for executives and decision-makers.\n\n**Real-World Impact:** Business dashboards help leadership teams monitor customer trends, churn risks, and performance metrics in real time.\n\n**What to do:**\n- Create interactive customer analytics dashboards\n- Visualize churn and segmentation insights\n- Add KPI cards and trend charts\n- Design business-friendly layouts\n- Document dashboard storytelling decisions\n\n**Submission:**\n- Dashboard notebook or app\n- Visualization screenshots\n- Business insight summary\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 34/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Designing Executive-Level Customer Dashboards\n\n🧠 What I explored:\n• How executives consume analytics insights\n• Building business dashboards for decision-making\n• Visual storytelling and KPI design\n• Translating data into strategic insights\n\n⚙️ What I worked on:\n• Built an interactive analytics dashboard\n• Visualized churn and customer insights\n• Designed KPI cards and trend charts\n• Improved dashboard storytelling\n\n📌 Key Learnings:\n• Dashboards help businesses make faster decisions.\n• Good visualization improves communication.\n• Data storytelling is critical in analytics.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to build executive-friendly analytics dashboards.\n\nGitHub Repo: {{github_link}}\n\n#BusinessIntelligence #Dashboard #DataScience #Klymb"
+  },
+  {
+   "day": 35,
+   "week": 5,
+   "kind": "build",
+   "title": "Combining Customer Intelligence Modules into One Analytics System",
+   "mission": "Phase: Sprint Review & System Integration",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "system-integration",
+    "analytics-platform",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Integrate multiple DS systems",
+    "Improve system thinking",
+    "Build scalable analytics workflows",
+    "Develop production-oriented thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Review & System Integration\nDay 35 focuses on integrating customer segmentation, recommendations, anomaly detection, and dashboards into a unified analytics workflow.\n\n**Real-World Impact:** Production business intelligence systems combine multiple analytical components into one integrated decision-support platform.\n\n**What to do:**\n- Combine all Week 5 modules into one workflow\n- Integrate segmentation, recommendations, and dashboards\n- Create a unified analytics presentation\n- Document engineering tradeoffs\n- Write a Week 5 reflection\n\n**Submission:**\n- Integrated analytics notebook/app\n- Workflow architecture diagram\n- Sprint reflection\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Week 5 Complete 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Combining Customer Intelligence Modules into One Analytics System\n\n🧠 What I explored:\n• Integrating multiple analytics systems together\n• Connecting segmentation, recommendations, and dashboards\n• Designing scalable customer intelligence workflows\n• Thinking like a production Data Scientist\n\n⚙️ What I worked on:\n• Combined Week 5 systems into one workflow\n• Integrated dashboards and ML modules\n• Documented architecture decisions\n• Created a unified analytics presentation\n\n📌 Key Learnings:\n• Real systems combine multiple ML components.\n• Integration is as important as modeling.\n• Production analytics requires systems thinking.\n\n🚀 Outcome:\nBy the end of this sprint, I improved my ability to design integrated customer intelligence systems.\n\nGitHub Repo: {{github_link}}\n\n#BusinessIntelligence #DataScience #MachineLearning #Klymb"
+  },
+  {
+   "day": 36,
+   "week": 6,
+   "kind": "build",
+   "title": "Forecasting Customer Growth Trends",
+   "mission": "Phase: Time Series Analytics",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "time-series",
+    "forecasting",
+    "business-analytics"
+   ],
+   "objectives": [
+    "Understand time series forecasting",
+    "Analyze trend and seasonality patterns",
+    "Build forecasting systems",
+    "Interpret future business projections"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · timeseries.html",
+     "url": "https://pandas.pydata.org/docs/user_guide/timeseries.html"
+    },
+    {
+     "kind": "read",
+     "label": "statsmodels.org",
+     "url": "https://www.statsmodels.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Time Series Analytics\nDay 36 focuses on Time Series Forecasting to predict future customer growth trends using historical business data.\n\n**Real-World Impact:** Businesses rely on forecasting systems to predict growth, allocate resources, plan marketing campaigns, and make strategic decisions.\n\n**What to do:**\n- Load historical customer or revenue data\n- Visualize time-based trends\n- Identify seasonality and growth patterns\n- Build a baseline forecasting model\n- Predict future customer growth for the next 30 days\n- Document forecasting observations and risks\n\n**Submission:**\n- Forecasting notebook\n- Trend visualizations\n- Prediction outputs\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 36/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Forecasting Customer Growth Trends\n\n🧠 What I explored:\n• Understanding business growth through historical data\n• Identifying seasonality and customer trends\n• Building forecasting workflows\n• Predicting future business behavior\n\n⚙️ What I worked on:\n• Built a time series forecasting model\n• Visualized growth patterns and seasonality\n• Predicted future customer growth\n• Documented forecasting insights and risks\n\n📌 Key Learnings:\n• Historical patterns help predict future business behavior.\n• Forecasting supports strategic business planning.\n• Trend analysis is critical in analytics systems.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of time series analytics and business forecasting workflows.\n\nGitHub Repo: {{github_link}}\n\n#TimeSeries #Forecasting #DataScience #Klymb"
+  },
+  {
+   "day": 37,
+   "week": 6,
+   "kind": "build",
+   "title": "Predicting Future Revenue with Time Series Models",
+   "mission": "Phase: Business Forecasting",
+   "points": 10,
+   "estimateMinutes": 110,
+   "tags": [
+    "Medium",
+    "forecasting",
+    "arima",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Understand business forecasting systems",
+    "Apply advanced time series models",
+    "Interpret forecasting outputs",
+    "Connect predictions with business strategy"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "facebook.github.io · prophet",
+     "url": "https://facebook.github.io/prophet/"
+    },
+    {
+     "kind": "read",
+     "label": "statsmodels.org",
+     "url": "https://www.statsmodels.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Business Forecasting\nDay 37 focuses on forecasting future business revenue using time series modeling techniques.\n\n**Real-World Impact:** Revenue forecasting helps companies estimate future profits, optimize investments, and improve financial planning.\n\n**What to do:**\n- Prepare revenue time series data\n- Build forecasting models using ARIMA or Prophet\n- Compare predictions against historical patterns\n- Visualize future revenue forecasts\n- Document business implications of forecasting accuracy\n\n**Submission:**\n- Revenue forecasting notebook\n- Forecast visualizations\n- Business forecasting report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 37/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Predicting Future Revenue with Time Series Models\n\n🧠 What I explored:\n• How businesses forecast future revenue\n• Understanding ARIMA and Prophet models\n• Predicting financial growth patterns\n• Connecting analytics with strategic planning\n\n⚙️ What I worked on:\n• Built a revenue forecasting model\n• Compared historical vs predicted growth trends\n• Visualized forecasting outputs\n• Documented business forecasting insights\n\n📌 Key Learnings:\n• Forecasting helps businesses plan proactively.\n• Revenue prediction systems require strong historical analysis.\n• Accurate forecasting improves strategic decision-making.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of financial forecasting systems and predictive analytics.\n\nGitHub Repo: {{github_link}}\n\n#Forecasting #TimeSeries #DataScience #Klymb"
+  },
+  {
+   "day": 38,
+   "week": 6,
+   "kind": "build",
+   "title": "Analyzing Customer Retention and Lifetime Value",
+   "mission": "Phase: Customer Retention Analytics",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "customer-retention",
+    "clv",
+    "business-analytics"
+   ],
+   "objectives": [
+    "Understand customer retention analytics",
+    "Calculate lifetime value metrics",
+    "Identify valuable customer groups",
+    "Connect analytics with business decisions"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · docs",
+     "url": "https://pandas.pydata.org/docs/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Customer Retention Analytics\nDay 38 focuses on Customer Lifetime Value (CLV) and retention analytics to measure long-term business impact.\n\n**Real-World Impact:** Businesses use CLV systems to identify valuable customers, improve retention strategies, and maximize long-term revenue.\n\n**What to do:**\n- Calculate customer retention metrics\n- Estimate Customer Lifetime Value\n- Identify high-value customer groups\n- Visualize retention trends\n- Recommend business retention strategies\n\n**Submission:**\n- Retention analytics notebook\n- CLV calculations\n- Visualization report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 38/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Analyzing Customer Retention and Lifetime Value\n\n🧠 What I explored:\n• Why customer retention matters in business analytics\n• Calculating Customer Lifetime Value (CLV)\n• Identifying high-value customer groups\n• Understanding long-term business impact\n\n⚙️ What I worked on:\n• Calculated retention and CLV metrics\n• Visualized customer retention patterns\n• Identified valuable customer segments\n• Recommended retention strategies\n\n📌 Key Learnings:\n• Retention is often more valuable than acquisition.\n• High-value customers drive long-term growth.\n• Business analytics helps optimize customer strategy.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to analyze long-term customer behavior and business value.\n\nGitHub Repo: {{github_link}}\n\n#CustomerAnalytics #CLV #DataScience #Klymb"
+  },
+  {
+   "day": 39,
+   "week": 6,
+   "kind": "build",
+   "title": "Designing a KPI Monitoring System for Executives",
+   "mission": "Phase: Business KPI Analytics",
+   "points": 10,
+   "estimateMinutes": 110,
+   "tags": [
+    "Medium",
+    "kpi-dashboard",
+    "business-intelligence",
+    "analytics"
+   ],
+   "objectives": [
+    "Understand business KPI systems",
+    "Track operational performance metrics",
+    "Build executive-level dashboards",
+    "Improve analytics storytelling"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Business KPI Analytics\nDay 39 focuses on building KPI monitoring systems that track customer, revenue, and retention performance metrics.\n\n**Real-World Impact:** Executives use KPI systems to monitor business health and make strategic decisions using real-time analytics.\n\n**What to do:**\n- Define business KPIs for customer intelligence\n- Calculate KPI metrics from datasets\n- Create interactive KPI visualizations\n- Track performance trends over time\n- Document executive-level business insights\n\n**Submission:**\n- KPI dashboard notebook/app\n- Business KPI report\n- Visualization screenshots\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 39/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Designing a KPI Monitoring System for Executives\n\n🧠 What I explored:\n• How businesses track customer and revenue performance\n• Understanding KPI monitoring systems\n• Designing executive-friendly dashboards\n• Translating data into strategic insights\n\n⚙️ What I worked on:\n• Built KPI monitoring dashboards\n• Visualized business performance trends\n• Created customer and revenue metrics\n• Documented executive-level insights\n\n📌 Key Learnings:\n• KPIs help businesses monitor performance in real time.\n• Visualization improves decision-making speed.\n• Business dashboards must communicate clearly.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to design analytics systems for business stakeholders.\n\nGitHub Repo: {{github_link}}\n\n#BusinessIntelligence #KPI #DataScience #Klymb"
+  },
+  {
+   "day": 40,
+   "week": 6,
+   "kind": "build",
+   "title": "Evaluating Business Decisions with A/B Testing",
+   "mission": "Phase: A/B Testing Analytics",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "ab-testing",
+    "statistics",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Understand experimentation workflows",
+    "Analyze statistical significance",
+    "Compare business experiments",
+    "Make evidence-based recommendations"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.scipy.org · stats.html",
+     "url": "https://docs.scipy.org/doc/scipy/reference/stats.html"
+    },
+    {
+     "kind": "read",
+     "label": "statsmodels.org",
+     "url": "https://www.statsmodels.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** A/B Testing Analytics\nDay 40 focuses on A/B Testing and experimentation systems used to evaluate business decisions scientifically.\n\n**Real-World Impact:** Tech companies use A/B testing to improve products, optimize marketing, and increase customer engagement.\n\n**What to do:**\n- Simulate or analyze an A/B testing dataset\n- Compare control vs experiment groups\n- Calculate statistical significance\n- Visualize experiment outcomes\n- Recommend business actions based on results\n\n**Submission:**\n- A/B testing notebook\n- Experiment analysis report\n- Statistical significance calculations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 40/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Evaluating Business Decisions with A/B Testing\n\n🧠 What I explored:\n• How companies test product and marketing decisions\n• Understanding control vs experiment groups\n• Measuring statistical significance\n• Making evidence-based business recommendations\n\n⚙️ What I worked on:\n• Analyzed an A/B testing experiment\n• Compared experimental group performance\n• Calculated statistical significance\n• Recommended business actions based on data\n\n📌 Key Learnings:\n• Data-driven experimentation improves business decisions.\n• Statistical significance helps validate results.\n• A/B testing reduces guesswork in product strategy.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of experimentation systems and business analytics workflows.\n\nGitHub Repo: {{github_link}}\n\n#ABTesting #DataScience #BusinessAnalytics #Klymb"
+  },
+  {
+   "day": 41,
+   "week": 6,
+   "kind": "build",
+   "title": "Predicting High-Risk Customers Before They Churn",
+   "mission": "Phase: Predictive Business Analytics",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "predictive-analytics",
+    "customer-risk",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Combine multiple analytics workflows",
+    "Build predictive business systems",
+    "Analyze churn risks proactively",
+    "Develop strategic business recommendations"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Predictive Business Analytics\nDay 41 focuses on combining segmentation, forecasting, and classification into a predictive customer risk system.\n\n**Real-World Impact:** Businesses proactively identify high-risk customers to reduce churn and improve retention strategies.\n\n**What to do:**\n- Combine customer behavior, segmentation, and churn signals\n- Build a predictive risk scoring model\n- Rank customers by churn probability\n- Visualize high-risk customer groups\n- Recommend retention strategies\n\n**Submission:**\n- Risk prediction notebook\n- Risk ranking dashboard\n- Business recommendation report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 41/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Predicting High-Risk Customers Before They Churn\n\n🧠 What I explored:\n• How businesses proactively reduce churn\n• Combining segmentation and predictive analytics\n• Ranking customer risk levels\n• Building retention-focused analytics systems\n\n⚙️ What I worked on:\n• Built a predictive customer risk model\n• Ranked customers by churn probability\n• Visualized high-risk customer groups\n• Recommended retention strategies\n\n📌 Key Learnings:\n• Predictive analytics improves proactive decision-making.\n• Customer retention requires multiple analytical signals.\n• Business intelligence systems combine multiple workflows.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to build integrated predictive analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#PredictiveAnalytics #CustomerRetention #DataScience #Klymb"
+  },
+  {
+   "day": 42,
+   "week": 6,
+   "kind": "build",
+   "title": "Building a Unified Customer Intelligence Decision System",
+   "mission": "Phase: Sprint Review & Business Intelligence Integration",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "business-intelligence",
+    "system-integration",
+    "analytics-platform"
+   ],
+   "objectives": [
+    "Integrate advanced analytics systems",
+    "Build scalable business intelligence workflows",
+    "Improve systems thinking",
+    "Develop production-oriented analytics skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Review & Business Intelligence Integration\nDay 42 focuses on integrating forecasting, KPI tracking, retention analytics, and predictive risk scoring into a unified business intelligence platform.\n\n**Real-World Impact:** Modern organizations combine forecasting, customer analytics, experimentation, and dashboards into centralized decision-support systems.\n\n**What to do:**\n- Integrate forecasting, KPI, and retention modules\n- Build a unified customer intelligence workflow\n- Design executive-level visualizations\n- Document architecture and business tradeoffs\n- Write a Week 6 reflection\n\n**Submission:**\n- Integrated BI notebook/app\n- Architecture workflow diagram\n- Business intelligence report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Week 6 Complete 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building a Unified Customer Intelligence Decision System\n\n🧠 What I explored:\n• Integrating forecasting, KPI tracking, and predictive analytics\n• Building centralized business intelligence workflows\n• Designing executive-level decision systems\n• Thinking like a production Data Scientist\n\n⚙️ What I worked on:\n• Combined forecasting and analytics modules\n• Built executive dashboards and workflows\n• Integrated retention and KPI systems\n• Documented architecture decisions and tradeoffs\n\n📌 Key Learnings:\n• Modern BI systems combine multiple analytical components.\n• Integration improves decision-making quality.\n• Scalable analytics systems require strong architecture thinking.\n\n🚀 Outcome:\nBy the end of this sprint, I improved my ability to design integrated business intelligence platforms.\n\nGitHub Repo: {{github_link}}\n\n#BusinessIntelligence #DataScience #Analytics #Klymb"
+  },
+  {
+   "day": 43,
+   "week": 7,
+   "kind": "build",
+   "title": "Turning Your Customer Intelligence Model into an API",
+   "mission": "Phase: Data Science Deployment",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "deployment",
+    "fastapi",
+    "ml-api"
+   ],
+   "objectives": [
+    "Understand ML deployment workflows",
+    "Build production-ready prediction APIs",
+    "Connect ML systems with applications",
+    "Improve backend engineering skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "fastapi.tiangolo.com",
+     "url": "https://fastapi.tiangolo.com/"
+    },
+    {
+     "kind": "read",
+     "label": "flask.palletsprojects.com",
+     "url": "https://flask.palletsprojects.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Data Science Deployment\nDay 43 focuses on deploying Machine Learning models as APIs so business systems can generate real-time predictions.\n\n**Real-World Impact:** Modern companies deploy ML models as APIs to power customer analytics, fraud detection, recommendation systems, and forecasting platforms.\n\n**What to do:**\n- Select your best-performing customer prediction model\n- Build a FastAPI or Flask API endpoint\n- Create prediction request and response workflows\n- Test the API using sample customer data\n- Document API architecture and usage instructions\n\n**Submission:**\n- Working API code\n- API documentation\n- Prediction demo screenshots\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 43/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Turning Your Customer Intelligence Model into an API\n\n🧠 What I explored:\n• How Machine Learning models are deployed in production\n• Building prediction APIs using FastAPI/Flask\n• Connecting analytics systems with applications\n• Designing scalable ML workflows\n\n⚙️ What I worked on:\n• Converted my ML model into an API\n• Built prediction request/response endpoints\n• Tested real-time predictions\n• Documented API architecture and workflows\n\n📌 Key Learnings:\n• Production ML systems require deployment workflows.\n• APIs connect models with real applications.\n• Deployment is a critical Data Science skill.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of ML deployment and backend integration workflows.\n\nGitHub Repo: {{github_link}}\n\n#FastAPI #MachineLearning #Deployment #DataScience #Klymb"
+  },
+  {
+   "day": 44,
+   "week": 7,
+   "kind": "build",
+   "title": "Building an Interactive Customer Intelligence Dashboard",
+   "mission": "Phase: Interactive Analytics Systems",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "dashboard",
+    "streamlit",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Build interactive analytics dashboards",
+    "Improve data storytelling",
+    "Design executive-level interfaces",
+    "Integrate ML outputs into business systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Interactive Analytics Systems\nDay 44 focuses on creating an interactive business intelligence dashboard for customer analytics and predictive insights.\n\n**Real-World Impact:** Organizations rely on dashboards to monitor KPIs, customer retention, churn risk, and business performance in real time.\n\n**What to do:**\n- Build a Streamlit dashboard for customer intelligence\n- Integrate KPI cards and visualizations\n- Display customer segmentation and churn analytics\n- Allow users to upload or filter customer data\n- Design a business-friendly user interface\n\n**Submission:**\n- Interactive dashboard application\n- Visualization screenshots\n- Dashboard architecture explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 44/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building an Interactive Customer Intelligence Dashboard\n\n🧠 What I explored:\n• Designing business intelligence dashboards\n• Integrating predictive analytics into visual systems\n• Improving user interaction and storytelling\n• Building executive-friendly analytics tools\n\n⚙️ What I worked on:\n• Built a Streamlit customer intelligence dashboard\n• Added KPI cards and customer insights\n• Integrated segmentation and churn analytics\n• Designed an interactive user experience\n\n📌 Key Learnings:\n• Dashboards transform raw analytics into actionable insights.\n• User experience matters in analytics systems.\n• Interactive systems improve decision-making.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to build interactive analytics applications.\n\nGitHub Repo: {{github_link}}\n\n#Streamlit #Dashboard #DataScience #Klymb"
+  },
+  {
+   "day": 45,
+   "week": 7,
+   "kind": "build",
+   "title": "Deploying Your Customer Intelligence Platform to the Cloud",
+   "mission": "Phase: Cloud Deployment",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "deployment",
+    "cloud",
+    "streamlit"
+   ],
+   "objectives": [
+    "Understand cloud deployment workflows",
+    "Deploy analytics applications publicly",
+    "Handle deployment configurations",
+    "Improve production engineering skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "render.com",
+     "url": "https://render.com/"
+    },
+    {
+     "kind": "read",
+     "label": "streamlit.io · cloud",
+     "url": "https://streamlit.io/cloud"
+    },
+    {
+     "kind": "read",
+     "label": "railway.app",
+     "url": "https://railway.app/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Cloud Deployment\nDay 45 focuses on deploying customer intelligence systems to cloud platforms for public access and real-world usability.\n\n**Real-World Impact:** Production analytics systems must be accessible online so businesses and users can interact with them anywhere.\n\n**What to do:**\n- Deploy your dashboard or API to a cloud platform\n- Choose a deployment provider (Render, Railway, Streamlit Cloud, Hugging Face Spaces)\n- Configure deployment settings\n- Test live prediction workflows\n- Document deployment architecture and challenges\n\n**Submission:**\n- Live deployment link\n- Deployment screenshots\n- Deployment architecture report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 45/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Deploying Your Customer Intelligence Platform to the Cloud\n\n🧠 What I explored:\n• How production analytics systems are deployed online\n• Understanding cloud deployment workflows\n• Configuring public-facing analytics applications\n• Improving production engineering skills\n\n⚙️ What I worked on:\n• Deployed my analytics system to the cloud\n• Tested live prediction workflows\n• Configured deployment settings\n• Documented deployment challenges and solutions\n\n📌 Key Learnings:\n• Deployment transforms projects into real products.\n• Cloud systems improve accessibility and scalability.\n• Production workflows require strong engineering practices.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of deploying ML systems for real-world usage.\n\nGitHub Repo: {{github_link}}\n\n#CloudDeployment #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 46,
+   "week": 7,
+   "kind": "build",
+   "title": "Monitoring Customer Intelligence Systems in Production",
+   "mission": "Phase: Production Monitoring",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "monitoring",
+    "production-systems",
+    "deployment"
+   ],
+   "objectives": [
+    "Understand production monitoring systems",
+    "Improve application reliability",
+    "Handle real-world deployment issues",
+    "Develop production engineering intuition"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · logging.html",
+     "url": "https://docs.python.org/3/library/logging.html"
+    },
+    {
+     "kind": "read",
+     "label": "fastapi.tiangolo.com · handling-errors",
+     "url": "https://fastapi.tiangolo.com/tutorial/handling-errors/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Production Monitoring\nDay 46 focuses on improving production reliability using logging, validation, and monitoring systems.\n\n**Real-World Impact:** Production analytics systems require monitoring and validation to detect failures, bad predictions, and system instability.\n\n**What to do:**\n- Add logging to your analytics application\n- Validate API input data\n- Handle invalid predictions and exceptions\n- Track prediction requests and outputs\n- Document monitoring and reliability improvements\n\n**Submission:**\n- Improved production application\n- Logging and validation report\n- Monitoring screenshots\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 46/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Monitoring Customer Intelligence Systems in Production\n\n🧠 What I explored:\n• Why production systems require monitoring and validation\n• Handling prediction errors and invalid inputs\n• Improving reliability in analytics systems\n• Building safer and more stable workflows\n\n⚙️ What I worked on:\n• Added logging and validation systems\n• Handled API exceptions and prediction failures\n• Tracked prediction requests and outputs\n• Improved system reliability\n\n📌 Key Learnings:\n• Reliable systems require monitoring and safeguards.\n• Error handling improves production stability.\n• Engineering quality matters beyond modeling.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of production-grade analytics engineering.\n\nGitHub Repo: {{github_link}}\n\n#ProductionAI #Monitoring #DataScience #Klymb"
+  },
+  {
+   "day": 47,
+   "week": 7,
+   "kind": "build",
+   "title": "Defining Your Customer Intelligence Capstone System",
+   "mission": "Phase: Capstone Project Kickoff",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "capstone",
+    "system-design",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Plan end-to-end analytics systems",
+    "Understand project architecture workflows",
+    "Translate business problems into technical systems",
+    "Develop product-oriented thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "miro.com",
+     "url": "https://miro.com/"
+    },
+    {
+     "kind": "read",
+     "label": "draw.io",
+     "url": "https://draw.io/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Project Kickoff\nDay 47 officially begins the Capstone Project phase where students design a complete Customer Intelligence Platform from scratch.\n\n**Real-World Impact:** Real Data Science projects start with business problem definition, system architecture planning, and strategic thinking before implementation begins.\n\n**What to do:**\n- Define your capstone business problem\n- Select datasets and business objectives\n- Design the architecture of your Customer Intelligence Platform\n- Choose key modules (forecasting, churn prediction, segmentation, dashboards)\n- Create a project roadmap for Day 47–60\n\n**Submission:**\n- Capstone proposal document\n- Architecture diagram\n- Project roadmap\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 47/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Defining Your Customer Intelligence Capstone System\n\n🧠 What I explored:\n• Planning production-grade analytics systems\n• Translating business problems into technical workflows\n• Designing scalable customer intelligence platforms\n• Structuring long-term engineering projects\n\n⚙️ What I worked on:\n• Defined my capstone business problem\n• Designed system architecture and workflows\n• Planned forecasting, segmentation, and analytics modules\n• Created a complete project roadmap\n\n📌 Key Learnings:\n• Great systems start with clear planning.\n• Architecture decisions impact scalability.\n• Data Science projects require product thinking.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to architect end-to-end analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#CapstoneProject #DataScience #BusinessIntelligence #Klymb"
+  },
+  {
+   "day": 48,
+   "week": 7,
+   "kind": "build",
+   "title": "Building the Data Pipeline for Your Customer Intelligence Platform",
+   "mission": "Phase: Capstone Data Pipeline",
+   "points": 10,
+   "estimateMinutes": 110,
+   "tags": [
+    "Medium",
+    "data-pipeline",
+    "preprocessing",
+    "capstone"
+   ],
+   "objectives": [
+    "Build reusable preprocessing pipelines",
+    "Improve data engineering workflows",
+    "Prepare production-ready datasets",
+    "Improve ML system consistency"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · sklearn.pipeline.Pipeline.html",
+     "url": "https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html"
+    },
+    {
+     "kind": "read",
+     "label": "pandas.pydata.org · docs",
+     "url": "https://pandas.pydata.org/docs/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Data Pipeline\nDay 48 focuses on designing preprocessing and data pipeline workflows for the capstone system.\n\n**Real-World Impact:** Production analytics platforms rely on reliable preprocessing pipelines to maintain data consistency and prediction quality.\n\n**What to do:**\n- Prepare datasets for the capstone project\n- Build preprocessing workflows\n- Handle missing values and feature engineering\n- Design reusable data transformation pipelines\n- Document pipeline architecture and decisions\n\n**Submission:**\n- Preprocessing pipeline notebook\n- Pipeline architecture report\n- Cleaned datasets\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 48/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building the Data Pipeline for Your Customer Intelligence Platform\n\n🧠 What I explored:\n• Designing reliable preprocessing workflows\n• Building reusable data pipelines\n• Improving consistency in analytics systems\n• Preparing production-grade datasets\n\n⚙️ What I worked on:\n• Built preprocessing pipelines for my capstone system\n• Handled missing values and feature engineering\n• Structured reusable data workflows\n• Documented pipeline architecture decisions\n\n📌 Key Learnings:\n• Data pipelines are critical in production systems.\n• Reusability improves scalability and maintenance.\n• Reliable preprocessing improves prediction quality.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of production-oriented data engineering workflows.\n\nGitHub Repo: {{github_link}}\n\n#DataEngineering #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 49,
+   "week": 7,
+   "kind": "build",
+   "title": "Building the First Working Version of Your Customer Intelligence Platform",
+   "mission": "Phase: Capstone Baseline System",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "capstone",
+    "prototype",
+    "system-integration"
+   ],
+   "objectives": [
+    "Integrate multiple analytics components",
+    "Build iterative ML prototypes",
+    "Test production workflows",
+    "Improve engineering problem-solving"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    },
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Baseline System\nDay 49 focuses on integrating preprocessing, analytics, and prediction modules into the first working capstone prototype.\n\n**Real-World Impact:** Engineering teams build iterative prototypes before optimizing and scaling production systems.\n\n**What to do:**\n- Integrate preprocessing and ML workflows\n- Build baseline prediction systems\n- Test forecasting, churn, or segmentation modules\n- Generate first working outputs\n- Document prototype strengths and weaknesses\n\n**Submission:**\n- Baseline capstone prototype\n- Prediction outputs\n- Prototype analysis report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 49/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Building the First Working Version of Your Customer Intelligence Platform\n\n🧠 What I explored:\n• Integrating preprocessing and prediction workflows\n• Building iterative ML prototypes\n• Testing production-style analytics systems\n• Improving engineering problem-solving skills\n\n⚙️ What I worked on:\n• Built the first working version of my capstone platform\n• Integrated analytics and ML workflows\n• Tested prediction outputs and modules\n• Documented strengths, limitations, and next improvements\n\n📌 Key Learnings:\n• Strong systems evolve through iteration.\n• Integration is a major engineering challenge.\n• Early prototypes reveal hidden issues quickly.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to build integrated production-style analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#CapstoneProject #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 50,
+   "week": 8,
+   "kind": "build",
+   "title": "Improving Your Customer Intelligence System with Model Optimization",
+   "mission": "Phase: Capstone Model Optimization",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "model-optimization",
+    "hyperparameter-tuning",
+    "capstone"
+   ],
+   "objectives": [
+    "Optimize Machine Learning systems",
+    "Compare multiple predictive models",
+    "Improve model generalization",
+    "Analyze engineering tradeoffs"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · grid_search.html",
+     "url": "https://scikit-learn.org/stable/modules/grid_search.html"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · model_selection.html",
+     "url": "https://scikit-learn.org/stable/model_selection.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Model Optimization\nDay 50 focuses on optimizing the core Machine Learning models inside your Customer Intelligence Platform to improve prediction quality and business reliability.\n\n**Real-World Impact:** Production analytics systems require continuous optimization to improve customer retention predictions, forecasting accuracy, and business decision-making.\n\n**What to do:**\n- Evaluate baseline capstone model performance\n- Apply hyperparameter tuning techniques\n- Compare multiple ML algorithms\n- Analyze overfitting and underfitting behavior\n- Document performance improvements and engineering tradeoffs\n\n**Submission:**\n- Optimized ML notebook\n- Model comparison report\n- Performance visualizations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 50/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Improving Your Customer Intelligence System with Model Optimization\n\n🧠 What I explored:\n• Optimizing predictive analytics systems\n• Comparing multiple Machine Learning models\n• Understanding overfitting and underfitting\n• Improving business prediction reliability\n\n⚙️ What I worked on:\n• Tuned model hyperparameters\n• Compared model performances\n• Improved customer prediction accuracy\n• Documented optimization tradeoffs and engineering decisions\n\n📌 Key Learnings:\n• Production ML systems require continuous optimization.\n• Better models improve business decision quality.\n• Small tuning changes can significantly impact performance.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of optimizing production-grade analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #Optimization #DataScience #Klymb"
+  },
+  {
+   "day": 51,
+   "week": 8,
+   "kind": "build",
+   "title": "Explaining Customer Predictions with Explainable AI",
+   "mission": "Phase: Capstone Explainable AI",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "explainable-ai",
+    "shap",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand Explainable AI concepts",
+    "Interpret ML model decisions",
+    "Build trustworthy analytics systems",
+    "Improve business communication skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "shap.readthedocs.io · latest",
+     "url": "https://shap.readthedocs.io/en/latest/"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Explainable AI\nDay 51 focuses on Explainable AI techniques that help businesses understand why predictions are made by Machine Learning systems.\n\n**Real-World Impact:** Businesses need transparent analytics systems to trust customer churn predictions, risk scores, and forecasting decisions.\n\n**What to do:**\n- Analyze feature importance in your capstone model\n- Apply SHAP or feature importance visualizations\n- Identify key drivers behind customer predictions\n- Visualize model explainability insights\n- Document business interpretation of predictions\n\n**Submission:**\n- Explainable AI notebook\n- Feature importance visualizations\n- Business interpretation report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 51/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Explaining Customer Predictions with Explainable AI\n\n🧠 What I explored:\n• Why businesses need interpretable ML systems\n• Understanding feature importance and prediction drivers\n• Building transparent analytics workflows\n• Improving trust in predictive systems\n\n⚙️ What I worked on:\n• Applied Explainable AI techniques\n• Visualized feature importance insights\n• Interpreted customer prediction behavior\n• Documented business implications of model outputs\n\n📌 Key Learnings:\n• Explainability improves trust in AI systems.\n• Business stakeholders need understandable predictions.\n• Transparency is critical in production analytics.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of Explainable AI and interpretable analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#ExplainableAI #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 52,
+   "week": 8,
+   "kind": "build",
+   "title": "Designing a Professional User Interface for Your Analytics Platform",
+   "mission": "Phase: Capstone Frontend Integration",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "ui-ux",
+    "dashboard",
+    "streamlit"
+   ],
+   "objectives": [
+    "Improve analytics UI/UX design",
+    "Build business-friendly applications",
+    "Enhance dashboard usability",
+    "Improve product thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Frontend Integration\nDay 52 focuses on improving the usability and visual quality of your Customer Intelligence Platform.\n\n**Real-World Impact:** A powerful analytics system is ineffective if business users cannot interact with it clearly and efficiently.\n\n**What to do:**\n- Improve dashboard UI and layout\n- Add navigation sections and filters\n- Enhance visualization readability\n- Improve customer interaction workflows\n- Document UI/UX design decisions\n\n**Submission:**\n- Improved dashboard application\n- UI screenshots\n- UX improvement report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 52/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Designing a Professional User Interface for Your Analytics Platform\n\n🧠 What I explored:\n• Why user experience matters in analytics systems\n• Designing business-friendly interfaces\n• Improving dashboard usability and readability\n• Creating interactive customer workflows\n\n⚙️ What I worked on:\n• Improved dashboard layouts and navigation\n• Enhanced visualization quality\n• Added filtering and interaction features\n• Documented UI and UX design decisions\n\n📌 Key Learnings:\n• User experience improves analytics adoption.\n• Good interfaces improve business communication.\n• Analytics products require product-thinking skills.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to design professional analytics interfaces.\n\nGitHub Repo: {{github_link}}\n\n#DashboardDesign #DataScience #Streamlit #Klymb"
+  },
+  {
+   "day": 53,
+   "week": 8,
+   "kind": "build",
+   "title": "Adding Real-Time Customer Prediction Workflows",
+   "mission": "Phase: Capstone Real-Time Analytics",
+   "points": 10,
+   "estimateMinutes": 110,
+   "tags": [
+    "Medium",
+    "real-time-analytics",
+    "prediction-system",
+    "deployment"
+   ],
+   "objectives": [
+    "Build real-time analytics systems",
+    "Connect user inputs with ML predictions",
+    "Improve system responsiveness",
+    "Design interactive business workflows"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "fastapi.tiangolo.com",
+     "url": "https://fastapi.tiangolo.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Real-Time Analytics\nDay 53 focuses on enabling real-time customer predictions inside the Customer Intelligence Platform.\n\n**Real-World Impact:** Modern business systems rely on real-time predictions to react instantly to customer behavior and operational risks.\n\n**What to do:**\n- Create real-time prediction forms\n- Allow users to submit live customer inputs\n- Display instant churn or risk predictions\n- Integrate prediction outputs into dashboards\n- Document real-time analytics workflows\n\n**Submission:**\n- Real-time analytics application\n- Prediction demo screenshots\n- Workflow explanation report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 53/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Adding Real-Time Customer Prediction Workflows\n\n🧠 What I explored:\n• Building real-time analytics systems\n• Connecting live user inputs with ML predictions\n• Designing responsive customer intelligence workflows\n• Improving analytics interactivity\n\n⚙️ What I worked on:\n• Added real-time prediction features\n• Built interactive customer input forms\n• Displayed live churn/risk predictions\n• Integrated real-time outputs into dashboards\n\n📌 Key Learnings:\n• Real-time systems improve business responsiveness.\n• Interactive workflows improve analytics usability.\n• ML systems become more valuable when actionable instantly.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of real-time predictive analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#RealTimeAnalytics #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 54,
+   "week": 8,
+   "kind": "build",
+   "title": "Turning Analytics into Executive Business Insights",
+   "mission": "Phase: Capstone Business Storytelling",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "data-storytelling",
+    "business-intelligence",
+    "analytics"
+   ],
+   "objectives": [
+    "Improve business storytelling skills",
+    "Translate analytics into business language",
+    "Communicate strategic recommendations",
+    "Improve executive reporting"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "tableau.com · data-storytelling",
+     "url": "https://www.tableau.com/learn/articles/data-storytelling"
+    },
+    {
+     "kind": "read",
+     "label": "plotly.com · python",
+     "url": "https://plotly.com/python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Business Storytelling\nDay 54 focuses on translating technical analytics outputs into executive-level business recommendations and storytelling.\n\n**Real-World Impact:** Data Scientists create the most impact when they communicate technical insights clearly to business stakeholders.\n\n**What to do:**\n- Summarize key analytics findings\n- Create executive-level insight reports\n- Highlight customer risks and opportunities\n- Design business-focused visual storytelling\n- Document actionable business recommendations\n\n**Submission:**\n- Business insight presentation\n- Executive analytics report\n- Visualization summary\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 54/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Turning Analytics into Executive Business Insights\n\n🧠 What I explored:\n• Translating analytics into business decisions\n• Improving executive communication skills\n• Designing business-focused storytelling workflows\n• Creating actionable strategic recommendations\n\n⚙️ What I worked on:\n• Summarized key customer intelligence insights\n• Built executive-level visual reports\n• Highlighted churn risks and growth opportunities\n• Documented business recommendations and actions\n\n📌 Key Learnings:\n• Analytics is valuable only when understood clearly.\n• Storytelling improves business impact.\n• Strong communication is a critical Data Science skill.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to communicate analytics insights to business stakeholders.\n\nGitHub Repo: {{github_link}}\n\n#BusinessAnalytics #DataStorytelling #DataScience #Klymb"
+  },
+  {
+   "day": 55,
+   "week": 8,
+   "kind": "build",
+   "title": "Improving the Scalability and Reliability of Your Analytics Platform",
+   "mission": "Phase: Capstone Scalability & Reliability",
+   "points": 10,
+   "estimateMinutes": 110,
+   "tags": [
+    "Hard",
+    "scalability",
+    "production-ai",
+    "optimization"
+   ],
+   "objectives": [
+    "Improve analytics scalability",
+    "Optimize application performance",
+    "Handle production reliability challenges",
+    "Develop production engineering thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.streamlit.io",
+     "url": "https://docs.streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "fastapi.tiangolo.com",
+     "url": "https://fastapi.tiangolo.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Scalability & Reliability\nDay 55 focuses on improving performance, reliability, and scalability in the Customer Intelligence Platform.\n\n**Real-World Impact:** Production systems must remain reliable under heavy usage, unexpected inputs, and business scaling challenges.\n\n**What to do:**\n- Optimize dashboard and API performance\n- Reduce unnecessary computations\n- Improve application responsiveness\n- Add better error handling and validation\n- Document scalability and engineering improvements\n\n**Submission:**\n- Optimized analytics platform\n- Performance improvement report\n- System reliability analysis\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 55/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Improving the Scalability and Reliability of Your Analytics Platform\n\n🧠 What I explored:\n• Optimizing production analytics systems\n• Improving dashboard and API responsiveness\n• Handling reliability and scalability challenges\n• Designing stable customer intelligence workflows\n\n⚙️ What I worked on:\n• Optimized dashboard and prediction performance\n• Improved error handling and validations\n• Reduced unnecessary computations\n• Documented scalability improvements\n\n📌 Key Learnings:\n• Production systems require performance optimization.\n• Reliability improves user trust.\n• Scalability is critical for real-world analytics products.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my understanding of scalable and reliable analytics engineering.\n\nGitHub Repo: {{github_link}}\n\n#ScalableAI #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 56,
+   "week": 8,
+   "kind": "build",
+   "title": "Presenting the Mid-Stage Version of Your Customer Intelligence Platform",
+   "mission": "Phase: Capstone Mid-Review",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "capstone-review",
+    "analytics-platform",
+    "production-systems"
+   ],
+   "objectives": [
+    "Evaluate production systems critically",
+    "Improve product review workflows",
+    "Prepare systems for final launch",
+    "Develop iterative engineering skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "github.com",
+     "url": "https://github.com/"
+    },
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Mid-Review\nDay 56 focuses on reviewing the current state of the capstone project and identifying final improvements before launch week.\n\n**Real-World Impact:** Engineering teams regularly conduct internal reviews before production launches to improve reliability and user experience.\n\n**What to do:**\n- Prepare a walkthrough of your platform\n- Review forecasting, segmentation, and prediction modules\n- Identify weak points and missing features\n- Collect feedback from peers or mentors\n- Create a final improvement roadmap for Days 57–60\n\n**Submission:**\n- Mid-stage project demo\n- Feature review report\n- Improvement roadmap\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 56/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Presenting the Mid-Stage Version of Your Customer Intelligence Platform\n\n🧠 What I explored:\n• Reviewing production analytics systems critically\n• Identifying scalability and usability improvements\n• Improving engineering workflows through iteration\n• Preparing for final product launch\n\n⚙️ What I worked on:\n• Presented the current version of my platform\n• Reviewed forecasting and prediction modules\n• Identified weaknesses and missing features\n• Created a final improvement roadmap\n\n📌 Key Learnings:\n• Great systems improve through iteration and review.\n• Feedback helps uncover hidden issues.\n• Product reviews improve engineering quality.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to review and refine production-grade analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#CapstoneProject #BusinessIntelligence #DataScience #Klymb"
+  },
+  {
+   "day": 57,
+   "week": 9,
+   "kind": "build",
+   "title": "Documenting Your Customer Intelligence Platform Like a Professional Engineer",
+   "mission": "Phase: Capstone Documentation",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "documentation",
+    "github",
+    "capstone"
+   ],
+   "objectives": [
+    "Improve technical documentation skills",
+    "Communicate system architecture clearly",
+    "Create recruiter-friendly GitHub projects",
+    "Develop professional engineering habits"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "markdownguide.org",
+     "url": "https://www.markdownguide.org/"
+    },
+    {
+     "kind": "read",
+     "label": "github.com · Best-README-Template",
+     "url": "https://github.com/othneildrew/Best-README-Template"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Documentation\nDay 57 focuses on creating professional documentation for your Customer Intelligence Platform so other developers, recruiters, and stakeholders can understand and use your system effectively.\n\n**Real-World Impact:** Production-grade systems require clear documentation for onboarding, collaboration, maintenance, deployment, and scalability.\n\n**What to do:**\n- Write a professional README for your capstone project\n- Document system architecture and workflows\n- Add setup and deployment instructions\n- Explain business objectives and analytics modules\n- Include screenshots, diagrams, and API usage examples\n\n**Submission:**\n- Professional README\n- Architecture documentation\n- API usage guide\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 57/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Documenting Your Customer Intelligence Platform Like a Professional Engineer\n\n🧠 What I explored:\n• Why documentation matters in production systems\n• Structuring professional GitHub repositories\n• Explaining analytics workflows clearly\n• Improving collaboration and maintainability\n\n⚙️ What I worked on:\n• Wrote a professional README and setup guide\n• Documented architecture and analytics modules\n• Added screenshots and API examples\n• Improved project presentation quality\n\n📌 Key Learnings:\n• Great engineering includes clear documentation.\n• Professional GitHub projects improve portfolio quality.\n• Strong communication improves project usability.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to document production-grade analytics systems professionally.\n\nGitHub Repo: {{github_link}}\n\n#Documentation #GitHub #DataScience #Klymb"
+  },
+  {
+   "day": 58,
+   "week": 9,
+   "kind": "build",
+   "title": "Creating a Professional Demo Presentation for Your Analytics Platform",
+   "mission": "Phase: Capstone Demo & Presentation",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "presentation",
+    "demo",
+    "portfolio"
+   ],
+   "objectives": [
+    "Improve technical presentation skills",
+    "Communicate analytics workflows clearly",
+    "Build recruiter-ready project showcases",
+    "Develop confidence explaining systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "canva.com",
+     "url": "https://www.canva.com/"
+    },
+    {
+     "kind": "read",
+     "label": "gamma.app",
+     "url": "https://gamma.app/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Demo & Presentation\nDay 58 focuses on presenting your Customer Intelligence Platform like a real Data Science product to recruiters, mentors, and business stakeholders.\n\n**Real-World Impact:** Strong presentation and demo skills help engineers communicate value, explain technical systems, and succeed in interviews and product showcases.\n\n**What to do:**\n- Create a short presentation deck for your platform\n- Record a demo walkthrough video\n- Explain the business problem and analytics workflow\n- Highlight forecasting, segmentation, and prediction modules\n- Present business insights and final outcomes clearly\n\n**Submission:**\n- Presentation deck\n- Demo walkthrough video\n- Project showcase summary\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 58/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Creating a Professional Demo Presentation for Your Analytics Platform\n\n🧠 What I explored:\n• Presenting analytics systems professionally\n• Explaining business problems and technical workflows clearly\n• Structuring recruiter-friendly project demos\n• Improving technical communication skills\n\n⚙️ What I worked on:\n• Created a presentation deck and demo video\n• Explained forecasting and customer intelligence modules\n• Showcased business insights and analytics workflows\n• Improved overall project storytelling\n\n📌 Key Learnings:\n• Great projects need great communication.\n• Presentation skills improve interview confidence.\n• Strong demos increase portfolio impact.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to present production-grade analytics systems professionally.\n\nGitHub Repo: {{github_link}}\n\n#ProjectDemo #DataScience #PortfolioProject #Klymb"
+  },
+  {
+   "day": 59,
+   "week": 9,
+   "kind": "build",
+   "title": "Polishing and Finalizing Your Customer Intelligence Platform",
+   "mission": "Phase: Capstone Final Optimization",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "optimization",
+    "production-systems",
+    "capstone"
+   ],
+   "objectives": [
+    "Improve system refinement skills",
+    "Optimize production workflows",
+    "Strengthen deployment stability",
+    "Develop quality assurance thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.streamlit.io",
+     "url": "https://docs.streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "fastapi.tiangolo.com",
+     "url": "https://fastapi.tiangolo.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Final Optimization\nDay 59 focuses on polishing the final version of the Customer Intelligence Platform before official showcase and submission.\n\n**Real-World Impact:** Production systems require final optimization, bug fixing, and usability improvements before public release or stakeholder delivery.\n\n**What to do:**\n- Fix bugs and inconsistencies in the platform\n- Improve dashboard responsiveness and usability\n- Optimize visualizations and workflows\n- Review deployment stability and prediction reliability\n- Perform final project cleanup and testing\n\n**Submission:**\n- Final optimized platform\n- Bug-fix and optimization report\n- Deployment screenshots\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 59/60 🚀 | Klymb Data Science Challenge\n\nToday’s focus was: Polishing and Finalizing Your Customer Intelligence Platform\n\n🧠 What I explored:\n• Improving production-grade analytics systems\n• Optimizing usability and deployment stability\n• Fixing bugs and refining workflows\n• Preparing systems for final release\n\n⚙️ What I worked on:\n• Optimized dashboard and prediction workflows\n• Fixed bugs and UI inconsistencies\n• Improved responsiveness and deployment stability\n• Conducted final testing and cleanup\n\n📌 Key Learnings:\n• Great products require refinement and iteration.\n• Final optimization improves user trust and reliability.\n• Attention to detail matters in engineering.\n\n🚀 Outcome:\nBy the end of today’s task, I improved my ability to refine and stabilize production analytics systems.\n\nGitHub Repo: {{github_link}}\n\n#ProductionAI #MachineLearning #DataScience #Klymb"
+  },
+  {
+   "day": 60,
+   "week": 9,
+   "kind": "build",
+   "title": "Launching Your Customer Intelligence Platform to the World",
+   "mission": "Phase: Capstone Showcase & Graduation",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "capstone-showcase",
+    "portfolio",
+    "business-intelligence"
+   ],
+   "objectives": [
+    "Showcase production-grade analytics systems",
+    "Build confidence presenting technical work",
+    "Reflect on long-term learning growth",
+    "Develop a strong public portfolio"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "github.com",
+     "url": "https://github.com/"
+    },
+    {
+     "kind": "read",
+     "label": "linkedin.com",
+     "url": "https://www.linkedin.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Capstone Showcase & Graduation\nDay 60 is the final showcase and graduation milestone where students officially launch and present their complete Customer Intelligence Platform.\n\n**Real-World Impact:** Professional engineers publicly showcase products, communicate outcomes, and demonstrate business impact through production-ready systems.\n\n**What to do:**\n- Publish your final deployed platform\n- Share your GitHub repository and demo publicly\n- Present the business problem, analytics workflow, and outcomes\n- Reflect on your 60-day learning journey\n- Create a final LinkedIn showcase post\n\n**Submission:**\n- Final deployed platform\n- Complete GitHub repository\n- Demo video and presentation\n- Final reflection report\n- LinkedIn showcase post",
+   "linkedinTemplate": "Day 60/60 🎉 | Klymb Data Science Challenge Complete\n\n🚀 Final Showcase: Launching My Customer Intelligence Platform\n\nOver the past 60 days, I built a complete production-style Customer Intelligence Platform focused on:\n• Customer churn prediction\n• Segmentation and business analytics\n• Forecasting and KPI dashboards\n• Real-time predictive workflows\n• Deployment and production engineering\n\n🧠 What this journey taught me:\n• Data Science is more than models - it’s systems thinking, communication, deployment, and problem-solving.\n• Building publicly improves consistency and confidence.\n• Production-grade projects require engineering discipline and iteration.\n\n⚙️ Final Deliverables:\n• Deployed analytics platform\n• Interactive dashboards\n• Prediction APIs\n• Executive-level business insights\n• Complete GitHub documentation\n\n🙏 Huge gratitude to @Anil Bajpai Sir and the Klymb community for creating such a practical, growth-focused learning environment.\n\nGitHub Repo: {{github_link}}\nDeployment Link: {{deployment_link}}\n\n#Klymb #DataScience #MachineLearning #BusinessIntelligence #LearningInPublic #PortfolioProject #AI"
+  }
+ ],
+ "modules": [
+  {
+   "week": 1,
+   "name": "Python Foundations + Data Science Basics",
+   "days": "Days 1–7",
+   "summary": "Python Fundamentals Bootcamp (Core Syntax)"
+  },
+  {
+   "week": 2,
+   "name": "Week 2",
+   "days": "Days 8–14",
+   "summary": "Finding Hidden Patterns Through EDA"
+  },
+  {
+   "week": 3,
+   "name": "Week 3",
+   "days": "Days 15–21",
+   "summary": "Predicting Customer Churn with Logistic Regression"
+  },
+  {
+   "week": 4,
+   "name": "Week 4",
+   "days": "Days 22–28",
+   "summary": "Turning Raw Categories into Machine Learning Signals"
+  },
+  {
+   "week": 5,
+   "name": "Customer Segmentation, Recommendations & Dashboards",
+   "days": "Days 29–35",
+   "summary": "Understanding Customer Types with K-Means Clustering"
+  },
+  {
+   "week": 6,
+   "name": "Forecasting, KPI Analytics & Predictive Business Intelligence",
+   "days": "Days 36–42",
+   "summary": "Forecasting Customer Growth Trends"
+  },
+  {
+   "week": 7,
+   "name": "Deployment, Monitoring & Capstone Engineering",
+   "days": "Days 43–49",
+   "summary": "Turning Your Customer Intelligence Model into an API"
+  },
+  {
+   "week": 8,
+   "name": "Optimization, Explainability & Production Analytics",
+   "days": "Days 50–56",
+   "summary": "Improving Your Customer Intelligence System with Model Optimization"
+  },
+  {
+   "week": 9,
+   "name": "Documentation, Presentation & Production Launch",
+   "days": "Days 57–60",
+   "summary": "Documenting Your Customer Intelligence Platform Like a Professional Engineer"
+  }
+ ],
+ "quizzes": [
+  {
+   "week": 1,
+   "title": "Python Foundations + Data Science Basics",
+   "questions": [
+    {
+     "question": "Which of the following is a mutable data type in Python?",
+     "options": [
+      "tuple",
+      "string",
+      "list",
+      "int"
+     ],
+     "answer": 2,
+     "explanation": "Lists are mutable, meaning their elements can be changed after creation."
+    },
+    {
+     "question": "What does the `input()` function return in Python?",
+     "options": [
+      "int",
+      "float",
+      "string",
+      "boolean"
+     ],
+     "answer": 2,
+     "explanation": "The input() function always returns user input as a string."
+    },
+    {
+     "question": "Which keyword is used to define a function in Python?",
+     "options": [
+      "function",
+      "define",
+      "def",
+      "func"
+     ],
+     "answer": 2,
+     "explanation": "Python uses the 'def' keyword to define functions."
+    },
+    {
+     "question": "What will `len([1, 2, 3, 4])` return?",
+     "options": [
+      "3",
+      "4",
+      "5",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "The len() function returns the number of elements in a list."
+    },
+    {
+     "question": "Which file mode is used to read a file in Python?",
+     "options": [
+      "r",
+      "w",
+      "a",
+      "x"
+     ],
+     "answer": 0,
+     "explanation": "'r' stands for read mode when opening files."
+    },
+    {
+     "question": "Which library is primarily used for data manipulation in Data Science?",
+     "options": [
+      "NumPy",
+      "Pandas",
+      "Matplotlib",
+      "Seaborn"
+     ],
+     "answer": 1,
+     "explanation": "Pandas provides powerful data structures like DataFrames for handling tabular data."
+    },
+    {
+     "question": "What does `df.head()` do in Pandas?",
+     "options": [
+      "Returns last 5 rows",
+      "Returns first 5 rows",
+      "Deletes rows",
+      "Sorts the dataset"
+     ],
+     "answer": 1,
+     "explanation": "df.head() returns the first 5 rows by default."
+    },
+    {
+     "question": "Why is data cleaning important?",
+     "options": [
+      "To visualize data",
+      "To improve model accuracy",
+      "To increase dataset size",
+      "To remove code errors"
+     ],
+     "answer": 1,
+     "explanation": "Clean data ensures models learn correct patterns and improves accuracy."
+    },
+    {
+     "question": "Which of the following is used to detect missing values in Pandas?",
+     "options": [
+      "df.checknull()",
+      "df.isnull()",
+      "df.missing()",
+      "df.null()"
+     ],
+     "answer": 1,
+     "explanation": "df.isnull() identifies missing values in a DataFrame."
+    },
+    {
+     "question": "What is the primary goal of Exploratory Data Analysis (EDA)?",
+     "options": [
+      "Train machine learning models",
+      "Deploy applications",
+      "Understand patterns and relationships in data",
+      "Store data in databases"
+     ],
+     "answer": 2,
+     "explanation": "EDA helps uncover patterns, anomalies, and insights before modeling."
+    }
+   ]
+  },
+  {
+   "week": 5,
+   "title": "Customer Segmentation, Recommendations & Dashboards",
+   "questions": [
+    {
+     "question": "What type of learning does K-Means Clustering use?",
+     "options": [
+      "Supervised Learning",
+      "Reinforcement Learning",
+      "Unsupervised Learning",
+      "Deep Learning"
+     ],
+     "answer": 2,
+     "explanation": "K-Means is an unsupervised learning algorithm because it works without labeled target values."
+    },
+    {
+     "question": "What is the purpose of customer segmentation?",
+     "options": [
+      "Increase dataset size",
+      "Group customers based on similar behavior",
+      "Remove anomalies",
+      "Train neural networks"
+     ],
+     "answer": 1,
+     "explanation": "Customer segmentation helps businesses understand different customer groups and personalize strategies."
+    },
+    {
+     "question": "Which method helps determine the optimal number of clusters in K-Means?",
+     "options": [
+      "Confusion Matrix",
+      "ROC Curve",
+      "Elbow Method",
+      "Gradient Descent"
+     ],
+     "answer": 2,
+     "explanation": "The Elbow Method helps identify the ideal number of clusters by analyzing inertia values."
+    },
+    {
+     "question": "What does the Silhouette Score measure?",
+     "options": [
+      "Prediction accuracy",
+      "Cluster quality and separation",
+      "Training speed",
+      "Feature importance"
+     ],
+     "answer": 1,
+     "explanation": "Silhouette Score measures how well-separated and cohesive clusters are."
+    },
+    {
+     "question": "Why are customer personas important in business analytics?",
+     "options": [
+      "They increase dataset size",
+      "They help businesses personalize strategies and communication",
+      "They reduce model training time",
+      "They remove missing values"
+     ],
+     "answer": 1,
+     "explanation": "Customer personas translate analytics insights into actionable business strategies."
+    },
+    {
+     "question": "What is the primary goal of a recommendation system?",
+     "options": [
+      "Reduce storage space",
+      "Personalize suggestions for users",
+      "Remove duplicate records",
+      "Scale numerical features"
+     ],
+     "answer": 1,
+     "explanation": "Recommendation systems personalize user experiences by suggesting relevant products or content."
+    },
+    {
+     "question": "Which similarity metric is commonly used in recommendation systems?",
+     "options": [
+      "Cosine Similarity",
+      "Mean Squared Error",
+      "Entropy",
+      "Accuracy Score"
+     ],
+     "answer": 0,
+     "explanation": "Cosine Similarity measures how similar two users or products are."
+    },
+    {
+     "question": "What is anomaly detection primarily used for?",
+     "options": [
+      "Generating random clusters",
+      "Identifying unusual or suspicious behavior",
+      "Scaling features",
+      "Building dashboards"
+     ],
+     "answer": 1,
+     "explanation": "Anomaly detection identifies rare or suspicious patterns in data."
+    },
+    {
+     "question": "Why are business dashboards important?",
+     "options": [
+      "They replace Machine Learning models",
+      "They help stakeholders monitor KPIs and trends visually",
+      "They remove outliers",
+      "They generate synthetic data"
+     ],
+     "answer": 1,
+     "explanation": "Dashboards provide clear visual insights for business decision-making."
+    },
+    {
+     "question": "What is the main benefit of integrating multiple analytics modules into one platform?",
+     "options": [
+      "Lower internet speed",
+      "Disconnected workflows",
+      "Unified business intelligence and decision support",
+      "Eliminating preprocessing"
+     ],
+     "answer": 2,
+     "explanation": "Integrated systems combine multiple analytical capabilities into one scalable workflow."
+    }
+   ]
+  },
+  {
+   "week": 6,
+   "title": "Forecasting, KPI Analytics & Predictive Business Intelligence",
+   "questions": [
+    {
+     "question": "What is the primary goal of time series forecasting?",
+     "options": [
+      "Remove missing values",
+      "Predict future values using historical patterns",
+      "Cluster customer groups",
+      "Encode categorical features"
+     ],
+     "answer": 1,
+     "explanation": "Time series forecasting predicts future behavior based on historical trends and patterns."
+    },
+    {
+     "question": "What does seasonality mean in time series analysis?",
+     "options": [
+      "Random data noise",
+      "Repeating patterns over regular intervals",
+      "Data duplication",
+      "Feature scaling"
+     ],
+     "answer": 1,
+     "explanation": "Seasonality refers to repeating patterns that occur over fixed time intervals."
+    },
+    {
+     "question": "Which model is commonly used for advanced forecasting tasks?",
+     "options": [
+      "K-Means",
+      "Decision Tree",
+      "ARIMA",
+      "KNN"
+     ],
+     "answer": 2,
+     "explanation": "ARIMA is a widely used statistical forecasting model for time series data."
+    },
+    {
+     "question": "What does Customer Lifetime Value (CLV) estimate?",
+     "options": [
+      "Customer age",
+      "Long-term business value generated by a customer",
+      "Internet traffic",
+      "Feature importance"
+     ],
+     "answer": 1,
+     "explanation": "CLV measures the total expected revenue generated by a customer over time."
+    },
+    {
+     "question": "Why are KPI dashboards important for executives?",
+     "options": [
+      "They replace Machine Learning models",
+      "They provide visual monitoring of business performance",
+      "They remove outliers automatically",
+      "They reduce dataset size"
+     ],
+     "answer": 1,
+     "explanation": "KPI dashboards help decision-makers monitor trends and business health quickly."
+    },
+    {
+     "question": "What is the purpose of A/B testing?",
+     "options": [
+      "Forecast future revenue",
+      "Compare two variations to measure performance differences",
+      "Cluster customers",
+      "Encode categorical data"
+     ],
+     "answer": 1,
+     "explanation": "A/B testing evaluates whether one variation performs better than another."
+    },
+    {
+     "question": "What does statistical significance help determine in A/B testing?",
+     "options": [
+      "Whether observed differences are likely due to chance",
+      "Customer segmentation quality",
+      "Forecasting speed",
+      "Feature scaling accuracy"
+     ],
+     "answer": 0,
+     "explanation": "Statistical significance indicates whether experiment results are meaningful or random."
+    },
+    {
+     "question": "Why is predictive customer risk scoring valuable for businesses?",
+     "options": [
+      "It increases storage capacity",
+      "It helps proactively identify customers likely to churn",
+      "It removes duplicate records",
+      "It visualizes feature importance"
+     ],
+     "answer": 1,
+     "explanation": "Risk scoring systems help businesses take action before customers leave."
+    },
+    {
+     "question": "What is the main benefit of integrating forecasting, KPI tracking, and retention analytics?",
+     "options": [
+      "Lower internet costs",
+      "Centralized business intelligence and decision support",
+      "Automatic data labeling",
+      "Removing customer data"
+     ],
+     "answer": 1,
+     "explanation": "Integrated analytics systems improve strategic business decision-making."
+    },
+    {
+     "question": "Which tool is commonly used to build interactive business dashboards in Python?",
+     "options": [
+      "NumPy",
+      "Matplotlib only",
+      "Streamlit",
+      "OpenCV"
+     ],
+     "answer": 2,
+     "explanation": "Streamlit is widely used for building interactive analytics dashboards and data apps."
+    }
+   ]
+  },
+  {
+   "week": 7,
+   "title": "Deployment, Monitoring & Capstone Engineering",
+   "questions": [
+    {
+     "question": "Why are APIs important in Machine Learning deployment?",
+     "options": [
+      "They remove missing values",
+      "They allow applications to communicate with ML models",
+      "They replace dashboards",
+      "They reduce feature count"
+     ],
+     "answer": 1,
+     "explanation": "APIs expose prediction systems so applications and users can interact with ML models."
+    },
+    {
+     "question": "Which framework is commonly used for building lightweight ML APIs in Python?",
+     "options": [
+      "NumPy",
+      "OpenCV",
+      "FastAPI",
+      "Matplotlib"
+     ],
+     "answer": 2,
+     "explanation": "FastAPI is widely used for building high-performance ML APIs."
+    },
+    {
+     "question": "What is the main purpose of a Streamlit dashboard?",
+     "options": [
+      "Train neural networks",
+      "Create interactive analytics applications",
+      "Scale numerical features",
+      "Cluster customer groups"
+     ],
+     "answer": 1,
+     "explanation": "Streamlit helps build interactive dashboards and analytics interfaces."
+    },
+    {
+     "question": "Why is cloud deployment important for analytics systems?",
+     "options": [
+      "It decreases model accuracy",
+      "It allows public access and scalability",
+      "It removes preprocessing requirements",
+      "It eliminates dashboards"
+     ],
+     "answer": 1,
+     "explanation": "Cloud deployment makes systems accessible online and scalable for users."
+    },
+    {
+     "question": "What is the purpose of logging in production systems?",
+     "options": [
+      "To increase dataset size",
+      "To monitor application behavior and detect issues",
+      "To remove features",
+      "To visualize clusters"
+     ],
+     "answer": 1,
+     "explanation": "Logging helps monitor system activity, errors, and prediction workflows."
+    },
+    {
+     "question": "Why is input validation important in deployed ML systems?",
+     "options": [
+      "It improves internet speed",
+      "It prevents invalid or harmful inputs from breaking the system",
+      "It reduces model complexity",
+      "It removes customer segmentation"
+     ],
+     "answer": 1,
+     "explanation": "Validation ensures prediction systems receive safe and properly formatted data."
+    },
+    {
+     "question": "What is the first step in starting a capstone analytics project?",
+     "options": [
+      "Deploying the final model",
+      "Defining the business problem and system architecture",
+      "Creating dashboards immediately",
+      "Building APIs first"
+     ],
+     "answer": 1,
+     "explanation": "Successful projects begin with clear business objectives and architecture planning."
+    },
+    {
+     "question": "Why are preprocessing pipelines important in production ML systems?",
+     "options": [
+      "They increase internet usage",
+      "They ensure consistent and reusable data transformations",
+      "They replace forecasting models",
+      "They remove APIs"
+     ],
+     "answer": 1,
+     "explanation": "Pipelines standardize preprocessing workflows and improve consistency."
+    },
+    {
+     "question": "What is the purpose of building a baseline prototype during a capstone project?",
+     "options": [
+      "To finalize deployment immediately",
+      "To test core workflows and identify system issues early",
+      "To avoid preprocessing",
+      "To eliminate analytics modules"
+     ],
+     "answer": 1,
+     "explanation": "Baseline prototypes help teams validate ideas and identify weaknesses before scaling."
+    },
+    {
+     "question": "What is the biggest advantage of integrating dashboards, APIs, and ML models into one platform?",
+     "options": [
+      "Reduced prediction quality",
+      "Disconnected workflows",
+      "Unified analytics and decision-making systems",
+      "Removing business KPIs"
+     ],
+     "answer": 2,
+     "explanation": "Integrated systems create centralized, scalable analytics platforms for business decision-making."
+    }
+   ]
+  },
+  {
+   "week": 8,
+   "title": "Optimization, Explainability & Production Analytics",
+   "questions": [
+    {
+     "question": "What is the main purpose of hyperparameter tuning?",
+     "options": [
+      "Increase dataset size",
+      "Optimize model performance",
+      "Remove customer records",
+      "Deploy dashboards"
+     ],
+     "answer": 1,
+     "explanation": "Hyperparameter tuning improves prediction quality and model performance."
+    },
+    {
+     "question": "What problem does Explainable AI primarily solve?",
+     "options": [
+      "Reducing internet usage",
+      "Making ML predictions understandable and transparent",
+      "Scaling databases",
+      "Removing dashboards"
+     ],
+     "answer": 1,
+     "explanation": "Explainable AI helps users and businesses understand how models make decisions."
+    },
+    {
+     "question": "Which library is commonly used for Explainable AI visualizations?",
+     "options": [
+      "TensorFlow",
+      "SHAP",
+      "BeautifulSoup",
+      "OpenCV"
+     ],
+     "answer": 1,
+     "explanation": "SHAP is widely used for interpreting feature importance and ML predictions."
+    },
+    {
+     "question": "Why is UI/UX important in analytics platforms?",
+     "options": [
+      "It improves user interaction and understanding",
+      "It reduces training data",
+      "It removes APIs",
+      "It replaces ML models"
+     ],
+     "answer": 0,
+     "explanation": "Good UI/UX improves usability, adoption, and clarity of analytics systems."
+    },
+    {
+     "question": "What is the primary benefit of real-time prediction systems?",
+     "options": [
+      "Delayed analytics processing",
+      "Immediate business insights and actions",
+      "Removing customer segmentation",
+      "Reducing dashboard quality"
+     ],
+     "answer": 1,
+     "explanation": "Real-time systems allow businesses to react immediately to changing conditions."
+    },
+    {
+     "question": "Why is business storytelling important in Data Science?",
+     "options": [
+      "To make dashboards colorful",
+      "To communicate insights clearly to stakeholders",
+      "To increase dataset size",
+      "To reduce prediction accuracy"
+     ],
+     "answer": 1,
+     "explanation": "Business storytelling helps decision-makers understand and act on analytics insights."
+    },
+    {
+     "question": "What is scalability in production analytics systems?",
+     "options": [
+      "The ability to handle increasing usage and workload efficiently",
+      "Reducing customer data",
+      "Removing ML models",
+      "Avoiding preprocessing"
+     ],
+     "answer": 0,
+     "explanation": "Scalable systems can support more users, requests, and data efficiently."
+    },
+    {
+     "question": "Why is error handling important in production systems?",
+     "options": [
+      "To increase prediction randomness",
+      "To prevent crashes and improve reliability",
+      "To remove dashboards",
+      "To avoid APIs"
+     ],
+     "answer": 1,
+     "explanation": "Error handling improves application stability and user trust."
+    },
+    {
+     "question": "What is the purpose of a capstone project review phase?",
+     "options": [
+      "Delete unfinished modules",
+      "Identify weaknesses and improve system quality",
+      "Stop development completely",
+      "Avoid feedback collection"
+     ],
+     "answer": 1,
+     "explanation": "Review phases help teams refine systems before final launch."
+    },
+    {
+     "question": "Which skill becomes most important during the final stages of a capstone project?",
+     "options": [
+      "Only writing algorithms",
+      "Integrating engineering, analytics, communication, and product thinking",
+      "Memorizing syntax",
+      "Removing visualizations"
+     ],
+     "answer": 1,
+     "explanation": "Final-stage projects require technical integration, communication, optimization, and product-focused thinking."
+    }
+   ]
+  },
+  {
+   "week": 9,
+   "title": "Documentation, Presentation & Production Launch",
+   "questions": [
+    {
+     "question": "Why is technical documentation important in production systems?",
+     "options": [
+      "It reduces prediction accuracy",
+      "It helps developers and users understand, maintain, and use the system",
+      "It removes preprocessing requirements",
+      "It replaces deployment"
+     ],
+     "answer": 1,
+     "explanation": "Documentation improves maintainability, collaboration, onboarding, and usability."
+    },
+    {
+     "question": "What is the purpose of a professional README file?",
+     "options": [
+      "Increase model size",
+      "Explain the project, setup process, and workflows clearly",
+      "Replace dashboards",
+      "Reduce deployment quality"
+     ],
+     "answer": 1,
+     "explanation": "A strong README helps users and recruiters quickly understand the project."
+    },
+    {
+     "question": "Why are demo presentations important in Data Science projects?",
+     "options": [
+      "They improve GPU performance",
+      "They help communicate technical systems and business value clearly",
+      "They remove APIs",
+      "They eliminate preprocessing"
+     ],
+     "answer": 1,
+     "explanation": "Presentations improve communication and help stakeholders understand project impact."
+    },
+    {
+     "question": "What should a strong analytics project presentation include?",
+     "options": [
+      "Only source code",
+      "Problem statement, workflow, insights, architecture, and outcomes",
+      "Only deployment screenshots",
+      "Random datasets"
+     ],
+     "answer": 1,
+     "explanation": "A strong presentation explains both the technical and business aspects of the system."
+    },
+    {
+     "question": "Why is final testing important before launching a production system?",
+     "options": [
+      "To increase bugs intentionally",
+      "To identify reliability and usability issues before release",
+      "To remove customer analytics",
+      "To avoid deployment"
+     ],
+     "answer": 1,
+     "explanation": "Final testing improves stability, usability, and user trust."
+    },
+    {
+     "question": "What does system optimization primarily improve?",
+     "options": [
+      "Application performance and reliability",
+      "Dataset duplication",
+      "Removing dashboards",
+      "Reducing user interaction"
+     ],
+     "answer": 0,
+     "explanation": "Optimization improves responsiveness, stability, and scalability."
+    },
+    {
+     "question": "Why are public project showcases valuable for learners?",
+     "options": [
+      "They decrease visibility",
+      "They strengthen portfolios and improve professional credibility",
+      "They reduce GitHub usage",
+      "They remove deployment requirements"
+     ],
+     "answer": 1,
+     "explanation": "Public showcases improve networking, credibility, and portfolio strength."
+    },
+    {
+     "question": "What is one major benefit of building projects publicly during a challenge?",
+     "options": [
+      "Reduced consistency",
+      "Improved accountability and motivation",
+      "Lower project quality",
+      "Avoiding feedback"
+     ],
+     "answer": 1,
+     "explanation": "Public progress sharing improves consistency, accountability, and engagement."
+    },
+    {
+     "question": "Which skill becomes especially important during final project launches?",
+     "options": [
+      "Only memorizing syntax",
+      "Communication and presentation skills",
+      "Ignoring user feedback",
+      "Avoiding documentation"
+     ],
+     "answer": 1,
+     "explanation": "Communication helps explain technical work effectively to recruiters and stakeholders."
+    },
+    {
+     "question": "What is the biggest outcome of completing an end-to-end capstone project?",
+     "options": [
+      "Learning isolated syntax only",
+      "Building a production-ready portfolio project and practical engineering experience",
+      "Reducing teamwork skills",
+      "Avoiding deployment workflows"
+     ],
+     "answer": 1,
+     "explanation": "Capstone projects demonstrate practical engineering, analytics, deployment, and communication skills."
+    }
+   ]
+  }
+ ]
+}

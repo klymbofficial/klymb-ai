@@ -15,5 +15,6 @@ export interface Product {
 export const products: Product[] = [
   { name: "Klymb.ai Courses", description: "30-day job-ready courses with reviewed work and interview prep.", href: "/tracks", badge: "You're here" },
   { name: "System Design", description: "21 days, 15 minutes a day, on your phone. Built for interviews.", href: "/system-design", badge: "New" },
+  { name: "60-day challenges", description: "Claude, AI, software engineering and data science: one task a day, built in public.", href: "/challenges", badge: "New" },
   { name: "Something new", description: "Our next product for your career. Launching soon.", badge: "Coming soon" },
 ];

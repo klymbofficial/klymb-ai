@@ -16,7 +16,7 @@ import { ProgressRing } from "@/components/learner/ProgressRing";
 import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
 import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
-import { getTrack } from "@/data/tracks";
+import { getTrack, publicPath } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { topicsFor } from "@/lib/coach/topics";
 import { requireLearner } from "@/lib/learner/data";
@@ -26,7 +26,7 @@ import { getCurriculum } from "@/data/curricula";
 export const metadata: Metadata = { title: "My track", robots: { index: false, follow: false } };
 
 /**
- * One track's own page: the 30-day calendar, progress, the voice coach and the
+ * One track's own page: its calendar (30 days, or 60 for a challenge), progress, the voice coach and the
  * learner's evidence. The dashboard at /learn lists every course and links here.
  */
 export default async function TrackHomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -90,7 +90,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
   for (let d = Math.max(0, ...doneDays); d >= 1 && doneDays.has(d); d--) streak++;
   const firstName = learner.name.split(" ")[0] || "there";
   const buddyMessage =
-    doneDays.size === days.length ? `All 30 days done, ${firstName}. Proud of you.`
+    doneDays.size === days.length ? `All ${days.length} days done, ${firstName}. Proud of you.`
     : doneDays.size === 0 ? `Hi ${firstName}, I'm Kamran. Day 1 is ready when you are.`
     : streak >= 3 ? `${streak} days in a row! Day ${nextDay?.day} next.`
     : `Welcome back, ${firstName}. Day ${nextDay?.day} is waiting.`;
@@ -110,7 +110,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
               <StudyBuddy message={buddyMessage} />
             </Appear>
             <Appear y={14}>
-              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.name} track</h1>
+              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.kind === "challenge" ? track.name : `${track.name} track`}</h1>
             </Appear>
             <Appear y={14} delay={0.08}>
               <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/80">
@@ -160,7 +160,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
           <CohortBoard base={home} days={days} initialDay={nextDay?.day ?? days[days.length - 1].day} />
         </Appear>
 
-        <Achievements days={days.filter((d) => d.submitted).length} name={learner.name} course={track.name} slug={learner.track} />
+        <Achievements days={days.filter((d) => d.submitted).length} total={days.length} name={learner.name} course={track.name} courseUrl={publicPath(track)} />
 
         {/* The spoken practice, where a learner will actually look for it:
             the course page they open every day, not a menu. */}

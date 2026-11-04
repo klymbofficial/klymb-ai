@@ -24,11 +24,21 @@ const INCLUDED = [
   { icon: FolderGit2, title: "A public portfolio on GitHub", body: "Evidence a recruiter can open, built day by day." },
 ];
 
+/** What a 60-day challenge includes instead. */
+const INCLUDED_CHALLENGE = [
+  { icon: Target, title: "60 tasks, one a day", body: "Scoped to under an hour, each opening once the last is in." },
+  { icon: ShieldCheck, title: "A quiz every week", body: "Multiple choice, marked straight away with the reasons." },
+  { icon: FolderGit2, title: "Built in public", body: "Every day on GitHub and LinkedIn: sixty days of proof." },
+  { icon: MessagesSquare, title: "Badges to share", body: "First day, seven days, halfway and the finish." },
+];
+
 export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: TrackSlug; googleUser?: GoogleUser }) {
   const [slug, setSlug] = useState<TrackSlug | "">(defaultTrack ?? "");
   const track = slug ? getTrack(slug) : undefined;
   const price = track?.price ?? priceFrom;
   const free = price === 0;
+  const isChallenge = track?.kind === "challenge";
+  const total = isChallenge ? 60 : 30;
 
   return (
     <section id="register" aria-labelledby="register-title" className="grid lg:h-dvh lg:grid-cols-[2fr_3fr]">
@@ -60,10 +70,11 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
 
         <Appear className="relative">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">
-            {track ? `${track.name} track` : "30-day track"}
+            {isChallenge ? "60-day challenge" : track ? `${track.name} track` : "30-day track"}
           </p>
           <h1 id="register-title" className="display display-soft mt-3 max-w-2xl text-[clamp(1.8rem,2.3vw,2.6rem)] text-white">
-            {track ? <>From {track.name} to <span className="text-red-soft">{track.becomes}</span>, in 30 days.</> : "30 days. Real work. A portfolio that gets you hired."}
+            {isChallenge && track ? <>{track.name}: <span className="text-red-soft">one task a day</span>, for 60 days.</>
+              : track ? <>From {track.name} to <span className="text-red-soft">{track.becomes}</span>, in 30 days.</> : "30 days. Real work. A portfolio that gets you hired."}
           </h1>
         </Appear>
 
@@ -101,7 +112,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
         <Appear delay={0.2} className="relative hidden sm:block">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">What you get</p>
           <ul className="mt-3 grid gap-2.5">
-            {INCLUDED.map(({ icon: Icon, title, body }) => (
+            {(isChallenge ? INCLUDED_CHALLENGE : INCLUDED).map(({ icon: Icon, title, body }) => (
               <li key={title} className="flex items-center gap-3 rounded-xl bg-black/15 px-3.5 py-3 ring-1 ring-white/10 backdrop-blur-sm">
                 <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/10">
                   <Icon aria-hidden="true" className="size-4.5 text-red-soft" />
@@ -149,7 +160,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
             <StudyBuddy
               tone="light"
               size={88}
-              message={googleUser?.name ? `Hi ${googleUser.name.split(" ")[0]}, I'm Kamran. One minute here, then I'll see you on Day 1.` : "Hi, I'm Kamran, your study buddy for the next 30 days. This takes about a minute."}
+              message={googleUser?.name ? `Hi ${googleUser.name.split(" ")[0]}, I'm Kamran. One minute here, then I'll see you on Day 1.` : `Hi, I'm Kamran, your study buddy for the next ${total} days. This takes about a minute.`}
             />
           </div>
           <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} bare titled onTrackChange={setSlug} />

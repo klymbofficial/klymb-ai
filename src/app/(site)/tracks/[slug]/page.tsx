@@ -4,7 +4,7 @@ import { TrackDetail } from "@/components/track/TrackDetail";
 import { allTracks as tracks, getTrack } from "@/data/tracks";
 
 export function generateStaticParams() {
-  return tracks.map((t) => ({ slug: t.slug }));
+  return tracks.filter((t) => t.kind !== "challenge").map((t) => ({ slug: t.slug }));
 }
 
 export const dynamicParams = false;

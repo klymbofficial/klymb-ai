@@ -284,6 +284,43 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
   return { subject, html, text };
 }
 
+/** The welcome for a 60-day challenge: no checkpoints or interview prep, a task a day in public and a weekly quiz. */
+export function challengeWelcomeEmail(p: { name: string; challengeName: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = `Welcome to Klymb.ai, ${p.name}`;
+  const text = [
+    `Hi ${p.name},`, "",
+    `Welcome to Klymb.ai. You're on the ${p.challengeName} 60-day challenge.`, "",
+    `Start Day 1: ${p.siteUrl}/learn`,
+    "Start any day: Day 1 opens as soon as you are enrolled, and each day opens once the one before is in.", "",
+    "Your 60 days",
+    "One scoped task a day, usually under an hour.",
+    "Push the work to GitHub and post about it on LinkedIn: both links are your submission.",
+    "A short quiz at the end of every week, marked straight away.", "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders out of your spam folder.", "",
+    `Sign in any time with this email: ${p.siteUrl}/learn`, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: `You're on the ${p.challengeName} challenge. Day 1 is open.`,
+    eyebrow: "Welcome to Klymb.ai",
+    title: `Glad you're here, ${esc(p.name)}.`,
+    intro: `You're on the <strong style="color:#fff">${esc(p.challengeName)}</strong> 60-day challenge. Sixty days from now, you'll have sixty days of public, dated work to show for it.`,
+    sections: [
+      `${sectionTitle("Start when you're ready")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Challenge", p.challengeName)}${row("Starts", "Any day you choose")}</table>${button(`${site}/learn`, "Start Day 1")}`,
+      `${sectionTitle("Your 60 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${step(1, "One task a day", "Scoped to usually under an hour. Each day opens once the one before is submitted.")}
+        ${step(2, "Built in public", "Push the work to your GitHub repository and post about it on LinkedIn. Both links are your submission.")}
+        ${step(3, "A quiz every week", "A short multiple-choice quiz at the end of each week, marked straight away with the reasons.")}
+      </table>
+      <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders never land in spam.</div>
+      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">Sign in any time at <a href="${site}/learn" style="color:${C.maroon};font-weight:600">klymb.ai/learn</a> with this email, using Continue with Google.</div>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
 /**
  * For someone enrolled directly (invite-only or free tracks): no form, no
  * payment. Says how to sign in and set up, with track-specific steps.

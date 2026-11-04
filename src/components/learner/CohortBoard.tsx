@@ -34,7 +34,7 @@ function formatLong(iso: string) {
 }
 
 /**
- * The learner's whole cohort on one surface: a calendar of the 30 days, the
+ * The learner's whole course on one surface: a calendar of its days, the
  * day list, and the detail of whichever day is selected.
  *
  * Selecting a day is local state: nothing is saved until they open the day
@@ -82,7 +82,7 @@ export function CohortBoard({ base, days, initialDay }: { /** The track's own ad
     <div className="card grid gap-8 rounded-slab p-6 sm:p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10 lg:p-10">
       {/* ── Calendar ─────────────────────────────────────────── */}
       <section aria-labelledby="your-30-days" className="min-w-0">
-        <h2 id="your-30-days" className="display text-3xl">Your 30 days</h2>
+        <h2 id="your-30-days" className="display text-3xl">Your {days.length} days</h2>
         <p className="mt-2 text-sm text-muted">Submitted days are filled. Assessment days are marked in red.</p>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">

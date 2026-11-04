@@ -1,7 +1,7 @@
 import { HIDE_MONEY } from "@/lib/site-status";
 import type { MetadataRoute } from "next";
 import { site } from "@/data/config";
-import { tracks } from "@/data/tracks";
+import { challenges, tracks } from "@/data/tracks";
 
 /** Every public page. Signed-in areas are deliberately absent. */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -17,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/program", 0.8, "monthly"),
     page("/tracks", 0.8, "monthly"),
     ...tracks.map((t) => page(`/tracks/${t.slug}`, t.available ? 0.9 : 0.6, "monthly")),
+    page("/challenges", 0.8, "monthly"),
+    ...challenges.map((c) => page(`/challenges/${c.slug}`, 0.8, "monthly")),
     page("/system-design", 0.9, "weekly"),
     page("/register", 0.9, "weekly"),
     page("/contact", 0.4, "yearly"),
