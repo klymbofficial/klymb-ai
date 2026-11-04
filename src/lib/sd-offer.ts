@@ -171,9 +171,13 @@ export type ReferralStanding = { view: ReferralView; why: null } | { view: null;
 
 export const referralLink = (site: string, code: string) => `${site}/system-design?ref=${code}`;
 
-/** A lesson post tagging Klymb. The API turns this into a real mention of the company page. */
+/**
+ * A lesson post tagging Klymb. The API turns this into a real mention of the
+ * company page. No ".ai": LinkedIn would read a domain, add a link card, and
+ * the card stops the image being pasted in.
+ */
 export function taggedPost(post: string, lang: "en" | "hi") {
-  return `${post}\n\n${lang === "hi" ? "@Klymb.ai ke saath seekh raha hoon" : "Learning with @Klymb.ai"}`;
+  return `${post}\n\n${lang === "hi" ? "@Klymb ke saath seekh raha hoon" : "Learning with @Klymb"}`;
 }
 
 /** A lesson post with their link on the end, in the lesson's language. */

@@ -98,15 +98,14 @@ const escapeLittle = (s: string) => s.replace(RESERVED, "\\$&");
  * A post's text as the Posts API wants it. Hashtags become LinkedIn's hashtag
  * template, so they stay tappable; every other reserved character is escaped
  * and shows up as typed. A # inside a word (C#) is plain text. Given a company
- * page, "@" plus its exact name becomes a real mention of that page.
+ * page, "@Klymb" becomes a real mention of that page, under its exact name.
  */
 export function toLittleText(text: string, mention?: { name: string; urn: string } | null) {
   const little = text.replace(/(?<![\p{L}\p{N}_])#(\p{L}[\p{L}\p{N}_]*)|[\\|{}@[\]()<>#*_~]/gu, (match, tag?: string) =>
     tag ? `{hashtag|\\#|${escapeLittle(tag)}}` : `\\${match}`,
   );
   if (!mention) return little;
-  const typed = `\\@${escapeLittle(mention.name)}`;
-  return little.replaceAll(typed, () => `@[${escapeLittle(mention.name)}](${mention.urn})`);
+  return little.replaceAll("\\@Klymb", () => `@[${escapeLittle(mention.name)}](${mention.urn})`);
 }
 
 /** Trimmed, with Windows line ends folded; null if empty or too long to post. */
