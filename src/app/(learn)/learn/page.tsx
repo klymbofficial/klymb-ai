@@ -10,7 +10,6 @@ import { contact } from "@/data/config";
 import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
 import { getTrack, tracks } from "@/data/tracks";
-import { platformLink, platformPrograms, type PlatformProgram } from "@/data/platform-programs";
 import type { Track } from "@/types/program";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
@@ -135,25 +134,9 @@ function MoreSystemDesignCard() {
   );
 }
 
-/** An app.klymb.ai program: it opens there, in a new tab. */
-function PlatformCard({ program }: { program: PlatformProgram }) {
-  return (
-    <article className="flex flex-col gap-3 rounded-card border border-line/40 bg-card p-5">
-      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">app.klymb.ai · {program.kind}</p>
-      <h3 className="text-lg font-extrabold">{program.title}</h3>
-      <p className="text-sm text-muted">{program.line}</p>
-      {program.note && <p className="text-xs font-bold text-red-deep">{program.note}</p>}
-      <a href={platformLink(program.path)} target="_blank" rel="noopener" className="mt-auto self-start pt-1 text-sm font-bold underline underline-offset-4 hover:text-red-deep">
-        Open on app.klymb.ai<span aria-hidden="true"> ↗</span><span className="sr-only"> (opens in a new tab)</span>
-      </a>
-    </article>
-  );
-}
-
 /**
  * The dashboard: every course this person has, each with how far they are
- * and the one next step; then every course they don't have yet, tracks and
- * System Design here, and app.klymb.ai's programs, which open there.
+ * and the one next step; then every course they don't have yet.
  */
 export default async function DashboardPage() {
   const state = await getLearnerState();
@@ -201,14 +184,6 @@ export default async function DashboardPage() {
             </div>
           </Appear>
         )}
-
-        <Appear y={12} delay={0.16} className="mt-14">
-          <h2 className="text-xl font-extrabold">On app.klymb.ai</h2>
-          <p className="mt-1 text-sm text-muted">Programs on our community platform. They open there, with its own sign-in.</p>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {platformPrograms.map((p) => <PlatformCard key={p.path} program={p} />)}
-          </div>
-        </Appear>
 
         <p className="mt-14 text-xs text-muted">
           Questions? <Link href={`mailto:${contact.email}`} className="underline underline-offset-2 hover:text-ink">{contact.email}</Link>
