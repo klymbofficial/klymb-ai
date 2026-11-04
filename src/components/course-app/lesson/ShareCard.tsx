@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Day, DayCopy, Lang } from "@/data/system-design/types";
 import { useLinkedInPost } from "@/components/share/LinkedInPost";
 import { fetchImage, useShareImage, type LinkedInShare } from "@/lib/linkedin-share";
-import { referralPost, taggedPost } from "@/lib/sd-offer";
+import { canRefer, referralPost, taggedPost } from "@/lib/sd-offer";
 import { Icon } from "../icons";
 import { useReferral } from "../Referral";
 import { track } from "../track";
@@ -28,7 +28,7 @@ const UI = {
  * The learn-in-public card: why to share, the image, and the post. At lesson
  * end it comes first and stands out; on a revisit it also shows the ready-written
  * post so it can be read, copied and edited. `onShared` fires once they've posted.
- * The post tags Klymb, and while a buyer's referral offer is open it ends with their link.
+ * The post tags Klymb, and while a buyer can refer it ends with their link.
  */
 export function ShareCard({ lang, id, day, c, shared, onShared, showText = false }: {
   lang: Lang; id: string; day: Day; c: DayCopy; shared: boolean; onShared: () => void; showText?: boolean;
@@ -36,7 +36,7 @@ export function ShareCard({ lang, id, day, c, shared, onShared, showText = false
   const ui = UI[lang];
   const referral = useReferral();
   const tagged = taggedPost(c.linkedin, lang);
-  const hasLink = referral?.state === "open" && !referral.sample;
+  const hasLink = !!referral && canRefer(referral.state) && !referral.sample;
   const post = hasLink ? referralPost(tagged, referral.link, lang) : tagged;
   const [posted, setPosted] = useState("");
   const [copied, setCopied] = useState(false);

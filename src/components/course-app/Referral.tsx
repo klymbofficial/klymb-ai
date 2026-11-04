@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { SD_REFERRAL, type ReferralStanding, type ReferralView } from "@/lib/sd-offer";
+import { SD_REFERRAL, canRefer, type ReferralStanding, type ReferralView } from "@/lib/sd-offer";
 import { Icon } from "./icons";
 import { track } from "./track";
 import type { Act } from "./useCourseApp";
@@ -97,7 +97,7 @@ function detail(r: ReferralView) {
   }
 }
 
-/** Where they stand on the Refer tab, with their link while it can still earn anything. */
+/** Where they stand on the Refer tab, with their link while they can refer. */
 export function ReferralCard({ r }: { r: ReferralView }) {
   const body = detail(r);
   return (
@@ -110,7 +110,8 @@ export function ReferralCard({ r }: { r: ReferralView }) {
         </div>
       )}
       {body && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">{body} <Link href="/refund-policy" className="underline underline-offset-2">T&amp;C apply.</Link></p>}
-      {r.state === "open" && <ShareLink r={r} />}
+      {r.state === "earned" && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">Your link still works, so keep sharing it with friends.</p>}
+      {canRefer(r.state) && <ShareLink r={r} />}
     </section>
   );
 }
