@@ -10,6 +10,7 @@ import type { SdProgress } from "@/lib/sd-pace";
 import { Icon, type IconName } from "./icons";
 import { Commitment, LeaveQuizDialog, Onboarding, PaywallSheet, QuickCheckSheet, Splash, StreakPop, Toast } from "./Overlays";
 import { ReferralProvider, ReferralSheet, SAMPLE_REFERRAL } from "./Referral";
+import { ReminderSheet } from "./SdReminders";
 import { Course } from "./screens/Course";
 import { Home } from "./screens/Home";
 import { Notifications } from "./screens/Inbox";
@@ -191,6 +192,8 @@ export function CourseApp({ user = null, lessons, enrolled, referral, passes = N
       {s.confirmExit && <LeaveQuizDialog s={s} act={act} />}
       {s.paywall && <PaywallSheet s={s} act={act} />}
       {standing.view?.state === "open" && !s.referralSeen && showTabs && <ReferralSheet r={standing.view} act={act} />}
+      {/* One ask at a time: the referral offer goes first. */}
+      {user && enrolled && showTabs && (standing.view?.state !== "open" || s.referralSeen) && <ReminderSheet />}
       {s.toast && <Toast text={s.toast} />}
     </div>
     </ReferralProvider>
