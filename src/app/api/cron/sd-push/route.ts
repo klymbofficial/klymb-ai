@@ -14,7 +14,8 @@ export const maxDuration = 300;
 const CONCURRENCY = 25;
 
 /**
- * 08:00, 17:00 and 21:00 IST (.github/workflows/sd-push.yml, with ?slot=).
+ * 08:00, 17:00 and 21:00 IST, called by cron-job.org with ?slot=. GitHub Actions
+ * ran hours late, too late for a reminder.
  * Notifies the devices of each System Design learner who passed no lesson check
  * today and has a lesson open to take. A pass stops the rest of that day's. A
  * re-run is harmless: the notification replaces itself on the device.
