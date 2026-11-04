@@ -97,12 +97,16 @@ const escapeLittle = (s: string) => s.replace(RESERVED, "\\$&");
 /**
  * A post's text as the Posts API wants it. Hashtags become LinkedIn's hashtag
  * template, so they stay tappable; every other reserved character is escaped
- * and shows up as typed. A # inside a word (C#) is plain text.
+ * and shows up as typed. A # inside a word (C#) is plain text. Given a company
+ * page, "@" plus its exact name becomes a real mention of that page.
  */
-export function toLittleText(text: string) {
-  return text.replace(/(?<![\p{L}\p{N}_])#(\p{L}[\p{L}\p{N}_]*)|[\\|{}@[\]()<>#*_~]/gu, (match, tag?: string) =>
+export function toLittleText(text: string, mention?: { name: string; urn: string } | null) {
+  const little = text.replace(/(?<![\p{L}\p{N}_])#(\p{L}[\p{L}\p{N}_]*)|[\\|{}@[\]()<>#*_~]/gu, (match, tag?: string) =>
     tag ? `{hashtag|\\#|${escapeLittle(tag)}}` : `\\${match}`,
   );
+  if (!mention) return little;
+  const typed = `\\@${escapeLittle(mention.name)}`;
+  return little.replaceAll(typed, () => `@[${escapeLittle(mention.name)}](${mention.urn})`);
 }
 
 /** Trimmed, with Windows line ends folded; null if empty or too long to post. */
@@ -148,8 +152,8 @@ export interface Published { urn: string; url: string }
  * is posted unless the upload went through.
  */
 export async function publishImagePost(
-  { accessToken, author, text, image, altText, version = DEFAULT_API_VERSION }:
-  { accessToken: string; author: string; text: string; image: Blob; altText: string; version?: string },
+  { accessToken, author, text, image, altText, version = DEFAULT_API_VERSION, mention }:
+  { accessToken: string; author: string; text: string; image: Blob; altText: string; version?: string; mention?: { name: string; urn: string } | null },
   { fetch: f = fetch }: { fetch?: Fetch } = {},
 ): Promise<Published> {
   const rest = {
@@ -184,7 +188,7 @@ export async function publishImagePost(
     headers: rest,
     body: JSON.stringify({
       author,
-      commentary: toLittleText(text),
+      commentary: toLittleText(text, mention),
       visibility: "PUBLIC",
       distribution: { feedDistribution: "MAIN_FEED", targetEntities: [], thirdPartyDistributionChannels: [] },
       content: { media: { id: value.image, altText: altText.slice(0, MAX_ALT_TEXT) } },

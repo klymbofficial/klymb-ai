@@ -171,6 +171,11 @@ export type ReferralStanding = { view: ReferralView; why: null } | { view: null;
 
 export const referralLink = (site: string, code: string) => `${site}/system-design?ref=${code}`;
 
+/** A lesson post tagging Klymb. The API turns this into a real mention of the company page. */
+export function taggedPost(post: string, lang: "en" | "hi") {
+  return `${post}\n\n${lang === "hi" ? "@Klymb.ai ke saath seekh raha hoon" : "Learning with @Klymb.ai"}`;
+}
+
 /** A lesson post with their link on the end, in the lesson's language. */
 export function referralPost(post: string, link: string, lang: "en" | "hi") {
   return `${post}\n\n${lang === "hi" ? "Mere saath seekhna hai? Yahan join karo" : "Want to learn this with me? Join here"}: ${link}`;

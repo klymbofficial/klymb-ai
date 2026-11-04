@@ -52,6 +52,8 @@ export async function POST(req: Request) {
       text,
       image: new Blob([await image.arrayBuffer()], { type: "image/png" }),
       altText: typeof alt === "string" ? alt.trim() : "",
+      // Klymb's company page, once its URN and exact page name are set: "@Klymb.ai" in the post becomes a real mention.
+      mention: process.env.LINKEDIN_ORG_URN && process.env.LINKEDIN_ORG_NAME ? { urn: process.env.LINKEDIN_ORG_URN, name: process.env.LINKEDIN_ORG_NAME } : null,
       version: app.version,
     });
     return NextResponse.json({ ok: true, url: post.url });
