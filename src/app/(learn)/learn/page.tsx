@@ -11,6 +11,9 @@ import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
 import { challenges, getTrack, publicPath, tracks } from "@/data/tracks";
 import type { Track } from "@/types/program";
+import { COURSES } from "@/data/courses/registry";
+import type { Course } from "@/data/courses/types";
+import { courseProgressSummary } from "@/lib/course-progress";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
 import { systemDesignSeat, type SystemDesignSeat } from "@/lib/learner/courses";
@@ -119,6 +122,46 @@ function MoreTrackCard({ track }: { track: Track }) {
   );
 }
 
+/** A self-paced course they have opened: modules done and the next one to read. */
+function SelfPacedCard({ course, done }: { course: Course; done: string[] }) {
+  const next = course.modules.find((m) => !done.includes(m.slug));
+  const total = course.modules.length;
+  const count = course.modules.filter((m) => done.includes(m.slug)).length;
+  return (
+    <article className="card flex flex-col gap-4 p-6">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Course · {total} modules</p>
+      <div>
+        <h2 className="display text-2xl"><Link href={`/courses/${course.slug}`} className="hover:text-red-deep">{course.title}</Link></h2>
+        <p className="mt-1 text-sm text-muted">{next ? `Up next · Module ${next.number}: ${next.title}` : "Course complete. Every module done."}</p>
+      </div>
+      <div className="mt-auto flex flex-col gap-4">
+        <div>
+          <Bar done={count} total={total} />
+          <p className="mt-2 text-xs font-bold text-muted nums">{count} of {total} modules done</p>
+        </div>
+        <ButtonLink href={next ? `/learn/courses/${course.slug}/${next.slug}` : `/courses/${course.slug}`} arrow className="self-start rounded-md px-5 py-2.5 text-xs">
+          {next ? (count ? `Continue module ${next.number}` : "Start module 1") : "Review the course"}
+        </ButtonLink>
+      </div>
+    </article>
+  );
+}
+
+/** A self-paced course they haven't opened yet. */
+function MoreCourseCard({ course }: { course: Course }) {
+  return (
+    <article className="card flex flex-col gap-3 p-5">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Course · {course.modules.length} modules</p>
+      <h3 className="text-lg font-extrabold">{course.title}</h3>
+      <p className="text-sm text-muted">{course.tagline}</p>
+      <div className="mt-auto flex flex-wrap items-center gap-4 pt-1">
+        <ButtonLink href={`/learn/courses/${course.slug}/${course.modules[0].slug}`} arrow className="rounded-md px-4 py-2 text-xs">Start module 1</ButtonLink>
+        <Link href={`/courses/${course.slug}`} className="text-sm font-semibold underline underline-offset-4 hover:text-red-deep">View course</Link>
+      </div>
+    </article>
+  );
+}
+
 /** System Design, for someone who hasn't got it. */
 function MoreSystemDesignCard() {
   return (
@@ -145,10 +188,12 @@ export default async function DashboardPage() {
 
   const session = await auth();
   const email = state.state === "enrolled" ? state.learner.email : state.email;
-  const [places, seat] = await Promise.all([getLearnerTracks(), systemDesignSeat(email)]);
+  const [places, seat, reading] = await Promise.all([getLearnerTracks(), systemDesignSeat(email), courseProgressSummary(email)]);
+  const opened = COURSES.filter((c) => reading[c.slug]);
+  const unopened = COURSES.filter((c) => !reading[c.slug]);
   const name = places[0]?.learner.name || session?.user?.name || email.split("@")[0];
   const firstName = name.split(" ")[0];
-  const none = !places.length && !seat;
+  const none = !places.length && !seat && !opened.length;
   const mine = new Set(places.map((p) => p.learner.track));
   const moreTracks = [...tracks, ...challenges].filter((t) => !mine.has(t.slug));
 
@@ -172,15 +217,17 @@ export default async function DashboardPage() {
           <Appear y={12} delay={0.06} className="mt-8 grid gap-6 lg:grid-cols-2">
             {places.map((p) => <TrackCard key={p.learner.id} learner={p.learner} submissions={p.submissions} />)}
             {seat && <SystemDesignCard seat={seat} />}
+            {opened.map((c) => <SelfPacedCard key={c.slug} course={c} done={reading[c.slug].done} />)}
           </Appear>
         )}
 
-        {(moreTracks.length > 0 || !seat) && (
+        {(moreTracks.length > 0 || !seat || unopened.length > 0) && (
           <Appear y={12} delay={0.12} className="mt-14">
             <h2 className="text-xl font-extrabold">{none ? "Start a course" : "More courses"}</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {moreTracks.map((t) => <MoreTrackCard key={t.slug} track={t} />)}
               {!seat && <MoreSystemDesignCard />}
+              {unopened.map((c) => <MoreCourseCard key={c.slug} course={c} />)}
             </div>
           </Appear>
         )}

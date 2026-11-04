@@ -46,7 +46,7 @@ export function Footer() {
               ))}
             </ul>
           </div>
-          <Column title="Programs" links={[...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })), { label: "System Design", href: "/system-design" }]} />
+          <Column title="Programs" links={[...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })), { label: "System Design", href: "/system-design" }, { label: "Agentic AI Systems", href: "/courses/agentic-ai" }]} />
           <Column title="Resources" links={footerLinks.program} />
           <Column title="Legal" links={footerLinks.company} />
         </div>
