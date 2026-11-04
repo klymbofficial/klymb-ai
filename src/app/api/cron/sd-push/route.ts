@@ -5,7 +5,7 @@ import { todayInIndia } from "@/lib/learn";
 import { pushReady, sendPush, type PushTarget } from "@/lib/push";
 import { SD_COURSE } from "@/lib/sd-offer";
 import { canTake, paceOf } from "@/lib/sd-pace";
-import { SD_FINAL_ASSESSMENT, SD_PUSH_SLOTS, pickSdReminder, sdReminderPush, type SdPushSlot } from "@/lib/sd-reminders";
+import { SD_FINAL_ASSESSMENT, SD_PUSH_SLOTS, pickSdReminder, pushStanding, sdReminderPush, type SdPushSlot } from "@/lib/sd-reminders";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
   if (!learners?.length) return NextResponse.json({ slot, checked: 0, sent: 0 });
   const emails = learners.map((l) => l.email);
 
-  const [{ data: devices, error: e1 }, { data: checks, error: e2 }, { data: finals, error: e3 }] = await Promise.all([
+  const [{ data: devices, error: e1 }, { data: checks, error: e2 }, { data: finals, error: e3 }, { data: activity }] = await Promise.all([
     sql.rows<PushTarget & { email: string }>`select endpoint, email, p256dh, auth from course.sd_push_subscriptions where email = any(${emails}::text[])`,
     sql.rows<{ email: string; lesson: string; passed_on: string }>`
       select email, lesson, to_char(passed_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as passed_on
@@ -51,7 +51,14 @@ export async function GET(req: Request) {
     sql.rows<{ email: string; attempt: number; score: number; at: string }>`
       select email, attempt, score, taken_at as at from course.final_attempts where course = ${SD_COURSE} and email = any(${emails}::text[])
     `,
+    // What they've been working on lately. Only changes the wording, so a failure here doesn't stop anything.
+    sql.rows<{ email: string; lesson: string }>`
+      select distinct email, lesson from course.sd_events
+       where email = any(${emails}::text[]) and lesson is not null and event in ('video_play', 'step_done')
+         and created_at > now() - interval '14 days'
+    `,
   ]);
+  const startedOn = new Set((activity ?? []).map((a) => `${a.email}|${a.lesson}`));
   const failed = e1 ?? e2 ?? e3;
   if (failed) return NextResponse.json({ error: failed.message }, { status: 500 });
 
@@ -74,7 +81,9 @@ export async function GET(req: Request) {
     const pick = pickSdReminder({ enrolledOn: l.enrolled_on, passes: passed, remindedOn: null, streak: 0 }, today);
     if (!pick || (pick.target.kind === "lesson" ? !canTake(pace, pick.target.lesson.id) : !pace.finalOpen)) continue;
     due++;
-    const message = sdReminderPush(pick.target.kind === "lesson" ? pick.target.lesson : null, slot, l.name);
+    const lesson = pick.target.kind === "lesson" ? pick.target.lesson : null;
+    const passDates = [...passed].filter(([id]) => id !== SD_FINAL_ASSESSMENT).map(([, on]) => on);
+    const message = sdReminderPush(lesson, slot, l.name, pushStanding(passDates, !!lesson && startedOn.has(`${l.email}|${lesson.id}`), today));
     for (const device of devicesOf.get(l.email) ?? []) outgoing.push({ device, message });
   }
 

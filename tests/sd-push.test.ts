@@ -1,29 +1,45 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { sdReminderPush } from "../src/lib/sd-reminders";
+import { COURSE_LESSONS, pushStanding, sdReminderPush } from "../src/lib/sd-reminders";
 
-test("the reminder notification opens the lesson it names", () => {
-  const m = sdReminderPush({ id: "0-2", title: "Why do applications slow down?", minutes: 7 }, "morning");
+const day3 = COURSE_LESSONS.find((l) => l.id === "0-2")!;
+const fresh = { started: false, streak: 0, lapsed: false };
+
+test("a learner with nothing special gets the lesson's own hook", () => {
+  const m = sdReminderPush(day3, "morning", "Sarthak Gupta", fresh);
+  assert.equal(m.title, "Users badhe, app slow. Kyun? 🤔");
+  assert.equal(m.body, "Sarthak, aaj samjho apps slow kyun hoti hain. Day 3 ready hai.");
   assert.equal(m.url, "/learn/system-design?lesson=0-2");
-  assert.match(m.body, /slow down\? · 7 min/);
+  assert.equal(sdReminderPush(day3, "evening", "Sarthak", fresh).title, "App slow hai. Pehle kya check karoge?");
+  assert.equal(sdReminderPush(day3, "night", "Sarthak", fresh).title, "Sarthak, aaj ka lesson kar lein?");
 });
 
-test("with every lesson passed it points at the final assessment", () => {
-  const m = sdReminderPush(null, "night");
-  assert.equal(m.url, "/learn/system-design");
-  assert.match(m.title, /final assessment/);
+test("started, lapsed and streak each speak differently, started first", () => {
+  assert.match(sdReminderPush(day3, "morning", "A", { ...fresh, started: true, lapsed: true }).title, /shuru kiya tha/);
+  assert.match(sdReminderPush(day3, "morning", "A", { ...fresh, lapsed: true }).title, /Koi baat nahi/);
+  assert.match(sdReminderPush(day3, "night", "A", { ...fresh, streak: 4 }).title, /4 din ki streak/);
 });
 
-test("three a day, each replacing the last, and only the morning sounds", () => {
-  const lesson = { id: "0-0", title: "T", minutes: 6 };
-  const [morning, evening, night] = (["morning", "evening", "night"] as const).map((slot) => sdReminderPush(lesson, slot));
-  assert.deepEqual([morning.loud, evening.loud, night.loud], [true, false, false]);
-  assert.equal(new Set([morning.tag, evening.tag, night.tag]).size, 1);
-  assert.equal(new Set([morning.title, evening.title, night.title]).size, 3);
+test("it reads fine with no name, and for the final assessment", () => {
+  assert.equal(sdReminderPush(day3, "night", null, fresh).title, "Aaj ka lesson kar lein?");
+  assert.equal(sdReminderPush(null, "night", "Sarthak", fresh).body, "Yeh kar lo aur course poora.");
 });
 
-test("it greets them by first name, and reads fine without one", () => {
-  const lesson = { id: "0-0", title: "T", minutes: 6 };
-  assert.equal(sdReminderPush(lesson, "morning", " Sarthak Gupta ").title, "Sarthak, your lesson for today is ready");
-  assert.equal(sdReminderPush(lesson, "morning", null).title, "Your lesson for today is ready");
+test("only the morning sounds, and each replaces the last", () => {
+  const all = (["morning", "evening", "night"] as const).map((s) => sdReminderPush(day3, s, "A", fresh));
+  assert.deepEqual(all.map((m) => m.loud), [true, false, false]);
+  assert.equal(new Set(all.map((m) => m.tag)).size, 1);
+});
+
+test("no spam wording in any combination", () => {
+  for (const lesson of [...COURSE_LESSONS, null]) for (const slot of ["morning", "evening", "night"] as const) for (const s of [fresh, { ...fresh, started: true }, { ...fresh, lapsed: true }, { ...fresh, streak: 5 }]) {
+    const m = sdReminderPush(lesson, slot, "A", s);
+    assert.doesNotMatch(`${m.title} ${m.body}`, /last call|hurry|undefined/i);
+  }
+});
+
+test("standing comes from the dates of their passes", () => {
+  assert.deepEqual(pushStanding([], false, "2026-11-05"), fresh);
+  assert.deepEqual(pushStanding(["2026-11-04", "2026-11-03"], false, "2026-11-05"), { started: false, streak: 2, lapsed: false });
+  assert.deepEqual(pushStanding(["2026-11-01"], true, "2026-11-05"), { started: true, streak: 0, lapsed: true });
 });

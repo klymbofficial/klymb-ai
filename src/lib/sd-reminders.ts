@@ -116,25 +116,69 @@ export function emailFromToken(token: unknown, secret: string | undefined): stri
 export const SD_PUSH_SLOTS = ["morning", "evening", "night"] as const;
 export type SdPushSlot = (typeof SD_PUSH_SLOTS)[number];
 
-const PUSH_TITLE: Record<SdPushSlot, string> = {
-  morning: "Your lesson for today is ready",
-  evening: "There’s still time for today’s lesson",
-  night: "It’s the last call for today’s lesson",
+/** A lesson's own hook: the question at 8 AM, then what the learner would do at 5 PM. */
+const PUSH_HOOKS: Record<string, { morning: string; topic: string; evening: string; eveningBody: string }> = {
+  "0-0": { morning: "Last pair, do buyers. Kaise? 🤔", topic: "system design hota kya hai", evening: "Dono ko “Order confirmed”. Galti kahan hui?", eveningBody: "Stock check karna kaafi hai?" },
+  "0-1": { morning: "Tap se saved cart tak kya hota hai? 🤔", topic: "ek app andar se kaise chalti hai", evening: "Timeout aaya. Cart save hua ya nahi?", eveningBody: "Request ka poora raasta" },
+  "0-2": { morning: "Users badhe, app slow. Kyun? 🤔", topic: "apps slow kyun hoti hain", evening: "App slow hai. Pehle kya check karoge?", eveningBody: "Sirf servers badhana kaafi hai?" },
+  "0-3": { morning: "Teen servers. Request kiske paas jaaye? 🤔", topic: "load balancing kaise kaam karti hai", evening: "Ek server down. Ab kya hoga?", eveningBody: "Login bhi na toote, kaise?" },
+  "0-4": { morning: "Purane order ka price kyun nahi badalta? 🤔", topic: "database mein data kaise rakhte hain", evening: "Har column par index laga dein?", eveningBody: "Fayda bhi hai, cost bhi." },
+  "0-5": { morning: "Har baar database se kyun poochna? 🤔", topic: "caching kaise kaam karti hai", evening: "Cache mein purana price. Ab kya?", eveningBody: "Tez bhi, sahi bhi, kaise?" },
+  "0-6": { morning: "Database bhaari ho gaya. Ab kya? 🤔", topic: "replication aur sharding mein farak", evening: "Address badla, purana kyun dikh raha hai?", eveningBody: "Replica ya shard?" },
+  "1-1": { morning: "Ek service slow, poori app kyun ruke? 🤔", topic: "failure ke liye design kaise karte hain", evening: "Timeout aaya. Retry kar dein?", eveningBody: "Payment do baar na kat jaaye" },
+  "1-3": { morning: "Ek post, 10 lakh followers. Kaise? 🤔", topic: "social feed kaise banti hai", evening: "Post pehle bhejein ya feed khulne par?", eveningBody: "Dono ka trade-off" },
 };
 
+/** Where a learner stands today, which decides how a notification speaks to them. */
+export interface PushStanding {
+  /** They've watched or worked on this lesson without passing it yet. */
+  started: boolean;
+  /** Days in a row with a pass, ending yesterday. */
+  streak: number;
+  /** They had passed something, but not yesterday or today, so a streak has lapsed. */
+  lapsed: boolean;
+}
+
+/** The learner's standing, from the IST dates of their passes. */
+export function pushStanding(passDates: string[], started: boolean, today: string): PushStanding {
+  const days = new Set(passDates);
+  let streak = 0;
+  for (let at = Date.parse(`${today}T00:00:00Z`) - 864e5; days.has(new Date(at).toISOString().slice(0, 10)); at -= 864e5) streak++;
+  return { started, streak, lapsed: days.size > 0 && streak === 0 };
+}
+
+/** Kamran's face for the moment, as on the 30-day tracks. */
+const pushFace = (mood: "excited" | "surprised" | "sleepy" | "missing") => `/mascots/kamran-${mood}-v2.png`;
+
 /**
- * One of the day's three notifications. Each replaces the one before it, and
- * only the morning's sounds: repeated alerts from one site are what Chrome's
- * spam detection flags.
+ * One of the day's three notifications, in the order: started, lapsed, on a
+ * streak, everyone else. Each replaces the one before it, and only the
+ * morning's sounds: repeated alerts from one site are what Chrome's spam
+ * detection flags, which is also why none says "last call" or counts down.
  */
-export function sdReminderPush(lesson: { id: string; title: string; minutes: number } | null, slot: SdPushSlot, name?: string | null) {
-  const first = name?.trim().split(/\s+/)[0];
-  const title = lesson ? PUSH_TITLE[slot] : "Your final assessment is due";
-  return {
-    title: first ? `${first}, ${title[0].toLowerCase()}${title.slice(1)}` : title,
-    body: lesson ? `${lesson.title} · ${lesson.minutes} min` : "Finish it to complete the course.",
-    url: `/learn/system-design${lesson ? `?lesson=${lesson.id}` : ""}`,
-    tag: "sd-reminder",
-    loud: slot === "morning",
-  };
+export function sdReminderPush(lesson: CourseLesson | null, slot: SdPushSlot, name: string | null | undefined, standing: PushStanding) {
+  const first = name?.trim().split(/\s+/)[0] || null;
+  const you = (text: string) => (first ? `${first}, ${text}` : `${text[0].toUpperCase()}${text.slice(1)}`);
+  const base = { url: `/learn/system-design${lesson ? `?lesson=${lesson.id}` : ""}`, tag: "sd-reminder", loud: slot === "morning" };
+  if (!lesson) return { ...base, title: you("bas final assessment baaki hai"), body: "Yeh kar lo aur course poora.", icon: pushFace("excited") };
+
+  const day = `Day ${lesson.position + 1}`;
+  const hook = PUSH_HOOKS[lesson.id];
+  const copy = (title: string, body: string, mood: Parameters<typeof pushFace>[0]) => ({ ...base, title, body, icon: pushFace(mood) });
+
+  if (standing.started) {
+    if (slot === "morning") return copy(you(`${day} shuru kiya tha`), "Jahan chhoda tha, wahin se aage badho.", "excited");
+    if (slot === "evening") return copy(`${day} poora kar lein?`, "Thoda sa aur, aur aaj ka concept clear.", "surprised");
+    return copy(you(`${day} poora ho sakta hai`), "Thoda waqt ho toh aaj hi khatam kar lo.", "sleepy");
+  }
+  if (standing.lapsed) {
+    if (slot === "morning") return copy(first ? `Koi baat nahi, ${first}` : "Koi baat nahi", `Aaj se nayi streak. ${day} ready hai.`, "missing");
+    if (slot === "evening") return copy(you("wapas aa jao"), `${day} se phir shuru karte hain. Ek lesson kaafi hai.`, "missing");
+    return copy("Aaj se nayi shuruaat?", `${day} kar lo, aur streak phir se chalu.`, "missing");
+  }
+  const streak = standing.streak >= 2 ? `${standing.streak} din ki streak` : null;
+  if (slot === "morning") return copy(hook?.morning ?? `${day} ready hai`, streak ? `${streak} chal rahi hai. ${day} ready hai.` : you(hook ? `aaj samjho ${hook.topic}. ${day} ready hai.` : `aaj ka lesson: ${lesson.title}.`), "excited");
+  if (slot === "evening") return copy(hook?.evening ?? `${day} abhi baaki hai`, `${hook?.eveningBody ?? lesson.title} ${day} mein approach samjho.`, "surprised");
+  if (streak) return copy(first ? `${streak}, ${first}` : streak, `${day} kar lo, aur streak chalti rahegi.`, "sleepy");
+  return copy(you("aaj ka lesson kar lein?"), `${day} abhi baaki hai. Thoda waqt ho toh ek concept aur clear kar lo.`, "sleepy");
 }
