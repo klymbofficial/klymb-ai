@@ -29,11 +29,12 @@ export async function GET(req: Request) {
   if (!sql || !pushReady()) return NextResponse.json({ error: "Not configured" }, { status: 500 });
   const today = todayInIndia();
 
-  const { data: learners, error } = await sql.rows<{ email: string; enrolled_on: string; refundable: boolean }>`
-    select e.email, to_char(e.created_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as enrolled_on,
+  const { data: learners, error } = await sql.rows<{ email: string; name: string | null; enrolled_on: string; refundable: boolean }>`
+    select e.email, lead.name, to_char(e.created_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as enrolled_on,
            (e.source = 'payment' and pay.status = 'paid') as refundable
       from course.enrollments e
       left join course.payments pay on pay.id = e.payment_id
+      left join course.sd_preregistrations lead on lead.email = e.email
      where e.course = ${SD_COURSE} and e.status = 'active' and e.finished_at is null and e.reminders_off_at is null
        and exists (select 1 from course.sd_push_subscriptions d where d.email = e.email)
   `;
@@ -73,7 +74,7 @@ export async function GET(req: Request) {
     const pick = pickSdReminder({ enrolledOn: l.enrolled_on, passes: passed, remindedOn: null, streak: 0 }, today);
     if (!pick || (pick.target.kind === "lesson" ? !canTake(pace, pick.target.lesson.id) : !pace.finalOpen)) continue;
     due++;
-    const message = sdReminderPush(pick.target.kind === "lesson" ? pick.target.lesson : null, slot);
+    const message = sdReminderPush(pick.target.kind === "lesson" ? pick.target.lesson : null, slot, l.name);
     for (const device of devicesOf.get(l.email) ?? []) outgoing.push({ device, message });
   }
 

@@ -21,3 +21,9 @@ test("three a day, each replacing the last, and only the morning sounds", () => 
   assert.equal(new Set([morning.tag, evening.tag, night.tag]).size, 1);
   assert.equal(new Set([morning.title, evening.title, night.title]).size, 3);
 });
+
+test("it greets them by first name, and reads fine without one", () => {
+  const lesson = { id: "0-0", title: "T", minutes: 6 };
+  assert.equal(sdReminderPush(lesson, "morning", " Sarthak Gupta ").title, "Sarthak, your lesson for today is ready");
+  assert.equal(sdReminderPush(lesson, "morning", null).title, "Your lesson for today is ready");
+});

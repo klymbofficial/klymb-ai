@@ -117,9 +117,9 @@ export const SD_PUSH_SLOTS = ["morning", "evening", "night"] as const;
 export type SdPushSlot = (typeof SD_PUSH_SLOTS)[number];
 
 const PUSH_TITLE: Record<SdPushSlot, string> = {
-  morning: "Today’s lesson is ready",
-  evening: "Still time for today’s lesson",
-  night: "Last call for today’s lesson",
+  morning: "Your lesson for today is ready",
+  evening: "There’s still time for today’s lesson",
+  night: "It’s the last call for today’s lesson",
 };
 
 /**
@@ -127,9 +127,11 @@ const PUSH_TITLE: Record<SdPushSlot, string> = {
  * only the morning's sounds: repeated alerts from one site are what Chrome's
  * spam detection flags.
  */
-export function sdReminderPush(lesson: { id: string; title: string; minutes: number } | null, slot: SdPushSlot) {
+export function sdReminderPush(lesson: { id: string; title: string; minutes: number } | null, slot: SdPushSlot, name?: string | null) {
+  const first = name?.trim().split(/\s+/)[0];
+  const title = lesson ? PUSH_TITLE[slot] : "Your final assessment is due";
   return {
-    title: lesson ? PUSH_TITLE[slot] : "Your final assessment is due",
+    title: first ? `${first}, ${title[0].toLowerCase()}${title.slice(1)}` : title,
     body: lesson ? `${lesson.title} · ${lesson.minutes} min` : "Finish it to complete the course.",
     url: `/learn/system-design${lesson ? `?lesson=${lesson.id}` : ""}`,
     tag: "sd-reminder",
