@@ -19,6 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...tracks.map((t) => page(`/tracks/${t.slug}`, t.available ? 0.9 : 0.6, "monthly")),
     page("/challenges", 0.8, "monthly"),
     page("/courses/agentic-ai", 0.8, "monthly"),
+    page("/hackathons", 0.7, "weekly"),
     ...challenges.map((c) => page(`/challenges/${c.slug}`, 0.8, "monthly")),
     page("/system-design", 0.9, "weekly"),
     page("/register", 0.9, "weekly"),

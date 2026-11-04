@@ -15,6 +15,8 @@ import { COURSES } from "@/data/courses/registry";
 import type { Course } from "@/data/courses/types";
 import { courseProgressSummary } from "@/lib/course-progress";
 import { readProfile } from "@/lib/profile";
+import { HACKATHON, hackathonPhase, type HackathonPhase } from "@/data/hackathon";
+import { myTeam, publishedResults, type MyTeam } from "@/lib/hackathon";
 import { scoreProfile, type ProfileScore } from "@/lib/profile-score";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
@@ -138,6 +140,28 @@ function ProfileCard({ score }: { score: ProfileScore }) {
   );
 }
 
+/** The hackathon: their team and next step once registered, otherwise what's open. */
+function HackathonCard({ team, phase }: { team: MyTeam | null; phase: HackathonPhase }) {
+  const status = {
+    "coming-soon": "The next one is coming. Get told when registration opens.",
+    registration: team ? "Registered. Share your team code before registration closes." : "Registration is open: solo or a team of up to three.",
+    closed: team ? `Registered. The build starts ${HACKATHON.kickoffLabel}.` : "Registration has closed.",
+    live: team ? (team.entry ? "Entry saved. You can change it until the deadline." : `The build is on. Submit by ${HACKATHON.deadlineLabel}.`) : "The build is on.",
+    judging: team ? "Judging is under way." : "Judging is under way.",
+    results: "The winners are out.",
+  }[phase];
+  return (
+    <article className="card flex flex-col gap-3 p-5">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Hackathon · 48 hours</p>
+      <h3 className="text-lg font-extrabold">{HACKATHON.name}</h3>
+      <p className="text-sm text-muted">{status}</p>
+      <ButtonLink href={team ? "/learn/hackathon" : "/hackathons"} arrow className="mt-auto self-start rounded-md px-4 py-2 text-xs">
+        {team ? (phase === "live" && !team.entry ? "Submit your entry" : "Go to your team") : phase === "registration" ? "Register" : "See the hackathon"}
+      </ButtonLink>
+    </article>
+  );
+}
+
 /** A self-paced course they have opened: modules done and the next one to read. */
 function SelfPacedCard({ course, done }: { course: Course; done: string[] }) {
   const next = course.modules.find((m) => !done.includes(m.slug));
@@ -206,11 +230,13 @@ export default async function DashboardPage() {
   const email = state.state === "enrolled" ? state.learner.email : state.email;
   const [places, seat, reading, { profile }] = await Promise.all([getLearnerTracks(), systemDesignSeat(email), courseProgressSummary(email), readProfile(email, session?.user?.name)]);
   const profileScore = scoreProfile(profile, { hasPhoto: !!session?.user?.image });
+  const [team, results] = await Promise.all([myTeam(email), publishedResults()]);
+  const phase = hackathonPhase(results.length > 0);
   const opened = COURSES.filter((c) => reading[c.slug]);
   const unopened = COURSES.filter((c) => !reading[c.slug]);
   const name = places[0]?.learner.name || session?.user?.name || email.split("@")[0];
   const firstName = name.split(" ")[0];
-  const none = !places.length && !seat && !opened.length;
+  const none = !places.length && !seat && !opened.length && !team;
   const mine = new Set(places.map((p) => p.learner.track));
   const moreTracks = [...tracks, ...challenges].filter((t) => !mine.has(t.slug));
 
@@ -235,18 +261,20 @@ export default async function DashboardPage() {
             {places.map((p) => <TrackCard key={p.learner.id} learner={p.learner} submissions={p.submissions} />)}
             {seat && <SystemDesignCard seat={seat} />}
             {opened.map((c) => <SelfPacedCard key={c.slug} course={c} done={reading[c.slug].done} />)}
+            {team && <HackathonCard team={team} phase={phase} />}
           </Appear>
         )}
 
         <Appear y={12} delay={0.09} className="mt-8"><ProfileCard score={profileScore} /></Appear>
 
-        {(moreTracks.length > 0 || !seat || unopened.length > 0) && (
+        {(moreTracks.length > 0 || !seat || unopened.length > 0 || !team) && (
           <Appear y={12} delay={0.12} className="mt-14">
             <h2 className="text-xl font-extrabold">{none ? "Start a course" : "More courses"}</h2>
             <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {moreTracks.map((t) => <MoreTrackCard key={t.slug} track={t} />)}
               {!seat && <MoreSystemDesignCard />}
               {unopened.map((c) => <MoreCourseCard key={c.slug} course={c} />)}
+              {!team && <HackathonCard team={null} phase={phase} />}
             </div>
           </Appear>
         )}

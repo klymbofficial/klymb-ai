@@ -9,7 +9,9 @@ export type AuditAction =
   | "payment.refund"
   | "admin.add"
   | "admin.remove"
-  | "ticket.status";
+  | "ticket.status"
+  | "hackathon.score"
+  | "hackathon.results";
 
 /**
  * Records an admin action. Never throws and never blocks the action itself:
