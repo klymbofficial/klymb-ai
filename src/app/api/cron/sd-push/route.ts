@@ -10,6 +10,9 @@ import { SD_FINAL_ASSESSMENT, SD_PUSH_SLOTS, pickSdReminder, sdReminderPush, typ
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
+/** Sends in parallel, this many at a time. */
+const CONCURRENCY = 25;
+
 /**
  * 08:00, 17:00 and 21:00 IST (.github/workflows/sd-push.yml, with ?slot=).
  * Notifies the devices of each System Design learner who passed no lesson check
@@ -50,24 +53,38 @@ export async function GET(req: Request) {
   const failed = e1 ?? e2 ?? e3;
   if (failed) return NextResponse.json({ error: failed.message }, { status: 500 });
 
-  let sent = 0, removed = 0, due = 0;
+  const byEmail = <T extends { email: string }>(rows: T[] | null | undefined) => {
+    const map = new Map<string, T[]>();
+    for (const row of rows ?? []) map.set(row.email, [...(map.get(row.email) ?? []), row]);
+    return map;
+  };
+  const devicesOf = byEmail(devices);
+  const checksOf = byEmail(checks);
+  const finalsOf = byEmail(finals);
+
+  let due = 0;
+  const outgoing: { device: PushTarget; message: ReturnType<typeof sdReminderPush> }[] = [];
   for (const l of learners) {
-    const passed = new Map((checks ?? []).filter((c) => c.email === l.email).map((c) => [c.lesson, c.passed_on]));
-    const pace = paceOf({ passes: [...passed].map(([lesson, at]) => ({ lesson, at })), finals: (finals ?? []).filter((f) => f.email === l.email), refundable: l.refundable });
+    const passed = new Map((checksOf.get(l.email) ?? []).map((c) => [c.lesson, c.passed_on]));
+    const pace = paceOf({ passes: [...passed].map(([lesson, at]) => ({ lesson, at })), finals: finalsOf.get(l.email) ?? [], refundable: l.refundable });
     if (pace.state === "finished") passed.set(SD_FINAL_ASSESSMENT, today);
     // Who's due and what for, as the email decides it, without its back-off: these go daily.
     const pick = pickSdReminder({ enrolledOn: l.enrolled_on, passes: passed, remindedOn: null, streak: 0 }, today);
     if (!pick || (pick.target.kind === "lesson" ? !canTake(pace, pick.target.lesson.id) : !pace.finalOpen)) continue;
     due++;
     const message = sdReminderPush(pick.target.kind === "lesson" ? pick.target.lesson : null, slot);
-    for (const device of (devices ?? []).filter((d) => d.email === l.email)) {
-      const res = await sendPush(device, message);
-      if (res === "ok") sent++;
-      if (res === "gone") {
-        await sql.run`delete from course.sd_push_subscriptions where endpoint = ${device.endpoint}`;
-        removed++;
-      }
-    }
+    for (const device of devicesOf.get(l.email) ?? []) outgoing.push({ device, message });
   }
+
+  let sent = 0, removed = 0;
+  const send = async ({ device, message }: (typeof outgoing)[number]) => {
+    const res = await sendPush(device, message);
+    if (res === "ok") sent++;
+    if (res === "gone") {
+      await sql.run`delete from course.sd_push_subscriptions where endpoint = ${device.endpoint}`;
+      removed++;
+    }
+  };
+  for (let i = 0; i < outgoing.length; i += CONCURRENCY) await Promise.all(outgoing.slice(i, i + CONCURRENCY).map(send));
   return NextResponse.json({ slot, checked: learners.length, due, sent, removed, today });
 }
