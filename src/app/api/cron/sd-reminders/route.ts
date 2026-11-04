@@ -18,7 +18,7 @@ const CONCURRENCY = 8;
 const EARLIEST_IST_HOUR = 18;
 
 /**
- * 20:00 IST every day (GitHub Actions, .github/workflows/sd-reminders.yml).
+ * About 20:00 IST every day (Vercel cron in vercel.json, with .github/workflows/sd-reminders.yml as a backup).
  * Mails each System Design learner who passed no lesson check today: the next
  * lesson that is out, or the final assessment once every lesson is passed.
  * Who is due and how often is decided in lib/sd-reminders.
