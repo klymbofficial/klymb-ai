@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   title: "System Design course",
   description: "Short video lessons, in-video quick checks, and a pre- and post-assessment that show what you learned.",
   robots: { index: false, follow: false },
+  // Added to a home screen, this opens the course, not the cohort page.
+  manifest: "/system-design.webmanifest",
 };
 
 export const viewport: Viewport = { themeColor: "#f3f2f2", viewportFit: "cover" };
