@@ -14,13 +14,13 @@ const UI = {
     share: "Share on LinkedIn", tag: "Do this first", title: "Share what you learned, in public",
     body: "Learning in public helps recruiters notice you. Share your thoughts so peer learners can connect with you and grow together.",
     download: "Download image", post: "Post on LinkedIn", shared: "Shared", template: "Post template", copy: "Copy text", copied: "Copied",
-    posted: { posted: "Posted on LinkedIn.", app: "Sent to LinkedIn. Tap Post there.", pasted: () => "Text is in. The image is in your Downloads: click the photo icon in LinkedIn, choose it, then tap Post.", text: "Text is in. Attach the downloaded image, then tap Post." },
+    posted: { posted: "Posted on LinkedIn.", app: "Sent to LinkedIn. Tap Post there.", pasted: (link: boolean) => `${link ? "Your post and referral link are in. If LinkedIn shows a link preview, click × on it. " : "Your post is in. "}The image is already in your Downloads: click the photo icon in LinkedIn, choose it, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
   },
   hi: {
     share: "LinkedIn par share karo", tag: "Pehle yeh karo", title: "Jo seekha, public mein share karo",
     body: "Public mein seekhne se recruiters ki nazar tum par padti hai. Apni soch share karo, taaki doosre learners tumse judein aur sab saath badhein.",
     download: "Image download karo", post: "LinkedIn pe post karo", shared: "Share ho gaya", template: "Post ka template", copy: "Text copy karo", copied: "Copy ho gaya",
-    posted: { posted: "LinkedIn pe post ho gaya.", app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: () => "Text aa gaya. Image Downloads mein hai: LinkedIn mein photo icon dabao, use chuno, phir Post dabao.", text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
+    posted: { posted: "LinkedIn pe post ho gaya.", app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (link: boolean) => `${link ? "Tumhara post aur referral link aa gaya. LinkedIn link preview dikhaye toh us par × dabao. " : "Tumhara post aa gaya. "}Image pehle se Downloads mein hai: LinkedIn mein photo icon dabao, use chuno, phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
   },
 };
 
@@ -36,7 +36,8 @@ export function ShareCard({ lang, id, day, c, shared, onShared, showText = false
   const ui = UI[lang];
   const referral = useReferral();
   const tagged = taggedPost(c.linkedin, lang);
-  const post = referral?.state === "open" && !referral.sample ? referralPost(tagged, referral.link, lang) : tagged;
+  const hasLink = referral?.state === "open" && !referral.sample;
+  const post = hasLink ? referralPost(tagged, referral.link, lang) : tagged;
   const [posted, setPosted] = useState("");
   const [copied, setCopied] = useState(false);
   const image = `/images/system-design/day-${day.day}-linkedin-${lang}.png`;
@@ -45,7 +46,7 @@ export function ShareCard({ lang, id, day, c, shared, onShared, showText = false
   const linkedIn = useLinkedInPost({
     text: post, image: shareImage, alt: c.cheatsheet.title, lang, returnTo: `/learn/system-design?lesson=${id}`,
     onShared: (how: LinkedInShare) => {
-      setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted() : ui.posted[how]);
+      setPosted(how === "cancelled" ? "" : how === "pasted" || how === "text" ? ui.posted.pasted(hasLink) : ui.posted[how]);
       if (how !== "cancelled") onShared();
     },
   });
