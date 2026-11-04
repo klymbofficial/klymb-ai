@@ -14,6 +14,8 @@ import type { Track } from "@/types/program";
 import { COURSES } from "@/data/courses/registry";
 import type { Course } from "@/data/courses/types";
 import { courseProgressSummary } from "@/lib/course-progress";
+import { readProfile } from "@/lib/profile";
+import { scoreProfile, type ProfileScore } from "@/lib/profile-score";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
 import { systemDesignSeat, type SystemDesignSeat } from "@/lib/learner/courses";
@@ -122,6 +124,20 @@ function MoreTrackCard({ track }: { track: Track }) {
   );
 }
 
+/** How complete their profile is, and the most valuable thing to add next. */
+function ProfileCard({ score }: { score: ProfileScore }) {
+  return (
+    <section aria-labelledby="profile-title" className="flex flex-wrap items-center justify-between gap-5 rounded-card border border-line/40 bg-card p-5">
+      <div className="min-w-0 flex-1">
+        <h2 id="profile-title" className="text-lg font-extrabold">{score.ready ? "Your profile is ready" : `Your profile is ${score.score}% complete`}</h2>
+        <div className="mt-2 max-w-md"><Bar done={score.score} total={100} /></div>
+        {score.missing.length > 0 && <p className="mt-2 text-sm text-muted">Still to add: {score.missing.slice(0, 3).join(", ")}.</p>}
+      </div>
+      <ButtonLink href="/learn/profile" arrow className="rounded-md px-5 py-2.5 text-xs">{score.score >= 100 ? "View your profile" : "Complete your profile"}</ButtonLink>
+    </section>
+  );
+}
+
 /** A self-paced course they have opened: modules done and the next one to read. */
 function SelfPacedCard({ course, done }: { course: Course; done: string[] }) {
   const next = course.modules.find((m) => !done.includes(m.slug));
@@ -188,7 +204,8 @@ export default async function DashboardPage() {
 
   const session = await auth();
   const email = state.state === "enrolled" ? state.learner.email : state.email;
-  const [places, seat, reading] = await Promise.all([getLearnerTracks(), systemDesignSeat(email), courseProgressSummary(email)]);
+  const [places, seat, reading, { profile }] = await Promise.all([getLearnerTracks(), systemDesignSeat(email), courseProgressSummary(email), readProfile(email, session?.user?.name)]);
+  const profileScore = scoreProfile(profile, { hasPhoto: !!session?.user?.image });
   const opened = COURSES.filter((c) => reading[c.slug]);
   const unopened = COURSES.filter((c) => !reading[c.slug]);
   const name = places[0]?.learner.name || session?.user?.name || email.split("@")[0];
@@ -220,6 +237,8 @@ export default async function DashboardPage() {
             {opened.map((c) => <SelfPacedCard key={c.slug} course={c} done={reading[c.slug].done} />)}
           </Appear>
         )}
+
+        <Appear y={12} delay={0.09} className="mt-8"><ProfileCard score={profileScore} /></Appear>
 
         {(moreTracks.length > 0 || !seat || unopened.length > 0) && (
           <Appear y={12} delay={0.12} className="mt-14">

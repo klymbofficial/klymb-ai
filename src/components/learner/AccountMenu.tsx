@@ -55,6 +55,7 @@ export function AccountMenu({ name, email, image }: { name: string; email?: stri
           </div>
           <div className="pt-1.5">
             <Link href="/learn" onClick={() => setOpen(false)} className={item}>Dashboard</Link>
+            <Link href="/learn/profile" onClick={() => setOpen(false)} className={item}>Profile</Link>
             <AdminLink onClick={() => setOpen(false)} className={item} />
             <form action={signOutLearner}>
               <button type="submit" className={clsx(item, "text-red-deep")}>Log out</button>
