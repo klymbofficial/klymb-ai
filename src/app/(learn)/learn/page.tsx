@@ -11,6 +11,8 @@ import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
 import { getTrack, tracks } from "@/data/tracks";
 import { platformLink, platformPrograms, type PlatformProgram } from "@/data/platform-programs";
+import { platformSummary } from "@/lib/platform-summary-fetch";
+import type { PlatformChallenge, PlatformSummary } from "@/lib/platform-summary";
 import type { Track } from "@/types/program";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
@@ -135,14 +137,83 @@ function MoreSystemDesignCard() {
   );
 }
 
+/** "Opens in a new tab" link to app.klymb.ai, the same on every card that leaves the site. */
+function OutLink({ path, children, solid }: { path: string; children: React.ReactNode; solid?: boolean }) {
+  return (
+    <a
+      href={platformLink(path)}
+      target="_blank"
+      rel="noopener"
+      className={solid
+        ? "inline-flex items-center gap-2 self-start rounded-md bg-red-strong px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-press"
+        : "self-start text-sm font-bold underline underline-offset-4 hover:text-red-deep"}
+    >
+      {children}<span aria-hidden="true"> ↗</span><span className="sr-only"> (opens app.klymb.ai in a new tab)</span>
+    </a>
+  );
+}
+
+/** A 60-day challenge they are on, with where they are; the work itself is on app.klymb.ai. */
+function ChallengeCard({ challenge }: { challenge: PlatformChallenge }) {
+  const path = platformPrograms.find((p) => p.domain === challenge.domain)?.path ?? "/dashboard";
+  const done = challenge.lifecycle === "completed";
+  return (
+    <article className="card flex flex-col gap-4 p-6">
+      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">app.klymb.ai · 60-day challenge</p>
+      <div>
+        <h2 className="display text-2xl">{challenge.title}</h2>
+        <p className="mt-1 text-sm text-muted">
+          {done ? `Complete. All ${challenge.totalDays} days submitted.`
+            : `Day ${challenge.currentDay} of ${challenge.totalDays}${challenge.currentStreak > 1 ? ` · ${challenge.currentStreak}-day streak` : ""}`}
+        </p>
+      </div>
+      <div className="mt-auto flex flex-col gap-4">
+        <div>
+          <Bar done={challenge.daysCompleted} total={challenge.totalDays} />
+          <p className="mt-2 text-xs font-bold text-muted nums">{challenge.daysCompleted} of {challenge.totalDays} days submitted</p>
+        </div>
+        <OutLink path={path} solid>{done ? "Open on app.klymb.ai" : "Continue on app.klymb.ai"}</OutLink>
+      </div>
+    </article>
+  );
+}
+
+/** Their app.klymb.ai profile strength, as app.klymb.ai scores it, and what would raise it. */
+function ProfileCard({ summary }: { summary: PlatformSummary }) {
+  if (!summary.hasUser) {
+    return (
+      <section aria-labelledby="profile-title" className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-line/40 bg-card p-5">
+        <div>
+          <h2 id="profile-title" className="text-lg font-extrabold">Your profile</h2>
+          <p className="mt-1 text-sm text-muted">Recruiters find people through their app.klymb.ai profile. You don&apos;t have one yet.</p>
+        </div>
+        <OutLink path="/" solid>Create your profile</OutLink>
+      </section>
+    );
+  }
+  const { score, missing, ready } = summary.profile;
+  return (
+    <section aria-labelledby="profile-title" className="flex flex-wrap items-center justify-between gap-5 rounded-card border border-line/40 bg-card p-5">
+      <div className="min-w-0 flex-1">
+        <h2 id="profile-title" className="text-lg font-extrabold">Your profile is {score}% complete</h2>
+        <div className="mt-2 max-w-md"><Bar done={score} total={100} /></div>
+        <p className="mt-2 text-sm text-muted">
+          {missing.length ? <>Still to add: {missing.join(", ")}.</> : ready ? "Ready for recruiters." : "Almost there."}
+        </p>
+      </div>
+      <OutLink path="/profile" solid>{score >= 100 ? "View your profile" : "Complete your profile"}</OutLink>
+    </section>
+  );
+}
+
 /** An app.klymb.ai program: it opens there, in a new tab. */
-function PlatformCard({ program }: { program: PlatformProgram }) {
+function PlatformCard({ program, status }: { program: PlatformProgram; status?: string }) {
   return (
     <article className="flex flex-col gap-3 rounded-card border border-line/40 bg-card p-5">
       <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">app.klymb.ai · {program.kind}</p>
       <h3 className="text-lg font-extrabold">{program.title}</h3>
       <p className="text-sm text-muted">{program.line}</p>
-      {program.note && <p className="text-xs font-bold text-red-deep">{program.note}</p>}
+      {(status ?? program.note) && <p className="text-xs font-bold text-red-deep">{status ?? program.note}</p>}
       <a href={platformLink(program.path)} target="_blank" rel="noopener" className="mt-auto self-start pt-1 text-sm font-bold underline underline-offset-4 hover:text-red-deep">
         Open on app.klymb.ai<span aria-hidden="true"> ↗</span><span className="sr-only"> (opens in a new tab)</span>
       </a>
@@ -162,10 +233,15 @@ export default async function DashboardPage() {
 
   const session = await auth();
   const email = state.state === "enrolled" ? state.learner.email : state.email;
-  const [places, seat] = await Promise.all([getLearnerTracks(), systemDesignSeat(email)]);
+  const [places, seat, platform] = await Promise.all([getLearnerTracks(), systemDesignSeat(email), platformSummary(email)]);
+  // Their app.klymb.ai challenges that still mean something: on now, or finished. An ended one stays off.
+  const challenges = platform?.hasUser ? platform.challenges.filter((c) => c.lifecycle !== "ended") : [];
+  const joined = new Set(challenges.map((c) => c.domain));
+  const hackathon = platform?.hasUser ? platform.hackathon : null;
+  const programs = platformPrograms.filter((p) => !p.domain || !joined.has(p.domain));
   const name = places[0]?.learner.name || session?.user?.name || email.split("@")[0];
   const firstName = name.split(" ")[0];
-  const none = !places.length && !seat;
+  const none = !places.length && !seat && !challenges.length;
   const mine = new Set(places.map((p) => p.learner.track));
   const moreTracks = tracks.filter((t) => !mine.has(t.slug));
 
@@ -189,8 +265,11 @@ export default async function DashboardPage() {
           <Appear y={12} delay={0.06} className="mt-8 grid gap-6 lg:grid-cols-2">
             {places.map((p) => <TrackCard key={p.learner.id} learner={p.learner} submissions={p.submissions} />)}
             {seat && <SystemDesignCard seat={seat} />}
+            {challenges.map((c) => <ChallengeCard key={c.domain} challenge={c} />)}
           </Appear>
         )}
+
+        {platform && <Appear y={12} delay={0.09} className="mt-8"><ProfileCard summary={platform} /></Appear>}
 
         {(moreTracks.length > 0 || !seat) && (
           <Appear y={12} delay={0.12} className="mt-14">
@@ -206,7 +285,13 @@ export default async function DashboardPage() {
           <h2 className="text-xl font-extrabold">On app.klymb.ai</h2>
           <p className="mt-1 text-sm text-muted">Programs on our community platform. They open there, with its own sign-in.</p>
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {platformPrograms.map((p) => <PlatformCard key={p.path} program={p} />)}
+            {programs.map((p) => (
+              <PlatformCard
+                key={p.path}
+                program={p}
+                status={p.hackathon && hackathon ? (hackathon.submitted ? "You've submitted" : hackathon.registered ? "You're registered" : undefined) : undefined}
+              />
+            ))}
           </div>
         </Appear>
 
