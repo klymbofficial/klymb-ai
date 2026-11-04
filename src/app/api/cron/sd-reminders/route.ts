@@ -4,11 +4,10 @@ import { site } from "@/data/config";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 import { todayInIndia } from "@/lib/learn";
-import { pushReady, sendPush, type PushTarget } from "@/lib/push";
 import { MAIL_SUPPORT, mailReady, sdReminderEmail, sendMail } from "@/lib/mail";
 import { SD_COURSE } from "@/lib/sd-offer";
 import { canTake, paceOf } from "@/lib/sd-pace";
-import { SD_FINAL_ASSESSMENT, pickSdReminder, sdReminderPush, unsubscribeToken, type ReminderPick } from "@/lib/sd-reminders";
+import { SD_FINAL_ASSESSMENT, pickSdReminder, unsubscribeToken, type ReminderPick } from "@/lib/sd-reminders";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -20,7 +19,7 @@ const EARLIEST_IST_HOUR = 18;
 
 /**
  * 20:00 IST every day (GitHub Actions, .github/workflows/sd-reminders.yml).
- * Mails, and notifies the devices of, each System Design learner who passed no lesson check today: the next
+ * Mails each System Design learner who passed no lesson check today: the next
  * lesson that is out, or the final assessment once every lesson is passed.
  * Who is due and how often is decided in lib/sd-reminders.
  *
@@ -93,18 +92,6 @@ export async function GET(req: Request) {
     due.push({ learner: l, pick, refund: pace.refund === "on-track" && pace.refundable });
   }
 
-  // Their devices too. If the table isn't there yet (0025_sd_push.sql) the emails still go.
-  const canPush = pushReady();
-  const { data: devices } = canPush ? await sql.rows<PushTarget & { email: string }>`select endpoint, email, p256dh, auth from course.sd_push_subscriptions` : { data: [] };
-  let pushed = 0;
-  const notify = async (email: string, lesson: { id: string; title: string; minutes: number } | null) => {
-    for (const device of (devices ?? []).filter((d) => d.email === email)) {
-      const res = await sendPush(device, sdReminderPush(lesson));
-      if (res === "ok") pushed++;
-      if (res === "gone") await sql.run`delete from course.sd_push_subscriptions where endpoint = ${device.endpoint}`;
-    }
-  };
-
   let sent = 0, failed = 0, suppressed = 0;
   const send = async ({ learner: l, pick, refund }: (typeof due)[number]) => {
     const { data: claimed } = await sql.row<{ id: string }>`
@@ -134,8 +121,8 @@ export async function GET(req: Request) {
       // One-click unsubscribe (RFC 8058), which Gmail and Yahoo expect on recurring mail.
       headers: { "List-Unsubscribe": `<${unsubscribeUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
     });
-    if (result.ok) { sent++; await notify(l.email, lesson); return; }
-    if (result.skipped) { suppressed++; await notify(l.email, lesson); return; }
+    if (result.ok) { sent++; return; }
+    if (result.skipped) { suppressed++; return; }
     failed++;
     console.error("sd reminder failed:", l.id, result.reason);
     // Release the claim so a re-run tonight can try again.
@@ -146,5 +133,5 @@ export async function GET(req: Request) {
   };
   for (let i = 0; i < due.length; i += CONCURRENCY) await Promise.all(due.slice(i, i + CONCURRENCY).map(send));
 
-  return NextResponse.json({ checked: learners.length, due: due.length, sent, pushed, suppressed, failed, today });
+  return NextResponse.json({ checked: learners.length, due: due.length, sent, suppressed, failed, today });
 }

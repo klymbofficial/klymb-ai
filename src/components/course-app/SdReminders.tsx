@@ -11,8 +11,8 @@ const toKey = (b64: string) => {
 };
 
 const SUB: Record<Exclude<State, "hidden">, string> = {
-  off: "A nudge at 8 PM on days you haven’t done your lesson.",
-  on: "We’ll nudge you at 8 PM on days you haven’t done your lesson.",
+  off: "Nudges at 8 AM, 5 PM and 9 PM, until you’ve done that day’s lesson.",
+  on: "Nudges at 8 AM, 5 PM and 9 PM, until you’ve done that day’s lesson.",
   busy: "One moment…",
   blocked: "Blocked. Allow notifications for klymb.ai in your browser settings.",
   ios: "On iPhone: tap Share, then Add to Home Screen, and open Klymb from there.",

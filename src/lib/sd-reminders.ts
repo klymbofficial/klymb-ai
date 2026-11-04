@@ -113,13 +113,26 @@ export function emailFromToken(token: unknown, secret: string | undefined): stri
   return given.length === want.length && timingSafeEqual(given, want) ? email : null;
 }
 
-/** The notification beside the email. One a day, so it may sound. */
-export function sdReminderPush(lesson: { id: string; title: string; minutes: number } | null) {
+export const SD_PUSH_SLOTS = ["morning", "evening", "night"] as const;
+export type SdPushSlot = (typeof SD_PUSH_SLOTS)[number];
+
+const PUSH_TITLE: Record<SdPushSlot, string> = {
+  morning: "Today’s lesson is ready",
+  evening: "Still time for today’s lesson",
+  night: "Last call for today’s lesson",
+};
+
+/**
+ * One of the day's three notifications. Each replaces the one before it, and
+ * only the morning's sounds: repeated alerts from one site are what Chrome's
+ * spam detection flags.
+ */
+export function sdReminderPush(lesson: { id: string; title: string; minutes: number } | null, slot: SdPushSlot) {
   return {
-    title: lesson ? "Your next lesson is waiting" : "Your final assessment is due",
+    title: lesson ? PUSH_TITLE[slot] : "Your final assessment is due",
     body: lesson ? `${lesson.title} · ${lesson.minutes} min` : "Finish it to complete the course.",
     url: `/learn/system-design${lesson ? `?lesson=${lesson.id}` : ""}`,
     tag: "sd-reminder",
-    loud: true,
+    loud: slot === "morning",
   };
 }

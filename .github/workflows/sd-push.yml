@@ -1,0 +1,29 @@
+# System Design notifications at 08:00, 17:00 and 21:00 IST. GitHub can start a scheduled run some minutes late.
+# A re-run is harmless: the notification replaces itself. CRON_SECRET is a repository secret.
+name: System Design notifications
+on:
+  schedule:
+    - cron: "30 2 * * *"
+    - cron: "30 11 * * *"
+    - cron: "30 15 * * *"
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: morning, evening or night
+        default: morning
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Send notifications
+        run: |
+          case "${{ github.event.schedule }}" in
+            "30 2 * * *") slot=morning ;;
+            "30 11 * * *") slot=evening ;;
+            "30 15 * * *") slot=night ;;
+            *) slot="${{ inputs.slot }}" ;;
+          esac
+          curl -fsS --max-time 300 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://www.klymb.ai/api/cron/sd-push?slot=$slot"
