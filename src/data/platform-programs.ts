@@ -4,14 +4,8 @@
  * hand: when a program opens, closes or changes its date there, change it
  * here. Titles and lines are app.klymb.ai's own wording.
  */
-import type { PlatformDomain } from "@/lib/platform-summary";
-
 export interface PlatformProgram {
   title: string;
-  /** For a 60-day challenge: how app.klymb.ai's summary names it, so the card can show their progress. */
-  domain?: PlatformDomain;
-  /** The hackathon card, which shows their registration. */
-  hackathon?: boolean;
   kind: string;
   line: string;
   /** Path on app.klymb.ai. */
@@ -21,12 +15,11 @@ export interface PlatformProgram {
 }
 
 export const platformPrograms: PlatformProgram[] = [
-  { title: "Agentic AI Systems", kind: "Course · 8 modules", line: "Design, build and ship AI agents that actually work.", path: "/learn/agentic-ai" },
-  { title: "Claude Challenge", domain: "CLAUDE", kind: "60-day challenge", line: "Master Claude AI in 60 days: one scoped task a day, shipped in public.", path: "/claude", note: "Next one starts 15 November 2026" },
-  { title: "Artificial Intelligence", domain: "AI", kind: "60-day track", line: "Build with models, agents and data.", path: "/ai" },
-  { title: "Software Engineering", domain: "SE", kind: "60-day track", line: "Ship real software, one task a day.", path: "/se" },
-  { title: "Data Science", domain: "DS", kind: "60-day track", line: "Turn raw data into real insight.", path: "/ds" },
-  { title: "Hackathons", hackathon: true, kind: "Weekend builds", line: "48 hours. No boilerplate. Just you, your ideas, and AI.", path: "/hackathon" },
+  { title: "Claude Challenge", kind: "60-day challenge", line: "Master Claude AI in 60 days: one scoped task a day, shipped in public.", path: "/claude", note: "Next one starts 15 November 2026" },
+  { title: "Artificial Intelligence", kind: "60-day track", line: "Build with models, agents and data.", path: "/ai" },
+  { title: "Software Engineering", kind: "60-day track", line: "Ship real software, one task a day.", path: "/se" },
+  { title: "Data Science", kind: "60-day track", line: "Turn raw data into real insight.", path: "/ds" },
+  { title: "Hackathons", kind: "Weekend builds", line: "48 hours. No boilerplate. Just you, your ideas, and AI.", path: "/hackathon" },
 ];
 
 /** A program's address, tagged so app.klymb.ai's analytics see the visit came from the dashboard. */
