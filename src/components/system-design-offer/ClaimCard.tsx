@@ -10,6 +10,7 @@ import { offerSignIn, offerSwitchAccount } from "@/app/(course)/system-design/ac
 import { FINAL_MARK } from "@/lib/sd-pace";
 import { formatINR } from "@/lib/format";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
+import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
 import { claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -96,6 +97,9 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const badLinkedin = tried ? linkedInProblem(linkedin) : null;
   const badRef = tried ? referralCodeProblem(ref) : null;
   const fail = (message: string) => { setBusy(false); setError(message); };
+  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign });
+  const [started, setStarted] = useState(false);
+  const startForm = () => { if (!started) { setStarted(true); step("form_start"); } };
 
   async function pay(details: Claim) {
     setError("");
@@ -110,6 +114,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     }).catch(() => null);
     const order = await res?.json().catch(() => null);
     if (order?.enrolled) return router.push("/learn/system-design");
+    if (!res?.ok || !order?.order_id) step("order_failed");
     if (!res?.ok || !order?.order_id) return fail(order?.error ?? "Could not start the payment. Please try again.");
 
     const rzp = new window.Razorpay({
@@ -128,17 +133,20 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           body: JSON.stringify(r),
         }).catch(() => null);
         const out = await v?.json().catch(() => null);
+        if (v?.ok && out?.ok) step("paid");
         if (v?.ok && out?.ok) router.push("/learn/system-design?paid=1");
         else fail(out?.error ?? `We could not confirm the payment. Email us with payment ID ${r.razorpay_payment_id}.`);
       },
-      modal: { ondismiss: () => fail("Payment cancelled. You can try again any time.") },
+      modal: { ondismiss: () => { step("rzp_closed"); fail("Payment cancelled. You can try again any time."); } },
     });
-    rzp.on("payment.failed", (r) => fail(r.error?.description ?? "The payment failed. No money was taken; please try again."));
+    rzp.on("payment.failed", (r) => { step("rzp_failed"); fail(r.error?.description ?? "The payment failed. No money was taken; please try again."); });
+    step("rzp_open");
     rzp.open();
   }
 
   /** Back from Google: the form as they left it, and on to payment with no second tap. */
   const restore = useEffectEvent(() => {
+    step("view");
     const draft = takeDraft();
     if (!draft) return;
     setName(draft.name);
@@ -159,10 +167,12 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     e.preventDefault();
     setError("");
     if (missing.length || linkedInProblem(linkedin) || referralCodeProblem(ref)) return setTried(true);
+    step("claim");
     const details = { name, phone, linkedin, role, ref };
     if (email) return void pay(details);
     // Google refuses to sign anyone in from an app's own browser, so don't send them to its error.
-    if (inApp) return setBlocked(true);
+    if (inApp) { step("blocked"); return setBlocked(true); }
+    step("google");
     keepDraft(details);
     setBusy(true);
     signIn.current?.requestSubmit();
@@ -200,7 +210,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
 
         <div className="flex flex-col gap-3.5 p-[18px] lg:p-6 lg:pb-[22px]">
           {referral && <p className="m-0 rounded-[10px] bg-[rgba(131,5,11,.08)] px-3 py-2.5 text-sm font-bold text-[#83050b]">{referral.invitedBy} invited you.</p>}
-          <form onSubmit={claim} noValidate className="flex flex-col gap-3.5">
+          <form onSubmit={claim} onChange={startForm} noValidate className="flex flex-col gap-3.5">
             <label className="flex min-w-0 flex-col gap-1.5">
               <span className={label}>Full name</span>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aarav Sharma" autoComplete="name" maxLength={120} aria-invalid={badName} className={clsx(input, badName ? "border-[#83050b]" : "border-transparent")} />
@@ -278,7 +288,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               Buying as <span className="font-bold break-all text-ink">{email}</span>. <button type="submit" className="cursor-pointer border-0 bg-transparent p-0 underline underline-offset-2">Use a different account</button>
             </form>
           ) : (
-            <form action={courseSignIn} onSubmit={(e) => { if (inApp) { e.preventDefault(); setBlocked(true); } }} className="text-xs leading-[1.4] text-[#605d5d]">
+            <form action={courseSignIn} onSubmit={(e) => { if (inApp) { e.preventDefault(); step("blocked"); setBlocked(true); } }} className="text-xs leading-[1.4] text-[#605d5d]">
               <input type="hidden" name="lesson" value="" />
               Next you&apos;ll sign in with Google. That account holds your seat. <button type="submit" className="cursor-pointer border-0 bg-transparent p-0 font-bold text-ink underline underline-offset-2">Already bought? Sign in</button>
             </form>

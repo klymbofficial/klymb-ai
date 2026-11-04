@@ -7,12 +7,17 @@ import { BarList } from "@/components/charts/BarList";
 import { rangeDays, RANGES } from "@/lib/admin/analytics";
 import { requireAdmin } from "@/lib/admin/auth";
 import { lessonDay } from "@/lib/course-app";
-import { getSdAnalytics, getSdLearner } from "@/lib/admin/system-design";
+import { getOfferFunnel, getSdAnalytics, getSdLearner } from "@/lib/admin/system-design";
 import { trailLines, type Tone } from "@/lib/admin/sd-event-words";
 import { Chip, DayView, Panel, PlainWords, pct } from "@/components/admin/SystemDesignViews";
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dayName = (lesson: string | null) => (lesson && /^\d+-\d+$/.test(lesson) ? lessonDay(lesson) : lesson ?? "");
+
+const FUNNEL_WORDS: Record<string, string> = {
+  view: "Opened the offer", form_start: "Started the form", claim: "Tapped Claim", blocked: "Told to leave the app", google: "Sent to Google",
+  order_failed: "Order failed", rzp_open: "Razorpay opened", rzp_closed: "Closed Razorpay", rzp_failed: "Payment failed", paid: "Paid",
+};
 
 const TONE: Record<Tone, string> = { learn: "bg-sky-500", win: "bg-emerald-500", miss: "bg-red-500", nav: "bg-line", setting: "bg-amber-500" };
 
@@ -49,7 +54,7 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
   if (learner) return <LearnerTrail anon={learner} />;
 
   const days = rangeDays(range);
-  const data = await getSdAnalytics(days);
+  const [data, funnel] = await Promise.all([getSdAnalytics(days), getOfferFunnel(days)]);
   const title = (
     <PageTitle
       eyebrow="Course activity"
@@ -77,6 +82,15 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
     <>
       {title}
       <PlainWords data={data} days={days} />
+
+      <div className="mt-6">
+        <Panel title="Offer page funnel" note="People reaching each step of /system-design. Inside an app means Instagram and other in-app browsers. Excludes anyone who turned analytics off.">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted"><th className="py-1 font-semibold">Step</th><th className="py-1 text-right font-semibold">Inside an app</th><th className="py-1 text-right font-semibold">Real browser</th></tr></thead>
+            <tbody>{funnel.map((r) => <tr key={r.step} className="border-t border-line/25"><td className="py-1.5">{FUNNEL_WORDS[r.step]}</td><td className="py-1.5 text-right tabular-nums">{r.inApp}</td><td className="py-1.5 text-right tabular-nums">{r.browser}</td></tr>)}</tbody>
+          </table>
+        </Panel>
+      </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile label="Opened the course" value={t.visitors} hint={`Last ${days} days`} />

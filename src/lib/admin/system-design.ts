@@ -21,7 +21,7 @@ export async function getSdAnalytics(days: number): Promise<SdAnalytics> {
     const { data, error } = await sql.rows<SdEventRow>`
       select created_at, anon_id, email, event, lesson, step, props, lang, device
         from course.sd_events
-       where created_at >= ${since}
+       where created_at >= ${since} and event <> 'offer'
        order by created_at
        limit ${PAGE} offset ${page * PAGE}
     `;
@@ -51,4 +51,26 @@ export async function getSdLearner(anon: string): Promise<SdEventRow[]> {
      limit 1000
   `;
   return data ?? [];
+}
+
+const FUNNEL = ["view", "form_start", "claim", "blocked", "google", "order_failed", "rzp_open", "rzp_closed", "rzp_failed", "paid"] as const;
+export interface OfferFunnelRow { step: (typeof FUNNEL)[number]; inApp: number; browser: number }
+
+/** Distinct visitors reaching each step of the offer page, split by where they opened it. */
+export async function getOfferFunnel(days: number): Promise<OfferFunnelRow[]> {
+  if (!(await getAdmin())) return [];
+  const sql = db();
+  if (!sql) return [];
+  const since = new Date(Date.now() - days * 864e5).toISOString();
+  const { data } = await sql.rows<{ step: string; in_app: boolean; people: number }>`
+    select step, coalesce((props->>'inApp')::boolean, false) as in_app, count(distinct anon_id)::int as people
+      from course.sd_events
+     where event = 'offer' and created_at >= ${since}
+     group by 1, 2
+  `;
+  return FUNNEL.map((step) => ({
+    step,
+    inApp: data?.find((r) => r.step === step && r.in_app)?.people ?? 0,
+    browser: data?.find((r) => r.step === step && !r.in_app)?.people ?? 0,
+  }));
 }
