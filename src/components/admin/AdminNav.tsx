@@ -9,6 +9,7 @@ const links = [
   { href: "/admin/registrations", label: "Registrations" },
   // Admin only, so it stays even while HIDE_MONEY keeps money off the public site.
   { href: "/admin/payments", label: "Payments & refunds" },
+  { href: "/admin/referrals", label: "Referrals" },
   { href: "/admin/analytics", label: "Traffic" },
   { href: "/admin/engagement", label: "Engagement" },
   { href: "/admin/learners", label: "Learners & progress" },
