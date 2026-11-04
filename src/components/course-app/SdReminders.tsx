@@ -124,7 +124,18 @@ export function ReminderSheet() {
       <div role="dialog" aria-modal="true" aria-labelledby="sd-remind-t" className="sd-a-in sd-lg-shadow flex flex-col gap-3 rounded-t-2xl border-t-[3px] border-sd-accent bg-sd-bg px-5 pt-[18px] pb-[34px] lg:w-[min(480px,90%)] lg:rounded-2xl lg:p-6">
         <span className="sd-kicker text-sd-accent-700">Daily reminder</span>
         <h3 id="sd-remind-t" className="m-0 text-2xl leading-[1.15] tracking-[-0.02em] text-balance">Don’t lose your streak.</h3>
-        <p className="m-0 text-[15px] leading-[1.45] text-pretty text-sd-n-800">{SUB[state]}{canAsk && " You can turn it off any time in Profile."}</p>
+        {state === "ios" ? (
+          <>
+            <p className="m-0 text-[15px] leading-[1.45] text-pretty text-sd-n-800">On iPhone and iPad, Apple only sends reminders to apps on your Home Screen. It takes 20 seconds:</p>
+            <ol className="m-0 flex list-decimal flex-col gap-1.5 pl-5 text-[15px] leading-[1.4] text-sd-n-800">
+              <li>Tap <b>Share</b> (the square with an arrow) in your browser.</li>
+              <li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+              <li>Open <b>Klymb.ai</b> from the new icon, sign in, and tap <b>Turn on reminders</b>.</li>
+            </ol>
+          </>
+        ) : (
+          <p className="m-0 text-[15px] leading-[1.45] text-pretty text-sd-n-800">{SUB[state]}{canAsk && " You can turn it off any time in Profile."}</p>
+        )}
         {canAsk && <button type="button" disabled={state === "busy"} onClick={() => enable().then((next) => { if (next === "on") close(); })} className="sd-btn sd-btn-primary mt-1 h-[52px] text-base disabled:opacity-50">Turn on reminders</button>}
         <button type="button" onClick={close} className="sd-btn sd-btn-ghost self-start">{canAsk ? "Not now" : "Got it"}</button>
       </div>
