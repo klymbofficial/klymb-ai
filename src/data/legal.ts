@@ -53,15 +53,15 @@ export const grievance = {
   /** confirm: the company's choice of Grievance Officer: a director by default. */
   name: "Tarun Kumar Singh",
   designation: "Director and Grievance Officer",
-  email: "klymbofficial@gmail.com",
+  email: "team@klymb.ai",
   address: entity.address,
   acknowledgeWithin: "24 hours",
   resolveWithin: "15 days",
 } as const;
 
 export const policyVersion = {
-  version: "2026-11-03",
-  effective: "3 November 2026",
+  version: "2026-11-05",
+  effective: "5 November 2026",
 } as const;
 
 /**
