@@ -56,7 +56,7 @@ export const site = {
 };
 
 export const contact = {
-  email: "klymbofficial@gmail.com",
+  email: "team@klymb.ai",
 };
 
 export const socials = [
