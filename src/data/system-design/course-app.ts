@@ -54,7 +54,7 @@ export const MODULES: CourseModule[] = [
       ["Build the architecture for a RAG assistant", "5:26"],
       ["AI latency, cost and model choices", "5:37"],
       ["AI safety, quality and data access", "5:21"],
-      ["AI system design capstone", "6:39"],
+      ["AI system design capstone", "6:27"],
     ],
   },
 ];

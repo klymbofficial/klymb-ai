@@ -570,7 +570,7 @@ export const essentialsDayTwentyOne: Day = {
   copy: { en, hi },
   sources: [],
   video: {
-    src: "/api/video/essentials-day-21.mp4", poster: "/videos/system-design/essentials-day-21-poster.jpg", minutes: 7, lang: "Hinglish",
+    src: "/api/video/essentials-day-21.mp4", poster: "/videos/system-design/essentials-day-21-poster.jpg", minutes: 6, lang: "Hinglish",
     // One horizontal cut with the captions burned in: it plays in the wide frame, and with no caption lines there's no subtitle switch.
     wide: { src: "/api/video/essentials-day-21.mp4", poster: "/videos/system-design/essentials-day-21-poster.jpg" },
   },
