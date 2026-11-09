@@ -19,7 +19,8 @@ export default async function OrgLayout({ children, params }: { children: React.
   return (
     <div className="min-h-screen bg-surface">
       <OrgHeader member={member} />
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      {/* pb-28: the site-wide help button floats bottom-right (64px + its margin). This leaves room to scroll the last row clear of it. */}
+      <main className="mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 sm:pt-10">{children}</main>
     </div>
   );
 }
