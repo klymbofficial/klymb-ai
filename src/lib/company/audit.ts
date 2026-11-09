@@ -29,6 +29,9 @@ export type CompanyAuditAction = Extract<
   | "company.team_create"
   | "company.team_head"
   | "company.person_move"
+  | "company.course_assign"
+  | "company.course_unassign"
+  | "company.course_assign_all"
 >;
 
 export async function logCompany(hr: CompanyMember, action: CompanyAuditAction, details: Record<string, unknown> = {}) {

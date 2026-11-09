@@ -49,13 +49,13 @@ export default async function OrgHome({ params }: { params: Promise<{ slug: stri
               <ul className="mt-3 grid gap-4 sm:grid-cols-3">
                 <ShortcutCard href={`${base}/people`} title="People" body="Add, resend an invite, or remove. Removing ends access at once." />
                 <ShortcutCard href={`${base}/teams`} title="Teams" body="Create teams, choose a head for each, and move people between them." />
-                <ShortcutCard href={`${base}/learning`} title="Learning" body="See System Design activity for your people, where there is any." />
+                <ShortcutCard href={`${base}/learning`} title="Learning" body="Assign System Design to your people, and see how they are getting on." />
               </ul>
             </section>
             <section aria-labelledby="not-yet" className="border-l-4 border-line/40 pl-4">
               <h2 id="not-yet" className="text-sm font-extrabold uppercase tracking-[0.14em] text-muted">Not available yet</h2>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-                <li>Assigning courses or assessments to your people: Klymb sets this up with you for now.</li>
+                <li>Assigning anything other than System Design, and assigning assessments.</li>
                 <li>Company reports and exports.</li>
                 <li>Single sign-on: people sign in with an emailed code.</li>
               </ul>
@@ -85,7 +85,7 @@ export default async function OrgHome({ params }: { params: Promise<{ slug: stri
         <div className="flex flex-col gap-6">
           <div className="grid gap-4 sm:grid-cols-3">
             <Stat label="People on your team" value={progress.rows.length} />
-            <Stat label="With System Design access" value={progress.rows.filter((r) => r.hasAccess).length} note="Of your team" />
+            <Stat label="With the course assigned" value={progress.rows.filter((r) => r.hasAccess).length} note="Of your team" />
           </div>
           <Link href={`${base}/learning`} className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">See your team&apos;s learning</Link>
         </div>
@@ -114,10 +114,10 @@ function MyLearning({ rows, total, slug, companyName }: { rows: MemberProgress[]
   if (!me.hasAccess) {
     return (
       <EmptyPanel
-        title="No course is set up for you yet"
+        title="No course is assigned to you yet"
         action={<Link href={`/org/${slug}/learning`} className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">How to reach your course</Link>}
       >
-        Being part of {companyName} doesn&apos;t open a course by itself. Klymb doesn&apos;t record one against {me.email} yet.
+        Being part of {companyName} doesn&apos;t open a course by itself. Your HR contact assigns System Design to people; it isn&apos;t assigned to {me.email} yet.
       </EmptyPanel>
     );
   }

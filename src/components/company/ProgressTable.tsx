@@ -2,8 +2,8 @@ import type { MemberProgress } from "@/lib/company/progress-data";
 
 /** One plain word for where someone is, from what the server recorded. */
 export function statusOf(p: MemberProgress, total: number): string {
-  if (!p.hasAccess) return "No access yet";
-  if (p.lessonsPassed === 0 && p.finalAttempts === 0) return "Not started";
+  if (!p.hasAccess) return "Not assigned";
+  if (p.lessonsPassed === 0 && p.finalAttempts === 0) return p.assigned ? "Assigned, not started" : "Not started";
   if (p.lessonsPassed >= total) return p.finalAttempts > 0 ? "Final taken" : "All lessons passed";
   return "In progress";
 }
@@ -18,7 +18,16 @@ export function lastActiveOf(p: MemberProgress) {
 const th = "px-3 py-2 text-left text-xs font-extrabold uppercase tracking-[0.12em] text-muted";
 
 /** System Design activity for the people the viewer may see. No totals that Klymb doesn't hold. */
-export function ProgressTable({ rows, total, showTeam }: { rows: MemberProgress[]; total: number; showTeam: boolean }) {
+export function ProgressTable({
+  rows, total, showTeam, renderAction, actionLabel,
+}: {
+  rows: MemberProgress[];
+  total: number;
+  showTeam: boolean;
+  /** HR's Assign / Remove button for a row. Omitted for everyone else, who only read. */
+  renderAction?: (p: MemberProgress) => React.ReactNode;
+  actionLabel?: string;
+}) {
   return (
     <div className="card overflow-x-auto">
       <table className="w-full min-w-[40rem] text-sm">
@@ -31,6 +40,7 @@ export function ProgressTable({ rows, total, showTeam }: { rows: MemberProgress[
             <th scope="col" className={th}>Lessons passed</th>
             <th scope="col" className={th}>Final assessment</th>
             <th scope="col" className={th}>Last activity</th>
+            {renderAction && <th scope="col" className={th}>{actionLabel}</th>}
           </tr>
         </thead>
         <tbody>
@@ -47,6 +57,7 @@ export function ProgressTable({ rows, total, showTeam }: { rows: MemberProgress[
                 {p.finalAttempts > 0 ? `${p.finalBest}% best, ${p.finalAttempts} ${p.finalAttempts === 1 ? "try" : "tries"}` : "Not taken"}
               </td>
               <td className="px-3 py-3 text-muted">{lastActiveOf(p)}</td>
+              {renderAction && <td className="px-3 py-3">{renderAction(p)}</td>}
             </tr>
           ))}
         </tbody>

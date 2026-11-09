@@ -6,10 +6,10 @@ import { SD_COURSE } from "@/lib/sd-offer";
 
 /**
  * The only learning data Klymb holds against a company's people: System
- * Design, which is recorded per email (course.enrollments, lesson_checks,
- * final_attempts). There is no company-level assignment, so nothing here says
- * "assigned" or "overdue": a row is what the person has done under their own
- * work email, and nothing else.
+ * Design, which is recorded per email (lesson_checks, final_attempts), and
+ * whether HR has assigned it (course.company_course_assignments). Nothing
+ * here says "overdue" or "due": a row is what the person has done under their
+ * own work email, and nothing else.
  *
  * Scoped like every company query (scopeFor): HR reads the whole company, a
  * head reads their team, an employee reads their own row. The scope comes
@@ -21,8 +21,12 @@ export interface MemberProgress {
   name: string | null;
   role: "hr" | "head" | "employee";
   teamName: string | null;
-  /** An active System Design enrolment under this email. */
+  /** Can open the course: assigned by their company, or paid for it themselves. */
   hasAccess: boolean;
+  /** HR has assigned it, and not taken it back. */
+  assigned: boolean;
+  /** An active enrolment of their own (they paid), so no assignment is needed. */
+  ownAccess: boolean;
   lessonsPassed: number;
   /** Best final-assessment score, or null when none was taken. */
   finalBest: number | null;
@@ -31,7 +35,7 @@ export interface MemberProgress {
 }
 
 export type ProgressResult =
-  | { status: "ok"; rows: MemberProgress[]; totalLessons: number }
+  | { status: "ok"; rows: MemberProgress[]; totalLessons: number; seatCount: number }
   | { status: "unavailable" };
 
 interface Row {
@@ -39,7 +43,9 @@ interface Row {
   name: string | null;
   role: MemberProgress["role"];
   team_name: string | null;
-  has_access: boolean;
+  assigned: boolean;
+  own_access: boolean;
+  seat_count: number;
   lessons_passed: number;
   last_lesson_at: string | null;
 }
@@ -51,13 +57,17 @@ export async function loadProgress(sql: Db, member: CompanyMember): Promise<Prog
   const scope = scopeFor(member);
   const people = await sql.rows<Row>`
     select m.email, m.name, m.role, t.name as team_name,
-           (e.id is not null) as has_access,
+           (a.email is not null) as assigned,
+           (e.id is not null) as own_access,
+           (select seat_count from course.companies where id = m.company_id) as seat_count,
            coalesce(l.passed, 0)::int as lessons_passed,
            l.last_at as last_lesson_at
       from course.company_members m
       left join course.teams t on t.id = m.team_id
       left join course.enrollments e
              on e.email = m.email and e.course = ${SD_COURSE} and e.status = 'active'
+      left join course.company_course_assignments a
+             on a.email = m.email and a.company_id = m.company_id and a.course = ${SD_COURSE} and a.revoked_at is null
       left join lateral (
         select count(*) filter (where passed_at is not null) as passed, max(updated_at) as last_at
           from course.lesson_checks where email = m.email and course = ${SD_COURSE}
@@ -87,6 +97,7 @@ export async function loadProgress(sql: Db, member: CompanyMember): Promise<Prog
   return {
     status: "ok",
     totalLessons,
+    seatCount: people.data[0]?.seat_count ?? 0,
     rows: people.data.map((r) => {
       const f = final.get(r.email);
       const last = [r.last_lesson_at, f?.last_at].filter((d): d is string => !!d).sort().pop() ?? null;
@@ -95,7 +106,9 @@ export async function loadProgress(sql: Db, member: CompanyMember): Promise<Prog
         name: r.name,
         role: r.role,
         teamName: r.team_name,
-        hasAccess: r.has_access,
+        hasAccess: r.assigned || r.own_access,
+        assigned: r.assigned,
+        ownAccess: r.own_access,
         lessonsPassed: Math.min(r.lessons_passed, totalLessons),
         finalBest: f?.best ?? null,
         finalAttempts: f?.attempts ?? 0,

@@ -24,6 +24,9 @@ const LABELS: Record<string, string> = {
   "company.team_create": "Company HR created a team",
   "company.team_head": "Company HR chose a team head",
   "company.person_move": "Company HR moved a person",
+  "company.course_assign": "Company HR assigned a course",
+  "company.course_unassign": "Company HR removed a course assignment",
+  "company.course_assign_all": "Company HR assigned a course to everyone without it",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;
