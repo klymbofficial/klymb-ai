@@ -28,6 +28,10 @@ const UNDEFINED_TABLE = "42P01";
  * hasPaid, for the same reason: an outage never locks out someone who paid.
  * A missing table is not an outage: the migration hasn't run here, so nobody
  * holds a seat, and opening the course to everyone would give it away.
+ *
+ * A company can also open it for a member (see hasCompanyAssignment), which
+ * is asked only when there is no enrolment, so what paid learners get is
+ * exactly what it was.
  */
 export async function hasCourseAccess(email: string, course: string) {
   const sql = db();
@@ -38,6 +42,33 @@ export async function hasCourseAccess(email: string, course: string) {
      limit 1
   `;
   if (error) return error.code !== UNDEFINED_TABLE;
+  if (data?.length) return true;
+  return hasCompanyAssignment(sql, email, course);
+}
+
+/**
+ * Whether a company has opened this course for this email: an active member
+ * of a company (removed_at is null), holding a non-revoked assignment in that
+ * same company. `email` is the Google-verified address of the session; the
+ * match is exact and the lookup never trusts a company id from the browser.
+ *
+ * Unlike the payer check above it fails closed: an error here must never
+ * open a company's course. A missing table (migration 0030 not run yet)
+ * simply means nobody has been assigned.
+ */
+export async function hasCompanyAssignment(sql: NonNullable<ReturnType<typeof db>>, email: string, course: string) {
+  const { data, error } = await sql.rows<{ email: string }>`
+    select a.email
+      from course.company_course_assignments a
+      join course.company_members m on m.company_id = a.company_id and m.email = a.email
+     where a.email = ${email} and a.course = ${course}
+       and a.revoked_at is null and m.removed_at is null
+     limit 1
+  `;
+  if (error) {
+    if (error.code !== UNDEFINED_TABLE) console.error("company assignment read failed:", error.code, error.message);
+    return false;
+  }
   return !!data?.length;
 }
 

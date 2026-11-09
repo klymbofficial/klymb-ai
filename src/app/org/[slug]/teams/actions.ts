@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { logCompany } from "@/lib/company/audit";
 import { hrFor } from "@/lib/company/auth";
 import { headBlocked, teamName } from "@/lib/company/people";
 import { insertTeam, loadPerson, movePersonRow, setTeamHead } from "@/lib/company/people-data";
@@ -29,6 +30,7 @@ export async function createTeam(slug: string, rawName: string): Promise<TeamsRe
   const created = await insertTeam(sql, hr.companyId, name.value);
   if (created === null) return UNAVAILABLE;
   if (!created) return { ok: false, message: `There is already a team called "${name.value}".` };
+  await logCompany(hr, "company.team_create", { team: name.value });
   refresh(slug);
   return { ok: true, message: `${name.value} was created.` };
 }
@@ -49,6 +51,7 @@ export async function chooseHead(slug: string, teamId: string, rawEmail: string)
   const changed = await setTeamHead(sql, hr.companyId, teamId, email);
   if (changed === null) return UNAVAILABLE;
   if (!changed) return { ok: false, message: "That team or person no longer exists. Reload and try again." };
+  await logCompany(hr, "company.team_head", { team_id: teamId, email });
   refresh(slug);
   return { ok: true, message: `${email} is now the team's head.` };
 }
@@ -69,6 +72,7 @@ export async function movePerson(slug: string, rawEmail: string, rawTeamId: stri
   const moved = await movePersonRow(sql, hr.companyId, email, teamId);
   if (moved === null) return UNAVAILABLE;
   if (!moved) return { ok: false, message: "That team no longer exists. Reload and try again." };
+  await logCompany(hr, "company.person_move", { email, team_id: teamId, was_head: target.role === "head" });
   refresh(slug);
   const wasHead = target.role === "head" && target.teamId !== teamId;
   return { ok: true, message: `${email} was moved${wasHead ? " and is no longer a head" : ""}.` };

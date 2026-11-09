@@ -12,7 +12,18 @@ export type AuditAction =
   | "ticket.status"
   | "company.create"
   | "company.update"
-  | "company.hr_add";
+  | "company.hr_add"
+  // By a company's own HR (src/lib/company/audit.ts), not by a Klymb admin.
+  | "company.person_add"
+  | "company.people_import"
+  | "company.person_remove"
+  | "company.invite_resend"
+  | "company.team_create"
+  | "company.team_head"
+  | "company.person_move"
+  | "company.course_assign"
+  | "company.course_unassign"
+  | "company.course_assign_all";
 
 /**
  * Records an admin action. Never throws and never blocks the action itself:
