@@ -164,7 +164,7 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
 
   function remove(p: PersonRow) {
     const who = p.name ? `${p.name} (${p.email})` : p.email;
-    if (!window.confirm(`Remove ${who}?\n\nTheir access ends now and their seat frees up. Their progress is kept, and you can add them back later.`)) return;
+    if (!window.confirm(`Remove ${who}?\n\nTheir access ends now and their seat frees up. Their record is kept, and you can add them back later.`)) return;
     return act(p, "remove");
   }
   const working = (p: PersonRow, what: "remove" | "resend") => busy?.email === p.email && busy.what === what;
@@ -220,7 +220,7 @@ function RemovedList({ people }: { people: PersonRow[] }) {
   return (
     <section aria-labelledby="removed-people" className="flex flex-col gap-3">
       <h2 id="removed-people" className="text-lg font-black">Removed <span className="text-muted nums">({people.length})</span></h2>
-      <p className="text-xs text-muted">They can&apos;t sign in and don&apos;t use a seat. Their progress is kept. Add the same email again to bring someone back.</p>
+      <p className="text-xs text-muted">They can&apos;t sign in and don&apos;t use a seat. Their record is kept. Add the same email again to bring someone back.</p>
       <ul className="border border-line/25 bg-white text-sm">
         {people.map((p) => (
           <li key={p.email} className="flex flex-wrap justify-between gap-2 border-b border-line/15 px-3 py-2 last:border-0">

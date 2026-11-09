@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { CODE_TTL_MINUTES } from "@/lib/company/signin-code";
 import { requestSignInCode } from "@/lib/company/signin";
-import { memberLookup } from "@/lib/company/lookup";
-import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 
 export interface SignInState {
@@ -62,10 +60,8 @@ export async function companySignIn(_prev: SignInState, formData: FormData): Pro
       throw error;
     }
 
-    // Signed in. Send them to their own company; the slug comes from the database, not the form.
-    const sql = db();
-    const member = sql ? await memberLookup(sql)(email) : null;
-    redirect(member ? `/org/${member.company_slug}` : "/org/sign-in");
+    // Signed in. /org sends them to their own company; the slug comes from the database, never the form.
+    redirect("/org");
   }
 
   return { step: "email" };
