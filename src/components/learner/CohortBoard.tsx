@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { learnerButton } from "@/components/learner/learner-ui";
 
 export interface BoardDay {
   day: number;
@@ -39,7 +40,7 @@ function formatLong(iso: string) {
  * Selecting a day is local state: nothing is saved until they open the day
  * itself, so a learner can look ahead without changing anything.
  */
-export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay: number }) {
+export function CohortBoard({ days, initialDay, todayDay }: { days: BoardDay[]; initialDay: number; /** The day to do next, ringed on the calendar. Null when every day is submitted. */ todayDay: number | null }) {
   const [selected, setSelected] = useState(initialDay);
   const byDay = useMemo(() => new Map(days.map((d) => [d.day, d])), [days]);
   const active = byDay.get(selected) ?? days[0];
@@ -78,11 +79,11 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
   }
 
   return (
-    <div className="card grid gap-8 rounded-slab p-6 sm:p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10 lg:p-10">
+    <div className="card grid gap-8 rounded-slab p-4 sm:p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10 lg:p-10">
       {/* ── Calendar ─────────────────────────────────────────── */}
       <section aria-labelledby="your-30-days" className="min-w-0">
         <h2 id="your-30-days" className="display text-3xl">Your 30 days</h2>
-        <p className="mt-2 text-sm text-muted">Submitted days are filled. Assessment days are marked in red.</p>
+        <p className="mt-2 text-sm text-muted">A tick marks a submitted day. The ringed day is your next one. Pick any day to see its status.</p>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -109,13 +110,14 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
             </button>
           </div>
 
-          <ul className="flex items-center gap-4 text-xs font-semibold">
-            <li className="flex items-center gap-2"><span aria-hidden="true" className="size-4 rounded bg-red-tint" />Test day</li>
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold">
+            <li className="flex items-center gap-2"><span aria-hidden="true" className="size-4 rounded bg-red-tint ring-1 ring-red-strong/30" />Test day</li>
             <li className="flex items-center gap-2"><span aria-hidden="true" className="size-4 rounded bg-red-strong" />Interview prep</li>
+            <li className="flex items-center gap-2"><span aria-hidden="true" className="grid size-4 place-items-center rounded-full bg-ink text-[10px] leading-none text-paper">✓</span>Submitted</li>
           </ul>
         </div>
 
-        <table className="mt-6 w-full table-fixed border-separate border-spacing-y-1 text-center">
+        <table className="mt-6 w-full table-fixed border-separate border-spacing-y-1.5 text-center">
           <thead>
             <tr>
               {WEEKDAYS.map((d, i) => (
@@ -136,6 +138,8 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
                   if (!cell) return <td key={i} />;
                   const { entry } = cell;
                   const isSelected = entry?.day === selected;
+                  const isToday = entry?.day === todayDay;
+                  const status = entry ? (entry.submitted ? ", submitted" : entry.lock ? ", locked" : isToday ? ", your next day" : "") : "";
                   return (
                     <td key={i} className="p-0">
                       {entry ? (
@@ -143,9 +147,10 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
                           type="button"
                           onClick={() => pick(entry)}
                           aria-pressed={isSelected}
-                          aria-label={`Day ${entry.day}: ${entry.title}`}
+                          aria-label={`Day ${entry.day}: ${entry.title}${status}`}
                           className={clsx(
-                            "mx-auto grid size-11 place-items-center rounded-lg text-base font-semibold transition-colors",
+                            "relative mx-auto grid size-9 place-items-center rounded-lg text-sm font-semibold transition-colors sm:size-11 sm:text-base",
+                            isToday && !isSelected && "ring-2 ring-red-strong ring-offset-2",
                             isSelected
                               ? "bg-red-strong text-white"
                               : entry.kind === "interview"
@@ -154,13 +159,18 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
                                   ? "bg-red-tint text-red-deep hover:bg-red-tint/70"
                                   : entry.submitted
                                     ? "bg-ink text-paper hover:bg-ink/85"
-                                    : "hover:bg-surface",
+                                    : entry.lock
+                                      ? "text-muted hover:bg-surface"
+                                      : "hover:bg-surface",
                           )}
                         >
                           {cell.dayOfMonth}
+                          {entry.submitted && (
+                            <span aria-hidden="true" className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-paper text-[10px] leading-none font-black text-ink ring-1 ring-ink">✓</span>
+                          )}
                         </button>
                       ) : (
-                        <span className="mx-auto grid size-11 place-items-center text-base text-muted/60">{cell.dayOfMonth}</span>
+                        <span className="mx-auto grid size-9 place-items-center text-sm text-muted/60 sm:size-11 sm:text-base">{cell.dayOfMonth}</span>
                       )}
                     </td>
                   );
@@ -191,6 +201,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
               active.submitted ? "Submitted"
               : active.lock === "previous" ? `Locked: submit Day ${active.day - 1} first`
               : active.lock === "pay" ? "Locked: unlock the full course"
+              : active.day === todayDay ? "Your next day: not yet submitted"
               : active.kind === "assessment" ? "Assessment: not yet submitted" : "Not yet submitted"
             }
           />
@@ -198,7 +209,7 @@ export function CohortBoard({ days, initialDay }: { days: BoardDay[]; initialDay
 
         <Link
           href={`/learn/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
-          className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-card px-6 py-3.5 font-bold text-ink transition-colors hover:bg-white"
+          className={learnerButton("onDark", "mt-7 w-full")}
         >
           {active.submitted ? "Review this day"
             : active.lock === "previous" ? `Go to Day ${active.day - 1}`

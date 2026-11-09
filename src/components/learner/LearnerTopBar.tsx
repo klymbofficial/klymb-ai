@@ -2,12 +2,13 @@ import { allFree } from "@/data/tracks";
 import Image from "next/image";
 import Link from "next/link";
 import { signOutLearner } from "@/app/(learn)/learn/actions";
-import { navLinks } from "@/data/program";
+import { LearnerNav } from "@/components/learner/LearnerNav";
+import { learnerButton } from "@/components/learner/learner-ui";
 import { ReminderBell } from "@/components/pwa/ReminderBell";
 import { AdminLink } from "@/components/layout/AdminLink";
 
-/** The signed-in bar shared by the dashboard and the day pages. */
-export function LearnerTopBar({ name, image }: { name: string; image?: string | null }) {
+/** The signed-in bar shared by the dashboard and the day pages: the learner's own links, not the marketing menu. */
+export function LearnerTopBar({ name, image, coach = false }: { name: string; image?: string | null; /** Show the voice-coach link: the learner's track has topics to practise. */ coach?: boolean }) {
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -26,22 +27,14 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
       <header className="border-b border-line/25 bg-card">
         {/* Equal outer columns keep the nav at the true centre, whatever the
             widths of the wordmark and the account block. */}
-        <div className="grid h-15 grid-cols-[1fr_auto] items-center gap-4 px-4 sm:px-8 lg:grid-cols-[1fr_auto_1fr] lg:px-20">
-          <Link href="/learn" aria-label="Klymb.ai dashboard" className="display inline-flex items-baseline justify-self-start text-lg">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 px-4 sm:px-8 lg:h-15 lg:grid-cols-[1fr_auto_1fr] lg:px-20">
+          <Link href="/learn" aria-label="Klymb.ai dashboard" className="display inline-flex h-14 items-center justify-self-start text-lg lg:h-auto">
             KLYMB<span className="text-red">.AI</span>
           </Link>
 
-          <nav aria-label="Primary" className="hidden lg:block">
-            <ul className="flex items-center gap-8 text-sm font-semibold">
-              {navLinks.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="transition-colors hover:text-red-deep">{l.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <LearnerNav coach={coach} />
 
-          <div className="flex items-center gap-3 justify-self-end">
+          <div className="flex h-14 items-center gap-3 justify-self-end lg:h-auto">
             <AdminLink className="rounded-md border border-line/50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors hover:border-red-deep hover:text-red-deep" />
             <ReminderBell />
             {image ? (
@@ -55,7 +48,7 @@ export function LearnerTopBar({ name, image }: { name: string; image?: string | 
             <form action={signOutLearner}>
               <button
                 type="submit"
-                className="ml-2 rounded-md bg-red-strong px-4 py-2 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-red-press"
+                className={learnerButton("secondary", "ml-1 min-h-9! px-3! py-1.5! text-xs!")}
               >
                 Sign out
               </button>

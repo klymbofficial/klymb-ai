@@ -50,7 +50,7 @@ export const sectionCopy = {
 export const inclusions = [
   { figure: "1", label: "Selected career track", detail: "Everything you do is specific to the role you want." },
   { figure: "30", label: "Practical daily challenges", detail: "One real workplace problem a day." },
-  { figure: "4", label: "Weekly assessments", detail: "After Days 7, 14, 21 and 28, with feedback." },
+  { figure: "4", label: "Weekly assessments", detail: "After Days 7, 14, 21 and 28." },
   { figure: "1+", label: "Role-specific project", detail: "Evidence you can show an interviewer." },
   { figure: "✓", label: "Interview preparation", detail: "Role-specific questions and answer frameworks." },
   { figure: "2", label: "Interview-prep days", detail: "Days 29 and 30: the most-asked questions." },
@@ -108,7 +108,7 @@ export const evidence: Evidence[] = [
 export const howItWorks = [
   { title: "Choose a track", body: "Pick one of five roles. Everything after this is specific to it." },
   { title: "Solve a daily workplace problem", body: "One realistic problem a day, the kind the role actually faces." },
-  { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28: scored, with feedback." },
+  { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28, on that week's work." },
   { title: "Build role-specific evidence", body: "Your work becomes a portfolio piece you can walk through." },
   { title: "Practice for interviews", body: "Role-specific questions, frameworks and practice answers." },
   { title: "Prepare for interviews", body: "Days 29 and 30: answer the most-asked questions for your role." },
@@ -173,7 +173,7 @@ export const faqs: Faq[] = [
   {
     question: "Can I change my track?",
     answer:
-      "Not after you enroll. Each track has its own 30-day project, assessments and reviewer, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
+      "Not after you enroll. Each track has its own 30-day project and assessments, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
   },
   {
     question: "What happens every day?",
@@ -183,7 +183,7 @@ export const faqs: Faq[] = [
   {
     question: "How do weekly assessments work?",
     answer:
-      "After Days 7, 14, 21 and 28 you complete an assessment based on that week's work. It is scored against a rubric and you receive feedback on what to improve.",
+      "After Days 7, 14, 21 and 28 you complete an assessment based on that week's work. Your answers are saved with your submission, and feedback appears on the day if a reviewer adds it.",
   },
   {
     question: "How do you prepare me for interviews?",
@@ -197,7 +197,7 @@ export const faqs: Faq[] = [
   {
     question: "What is included in the price?",
     answer:
-      "One career track with 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation.",
+      "One career track with 30 daily problems, 4 weekly assessments, role-specific projects, progress tracking, interview preparation.",
   },
   {
     question: "Will you try to sell me another course?",
@@ -244,7 +244,7 @@ export const whyRefund = {
   points: [
     { title: "You pay to commit", body: "A fee makes you show up on Day 12 when motivation is low. Free programs are easy to abandon." },
     { title: "You finish, you get it back", body: "Submit all 30 days, take the four assessments and complete both interview-prep days. We refund 100% of the fee." },
-    { title: "We only win if you finish", body: "Your completion is what we show the next cohort. That is why every assessment gets individual feedback." },
+    { title: "We only win if you finish", body: "Your completion is what we show the next cohort." },
   ],
   promises: [
     "No upsell. There is no advanced course to pitch you at the end.",
