@@ -90,7 +90,7 @@ export default async function OrgHome({ params }: { params: Promise<{ slug: stri
           <Link href={`${base}/learning`} className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">See your team&apos;s learning</Link>
         </div>
       ) : (
-        <MyLearning rows={progress.rows} total={progress.totalLessons} slug={member.companySlug} />
+        <MyLearning rows={progress.rows} total={progress.totalLessons} slug={member.companySlug} companyName={member.companyName} />
       )}
     </>
   );
@@ -108,16 +108,16 @@ function ShortcutCard({ href, title, body }: { href: string; title: string; body
 }
 
 /** An employee's own state, and the one honest way into the course when they have it. */
-function MyLearning({ rows, total, slug }: { rows: MemberProgress[]; total: number; slug: string }) {
+function MyLearning({ rows, total, slug, companyName }: { rows: MemberProgress[]; total: number; slug: string; companyName: string }) {
   const me = rows[0];
   if (!me) return <LoadError what="Your learning" />;
   if (!me.hasAccess) {
     return (
       <EmptyPanel
         title="No course is set up for you yet"
-        action={<Link href={`/org/${slug}/learning`} className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">How learning works here</Link>}
+        action={<Link href={`/org/${slug}/learning`} className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">How to reach your course</Link>}
       >
-        Klymb doesn&apos;t record any course against {me.email} yet. When your company arranges one, it will show here.
+        Being part of {companyName} doesn&apos;t open a course by itself. Klymb doesn&apos;t record one against {me.email} yet.
       </EmptyPanel>
     );
   }
@@ -127,7 +127,7 @@ function MyLearning({ rows, total, slug }: { rows: MemberProgress[]; total: numb
       <p className="display mt-2 text-2xl">{statusOf(me, total)}</p>
       <p className="mt-1 text-sm text-muted">{me.lessonsPassed} of {total} lessons passed · last activity {lastActiveOf(me)}</p>
       <ButtonLink href="/learn/system-design" arrow className="mt-5">Open the course</ButtonLink>
-      <p className="mt-4 text-xs text-muted">The course opens with Google. Sign in there with {me.email}, the email your learning is recorded under.</p>
+      <p className="mt-4 text-xs text-muted">The course signs in with Google, not with a company code. Use a Google account for {me.email}, the email your learning is recorded under.</p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyPanel, LoadError, OrgPageTitle } from "@/components/company/OrgPanels";
+import { CourseAccessSteps } from "@/components/company/CourseAccessSteps";
 import { ProgressTable } from "@/components/company/ProgressTable";
 import { contact } from "@/data/config";
 import { requireCompany } from "@/lib/company/auth";
@@ -60,6 +61,8 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
             <ProgressTable rows={progress.rows} total={progress.totalLessons} showTeam={member.role === "hr"} />
           </>
         )}
+
+        {member.role === "employee" && progress?.status === "ok" && <CourseAccessSteps email={member.email} hasAccess={!!progress.rows[0]?.hasAccess} />}
 
         <section aria-labelledby="scope" className="border-l-4 border-line/40 pl-4">
           <h2 id="scope" className="text-sm font-extrabold uppercase tracking-[0.14em] text-muted">What this shows</h2>

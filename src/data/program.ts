@@ -222,6 +222,8 @@ export const footerLinks = {
     { label: "Program", href: "/program" },
     { label: "Register", href: "/register" },
     { label: "Learner sign-in", href: "/learn/login" },
+    // For people a company has invited: HR, team heads and employees. Not SSO: an emailed code.
+    { label: "Company sign-in", href: "/org/sign-in" },
   ],
   company: [
     { label: "Contact", href: "/contact" },
