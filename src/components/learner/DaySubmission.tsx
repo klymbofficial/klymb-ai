@@ -4,7 +4,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { submitDay } from "@/app/(learn)/learn/actions";
 import { track } from "@/lib/analytics";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import Link from "next/link";
+import { learnerButton } from "@/components/learner/learner-ui";
 import type { Submission } from "@/lib/learner/data";
 import { Celebrate } from "./Celebrate";
 import { submitOrQueue } from "@/lib/offlineQueue";
@@ -88,34 +89,49 @@ export function DaySubmission({
           />
         </div>
 
-        {error && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{error}</p>}
+        {error && (
+          <div role="alert" className="border-2 border-error bg-error-tint p-3 text-sm text-error">
+            <p className="font-extrabold">{submission ? "Your changes were not saved" : `Day ${day} was not submitted`}</p>
+            <p className="mt-1 font-semibold">{error}</p>
+          </div>
+        )}
 
-        <div className="mt-auto flex flex-wrap items-center gap-4">
-          <Button type="submit" className="rounded-md px-4! py-2! text-xs!" disabled={pending} aria-busy={pending}>
+        <div className="mt-auto flex flex-col gap-4">
+          <button type="submit" className={learnerButton("primary", "w-full sm:w-auto sm:self-start")} disabled={pending} aria-busy={pending}>
             {pending ? "Saving…" : submission ? "Update submission" : `Submit Day ${day}`}
-          </Button>
+          </button>
           <AnimatePresence>
-            {saved && !pending && (
+            {saved && !pending && (queued || burst > 0) && (
               <motion.div
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="relative flex flex-wrap items-center gap-4"
+                className="relative flex flex-col gap-3 rounded-lg bg-red-tint p-4"
               >
                 <Celebrate burstKey={burst} />
-                <p role="status" className="text-sm font-bold text-red-deep">{queued ? "Saved on this device. It sends when you are back online." : burst ? `Day ${day} done. Nice work.` : "Saved. You can update it any time."}</p>
-                {nextDay && <ButtonLink href={`/learn/day/${nextDay}`} arrow>Start Day {nextDay}</ButtonLink>}
+                <p role="status" className="text-sm font-bold text-red-deep">
+                  {queued
+                    ? "Saved on this device, not sent yet. It sends when you are back online."
+                    : nextDay ? `Day ${day} submitted. Day ${nextDay} is open.` : `Day ${day} submitted. That's every day of the track.`}
+                </p>
+                {!queued && (nextDay
+                  ? <Link href={`/learn/day/${nextDay}`} className={learnerButton("primary", "w-full sm:w-auto sm:self-start")}>Start Day {nextDay}</Link>
+                  : <Link href="/learn#your-days" className={learnerButton("primary", "w-full sm:w-auto sm:self-start")}>Back to your dashboard</Link>)}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </form>
 
-      {submission?.reviewer_note && (
-        <div className="mt-6 border-l-2 border-red-strong bg-red-tint p-4">
-          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">Reviewer feedback</p>
-          <p className="mt-1 text-sm">{submission.reviewer_note}</p>
-        </div>
+      {submission && (
+        submission.reviewer_note ? (
+          <div className="mt-6 border-l-2 border-red-strong bg-red-tint p-4">
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">Reviewer feedback</p>
+            <p className="mt-1 text-sm">{submission.reviewer_note}</p>
+          </div>
+        ) : (
+          <p className="mt-6 text-sm text-muted">Reviewer feedback: none yet. If a reviewer leaves a note on this day, it appears here.</p>
+        )
       )}
     </div>
   );
