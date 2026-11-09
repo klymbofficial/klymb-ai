@@ -176,7 +176,7 @@ export default async function LearnHomePage() {
                 <div>
                   <h2 className="display text-xl">Practise out loud, five minutes</h2>
                   <p className="mt-1 max-w-lg text-sm text-white/60">
-                    The voice coach asks one question at a time on a single topic, and files what it heard for your reviewer.
+                    The voice coach asks one question at a time on a single topic, and saves a short summary of what it heard.
                     Interviews are spoken: reading an answer is not practising it.
                   </p>
                 </div>

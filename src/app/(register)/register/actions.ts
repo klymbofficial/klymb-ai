@@ -131,7 +131,7 @@ async function checkRepoExists(owner: string, repo: string): Promise<string | nu
     }
     if (res.ok) {
       const body = (await res.json()) as { private?: boolean };
-      if (body.private) return "That repository is private. Make it public so reviewers can see your work.";
+      if (body.private) return "That repository is private. Make it public so your work can be opened and checked.";
     }
   } catch {
     // Network trouble: accept it, a reviewer checks the repository on Day 1.

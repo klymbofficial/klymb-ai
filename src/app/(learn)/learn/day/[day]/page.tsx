@@ -271,7 +271,7 @@ export default async function LearnDayPage({
                   <dd className="mt-1" dangerouslySetInnerHTML={{ __html: entry.deliverable }} />
                 </div>
                 <div>
-                  <dt className="text-xs font-bold uppercase tracking-widest text-muted">Reviewer checks</dt>
+                  <dt className="text-xs font-bold uppercase tracking-widest text-muted">Done when</dt>
                   <dd className="mt-1">{entry.reviewerChecks}</dd>
                 </div>
               </dl>

@@ -186,7 +186,7 @@ export function TrackDetail({ track }: { track: Track }) {
       {/* ── Checkpoints: a timeline on the page, no boxes ───── */}
       <section aria-labelledby="assess-title" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-24">
         <Appear>
-          <Heading id="assess-title" eyebrow="Weekly checkpoints" title="Four checkpoints. Real feedback." intro="Each one is marked on your reasoning, not just the output: and you defend it." />
+          <Heading id="assess-title" eyebrow="Weekly checkpoints" title="Four checkpoints on your own work." intro="Each one asks for your reasoning, not just the output: and you defend it." />
         </Appear>
         <ol className="relative mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {/* The rail the four checkpoints sit on; it draws itself across once in view. */}

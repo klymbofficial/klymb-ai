@@ -18,7 +18,7 @@ export function KnowledgeCheck({
   return (
     <div className="flex flex-1 flex-col gap-6">
       <p className="text-sm leading-relaxed text-muted">
-        Answer every question in your own words, a full sentence or more. They&apos;re sent with your deliverable when you submit the day, and your reviewer reads them together.
+        Answer every question in your own words, a full sentence or more. They&apos;re saved with your deliverable when you submit the day.
       </p>
 
       <ol className="flex flex-col gap-5">

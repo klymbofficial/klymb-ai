@@ -130,7 +130,7 @@ export function DaySubmission({
             <p className="mt-1 text-sm">{submission.reviewer_note}</p>
           </div>
         ) : (
-          <p className="mt-6 text-sm text-muted">Reviewer feedback: none yet. If a reviewer leaves a note on this day, it appears here.</p>
+          <p className="mt-6 text-sm text-muted">Your submission is saved. Feedback will appear here if a reviewer adds it.</p>
         )
       )}
     </div>
