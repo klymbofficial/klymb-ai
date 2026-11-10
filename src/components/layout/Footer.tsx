@@ -22,7 +22,8 @@ function Column({ title, links }: { title: string; links: { label: string; href:
 export function Footer() {
   return (
     <footer className="bg-night text-paper">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+      {/* Extra room at the bottom on phones: the floating help button (and, on Home, the sign-up bar) sits over the last lines otherwise. */}
+      <div className="mx-auto max-w-7xl px-4 pt-16 pb-40 sm:px-6 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_4fr]">
           <div>
             <Link href="/" aria-label="Klymb.ai home" className="display inline-flex min-h-6 items-baseline py-1 text-xl text-white">
