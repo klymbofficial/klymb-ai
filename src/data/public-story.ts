@@ -13,31 +13,63 @@ import { topicsFor } from "@/lib/coach/topics";
 export const coachTrackCount = tracks.filter((t) => topicsFor(t.slug).length > 0).length;
 export const trackCount = tracks.filter((t) => t.available).length;
 
+/**
+ * The home page's first screen. Two audiences, said with equal weight. Every
+ * line is something the site does today: the career tracks and System Design
+ * are open (src/data/catalog.ts), and the organization pages let a company add
+ * people, group them into teams and assign System Design as a pilot
+ * (docs/organization-workspace.md). Draft wording, for review.
+ */
+export const homeHero = {
+  eyebrow: "For individuals and for organizations",
+  titleLines: ["Practical learning,", "for you or your team."],
+  body: "Individuals can work through a 30-day career track or take a course. Organizations can add their people, group them into teams and assign System Design, as a pilot.",
+};
+
+/** The two doors on the first screen, equal in size and weight. Each button goes to a page that exists. */
+export const homeDoors = {
+  individuals: {
+    eyebrow: "For individuals",
+    title: "Explore courses and career tracks.",
+    body: `${trackCount} career tracks of 30 days each, and the System Design course.`,
+    cta: { label: "Explore courses", href: "/courses" },
+    secondary: { label: "Career tracks", href: "/tracks" },
+  },
+  organizations: {
+    eyebrow: "For organizations · pilot",
+    title: "Explore team training and the organization pilot.",
+    body: "Add people, group them into teams and assign System Design. Other courses can't be assigned yet.",
+    cta: { label: "Explore team training", href: "/training-solutions" },
+    secondary: { label: "Organization pilot", href: "/organizations" },
+  },
+};
+
 export const learnerPath = {
   eyebrow: "For individuals",
-  title: "Get job-ready for one role in 30 days.",
-  body: "Choose a career track and work through one realistic workplace problem a day, with four checkpoints and two days of interview prep.",
+  title: "Learn one role in 30 days, or take a single course.",
+  body: "Choose a career track and work through one realistic workplace problem a day, with four checkpoints and two days of interview prep. Or take System Design, a video course with short lessons.",
   points: [
     "One role, one project, built day by day",
     "Start any day, 1–2 hours at a time",
     "Your work lives in your own GitHub repository",
   ],
-  cta: { label: "Choose my career track", href: "/tracks" },
-  secondary: { label: "See how the 30 days work", href: "/#how-it-works" },
+  cta: { label: "Explore courses", href: "/courses" },
+  secondary: { label: "Compare the career tracks", href: "/tracks" },
 };
 
 /** What a company can do in /org today (People, Teams, Learning pages). */
 export const orgPath = {
-  eyebrow: "For organizations",
+  eyebrow: "For organizations · pilot",
   title: "Upskill the people you already employ.",
-  body: "Add your people, group them into teams and assign System Design. See who has started, lessons passed and final assessment scores.",
+  body: "A pilot workspace for companies: add your people, group them into teams and assign System Design. See who has started, lessons passed and final assessment scores.",
   points: [
     "Invite people one by one or from a CSV",
     "Teams, each with a head you choose",
     "Progress you can read at a glance, live",
   ],
-  cta: { label: "See how it works for teams", href: "/organizations" },
-  secondary: { label: "Already invited? Sign in", href: "/org/sign-in" },
+  cta: { label: "Explore team training", href: "/training-solutions" },
+  secondary: { label: "Organization pilot", href: "/organizations" },
+  signIn: { label: "Already invited? Sign in", href: "/org/sign-in" },
 };
 
 /** The daily loop, as the learner screens actually work. */

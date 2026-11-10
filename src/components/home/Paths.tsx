@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Minus } from "lucide-react";
 import { Appear } from "@/components/motion/Appear";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { learnerPath, orgPath } from "@/data/public-story";
+import { learnerPath, orgNotYet, orgPath } from "@/data/public-story";
 
 /**
- * Right under the hero: who Klymb is for, as two clearly different doors. A
- * person goes to the tracks; a company goes to the organizations page. Each
- * card has its own colour and its own primary action.
+ * Right under the first screen: what each audience gets, in two cards of the
+ * same size and style. Individuals go to the courses; a company goes to the
+ * team training page and the organization pilot. The organization card says
+ * plainly what is not available yet.
  */
 export function Paths() {
   return (
@@ -31,7 +32,7 @@ export function Paths() {
               ))}
             </ul>
             <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-3 pt-8">
-              <Link href={learnerPath.cta.href} className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg sm:w-auto bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
+              <Link href={learnerPath.cta.href} className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97] sm:w-auto">
                 {learnerPath.cta.label} <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
               <Link href={learnerPath.secondary.href} className="inline-flex min-h-11 items-center justify-center px-2 text-sm font-semibold underline underline-offset-4 hover:text-red-deep">
@@ -42,21 +43,32 @@ export function Paths() {
         </Appear>
 
         <Appear delay={0.12} className="flex">
-          <article aria-labelledby="path-org" className="flex flex-1 flex-col rounded-slab bg-night p-7 text-white shadow-card sm:p-9">
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/70">{orgPath.eyebrow}</p>
+          <article aria-labelledby="path-org" className="card flex flex-1 flex-col p-7 sm:p-9">
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-muted">{orgPath.eyebrow}</p>
             <h3 id="path-org" className="display mt-4 text-3xl text-balance">{orgPath.title}</h3>
-            <p className="mt-3 text-[15px] leading-relaxed text-white/80">{orgPath.body}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted">{orgPath.body}</p>
             <ul className="mt-6 space-y-2.5 text-[15px]">
               {orgPath.points.map((t) => (
-                <li key={t} className="flex gap-2.5"><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-soft" />{t}</li>
+                <li key={t} className="flex gap-2.5"><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-strong" />{t}</li>
               ))}
             </ul>
+            <div className="mt-5 border-t border-line/25 pt-4">
+              <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Not available yet</p>
+              <ul className="mt-2 space-y-1.5 text-sm text-muted">
+                {orgNotYet.map((t) => (
+                  <li key={t} className="flex gap-2.5"><Minus aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{t}</li>
+                ))}
+              </ul>
+            </div>
             <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-3 pt-8">
-              <Link href={orgPath.cta.href} className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg sm:w-auto border-2 border-white px-6 py-3 text-sm font-bold text-white transition-[background-color,color,transform] duration-150 hover:bg-white hover:text-ink active:scale-[0.97]">
+              <Link href={orgPath.cta.href} className="inline-flex min-h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97] sm:w-auto">
                 {orgPath.cta.label} <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
-              <Link href={orgPath.secondary.href} className="inline-flex min-h-11 items-center justify-center px-2 text-sm font-semibold text-white/80 underline underline-offset-4 hover:text-white">
+              <Link href={orgPath.secondary.href} className="inline-flex min-h-11 items-center justify-center px-2 text-sm font-semibold underline underline-offset-4 hover:text-red-deep">
                 {orgPath.secondary.label}
+              </Link>
+              <Link href={orgPath.signIn.href} className="inline-flex min-h-11 items-center justify-center px-2 text-sm font-semibold text-muted underline underline-offset-4 hover:text-red-deep">
+                {orgPath.signIn.label}
               </Link>
             </div>
           </article>
