@@ -40,6 +40,7 @@ const FAILURE_NEXT: Record<NonNullable<Failure["kind"]>, string> = {
   limited: "Wait a little, then press Register again. Your answers are still here.",
   unavailable: "Your answers are still here. Try again in a few minutes.",
   "save-failed": "Your answers are still here. Press Register to try again.",
+  support: "Trying again will not help. Email us and we will sort it out.",
 };
 
 /**

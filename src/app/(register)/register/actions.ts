@@ -9,6 +9,7 @@ import { sendWelcome } from "@/lib/welcome";
 import { db } from "@/lib/db/client";
 import { ensureLearner, UNIQUE_VIOLATION } from "@/lib/learner/enrolment";
 import { enrolmentClient } from "@/lib/learner/enrolment-db";
+import { lookupPlaceTrack } from "@/lib/registration-place";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { clamp, LIMITS, parseRepoUrl, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
@@ -33,7 +34,7 @@ export type RegisterResult =
       errors?: RegistrationErrors;
       message?: string;
       /** Why it failed, when it was not a mistake in the form: lets the page say what to do next. */
-      kind?: "signin" | "limited" | "unavailable" | "save-failed";
+      kind?: "signin" | "limited" | "unavailable" | "save-failed" | "support";
     };
 
 /**
@@ -78,13 +79,10 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   const errors = validateRegistration(data);
   if (Object.keys(errors).length) return { ok: false, errors };
 
-  // Stored in one canonical form, so reviewers and the submission check see the same link.
-  const repo = parseRepoUrl(data.github)!;
-  data.github = repo.url;
-  const repoError = await checkRepoExists(repo.owner, repo.repo);
-  if (repoError) return { ok: false, errors: { github: repoError } };
-
-  // Throttle before touching anything else, so a flood costs one cheap count.
+  // Throttle before any outside call. Only a person who is signed in and whose
+  // form is valid gets this far, and each attempt (a mistyped repository
+  // included) counts, so repeated attempts are limited before they cost a
+  // request to GitHub or a write here.
   const limit = await checkRateLimit("register", { limit: 5, windowMinutes: 60 });
   if (!limit.allowed) {
     return { ok: false, kind: "limited", message: "Too many registrations from this connection." };
@@ -93,14 +91,26 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   const sql = db();
   if (!sql) return { ok: false, kind: "unavailable", message: "Registration is not available right now." };
 
+  // Stored in one canonical form, so reviewers and the submission check see the same link.
+  const repo = parseRepoUrl(data.github)!;
+  data.github = repo.url;
+  const repoError = await checkRepoExists(repo.owner, repo.repo);
+  if (repoError) return { ok: false, errors: { github: repoError } };
+
   // One person, one track. If this email already holds a course place, that
   // place stays where it is: a second registration never moves it, so the
-  // registration record keeps the track the learner is really on. A failed
-  // read counts as "no place": the enrolment below is idempotent either way.
-  const { data: held } = await sql.row<{ track: string }>`
-    select track from course.learners where email = ${data.email}
-  `;
-  const placeTrack = held && trackSlugs.includes(held.track as TrackSlug) ? (held.track as TrackSlug) : null;
+  // registration record keeps the track the learner is really on. If the
+  // lookup itself fails, or a learner row exists on a track we do not know,
+  // stop before writing anything: neither is "no place", and carrying on
+  // could record this registration over a learner who is already on a track.
+  const place = await lookupPlaceTrack(sql, data.email);
+  if (!place.ok) {
+    if (place.reason === "unknown-track") {
+      return { ok: false, kind: "support", message: "We can't register this account automatically: it needs a quick check by our team. Nothing was changed." };
+    }
+    return { ok: false, kind: "unavailable", message: "Registration is not available right now." };
+  }
+  const placeTrack = place.track;
   const keptOnOtherTrack = !!placeTrack && placeTrack !== data.track;
   const trackToStore = keptOnOtherTrack ? placeTrack : data.track;
 
