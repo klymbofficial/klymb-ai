@@ -23,7 +23,7 @@ export function OpenInBrowser({ campaign }: { campaign: string | null }) {
   const copyLink = () => { void navigator.clipboard?.writeText(window.location.href).then(() => setCopied(true)); };
 
   return (
-    <aside aria-label="Open in your browser" className="flex flex-col gap-2.5 rounded-2xl border border-[rgba(231,201,122,.45)] bg-[rgba(231,201,122,.12)] p-4 lg:col-span-2">
+    <aside aria-label="Open in your browser" className="flex flex-col gap-2.5 rounded-2xl border border-[rgba(231,201,122,.45)] bg-[rgba(231,201,122,.12)] p-4 max-lg:mt-3 lg:col-span-2">
       <p className="m-0 text-[15px] leading-[1.4] text-pretty text-[#fbf6ee]"><b>Open this page in Chrome or Safari to buy.</b> Sign-in and payment don&apos;t work inside this app.</p>
       <button type="button" onClick={() => { openInBrowser(campaign); setTried(true); }} className="flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-0 bg-[#e7c97a] px-4 text-base font-extrabold text-[#2a1d05] transition-transform duration-150 active:scale-[.98]">Open in browser</button>
       {tried && (

@@ -6,6 +6,18 @@
 .sd-offer-right { animation: sd-offer-side .6s .1s both; }
 .sd-offer-pop { animation: sd-offer-pop .6s .5s both; }
 
+/*
+ * The form stays beside the pitch as it scrolls. It is usually taller than the
+ * screen, so it follows from its bottom edge and the Claim button stays in view;
+ * on a screen tall enough to hold all of it, it follows from the top instead.
+ */
+@media (min-width: 1024px) {
+  .sd-offer-right { position: sticky; bottom: 16px; align-self: end; }
+}
+@media (min-width: 1024px) and (min-height: 1080px) {
+  .sd-offer-right { top: 32px; bottom: auto; align-self: start; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sd-offer-left, .sd-offer-right, .sd-offer-pop { animation: none; }
 }
