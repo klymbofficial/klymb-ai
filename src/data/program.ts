@@ -7,8 +7,9 @@ export const brand = {
 };
 
 const allNavLinks = [
+  { label: "Courses", href: "/courses" },
+  { label: "Organizations", href: "/organizations" },
   { label: "Program", href: "/program" },
-  { label: "Career Tracks", href: "/tracks" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Pricing", href: "/#pricing" },
 ];
@@ -217,16 +218,22 @@ export const urgency = {
 };
 
 export const footerLinks = {
-  program: [
-    { label: "Career Tracks", href: "/tracks" },
+  klymb: [
+    { label: "Why Klymb", href: "/why-klymb" },
+    { label: "About", href: "/about" },
     { label: "Program", href: "/program" },
+    { label: "Career Tracks", href: "/tracks" },
     { label: "Register", href: "/register" },
     { label: "Learner sign-in", href: "/learn/login" },
+    { label: "Contact", href: "/contact" },
+  ],
+  organizations: [
+    { label: "Organizations", href: "/organizations" },
+    { label: "Training Solutions", href: "/training-solutions" },
     // For people a company has invited: HR, team heads and employees. Not SSO: an emailed code.
     { label: "Company sign-in", href: "/org/sign-in" },
   ],
-  company: [
-    { label: "Contact", href: "/contact" },
+  legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Cookie Policy", href: "/cookies" },
     { label: "Terms", href: "/terms" },

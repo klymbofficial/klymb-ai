@@ -23,7 +23,7 @@ export function Footer() {
   return (
     <footer className="bg-night text-paper">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 lg:grid-cols-[1.4fr_4fr]">
           <div>
             <Link href="/" aria-label="Klymb.ai home" className="display inline-flex min-h-6 items-baseline py-1 text-xl text-white">
               KLYMB<span className="text-red-soft">.AI</span>
@@ -48,9 +48,12 @@ export function Footer() {
               ))}
             </ul>
           </div>
-          <Column title="Programs" links={[...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })), { label: "System Design", href: "/system-design" }, { label: HIDE_MONEY ? "app.klymb.ai ↗" : "app.klymb.ai: free platform ↗", href: APP_URL }]} />
-          <Column title="Resources" links={footerLinks.program} />
-          <Column title="Legal" links={footerLinks.company} />
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
+            <Column title="Programs" links={[{ label: "Courses", href: "/courses" }, ...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })), { label: "System Design", href: "/system-design" }, { label: HIDE_MONEY ? "app.klymb.ai ↗" : "app.klymb.ai: free platform ↗", href: APP_URL }]} />
+            <Column title="Organizations" links={footerLinks.organizations} />
+            <Column title="Klymb" links={footerLinks.klymb} />
+            <Column title="Legal" links={footerLinks.legal} />
+          </div>
         </div>
 
         <div className="mt-14 flex flex-col gap-3 border-t border-white/12 pt-7 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
