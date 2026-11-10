@@ -12,7 +12,7 @@ import { formatINR } from "@/lib/format";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
 import { openInBrowser } from "./OpenInBrowser";
-import { claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
+import { SD_OFFER, claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -203,7 +203,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           </div>
           {offer.open && (
             <div className="relative mt-4 flex flex-wrap items-center gap-2.5">
-              <span className="text-xs font-bold text-[#f3d48a]">Ends in</span>
+              <span className="text-xs font-bold text-[#f3d48a]">Offer ends {SD_OFFER.endsLabel}, in</span>
               <Countdown endsAt={offer.endsAt} serverNow={offer.now} onEnd={router.refresh} />
             </div>
           )}

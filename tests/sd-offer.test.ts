@@ -4,10 +4,10 @@ import {
   SD_OFFER, campaignOf, claimProblems, countdownParts, externalBrowserUrl, inAppBrowser, linkedInProblem, mobileOf, offPercent, offerPath, sdOfferEnd, sdOfferOpen, sdOfferState, sdPriceFor, sdPriceNow, signInFailedPath,
 } from "../src/lib/sd-offer";
 
-const DURING = new Date("2026-11-08T23:59:59+05:30");
-const AFTER = new Date("2026-11-09T00:00:00+05:30");
+const DURING = new Date("2026-11-14T23:59:59+05:30");
+const AFTER = new Date("2026-11-15T00:00:00+05:30");
 
-test("₹499 runs to the end of 8 November IST, and the end itself is the full price", () => {
+test("₹499 runs to the end of 14 November IST, and the end itself is the full price", () => {
   assert.equal(sdOfferOpen(DURING), true);
   assert.equal(sdPriceNow(DURING), 499);
   assert.equal(sdOfferOpen(AFTER), false);

@@ -1,5 +1,5 @@
 /**
- * The System Design offer: ₹499 until the end of 8 November 2026 (IST), then
+ * The System Design offer: ₹499 until the end of 14 November 2026 (IST), then
  * ₹1,999. Pure, so it is unit-tested and usable in the browser. The countdown
  * on the page and the amount on the order both read this, so they can't
  * disagree: when the clock reaches zero the price really changes.
@@ -10,10 +10,10 @@ export const SD_OFFER = {
   price: 499,
   /** What the course costs once the offer ends, so the struck-out price is a real one. */
   full: 1999,
-  /** Exclusive end: midnight IST at the start of 9 November. */
-  endsAt: "2026-11-09T00:00:00+05:30",
+  /** Exclusive end: midnight IST at the start of 15 November. */
+  endsAt: "2026-11-15T00:00:00+05:30",
   /** The last day of the offer, in words. */
-  endsLabel: "8 Nov",
+  endsLabel: "14 Nov",
 } as const;
 
 /** The course at a glance, on the offer page and the home page. */
