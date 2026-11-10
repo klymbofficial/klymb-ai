@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
+import { logCompany } from "@/lib/company/audit";
 import { hrFor } from "@/lib/company/auth";
 import { RESEND_LIMITS, type CompanyBrand } from "@/lib/company/brand";
 import { loadCompanyBrand, sendCompanyInvite } from "@/lib/company/invite";
@@ -19,7 +20,7 @@ const NOT_ALLOWED: PeopleResult = { ok: false, message: "Only your company's HR 
 const UNAVAILABLE: PeopleResult = { ok: false, message: "That didn't work just now. Please try again in a minute." };
 
 /** Plans, then adds everyone in one statement, then emails them after the response. */
-async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0]): Promise<PeopleResult> {
+async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], via: "form" | "csv"): Promise<PeopleResult> {
   const hr = await hrFor(slug);
   if (!hr) return NOT_ALLOWED;
   const sql = db();
@@ -45,6 +46,10 @@ async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0]): 
   }
 
   invite(plan.add, hr.companyId, hr.companyName);
+  // One entry for a form add, with the address; for a CSV only the counts, never the list.
+  await (via === "form"
+    ? logCompany(hr, "company.person_add", { email: plan.add[0].email, role: plan.add[0].role, returning: !!plan.add[0].returning })
+    : logCompany(hr, "company.people_import", { added: added, returning: plan.add.filter((p) => p.returning).length, hr_added: plan.add.filter((p) => p.role === "hr").length }));
   revalidatePath(`/org/${slug}/people`);
   revalidatePath(`/org/${slug}/teams`);
   const back = plan.add.filter((p) => p.returning).length;
@@ -73,7 +78,7 @@ async function brandOf(companyId: string, companyName: string): Promise<CompanyB
 /** 1.8: one person, as an employee or another HR person. */
 export async function addPerson(slug: string, form: { email: string; name: string; team: string; role: string }): Promise<PeopleResult> {
   const role: AddRole = form.role === "hr" ? "hr" : "employee";
-  return addPlanned(slug, [{ line: 1, email: form.email.trim(), name: tidyName(form.name), team: form.team.trim() || null, role }]);
+  return addPlanned(slug, [{ line: 1, email: form.email.trim(), name: tidyName(form.name), team: form.team.trim() || null, role }], "form");
 }
 
 /** 1.8: a CSV of email, name, team. All or nothing, with every problem listed by line. */
@@ -86,7 +91,7 @@ export async function uploadPeople(slug: string, formData: FormData): Promise<Pe
 
   const { people, errors } = readPeopleCsv(await file.text());
   if (errors.length) return { ok: false, message: "Nobody was added. Fix the file and upload it again.", errors };
-  return addPlanned(slug, people);
+  return addPlanned(slug, people, "csv");
 }
 
 /**
@@ -110,6 +115,7 @@ export async function removePerson(slug: string, rawEmail: string): Promise<Peop
   if (removed === null) return UNAVAILABLE;
   if (!removed) return { ok: false, message: "That couldn't be done: something changed meanwhile. Reload and try again." };
 
+  await logCompany(hr, "company.person_remove", { email, was_role: target?.role });
   revalidatePath(`/org/${slug}/people`);
   revalidatePath(`/org/${slug}/teams`);
   return { ok: true, message: `${email} was removed. Their access has ended and their seat is free.` };
@@ -141,6 +147,7 @@ export async function resendInvite(slug: string, rawEmail: string): Promise<Peop
     email, name: target.name, role: target.role === "hr" ? "hr" : "employee", resend: true,
     company: await brandOf(hr.companyId, hr.companyName),
   });
+  await logCompany(hr, "company.invite_resend", { email, delivered: sent });
   return sent
     ? { ok: true, message: `The invite was sent to ${email} again.` }
     : { ok: false, message: `The invite to ${email} couldn't be sent just now. Tell them to sign in at klymb.ai/org/sign-in with this email.` };

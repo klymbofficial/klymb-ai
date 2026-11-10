@@ -13,14 +13,12 @@ export function AnnouncementBar() {
   const items = HIDE_MONEY ? [
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,
-    "Reviewed work and interview prep",
-    "Individual feedback every week",
+    "Hands-on work and interview prep",
   ] : allFree ? [
     "Every course is free right now",
     "Start any day: Day 1 opens when you enrol",
     `${enrolment.dailyTime}, in your own time`,
-    "Reviewed work and interview prep",
-    "Individual feedback every week",
+    "Hands-on work and interview prep",
   ] : [
     ...(offerOpen() ? [`Launch price: every track ${formatINR(LAUNCH_OFFER.price)} until ${LAUNCH_OFFER.endsLabel}`] : []),
     "Day 1 free on every track",
@@ -28,7 +26,6 @@ export function AnnouncementBar() {
     `${enrolment.dailyTime}, in your own time`,
     ...(offerOpen() ? [] : [`Tracks from ${formatINR(priceFrom)}`]),
     "100% fee back when you complete",
-    "Individual feedback every week",
   ];
 
   const row = (hidden: boolean) => (

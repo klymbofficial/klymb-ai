@@ -294,7 +294,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
     "Week 1-4: one real workplace problem a day, about 90 to 120 minutes.",
     "Days 7, 14, 21, 28: a checkpoint you defend on camera.",
     "Days 29-30: interview prep on the most-asked questions.", "",
-    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders and feedback out of your spam folder.", "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders out of your spam folder.", "",
     `Sign in any time with this email: ${p.siteUrl}/learn`, "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
@@ -310,10 +310,10 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
         : `${sectionTitle("Day 1 is free")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Day 1", "Free, open now")}${row("Days 2 to 30", `${p.price} · 100% back when you complete`)}</table>${button(`${site}/learn`, "Start Day 1 free")}`,
       `${sectionTitle("Your 30 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "One real problem a day", "About 90 to 120 minutes, built around the work this role actually does. Works offline too.")}
-        ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera and get written feedback.")}
+        ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera.")}
         ${step(3, "Interview prep", "Days 29 and 30: practise the most-asked questions for your role, so you walk into the real one ready.")}
       </table>
-      <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders, checkpoint feedback and receipt never land in spam.</div>
+      <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders and receipt never land in spam.</div>
       <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">Sign in any time at <a href="${site}/learn" style="color:${C.maroon};font-weight:600">klymb.ai/learn</a> with this email, using Continue with Google.</div>`,
     ],
   });
@@ -329,7 +329,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
   const subject = `You're in: ${p.trackName} on Klymb.ai`;
   const steps = [
     { title: "Sign in", body: `Open ${p.siteUrl}/learn and choose Continue with Google using ${p.email}. It must be this exact account.` },
-    { title: "Create your course repository", body: `On GitHub, create a public repository named ${p.repoName}. Every artifact you produce goes here, and reviewers check your work against it.` },
+    { title: "Create your course repository", body: `On GitHub, create a public repository named ${p.repoName}. Every artifact you produce goes here, and your submissions link to it.` },
     { title: "Add GitHub and LinkedIn to your dashboard", body: "Both are needed before you can submit Day 1: submitted links are checked to be yours." },
     ...p.setup,
   ];
@@ -339,7 +339,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
     "Getting set up",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
     `Start here: ${p.siteUrl}/learn`, "",
-    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders and feedback out of your spam folder.", "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders out of your spam folder.", "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
   const html = layout({
@@ -352,7 +352,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
       `${sectionTitle("Getting set up")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body))).join("")}
       </table>${button(`${site}/learn`, "Start Day 1")}`,
-      `<div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders and feedback never land in spam.</div>`,
+      `<div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders never land in spam.</div>`,
     ],
   });
   return { subject, html, text };

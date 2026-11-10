@@ -37,6 +37,8 @@ export type LearnerState =
   | { state: "signed-out" }
   /** Signed in, but another device holds this learner's one device slot. */
   | { state: "other-device" }
+  /** Signed in, but the course database could not be read: not the same as "not enrolled". */
+  | { state: "unavailable" }
   | { state: "not-enrolled"; email: string }
   | { state: "enrolled"; learner: Learner; submissions: Submission[] };
 
@@ -55,25 +57,30 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
   if (!session?.user?.sid) return { state: "signed-out" };
 
   const sql = db();
-  if (!sql) return { state: "signed-out" };
+  if (!sql) return { state: "unavailable" };
 
   // Exact match only: ownership of a cohort place must not be fuzzy.
-  const { data: learner } = await sql.row<Learner & { device_session: string | null; device_seen_at: string | null }>`
+  const { data: learner, error: learnerError } = await sql.row<Learner & { device_session: string | null; device_seen_at: string | null }>`
     select id, name, email, track, cohort_start, status, github_url, linkedin_url,
            github_username, linkedin_slug, device_session, device_seen_at
       from course.learners
      where email = ${email}
   `;
 
+  // A failed read is not an empty one: say the data is unavailable instead of "not enrolled".
+  if (learnerError) return { state: "unavailable" };
   if (!learner) return { state: "not-enrolled", email };
   if (!(await checkDevice(learner, session?.user?.sid))) return { state: "other-device" };
 
-  const { data: submissions } = await sql.rows<Submission>`
+  const { data: submissions, error: submissionsError } = await sql.rows<Submission>`
     select day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers, linkedin_post_url
       from course.day_submissions
      where learner_id = ${learner.id}
      order by day
   `;
+
+  // Without the submissions every day would look unstarted, so don't show a half-empty course.
+  if (submissionsError) return { state: "unavailable" };
 
   return { state: "enrolled", learner: learner as Learner, submissions: submissions ?? [] };
 });
@@ -89,5 +96,7 @@ export async function requireLearner() {
   const result = await getLearnerState();
   if (result.state === "signed-out") redirect("/learn/login");
   if (result.state === "other-device") redirect("/learn/login?error=device");
+  // Rendered by the learner error page (retry), never mistaken for a missing enrolment.
+  if (result.state === "unavailable") throw new Error("Learner data is unavailable");
   return result;
 }

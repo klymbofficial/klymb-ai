@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   MAX_CSV_ROWS,
@@ -261,9 +261,17 @@ test("every People and Teams action checks for HR of this company first", () => 
   }
 });
 
-test("both pages are HR-only and the org folder has no layout yet (that is task 1.7)", () => {
+test("both pages are HR-only: other roles get a role panel and nothing is loaded; the org layout checks membership (task 1.7)", () => {
   for (const page of ["people", "teams"]) {
-    assert.match(read(`src/app/org/[slug]/${page}/page.tsx`), /requireCompany\(slug, \["hr"\]\)/);
+    const src = read(`src/app/org/[slug]/${page}/page.tsx`);
+    // Membership of this company is required, then the role; a non-HR member is stopped before any query.
+    assert.match(src, /requireCompany\(slug\)/);
+    const role = src.indexOf('hr.role !== "hr"');
+    assert.ok(role > -1, `${page} checks the role`);
+    assert.match(src.slice(role, role + 140), /return <RoleOnly/);
+    assert.ok(role < src.indexOf("db()"), `${page} checks the role before touching the database`);
   }
-  assert.ok(!readdirSync("src/app/org/[slug]").includes("layout.tsx"));
+  const layout = read("src/app/org/[slug]/layout.tsx");
+  assert.match(layout, /getMember\(\)/);
+  assert.match(layout, /allowCompany\(member, slug\)/);
 });
