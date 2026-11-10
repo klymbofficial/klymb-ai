@@ -12,8 +12,9 @@ import { RememberReferral } from "./RememberReferral";
 
 /**
  * The System Design offer: the pitch, the intro video and what the fee buys on
- * the left, the price and the claim form on the right. On a phone the form
- * comes last, so the top bar keeps the price and a way to it in reach.
+ * the left, the price and the claim form on the right. On a phone the left
+ * column dissolves into the page, so the form can sit right under the video
+ * with the details after it; the top bar is the way back up.
  */
 export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
@@ -22,9 +23,9 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
   return (
     <OfferBackdrop>
       <RememberReferral live={referral?.code ?? null} />
-      <main className="relative mx-auto box-border grid min-h-dvh w-full max-w-[1240px] grid-cols-[minmax(0,1fr)] items-center gap-[26px] px-[18px] pt-0 pb-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,.8fr)] lg:items-start lg:gap-12 lg:px-10 lg:py-16">
+      <main className="relative mx-auto box-border grid min-h-dvh w-full max-w-[1240px] grid-cols-[minmax(0,1fr)] items-center gap-4 px-[18px] pt-0 pb-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,.8fr)] lg:items-start lg:gap-12 lg:px-10 lg:py-16">
         {inApp && !email && <OpenInBrowser campaign={campaign} />}
-        <div className="sd-offer-left flex flex-col gap-4 lg:gap-6">
+        <div className="sd-offer-left contents lg:flex lg:flex-col lg:gap-6">
           <div className="sticky top-0 z-20 -mx-[18px] flex items-center justify-between gap-3 bg-[rgba(26,23,22,.88)] px-[18px] py-2.5 backdrop-blur-md lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <Link href="/" aria-label="Klymb.ai home" className="inline-flex py-2">
               <Image src="/brand/klymb-logo.svg" alt="" width={104} height={16} priority className="h-4 w-auto [filter:brightness(0)_invert(1)_sepia(.2)]" />
@@ -46,10 +47,10 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
               </div>
             ))}
           </dl>
-          <OfferProof />
+          <div className="max-lg:order-2 max-lg:mt-5"><OfferProof /></div>
         </div>
 
-        <div id="claim" className="sd-offer-right flex scroll-mt-4 flex-col gap-4">
+        <div id="claim" className="sd-offer-right flex scroll-mt-20 flex-col gap-4 max-lg:order-1 max-lg:mt-2">
           <ClaimCard key={referral?.code} offer={offer} email={email} name={name} phone={phone} linkedin={linkedin} role={role} campaign={campaign} referral={referral} resume={resume} signInFailed={signInFailed} inApp={inApp} />
           <p className="m-0 text-xs leading-[1.4] text-[#b9ad9f]">
             Sold by {entity.registeredName} ·{" "}
