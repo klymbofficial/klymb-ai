@@ -22,7 +22,7 @@ export const hero = {
   /** The working professional's first question, answered in the hero. */
   timeLine: "1–2 hrs a day, in your own time. Start any day.",
   primaryCta: { label: "Choose My Career Track", href: "/tracks" },
-  secondaryCta: { label: "See How the 30 Days Work", href: "/#how-it-works" },
+  secondaryCta: { label: "For organizations", href: "/organizations" },
 };
 
 /** The story beat under the hero. */

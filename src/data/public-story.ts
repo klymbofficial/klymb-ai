@@ -1,0 +1,71 @@
+import { entity } from "@/data/legal";
+import { contact } from "@/data/config";
+import { tracks } from "@/data/tracks";
+import { topicsFor } from "@/lib/coach/topics";
+
+/**
+ * Copy for the public story pages (Home, Why Klymb, About, Organizations).
+ * Every line states something the code does today, so each entry names where
+ * it comes from. When the product changes, change the line here.
+ */
+
+/** Tracks that have voice-coach topics, read from the coach itself. */
+export const coachTrackCount = tracks.filter((t) => topicsFor(t.slug).length > 0).length;
+export const trackCount = tracks.filter((t) => t.available).length;
+
+export const learnerPath = {
+  eyebrow: "For individuals",
+  title: "Get job-ready for one role in 30 days.",
+  body: "Choose a career track and work through one realistic workplace problem a day, with four checkpoints and two days of interview prep.",
+  points: [
+    "One role, one project, built day by day",
+    "Start any day, 1–2 hours at a time",
+    "Your work lives in your own GitHub repository",
+  ],
+  cta: { label: "Choose my career track", href: "/tracks" },
+  secondary: { label: "See how the 30 days work", href: "/#how-it-works" },
+};
+
+/** What a company can do in /org today (People, Teams, Learning pages). */
+export const orgPath = {
+  eyebrow: "For organizations",
+  title: "Upskill the people you already employ.",
+  body: "Add your people, group them into teams and assign System Design. See who has started, lessons passed and final assessment scores.",
+  points: [
+    "Invite people one by one or from a CSV",
+    "Teams, each with a head you choose",
+    "Progress you can read at a glance, live",
+  ],
+  cta: { label: "See how it works for teams", href: "/organizations" },
+  secondary: { label: "Already invited? Sign in", href: "/org/sign-in" },
+};
+
+/** The daily loop, as the learner screens actually work. */
+export const approach = [
+  { title: "One problem a day", body: "Each day is one realistic problem from the role, with a mission, build steps and what done looks like." },
+  { title: "You submit real work", body: "Paste the link to your own GitHub repository, add a note on what you did and why, and answer a few written questions. You can update a day any time." },
+  { title: "Four checkpoints", body: "After Days 7, 14, 21 and 28 you complete a checkpoint on that week's work." },
+  { title: "Speak it out loud", body: `A five-minute voice coach asks one question at a time on a single topic, available on all ${coachTrackCount} tracks.` },
+  { title: "Interview prep to finish", body: "Days 29 and 30 take the most-asked questions for your role, answered in writing with your own work as the example." },
+  { title: "See where you stand", body: "A calendar shows every day you have submitted and what comes next. Days open in order, so you always know the one to do today." },
+];
+
+export const principles = [
+  { title: "Evidence, not a certificate", body: "There is no certificate. What you leave with is a project in your own repository and answers you can walk an interviewer through." },
+  { title: "No promised outcomes", body: "No program can guarantee a job, and we don't say it will. We say what you will have done." },
+  { title: "Say what is not built yet", body: "Where something is not available, we say so, on the page where you would look for it." },
+];
+
+/** What the organization pages say is not available yet, in the same words. */
+export const orgNotYet = [
+  "Assigning anything other than System Design, and assigning assessments.",
+  "Company reports and exports.",
+  "Single sign-on: people sign in with an emailed code.",
+];
+
+export const aboutFacts = {
+  email: contact.email,
+  registeredName: entity.registeredName,
+  incorporationYear: entity.incorporationDate.slice(-4),
+  country: "India",
+};
