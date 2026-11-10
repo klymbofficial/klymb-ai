@@ -5,7 +5,6 @@ import { cohort } from "@/data/config";
 import { todayInIndia } from "@/lib/learn";
 import { getTrack, trackSlugs } from "@/data/tracks";
 import { after } from "next/server";
-import { normaliseEmail } from "@/lib/email";
 import { sendWelcome } from "@/lib/welcome";
 import { db } from "@/lib/db/client";
 import { ensureLearner, UNIQUE_VIOLATION } from "@/lib/learner/enrolment";
@@ -15,29 +14,57 @@ import { clamp, LIMITS, parseRepoUrl, validateRegistration, type RegistrationDat
 import type { TrackSlug } from "@/types/program";
 
 export type RegisterResult =
-  | { ok: true; duplicate?: boolean; enrolled?: boolean; signedIn?: boolean }
-  | { ok: false; errors?: RegistrationErrors; message?: string };
+  | {
+      ok: true;
+      /** The verified Google address the registration was made for. */
+      email?: string;
+      duplicate?: boolean;
+      /** A course place exists for this email now. */
+      enrolled?: boolean;
+      /** The place is on the track chosen in the form. False when this email already held a place on another track. */
+      sameTrack?: boolean;
+      /** Where the place really is. */
+      placeTrack?: TrackSlug;
+      /** The canonical repository, owner/name, as saved. */
+      repo?: string;
+    }
+  | {
+      ok: false;
+      errors?: RegistrationErrors;
+      message?: string;
+      /** Why it failed, when it was not a mistake in the form: lets the page say what to do next. */
+      kind?: "signin" | "limited" | "unavailable" | "save-failed";
+    };
 
 /**
- * Public registration, written entirely in trusted server code.
+ * Registration, written entirely in trusted server code.
  *
  * The browser holds no database credential: this runs with the service-role
  * client, which never leaves the server, and the anon role has no write access
  * to registrations at all.
+ *
+ * It needs a Google-verified session, and the registration is made for that
+ * session's email and no other: whatever address the browser sends is ignored.
+ * So nobody can register, reserve a course place for, or overwrite the record
+ * of an address they have not signed in as. Without a session it returns
+ * before it reads or writes anything (no GitHub call, no rate-limit row, no
+ * database access), so a signed-out attempt leaves no trace.
  */
 export async function registerInterest(input: RegistrationData, honeypot?: string): Promise<RegisterResult> {
   // Bots fill every field, including the hidden one. Humans never see it.
   if (honeypot) return { ok: true };
 
-  // Registering with Google: the verified account is the identity, whatever
-  // the browser sent, so the enrolment matches the sign-in exactly.
-  const sessionEmail = await currentEmail();
-  const email = sessionEmail ?? normaliseEmail(input.email);
+  // The verified Google account is the identity, whatever the browser sent, so
+  // the registration and the enrolment match the sign-in exactly.
+  const email = await currentEmail();
+  if (!email) {
+    return { ok: false, kind: "signin", message: "Sign in with Google to register. Your sign-in may have ended." };
+  }
 
   // Never trust the client: rebuild the record from clamped, canonical values.
   const data: RegistrationData = {
     name: clamp(input.name, LIMITS.name),
-    email: email ?? "",
+    email,
     phone: clamp(input.phone, LIMITS.phone).replace(/[\s()-]/g, ""),
     track: input.track,
     currentRole: clamp(input.currentRole, 60),
@@ -60,17 +87,28 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   // Throttle before touching anything else, so a flood costs one cheap count.
   const limit = await checkRateLimit("register", { limit: 5, windowMinutes: 60 });
   if (!limit.allowed) {
-    return { ok: false, message: "Too many registrations from this connection. Please try again later, or email us." };
+    return { ok: false, kind: "limited", message: "Too many registrations from this connection." };
   }
 
   const sql = db();
-  if (!sql) return { ok: false, message: "Registration is not available right now. Please email us instead." };
+  if (!sql) return { ok: false, kind: "unavailable", message: "Registration is not available right now." };
+
+  // One person, one track. If this email already holds a course place, that
+  // place stays where it is: a second registration never moves it, so the
+  // registration record keeps the track the learner is really on. A failed
+  // read counts as "no place": the enrolment below is idempotent either way.
+  const { data: held } = await sql.row<{ track: string }>`
+    select track from course.learners where email = ${data.email}
+  `;
+  const placeTrack = held && trackSlugs.includes(held.track as TrackSlug) ? (held.track as TrackSlug) : null;
+  const keptOnOtherTrack = !!placeTrack && placeTrack !== data.track;
+  const trackToStore = keptOnOtherTrack ? placeTrack : data.track;
 
   const { error } = await sql.run`
     insert into course.registrations
       (name, email, phone, track, job_role, experience, linkedin, github, consent, cohort_start)
     values (
-      ${data.name}, ${data.email}, ${data.phone}, ${data.track}, ${data.currentRole},
+      ${data.name}, ${data.email}, ${data.phone}, ${trackToStore}, ${data.currentRole},
       ${data.experience}, ${data.linkedin || null}, ${data.github || null},
       ${data.consent}, ${cohort.startDate}
     )
@@ -78,25 +116,25 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
 
   const duplicate = error?.code === UNIQUE_VIOLATION;
 
+  if (error && !duplicate) {
+    console.error("registrations insert failed:", error.code, error.message);
+    return { ok: false, kind: "save-failed", message: "Something went wrong saving your registration." };
+  }
+
   if (duplicate) {
-    // Already registered: keep their latest answers rather than the first ones.
+    // Their own registration (the address is the verified session's): keep their latest answers rather than the first ones.
     await sql.run`
       update course.registrations
-         set name = ${data.name}, phone = ${data.phone}, track = ${data.track},
+         set name = ${data.name}, phone = ${data.phone}, track = ${trackToStore},
              job_role = ${data.currentRole}, experience = ${data.experience},
              linkedin = ${data.linkedin || null}, github = ${data.github || null}
        where email = ${data.email} and cohort_start = ${cohort.startDate}
     `;
   }
 
-  if (error && !duplicate) {
-    console.error("registrations insert failed:", error.code, error.message);
-    return { ok: false, message: "Something went wrong saving your registration. Please try again, or email us." };
-  }
-
   // Only tracks whose course is built enrol straight into Day 1. The others
   // hold a reserved place until their content opens.
-  let enrolled = false;
+  let enrolled = keptOnOtherTrack;
   if (getTrack(data.track)?.contentLive) {
     enrolled = await ensureLearner(enrolmentClient(sql), {
       email: data.email,
@@ -110,9 +148,18 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   }
 
   // A first registration gets the welcome email, after the response so the form never waits on it.
-  if (!duplicate) after(() => sendWelcome({ email: data.email, name: data.name, track: data.track }));
+  // Not when the place is on another track: it would welcome them to a track they are not on.
+  if (!duplicate && !keptOnOtherTrack) after(() => sendWelcome({ email: data.email, name: data.name, track: data.track }));
 
-  return { ok: true, duplicate, enrolled, signedIn: !!sessionEmail };
+  return {
+    ok: true,
+    email: data.email,
+    duplicate,
+    enrolled,
+    sameTrack: !keptOnOtherTrack,
+    ...(placeTrack ? { placeTrack } : {}),
+    repo: `${repo.owner}/${repo.repo}`,
+  };
 }
 
 /**
