@@ -14,8 +14,11 @@ import type { MemberProgress } from "@/lib/company/progress-data";
  *     email: a lesson attempt (passed or not) or a final-assessment try. It
  *     can predate the company's assignment, because the records are keyed by
  *     email only. It is not a measure of what the company program caused.
- *   - "Final attempted" is `finalAttempts > 0`. It says nothing about the
- *     score, and no pass or fail is derived from it.
+ *   - Progress state and the final assessment are separate. Progress state is
+ *     about lessons only. "Final attempted" is `finalAttempts > 0`, counted
+ *     on its own (`finalAttempted`, `hasFinalAttempt`); it never changes a
+ *     person's progress state or label. It says nothing about the score, and
+ *     no pass or fail is derived from it.
  *   - A person with company-assigned access and a person with their own paid
  *     access are kept apart (`assigned`, `ownAccess`); `withAccess` is either.
  *
@@ -28,7 +31,7 @@ import type { MemberProgress } from "@/lib/company/progress-data";
 /** The group for people HR has not put on a team. */
 export const NO_TEAM_LABEL = "No team assigned";
 
-/** Where one person stands. Exactly one applies to each person. */
+/** Where one person stands on lessons. Exactly one applies to each person. A final attempt does not change it. */
 export type ProgressState =
   /** Cannot open the course: not assigned, and no course of their own. */
   | "no-access"
@@ -38,7 +41,7 @@ export type ProgressState =
   | "activity-no-lessons"
   /** Some lessons passed, not all of the lessons built today. */
   | "in-progress"
-  /** Every lesson built today passed. A final may or may not have been tried. */
+  /** Every lesson built today passed. Whether a final was tried is a separate fact. */
   | "all-lessons-passed";
 
 export interface ProgressCounts {
@@ -61,9 +64,10 @@ export interface ProgressCounts {
   /** With access, and every lesson built today passed. */
   allLessonsPassed: number;
   /**
-   * With access, and at least one final-assessment try recorded. Independent of
-   * the four states above: a try can exist while a newly released lesson is
-   * still unpassed.
+   * With access, and at least one final-assessment try recorded. A separate
+   * dimension from the four states above, which it does not change: it can
+   * overlap any of them (a try can exist while a newly released lesson is
+   * still unpassed). Counted the same way in the total and in each team.
    */
   finalAttempted: number;
   // withAccess === accessNoActivity + activityNoLessons + inProgress + allLessonsPassed
@@ -94,6 +98,11 @@ export function hasRecordedActivity(p: Pick<MemberProgress, "lessonsPassed" | "f
   return p.lastActive !== null || p.lessonsPassed > 0 || p.finalAttempts > 0;
 }
 
+/** True when at least one final-assessment try is recorded. Says nothing about the score. */
+export function hasFinalAttempt(p: Pick<MemberProgress, "finalAttempts">): boolean {
+  return p.finalAttempts > 0;
+}
+
 /** Whether `lessonsPassed` covers every lesson built today. Never true when none are built. */
 function passedAll(lessonsPassed: number, totalLessons: number): boolean {
   return Number.isFinite(totalLessons) && totalLessons > 0 && lessonsPassed >= totalLessons;
@@ -107,22 +116,24 @@ export function progressState(p: Person, totalLessons: number): ProgressState {
 }
 
 /**
- * One plain phrase for where someone is, from what Klymb recorded. It says
- * "recorded" rather than "started" because a person on a different Google
- * account than their work email shows no activity here.
+ * One plain phrase for where someone is on lessons, from what Klymb recorded.
+ * It says "recorded" rather than "started" because a person on a different
+ * Google account than their work email shows no activity here, and recorded
+ * activity can predate the company's assignment. The final assessment is not
+ * part of it: show attempts beside it, not inside it.
  */
 export function statusLabel(p: Person, totalLessons: number): string {
   switch (progressState(p, totalLessons)) {
     case "no-access":
-      return "Not assigned";
+      return "No course access";
     case "no-activity":
-      return p.assigned ? "Assigned, no activity recorded" : "No activity recorded";
+      return "Access, no recorded activity";
     case "activity-no-lessons":
       return "Activity recorded, no lessons passed";
     case "in-progress":
       return "In progress";
     case "all-lessons-passed":
-      return p.finalAttempts > 0 ? "Final attempted" : "All lessons passed";
+      return "All lessons passed";
   }
 }
 
@@ -165,7 +176,7 @@ function countPeople(rows: readonly Person[], totalLessons: number): ProgressCou
         break;
     }
     c.withAccess += 1;
-    if (p.finalAttempts > 0) c.finalAttempted += 1;
+    if (hasFinalAttempt(p)) c.finalAttempted += 1;
   }
   return c;
 }
