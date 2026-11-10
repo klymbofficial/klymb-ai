@@ -31,6 +31,11 @@ export default function TracksPage() {
 
       <section aria-label="All tracks" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <TrackGrid />
+        <p className="mt-8 text-sm text-muted">
+          Looking by industry, or training a team?{" "}
+          <Link href="/courses" className="font-bold text-red-deep underline underline-offset-4">Browse the course library</Link> or see{" "}
+          <Link href="/training-solutions" className="font-bold text-red-deep underline underline-offset-4">training solutions</Link>.
+        </p>
       </section>
 
       <section id="compare" aria-labelledby="compare-title" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-6 pb-16 sm:px-6 sm:pb-20">
