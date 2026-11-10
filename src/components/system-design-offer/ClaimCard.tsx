@@ -11,6 +11,7 @@ import { FINAL_MARK } from "@/lib/sd-pace";
 import { formatINR } from "@/lib/format";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
+import { openInBrowser } from "./OpenInBrowser";
 import { claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -264,8 +265,9 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
             {error && <p role="alert" className="m-0 text-[13px] font-semibold text-[#83050b]">{error}</p>}
             {blocked && (
               <div role="alert" className="flex flex-col gap-2 rounded-[10px] bg-[rgba(131,5,11,.08)] p-3 text-[13px] leading-[1.4] font-semibold text-[#83050b]">
-                Google sign-in doesn&apos;t work inside this app. Open the ⋯ menu and choose Open in Chrome or Open in Safari.
-                <button type="button" onClick={copyLink} className="cursor-pointer self-start border-0 bg-transparent p-0 underline underline-offset-2">{copied ? "Link copied" : "Copy the link"}</button>
+                Google sign-in doesn&apos;t work inside this app. Open this page in Chrome or Safari to buy.
+                <button type="button" onClick={() => openInBrowser(campaign)} className="min-h-11 cursor-pointer self-stretch rounded-[10px] border-0 bg-[#83050b] px-4 text-sm font-extrabold text-[#fbf6ee]">Open in browser</button>
+                <span>Didn&apos;t open? Tap the ⋯ menu at the top and choose Open in browser, or <button type="button" onClick={copyLink} className="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[#83050b] underline underline-offset-2">{copied ? "link copied" : "copy the link"}</button>.</span>
               </div>
             )}
             <button type="submit" disabled={busy} className="relative flex h-[58px] cursor-pointer items-center justify-between overflow-hidden rounded-xl border-0 bg-[#83050b] px-5 text-[17px] font-extrabold text-[#fbf6ee] shadow-[0_10px_24px_-8px_rgba(131,5,11,.7)] hover:bg-[#690409] disabled:cursor-wait disabled:opacity-80">

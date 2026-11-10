@@ -5,6 +5,7 @@ import { SD_STATS, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 import { ClaimCard } from "./ClaimCard";
 import { IntroVideo } from "./IntroVideo";
 import { OfferBackdrop } from "./OfferBackdrop";
+import { OpenInBrowser } from "./OpenInBrowser";
 import { RememberReferral } from "./RememberReferral";
 
 /** The System Design offer: the intro video then the pitch on the left, the price and the claim form on the right. */
@@ -16,6 +17,7 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
     <OfferBackdrop>
       <RememberReferral live={referral?.code ?? null} />
       <main className="relative mx-auto box-border grid min-h-dvh w-full max-w-[1240px] grid-cols-[minmax(0,1fr)] items-center gap-[26px] px-[18px] pt-11 pb-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,.8fr)] lg:items-start lg:gap-12 lg:px-10 lg:py-16">
+        {inApp && !email && <OpenInBrowser campaign={campaign} />}
         {/* The form runs longer than this column, so the video and the pitch stay in view beside it. */}
         <div className="sd-offer-left flex flex-col gap-4 lg:sticky lg:top-16 lg:gap-6">
           <Link href="/" aria-label="Klymb.ai home" className="inline-flex self-start py-2">

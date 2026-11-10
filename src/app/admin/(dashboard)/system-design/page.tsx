@@ -15,7 +15,7 @@ const when = (iso: string) => new Date(iso).toLocaleString("en-IN", { timeZone: 
 const dayName = (lesson: string | null) => (lesson && /^\d+-\d+$/.test(lesson) ? lessonDay(lesson) : lesson ?? "");
 
 const FUNNEL_WORDS: Record<string, string> = {
-  view: "Opened the offer", form_start: "Started the form", claim: "Tapped Claim", blocked: "Told to leave the app", google: "Sent to Google",
+  view: "Opened the offer", form_start: "Started the form", claim: "Tapped Claim", blocked: "Told to leave the app", open_browser: "Tapped Open in browser", google: "Sent to Google",
   order_failed: "Order failed", rzp_open: "Razorpay opened", rzp_closed: "Closed Razorpay", rzp_failed: "Payment failed", paid: "Paid",
 };
 

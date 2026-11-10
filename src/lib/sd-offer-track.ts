@@ -8,7 +8,7 @@ import { readConsent } from "@/lib/consent";
  * Honours "Turn analytics off", and never gets in the way of a purchase.
  */
 
-export type OfferStep = "view" | "form_start" | "claim" | "blocked" | "google" | "order_failed" | "rzp_open" | "rzp_closed" | "rzp_failed" | "paid";
+export type OfferStep = "view" | "form_start" | "claim" | "blocked" | "open_browser" | "google" | "order_failed" | "rzp_open" | "rzp_closed" | "rzp_failed" | "paid";
 
 const ANON_KEY = "klymb.sd.anon";
 

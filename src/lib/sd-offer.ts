@@ -244,3 +244,19 @@ export function signInFailedPath(callback: string | undefined) {
 export function inAppBrowser(userAgent: string) {
   return /\b(Instagram|FBAN|FBAV|FB_IAB|LinkedInApp|Snapchat|musical_ly|BytedanceWebview|MicroMessenger)\b|\bLine\/|; wv\)/i.test(userAgent);
 }
+
+/**
+ * The link that takes a page out of an app's webview into a real browser:
+ * Chrome on Android, Safari on an iPhone (iOS 17 and later). Null on anything
+ * else, where the visitor uses the app's own menu instead.
+ */
+export function externalBrowserUrl(href: string, userAgent: string) {
+  let url: URL;
+  try { url = new URL(href); } catch { return null; }
+  const scheme = url.protocol.replace(":", "");
+  if (scheme !== "https" && scheme !== "http") return null;
+  const rest = `${url.host}${url.pathname}${url.search}`;
+  if (/Android/i.test(userAgent)) return `intent://${rest}#Intent;scheme=${scheme};package=com.android.chrome;end`;
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return `x-safari-${scheme}://${rest}`;
+  return null;
+}

@@ -53,7 +53,7 @@ export async function getSdLearner(anon: string): Promise<SdEventRow[]> {
   return data ?? [];
 }
 
-const FUNNEL = ["view", "form_start", "claim", "blocked", "google", "order_failed", "rzp_open", "rzp_closed", "rzp_failed", "paid"] as const;
+const FUNNEL = ["view", "form_start", "claim", "blocked", "open_browser", "google", "order_failed", "rzp_open", "rzp_closed", "rzp_failed", "paid"] as const;
 export interface OfferFunnelRow { step: (typeof FUNNEL)[number]; inApp: number; browser: number }
 
 /** Distinct visitors reaching each step of the offer page, split by where they opened it. */
