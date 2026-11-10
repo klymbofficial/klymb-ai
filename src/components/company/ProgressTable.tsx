@@ -1,11 +1,14 @@
 import type { MemberProgress } from "@/lib/company/progress-data";
+import { statusLabel } from "@/lib/company/progress-summary";
 
-/** One plain word for where someone is, from what the server recorded. */
+/**
+ * One plain phrase for where someone is, from what the server recorded. The
+ * wording and the rules live in progress-summary.ts, so this table and the
+ * summary counts always agree. A person with failed attempts and no lessons
+ * passed has recorded activity: they are not "not started".
+ */
 export function statusOf(p: MemberProgress, total: number): string {
-  if (!p.hasAccess) return "Not assigned";
-  if (p.lessonsPassed === 0 && p.finalAttempts === 0) return p.assigned ? "Assigned, not started" : "Not started";
-  if (p.lessonsPassed >= total) return p.finalAttempts > 0 ? "Final taken" : "All lessons passed";
-  return "In progress";
+  return statusLabel(p, total);
 }
 
 /** The server stores timestamps; the date shown is India's, like the course. */
