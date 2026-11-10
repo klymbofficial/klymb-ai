@@ -1,10 +1,9 @@
 import { HIDE_MONEY } from "@/lib/site-status";
-import { signInLearner } from "@/app/(learn)/learn/actions";
 import { ButtonLink } from "@/components/ui/Button";
 import { PayButton } from "./PayButton";
 import { priceNow } from "@/lib/offer";
-import { GoogleMark } from "@/components/ui/GoogleMark";
-import type { Track } from "@/types/program";
+import { contact } from "@/data/config";
+import { successModel, type RegistrationOutcome } from "@/lib/registration-outcome";
 
 /**
  * A scalloped seal, drawn rather than shipped as an asset.
@@ -32,100 +31,113 @@ function sealPath(bumps = 20, inner = 44, outer = 50) {
 
 const SEAL = sealPath();
 
-function Seal() {
+/** A tick where it is done; an "i" where the registration is saved but something is still to do. */
+function Seal({ tone }: { tone: "done" | "saved" }) {
   return (
-    <svg viewBox="0 0 100 100" className="size-28" role="img" aria-label="Registered">
+    <svg viewBox="0 0 100 100" className="size-24 sm:size-28" role="img" aria-label={tone === "done" ? "Registered" : "Saved"}>
       <path d={SEAL} fill="var(--color-red)" />
-      <path
-        d="M30 52 L44 66 L71 34"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="11"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {tone === "done" ? (
+        <path d="M30 52 L44 66 L71 34" fill="none" stroke="#fff" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <>
+          <path d="M50 46 L50 70" fill="none" stroke="#fff" strokeWidth="11" strokeLinecap="round" />
+          <circle cx="50" cy="31" r="6.5" fill="#fff" />
+        </>
+      )}
     </svg>
   );
 }
 
-export interface SuccessState {
-  enrolled: boolean;
-  duplicate: boolean;
-  email: string;
-  track?: Track;
-  /** Registered while signed in with Google: the course can open directly. */
-  signedIn?: boolean;
+export interface SuccessState extends RegistrationOutcome {
+  /** The canonical repository, owner/name, as saved. */
+  repo?: string;
 }
 
-/** The message shown once a registration has been saved. */
-export function RegistrationSuccess({ enrolled, duplicate, email, track, signedIn }: SuccessState) {
+/**
+ * What the person sees once Register has been pressed and it worked: what was
+ * saved, what happens next in order, and the one button that moves them on.
+ * The words come from successModel, so each real outcome has its own answer.
+ */
+export function RegistrationSuccess({ onRetry, repo, ...outcome }: SuccessState & { onRetry?: () => void }) {
+  const { track, placeTrack, email } = outcome;
+  const m = successModel(outcome);
+  // The track the place is on, when we may say so; otherwise the one chosen.
+  const shownTrack = outcome.enrolled && !outcome.sameTrack ? placeTrack : track;
+
   return (
-    <div className="flex flex-col items-center px-8 py-10 text-center sm:px-12 sm:py-12">
-      <Seal />
+    <div className="flex flex-col items-center px-6 py-9 text-center sm:px-12 sm:py-12">
+      <Seal tone={m.tone} />
 
-      <p id="register-success-title" className="display mt-7 text-[2.6rem] text-white">{enrolled || track?.available ? "You're in." : "Interest registered."}</p>
+      <h2 id="register-success-title" className="display mt-6 text-[2.3rem] text-white sm:text-[2.6rem]">{m.title}</h2>
 
-      <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-white/80">
-        {duplicate && <p>You had already registered with this email: nothing was duplicated.</p>}
-
-        {enrolled ? (
-          <>
-            <p>
-              Your place on the <strong className="font-bold text-white">{track?.name}</strong> track is reserved.
-            </p>
-            <p>
-              {signedIn
-                ? "Day 1 is open. Start whenever you are ready."
-                : <>Continue with the Google account for <strong className="font-bold text-white">{email}</strong> to open Day 1 and start today.</>}
-            </p>
-          </>
-        ) : track?.available && !track.contentLive ? (
-          <>
-            <p>
-              Your place on the <strong className="font-bold text-white">{track.name}</strong> track is reserved.
-            </p>
-            <p>Day 1 opens soon. We will email {email} the moment it does, and your 30 days start from that day.</p>
-          </>
-        ) : track?.available ? (
-          <p>
-            You chose the <strong className="font-bold text-white">{track.name}</strong> track. We will confirm your
-            place at {email} shortly, and you will be able to start Day 1 from there.
-          </p>
-        ) : (
-          <p>
-            You chose the <strong className="font-bold text-white">{track?.name}</strong> track, which opens in a later
-            cohort. We will email {email} the moment it does.
-          </p>
-        )}
-
-        {!HIDE_MONEY && <p>{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>}
+      <div className="mt-4 max-w-md space-y-3 text-[15px] leading-relaxed text-white/80">
+        {m.repeatNote && <p>{m.repeatNote}</p>}
+        <p>{m.lead}</p>
       </div>
 
-      {track?.available && track.price > 0 && (
+      {/* What was saved, so a typo is caught here and not on Day 1. */}
+      <dl aria-label="What was saved" className="mt-6 w-full max-w-md divide-y divide-white/10 rounded-xl bg-white/5 text-left text-sm ring-1 ring-white/10">
+        {shownTrack && (
+          <div className="flex justify-between gap-4 px-4 py-2.5">
+            <dt className="text-white/55">Track</dt>
+            <dd className="text-right font-semibold text-white">{shownTrack.name}</dd>
+          </div>
+        )}
+        <div className="flex justify-between gap-4 px-4 py-2.5">
+          <dt className="text-white/55">Email</dt>
+          <dd className="min-w-0 break-words text-right font-semibold text-white">{email}</dd>
+        </div>
+        {repo && outcome.sameTrack && (
+          <div className="flex justify-between gap-4 px-4 py-2.5">
+            <dt className="text-white/55">Repository</dt>
+            <dd className="min-w-0 break-all text-right font-semibold text-white">{repo}</dd>
+          </div>
+        )}
+      </dl>
+
+      <div className="mt-6 w-full max-w-md text-left">
+        <h3 className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/55">What happens next</h3>
+        <ol className="mt-3 space-y-2.5 text-sm leading-relaxed text-white/85">
+          {m.steps.map((s, i) => (
+            <li key={s} className="flex gap-3">
+              <span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/15 text-[11px] font-bold text-white nums">{i + 1}</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {!HIDE_MONEY && outcome.sameTrack && <p className="mt-6 text-[15px] text-white/80">{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>}
+
+      {outcome.sameTrack && track?.available && track.price > 0 && (
         <>
           <p className="mt-6 text-sm text-white/75">Day 1 is free. Pay when you&apos;re ready to unlock Days 2 to 30.</p>
           <PayButton email={email} price={priceNow(track.price)} />
         </>
       )}
 
-      {/* Straight into the course: already signed in, or one Google step that
-          lands on Day 1, never a separate sign-in page. */}
-      {enrolled && signedIn && (
-        <ButtonLink href="/learn" soft arrow className="mt-8 rounded-full px-7">
-          Start Day 1
-        </ButtonLink>
-      )}
-      {enrolled && !signedIn && (
-        <form action={signInLearner} className="mt-8">
+      {/* Straight into the course: they are signed in already. */}
+      <div className="mt-8 flex flex-col items-center gap-4">
+        {m.action === "start-day-1" && (
+          <ButtonLink href="/learn" soft arrow className="rounded-full px-7">Start Day 1</ButtonLink>
+        )}
+        {m.action === "open-course" && (
+          <ButtonLink href="/learn" soft arrow className="rounded-full px-7">Open my course</ButtonLink>
+        )}
+        {m.action === "retry" && (
           <button
-            type="submit"
-            className="inline-flex items-center gap-3 rounded-full bg-white px-7 py-3 text-sm font-bold text-ink transition-colors hover:bg-paper"
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center rounded-full bg-white px-7 py-3 text-sm font-bold text-ink transition-colors hover:bg-paper"
           >
-            <GoogleMark />
-            Continue with Google to start Day 1
+            Back to the form
           </button>
-        </form>
-      )}
+        )}
+        <p className="text-xs text-white/55">
+          Something not right?{" "}
+          <a href={`mailto:${contact.email}`} className="font-bold text-white underline underline-offset-4 hover:text-red-soft">{contact.email}</a>
+        </p>
+      </div>
     </div>
   );
 }

@@ -226,6 +226,13 @@ export function signInFailedPath(callback: string | undefined) {
     url.searchParams.set("signin", "failed");
     return `${url.pathname}${url.search}`;
   }
+  // Registration starts with Google, so backing out of it comes back here with
+  // the chosen track kept and nothing else: only a track slug is ever carried,
+  // never a name, an email or anything typed.
+  if (url.pathname === "/register") {
+    const track = url.searchParams.get("track") ?? "";
+    return /^[a-z0-9-]{1,40}$/.test(track) ? `/register?track=${track}&signin=failed` : "/register?signin=failed";
+  }
   return url.pathname.startsWith("/learn") ? "/learn/login?error=1" : null;
 }
 
