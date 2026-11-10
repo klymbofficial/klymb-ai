@@ -209,6 +209,10 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
         </div>
 
         <div className="flex flex-col gap-3.5 p-[18px] lg:p-6 lg:pb-[22px]">
+          <p className="m-0 flex items-start gap-2.5 rounded-[10px] bg-[rgba(201,162,74,.16)] px-3 py-2.5 text-[13px] leading-[1.4] text-pretty">
+            <span aria-hidden="true" className="flex-none font-extrabold text-[#8a6a1c]">100%</span>
+            <span><b>100% back if you finish on schedule.</b> One lesson a day, no missed days, and {FINAL_MARK}% or higher on the final assessment. Start any day you like. <Link href="/refund-policy" className="text-[#605d5d] underline underline-offset-2">T&amp;C apply.</Link></span>
+          </p>
           {referral && <p className="m-0 rounded-[10px] bg-[rgba(131,5,11,.08)] px-3 py-2.5 text-sm font-bold text-[#83050b]">{referral.invitedBy} invited you.</p>}
           <form onSubmit={claim} onChange={startForm} noValidate className="flex flex-col gap-3.5">
             <label className="flex min-w-0 flex-col gap-1.5">
@@ -277,10 +281,6 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
             <input type="hidden" name="ref" value={ref} />
           </form>
 
-          <p className="m-0 flex items-start gap-2.5 rounded-[10px] bg-[rgba(201,162,74,.16)] px-3 py-2.5 text-[13px] leading-[1.4] text-pretty">
-            <span aria-hidden="true" className="flex-none font-extrabold text-[#8a6a1c]">100%</span>
-            <span><b>100% back if you finish on schedule.</b> One lesson a day, no missed days, and {FINAL_MARK}% or higher on the final assessment. Start any day you like. <Link href="/refund-policy" className="text-[#605d5d] underline underline-offset-2">T&amp;C apply.</Link></span>
-          </p>
           {email ? (
             <form action={offerSwitchAccount} className="text-xs leading-[1.4] text-[#605d5d]">
               <input type="hidden" name="campaign" value={campaign ?? ""} />
