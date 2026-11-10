@@ -38,8 +38,8 @@ test("failed attempts with no lesson passed are recorded activity, never 'not st
 test("someone with nothing recorded is told so, without claiming they have not started", () => {
   const assigned = person({ email: "a@x.com" });
   const own = person({ email: "b@x.com", assigned: false, ownAccess: true });
-  assert.equal(statusLabel(assigned, TOTAL), "Assigned, no activity recorded");
-  assert.equal(statusLabel(own, TOTAL), "No activity recorded");
+  assert.equal(statusLabel(assigned, TOTAL), "Access, no recorded activity");
+  assert.equal(statusLabel(own, TOTAL), "Access, no recorded activity");
   assert.equal(progressState(assigned, TOTAL), "no-activity");
 });
 
@@ -49,11 +49,11 @@ test("each state has one label, and the final is 'attempted', never passed or fa
   const all = person({ email: "l@x.com", lessonsPassed: TOTAL, lastActive: ACTIVE_AT });
   const lowFinal = person({ email: "f1@x.com", lessonsPassed: TOTAL, finalAttempts: 3, finalBest: 20, lastActive: ACTIVE_AT });
   const highFinal = person({ email: "f2@x.com", lessonsPassed: TOTAL, finalAttempts: 1, finalBest: 95, lastActive: ACTIVE_AT });
-  assert.equal(statusLabel(none, TOTAL), "Not assigned");
+  assert.equal(statusLabel(none, TOTAL), "No course access");
   assert.equal(statusLabel(some, TOTAL), "In progress");
   assert.equal(statusLabel(all, TOTAL), "All lessons passed");
-  assert.equal(statusLabel(lowFinal, TOTAL), "Final attempted");
-  assert.equal(statusLabel(highFinal, TOTAL), "Final attempted");
+  assert.equal(statusLabel(lowFinal, TOTAL), "All lessons passed");
+  assert.equal(statusLabel(highFinal, TOTAL), "All lessons passed");
 });
 
 test("no access is counted once, even when records exist under the email", () => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AssignmentControls } from "@/components/company/AssignmentControls";
 import { CourseAccessSteps } from "@/components/company/CourseAccessSteps";
+import { LearningSummary } from "@/components/company/LearningSummary";
 import { EmptyPanel, LoadError, OrgPageTitle } from "@/components/company/OrgPanels";
 import { ProgressTable } from "@/components/company/ProgressTable";
 import { requireCompany } from "@/lib/company/auth";
@@ -45,7 +46,11 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
             )}
           </EmptyPanel>
         ) : member.role === "hr" ? (
-          <AssignmentControls slug={member.companySlug} rows={progress.rows} total={progress.totalLessons} seats={progress.seatCount} />
+          <>
+            {/* HR only: the rows are the ones loadProgress scoped to this HR person. The head and employee pages below are unchanged. */}
+            <LearningSummary rows={progress.rows} totalLessons={progress.totalLessons} teamsHref={`/org/${member.companySlug}/teams`} />
+            <AssignmentControls slug={member.companySlug} rows={progress.rows} total={progress.totalLessons} seats={progress.seatCount} />
+          </>
         ) : (
           <>
             {!progress.rows.some((r) => r.hasAccess) && (
