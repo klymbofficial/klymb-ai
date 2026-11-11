@@ -1,0 +1,613 @@
+/*
+ * The klymb.ai homepage, from the Claude Design file "Klymb Landing v3"
+ * (Modernist design system, all Archivo). Everything is scoped to .kl.
+ *
+ * The design's accent was #ec3013; here it is the brand red #83050B with the
+ * same ramp the System Design app uses (course-app.css). On the dark ground
+ * #83050B nearly disappears, so thin red marks there (the strike, the
+ * dock's ring, the India pips) use the lifted red, --kl-red-400, the way
+ * the rest of the site does.
+ */
+
+.kl {
+  --kl-bg: #f3f2f2;
+  --kl-ink: #201e1d;
+  --kl-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --kl-card: color-mix(in srgb, #f3f2f2 60%, white);
+  --kl-red: #83050b;
+  --kl-red-100: #f9eaeb;
+  --kl-red-300: #e8b4b7;
+  --kl-red-400: #f0868b;
+  --kl-red-600: #690409;
+  --kl-red-700: #83050b;
+  --kl-red-800: #5a0307;
+  --kl-red-900: #4a0206;
+  --kl-live: oklch(0.75 0.17 150);
+  --kl-font: var(--font-archivo), system-ui, sans-serif;
+  --kl-shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --kl-shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  --kl-gutter: clamp(20px, 4vw, 56px);
+  --kl-ease: cubic-bezier(.2, .8, .2, 1);
+
+  overflow-x: clip;
+  background: var(--kl-bg);
+  color: var(--kl-ink);
+  font-family: var(--kl-font);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* Archivo ships 400/600/800 in the design, so a plain <strong> lands on 800. */
+.kl strong { font-weight: 800; }
+.kl .kl-semibold { font-weight: 600; }
+.kl a { color: inherit; text-decoration: none; }
+.kl :focus-visible { outline: 2px solid var(--kl-red); outline-offset: 2px; }
+.kl .kl-dark :focus-visible { outline-color: var(--kl-red-400); }
+.kl ::selection { background: color-mix(in srgb, var(--kl-red) 30%, transparent); color: inherit; }
+.kl h1, .kl h2, .kl h3 { font-family: var(--kl-font); }
+
+.kl-nowrap { white-space: nowrap; }
+.kl-flex-none { flex: none; }
+
+.kl-wrap { max-width: 1440px; margin: 0 auto; padding: 0 var(--kl-gutter); }
+
+/* Wordmark in running text. */
+.kl-brandword { font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; }
+.kl-brandword--nav { letter-spacing: -0.01em; }
+.kl-dot { color: var(--kl-red); }
+
+/* Photos: cover-cropped, credited bottom-left. */
+.kl-photo { position: absolute; inset: 0; }
+.kl-photo img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.kl-credit {
+  position: absolute; left: 6px; bottom: 6px; max-width: calc(100% - 12px);
+  padding: 3px 7px; border-radius: 5px; background: rgba(0, 0, 0, .55); color: #fff;
+  font: 10px/1.2 system-ui, -apple-system, sans-serif; letter-spacing: 0; text-transform: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.kl-stars { display: flex; gap: 2px; color: var(--kl-red); }
+
+/* Buttons (Modernist .btn, with the page's 12px radius). */
+.kl-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--kl-font); font-weight: 800; font-size: 14px; line-height: 1.2;
+  color: var(--kl-ink); background: transparent; border: 1px solid transparent;
+  padding: 8px 14.4px; border-radius: 12px;
+}
+.kl .kl-btn-primary { background: var(--kl-red); color: var(--kl-bg); }
+.kl .kl-btn-primary:hover { background: var(--kl-red-600); color: var(--kl-bg); }
+.kl .kl-btn-primary:active { background: var(--kl-red-900); }
+.kl-btn-secondary { border-color: var(--kl-divider); }
+.kl-btn-secondary:hover { background: color-mix(in srgb, var(--kl-ink) 7%, transparent); }
+.kl-btn-secondary:active { background: color-mix(in srgb, var(--kl-ink) 14%, transparent); }
+
+/* ── Nav ─────────────────────────────────────────────────────────────── */
+
+.kl-navbar { position: sticky; top: 0; z-index: 50; padding: 12px clamp(12px, 3vw, 40px) 0; }
+.kl-nav {
+  max-width: 1400px; margin: 0 auto; padding: 10px 10px 10px 20px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  border: 1px solid var(--kl-divider); border-radius: 999px;
+  background: color-mix(in srgb, var(--kl-bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: var(--kl-shadow-md);
+}
+.kl .kl-brand {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  font-weight: 800; font-size: 22px; letter-spacing: -0.03em; color: var(--kl-ink);
+}
+.kl-logo { position: relative; display: inline-flex; align-items: baseline; }
+.kl-logo > span { display: inline-block; }
+
+/*
+ * Links that don't fit wrap onto a second row, which the 40px height hides.
+ * When even the first link doesn't fit (phones), the row would show a sliver
+ * of it ("mb."), so below that width the links are hidden altogether.
+ */
+.kl-navlinks {
+  flex: 1 1 auto; min-width: 0; height: 40px; overflow: hidden;
+  display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 0 2px;
+  container-type: inline-size;
+}
+.kl-navlink {
+  padding: 8px 12px; white-space: nowrap; letter-spacing: 0.12em; border-radius: 999px;
+  font-size: 15px; transition: background .2s, color .2s;
+}
+.kl .kl-navlink:hover { background: var(--kl-red-100); color: var(--kl-red-800); }
+.kl .kl-navlink--teams { color: var(--kl-red-700); display: flex; gap: 6px; align-items: center; }
+.kl .kl-navlink--teams:hover { color: var(--kl-red-700); }
+@container (max-width: 132px) { .kl-navlink { visibility: hidden; } }
+
+.kl-pulse {
+  flex: none; display: flex; gap: 7px; align-items: center; padding: 10px 16px; border-radius: 999px;
+  background: var(--kl-red); color: var(--kl-bg); font-weight: 800; font-size: 15px; letter-spacing: 0.01em; white-space: nowrap;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--kl-red) 45%, transparent), var(--kl-shadow-md);
+  animation: kl-pulse 1.8s ease-out infinite;
+}
+/* The smallest phones: the pill would otherwise poke out past the nav's rounded end. */
+@media (max-width: 360px) {
+  .kl-nav { padding-left: 16px; }
+  .kl-pulse { padding: 9px 12px; gap: 5px; font-size: 14px; }
+}
+@keyframes kl-pulse {
+  from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--kl-red) 45%, transparent), var(--kl-shadow-md); }
+  to { box-shadow: 0 0 0 10px color-mix(in srgb, var(--kl-red) 0%, transparent), var(--kl-shadow-md); }
+}
+
+/* ── Hero ────────────────────────────────────────────────────────────── */
+
+.kl-hero { padding: clamp(12px, 2.5vh, 32px) 0 0; }
+.kl-hero-stage { position: relative; }
+/*
+ * The learner photo runs off the right edge, fading in from the left; its
+ * bottom strip stays clear for the credit. It starts at the nav's lower edge
+ * and fades in from there, rather than running up behind the see-through nav
+ * as it did in the design. The top fade (first layer) is intersected with the
+ * other two, which are combined.
+ */
+.kl-hero-photo {
+  position: absolute; top: calc(-1 * clamp(12px, 2.5vh, 32px)); bottom: 0; right: calc(50% - 50vw);
+  width: min(62vw, 1000px); overflow: hidden; z-index: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 56px), linear-gradient(to right, transparent 0, #000 38%), linear-gradient(to top, #000 36px, transparent 36px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 56px), linear-gradient(to right, transparent 0, #000 38%), linear-gradient(to top, #000 36px, transparent 36px);
+  -webkit-mask-composite: source-in, source-over;
+  mask-composite: intersect, add;
+}
+.kl-hero-grid {
+  position: relative; z-index: 1; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 56px clamp(32px, 5vw, 80px); align-items: stretch;
+  min-height: calc(100svh - 100px); padding-bottom: clamp(20px, 4vh, 48px);
+}
+.kl-hero-left { display: flex; flex-direction: column; align-items: flex-start; gap: clamp(14px, 3vh, 28px); padding-top: clamp(8px, 2vh, 24px); }
+
+.kl-experts {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  border: 1px solid var(--kl-divider); border-radius: 999px; background: var(--kl-bg); padding: 8px 16px; font-size: 14px;
+}
+.kl-experts-label { color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-logos { display: flex; gap: 14px; align-items: center; }
+.kl-logos img { display: block; height: 18px; width: auto; max-width: none; }
+.kl-logos .kl-logo-amazon { margin-top: 5px; }
+
+.kl-h1 {
+  font-weight: 800; font-size: clamp(32px, min(4.3vw, 8.4vh), 76px); line-height: 1.06; letter-spacing: -0.035em;
+  margin: 0 0 0 -0.04em; display: grid; max-width: 100%;
+}
+.kl-hl { grid-area: 1 / 1; }
+.kl-hl-line { display: block; white-space: nowrap; }
+.kl-w { display: inline-block; }
+.kl-w-accent { position: relative; font-style: italic; color: var(--kl-red); padding-right: 0.08em; }
+.kl-swoosh { position: absolute; left: 0; right: 0; bottom: -0.16em; width: 100%; height: 0.26em; overflow: visible; pointer-events: none; }
+
+/* The first headline plays in from the first paint; JS takes over for the swaps. */
+.kl-hl[data-first] .kl-w { animation: kl-word-in .7s var(--kl-ease) backwards; animation-delay: calc(var(--i) * 80ms); }
+.kl-hl[data-first] .kl-swoosh path { stroke-dasharray: 1 1; animation: kl-draw .6s cubic-bezier(.6, 0, .2, 1) 780ms both; }
+@keyframes kl-word-in { from { transform: translateY(0.6em) rotate(5deg); opacity: 0; filter: blur(8px); } }
+@keyframes kl-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+.kl-rating {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  padding: 12px 18px; border: 1px solid var(--kl-divider); border-radius: 16px; background: var(--kl-bg);
+}
+.kl-rating-text { font-size: 15px; }
+.kl-rating-text strong { font-size: 18px; }
+
+.kl-cta-row { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; margin-top: auto; }
+.kl-hero-cta { min-width: 260px; padding: 18px 22px; font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
+
+.kl-hero-right { display: grid; gap: 12px; align-content: end; justify-items: end; min-height: 0; padding-top: clamp(8px, 2vh, 24px); }
+.kl-chip {
+  display: flex; gap: 10px; align-items: center; background: var(--kl-bg); border: 1px solid var(--kl-divider);
+  border-radius: 999px; box-shadow: var(--kl-shadow-md); padding: 10px 18px; font-weight: 800; font-size: 15px; white-space: nowrap;
+}
+.kl-chip svg { color: var(--kl-red); flex: none; }
+
+/*
+ * Two columns: the floating "Chat with us" sat on the results card's corner
+ * in the design, so the right column stands clear of it. The CTA, lined up
+ * with "Job-oriented" by JS, waits for that before it shows.
+ */
+@media (min-width: 830px) {
+  .kl-hero-right { padding-bottom: 72px; }
+  .kl-cta-row { opacity: 0; animation: kl-appear 0s linear 1.6s forwards; }
+  .kl-cta-row.is-placed { opacity: 1; animation: none; transition: opacity .45s ease; }
+}
+@keyframes kl-appear { to { opacity: 1; } }
+
+.kl-results {
+  width: min(100%, 360px); border-radius: 24px; background: var(--kl-ink); color: var(--kl-bg);
+  padding: 18px 20px 20px; box-shadow: var(--kl-shadow-lg); display: grid; gap: 14px;
+  animation: kl-fade-up .8s var(--kl-ease) .5s backwards;
+}
+@keyframes kl-fade-up { from { opacity: 0; transform: translateY(24px); } }
+.kl-results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.kl-results-label { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kl-red-400); }
+.kl-results-live { display: flex; gap: 6px; align-items: center; font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 75%, transparent); }
+.kl-live-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--kl-live); animation: kl-blink 1.6s linear infinite; }
+@keyframes kl-blink { 50% { opacity: .25; } }
+.kl-results-body { display: grid; grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr); align-items: stretch; gap: 20px; }
+.kl-results-col { display: grid; gap: 4px; }
+.kl-region {
+  justify-self: start; font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--kl-bg) 40%, transparent);
+}
+.kl-region--india { justify-self: stretch; border: 0; background: var(--kl-red); }
+.kl-tally {
+  position: relative; justify-self: start; font-weight: 800; font-size: clamp(36px, 3.6vw, 52px);
+  line-height: 0.9; letter-spacing: -0.04em;
+}
+.kl-tally--india { color: var(--kl-red-400); }
+.kl-pop { position: absolute; left: 100%; top: 0; margin-left: 6px; font-size: 14px; letter-spacing: 0; pointer-events: none; }
+.kl-results-note { font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 78%, transparent); }
+.kl-pips { display: flex; gap: 3px; margin-top: 4px; }
+.kl-pips > span { width: 10px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--kl-bg) 22%, transparent); }
+.kl-results-rule { width: 1px; align-self: stretch; background: color-mix(in srgb, var(--kl-bg) 25%, transparent); }
+
+/* ── Why Klymb ───────────────────────────────────────────────────────── */
+
+.kl-why { background: var(--kl-ink); color: var(--kl-bg); border-radius: 32px; margin: 24px clamp(12px, 2vw, 24px) 0; overflow: hidden; }
+.kl-why-inner {
+  max-width: 1440px; margin: 0 auto; padding: clamp(28px, 5vh, 64px) var(--kl-gutter);
+  display: grid; gap: clamp(20px, 4vh, 48px); min-height: calc(100vh - 96px); align-content: center;
+}
+.kl-why-head { min-width: 0; display: grid; gap: clamp(12px, 2.5vh, 28px); }
+.kl-why-title { font-weight: 800; font-size: clamp(34px, min(6.4vw, 8vh), 100px); line-height: 0.95; letter-spacing: -0.04em; margin: 0; }
+.kl-strike { position: relative; display: inline-block; color: color-mix(in srgb, var(--kl-bg) 55%, transparent); }
+.kl-strike svg { position: absolute; left: -4%; top: 28%; width: 108%; height: 44%; overflow: visible; pointer-events: none; color: var(--kl-red-400); }
+.kl-why-lede {
+  font-size: clamp(16px, min(2vw, 3vh), 28px); line-height: 1.35; margin: 0; display: grid; gap: 6px;
+  color: color-mix(in srgb, var(--kl-bg) 86%, transparent);
+}
+.kl-why-lede strong { color: var(--kl-bg); }
+
+/* The staircase scrolls sideways when the screen is narrower than it. */
+.kl-steps-scroll { overflow-x: auto; overflow-y: hidden; padding: 22px 20px 0 0; margin-right: -20px; }
+.kl-steps {
+  min-width: 560px; height: clamp(256px, 42vh, 420px); margin: 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end;
+}
+.kl-step {
+  position: relative; border-radius: 20px 20px 6px 6px; padding: 14px; display: grid; align-content: start; gap: 5px;
+  transform-origin: bottom; background: color-mix(in srgb, var(--kl-bg) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kl-bg) 18%, transparent);
+}
+.kl-step--1 { height: 30%; min-height: 110px; background: transparent; border: 2px dashed var(--kl-red-400); }
+.kl-step--2 { height: 56%; min-height: 185px; }
+.kl-step--3 { height: 78%; min-height: 215px; }
+.kl-step--4 { height: 98%; min-height: 250px; background: var(--kl-red); border: 0; }
+.kl-step-tag {
+  position: absolute; top: -15px; left: 14px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: var(--kl-red); color: var(--kl-bg);
+}
+.kl-step--1 .kl-step-tag { background: var(--kl-bg); color: var(--kl-ink); }
+.kl-step--4 .kl-step-tag { background: var(--kl-bg); color: var(--kl-red-800); }
+.kl-step-num { font-weight: 800; font-size: 13px; color: var(--kl-red-400); margin-top: 10px; }
+.kl-step--4 .kl-step-num { color: var(--kl-bg); margin-top: 0; }
+.kl-step-title { font-weight: 800; font-size: clamp(16px, 1.6vw, 22px); line-height: 1.1; letter-spacing: -0.01em; }
+.kl-step-item { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.3; }
+.kl-step-tick { display: flex; color: var(--kl-red-400); }
+.kl-step-tick svg { flex: none; margin-top: 3px; }
+.kl-step--4 .kl-step-tick { color: var(--kl-bg); }
+.kl-flag { transform-origin: 20% 80%; margin-top: 8px; }
+.kl-refund {
+  margin-top: 6px; display: flex; gap: 8px; align-items: center; background: var(--kl-bg); color: var(--kl-red-800);
+  border-radius: 14px; padding: 8px 10px; font-weight: 800; font-size: 13px; line-height: 1.25;
+}
+
+/* ── Section heads ───────────────────────────────────────────────────── */
+
+.kl-section-head { display: flex; flex-wrap: wrap; gap: 20px 40px; align-items: end; justify-content: space-between; }
+.kl-h2 { font-weight: 800; font-size: clamp(40px, 5.4vw, 80px); line-height: 0.98; letter-spacing: -0.035em; margin: 0; }
+.kl-h2 em { font-style: italic; color: var(--kl-red); padding-right: 0.06em; }
+
+/* ── Who it's for ────────────────────────────────────────────────────── */
+
+.kl-who { padding: 96px 0; display: grid; gap: 36px; }
+.kl-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-width: 260px; }
+.kl-tab {
+  display: grid; gap: 8px; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font: inherit; font-size: 13px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent);
+}
+.kl-tab:hover { color: var(--kl-ink); }
+.kl-tab-track { display: block; height: 4px; border-radius: 4px; background: var(--kl-divider); overflow: hidden; }
+.kl-tab-fill { display: block; height: 100%; background: var(--kl-red); transform-origin: left; transform: scaleX(0); }
+
+.kl-panels { display: flex; gap: 12px; height: clamp(480px, 72vh, 760px); }
+.kl-panel {
+  position: relative; flex: 1 1 0; min-width: 0; border-radius: 28px; overflow: hidden; cursor: pointer;
+  background: var(--kl-ink); color: var(--kl-bg); transition: flex-grow .8s var(--kl-ease); outline-offset: 3px;
+}
+.kl-panel.is-active { flex-grow: 3; }
+.kl-panel-photo { position: absolute; inset: 0; transition: filter .8s ease, transform 1.2s var(--kl-ease); filter: grayscale(1) brightness(0.55); }
+.kl-panel.is-active .kl-panel-photo { filter: none; }
+.kl-panel-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--kl-ink) 88%, transparent) 0%, color-mix(in srgb, var(--kl-ink) 40%, transparent) 45%, transparent 70%);
+}
+.kl-panel-num {
+  position: absolute; top: 24px; right: 24px; font-weight: 800; font-size: clamp(14px, 1.2vw, 16px);
+  line-height: 1; letter-spacing: 0.08em; color: var(--kl-bg); pointer-events: none;
+}
+.kl-panel-vlabel {
+  position: absolute; left: 22px; top: 24px; writing-mode: vertical-rl; transform: rotate(180deg);
+  font-weight: 800; font-size: clamp(34px, min(4.4vw, 7vh), 72px); line-height: 0.92; letter-spacing: -0.045em;
+  max-height: calc(100% - 48px); transition: opacity .4s ease .25s; opacity: 1; pointer-events: none;
+}
+.kl-panel.is-active .kl-panel-vlabel { opacity: 0; transition: opacity .4s ease; }
+/*
+ * Opening keeps the design's timing. Closing clears the details first and
+ * brings the vertical name in after them; with the same delay both ways (as
+ * in the design) the two overlapped for a moment on every switch.
+ */
+.kl-panel-detail {
+  position: absolute; left: 0; right: 0; top: 0; padding: clamp(22px, 2.6vw, 36px); display: grid; gap: 14px; max-width: 520px;
+  transition: opacity .25s ease, transform .3s ease; opacity: 0; transform: translateY(16px); pointer-events: none;
+}
+.kl-panel.is-active .kl-panel-detail { opacity: 1; transform: none; transition: opacity .5s ease .25s, transform .6s var(--kl-ease) .2s; }
+.kl-panel-for {
+  width: 100%; max-width: 300px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--kl-bg) 80%, transparent); border-top: 1px solid var(--kl-bg); padding-top: 10px;
+}
+.kl-panel-detail h3 { font-weight: 800; font-size: clamp(28px, 3.2vw, 48px); line-height: 0.95; letter-spacing: -0.04em; margin: 0; text-wrap: balance; }
+.kl-panel-detail p { font-size: clamp(15px, 1.2vw, 17px); line-height: 1.5; margin: 0; max-width: 34ch; color: color-mix(in srgb, var(--kl-bg) 88%, transparent); }
+.kl-panel-tags { display: grid; max-width: 300px; margin: 0; padding: 0; list-style: none; border-top: 1px solid color-mix(in srgb, var(--kl-bg) 45%, transparent); }
+.kl-panel-tags li {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--kl-bg) 45%, transparent);
+}
+
+/*
+ * Phones: three side-by-side panels left the open one too narrow for its
+ * heading and the closed ones too narrow for their names, so the panels
+ * stack and the open one grows tall instead; the names run across.
+ */
+@media (max-width: 760px) {
+  .kl-panels { flex-direction: column; height: clamp(600px, calc(100svh - 120px), 720px); }
+  .kl-panel-vlabel { writing-mode: horizontal-tb; transform: none; right: 64px; max-height: none; font-size: clamp(26px, 7.5vw, 34px); }
+  /* The "For" rule stops short of the panel number in the corner. */
+  .kl-panel-for { max-width: min(300px, calc(100% - 52px)); }
+}
+
+.kl .kl-pill-cta {
+  justify-self: start; width: max-content; white-space: nowrap; flex: none; border-radius: 999px;
+  padding: 14px 20px; display: flex; gap: 12px; align-items: center;
+}
+
+.kl-teams {
+  display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between;
+  padding: 24px 28px; border-radius: 20px; background: var(--kl-red); color: var(--kl-bg);
+}
+.kl-teams p { font-size: 18px; line-height: 1.5; margin: 0; max-width: 60ch; }
+/* The design's full stop was its accent on an accent band, so it vanished; here it shows. */
+.kl-teams .kl-dot { color: var(--kl-red-400); }
+.kl .kl-teams-btn { background: var(--kl-bg); color: var(--kl-red-800); border-radius: 999px; padding: 12px 20px; font-weight: 600; }
+.kl .kl-teams-btn:hover { background: var(--kl-ink); color: var(--kl-bg); }
+
+/* ── Pricing ─────────────────────────────────────────────────────────── */
+
+.kl-pricing { padding: 96px 0; display: grid; gap: 48px; }
+.kl-badge {
+  display: flex; gap: 8px; align-items: center; padding: 10px 16px; border-radius: 999px;
+  background: var(--kl-red-100); color: var(--kl-red-800); font-weight: 800; font-size: 15px;
+}
+.kl-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; align-items: stretch; }
+.kl-plan { position: relative; border-radius: 32px; display: flex; flex-direction: column; }
+.kl-plan--single { padding: clamp(28px, 3vw, 44px); gap: 28px; background: var(--kl-card); border: 1px solid var(--kl-divider); }
+.kl-plan--all { background: var(--kl-ink); color: var(--kl-bg); overflow: hidden; box-shadow: var(--kl-shadow-lg); }
+.kl-plan-glow {
+  position: absolute; right: -18%; top: -30%; width: 70%; aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--kl-red) 55%, transparent) 0%, transparent 70%);
+}
+.kl-plan-body { position: relative; padding: clamp(28px, 3vw, 44px); display: flex; flex-direction: column; gap: 28px; flex: 1; }
+.kl-plan-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.kl-plan-head { display: grid; gap: 6px; }
+.kl-kicker { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kl-red-700); }
+.kl-plan--all .kl-kicker { color: var(--kl-red-400); }
+.kl-plan-sub { font-size: 16px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-plan--all .kl-plan-sub { color: color-mix(in srgb, var(--kl-bg) 80%, transparent); }
+.kl-sticker {
+  flex: none; display: grid; place-items: center; text-align: center; width: 88px; height: 88px; border-radius: 50%;
+  background: var(--kl-bg); color: var(--kl-red-800); font-weight: 800; font-size: 12px; line-height: 1.1;
+  letter-spacing: 0.04em; text-transform: uppercase; transform: rotate(-12deg);
+}
+/* The price shrinks with its card where the design's size would push "per month" out of it. */
+.kl-price { display: flex; align-items: flex-start; gap: 4px; font-weight: 800; line-height: 0.8; letter-spacing: -0.06em; container-type: inline-size; }
+.kl-price-cur { font-size: clamp(32px, 3.4vw, 48px); margin-top: 0.2em; }
+.kl-plan--all .kl-price-cur { color: var(--kl-red-400); }
+.kl-price-num { font-size: min(clamp(96px, 11vw, 168px), calc(38cqi - 30px)); font-variant-numeric: tabular-nums; }
+.kl-price-per {
+  align-self: flex-end; font-size: 16px; letter-spacing: 0; line-height: 1.2; margin-left: 10px; padding-bottom: 0.6em;
+  color: color-mix(in srgb, var(--kl-ink) 72%, transparent); font-weight: 400;
+}
+.kl-plan--all .kl-price-per { color: color-mix(in srgb, var(--kl-bg) 80%, transparent); }
+.kl-plan-list { display: grid; margin: 0; padding: 0; list-style: none; border-bottom: 1px solid var(--kl-divider); }
+.kl-plan-list li { display: flex; gap: 12px; align-items: center; font-size: 16px; line-height: 1.35; padding: 11px 0; border-top: 1px solid var(--kl-divider); }
+.kl-plan--all .kl-plan-list, .kl-plan--all .kl-plan-list li { border-color: color-mix(in srgb, var(--kl-bg) 25%, transparent); }
+.kl-tick { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--kl-ink); color: var(--kl-bg); }
+.kl-plan--all .kl-tick { background: var(--kl-bg); color: var(--kl-ink); }
+.kl-plan--all .kl-tick--red { background: var(--kl-red); color: var(--kl-bg); }
+.kl-included {
+  margin-left: auto; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px;
+  border-radius: 999px; background: var(--kl-red); white-space: nowrap;
+}
+.kl .kl-plan-cta {
+  width: 100%; margin-top: auto; border-radius: 999px; padding: 16px 22px;
+  display: flex; justify-content: space-between; align-items: center; text-align: left;
+}
+
+/* ── Learner stories ─────────────────────────────────────────────────── */
+
+.kl-stories { padding: 24px 0 96px; display: grid; gap: 40px; }
+.kl-proof { display: flex; gap: 14px; align-items: center; }
+.kl-avatars { display: flex; }
+.kl-avatars img {
+  display: block; width: 40px; height: 40px; max-width: none; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--kl-bg); margin-left: -12px;
+}
+.kl-avatars img:first-child { margin-left: 0; }
+.kl-proof-text { display: grid; gap: 2px; font-size: 14px; }
+
+.kl-feature {
+  margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  border-radius: 32px; overflow: hidden; background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg);
+}
+.kl-feature-photo { position: relative; min-height: clamp(360px, 40vw, 520px); }
+/* Lifted off the bottom edge so the photo credit underneath stays readable (they overlapped in the design). */
+.kl-feature-chips { position: absolute; left: 20px; bottom: 32px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+.kl-feature-chip { padding: 8px 14px; border-radius: 999px; background: var(--kl-bg); color: var(--kl-ink); font-size: 13px; }
+.kl-feature-chip--now { background: var(--kl-red); color: var(--kl-bg); }
+.kl-feature-arrow { color: var(--kl-bg); }
+.kl-feature-quote { position: relative; padding: clamp(28px, 4vw, 56px); display: flex; flex-direction: column; gap: 28px; justify-content: space-between; }
+.kl-quote-mark {
+  position: absolute; right: clamp(16px, 3vw, 40px); top: -0.12em; font-weight: 800; font-size: clamp(160px, 18vw, 280px);
+  line-height: 1; color: var(--kl-red); pointer-events: none;
+}
+.kl-eyebrow-soft { position: relative; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kl-red-400); }
+.kl-feature blockquote { position: relative; margin: 0; font-weight: 800; font-size: clamp(26px, 2.8vw, 42px); line-height: 1.12; letter-spacing: -0.025em; }
+.kl-feature blockquote span { color: var(--kl-red-400); }
+.kl-feature figcaption {
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--kl-bg) 25%, transparent); padding-top: 20px;
+}
+.kl-feature-who { display: grid; gap: 2px; }
+.kl-feature-who strong { font-size: 18px; }
+.kl-feature-who span { font-size: 14px; color: color-mix(in srgb, var(--kl-bg) 78%, transparent); }
+.kl-verified {
+  margin-left: auto; display: flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--kl-bg) 35%, transparent); font-size: 13px;
+}
+
+/* The review row runs edge to edge, fading out at both ends. */
+.kl-reviews {
+  overflow: hidden; margin: 0 calc(-1 * var(--kl-gutter)); padding: 6px 0 6px var(--kl-gutter);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.kl-reviews.is-still { overflow-x: auto; }
+.kl-review-track { display: flex; width: max-content; }
+.kl-review {
+  flex: none; width: 340px; margin: 0 16px 0 0; border-radius: 24px; padding: 24px; background: var(--kl-card);
+  border: 1px solid var(--kl-divider); display: grid; gap: 18px; align-content: space-between;
+}
+.kl-review-top { display: grid; gap: 12px; }
+.kl-review blockquote { margin: 0; font-size: 17px; line-height: 1.45; }
+.kl-review figcaption { display: flex; gap: 12px; align-items: center; margin: 0; }
+.kl-avatar { position: relative; flex: none; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display: block; }
+.kl-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.kl-review-who { display: grid; gap: 2px; font-size: 14px; }
+.kl-review-who strong { font-size: 15px; }
+.kl-review-who span { color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-review-badge { margin-left: auto; flex: none; color: var(--kl-red); }
+
+/* ── FAQ ─────────────────────────────────────────────────────────────── */
+
+.kl-faq { border-top: 1px solid var(--kl-divider); padding: 72px 0 96px; display: flex; flex-wrap: wrap; gap: 40px 24px; }
+.kl-faq-side { flex: 1 1 220px; display: grid; gap: 12px; align-content: start; }
+.kl-faq-num { font-weight: 800; font-size: 15px; color: var(--kl-red); }
+.kl .kl-faq-label { margin: 0; font-family: var(--kl-font); font-weight: 400; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.kl-faq-list { flex: 999 1 560px; min-width: 0; display: grid; border-top: 1px solid var(--kl-divider); }
+.kl-faq-item { border-bottom: 1px solid var(--kl-divider); }
+.kl-faq-item h3 { margin: 0; font: inherit; }
+.kl-faq-q {
+  width: 100%; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; align-items: center;
+  padding: 24px 0; border: 0; background: none; color: inherit; text-align: left;
+  font-family: var(--kl-font); font-weight: 800; font-size: clamp(20px, 1.8vw, 26px); line-height: 1.25; letter-spacing: -0.01em;
+}
+.kl-faq-q:hover { color: var(--kl-red-700); }
+.kl-faq-icon { font-size: 32px; line-height: 1; color: var(--kl-red); }
+.kl-faq-a { margin: 0; padding: 0 0 28px; font-size: 17px; line-height: 1.6; max-width: 60ch; color: color-mix(in srgb, var(--kl-ink) 78%, transparent); }
+
+/* ── Closing banner ──────────────────────────────────────────────────── */
+
+.kl-close { position: relative; overflow: hidden; background: var(--kl-red); color: var(--kl-bg); border-radius: 32px; margin: 0 clamp(12px, 2vw, 24px); }
+.kl-close :focus-visible { outline-color: var(--kl-bg); }
+.kl-close-inner {
+  position: relative; max-width: 1440px; margin: 0 auto; padding: clamp(64px, 9vw, 120px) var(--kl-gutter);
+  display: grid; gap: clamp(40px, 5vw, 64px);
+}
+.kl-close-eyebrow { display: flex; gap: 10px; align-items: center; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
+.kl-close-eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--kl-bg); }
+.kl-close h2 {
+  font-weight: 800; font-size: clamp(52px, 9.5vw, 152px); line-height: 0.92; letter-spacing: -0.05em;
+  margin: 0 0 0 -0.05em; display: grid; gap: 0.04em;
+}
+.kl-climb { display: flex; align-items: flex-end; gap: clamp(12px, 1.6vw, 24px); padding-left: calc(var(--n) * clamp(28px, 9vw, 160px)); }
+.kl-climb--last { align-items: center; gap: 0.18em; }
+/* The design set "AI." in ink, which reads on its bright red but not on the brand red; it takes the lifted red instead. */
+.kl-climb em { font-style: italic; color: var(--kl-red-400); padding-right: 0.06em; }
+.kl-climb-arrow { width: 0.6em; height: 0.6em; color: var(--kl-bg); flex: none; }
+.kl .kl-close-cta {
+  justify-self: start; background: var(--kl-bg); color: var(--kl-ink); border-radius: 999px; padding: 18px 24px;
+  min-width: 260px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; box-shadow: var(--kl-shadow-lg);
+}
+.kl .kl-close-cta:hover { background: var(--kl-ink); color: var(--kl-bg); }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+/* Bottom room so the journey dock and "Chat with us" never sit on the last links. */
+.kl-footer {
+  max-width: 1440px; margin: 0 auto; padding: 28px var(--kl-gutter) 112px;
+  display: flex; flex-wrap: wrap; gap: 12px 28px; font-size: 14px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent);
+}
+.kl-footer-copy { margin-right: auto; }
+.kl-footer-copy .kl-brandword { color: var(--kl-ink); }
+.kl .kl-footer a:hover { color: var(--kl-red); }
+
+/* ── Journey dock and chat ───────────────────────────────────────────── */
+
+.kl .kl-dock {
+  position: fixed; left: 50%; bottom: clamp(16px, 2.5vw, 28px); z-index: 60;
+  transform: translate(-50%, 160%); opacity: 0; transition: transform .55s var(--kl-ease), opacity .4s ease;
+  display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 10px; border-radius: 999px;
+  background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg); max-width: calc(100vw - 120px);
+}
+.kl .kl-dock.is-on { transform: translate(-50%, 0); opacity: 1; }
+.kl .kl-dock:hover { background: var(--kl-red-800); color: var(--kl-bg); }
+.kl-dock-ring { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; }
+.kl-dock-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.kl-dock-track { stroke: color-mix(in srgb, var(--kl-bg) 22%, transparent); }
+.kl-dock-progress { stroke: var(--kl-red-400); }
+.kl-dock-step { font-weight: 800; font-size: 13px; }
+.kl-dock-text { display: grid; gap: 1px; min-width: 0; }
+.kl-dock-title { font-weight: 800; font-size: 16px; white-space: nowrap; }
+.kl-dock-hint {
+  font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 75%, transparent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .25s ease;
+}
+.kl-dock-go { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--kl-red); color: var(--kl-bg); }
+
+.kl-chat {
+  position: fixed; right: clamp(16px, 2.5vw, 32px); bottom: clamp(16px, 2.5vw, 32px); z-index: 60;
+  display: flex; align-items: center; gap: 10px; padding: 12px 20px 12px 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--kl-ink); color: var(--kl-bg); font-family: var(--kl-font); font-weight: 800; font-size: 15px; line-height: 1.55;
+  box-shadow: var(--kl-shadow-lg);
+}
+.kl-chat:hover { background: var(--kl-red); color: var(--kl-bg); }
+.kl-chat-icon { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--kl-red); }
+.kl-chat-online {
+  position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--kl-live); border: 2px solid var(--kl-ink);
+}
+
+@media (max-width: 760px) {
+  .kl .kl-dock { left: 16px; transform: none; max-width: calc(100vw - 92px); }
+  .kl .kl-dock:not(.is-on) { transform: translateY(160%); }
+  .kl .kl-dock.is-on { transform: none; }
+  .kl-chat-label { display: none; }
+  .kl-chat { padding: 4px; gap: 0; }
+  /* Wider steps, so their text isn't cut off at the bottom of each bar. */
+  .kl-steps { min-width: 820px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kl-pulse, .kl-live-dot, .kl-results,
+  .kl-hl[data-first] .kl-w, .kl-hl[data-first] .kl-swoosh path { animation: none; }
+  .kl-cta-row, .kl-cta-row.is-placed { opacity: 1; animation: none; transition: none; }
+}
