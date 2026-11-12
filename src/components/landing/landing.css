@@ -199,8 +199,24 @@
 .kl-rating-text { font-size: 15px; }
 .kl-rating-text strong { font-size: 18px; }
 
-.kl-cta-row { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; margin-top: auto; }
+/* The placement card and the two buttons sit together at the foot of the column. */
+.kl-hero-left .kl-results { margin-top: auto; }
+.kl-cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .kl-hero-cta { min-width: 260px; padding: 18px 22px; font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
+.kl .kl-hero-login { padding: 18px 26px; font-size: 18px; background: var(--kl-bg); }
+.kl .kl-hero-login:hover { background: color-mix(in srgb, var(--kl-ink) 7%, var(--kl-bg)); }
+.kl .kl-hero-login:active { background: color-mix(in srgb, var(--kl-ink) 14%, var(--kl-bg)); }
+/* Phones: the two buttons stay side by side; the CTA gives up its minimum width (and, on the smallest, its arrow). */
+@media (max-width: 480px) {
+  .kl-cta-row { flex-wrap: nowrap; gap: 10px; }
+  .kl .kl-hero-cta { min-width: 0; flex: 1 1 auto; white-space: nowrap; padding: 16px 18px; font-size: 16px; gap: 10px; }
+  .kl .kl-hero-login { flex: none; white-space: nowrap; padding: 16px 20px; font-size: 16px; }
+}
+@media (max-width: 360px) {
+  .kl .kl-hero-cta { padding: 15px 14px; }
+  .kl .kl-hero-cta svg { display: none; }
+  .kl .kl-hero-login { padding: 15px 14px; }
+}
 
 .kl-hero-right { display: grid; gap: 12px; align-content: end; justify-items: end; min-height: 0; padding-top: clamp(8px, 2vh, 24px); }
 .kl-chip {
@@ -209,17 +225,10 @@
 }
 .kl-chip svg { color: var(--kl-red); flex: none; }
 
-/*
- * Two columns: the floating "Chat with us" sat on the results card's corner
- * in the design, so the right column stands clear of it. The CTA, lined up
- * with "Job-oriented" by JS, waits for that before it shows.
- */
+/* Two columns: the chips stand clear of the floating "Chat with us" in the corner. */
 @media (min-width: 830px) {
   .kl-hero-right { padding-bottom: 72px; }
-  .kl-cta-row { opacity: 0; animation: kl-appear 0s linear 1.6s forwards; }
-  .kl-cta-row.is-placed { opacity: 1; animation: none; transition: opacity .45s ease; }
 }
-@keyframes kl-appear { to { opacity: 1; } }
 
 .kl-results {
   width: min(100%, 360px); border-radius: 24px; background: var(--kl-ink); color: var(--kl-bg);
@@ -543,11 +552,6 @@
 /* The design set "AI." in ink, which reads on its bright red but not on the brand red; it takes the lifted red instead. */
 .kl-climb em { font-style: italic; color: var(--kl-red-400); padding-right: 0.06em; }
 .kl-climb-arrow { width: 0.6em; height: 0.6em; color: var(--kl-bg); flex: none; }
-.kl .kl-close-cta {
-  justify-self: start; background: var(--kl-bg); color: var(--kl-ink); border-radius: 999px; padding: 18px 24px;
-  min-width: 260px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; box-shadow: var(--kl-shadow-lg);
-}
-.kl .kl-close-cta:hover { background: var(--kl-ink); color: var(--kl-bg); }
 
 /* ── Footer ──────────────────────────────────────────────────────────── */
 
@@ -575,12 +579,7 @@
 .kl-dock-track { stroke: color-mix(in srgb, var(--kl-bg) 22%, transparent); }
 .kl-dock-progress { stroke: var(--kl-red-400); }
 .kl-dock-step { font-weight: 800; font-size: 13px; }
-.kl-dock-text { display: grid; gap: 1px; min-width: 0; }
-.kl-dock-title { font-weight: 800; font-size: 16px; white-space: nowrap; }
-.kl-dock-hint {
-  font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 75%, transparent);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .25s ease;
-}
+.kl-dock-title { min-width: 0; font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kl-dock-go { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--kl-red); color: var(--kl-bg); }
 
 .kl-chat {
@@ -609,5 +608,4 @@
 @media (prefers-reduced-motion: reduce) {
   .kl-pulse, .kl-live-dot, .kl-results,
   .kl-hl[data-first] .kl-w, .kl-hl[data-first] .kl-swoosh path { animation: none; }
-  .kl-cta-row, .kl-cta-row.is-placed { opacity: 1; animation: none; transition: none; }
 }

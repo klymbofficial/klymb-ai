@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { AccountLink } from "@/components/layout/AccountLink";
 import { Brand, IconArrowRight, IconCheck, Photo, Stars, unsplash } from "./parts";
 import { C, EASE, countUp, reduceMotion } from "./motion";
 
@@ -34,8 +35,6 @@ function Pips() {
 export function Hero() {
   const h1 = useRef<HTMLHeadingElement>(null);
   const results = useRef<HTMLDivElement>(null);
-  const ctaRow = useRef<HTMLDivElement>(null);
-  const jobChip = useRef<HTMLDivElement>(null);
 
   // The two headlines take turns: words blur out, the next set rises in and its red word is underlined.
   useEffect(() => {
@@ -163,37 +162,6 @@ export function Hero() {
     };
   }, []);
 
-  // Two columns: the CTA rides up to sit level with the "Job-oriented" chip, never closer than 20px to the rating above it.
-  useEffect(() => {
-    const row = ctaRow.current;
-    const jo = jobChip.current;
-    if (!row || !jo) return;
-    const fit = () => {
-      row.style.transform = "none";
-      const r = row.getBoundingClientRect();
-      const j = jo.getBoundingClientRect();
-      if (j.left > r.right - 4) {
-        let d = r.top + r.height / 2 - (j.top + j.height / 2);
-        const prev = row.previousElementSibling;
-        if (prev) d = Math.min(d, r.top - (prev.getBoundingClientRect().bottom + 20));
-        if (d > 0) row.style.transform = `translateY(${-d}px)`;
-      }
-      // Hidden until placed (landing.css), so it doesn't visibly jump after the page loads.
-      row.classList.add("is-placed");
-    };
-    fit();
-    document.fonts?.ready.then(fit);
-    const t1 = window.setTimeout(fit, 300);
-    const t2 = window.setTimeout(fit, 1200);
-    const ro = new ResizeObserver(fit);
-    ro.observe(document.body);
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      ro.disconnect();
-    };
-  }, []);
-
   return (
     <section className="kl-hero" aria-label="Introduction">
       <div className="kl-hero-stage">
@@ -240,22 +208,6 @@ export function Hero() {
               </span>
             </div>
 
-            <div ref={ctaRow} className="kl-cta-row">
-              <a href="#pricing" data-hero-cta="" className="kl-btn kl-btn-primary kl-hero-cta">
-                Start your journey <IconArrowRight size={20} />
-              </a>
-            </div>
-          </div>
-
-          <div className="kl-hero-right">
-            <div className="kl-chip">
-              <IconCheck size={18} strokeWidth={2.5} />
-              Expert-led lessons
-            </div>
-            <div ref={jobChip} className="kl-chip">
-              <IconCheck size={18} strokeWidth={2.5} />
-              Job-oriented
-            </div>
             <div ref={results} className="kl-results">
               <div className="kl-results-head">
                 <span className="kl-results-label">Results · Learners placed</span>
@@ -283,6 +235,24 @@ export function Hero() {
                   <Pips />
                 </div>
               </div>
+            </div>
+
+            <div className="kl-cta-row">
+              <a href="#pricing" data-hero-cta="" className="kl-btn kl-btn-primary kl-hero-cta">
+                Start your journey <IconArrowRight size={20} />
+              </a>
+              <AccountLink className="kl-btn kl-btn-secondary kl-hero-login" />
+            </div>
+          </div>
+
+          <div className="kl-hero-right">
+            <div className="kl-chip">
+              <IconCheck size={18} strokeWidth={2.5} />
+              Expert-led lessons
+            </div>
+            <div className="kl-chip">
+              <IconCheck size={18} strokeWidth={2.5} />
+              Job-oriented
             </div>
           </div>
         </div>

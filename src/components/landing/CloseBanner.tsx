@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties } from "react";
 import { EASE, onceVisible, reduceMotion } from "./motion";
-import { IconArrowRight, IconArrowUpRight } from "./parts";
+import { IconArrowUpRight } from "./parts";
 
 /**
  * The closing red banner. "Upskill / yourself / in AI." is set as a
@@ -59,9 +59,6 @@ export function CloseBanner() {
             <IconArrowUpRight ref={arrow} className="kl-climb-arrow" />
           </span>
         </h2>
-        <a href="#pricing" className="kl-btn kl-close-cta">
-          Start your journey <IconArrowRight size={20} />
-        </a>
       </div>
     </section>
   );
