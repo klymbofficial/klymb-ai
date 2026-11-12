@@ -46,7 +46,7 @@ export default function AboutPage() {
             </li>
             <li className="card p-7">
               <h3 className="display text-xl">System Design</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">A course on system design, explained with real examples and built for interviews. Early access: {BUILT_LESSONS.length} of {LESSON_COUNT} lessons are live, and the rest are added as they are ready.</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">A course on system design, explained with real examples and built for interviews. {BUILT_LESSONS.length >= LESSON_COUNT ? `All ${LESSON_COUNT} lessons are live.` : `Early access: ${BUILT_LESSONS.length} of ${LESSON_COUNT} lessons are live, and the rest are added as they are ready.`}</p>
               <Link href="/system-design" className="mt-4 inline-block text-sm font-bold underline underline-offset-4 hover:text-red-deep">See the course</Link>
             </li>
             <li className="card p-7">

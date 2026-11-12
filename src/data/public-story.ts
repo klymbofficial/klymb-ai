@@ -1,7 +1,6 @@
 import { entity } from "@/data/legal";
 import { contact } from "@/data/config";
 import { tracks } from "@/data/tracks";
-import { topicsFor } from "@/lib/coach/topics";
 
 /**
  * Copy for the public story pages (Home, Why Klymb, About, Organizations).
@@ -9,8 +8,6 @@ import { topicsFor } from "@/lib/coach/topics";
  * it comes from. When the product changes, change the line here.
  */
 
-/** Tracks that have voice-coach topics, read from the coach itself. */
-export const coachTrackCount = tracks.filter((t) => topicsFor(t.slug).length > 0).length;
 export const trackCount = tracks.filter((t) => t.available).length;
 
 /**
@@ -77,7 +74,6 @@ export const approach = [
   { title: "One problem a day", body: "Each day is one realistic problem from the role, with a mission, build steps and what done looks like." },
   { title: "You submit real work", body: "Paste the link to your own GitHub repository, add a note on what you did and why, and answer a few written questions. You can update a day any time." },
   { title: "Four checkpoints", body: "After Days 7, 14, 21 and 28 you complete a checkpoint on that week's work." },
-  { title: "Speak it out loud", body: `A five-minute voice coach asks one question at a time on a single topic, available on all ${coachTrackCount} tracks.` },
   { title: "Interview prep to finish", body: "Days 29 and 30 take the most-asked questions for your role, answered in writing with your own work as the example." },
   { title: "See where you stand", body: "A calendar shows every day you have submitted and what comes next. Days open in order, so you always know the one to do today." },
 ];

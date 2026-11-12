@@ -99,7 +99,9 @@ export const refund = {
  */
 export const sdRefund = {
   headline: `Finish System Design on schedule, one lesson a day with no missed days, score ${FINAL_MARK}% or higher on the final assessment, and we refund 100% of your fee.`,
-  earlyAccess: `System Design is sold in early access. ${BUILT_LESSONS.length} of its ${LESSON_TOTAL} lessons are live today. The rest are released as they are ready and are included in what you paid.`,
+  earlyAccess: BUILT_LESSONS.length >= LESSON_TOTAL
+    ? `All ${LESSON_TOTAL} lessons of System Design are live.`
+    : `System Design is sold in early access. ${BUILT_LESSONS.length} of its ${LESSON_TOTAL} lessons are live today. The rest are released as they are ready and are included in what you paid.`,
   /** confirm: is every one of these required? */
   conditions: [
     `All ${LESSON_TOTAL} lessons finished, from Day 1 to Day ${LESSON_TOTAL}, one a day. You can start Day 1 any day you like`,
@@ -107,7 +109,7 @@ export const sdRefund = {
     `At least ${FINAL_MARK}% on the final assessment, which opens the day after you pass Day ${LESSON_TOTAL} and must be taken that same day. You get ${FINAL_TRIES} tries and your best score counts. Tries after that are for practice`,
   ],
   /** confirm: is this right for early access? */
-  waiting: "If the next lesson is not out yet, those days do not count as missed. A new lesson must be passed on the day it comes out or the next day.",
+  waiting: BUILT_LESSONS.length >= LESSON_TOTAL ? "" : "If the next lesson is not out yet, those days do not count as missed. A new lesson must be passed on the day it comes out or the next day.",
   /** confirm: does a change this strict need notice for people who bought before it? */
   missed: "If you miss a day, you can keep learning and finish the course, but your streak resets and the refund is no longer available. There are no exceptions and a missed day cannot be made up.",
   /** confirm: the 60 days. */

@@ -10,7 +10,12 @@ import { HIDE_MONEY } from "@/lib/site-status";
 const SENDER_NAME = "Klymb.ai";
 /** The address every mail says to write to: the support inbox, not the legal grievance contact on the policy pages. */
 export const MAIL_SUPPORT = SUPPORT_EMAIL;
-const SD_LIVE = `${BUILT_LESSONS.length} of the ${MODULES.reduce((n, m) => n + m.lessons.length, 0)} lessons are out today`;
+const SD_TOTAL = MODULES.reduce((n, m) => n + m.lessons.length, 0);
+const SD_LIVE = `${BUILT_LESSONS.length} of the ${SD_TOTAL} lessons are out today`;
+/** What the buyer gets today, in one sentence: all of it, or how much is out so far. */
+const SD_ACCESS = BUILT_LESSONS.length >= SD_TOTAL
+  ? `All ${SD_TOTAL} lessons are open to you now.`
+  : `This is early access: ${SD_LIVE}, and the rest are added as they are ready, at no extra cost.`;
 
 export type MailResult = { ok: true } | { ok: false; reason: string; skipped?: boolean };
 
@@ -223,7 +228,7 @@ export function sdReceiptEmail(p: { name: string; amount: string; paymentId: str
     `Amount paid: ${p.amount}`, `Payment ID: ${p.paymentId}`, "",
     "What happens next",
     `1. Open ${p.siteUrl}/learn/system-design and sign in with the Google account you paid with.`,
-    `2. This is early access: ${SD_LIVE}, and the rest are added as they are ready, at no extra cost.`,
+    `2. ${SD_ACCESS}`,
     `3. Finish on schedule and we refund 100% of your fee: one lesson a day, no missed days, and 70% or higher on the final assessment. Miss a day and you can keep learning, but the refund is gone. The conditions: ${p.siteUrl}/refund-policy`,
     ...(p.referral ? [`4. ${referralLine} Your link: ${p.referral.link}`] : []), "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
@@ -238,7 +243,7 @@ export function sdReceiptEmail(p: { name: string; amount: string; paymentId: str
       `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Amount paid", p.amount)}${row("Payment ID", p.paymentId)}</table>${button(`${site}/learn/system-design`, "Open the course")}`,
       `${sectionTitle("What happens next")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "Sign in with the same Google account", "The account you paid with is the one that holds your seat.")}
-        ${step(2, "This is early access", `${SD_LIVE[0].toUpperCase()}${SD_LIVE.slice(1)}. The rest are added as they are ready, at no extra cost.`)}
+        ${step(2, BUILT_LESSONS.length >= SD_TOTAL ? "Every lesson is open" : "This is early access", SD_ACCESS)}
         ${step(3, "Finish on schedule, get 100% back", `One lesson a day with no missed days, and 70% or higher on the final assessment. Miss a day and you can keep learning, but the refund is gone. <a href="${site}/refund-policy" style="color:${C.maroon}">How the refund works</a>`)}
         ${p.referral ? step(4, "Or get it back by referring friends", `${esc(referralLine!)} <a href="${esc(p.referral.link)}" style="color:${C.maroon}">Your link</a>`) : ""}
       </table>`,
@@ -534,7 +539,7 @@ export function sdInviteEmail(p: { name: string; price: string; full: string; le
     sections: [
       `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Your price", p.price)}${row("Price after the offer", p.full)}</table>${button(esc(p.url), "Claim my seat")}`,
       `${sectionTitle("What you get")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${step(1, "Lessons out now", `${p.lessonsOut} of ${p.lessonsTotal} lessons today. The rest are added as they are ready, at no extra cost.`)}
+        ${step(1, "Lessons out now", p.lessonsOut >= p.lessonsTotal ? `All ${p.lessonsTotal} lessons are out.` : `${p.lessonsOut} of ${p.lessonsTotal} lessons today. The rest are added as they are ready, at no extra cost.`)}
         ${step(2, "Short lessons, one check each", "A few minutes of video, then a quick check. English or Hinglish.")}
         ${step(3, "Finish it, get 100% back", `Pass every lesson's check and the final assessment. <a href="${site}/refund-policy" style="color:${C.maroon}">How the refund works</a>`)}
       </table>`,

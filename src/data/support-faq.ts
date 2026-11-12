@@ -110,6 +110,17 @@ export function supportTopics(): SupportTopic[] {
       ],
     },
     {
+      id: "companies",
+      title: "For companies",
+      audience: "public",
+      items: [
+        { id: "org-what", question: "Can my company use Klymb for its people?", keywords: ["company", "organization", "organisation", "team", "employees", "hr", "corporate", "b2b", "business"], answer: ["Yes, as a pilot with one course, System Design. Klymb sets up a workspace for your company. HR then adds people one at a time or from a CSV, groups them into teams with a head for each, and assigns System Design.", "On the Learning page, HR and team heads see who has the course, which lessons each person has passed and their final assessment scores."], action: { label: "See Klymb for organizations", href: "/organizations" } },
+        { id: "org-setup", question: "How do we set up a company workspace?", keywords: ["setup", "workspace", "start", "pilot", "seats", "company"], answer: [`Write to ${SUPPORT_EMAIL} with how many people, which roles and which industry. Klymb sets up the workspace and the number of seats; a company can't create one itself.`, "Once it is set up, the people you add are emailed how to sign in."], action: { label: "See training solutions", href: "/training-solutions" } },
+        { id: "org-signin", question: "How do employees sign in?", keywords: ["employee", "signin", "code", "invite", "invited", "company"], answer: ["At Company sign-in, with the work email they were invited on: we email them a 6-digit code.", "To open System Design, they sign in with the Google account that matches that same email."], action: { label: "Company sign-in", href: "/org/sign-in" } },
+        { id: "org-not-yet", question: "What can't a company do yet?", keywords: ["sso", "report", "export", "certificate", "other", "course", "company"], answer: ["Assign anything other than System Design, including the 30-day tracks; company reports and exports; certificates; single sign-on; and reminder emails for people a company has assigned.", "If you need one of these, tell us what and for how many people."] },
+      ],
+    },
+    {
       id: "account",
       title: "Sign-in and devices",
       audience: "learner",

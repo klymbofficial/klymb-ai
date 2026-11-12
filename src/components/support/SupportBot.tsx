@@ -117,10 +117,16 @@ export function SupportBot() {
   // The homepage has its own "Chat with us" button, which opens this panel.
   const launcherHidden = pathname === "/";
 
+  // Pages a company reads: the company topic leads there, and waits at the end elsewhere.
+  const forCompanies = /^\/(organizations|training-solutions|org)(\/|$)/.test(pathname);
+
   const topics = useMemo(() => {
-    const rank = (t: SupportTopic) => (inCourse && t.id === "system-design" ? -1 : t.audience === (learner ? "learner" : "public") ? 0 : t.audience === "both" ? 1 : 2);
+    const rank = (t: SupportTopic) =>
+      t.id === "companies" ? (forCompanies ? -1 : 3)
+      : inCourse && t.id === "system-design" ? -1
+      : t.audience === (learner ? "learner" : "public") ? 0 : t.audience === "both" ? 1 : 2;
     return [...supportTopics()].sort((a, b) => rank(a) - rank(b));
-  }, [learner, inCourse]);
+  }, [learner, inCourse, forCompanies]);
   const answers = useMemo(() => topics.flatMap((t) => t.items), [topics]);
 
   // Learner context, fetched once when the chat first opens on a learner page.

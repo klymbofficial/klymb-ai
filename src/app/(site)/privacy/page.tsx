@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and, only if you allow cookies, aggregate analytics.">
+      <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and aggregate analytics, which is on by default and you can turn off.">
         <Facts rows={dataPoints.collected} />
         {!HIDE_MONEY && (
           <p>
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
         </ul>
       </Section>
 
-      <Section n="4." title="Our lawful basis" plain="Some things we do because you asked us to provide the programme; optional things, like analytics cookies and marketing contact, we do only with your consent.">
+      <Section n="4." title="Our lawful basis" plain="Some things we do because you asked us to provide the programme; marketing contact needs your consent, and analytics runs by default until you turn it off.">
         <p>
           <strong>Necessary to provide the service you asked for:</strong> creating your account, reserving your place,
           storing and reviewing your submissions, verifying evidence, issuing results, and keeping the service secure.
@@ -95,7 +95,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section n="7." title="How long we keep it" plain="Registrations and coursework stay while your cohort runs and for a period afterwards, so your record and certificate remain verifiable. Ask us to delete it and we will.">
+      <Section n="7." title="How long we keep it" plain="Registrations and coursework stay while your cohort runs and for a period afterwards, so your record and results stay available to you. Ask us to delete it and we will.">
         <ul>
           <li><strong>Registrations that do not enroll:</strong> kept for 24 months, so we can tell you when a track opens, then deleted.</li>
           <li><strong>Learner records and submissions:</strong> kept for 24 months after the cohort ends, so results and feedback remain available to you.</li>

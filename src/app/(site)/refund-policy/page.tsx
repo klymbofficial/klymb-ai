@@ -21,7 +21,7 @@ function SystemDesignRefund({ n }: { n: string }) {
       <ul>
         {sdRefund.conditions.map((c) => <li key={c}>{c}</li>)}
       </ul>
-      <p>{sdRefund.waiting}</p>
+      {sdRefund.waiting && <p>{sdRefund.waiting}</p>}
       <p>{sdRefund.missed}</p>
       <p>{sdRefund.window}</p>
       <p>{sdRefund.payout}</p>

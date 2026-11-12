@@ -12,7 +12,7 @@ import { mockInterviewPhase, weekPhases } from "@/data/program";
 export function ProgramTimeline() {
   const phases = [
     ...weekPhases.map((p) => ({ key: `W${p.week}`, ...p })),
-    { key: "MI", week: 5, ...mockInterviewPhase },
+    { key: "IP", week: 5, ...mockInterviewPhase },
   ];
   return (
     <section aria-labelledby="timeline-title" className="timeline relative overflow-hidden bg-night text-paper">
@@ -21,9 +21,9 @@ export function ProgramTimeline() {
         <div className="grid items-center gap-8 lg:grid-cols-[1fr_1fr]">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-soft">The arc</p>
-            <h2 id="timeline-title" className="display mt-3 max-w-2xl text-[clamp(1.9rem,4vw,3rem)] text-balance">Four weeks, four proofs, then two interviews.</h2>
+            <h2 id="timeline-title" className="display mt-3 max-w-2xl text-[clamp(1.9rem,4vw,3rem)] text-balance">Four weeks, four proofs, then two days of interview prep.</h2>
             <p className="mt-4 max-w-md text-sm leading-relaxed text-white/60">
-              Thirty steps, one a day. The red ones are the weekly checkpoints you defend; the one at the top is the interview.
+              Thirty steps, one a day. The red ones are the weekly checkpoints you defend; the last two days prepare you for interviews.
             </p>
           </div>
           {/* The 30 days as a 3D staircase: large screens with a mouse only, loaded on approach. */}
@@ -46,7 +46,7 @@ export function ProgramTimeline() {
                 {p.key}
               </span>
               <Spotlight tone="white" className="h-full rounded-card">
-                <div className={`relative z-[2] h-full rounded-card p-5 ring-1 transition-colors duration-300 ${p.key === "MI" ? "bg-red-strong/25 ring-red-soft/40" : "bg-white/[0.05] ring-white/10 hover:bg-white/[0.08]"}`}>
+                <div className={`relative z-[2] h-full rounded-card p-5 ring-1 transition-colors duration-300 ${p.key === "IP" ? "bg-red-strong/25 ring-red-soft/40" : "bg-white/[0.05] ring-white/10 hover:bg-white/[0.08]"}`}>
                   <p className="display text-3xl text-red-soft md:hidden">{p.key}</p>
                   <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/55">{p.days}</p>
                   <h3 className="mt-1 text-lg font-extrabold leading-snug">{p.name}</h3>
