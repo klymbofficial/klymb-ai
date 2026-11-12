@@ -27,9 +27,17 @@ export function Photo({ src, credit = "Vitaly Gariev", priority = false }: { src
   );
 }
 
-/** The Unsplash photos the design uses, by id. `w` is the width Unsplash renders. */
-export const unsplash = (id: string, w: number, square = false) =>
-  `https://images.unsplash.com/photo-${id}?fm=jpg&q=70&w=${w}${square ? `&h=${w}&crop=faces` : ""}&auto=format&fit=crop`;
+/** Where one person's face sits in a photo (0–1 across and down) and how far to zoom in on it. */
+export interface Face { x: number; y: number; z: number }
+
+/**
+ * An Unsplash photo by id, `w` pixels wide. With a `face`, a `w`-pixel square
+ * zoomed in on that one face, for avatars cut from photos of several people.
+ */
+export const unsplash = (id: string, w: number, face?: Face) =>
+  face
+    ? `https://images.unsplash.com/photo-${id}?fm=jpg&q=70&w=${w}&h=${w}&fit=crop&crop=focalpoint&fp-x=${face.x}&fp-y=${face.y}&fp-z=${face.z}&auto=format`
+    : `https://images.unsplash.com/photo-${id}?fm=jpg&q=70&w=${w}&auto=format&fit=crop`;
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 

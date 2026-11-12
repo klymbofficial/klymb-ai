@@ -2,20 +2,31 @@
 
 import { useEffect, useRef } from "react";
 import { EASE, onceVisible, reduceMotion } from "./motion";
-import { IconArrowRight, IconBadgeCheck, IconCircleCheck, IconStar, Photo, Stars, unsplash } from "./parts";
+import { IconArrowRight, IconBadgeCheck, IconCircleCheck, IconStar, Photo, Stars, unsplash, type Face } from "./parts";
 
-const REVIEWS = [
-  { quote: "Fifteen minutes a day was enough. Three months later I was building AI tools for my own team.", role: "Working professional → AI lead", photo: "1758876201935-0d85989a52e2" },
-  { quote: "The mentors answered every question. I never felt stuck or alone.", role: "Final-year student", photo: "1758600588375-f472270a98f9" },
-  { quote: "I had zero coding background. The starting test put me exactly where I needed to be.", role: "Commerce graduate → Analyst", photo: "1758874573194-a98be0ed3ff5" },
-  { quote: "The placement advice got me three interview calls in my first month.", role: "Job seeker → Data analyst", photo: "1758611972589-0012481178f9" },
-  { quote: "Detailed feedback on my project, not just a pass or fail. That made the difference.", role: "Fresher → ML intern", photo: "1758270705518-b61b40527e76" },
-  { quote: "My manager noticed the change in my work within weeks.", role: "Marketing professional", photo: "1758876020491-9560594ec362" },
+/*
+ * Mock learners for the demo: made-up names and lines, each on one face cut
+ * from the design's Unsplash photos. Replace with real reviews before this
+ * goes live.
+ */
+interface Review { quote: string; name: string; role: string; photo: string; face: Face }
+
+const REVIEWS: Review[] = [
+  { quote: "Fifteen minutes a day was enough. Three months later I was building AI tools for my own team.", name: "Daniel Carter", role: "Operations manager → AI lead, Chicago", photo: "1758270705518-b61b40527e76", face: { x: 0.29, y: 0.16, z: 3.2 } },
+  { quote: "The mentors answered every question. I never felt stuck or alone.", name: "Liam O'Connor", role: "Final-year student, Boston", photo: "1758600588375-f472270a98f9", face: { x: 0.56, y: 0.3, z: 2.4 } },
+  { quote: "I had zero coding background. The starting test put me exactly where I needed to be.", name: "Marcus Reed", role: "Business graduate → Analyst, Houston", photo: "1758874573194-a98be0ed3ff5", face: { x: 0.43, y: 0.28, z: 2.6 } },
+  { quote: "The placement advice got me three interview calls in my first month.", name: "Nia Thompson", role: "Job seeker → Data analyst, New York", photo: "1758611972589-0012481178f9", face: { x: 0.4, y: 0.36, z: 2.2 } },
+  { quote: "Detailed feedback on my project, not just a pass or fail. That made the difference.", name: "Rohan Mehta", role: "Fresher → ML intern, Pune", photo: "1758270705518-b61b40527e76", face: { x: 0.665, y: 0.5, z: 3.4 } },
+  { quote: "My manager noticed the change in my work within weeks.", name: "Elena Ruiz", role: "Marketing manager, Austin", photo: "1758876020491-9560594ec362", face: { x: 0.42, y: 0.25, z: 2.6 } },
 ];
 
-const AVATARS = ["1758876201935-0d85989a52e2", "1758600588375-f472270a98f9", "1758874573194-a98be0ed3ff5", "1758611972589-0012481178f9"];
+/** The featured story's learner (the full photo beside the quote). */
+const FEATURED = { name: "Amara Johnson", role: "AI analyst at a health-tech startup, Atlanta" };
 
-function Review({ r, copy }: { r: (typeof REVIEWS)[number]; copy?: boolean }) {
+/** The faces stacked beside the rating: the first four reviewers. */
+const AVATARS = REVIEWS.slice(0, 4);
+
+function ReviewCard({ r, copy }: { r: Review; copy?: boolean }) {
   return (
     <figure className="kl-review" aria-hidden={copy || undefined}>
       <div className="kl-review-top">
@@ -27,10 +38,10 @@ function Review({ r, copy }: { r: (typeof REVIEWS)[number]; copy?: boolean }) {
       <figcaption>
         <span className="kl-avatar">
           {/* eslint-disable-next-line @next/next/no-img-element -- a 48px Unsplash crop, already sized */}
-          <img src={unsplash(r.photo, 160, true)} alt="" loading="lazy" decoding="async" />
+          <img src={unsplash(r.photo, 160, r.face)} alt="" loading="lazy" decoding="async" />
         </span>
         <span className="kl-review-who">
-          <strong>Learner name</strong>
+          <strong>{r.name}</strong>
           <span>{r.role}</span>
         </span>
         <IconBadgeCheck size={18} className="kl-review-badge" aria-label="Verified learner" aria-hidden={undefined} role="img" />
@@ -90,9 +101,9 @@ export function Stories() {
         </h2>
         <div className="kl-proof">
           <span className="kl-avatars" aria-hidden="true">
-            {AVATARS.map((id) => (
+            {AVATARS.map((r) => (
               // eslint-disable-next-line @next/next/no-img-element -- a 40px Unsplash crop, already sized
-              <img key={id} src={unsplash(id, 120, true)} alt="" loading="lazy" decoding="async" />
+              <img key={r.name} src={unsplash(r.photo, 120, r.face)} alt="" loading="lazy" decoding="async" />
             ))}
           </span>
           <span className="kl-proof-text">
@@ -121,8 +132,8 @@ export function Stories() {
           </blockquote>
           <figcaption>
             <span className="kl-feature-who">
-              <strong>Learner name</strong>
-              <span>AI analyst at company</span>
+              <strong>{FEATURED.name}</strong>
+              <span>{FEATURED.role}</span>
             </span>
             <span className="kl-verified">
               <IconCircleCheck size={14} />
@@ -134,8 +145,8 @@ export function Stories() {
 
       <div className="kl-reviews">
         <div ref={track} className="kl-review-track">
-          {REVIEWS.map((r) => <Review key={r.quote} r={r} />)}
-          {REVIEWS.map((r) => <Review key={`copy-${r.quote}`} r={r} copy />)}
+          {REVIEWS.map((r) => <ReviewCard key={r.name} r={r} />)}
+          {REVIEWS.map((r) => <ReviewCard key={`copy-${r.name}`} r={r} copy />)}
         </div>
       </div>
     </section>
