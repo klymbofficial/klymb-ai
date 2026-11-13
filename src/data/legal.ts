@@ -30,6 +30,8 @@ export const entity = {
   incorporationDate: "06 September 2016",
   registrar: "Registrar of Companies, Kanpur",
   directors: ["Tarun Kumar Singh", "Gayatri Singh"],
+  /** From the Udyam Registration Certificate printed 3 November 2026. */
+  udyam: "UDYAM-UP-29-0268341",
   /** confirm: exactly as printed on the Certificate of Incorporation. */
   address: "1605, Tower 3, Panchsheel Wellington, Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India",
   /** confirm: add the GSTIN here once registered; it is shown wherever it is set. */
@@ -45,6 +47,7 @@ export const entityRows: [string, string][] = [
   ["Date of incorporation", entity.incorporationDate],
   ["Registered with", entity.registrar],
   ["Directors", entity.directors.join(", ")],
+  ["Udyam Registration Number", entity.udyam],
   ...(entity.gstin ? ([["GSTIN", entity.gstin]] as [string, string][]) : []),
   ["Registered office", entity.address],
 ];
@@ -60,8 +63,8 @@ export const grievance = {
 } as const;
 
 export const policyVersion = {
-  version: "2026-11-05",
-  effective: "5 November 2026",
+  version: "2026-11-13",
+  effective: "13 November 2026",
 } as const;
 
 /**
