@@ -7,6 +7,7 @@ import { Hero } from "./Hero";
 import { JourneyDock } from "./JourneyDock";
 import { LandingNav } from "./LandingNav";
 import { Plans } from "./Plans";
+import { ScrollMotion } from "./ScrollMotion";
 import { Stories } from "./Stories";
 import { WhoPanels } from "./WhoPanels";
 import { WhySteps } from "./WhySteps";
@@ -53,6 +54,7 @@ export function Landing() {
       </footer>
       <JourneyDock />
       <ChatButton />
+      <ScrollMotion />
     </div>
   );
 }

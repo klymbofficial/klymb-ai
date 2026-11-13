@@ -13,9 +13,9 @@ const LINKS = [
 ];
 
 /**
- * The floating pill nav. The wordmark plays its climb on load and again on
- * hover: the letters bounce in turn while the full stop hops across them and
- * lands back in place with a little pop.
+ * The floating pill nav. The wordmark plays its climb on load, every five
+ * seconds and on hover: the letters bounce in turn while the full stop hops
+ * across them and lands back in place with a little pop.
  */
 export function LandingNav() {
   const brand = useRef<HTMLAnchorElement>(null);
@@ -59,18 +59,20 @@ export function LandingNav() {
       dot.animate([{ transform: "scale(1)" }, { transform: "scale(1.6)" }, { transform: "scale(1)" }], { duration: 300, delay: 1300, easing: "ease-out", composite: "add" });
     };
 
-    const first = window.setTimeout(play, 400);
+    // On load, then every 5 seconds, and on hover; never twice within one run (1.6s).
     let last = 0;
-    const onEnter = () => {
-      if (Date.now() - last > 1600) {
-        last = Date.now();
-        play();
-      }
+    const replay = () => {
+      if (Date.now() - last < 1600) return;
+      last = Date.now();
+      play();
     };
-    link.addEventListener("mouseenter", onEnter);
+    const first = window.setTimeout(replay, 400);
+    const every = window.setInterval(replay, 5000);
+    link.addEventListener("mouseenter", replay);
     return () => {
       window.clearTimeout(first);
-      link.removeEventListener("mouseenter", onEnter);
+      window.clearInterval(every);
+      link.removeEventListener("mouseenter", replay);
     };
   }, []);
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { AccountLink } from "@/components/layout/AccountLink";
-import { Brand, IconArrowRight, IconCheck, Photo, Stars, unsplash } from "./parts";
+import { AmazonMark, Brand, GoogleMark, IconArrowRight, IconCheck, MicrosoftMark, Photo, Stars, unsplash } from "./parts";
 import { C, EASE, countUp, reduceMotion } from "./motion";
 
 /** The hand-drawn underline under the red word of each headline. */
@@ -106,17 +106,20 @@ export function Hero() {
   // The results card: tallies count up, the pips light in a chase, "+1"s float off the numbers, the live dot blinks (CSS).
   useEffect(() => {
     const card = results.current;
-    if (!card || reduceMotion()) return;
+    if (!card) return;
+    const counters = [...card.querySelectorAll<HTMLElement>("[data-count-to]")];
+    if (reduceMotion()) {
+      counters.forEach((n) => (n.textContent = n.dataset.countTo ?? ""));
+      return;
+    }
     const anims: Animation[] = [];
     const stops: (() => void)[] = [];
     const timers: number[] = [];
 
-    // The card fades in from 500ms (CSS). Count up only while it is still too faint to have shown the real numbers.
+    // The numbers start at 0 in the HTML and always count up: 700ms into the card's fade-in (CSS, from 500ms), or at once if it is already in.
     const entrance = card.getAnimations().find((a) => a instanceof CSSAnimation);
-    const elapsed = entrance && entrance.currentTime != null ? Number(entrance.currentTime) : Infinity;
-    if (elapsed < 600) {
-      card.querySelectorAll<HTMLElement>("[data-count-to]").forEach((n, k) => stops.push(countUp(n, Number(n.dataset.countTo), 700 + k * 150 - elapsed, 1400)));
-    }
+    const elapsed = entrance && entrance.currentTime != null ? Number(entrance.currentTime) : 700;
+    counters.forEach((n, k) => stops.push(countUp(n, Number(n.dataset.countTo), Math.max(0, 700 - elapsed) + k * 150, 1400)));
 
     card.querySelectorAll<HTMLElement>("[data-pips]").forEach((row, r) => {
       const lit = r ? C.red400 : C.bg;
@@ -172,7 +175,13 @@ export function Hero() {
           <div className="kl-hero-left">
             <span className="kl-experts">
               <span className="kl-experts-label">Built by experts from</span>
-              <span className="kl-logos">
+              {/* Phones show the marks (one line); wider screens the full wordmarks. */}
+              <span className="kl-logos kl-logos--marks">
+                <AmazonMark />
+                <GoogleMark />
+                <MicrosoftMark />
+              </span>
+              <span className="kl-logos kl-logos--words">
                 {/* eslint-disable-next-line @next/next/no-img-element -- the companies' own wordmarks, as in the design */}
                 <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon" className="kl-logo-amazon" />
                 {/* eslint-disable-next-line @next/next/no-img-element -- the companies' own wordmarks, as in the design */}
@@ -219,18 +228,20 @@ export function Hero() {
               <div className="kl-results-body">
                 <div className="kl-results-col">
                   <span className="kl-region">USA</span>
-                  <span className="kl-tally" data-tally="">
-                    <span data-count-to="15">15</span>+
+                  <span className="kl-tally" data-tally="" aria-hidden="true">
+                    <span data-count-to="15">0</span>+
                   </span>
+                  <span className="sr-only">15+</span>
                   <span className="kl-results-note">placements</span>
                   <Pips />
                 </div>
                 <span className="kl-results-rule" aria-hidden="true" />
                 <div className="kl-results-col">
                   <span className="kl-region kl-region--india">INDIA</span>
-                  <span className="kl-tally kl-tally--india" data-tally="">
-                    <span data-count-to="200">200</span>+
+                  <span className="kl-tally kl-tally--india" data-tally="" aria-hidden="true">
+                    <span data-count-to="200">0</span>+
                   </span>
+                  <span className="sr-only">200+</span>
                   <span className="kl-results-note">placements</span>
                   <Pips />
                 </div>
@@ -239,7 +250,7 @@ export function Hero() {
 
             <div className="kl-cta-row">
               <a href="#pricing" data-hero-cta="" className="kl-btn kl-btn-primary kl-hero-cta">
-                Start your journey <IconArrowRight size={20} />
+                Start your journey <IconArrowRight size={20} className="kl-hero-arrow" />
               </a>
               <AccountLink className="kl-btn kl-btn-secondary kl-hero-login" />
             </div>

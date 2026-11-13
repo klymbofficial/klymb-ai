@@ -139,7 +139,7 @@ export function WhySteps() {
     <section id="why" className="kl-why kl-dark" aria-label="Why Klymb">
       {/* Phones get the chat version instead (WhyPhone); landing.css shows one or the other. */}
       <div className="kl-why-inner kl-why-desk">
-        <div className="kl-why-head">
+        <div className="kl-why-head" data-reveal="">
           <h2 ref={head} className="kl-why-title">
             We don’t sell{" "}
             <span className="kl-strike">

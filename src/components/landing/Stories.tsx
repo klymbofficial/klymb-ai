@@ -95,7 +95,7 @@ export function Stories() {
 
   return (
     <section id="stories" className="kl-stories" aria-labelledby="stories-title">
-      <div className="kl-section-head">
+      <div className="kl-section-head" data-reveal="">
         <h2 id="stories-title" className="kl-h2">
           Real learners. <em>Real jobs.</em>
         </h2>
@@ -143,7 +143,7 @@ export function Stories() {
         </div>
       </figure>
 
-      <div className="kl-reviews">
+      <div className="kl-reviews" data-reveal="">
         <div ref={track} className="kl-review-track">
           {REVIEWS.map((r) => <ReviewCard key={r.name} r={r} />)}
           {REVIEWS.map((r) => <ReviewCard key={`copy-${r.name}`} r={r} copy />)}

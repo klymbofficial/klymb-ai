@@ -211,7 +211,7 @@ export function WhyPhone() {
         </span>
       </div>
 
-      <div className="kl-wp-head">
+      <div className="kl-wp-head" data-reveal="">
         <h2 ref={head} className="kl-wp-title">
           <span>We don’t</span>
           <span>sell</span>

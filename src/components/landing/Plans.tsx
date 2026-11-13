@@ -60,7 +60,7 @@ export function Plans() {
 
   return (
     <section id="pricing" className="kl-pricing" aria-labelledby="pricing-title">
-      <div className="kl-section-head">
+      <div className="kl-section-head" data-reveal="">
         <h2 id="pricing-title" className="kl-h2">
           Pick your <em>plan.</em>
         </h2>
