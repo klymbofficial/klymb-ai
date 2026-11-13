@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { C, EASE, onceVisible, reduceMotion } from "./motion";
 import { IconCheck, IconPartyPopper, IconShieldCheck } from "./parts";
+import { WhyPhone } from "./WhyPhone";
 
 const STEPS = [
   { tag: "You do this", title: "Enroll", items: ["That’s the only step you take."] },
@@ -135,10 +136,11 @@ export function WhySteps() {
   }, []);
 
   return (
-    <section id="why" className="kl-why kl-dark" aria-labelledby="why-title">
-      <div className="kl-why-inner">
+    <section id="why" className="kl-why kl-dark" aria-label="Why Klymb">
+      {/* Phones get the chat version instead (WhyPhone); landing.css shows one or the other. */}
+      <div className="kl-why-inner kl-why-desk">
         <div className="kl-why-head">
-          <h2 ref={head} id="why-title" className="kl-why-title">
+          <h2 ref={head} className="kl-why-title">
             We don’t sell{" "}
             <span className="kl-strike">
               courses
@@ -178,6 +180,7 @@ export function WhySteps() {
           </ol>
         </div>
       </div>
+      <WhyPhone />
     </section>
   );
 }
