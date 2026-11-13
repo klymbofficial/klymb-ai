@@ -142,7 +142,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
                 if (!row) return null;
                 return (
                   <tr key={s.key}>
-                    <td className="px-4 py-3 font-semibold">{labelOf(SOURCES, s.key)}</td>
+                    <td className="px-4 py-3 font-semibold"><Link href={`/admin/sales/leads?source=${s.key}`} className="underline decoration-line/40 underline-offset-4 hover:decoration-ink" title={`See every ${labelOf(SOURCES, s.key)} lead`}>{labelOf(SOURCES, s.key)} →</Link></td>
                     <td className="px-4 py-3 text-right">{row.leads}</td>
                     <td className="px-4 py-3 text-right">{row.contacted}</td>
                     <td className="px-4 py-3 text-right">{row.conversations}</td>
