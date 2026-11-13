@@ -76,6 +76,11 @@ export default function PrivacyPage() {
           send your name, email, phone or submissions to Google. You can switch it off at any time at{" "}
           <Link href="/cookies">/cookies</Link>.
         </p>
+        <p>
+          <strong>Advertising:</strong> Meta Pixel runs only if you tap OK on the cookie notice. It tells Meta which of our
+          pages this browser opened and whether a purchase happened, so our ads reach people who visited. It never sends
+          your name, email, phone or submissions, and you can turn it off at <Link href="/cookies">/cookies</Link>.
+        </p>
       </Section>
 
       <Section n="5." title="Who we share it with" plain="Only the services that run the product. We do not sell your data.">
@@ -84,7 +89,7 @@ export default function PrivacyPage() {
           Reviewers and administrators of Klymb.ai see your submissions and evidence links in order to score your work.
           Nobody else can see another learner&apos;s submissions: access is enforced in the database itself, not only in the interface.
         </p>
-        <p><strong>We do not sell personal data, and we do not use advertising or cross-site tracking networks.</strong></p>
+        <p><strong>We do not sell personal data. The only advertising tool we use is Meta Pixel, and only if you allow it.</strong></p>
       </Section>
 
       <Section n="6." title="International transfers" plain="Some of our providers store data outside India: mainly the United States and Japan.">

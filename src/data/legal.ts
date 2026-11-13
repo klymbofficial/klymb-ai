@@ -155,6 +155,7 @@ export const dataPoints = {
     ["Cloudflare", "Storing and delivering course videos", "Global"],
     ["Supabase", "Live messages that sign a second device out, holding no personal records", "Tokyo, Japan"],
     ["Google", "Sign-in (OAuth) and Google Analytics 4", "Global"],
+    ["Meta", "Meta Pixel, only if you allow it on the cookie notice: measuring and showing our Instagram and Facebook ads", "Global"],
     ["LinkedIn", "Publishing the posts you confirm, with their image, to your own LinkedIn feed, only if you connect it", "Global"],
   ],
 } as const;

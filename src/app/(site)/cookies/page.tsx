@@ -13,13 +13,13 @@ export default function CookiePolicyPage() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="Two cookies keep you signed in. We also measure aggregate usage with Google Analytics, which runs by default: you can turn it off on this page at any time."
+      intro="Two cookies keep you signed in. We measure aggregate usage with Google Analytics, which runs by default, and use Meta Pixel for our Instagram ads only if you allow it. You can change either on this page at any time."
     >
-      <Section n="1." title="Your choice" plain="Analytics is on by default. Turn it off here and it stops immediately.">
+      <Section n="1." title="Your choice" plain="Analytics is on by default. Meta Pixel is off until you tap OK. Change either here.">
         <p>
-          On your first visit a small notice tells you about analytics, with a one-tap way to turn it off. Google Analytics runs by default so we can see, in aggregate,
-          which pages people read and where they arrive from. If you would rather we did not, switch it off below: the
-          script stops loading immediately, on this and every later page.
+          On your first visit a small notice tells you about analytics and Meta Pixel. Google Analytics runs by default so we can see, in aggregate,
+          which pages people read and where they arrive from. Meta Pixel loads only if you tap OK. If you would rather we did not, switch them off below: the
+          scripts stop immediately, on this and every later page.
         </p>
         <p>
           Turning it off costs you nothing: every part of the programme, every submission and every page works exactly
@@ -32,7 +32,7 @@ export default function CookiePolicyPage() {
         <Facts
           rows={[
             ["Auth.js session cookie", "Keeps you signed in to your learner or admin account. Set only after you sign in, and not readable by page scripts."],
-            ["klymb_consent", "Set only if you turn analytics off, so we remember that on later visits. Lasts 180 days."],
+            ["klymb_consent", "Remembers your answer to the cookie notice (OK or No thanks), so we do not ask on every visit. Lasts 180 days."],
             ["klymb_li_state", "Set only while you connect LinkedIn, so we can check that LinkedIn's reply belongs to the request you started. Not readable by page scripts, and deleted when you come back, or after 10 minutes."],
           ]}
         />
@@ -48,16 +48,22 @@ export default function CookiePolicyPage() {
           ]}
         />
         <p>
+          <strong>Meta Pixel (only if you tap OK):</strong> tells Meta that this browser opened our pages, viewed the System
+          Design course page, started a payment or bought the course, with the amount. Meta uses it to show our Instagram
+          and Facebook ads to people who visited, and to measure whether the ads led to a purchase. We never send your
+          name, email, phone number or answers. Meta keeps this under its own privacy policy.
+        </p>
+        <p>
           If you turn analytics off, we stop loading the script immediately for the rest of your visit and on every page
           afterwards. Events Google has already recorded stay until they age out of its 14-month retention window.
         </p>
       </Section>
 
-      <Section n="4." title="What we do not do" plain="No advertising, no pixels, no selling anything.">
+      <Section n="4." title="What we do not do" plain="No selling data, no data brokers, no pixel without your OK.">
         <p>
-          We do not sell personal data. We do not use advertising networks, Meta Pixel, cross-site tracking, or
-          third-party data brokers. If that ever changes, we will update this policy and ask for your consent again
-          before enabling anything new.
+          We do not sell personal data, and we do not use third-party data brokers. The only advertising tool we use is
+          Meta Pixel, and only after you tap OK. If that ever changes, we will update this policy and ask for your consent
+          again before enabling anything new.
         </p>
         <p>
           <strong>Do Not Track:</strong> browsers vary in how they send this signal, so we do not rely on it. Use the

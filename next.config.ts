@@ -16,6 +16,8 @@ const isDev = process.env.NODE_ENV === "development";
  *   *.googleusercontent.com     Google profile images on signed-in accounts
  *   *.razorpay.com              Razorpay Checkout: its script, its payment frame and its API
  *   *.r2.cloudflarestorage.com  System Design videos, played from signed R2 links
+ *   connect.facebook.net        Meta Pixel script, loaded only after OK on the cookie notice
+ *   www.facebook.com            Meta Pixel events
  *
  * 'unsafe-inline' on script-src is required by Next.js, which inlines a small
  * bootstrap and the flight payload; a nonce would mean giving up static
@@ -24,7 +26,7 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com https://connect.facebook.net`,
   "style-src 'self' 'unsafe-inline'",
   // Any https image: company logos are links an admin pastes from the
   // company's own site (/admin/companies), so the hosts can't be listed.
@@ -42,6 +44,8 @@ const csp = [
     "https://*.googletagmanager.com",
     "https://stats.g.doubleclick.net",
     "https://*.razorpay.com",
+    "https://www.facebook.com",
+    "https://connect.facebook.net",
     isDev ? "ws: http://localhost:*" : "",
     // Nothing for the voice coach: the browser posts its WebRTC offer to
     // /api/coach/session on this origin, and the media connection that

@@ -11,6 +11,7 @@ import { FINAL_MARK } from "@/lib/sd-pace";
 import { formatINR } from "@/lib/format";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
+import { metaTrack } from "@/lib/meta-pixel";
 import { openInBrowser } from "./OpenInBrowser";
 import { SD_OFFER, claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
@@ -135,6 +136,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
         }).catch(() => null);
         const out = await v?.json().catch(() => null);
         if (v?.ok && out?.ok) step("paid");
+        if (v?.ok && out?.ok) metaTrack("Purchase", { value: order.amount / 100, currency: order.currency ?? "INR", content_name: "System Design" });
         if (v?.ok && out?.ok) router.push("/learn/system-design?paid=1");
         else fail(out?.error ?? `We could not confirm the payment. Email us with payment ID ${r.razorpay_payment_id}.`);
       },
@@ -142,6 +144,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     });
     rzp.on("payment.failed", (r) => { step("rzp_failed"); fail(r.error?.description ?? "The payment failed. No money was taken; please try again."); });
     step("rzp_open");
+    metaTrack("InitiateCheckout", { value: order.amount / 100, currency: order.currency ?? "INR", content_name: "System Design" });
     rzp.open();
   }
 
