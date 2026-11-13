@@ -19,6 +19,19 @@ const LINKS = [
  */
 export function LandingNav() {
   const brand = useRef<HTMLAnchorElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
+
+  // The nav's height, as --kl-nav-h on the page, for anything that sticks just below it.
+  useEffect(() => {
+    const el = bar.current;
+    const page = el?.closest<HTMLElement>(".kl");
+    if (!el || !page) return;
+    const set = () => page.style.setProperty("--kl-nav-h", `${Math.round(el.getBoundingClientRect().height)}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const link = brand.current;
@@ -62,7 +75,7 @@ export function LandingNav() {
   }, []);
 
   return (
-    <div className="kl-navbar">
+    <div ref={bar} className="kl-navbar">
       <nav className="kl-nav" aria-label="Main">
         <Link href="/" ref={brand} className="kl-brand" aria-label="Klymb home">
           <span className="kl-logo" aria-hidden="true">

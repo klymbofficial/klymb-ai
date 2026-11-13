@@ -261,7 +261,8 @@
 
 /* ── Why Klymb ───────────────────────────────────────────────────────── */
 
-.kl-why { background: var(--kl-ink); color: var(--kl-bg); border-radius: 32px; margin: 24px clamp(12px, 2vw, 24px) 0; overflow: hidden; }
+/* clip, not hidden: hidden would make the section a scroll box, and the phone version's strip couldn't stick. */
+.kl-why { background: var(--kl-ink); color: var(--kl-bg); border-radius: 32px; margin: 24px clamp(12px, 2vw, 24px) 0; overflow: hidden; overflow: clip; }
 .kl-why-inner {
   max-width: 1440px; margin: 0 auto; padding: clamp(28px, 5vh, 64px) var(--kl-gutter);
   display: grid; gap: clamp(20px, 4vh, 48px); min-height: calc(100vh - 96px); align-content: center;
@@ -309,6 +310,112 @@
   margin-top: 6px; display: flex; gap: 8px; align-items: center; background: var(--kl-bg); color: var(--kl-red-800);
   border-radius: 14px; padding: 8px 10px; font-weight: 800; font-size: 13px; line-height: 1.25;
 }
+
+/* ── Why Klymb on phones: the chat (Claude Design "Klymb Why Mobile") ─── */
+
+/* flow-root, so the strip's negative margin below can't collapse through and pull the whole section up. */
+.kl-why-phone { display: none; }
+@media (max-width: 760px) {
+  .kl-why-desk { display: none; }
+  .kl-why-phone { display: flow-root; }
+}
+
+/*
+ * "Your journey" sticks under the nav while the section scrolls by. Its dark
+ * glass also reaches up behind the nav (its height comes from LandingNav), as
+ * the design's bar filled the top of the screen, so the chat doesn't show
+ * around the nav pill. That extra height sits above the section's top edge,
+ * where the section clips it, so the strip takes no more room than designed.
+ */
+.kl-wp-bar {
+  position: sticky; top: 0; z-index: 5; display: flex; justify-content: flex-end; align-items: center;
+  margin-top: calc(-1 * var(--kl-nav-h, 76px)); padding: calc(var(--kl-nav-h, 76px) + 16px) 22px 12px;
+  background: color-mix(in srgb, var(--kl-ink) 86%, transparent);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.kl-wp-journey { display: flex; gap: 6px; align-items: center; font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 75%, transparent); }
+.kl-wp-track { display: block; width: 44px; height: 4px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--kl-bg) 18%, transparent); }
+.kl-wp-fill { display: block; width: 100%; height: 100%; background: var(--kl-red-400); transform-origin: left; transform: scaleX(0); }
+
+.kl-wp-head { padding: 28px 22px 8px; display: grid; gap: 18px; }
+.kl .kl-wp-title { margin: 0; display: grid; font-weight: 800; font-size: 54px; line-height: 0.92; letter-spacing: -0.05em; }
+.kl-wp-strike { position: relative; justify-self: start; color: color-mix(in srgb, var(--kl-bg) 45%, transparent); }
+.kl-wp-strike svg { position: absolute; left: -4%; top: 30%; width: 108%; height: 40%; overflow: visible; pointer-events: none; color: var(--kl-red-400); }
+.kl-wp-lede { margin: 0; display: grid; gap: 6px; font-size: 17px; line-height: 1.45; color: color-mix(in srgb, var(--kl-bg) 86%, transparent); }
+.kl-wp-lede strong { color: var(--kl-bg); }
+.kl-wp-hint { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--kl-red-400); }
+
+.kl-wp-chat { padding: 24px 16px 32px; display: grid; gap: 12px; }
+.kl-wp-step {
+  justify-self: center; display: flex; gap: 8px; align-items: center; margin: 18px 0 4px;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--kl-bg) 65%, transparent);
+}
+.kl-wp-step:first-child { margin-top: 8px; }
+.kl-wp-step b { font-weight: 800; color: var(--kl-red-400); }
+
+.kl-wp-me {
+  justify-self: end; max-width: 78%; padding: 12px 16px; border-radius: 22px 22px 6px 22px;
+  background: var(--kl-red); color: var(--kl-bg); font-size: 16px; line-height: 1.35;
+}
+.kl-wp-me--icon { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.kl-wp-me--icon svg { flex: none; }
+.kl-wp-us {
+  justify-self: start; max-width: 82%; padding: 12px 16px; border-radius: 22px 22px 22px 6px;
+  background: color-mix(in srgb, var(--kl-bg) 12%, transparent); font-size: 16px; line-height: 1.35;
+}
+.kl-wp-typing {
+  justify-self: start; display: flex; gap: 5px; padding: 14px 16px; border-radius: 22px 22px 22px 6px;
+  background: color-mix(in srgb, var(--kl-bg) 12%, transparent);
+}
+.kl-wp-typing span { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--kl-bg); }
+
+.kl-wp-enrolled {
+  justify-self: end; display: flex; gap: 10px; align-items: center; padding: 10px 14px 10px 10px;
+  border-radius: 22px 22px 6px 22px; background: var(--kl-bg); color: var(--kl-ink);
+}
+.kl-wp-enrolled-tick { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--kl-red); color: var(--kl-bg); }
+.kl-wp-enrolled-text { display: grid; gap: 1px; }
+.kl-wp-enrolled-text strong { font-size: 17px; letter-spacing: -0.01em; }
+.kl-wp-enrolled-text span { font-size: 12px; color: color-mix(in srgb, var(--kl-ink) 70%, transparent); }
+
+.kl-wp-plan { width: 82%; max-width: none; padding: 14px 16px; display: grid; gap: 10px; }
+.kl-wp-plan-head {
+  display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--kl-bg) 72%, transparent);
+}
+.kl-wp-task { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+/* The design's filled dot was its accent; on this ground the brand red barely shows, so it is the lifted red. */
+.kl-wp-dot { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--kl-red-400); }
+.kl-wp-dot--todo { background: none; border: 2px solid color-mix(in srgb, var(--kl-bg) 45%, transparent); }
+
+.kl-wp-review {
+  justify-self: start; width: 86%; padding: 16px; display: grid; gap: 12px;
+  border-radius: 22px 22px 22px 6px; background: var(--kl-bg); color: var(--kl-ink);
+}
+.kl-wp-review-head { display: flex; justify-content: space-between; align-items: center; }
+.kl-wp-review-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kl-red-700); }
+.kl-wp-review-badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--kl-red-100); color: var(--kl-red-800); }
+.kl-wp-scores { display: grid; gap: 8px; }
+.kl-wp-score { display: grid; gap: 4px; font-size: 13px; }
+.kl-wp-score-row { display: flex; justify-content: space-between; }
+.kl-wp-score-track { display: block; height: 6px; border-radius: 6px; overflow: hidden; background: #eae7e7; }
+.kl-wp-score-fill { display: block; height: 100%; border-radius: 6px; background: var(--kl-red); transform-origin: left; }
+.kl-wp-review-note { font-size: 13px; line-height: 1.4; color: color-mix(in srgb, var(--kl-ink) 75%, transparent); }
+
+.kl-wp-final {
+  position: relative; padding: 24px 20px 20px; display: grid; gap: 14px;
+  border-radius: 28px; background: var(--kl-red); color: var(--kl-bg);
+}
+.kl-wp-popper { transform-origin: 20% 80%; }
+.kl-wp-final-title { font-weight: 800; font-size: 48px; line-height: 0.9; letter-spacing: -0.05em; }
+.kl-wp-final-list { display: grid; gap: 8px; font-size: 15px; }
+.kl-wp-final-list > span { display: flex; gap: 10px; align-items: center; }
+.kl-wp-final-list svg { flex: none; }
+.kl-wp-refund {
+  display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 16px;
+  background: var(--kl-bg); color: var(--kl-red-800); font-weight: 800; font-size: 15px;
+}
+.kl-wp-confetti { position: absolute; top: 30px; pointer-events: none; }
 
 /* ── Section heads ───────────────────────────────────────────────────── */
 
@@ -601,8 +708,6 @@
   .kl .kl-dock.is-on { transform: none; }
   .kl-chat-label { display: none; }
   .kl-chat { padding: 4px; gap: 0; }
-  /* Wider steps, so their text isn't cut off at the bottom of each bar. */
-  .kl-steps { min-width: 820px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

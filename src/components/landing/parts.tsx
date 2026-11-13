@@ -94,6 +94,21 @@ export const IconArrowRight = (p: IconProps) => (
   </Icon>
 );
 
+export const IconArrowDown = (p: IconProps) => (
+  <Icon strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" {...p}>
+    <path d="M12 5v14" />
+    <path d="m19 12-7 7-7-7" />
+  </Icon>
+);
+
+export const IconClipboardCheck = (p: IconProps) => (
+  <Icon strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" {...p}>
+    <rect width="8" height="4" x="8" y="2" rx="1" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <path d="m9 14 2 2 4-4" />
+  </Icon>
+);
+
 export const IconArrowUpRight = (p: IconProps) => (
   <Icon strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" {...p}>
     <path d="M7 17 17 7" />
