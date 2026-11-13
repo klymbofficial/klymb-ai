@@ -145,10 +145,12 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
       </div>
 
       <details className="group mt-10">
-        <summary className="cursor-pointer list-none text-sm font-bold underline underline-offset-4 [&::-webkit-details-marker]:hidden">More detail: language, device, screens, welcome, tour and sign-ins</summary>
+        <summary className="cursor-pointer list-none text-sm font-bold underline underline-offset-4 [&::-webkit-details-marker]:hidden">More detail: language, device, city, screens, welcome, tour and sign-ins</summary>
         <div className="mt-4 grid gap-6 lg:grid-cols-3">
           <Panel title="Language"><BarList rows={data.lang} unit="people" /></Panel>
           <Panel title="Device"><BarList rows={data.device} unit="people" /></Panel>
+          <Panel title="City (approximate)"><BarList rows={data.city} unit="people" emptyLabel="No city yet: it is recorded from today." /></Panel>
+          <Panel title="Country"><BarList rows={data.country} unit="people" emptyLabel="No country yet: it is recorded from today." /></Panel>
           <Panel title="Screens they open"><BarList rows={data.screens} unit="views" /></Panel>
           <Panel title="Welcome screen"><BarList rows={data.welcome} unit="people" /></Panel>
           <Panel title="Kamran’s tour"><BarList rows={data.tour} unit="people" /></Panel>

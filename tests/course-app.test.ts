@@ -291,6 +291,20 @@ test("the admin summary counts each learner once per step and finds where they s
   assert.equal(sum.totals.completedAny, 1);
 });
 
+test("the admin summary counts each visitor's latest city and country once", async () => {
+  const { summarise } = await import("../src/lib/sd-summary");
+  const ev = (anon: string, props: Record<string, unknown>) =>
+    ({ created_at: new Date(NOW).toISOString(), anon_id: anon, email: null, event: "lesson_open", lesson: "0-0", step: null, props, lang: "en", device: "phone" });
+  const sum = summarise([
+    ev("aaaaaaaa", { city: "Delhi", country: "IN" }), ev("aaaaaaaa", { city: "Delhi", country: "IN" }),
+    ev("bbbbbbbb", { city: "Bengaluru", country: "IN" }),
+    ev("cccccccc", { city: "Delhi", country: "IN" }),
+    ev("dddddddd", {}),
+  ], [], LESSON_DAYS);
+  assert.deepEqual(sum.city, [{ label: "Delhi", value: 2 }, { label: "Bengaluru", value: 1 }]);
+  assert.deepEqual(sum.country, [{ label: "India", value: 3 }]);
+});
+
 test("a passed lesson can be revisited, a lesson only watched cannot", () => {
   assert.equal(revisitable(home(), "0-1"), false);
   assert.equal(revisitable(updateLesson(home(), "0-1", { watched: true }, NOW), "0-1"), false);

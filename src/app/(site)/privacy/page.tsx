@@ -74,7 +74,9 @@ export default function PrivacyPage() {
         <p>
           <strong>Analytics:</strong> aggregate measurement runs by default and is not tied to your identity: we never
           send your name, email, phone or submissions to Google. You can switch it off at any time at{" "}
-          <Link href="/cookies">/cookies</Link>.
+          <Link href="/cookies">/cookies</Link>. For the System Design course we also note the approximate city and
+          country our hosting provider reads from your connection, to see where learners are; we do not store your IP
+          address for this.
         </p>
         <p>
           <strong>Advertising:</strong> Meta Pixel runs only if you tap OK on the cookie notice. It tells Meta which of our
