@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { site } from "@/data/config";
+import { isOwnerEmail } from "@/lib/admin/access";
 import { isCronRequest } from "@/lib/cron-auth";
 import { db } from "@/lib/db/client";
 import { mailReady, sendMail } from "@/lib/mail";
@@ -32,7 +33,8 @@ export async function GET(req: Request) {
   if (error) return NextResponse.json({ error: "Read failed" }, { status: 500 });
 
   const byOwner = new Map<string, { name: string | null; leads: DueLead[] }>();
-  for (const r of data ?? []) {
+  // Sales is owners only: nobody else gets a digest of leads they can't open.
+  for (const r of (data ?? []).filter((x) => isOwnerEmail(x.owner_email))) {
     const o = byOwner.get(r.owner_email) ?? { name: r.owner_name, leads: [] };
     o.leads.push(r);
     byOwner.set(r.owner_email, o);

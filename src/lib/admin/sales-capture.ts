@@ -1,5 +1,5 @@
 import "server-only";
-import { getAdmin } from "@/lib/admin/auth";
+import { getSalesAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 
 /**
@@ -14,7 +14,7 @@ import { db } from "@/lib/db/client";
  */
 export async function captureWebsiteLeads(opts: { cron?: boolean } = {}): Promise<number> {
   // Pages render alongside the layout's admin check, so check here too.
-  if (!opts.cron && !(await getAdmin())) return 0;
+  if (!opts.cron && !(await getSalesAdmin())) return 0;
   const sql = db();
   if (!sql) return 0;
   const { error: seedError } = await sql.run`

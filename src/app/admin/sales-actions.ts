@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getAdmin } from "@/lib/admin/auth";
+import { getSalesAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 import { AUTO_FOLLOW_UP_DAYS, isChannel, isSource, isStage, istToday, normalisePhone, parseLeadsCsv, type Source } from "@/lib/sales";
@@ -60,7 +60,7 @@ function duplicate(code: string | undefined) {
 }
 
 export async function createLead(input: LeadInput): Promise<SalesResult> {
-  const admin = await getAdmin();
+  const admin = await getSalesAdmin();
   if (!admin) return { ok: false, message: "Not authorised." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
@@ -79,7 +79,7 @@ export async function createLead(input: LeadInput): Promise<SalesResult> {
 }
 
 export async function updateLead(id: string, input: LeadInput & { stage: string }): Promise<SalesResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
@@ -112,7 +112,7 @@ export async function logTouch(
   leadId: string,
   t: { channel: string; replied: boolean; note: string; stage: string; next_follow_up: string },
 ): Promise<SalesResult> {
-  const admin = await getAdmin();
+  const admin = await getSalesAdmin();
   if (!admin) return { ok: false, message: "Not authorised." };
   if (!uuid(leadId)) return { ok: false, message: "That lead no longer exists." };
   if (!isChannel(t.channel)) return { ok: false, message: "Pick a channel." };
@@ -155,7 +155,7 @@ export async function logTouch(
 }
 
 export async function deleteLead(id: string): Promise<SalesResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
@@ -171,7 +171,7 @@ export type ImportResult =
 
 /** A sheet or a WhatsApp-dashboard export. Leads already here (same phone or email) are left alone. */
 export async function importLeads(csv: string, opts: { source: string; source_detail: string; owner_email: string }): Promise<ImportResult> {
-  const admin = await getAdmin();
+  const admin = await getSalesAdmin();
   if (!admin) return { ok: false, message: "Not authorised." };
   if (csv.length > 2_000_000) return { ok: false, message: "That file is too big. Split it into files under 2 MB." };
   const source: Source = isSource(opts.source) ? opts.source : "other";
@@ -205,7 +205,7 @@ export async function importLeads(csv: string, opts: { source: string; source_de
 }
 
 export async function saveTarget(month: string, t: { enrolments: number; b2b: number; hackathons: number; webinars: number }): Promise<SalesResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   if (!/^\d{4}-\d{2}-01$/.test(month)) return { ok: false, message: "Pick a month." };
   const vals = [t.enrolments, t.b2b, t.hackathons, t.webinars].map((x) => Math.max(0, Math.min(100000, Math.floor(Number(x) || 0))));
   const sql = db();
@@ -225,7 +225,7 @@ export type SyncActionResult = { ok: true; text: string } | { ok: false; message
 
 /** The "Sync WhatsApp" button: the same sync the cron runs. */
 export async function syncWhatsAppNow(): Promise<SyncActionResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   const { syncWhatsApp } = await import("@/lib/admin/whatsapp-sync");
   const { captureWebsiteLeads } = await import("@/lib/admin/sales-capture");
   const web = await captureWebsiteLeads();
@@ -243,7 +243,7 @@ export async function syncWhatsAppNow(): Promise<SyncActionResult> {
 
 /** The sheet's quick-add row: a name and a number (or email) is enough. Owned by whoever adds it. */
 export async function quickAddLead(raw: { name: string; contact: string; note: string; source: string }): Promise<SalesResult> {
-  const admin = await getAdmin();
+  const admin = await getSalesAdmin();
   if (!admin) return { ok: false, message: "Not authorised." };
   const contact = raw.contact.trim();
   const isEmail = contact.includes("@");
@@ -256,7 +256,7 @@ export async function quickAddLead(raw: { name: string; contact: string; note: s
 
 /** One cell of the sheet: stage, next follow-up, notes or owner. */
 export async function updateLeadField(id: string, field: "stage" | "next_follow_up" | "notes" | "owner_email", value: string): Promise<SalesResult> {
-  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };

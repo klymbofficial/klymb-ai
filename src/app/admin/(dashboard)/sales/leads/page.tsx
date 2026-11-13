@@ -3,7 +3,7 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { ImportLeads, input, LeadForm } from "@/components/admin/sales/SalesForms";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
-import { requireAdmin } from "@/lib/admin/auth";
+import { requireOwner } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
 import { CHANNELS, formatPhone, istToday, labelOf, SOURCES, STAGES } from "@/lib/sales";
@@ -16,7 +16,7 @@ const shortDate = (iso: string) =>
 export default async function SalesLeadsPage({ searchParams }: { searchParams: Promise<Search> }) {
   // Website form fills arrive as leads before anything is read.
   await captureWebsiteLeads();
-  const admin = await requireAdmin();
+  const admin = await requireOwner();
   const sp = await searchParams;
   const due = sp.due === "1";
   // "Due today" is your own list unless an owner is picked.

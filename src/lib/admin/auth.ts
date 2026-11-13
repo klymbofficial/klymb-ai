@@ -46,3 +46,12 @@ export async function requireOwner(): Promise<AdminSession> {
   if (!admin.owner) redirect("/admin");
   return admin;
 }
+
+/**
+ * Sales is owners only for now: the CRM holds every lead's number and notes.
+ * For server actions and data reads, where redirecting isn't an option.
+ */
+export async function getSalesAdmin(): Promise<AdminSession | null> {
+  const admin = await getAdmin();
+  return admin?.owner ? admin : null;
+}

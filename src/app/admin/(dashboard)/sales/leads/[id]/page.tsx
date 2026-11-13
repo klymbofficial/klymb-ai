@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { DeleteLead, LeadForm, TouchForm } from "@/components/admin/sales/SalesForms";
 import { StageBadge } from "@/components/admin/sales/SalesTabs";
-import { requireAdmin } from "@/lib/admin/auth";
+import { requireOwner } from "@/lib/admin/auth";
 import { getLead, getOwners } from "@/lib/admin/sales";
 import { CHANNELS, formatPhone, labelOf, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
 
@@ -11,7 +11,7 @@ const when = (iso: string) =>
   new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
-  const admin = await requireAdmin();
+  const admin = await requireOwner();
   const [found, owners] = await Promise.all([getLead((await params).id), getOwners()]);
   if (!found) notFound();
   const { lead, touches } = found;

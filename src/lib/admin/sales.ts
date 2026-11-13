@@ -1,5 +1,6 @@
 import "server-only";
-import { getAdmin } from "@/lib/admin/auth";
+import { isOwnerEmail } from "@/lib/admin/access";
+import { getSalesAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import { HOT_STAGES, istToday, PAID_COUNTED_FROM, period, type Channel, type PeriodKey, type Source, type Stage } from "@/lib/sales";
 
@@ -57,15 +58,16 @@ export interface LeadFilter {
 }
 
 export async function getOwners(): Promise<Owner[]> {
-  if (!(await getAdmin())) return [];
+  if (!(await getSalesAdmin())) return [];
   const sql = db();
   if (!sql) return [];
   const { data } = await sql.rows<Owner>`select email, name from course.admin_users order by coalesce(name, email)`;
-  return data ?? [];
+  // Only owners can open Sales, so only they can be given leads.
+  return (data ?? []).filter((a) => isOwnerEmail(a.email));
 }
 
 export async function getLeads(f: LeadFilter): Promise<Lead[]> {
-  if (!(await getAdmin())) return [];
+  if (!(await getSalesAdmin())) return [];
   const sql = db();
   if (!sql) return [];
   const stage = f.stage || null;
@@ -118,7 +120,7 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
 }
 
 export async function getLead(id: string): Promise<{ lead: Lead; touches: Touch[] } | null> {
-  if (!(await getAdmin())) return null;
+  if (!(await getSalesAdmin())) return null;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const sql = db();
   if (!sql) return null;
@@ -179,7 +181,7 @@ export interface SalesReport {
 const n = (v: unknown) => Number(v ?? 0);
 
 export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null> {
-  if (!(await getAdmin())) return null;
+  if (!(await getSalesAdmin())) return null;
   const sql = db();
   const p = period(key);
   const empty: SalesReport = {
