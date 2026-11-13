@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createLead, deleteLead, importLeads, logTouch, saveTarget, updateLead, type LeadInput } from "@/app/admin/sales-actions";
+import { createLead, deleteLead, importLeads, logTouch, saveTarget, syncWhatsAppNow, updateLead, type LeadInput } from "@/app/admin/sales-actions";
 import { CHANNELS, SOURCES, STAGES } from "@/lib/sales";
 
 export const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none";
@@ -166,7 +166,7 @@ export function ImportLeads({ owners, me }: { owners: Owner[]; me: string }) {
       className="card flex flex-col gap-4 p-5"
       onSubmit={async (e) => {
         e.preventDefault();
-        if (!csv) return setMsg({ ok: false, text: "Choose a CSV file first." });
+        if (!csv) return setMsg({ ok: false, text: "Choose a CSV file or paste some rows first." });
         setBusy(true);
         setMsg(null);
         const r = await importLeads(csv, { source, source_detail: detail, owner_email: owner });
@@ -185,7 +185,8 @@ export function ImportLeads({ owners, me }: { owners: Owner[]; me: string }) {
         <h2 className="display text-xl">Import a CSV</h2>
         <p className="mt-1 text-xs text-muted">
           First row is the header. Needs <b>name</b> and <b>phone</b> or <b>email</b>. Optional: source, source detail, college, stage, notes.
-          Works with a Google Sheet download or a WhatsApp dashboard export. Leads already here are never overwritten.
+          Choose a CSV file, or copy rows straight out of Google Sheets and paste them below (no header needed: name, number, note).
+          Leads already here are never overwritten.
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -211,6 +212,16 @@ export function ImportLeads({ owners, me }: { owners: Owner[]; me: string }) {
         <label className={label}>Source detail<input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="WhatsApp Batch 2" className={input} /></label>
         <OwnerSelect owners={owners} value={owner} onChange={setOwner} name="Assign to" />
       </div>
+      <label className={label}>
+        Or paste rows from Google Sheets
+        <textarea
+          value={file ? "" : csv}
+          onChange={(e) => { setFile(""); setCsv(e.target.value); }}
+          rows={4}
+          placeholder={"Asha Verma\t98765 43210\tAsked about weekend batch"}
+          className={`${input} font-mono text-xs`}
+        />
+      </label>
       <div className="flex items-center gap-3">
         <button type="submit" disabled={busy || !csv} className={button}>{busy ? "Importing…" : file ? `Import ${file}` : "Import"}</button>
         <Note msg={msg} />
@@ -276,5 +287,39 @@ export function TargetEditor({ month, label: monthLabel, initial }: { month: str
       <button type="submit" className={button}>Save</button>
       <Note msg={msg} />
     </form>
+  );
+}
+
+/** Runs the WhatsApp dashboard sync now, instead of waiting for the cron. */
+export function SyncWhatsApp({ syncedAt, lastError, configured }: { syncedAt: string | null; lastError: string | null; configured: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<Msg>(null);
+  const when = syncedAt
+    ? new Date(syncedAt).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })
+    : null;
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-xs">
+      <span className="text-muted">
+        {!configured ? "WhatsApp sync isn't connected yet." : when ? `WhatsApp synced ${when}` : "WhatsApp not synced yet."}
+        {lastError && <span className="ml-1 font-semibold text-error">Last sync failed: {lastError}</span>}
+      </span>
+      {configured && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            setMsg(null);
+            const r = await syncWhatsAppNow();
+            setBusy(false);
+            setMsg(r.ok ? { ok: true, text: r.text } : { ok: false, text: r.message });
+          }}
+          className="border border-line/50 px-3 py-1.5 font-bold hover:bg-ink hover:text-paper disabled:opacity-50"
+        >
+          {busy ? "Syncing…" : "Sync WhatsApp"}
+        </button>
+      )}
+      {msg && <span role={msg.ok ? "status" : "alert"} className={`font-semibold ${msg.ok ? "text-ink" : "text-error"}`}>{msg.text}</span>}
+    </div>
   );
 }

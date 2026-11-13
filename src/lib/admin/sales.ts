@@ -1,7 +1,7 @@
 import "server-only";
 import { getAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
-import { HOT_STAGES, istToday, period, type Channel, type PeriodKey, type Source, type Stage } from "@/lib/sales";
+import { HOT_STAGES, istToday, PAID_COUNTED_FROM, period, type Channel, type PeriodKey, type Source, type Stage } from "@/lib/sales";
 
 /**
  * Sales reads. Every function checks the admin first: the connection can read
@@ -41,6 +41,8 @@ export interface Touch {
   by_email: string;
   channel: Channel;
   replied: boolean;
+  /** A message they sent us, synced from the WhatsApp dashboard. */
+  inbound: boolean;
   note: string | null;
 }
 
@@ -96,7 +98,7 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
            (paid.id is not null) as paid
       from course.sales_leads l
       left join lateral (
-        select count(*) as n, max(created_at) as last_at, bool_or(replied) as replied,
+        select count(*) filter (where not inbound) as n, max(created_at) as last_at, bool_or(replied) as replied,
                (array_agg(channel order by created_at desc))[1] as last_channel
           from course.sales_touches where lead_id = l.id
       ) t on true
@@ -124,7 +126,7 @@ export async function getLead(id: string): Promise<{ lead: Lead; touches: Touch[
   const lead = all[0];
   if (!lead) return null;
   const { data } = await sql.rows<Touch>`
-    select id, created_at, by_email, channel, replied, note
+    select id, created_at, by_email, channel, replied, inbound, note
       from course.sales_touches where lead_id = ${id} order by created_at desc limit 200
   `;
   return { lead, touches: data ?? [] };
@@ -136,7 +138,7 @@ async function getLeadsByIds(ids: string[]): Promise<Lead[]> {
   const { data } = await sql.rows<Lead>`
     select l.id, l.created_at, l.name, l.phone, l.email, l.kind, l.source, l.source_detail, l.org,
            l.stage, l.stage_changed_at, l.owner_email, l.next_follow_up::text as next_follow_up, l.notes,
-           (select count(*)::int from course.sales_touches t where t.lead_id = l.id) as touches,
+           (select count(*)::int from course.sales_touches t where t.lead_id = l.id and not t.inbound) as touches,
            (select max(created_at) from course.sales_touches t where t.lead_id = l.id) as last_touch_at,
            (select channel from course.sales_touches t where t.lead_id = l.id order by created_at desc limit 1) as last_channel,
            exists (select 1 from course.sales_touches t where t.lead_id = l.id and t.replied) as replied,
@@ -197,7 +199,7 @@ export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null
       select channel,
              count(*) filter (where created_at >= ${s} and created_at < ${e})::int as cur,
              count(*) filter (where created_at >= ${ps} and created_at < ${pe})::int as prev
-        from course.sales_touches where created_at >= least(${s}::timestamptz, ${ps}::timestamptz)
+        from course.sales_touches where not inbound and created_at >= least(${s}::timestamptz, ${ps}::timestamptz)
        group by channel`,
     sql.row<{ cur: number; prev: number }>`
       select count(distinct lead_id) filter (where replied and created_at >= ${s} and created_at < ${e})::int as cur,
@@ -210,12 +212,13 @@ export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null
              count(*) filter (where next_follow_up <= ${today}::date and stage not in ('signed', 'rejected'))::int as due
         from course.sales_leads`,
     // Every paid enrolment counts, whether or not it came through a lead:
-    // that is the number the board's targets are written against.
+    // that is the number the board's targets are written against. Counting
+    // starts at PAID_COUNTED_FROM, when the sales team started.
     sql.row<{ cur: number; prev: number; revenue: number }>`
       select count(distinct lower(email)) filter (where created_at >= ${s} and created_at < ${e})::int as cur,
              count(distinct lower(email)) filter (where created_at >= ${ps} and created_at < ${pe})::int as prev,
              coalesce(sum(amount) filter (where created_at >= ${s} and created_at < ${e}), 0)::int as revenue
-        from course.payments where status in ('paid', 'refunded')`,
+        from course.payments where status in ('paid', 'refunded') and created_at >= ${PAID_COUNTED_FROM}`,
     sql.row<{ cur: number; prev: number }>`
       select count(*) filter (where signed_at >= ${s} and signed_at < ${e})::int as cur,
              count(*) filter (where signed_at >= ${ps} and signed_at < ${pe})::int as prev
@@ -242,18 +245,18 @@ export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null
       paid as (
         select distinct ids.id from ids
           join course.payments pay on lower(pay.email) = ids.email and pay.status in ('paid', 'refunded')
-         where pay.created_at >= ${s} and pay.created_at < ${e}
+         where pay.created_at >= ${s} and pay.created_at < ${e} and pay.created_at >= ${PAID_COUNTED_FROM}
       )
       select l.source,
              count(*) filter (where l.created_at >= ${s} and l.created_at < ${e})::int as leads,
-             count(*) filter (where exists (select 1 from course.sales_touches t where t.lead_id = l.id and t.created_at >= ${s} and t.created_at < ${e}))::int as contacted,
+             count(*) filter (where exists (select 1 from course.sales_touches t where t.lead_id = l.id and not t.inbound and t.created_at >= ${s} and t.created_at < ${e}))::int as contacted,
              count(*) filter (where exists (select 1 from course.sales_touches t where t.lead_id = l.id and t.replied and t.created_at >= ${s} and t.created_at < ${e}))::int as conversations,
              count(paid.id)::int as paid
         from course.sales_leads l left join paid on paid.id = l.id
        group by l.source`,
     sql.rows<{ email: string; touches: number; conversations: number; hot: number; due: number }>`
       with t as (
-        select by_email as email, count(*)::int as touches, count(distinct lead_id) filter (where replied)::int as conversations
+        select by_email as email, count(*) filter (where not inbound)::int as touches, count(distinct lead_id) filter (where replied)::int as conversations
           from course.sales_touches where created_at >= ${s} and created_at < ${e} group by by_email
       ), o as (
         select owner_email as email,

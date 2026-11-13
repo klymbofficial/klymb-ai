@@ -16,6 +16,16 @@ export const STAGES = [
 export type Stage = (typeof STAGES)[number]["key"];
 
 /** Stages that count as "potential conversions" on the report. */
+/**
+ * Paid enrolments on the report count from here: 13 Nov 2026, 13:30 IST, when
+ * the sales team started. Earlier payments stay in Payments, and a lead who
+ * paid before still shows as paid; they just don't count towards targets.
+ */
+export const PAID_COUNTED_FROM = "2026-11-13T08:00:00.000Z";
+
+/** The by_email on touches the WhatsApp dashboard sync writes. */
+export const WHATSAPP_BY = "whatsapp-dashboard";
+
 export const HOT_STAGES: readonly Stage[] = ["potential", "positive", "almost"];
 
 export const SOURCES = [
@@ -72,8 +82,14 @@ export function formatPhone(phone: string | null): string {
 
 // ── CSV import ──────────────────────────────────────────────
 
-/** RFC 4180-ish: quoted fields, doubled quotes, commas and newlines inside quotes. */
+/**
+ * RFC 4180-ish: quoted fields, doubled quotes, commas and newlines inside
+ * quotes. Rows copied out of Google Sheets arrive tab-separated, so a first
+ * line with more tabs than commas is read as TSV.
+ */
 export function parseCsv(text: string): string[][] {
+  const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
+  const sep = (firstLine.match(/\t/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? "\t" : ",";
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -86,7 +102,7 @@ export function parseCsv(text: string): string[][] {
       else if (c === '"') quoted = false;
       else field += c;
     } else if (c === '"') quoted = true;
-    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === sep) { row.push(field); field = ""; }
     else if (c === "\n" || c === "\r") {
       if (c === "\r" && src[i + 1] === "\n") i += 1;
       row.push(field); field = "";
@@ -133,8 +149,14 @@ const clip = (v: string | undefined, max: number) => (v?.trim() ? v.trim().slice
 
 /** Reads a sheet export. Needs a name column and a phone or email column. */
 export function parseLeadsCsv(text: string, defaultSource: Source, maxRows = 2000): ImportParse {
-  const table = parseCsv(text);
-  const header = (table[0] ?? []).map((h) => h.trim().toLowerCase());
+  let table = parseCsv(text);
+  let header = (table[0] ?? []).map((h) => h.trim().toLowerCase());
+  // Rows pasted without their header: read them as name, phone, note.
+  const known = Object.values(HEADER_ALIASES).flat();
+  if (!header.some((h) => known.includes(h)) && table[0] && normalisePhone(table[0][1] ?? "")) {
+    header = ["name", "phone", "notes"];
+    table = [header, ...table];
+  }
   const col: Record<string, number> = {};
   for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
     const i = header.findIndex((h) => aliases.includes(h));

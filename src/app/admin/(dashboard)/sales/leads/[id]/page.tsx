@@ -5,7 +5,7 @@ import { DeleteLead, LeadForm, TouchForm } from "@/components/admin/sales/SalesF
 import { StageBadge } from "@/components/admin/sales/SalesTabs";
 import { requireAdmin } from "@/lib/admin/auth";
 import { getLead, getOwners } from "@/lib/admin/sales";
-import { CHANNELS, formatPhone, labelOf, SOURCES, STAGES } from "@/lib/sales";
+import { CHANNELS, formatPhone, labelOf, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
@@ -15,7 +15,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const [found, owners] = await Promise.all([getLead((await params).id), getOwners()]);
   if (!found) notFound();
   const { lead, touches } = found;
-  const who = (email: string) => owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
+  const who = (email: string) => email === WHATSAPP_BY ? "WhatsApp dashboard" : owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
 
   return (
     <>
@@ -49,8 +49,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               {touches.map((t) => (
                 <li key={t.id} className="py-2.5 text-sm">
                   <p className="text-xs text-muted nums">
-                    <b className="text-ink">{labelOf(CHANNELS, t.channel)}</b> · {when(t.created_at)} · {who(t.by_email)}
-                    {t.replied && <span className="ml-2 font-bold text-emerald-800">Replied</span>}
+                    <b className="text-ink">{t.inbound ? "They wrote on WhatsApp" : labelOf(CHANNELS, t.channel)}</b> · {when(t.created_at)} · {who(t.by_email)}
+                    {t.replied && !t.inbound && <span className="ml-2 font-bold text-emerald-800">Replied</span>}
                   </p>
                   {t.note && <p className="mt-0.5">{t.note}</p>}
                 </li>

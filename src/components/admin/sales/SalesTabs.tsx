@@ -2,12 +2,13 @@ import clsx from "clsx";
 import Link from "next/link";
 
 const tabs = [
+  { href: "/admin/sales/list", label: "My list", key: "list" },
   { href: "/admin/sales", label: "Report" },
   { href: "/admin/sales/leads", label: "Leads" },
   { href: "/admin/sales/leads?due=1", label: "Due today", key: "due" },
 ];
 
-export function SalesTabs({ current }: { current: "report" | "leads" | "due" }) {
+export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "list" }) {
   return (
     <nav aria-label="Sales" className="mb-6 flex gap-1 border-b border-line/25">
       {tabs.map((t) => {

@@ -65,3 +65,12 @@ test("pace is linear through the month", () => {
   assert.deepEqual(pace(5, 15, 13, 30), { expected: 7, onPace: false, needPerDay: 1 });
   assert.equal(pace(10, 15, 13, 30).onPace, true);
 });
+
+test("rows pasted from Google Sheets are tab-separated and may have no header", () => {
+  const pasted = "Asha Verma\t98765 43210\tAsked about EMI\nRavi\t+91 98765 00002\t";
+  const r = parseLeadsCsv(pasted, "other");
+  assert.deepEqual(r.missingHeaders, []);
+  assert.deepEqual(r.rows.map((x) => [x.name, x.phone, x.notes]), [["Asha Verma", "919876543210", "Asked about EMI"], ["Ravi", "919876500002", null]]);
+  const withHeader = parseLeadsCsv("Name\tMobile\tStatus\nMeena\t9876500003\tWarm", "other");
+  assert.equal(withHeader.rows[0].stage, "warm");
+});

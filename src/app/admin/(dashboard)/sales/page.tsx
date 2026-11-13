@@ -2,11 +2,12 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { RangeTabs } from "@/components/admin/RangeTabs";
 import { StatTile } from "@/components/admin/StatTile";
-import { TargetEditor } from "@/components/admin/sales/SalesForms";
+import { SyncWhatsApp, TargetEditor } from "@/components/admin/sales/SalesForms";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
 import { getOwners, getSalesReport } from "@/lib/admin/sales";
+import { whatsappSyncStatus } from "@/lib/admin/whatsapp-sync";
 import { formatINR } from "@/lib/format";
-import { CHANNELS, labelOf, pace, SOURCES, STAGES } from "@/lib/sales";
+import { CHANNELS, labelOf, pace, PAID_COUNTED_FROM, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
 
 const vs = (cur: number, prev: number, what: string) => {
   if (!prev) return cur ? `New this ${what}` : `Nothing yet this ${what}`;
@@ -17,11 +18,11 @@ const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "â€
 
 export default async function SalesReportPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
   const key = (await searchParams).range === "ytd" ? "ytd" : "mtd";
-  const [r, owners] = await Promise.all([getSalesReport(key), getOwners()]);
+  const [r, owners, wa] = await Promise.all([getSalesReport(key), getOwners(), whatsappSyncStatus()]);
   if (!r) return null;
   const p = r.period;
   const unit = key === "mtd" ? "month" : "year";
-  const who = (email: string) => owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
+  const who = (email: string) => email === WHATSAPP_BY ? "WhatsApp dashboard" : owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
   const t = r.target;
   const enrolPace = t && key === "mtd" ? pace(r.enrolments.total, t.enrolments, p.dayOfMonth, p.daysInMonth) : null;
   const maxChannel = Math.max(1, ...Object.values(r.outreach.byChannel));
@@ -37,6 +38,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
         actions={<RangeTabs param="range" current={key} options={[{ key: "mtd", label: "MTD" }, { key: "ytd", label: "YTD" }]} />}
       />
       <SalesTabs current="report" />
+      <div className="mb-4"><SyncWhatsApp syncedAt={wa.synced_at} lastError={wa.last_error} configured={wa.configured} /></div>
 
       {!r.ready && (
         <p role="alert" className="mb-6 border border-error/40 bg-error-tint p-4 text-sm font-semibold text-error">
@@ -87,7 +89,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
         </Link>
       </div>
       <p className="mt-2 text-xs text-muted">
-        Conversation to paid: {pct(r.enrolments.total, r.conversations.total)} (the plan assumes 1 in 10). Paid counts every enrolment, including ones that came straight from the website.
+        Conversation to paid: {pct(r.enrolments.total, r.conversations.total)} (the plan assumes 1 in 10). Paid counts every enrolment since {new Date(PAID_COUNTED_FROM).toLocaleDateString("en-IN", { day: "numeric", month: "long", timeZone: "Asia/Kolkata" })}, when sales started, including ones that came straight from the website.
       </p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

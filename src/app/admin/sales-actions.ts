@@ -28,6 +28,7 @@ const uuid = (v: unknown) => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v)
 function refresh(id?: string) {
   revalidatePath("/admin/sales");
   revalidatePath("/admin/sales/leads");
+  revalidatePath("/admin/sales/list");
   if (id) revalidatePath(`/admin/sales/leads/${id}`);
 }
 
@@ -212,4 +213,67 @@ export async function saveTarget(month: string, t: { enrolments: number; b2b: nu
   if (error) return { ok: false, message: "That could not be saved." };
   refresh();
   return { ok: true };
+}
+
+export type SyncActionResult = { ok: true; text: string } | { ok: false; message: string };
+
+/** The "Sync WhatsApp" button: the same sync the cron runs. */
+export async function syncWhatsAppNow(): Promise<SyncActionResult> {
+  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  const { syncWhatsApp } = await import("@/lib/admin/whatsapp-sync");
+  const r = await syncWhatsApp();
+  refresh();
+  if (!r.ok) return { ok: false, message: r.message ?? "The sync failed." };
+  return {
+    ok: true,
+    text: r.read
+      ? `Read ${r.read} messages: ${r.touches} new touches, ${r.leads} new leads${r.removed ? `, ${r.removed} failed sends removed` : ""}.`
+      : "Already up to date.",
+  };
+}
+
+/** The sheet's quick-add row: a name and a number (or email) is enough. Owned by whoever adds it. */
+export async function quickAddLead(raw: { name: string; contact: string; note: string; source: string }): Promise<SalesResult> {
+  const admin = await getAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
+  const contact = raw.contact.trim();
+  const isEmail = contact.includes("@");
+  return createLead({
+    name: raw.name, phone: isEmail ? "" : contact, email: isEmail ? contact : "", kind: "b2c",
+    source: isSource(raw.source) ? raw.source : "other", source_detail: "", org: "",
+    owner_email: admin.email, next_follow_up: "", notes: raw.note,
+  });
+}
+
+/** One cell of the sheet: stage, next follow-up, notes or owner. */
+export async function updateLeadField(id: string, field: "stage" | "next_follow_up" | "notes" | "owner_email", value: string): Promise<SalesResult> {
+  if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
+  if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
+
+  let result;
+  if (field === "stage") {
+    if (!isStage(value)) return { ok: false, message: "Pick a stage." };
+    result = await sql.run`
+      update course.sales_leads set
+        stage_changed_at = case when stage <> ${value} then now() else stage_changed_at end,
+        signed_at = case when ${value}::text = 'signed' then coalesce(signed_at, now()) else null end,
+        next_follow_up = case when ${value}::text in ('signed', 'rejected') then null else next_follow_up end,
+        stage = ${value}, updated_at = now()
+      where id = ${id}`;
+  } else if (field === "next_follow_up") {
+    if (value && !date(value)) return { ok: false, message: "Pick a date." };
+    result = await sql.run`update course.sales_leads set next_follow_up = ${value || null}::date, updated_at = now() where id = ${id}`;
+  } else if (field === "notes") {
+    result = await sql.run`update course.sales_leads set notes = ${text(value, 2000)}, updated_at = now() where id = ${id}`;
+  } else if (field === "owner_email") {
+    result = await sql.run`update course.sales_leads set owner_email = ${normaliseEmail(value)}, updated_at = now() where id = ${id}`;
+  } else {
+    return { ok: false, message: "That can't be changed here." };
+  }
+  if (result.error) return { ok: false, message: "That could not be saved." };
+  if (!result.data) return { ok: false, message: "That lead no longer exists." };
+  refresh(id);
+  return { ok: true, id };
 }
