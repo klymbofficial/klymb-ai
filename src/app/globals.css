@@ -251,7 +251,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .spotlight:hover::after { opacity: 1; }
 }
 
-/* Announcement ticker: two copies of the row slide left by exactly one copy. */
+/* Experts strip: two copies of the row slide left by exactly one copy. */
 .marquee-track { animation: marquee 40s linear infinite; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }
