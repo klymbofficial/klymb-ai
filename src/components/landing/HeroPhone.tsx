@@ -1,22 +1,23 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, type MouseEvent, type PointerEvent } from "react";
 import { Headline, Pips, useResultsMotion } from "./HeroParts";
 import { reduceMotion } from "./motion";
 import { AmazonMark, GoogleMark, IconArrowUpRight, IconCheck, MicrosoftMark, Photo, Stars, unsplash } from "./parts";
-import { glideTo } from "./ScrollMotion";
 import { AVATARS } from "./Stories";
 
-/** Where "Start your journey" takes you. */
-const TARGET = "#pricing";
+/** Where "Start your journey" takes you: the course library. */
+const TARGET = "/courses";
 
 /**
  * "Start your journey" as a slider: drag the knob across (or just tap) and
- * the red fills the track, the label turns to "Let's climb!" and the page
- * glides to the plans. It nudges every few seconds to show it moves, and
+ * the red fills the track, the label turns to "Let's climb!" and it opens
+ * the course library. It nudges every few seconds to show it moves, and
  * resets itself once you've gone.
  */
 function SlideToStart() {
+  const router = useRouter();
   const track = useRef<HTMLAnchorElement>(null);
   const fill = useRef<HTMLSpanElement>(null);
   const knob = useRef<HTMLSpanElement>(null);
@@ -60,7 +61,7 @@ function SlideToStart() {
         label.current.style.opacity = "1";
       }
     }, 450);
-    later(() => glideTo(TARGET), 700);
+    later(() => router.push(TARGET), 700);
     later(reset, 2600);
   };
 

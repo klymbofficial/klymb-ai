@@ -17,8 +17,13 @@ const LINKS = [
  * The floating pill nav. The wordmark plays its climb on load, every five
  * seconds and on hover: the letters bounce in turn while the full stop hops
  * across them and lands back in place with a little pop.
+ *
+ * `site`: the (site) pages use it too. There the section links go back to the
+ * homepage (/#why), and Log in shows on desktop as well, since those pages
+ * have no hero with a Log in button of their own.
  */
-export function LandingNav() {
+export function LandingNav({ site = false }: { site?: boolean }) {
+  const base = site ? "/" : "";
   const brand = useRef<HTMLAnchorElement>(null);
   const bar = useRef<HTMLDivElement>(null);
 
@@ -78,7 +83,7 @@ export function LandingNav() {
   }, []);
 
   return (
-    <div ref={bar} className="kl-navbar">
+    <div ref={bar} className={site ? "kl-navbar kl-navbar--site" : "kl-navbar"}>
       <nav className="kl-nav" aria-label="Main">
         <Link href="/" ref={brand} className="kl-brand" aria-label="Klymb home">
           <span className="kl-logo" aria-hidden="true">
@@ -90,15 +95,16 @@ export function LandingNav() {
         </Link>
         <div className="kl-navlinks">
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="kl-navlink">{l.label}</a>
+            <a key={l.href} href={base + l.href} className="kl-navlink">{l.label}</a>
           ))}
-          <a href="#teams" className="kl-navlink kl-navlink--teams">For Teams</a>
+          <a href={`${base}#teams`} className="kl-navlink kl-navlink--teams">For Teams</a>
         </div>
+        {site && <AccountLink className="kl-btn kl-btn-secondary kl-navlogin" />}
         <span className="kl-pulse">
           <IconShieldCheck size={16} />
           100% money back
         </span>
-        <PhoneMenu />
+        <PhoneMenu base={base} />
       </nav>
     </div>
   );
@@ -110,7 +116,7 @@ export function LandingNav() {
  * its own). The two bars turn into a cross; a link, Escape or a tap outside
  * closes it.
  */
-function PhoneMenu() {
+function PhoneMenu({ base }: { base: string }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -151,11 +157,11 @@ function PhoneMenu() {
         <ul>
           {LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} onClick={() => setOpen(false)}>{l.label}</a>
+              <a href={base + l.href} onClick={() => setOpen(false)}>{l.label}</a>
             </li>
           ))}
           <li>
-            <a href="#teams" className="kl-menu-teams" onClick={() => setOpen(false)}>For Teams</a>
+            <a href={`${base}#teams`} className="kl-menu-teams" onClick={() => setOpen(false)}>For Teams</a>
           </li>
         </ul>
         <AccountLink className="kl-btn kl-btn-secondary kl-menu-login" />

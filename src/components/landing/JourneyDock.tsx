@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { reduceMotion } from "./motion";
 import { IconArrowUpRight } from "./parts";
@@ -80,9 +81,9 @@ export function JourneyDock() {
   }, []);
 
   return (
-    <a
+    <Link
       ref={dock}
-      href="#pricing"
+      href="/courses"
       className={on ? "kl-dock is-on" : "kl-dock"}
       aria-label="Start your journey"
       aria-hidden={!on}
@@ -99,6 +100,6 @@ export function JourneyDock() {
       <span className="kl-dock-go">
         <IconArrowUpRight size={18} />
       </span>
-    </a>
+    </Link>
   );
 }

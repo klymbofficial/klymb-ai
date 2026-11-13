@@ -314,7 +314,7 @@ src/
 │   ├── home/            Homepage sections + registration form
 │   ├── track/           TrackCard, TrackGrid, TrackDetail, TrackCurriculum
 │   ├── learn/           Dashboard/learning UI: TrackSwitcher, ProgressBar, WorkSubmission, InterviewPractice
-│   ├── layout/          AnnouncementBar, Header, Footer, Wordmark
+│   ├── layout/          Header, Footer, Wordmark
 │   └── ui/              Button, Container, Eyebrow, SectionHeader, Tag, Reveal, FormField, PageHeader, SourceLink, DemoNotice
 ├── data/                All editable content and config
 ├── lib/                 Validation, formatting, 30-day helpers

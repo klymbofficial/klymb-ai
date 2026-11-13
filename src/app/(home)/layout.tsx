@@ -2,8 +2,8 @@ import { CookieBanner } from "@/components/legal/CookieBanner";
 
 /**
  * The homepage brings its own pill nav, footer and floating buttons
- * (components/landing), so it sits outside the (site) layout: no
- * announcement bar, site header or site footer here.
+ * (components/landing), so it sits outside the (site) layout: no site
+ * header or site footer here.
  */
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
   return (

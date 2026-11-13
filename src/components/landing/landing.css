@@ -134,6 +134,9 @@ html.lenis { scroll-behavior: auto; }
 .kl .kl-navlink--teams:hover { color: var(--kl-red-700); }
 @container (max-width: 132px) { .kl-navlink { visibility: hidden; } }
 
+/* Site pages: Log in beside the money-back pill on desktop (phones have it in the menu). */
+.kl .kl-navlogin { flex: none; padding: 10px 16px; border-radius: 999px; font-size: 15px; white-space: nowrap; }
+
 .kl-pulse {
   flex: none; display: flex; gap: 7px; align-items: center; padding: 10px 16px; border-radius: 999px;
   background: var(--kl-red); color: var(--kl-bg); font-weight: 800; font-size: 15px; letter-spacing: 0.01em; white-space: nowrap;
@@ -158,7 +161,9 @@ html.lenis { scroll-behavior: auto; }
     margin-right: auto; padding: 8px 14px; border-radius: 999px; font-size: 19px;
     background: color-mix(in srgb, var(--kl-bg) 82%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   }
-  .kl-navlinks { display: none; }
+  /* Site pages have no full-bleed photo to float over: the bar keeps its place in the flow. */
+  .kl-navbar--site { position: sticky; }
+  .kl-navlinks, .kl .kl-navlogin { display: none; }
   .kl-pulse { gap: 5px; padding: 8px 12px; font-size: 12px; }
   .kl-pulse svg { width: 14px; height: 14px; }
   .kl-menu { display: block; position: relative; flex: none; }
