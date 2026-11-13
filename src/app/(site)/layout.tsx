@@ -1,6 +1,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { CookieBanner } from "@/components/legal/CookieBanner";
-import { Header } from "@/components/layout/Header";
+import { LandingNav } from "@/components/landing/LandingNav";
+import "@/components/landing/landing.css";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,7 +9,10 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-ink focus:px-4 focus:py-2 focus:text-paper">
         Skip to content
       </a>
-      <Header />
+      {/* The homepage's pill nav. .kl carries its tokens and font; `contents` gives the wrapper no box, so the bar still sticks for the whole page. */}
+      <div className="kl contents">
+        <LandingNav site />
+      </div>
       <main id="main" className="flex-1">{children}</main>
       <Footer />
       <CookieBanner />

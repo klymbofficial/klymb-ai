@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef } from "react";
 import { AccountLink } from "@/components/layout/AccountLink";
 import { Headline, Pips, useResultsMotion } from "./HeroParts";
@@ -75,9 +76,9 @@ export function Hero() {
             </div>
 
             <div className="kl-cta-row">
-              <a href="#pricing" className="kl-btn kl-btn-primary kl-hero-cta">
+              <Link href="/courses" className="kl-btn kl-btn-primary kl-hero-cta">
                 Start your journey <IconArrowRight size={20} className="kl-hero-arrow" />
-              </a>
+              </Link>
               <AccountLink className="kl-btn kl-btn-secondary kl-hero-login" />
             </div>
           </div>
