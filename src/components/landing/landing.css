@@ -151,7 +151,17 @@ html.lenis { scroll-behavior: auto; }
  */
 .kl-menu { display: none; }
 @media (max-width: 760px) {
-  .kl-navbar { position: fixed; left: 0; right: 0; padding: 16px 16px 0; pointer-events: none; }
+  .kl-navbar {
+    position: fixed; left: 0; right: 0; padding: 16px 16px 0; pointer-events: none;
+    border-bottom: 1px solid transparent; transition: background-color .3s ease, padding .3s ease, border-color .3s ease;
+  }
+  /* Past the hero photo: a frosted bar behind the pills (LandingNav), so content passes under a bar, not between pills. */
+  .kl-navbar.is-solid:not(.kl-navbar--site) {
+    padding: 10px 16px; pointer-events: auto;
+    background: color-mix(in srgb, var(--kl-bg) 90%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom-color: color-mix(in srgb, var(--kl-ink) 10%, transparent);
+  }
   .kl-nav {
     padding: 0; gap: 8px; border: 0; border-radius: 0; background: none; box-shadow: none;
     -webkit-backdrop-filter: none; backdrop-filter: none;
@@ -336,8 +346,8 @@ html.lenis { scroll-behavior: auto; }
 }
 .kl-hp-chip svg { flex: none; color: var(--kl-red); }
 /* Below the face: the photo covers by height, so the face sits in the top quarter at any phone size. */
-.kl-hp-chip--a { left: 14px; top: 46%; animation-delay: .9s; }
-.kl-hp-chip--b { right: 14px; top: 150px; animation-delay: 1.05s; }
+.kl-hp-chip--a { left: 16px; top: 46%; animation-delay: .9s; }
+.kl-hp-chip--b { right: 16px; top: 150px; animation-delay: 1.05s; }
 @keyframes kl-chip-in { from { opacity: 0; transform: translateY(12px) scale(.9); } }
 
 .kl-hp-results {
@@ -931,6 +941,8 @@ html.lenis { scroll-behavior: auto; }
   .kl .kl-dock { left: 16px; transform: none; max-width: calc(100vw - 92px); }
   .kl .kl-dock:not(.is-on) { transform: translateY(160%); }
   .kl .kl-dock.is-on { transform: none; }
+  /* Out of the way while a plan card or the teams card is on screen (JourneyDock). */
+  .kl .kl-dock.is-on.is-yield { transform: translateY(160%); pointer-events: none; }
   .kl-chat-label { display: none; }
   .kl-chat { padding: 4px; gap: 0; }
 }
