@@ -25,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...availablePrograms.map((p) => page(`/courses/${p.slug}`, 0.6, "monthly")),
     page("/training-solutions", 0.5, "monthly"),
     page("/system-design", 0.9, "weekly"),
+    page("/learn/system-design", 0.8, "weekly"),
     page("/register", 0.9, "weekly"),
     page("/why-klymb", 0.7, "monthly"),
     page("/about", 0.6, "monthly"),
