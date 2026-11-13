@@ -147,8 +147,12 @@ export function referralState({ count, deadline, refunded }: { count: number; de
   return now < deadline ? "open" : "closed";
 }
 
-/** Whether they should be offered their link. Earning the refund doesn't stop them referring; it can only be earned once. */
-export const canRefer = (state: ReferralState) => state === "open" || state === "earned";
+/**
+ * Whether they should be offered their link. Earning the refund, or being paid
+ * it, doesn't stop them referring: the refund comes once, the link keeps working.
+ * Only a window that closed short of three friends ends it.
+ */
+export const canRefer = (state: ReferralState) => state !== "closed";
 
 /** A buyer's referral offer, as the course and the receipt show it. */
 export interface ReferralView {

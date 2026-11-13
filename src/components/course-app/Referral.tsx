@@ -110,7 +110,7 @@ export function ReferralCard({ r }: { r: ReferralView }) {
         </div>
       )}
       {body && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">{body} <Link href="/refund-policy" className="underline underline-offset-2">T&amp;C apply.</Link></p>}
-      {r.state === "earned" && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">Your link still works, so keep sharing it with friends.</p>}
+      {(r.state === "earned" || r.state === "refunded") && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">Your link still works, so keep sharing it with friends.</p>}
       {canRefer(r.state) && <ShareLink r={r} />}
     </section>
   );

@@ -81,7 +81,7 @@ test("the link is the offer page with the code on it", () => {
 
 test("a lesson post carries the link, in the lesson's language", () => {
   const link = "https://www.klymb.ai/system-design?ref=ABCD2345";
-  assert.deepEqual((["open", "earned", "refunded", "closed"] as const).map(canRefer), [true, true, false, false], "earning the refund doesn't end referring");
+  assert.deepEqual((["open", "earned", "refunded", "closed"] as const).map(canRefer), [true, true, true, false], "earning or being paid the refund doesn't end referring");
   assert.equal(referralPost("Day 1 done.", link, "en"), `Day 1 done.\n\nWant to learn this with me? Join here: ${link}`);
   assert.match(referralPost("Day 1 ho gaya.", link, "hi"), /^Day 1 ho gaya\.\n\nMere saath seekhna hai\? Yahan join karo: https/);
 });
