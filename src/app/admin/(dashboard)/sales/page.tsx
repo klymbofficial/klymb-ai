@@ -4,6 +4,7 @@ import { RangeTabs } from "@/components/admin/RangeTabs";
 import { StatTile } from "@/components/admin/StatTile";
 import { SyncWhatsApp, TargetEditor } from "@/components/admin/sales/SalesForms";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
+import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getOwners, getSalesReport } from "@/lib/admin/sales";
 import { whatsappSyncStatus } from "@/lib/admin/whatsapp-sync";
 import { formatINR } from "@/lib/format";
@@ -17,6 +18,8 @@ const vs = (cur: number, prev: number, what: string) => {
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "—");
 
 export default async function SalesReportPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+  // Website form fills arrive as leads before anything is read.
+  await captureWebsiteLeads();
   const key = (await searchParams).range === "ytd" ? "ytd" : "mtd";
   const [r, owners, wa] = await Promise.all([getSalesReport(key), getOwners(), whatsappSyncStatus()]);
   if (!r) return null;

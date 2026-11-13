@@ -3,8 +3,8 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { logTouch, quickAddLead, updateLeadField } from "@/app/admin/sales-actions";
-import { CHANNELS, formatPhone, labelOf, SOURCES, STAGES } from "@/lib/sales";
+import { logCallOutcome, logTouch, quickAddLead, updateLeadField } from "@/app/admin/sales-actions";
+import { CALL_OUTCOMES, CHANNELS, formatPhone, labelOf, SOURCES, STAGES } from "@/lib/sales";
 
 export interface SheetRow {
   id: string;
@@ -45,6 +45,8 @@ function ago(iso: string) {
 export function SalesSheet({ rows, today, owners }: { rows: SheetRow[]; today: string; owners: { email: string; name: string | null }[] }) {
   const [error, setError] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
+  // The row whose call is in progress: its outcome buttons are showing.
+  const [calling, setCalling] = useState<string | null>(null);
 
   async function save(id: string, field: "stage" | "next_follow_up" | "notes" | "owner_email", value: string) {
     setError("");
@@ -94,13 +96,33 @@ export function SalesSheet({ rows, today, owners }: { rows: SheetRow[]; today: s
                         <>
                           <a href={`https://wa.me/${r.phone}`} target="_blank" rel="noopener noreferrer" onClick={() => touch(r, "whatsapp")}
                             className="border border-emerald-700/40 px-1.5 py-0.5 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50" title="Open WhatsApp and log it">WA</a>
-                          <a href={`tel:+${r.phone}`} onClick={() => touch(r, "call")}
+                          <a href={`tel:+${r.phone}`} onClick={() => setCalling(r.id)}
                             className="border border-line/50 px-1.5 py-0.5 text-[11px] font-bold hover:bg-surface" title="Call and log it">Call</a>
                         </>
                       )}
                       <button type="button" onClick={() => touch(r, r.last_channel ?? "whatsapp", true)}
                         className="border border-line/50 px-1.5 py-0.5 text-[11px] font-bold hover:bg-surface" title="They replied: counts as a conversation">Replied</button>
                     </span>
+                    {calling === r.id && (
+                      <span role="group" aria-label="How did the call go?" className="mt-1.5 flex flex-wrap gap-1">
+                        {CALL_OUTCOMES.map((o) => (
+                          <button
+                            key={o.key}
+                            type="button"
+                            onClick={async () => {
+                              setCalling(null);
+                              setError("");
+                              const res = await logCallOutcome(r.id, o.key);
+                              if (!res.ok) setError(res.message);
+                            }}
+                            className="bg-ink px-1.5 py-0.5 text-[11px] font-bold text-paper hover:bg-red-strong"
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                        <button type="button" onClick={() => setCalling(null)} className="px-1 text-[11px] text-muted underline">Skip</button>
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2">
                     <select

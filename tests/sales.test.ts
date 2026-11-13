@@ -74,3 +74,23 @@ test("rows pasted from Google Sheets are tab-separated and may have no header", 
   const withHeader = parseLeadsCsv("Name\tMobile\tStatus\nMeena\t9876500003\tWarm", "other");
   assert.equal(withHeader.rows[0].stage, "warm");
 });
+
+test("the morning digest lists due leads, flags overdue ones and escapes names", async () => {
+  const { salesDigestEmail } = await import("../src/lib/sales-digest");
+  const mail = salesDigestEmail({
+    name: "Sarthak", today: "2026-11-14", siteUrl: "https://www.klymb.ai",
+    leads: [
+      { id: "a", name: "Asha <b>", phone: "919876500001", stage: "positive", next_follow_up: "2026-11-12", notes: "EMI?" },
+      { id: "b", name: "Ravi", phone: null, stage: "warm", next_follow_up: "2026-11-14", notes: null },
+    ],
+  });
+  assert.equal(mail.subject, "2 follow-ups today (1 overdue)");
+  assert.ok(mail.html.includes("Asha &lt;b&gt;"));
+  assert.ok(mail.text.includes("Asha <b> (+91 98765 00001), Positive, overdue since 2026-11-12: EMI?"));
+  assert.ok(mail.html.includes("https://www.klymb.ai/admin/sales/leads/a"));
+});
+
+test("addDays steps calendar days across a month end", async () => {
+  const { addDays } = await import("../src/lib/sales");
+  assert.equal(addDays("2026-11-30", 1), "2026-12-01");
+});

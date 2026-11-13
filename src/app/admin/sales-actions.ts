@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
-import { isChannel, isSource, isStage, normalisePhone, parseLeadsCsv, type Source } from "@/lib/sales";
+import { AUTO_FOLLOW_UP_DAYS, isChannel, isSource, isStage, istToday, normalisePhone, parseLeadsCsv, type Source } from "@/lib/sales";
 
 export type SalesResult = { ok: true; id?: string } | { ok: false; message: string };
 
@@ -131,6 +131,7 @@ export async function logTouch(
 
   const stage = isStage(t.stage) ? t.stage : null;
   const follow = date(t.next_follow_up);
+  const today = istToday();
   await sql.run`
     update course.sales_leads set
       stage = coalesce(${stage}::text, case when ${t.replied}::boolean and stage = 'new' then 'warm' else stage end),
@@ -138,8 +139,13 @@ export async function logTouch(
                               then now() else stage_changed_at end,
       signed_at = case when ${stage}::text = 'signed' then coalesce(signed_at, now())
                        when ${stage}::text is null then signed_at else null end,
+      -- Every open lead keeps a next step, as CRMs insist on: with no date
+      -- given, a follow-up that is missing or already due moves out two days.
       next_follow_up = case when ${follow}::date is not null then ${follow}::date
-                            when ${stage}::text in ('signed', 'rejected') then null else next_follow_up end,
+                            when coalesce(${stage}::text, stage) in ('signed', 'rejected') then null
+                            when next_follow_up is null or next_follow_up <= ${today}::date
+                              then ${today}::date + ${AUTO_FOLLOW_UP_DAYS}::int
+                            else next_follow_up end,
       owner_email = coalesce(owner_email, ${admin.email}),
       updated_at = now()
     where id = ${leadId}
@@ -221,14 +227,17 @@ export type SyncActionResult = { ok: true; text: string } | { ok: false; message
 export async function syncWhatsAppNow(): Promise<SyncActionResult> {
   if (!(await getAdmin())) return { ok: false, message: "Not authorised." };
   const { syncWhatsApp } = await import("@/lib/admin/whatsapp-sync");
+  const { captureWebsiteLeads } = await import("@/lib/admin/sales-capture");
+  const web = await captureWebsiteLeads();
   const r = await syncWhatsApp();
   refresh();
-  if (!r.ok) return { ok: false, message: r.message ?? "The sync failed." };
+  const webText = web ? ` ${web} new from website forms.` : "";
+  if (!r.ok) return { ok: false, message: `${r.message ?? "The WhatsApp sync failed."}${webText}` };
   return {
     ok: true,
-    text: r.read
+    text: (r.read
       ? `Read ${r.read} messages: ${r.touches} new touches, ${r.leads} new leads${r.removed ? `, ${r.removed} failed sends removed` : ""}.`
-      : "Already up to date.",
+      : "WhatsApp is up to date.") + webText,
   };
 }
 
@@ -276,4 +285,18 @@ export async function updateLeadField(id: string, field: "stage" | "next_follow_
   if (!result.data) return { ok: false, message: "That lead no longer exists." };
   refresh(id);
   return { ok: true, id };
+}
+
+/** One tap after a call: logs it with its outcome and sets the next step. */
+export async function logCallOutcome(leadId: string, outcome: string): Promise<SalesResult> {
+  const { CALL_OUTCOMES, addDays } = await import("@/lib/sales");
+  const o = CALL_OUTCOMES.find((x) => x.key === outcome);
+  if (!o) return { ok: false, message: "Pick what happened on the call." };
+  return logTouch(leadId, {
+    channel: "call",
+    replied: o.replied,
+    note: o.label,
+    stage: o.stage ?? "",
+    next_follow_up: o.followDays ? addDays(istToday(), o.followDays) : "",
+  });
 }

@@ -23,6 +23,26 @@ export type Stage = (typeof STAGES)[number]["key"];
  */
 export const PAID_COUNTED_FROM = "2026-11-13T08:00:00.000Z";
 
+/** After a touch with no date set, the next follow-up lands this many days out. */
+export const AUTO_FOLLOW_UP_DAYS = 2;
+
+/** Call outcomes, one tap each, the way dialler CRMs log a call. */
+export const CALL_OUTCOMES = [
+  { key: "talked", label: "Talked", replied: true, followDays: null, stage: null },
+  { key: "no_answer", label: "No answer", replied: false, followDays: 1, stage: null },
+  { key: "busy", label: "Busy", replied: false, followDays: 1, stage: null },
+  { key: "call_back", label: "Call back", replied: true, followDays: 1, stage: null },
+  { key: "not_interested", label: "Not interested", replied: true, followDays: null, stage: "rejected" },
+  { key: "wrong_number", label: "Wrong number", replied: false, followDays: null, stage: "rejected" },
+] as const;
+
+/** YYYY-MM-DD, n days after an IST date. */
+export function addDays(day: string, n: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 /** The by_email on touches the WhatsApp dashboard sync writes. */
 export const WHATSAPP_BY = "whatsapp-dashboard";
 

@@ -300,10 +300,10 @@ export function SyncWhatsApp({ syncedAt, lastError, configured }: { syncedAt: st
   return (
     <div className="flex flex-wrap items-center gap-3 text-xs">
       <span className="text-muted">
-        {!configured ? "WhatsApp sync isn't connected yet." : when ? `WhatsApp synced ${when}` : "WhatsApp not synced yet."}
+        {!configured ? "Website forms sync on every visit. WhatsApp isn't connected yet." : when ? `WhatsApp synced ${when}` : "WhatsApp not synced yet."}
         {lastError && <span className="ml-1 font-semibold text-error">Last sync failed: {lastError}</span>}
       </span>
-      {configured && (
+      {(
         <button
           type="button"
           disabled={busy}
@@ -316,7 +316,7 @@ export function SyncWhatsApp({ syncedAt, lastError, configured }: { syncedAt: st
           }}
           className="border border-line/50 px-3 py-1.5 font-bold hover:bg-ink hover:text-paper disabled:opacity-50"
         >
-          {busy ? "Syncing…" : "Sync WhatsApp"}
+          {busy ? "Syncing…" : "Sync now"}
         </button>
       )}
       {msg && <span role={msg.ok ? "status" : "alert"} className={`font-semibold ${msg.ok ? "text-ink" : "text-error"}`}>{msg.text}</span>}
