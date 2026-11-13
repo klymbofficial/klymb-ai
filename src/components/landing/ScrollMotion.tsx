@@ -8,6 +8,17 @@ import { reduceMotion } from "./motion";
 /** How far a photo drifts, as a share of its own height, either way (its 10% overscan in landing.css keeps the edges hidden). */
 const DRIFT = 0.045;
 
+let smooth: Lenis | null = null;
+
+/** Glides to a section the way in-page links do (or jumps, where smooth scrolling is off). */
+export function glideTo(selector: string) {
+  if (smooth) {
+    smooth.scrollTo(selector);
+    return;
+  }
+  document.querySelector(selector)?.scrollIntoView();
+}
+
 /**
  * The homepage's scrolling, all in one place:
  *
@@ -28,25 +39,29 @@ export function ScrollMotion() {
 
     // Anchor links stop at the site's scroll-padding-top (globals.css), which Lenis reads, so they land clear of the nav.
     const lenis = new Lenis({ autoRaf: true, lerp: 0.09, anchors: true, allowNestedScroll: true, stopInertiaOnNavigate: true });
+    smooth = lenis;
 
     // Reveals. What is already on screen shows at once, so nothing blinks out on load.
+    // State goes in data attributes, never classes: React rewrites an element's
+    // className when it re-renders (an FAQ item opening), which would wipe a
+    // class added here and hide the item again.
     const items = [...root.querySelectorAll<HTMLElement>("[data-reveal]")];
     items.forEach((el) => {
       const r = el.getBoundingClientRect();
-      if (r.top < window.innerHeight && r.bottom > 0) el.classList.add("is-in");
+      if (r.top < window.innerHeight && r.bottom > 0) el.setAttribute("data-in", "");
     });
-    root.classList.add("kl-motion");
+    root.setAttribute("data-motion", "");
     const reveal = new IntersectionObserver(
       (es) =>
         es.forEach((e) => {
           if (!e.isIntersecting) return;
-          e.target.classList.add("is-in");
+          e.target.setAttribute("data-in", "");
           reveal.unobserve(e.target);
         }),
       { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
     );
     items.forEach((el) => {
-      if (!el.classList.contains("is-in")) reveal.observe(el);
+      if (!el.hasAttribute("data-in")) reveal.observe(el);
     });
 
     // Parallax: only photos near the screen are moved, once per frame at most.
@@ -79,12 +94,13 @@ export function ScrollMotion() {
 
     return () => {
       lenis.destroy();
+      smooth = null;
       reveal.disconnect();
       watch.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      root.classList.remove("kl-motion");
+      root.removeAttribute("data-motion");
     };
   }, []);
 

@@ -23,8 +23,8 @@ const REVIEWS: Review[] = [
 /** The featured story's learner (the full photo beside the quote). */
 const FEATURED = { name: "Amara Johnson", role: "AI analyst at a health-tech startup, Atlanta" };
 
-/** The faces stacked beside the rating: the first four reviewers. */
-const AVATARS = REVIEWS.slice(0, 4);
+/** The faces stacked beside the rating (and under the phone hero's slider): the first four reviewers. */
+export const AVATARS = REVIEWS.slice(0, 4);
 
 function ReviewCard({ r, copy }: { r: Review; copy?: boolean }) {
   return (

@@ -18,9 +18,10 @@ const STEPS: Record<string, string> = {
 const RING = 119.4;
 
 /**
- * "Start your journey", docked at the bottom once the hero's own button has
- * scrolled away. Its ring fills with how far down the page you are, and its
- * number follows the section in view, with a little bump on each change.
+ * "Start your journey", docked at the bottom once the hero has scrolled
+ * fully away (never over the hero's own button). Its ring fills with how far
+ * down the page you are, and its number follows the section in view, with a
+ * little bump on each change.
  */
 export function JourneyDock() {
   const dock = useRef<HTMLAnchorElement>(null);
@@ -30,12 +31,21 @@ export function JourneyDock() {
 
   useEffect(() => {
     const d = dock.current;
-    const hero = document.querySelector("[data-hero-cta]");
-    if (!d || !hero || !("IntersectionObserver" in window)) return;
+    // The dock stays away while any part of the hero is on screen, so it never sits over the hero's own
+    // "Start your journey". Both heroes are watched (desktop and phone); the hidden one never shows.
+    const heroes = [...document.querySelectorAll("[data-hero]")];
+    if (!d || !heroes.length || !("IntersectionObserver" in window)) return;
     let shown = "01";
 
-    const heroIO = new IntersectionObserver((es) => setOn(!es[0].isIntersecting), { threshold: 0 });
-    heroIO.observe(hero);
+    const inView = new Set<Element>();
+    const heroIO = new IntersectionObserver(
+      (es) => {
+        es.forEach((e) => (e.isIntersecting ? inView.add(e.target) : inView.delete(e.target)));
+        setOn(inView.size === 0);
+      },
+      { threshold: 0 },
+    );
+    heroes.forEach((h) => heroIO.observe(h));
 
     const sectionIO = new IntersectionObserver(
       (es) =>

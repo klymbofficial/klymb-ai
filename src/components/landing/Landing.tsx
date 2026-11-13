@@ -4,6 +4,7 @@ import { ChatButton } from "./ChatButton";
 import { CloseBanner } from "./CloseBanner";
 import { Faq } from "./Faq";
 import { Hero } from "./Hero";
+import { HeroPhone } from "./HeroPhone";
 import { JourneyDock } from "./JourneyDock";
 import { LandingNav } from "./LandingNav";
 import { Plans } from "./Plans";
@@ -28,7 +29,9 @@ export function Landing() {
       <LandingNav />
       <main id="main">
         <div className="kl-wrap">
+          {/* landing.css shows one: HeroPhone up to 760px wide, Hero above. */}
           <Hero />
+          <HeroPhone />
         </div>
         <WhySteps />
         <div className="kl-wrap">
