@@ -92,10 +92,10 @@ export default function PrivacyPage() {
         <p><strong>We do not sell personal data. The only advertising tool we use is Meta Pixel, and only if you allow it.</strong></p>
       </Section>
 
-      <Section n="6." title="International transfers" plain="Some of our providers store data outside India: mainly the United States and Japan.">
+      <Section n="6." title="International transfers" plain="Our database is in the United States, and some providers store data elsewhere outside India.">
         <p>
-          Our database is hosted in Tokyo, Japan, and our hosting and sign-in providers operate globally, including in the
-          United States. By using the service you understand that your data may be processed in those countries. We use
+          Our database is hosted in the United States. Our hosting and sign-in providers operate globally, and one small
+          service that signs a second device out runs in Tokyo, Japan, holding no personal records. By using the service you understand that your data may be processed in those countries. We use
           established providers and rely on their contractual protections.
         </p>
       </Section>
