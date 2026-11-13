@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/sales", label: "Sales" },
   { href: "/admin/registrations", label: "Registrations" },
   // Admin only, so it stays even while HIDE_MONEY keeps money off the public site.
   { href: "/admin/payments", label: "Payments & refunds" },
