@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { EASE, onceVisible, reduceMotion } from "./motion";
-import { Brand, IconArrowRight, Photo, unsplash } from "./parts";
+import { Brand, Photo, unsplash } from "./parts";
 
 const PANELS = [
   {
@@ -106,7 +106,7 @@ export function WhoPanels() {
 
   return (
     <section id="who" className="kl-who" aria-labelledby="who-title">
-      <div className="kl-section-head">
+      <div className="kl-section-head" data-reveal="">
         <h2 id="who-title" className="kl-h2">
           Who is it <em>for?</em>
         </h2>
@@ -158,11 +158,7 @@ export function WhoPanels() {
         ))}
       </div>
 
-      <a href="#pricing" className="kl-btn kl-btn-primary kl-pill-cta">
-        Start your journey <IconArrowRight size={18} />
-      </a>
-
-      <div id="teams" className="kl-teams">
+      <div id="teams" className="kl-teams" data-reveal="">
         <p>
           <strong>Training a team?</strong> <Brand /> for Business assesses your workforce&apos;s AI skills and builds custom upskilling programs.
         </p>

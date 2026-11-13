@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AccountLink } from "@/components/layout/AccountLink";
 import { Brand, IconShieldCheck } from "./parts";
 import { reduceMotion } from "./motion";
 
@@ -13,9 +14,9 @@ const LINKS = [
 ];
 
 /**
- * The floating pill nav. The wordmark plays its climb on load and again on
- * hover: the letters bounce in turn while the full stop hops across them and
- * lands back in place with a little pop.
+ * The floating pill nav. The wordmark plays its climb on load, every five
+ * seconds and on hover: the letters bounce in turn while the full stop hops
+ * across them and lands back in place with a little pop.
  */
 export function LandingNav() {
   const brand = useRef<HTMLAnchorElement>(null);
@@ -59,18 +60,20 @@ export function LandingNav() {
       dot.animate([{ transform: "scale(1)" }, { transform: "scale(1.6)" }, { transform: "scale(1)" }], { duration: 300, delay: 1300, easing: "ease-out", composite: "add" });
     };
 
-    const first = window.setTimeout(play, 400);
+    // On load, then every 5 seconds, and on hover; never twice within one run (1.6s).
     let last = 0;
-    const onEnter = () => {
-      if (Date.now() - last > 1600) {
-        last = Date.now();
-        play();
-      }
+    const replay = () => {
+      if (Date.now() - last < 1600) return;
+      last = Date.now();
+      play();
     };
-    link.addEventListener("mouseenter", onEnter);
+    const first = window.setTimeout(replay, 400);
+    const every = window.setInterval(replay, 5000);
+    link.addEventListener("mouseenter", replay);
     return () => {
       window.clearTimeout(first);
-      link.removeEventListener("mouseenter", onEnter);
+      window.clearInterval(every);
+      link.removeEventListener("mouseenter", replay);
     };
   }, []);
 
@@ -95,7 +98,68 @@ export function LandingNav() {
           <IconShieldCheck size={16} />
           100% money back
         </span>
+        <PhoneMenu />
       </nav>
+    </div>
+  );
+}
+
+/**
+ * Phones: a round menu button beside the money-back pill. It opens a card
+ * with the sections and Log in (the hero on phones has no Log in button of
+ * its own). The two bars turn into a cross; a link, Escape or a tap outside
+ * closes it.
+ */
+function PhoneMenu() {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      button.current?.focus();
+    };
+    const onDown = (e: globalThis.PointerEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrap} className="kl-menu">
+      <button
+        ref={button}
+        type="button"
+        className={open ? "kl-menu-btn is-open" : "kl-menu-btn"}
+        aria-label={open ? "Close menu" : "Menu"}
+        aria-expanded={open}
+        aria-controls="kl-menu-panel"
+        onClick={() => setOpen(!open)}
+      >
+        <span />
+        <span />
+      </button>
+      <div id="kl-menu-panel" className={open ? "kl-menu-panel is-open" : "kl-menu-panel"} inert={!open}>
+        <ul>
+          {LINKS.map((l) => (
+            <li key={l.href}>
+              <a href={l.href} onClick={() => setOpen(false)}>{l.label}</a>
+            </li>
+          ))}
+          <li>
+            <a href="#teams" className="kl-menu-teams" onClick={() => setOpen(false)}>For Teams</a>
+          </li>
+        </ul>
+        <AccountLink className="kl-btn kl-btn-secondary kl-menu-login" />
+      </div>
     </div>
   );
 }

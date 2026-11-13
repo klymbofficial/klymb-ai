@@ -45,7 +45,7 @@ export function CloseBanner() {
   return (
     <section id="close" className="kl-close" aria-labelledby="close-title">
       <div className="kl-close-inner">
-        <div className="kl-close-eyebrow">Your next step</div>
+        <div className="kl-close-eyebrow" data-reveal="">Your next step</div>
         <h2 ref={head} id="close-title" aria-label="Upskill yourself in AI.">
           <span data-climb="" className="kl-climb" style={{ "--n": 0 } as CSSProperties} aria-hidden="true">
             <span>Upskill</span>

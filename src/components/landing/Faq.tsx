@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 const FAQS = [
   ["What exactly is Klymb?", "Klymb is an online platform for learning AI skills. Each course combines expert-led lessons, short daily practice, hands-on assessments and a final capstone project that AI agents review in detail."],
@@ -11,33 +11,38 @@ const FAQS = [
   ["Can my company pay for this?", "Yes. Klymb for Business covers team licences, workforce skill assessments and custom programs."],
 ];
 
-/** One answer open at a time; the first starts open. */
+/**
+ * One answer open at a time; the first starts open. Answers slide open and
+ * shut (landing.css), and the plus turns into a minus. Closed answers stay
+ * in the page for the animation but are inert, so they can't be tabbed to.
+ */
 export function Faq() {
   const [open, setOpen] = useState(0);
   return (
     <section id="faq" className="kl-faq" aria-labelledby="faq-title">
-      <div className="kl-faq-side">
+      <div className="kl-faq-side" data-reveal="">
         <span className="kl-faq-num" aria-hidden="true">06</span>
-        <h2 id="faq-title" className="kl-faq-label">FAQ</h2>
+        <h2 id="faq-title" className="kl-h2 kl-faq-title">FAQ</h2>
       </div>
       <div className="kl-faq-list">
-        {FAQS.map(([q, a], i) => (
-          <div key={q} className="kl-faq-item">
-            <h3>
-              <button
-                type="button"
-                className="kl-faq-q"
-                aria-expanded={open === i}
-                aria-controls={`faq-${i}`}
-                onClick={() => setOpen(open === i ? -1 : i)}
-              >
-                <span>{q}</span>
-                <span className="kl-faq-icon" aria-hidden="true">{open === i ? "–" : "+"}</span>
-              </button>
-            </h3>
-            {open === i && <p id={`faq-${i}`} className="kl-faq-a">{a}</p>}
-          </div>
-        ))}
+        {FAQS.map(([q, a], i) => {
+          const on = open === i;
+          return (
+            <div key={q} className={on ? "kl-faq-item is-open" : "kl-faq-item"} data-reveal="" style={{ "--kl-delay": `${i * 70}ms` } as CSSProperties}>
+              <h3>
+                <button type="button" className="kl-faq-q" aria-expanded={on} aria-controls={`faq-${i}`} onClick={() => setOpen(on ? -1 : i)}>
+                  <span>{q}</span>
+                  <span className="kl-faq-icon" aria-hidden="true" />
+                </button>
+              </h3>
+              <div id={`faq-${i}`} className="kl-faq-panel" inert={!on}>
+                <div className="kl-faq-panel-inner">
+                  <p className="kl-faq-a">{a}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
