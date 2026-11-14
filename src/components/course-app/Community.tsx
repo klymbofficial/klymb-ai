@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { CourseState } from "@/lib/course-app";
+import type { Announcement } from "@/lib/sd-announcement-types";
 import { Icon } from "./icons";
 import type { Act } from "./useCourseApp";
 
@@ -9,6 +10,18 @@ import type { Act } from "./useCourseApp";
 const Ctx = createContext<string | null>(null);
 export const GroupProvider = Ctx.Provider;
 export const useGroupLink = () => useContext(Ctx);
+
+/** Announcements from the Klymb team that this seat should see, newest first. */
+const AnnCtx = createContext<Announcement[]>([]);
+export const AnnouncementsProvider = AnnCtx.Provider;
+export const useAnnouncements = () => useContext(AnnCtx);
+
+/** Inbox items beyond the app's own notifications: the group link and announcements not read yet. */
+export function useExtraUnread(s: CourseState) {
+  const group = useGroupLink();
+  const ann = useAnnouncements();
+  return (group && !s.groupSeen ? 1 : 0) + ann.filter((a) => !s.annRead.includes(a.id)).length;
+}
 
 const seen = (p: CourseState): CourseState => ({ ...p, groupSeen: true });
 
@@ -69,5 +82,25 @@ export function GroupNotice({ s, act }: { s: CourseState; act: Act }) {
       </span>
       {!s.groupSeen && <span className="mt-1.5 size-2 rounded-full bg-sd-accent"><span className="sr-only">Unread</span></span>}
     </JoinLink>
+  );
+}
+
+const when = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/** One announcement in the inbox: what the team wrote, and its button if it has a link. */
+export function AnnouncementItem({ a, fresh }: { a: Announcement; fresh: boolean }) {
+  return (
+    <div className={`sd-a-in grid w-full grid-cols-[36px_1fr_8px] items-start gap-3 border-b border-sd-divider px-2 py-3.5 ${fresh ? "bg-sd-accent-100" : ""}`}>
+      <span className={`flex size-9 items-center justify-center rounded-lg text-sd-bg ${fresh ? "bg-sd-accent" : "bg-sd-ink"}`}><Icon name="bell" size={18} /></span>
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="text-sm leading-[1.3] font-extrabold">{a.title}</span>
+        <span className="text-[13px] leading-[1.45] whitespace-pre-line text-sd-n-800">{a.body}</span>
+        {a.linkUrl && (
+          <a href={a.linkUrl} target="_blank" rel="noopener noreferrer" className="sd-btn sd-btn-secondary mt-1 h-10 gap-1.5 self-start">{a.linkLabel ?? "Open link"}<Icon name="arrowR" size={16} /></a>
+        )}
+        <span className="text-xs text-sd-n-700">{when(a.at)}</span>
+      </span>
+      {fresh && <span className="mt-1.5 size-2 rounded-full bg-sd-accent"><span className="sr-only">Unread</span></span>}
+    </div>
   );
 }

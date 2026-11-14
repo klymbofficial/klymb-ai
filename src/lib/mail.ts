@@ -303,6 +303,22 @@ export function sdWhatsAppGroupEmail(p: { name: string; groupUrl: string; siteUr
   return { subject, html, text };
 }
 
+/** An announcement an owner posted for System Design learners, when they ticked "Also email". */
+export function sdAnnouncementEmail(p: { name: string; title: string; body: string; link: { url: string; label: string } | null; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const app = `${p.siteUrl}/learn/system-design`;
+  const text = [`Hi ${p.name},`, "", p.body, "", ...(p.link ? [`${p.link.label}: ${p.link.url}`, ""] : []), `Open the course: ${app}`, "", `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai"].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: p.body.slice(0, 90),
+    eyebrow: "System Design",
+    title: esc(p.title),
+    intro: esc(p.body).replace(/\n/g, "<br>"),
+    sections: [p.link ? button(esc(p.link.url), esc(p.link.label)) : button(`${site}/learn/system-design`, "Open the course")],
+  });
+  return { subject: p.title, html, text };
+}
+
 /** Sent once, on a new registration: a welcome, what the 30 days hold, and how to confirm the seat. */
 export function welcomeEmail(p: { name: string; trackName: string; becomes: string; price: string; free?: boolean; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

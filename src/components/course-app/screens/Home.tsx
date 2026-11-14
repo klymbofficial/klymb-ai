@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, localDate, nextStep, openFinal, openLesson, paceNow, pct, streak, type CourseState } from "@/lib/course-app";
 import { paceMessage, type Pace } from "@/lib/sd-pace";
 import { firstOpenLesson } from "./Course";
-import { GroupCard, useGroupLink } from "../Community";
+import { GroupCard, useExtraUnread } from "../Community";
 import { ReminderPrompt } from "../SdReminders";
 import { GoogleButton, firstName, useCourseUser } from "../user";
 import { Icon } from "../icons";
@@ -35,8 +35,7 @@ function greeting(now = new Date()) {
 }
 
 export function BellButton({ s, act, className }: { s: CourseState; act: Act; className?: string }) {
-  const group = useGroupLink();
-  const unread = s.notifs.filter((n) => n.unread).length + (group && !s.groupSeen ? 1 : 0);
+  const unread = s.notifs.filter((n) => n.unread).length + useExtraUnread(s);
   return (
     <button
       type="button"

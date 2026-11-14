@@ -75,7 +75,10 @@ export function useCourseApp({ lessons, enrolled, passes, progress }: { lessons:
       else if (link.current) next = deepLink(next, link.current);
       else if (enrolled && !next.onboarded) next = startEnrolled(next);
       else if (!next.onboarded) return window.location.replace("/system-design");
-      if (link.current || paid.current) window.history.replaceState(null, "", window.location.pathname);
+      // From an announcement's phone notification: straight to the inbox.
+      const inbox = params.has("inbox");
+      if (inbox && next.onboarded && !paid.current && !link.current) next = { ...next, screen: "notifs", tab: "home" };
+      if (link.current || paid.current || inbox) window.history.replaceState(null, "", window.location.pathname);
     }
     if (!navigator.onLine) next = { ...next, offline: true };
     // Storage and the URL only exist in the browser, so the first real state arrives after mount.

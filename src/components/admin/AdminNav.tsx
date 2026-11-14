@@ -23,7 +23,7 @@ const links = [
 
 // Owners only: Sales holds every lead's number and notes.
 const salesLink = { href: "/admin/sales", label: "Sales" };
-const ownerLinks = [{ href: "/admin/admins", label: "Admins" }];
+const ownerLinks = [{ href: "/admin/announcements", label: "Announcements" }, { href: "/admin/admins", label: "Admins" }];
 
 export function AdminNav({ owner = false }: { owner?: boolean }) {
   const pathname = usePathname();

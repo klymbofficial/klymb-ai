@@ -67,6 +67,8 @@ export interface CourseState {
   referralSeen: boolean;
   /** They joined the learners' WhatsApp group, or closed its card on Home. */
   groupSeen: boolean;
+  /** Announcement ids already seen in the inbox on this device. */
+  annRead: string[];
   /** `?start=refer`: show a made-up buyer's offer, for checking the screen from a seat that has none. */
   referralSample: boolean;
   /** Current lesson id, "module-lesson", zero-based. */
@@ -366,7 +368,7 @@ const toast = (msg: string, now: number, ms = 2600) => ({ toast: msg, toastUntil
 /** A first visit: nothing done, no baseline yet, the course opens on Day 1. */
 export function defaultState(now = Date.now()): CourseState {
   return {
-    screen: "splash", tab: "home", onboarded: false, onb: 0, splashUntil: now + 1800, referralSeen: false, referralSample: false, groupSeen: false,
+    screen: "splash", tab: "home", onboarded: false, onb: 0, splashUntil: now + 1800, referralSeen: false, referralSample: false, groupSeen: false, annRead: [],
     cur: "0-0", t: 0, playing: false, speed: 1, visited: false, miniHide: null, ended: false, upNext: 0,
     notes: {}, draft: "", ptab: "lessons", openMod: 0, done: [],
     quiz: { kind: "pre", stage: "intro", idx: 0, answers: {} }, timeLeft: TIMED_SECONDS, confirmExit: false,
@@ -645,7 +647,7 @@ export function badges(s: CourseState, now = Date.now()): Badge[] {
 
 /** Fields kept in storage between visits. Preview switches and transient UI stay out. */
 const PERSISTED = [
-  "onboarded", "referralSeen", "groupSeen", "cur", "t", "speed", "visited", "notes", "openMod", "done", "pre", "post", "qcDone",
+  "onboarded", "referralSeen", "groupSeen", "annRead", "cur", "t", "speed", "visited", "notes", "openMod", "done", "pre", "post", "qcDone",
   "goal", "remind", "autoplay", "quality", "wifiOnly", "streakRem", "replyNotif", "todaySec", "today",
   "lessons", "lang", "subs", "subLang", "subSize", "audio", "volume", "muted", "toured", "activeDays", "commitment", "popDay",
 ] as const satisfies readonly (keyof CourseState)[];

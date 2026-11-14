@@ -29,7 +29,6 @@ export function JourneyDock() {
   const ring = useRef<SVGCircleElement>(null);
   const [on, setOn] = useState(false);
   const [step, setStep] = useState("01");
-  const [yieldDock, setYieldDock] = useState(false);
 
   useEffect(() => {
     const d = dock.current;
@@ -48,19 +47,6 @@ export function JourneyDock() {
       { threshold: 0 },
     );
     heroes.forEach((h) => heroIO.observe(h));
-
-    // On phones the dock would cover a plan's price or buy button, or "Talk to our team", so it steps
-    // aside while a plan card or the teams card is on screen (is-yield is styled only at phone width).
-    const plans = [...document.querySelectorAll("[data-plan], #teams")];
-    const plansInView = new Set<Element>();
-    const plansIO = new IntersectionObserver(
-      (es) => {
-        es.forEach((e) => (e.isIntersecting ? plansInView.add(e.target) : plansInView.delete(e.target)));
-        setYieldDock(plansInView.size > 0);
-      },
-      { threshold: 0 },
-    );
-    plans.forEach((p) => plansIO.observe(p));
 
     const sectionIO = new IntersectionObserver(
       (es) =>
@@ -89,7 +75,6 @@ export function JourneyDock() {
 
     return () => {
       heroIO.disconnect();
-      plansIO.disconnect();
       sectionIO.disconnect();
       window.removeEventListener("scroll", onScroll);
     };
@@ -99,7 +84,7 @@ export function JourneyDock() {
     <Link
       ref={dock}
       href="/courses"
-      className={`kl-dock${on ? " is-on" : ""}${yieldDock ? " is-yield" : ""}`}
+      className={on ? "kl-dock is-on" : "kl-dock"}
       aria-label="Start your journey"
       aria-hidden={!on}
       tabIndex={on ? 0 : -1}
