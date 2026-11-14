@@ -5,7 +5,7 @@
  *
  * It never decides anything about access. The server action has already
  * registered the person and, for a track whose course is built, looked for or
- * created their one course place; this only describes the result. Nothing
+ * created their place on that track; this only describes the result. Nothing
  * here promises an email, a date or a payment: the app does not guarantee
  * those, so the copy does not either.
  */
@@ -13,21 +13,17 @@ import { enrolment } from "@/data/config";
 import type { Track } from "@/types/program";
 
 export interface RegistrationOutcome {
-  /** A course place exists for this email after the request. */
+  /** A course place exists for this email on the chosen track after the request. */
   enrolled: boolean;
-  /** That place is on the track chosen in the form (true too when no place exists yet). */
-  sameTrack: boolean;
   /** The email had registered before. */
   duplicate: boolean;
-  /** The track the place is really on. */
-  placeTrack?: Track;
   /** The track chosen in the form. */
   track?: Track;
   email: string;
 }
 
 /** What the primary button does. */
-export type SuccessAction = "start-day-1" | "open-course" | "retry" | "none";
+export type SuccessAction = "start-day-1" | "retry" | "none";
 
 export interface SuccessModel {
   /** The seal: a tick for "done", a plain mark where the registration is saved but the place is not open. */
@@ -44,21 +40,6 @@ export interface SuccessModel {
 export function successModel(o: RegistrationOutcome): SuccessModel {
   const name = o.track?.name ?? "your track";
   const repeatNote = o.duplicate ? "This email had already registered, so nothing was duplicated." : undefined;
-
-  // A place already exists, on a different track than the one just chosen. One
-  // person has one track, and registering again does not move them.
-  if (o.enrolled && !o.sameTrack) {
-    if (o.placeTrack) {
-      return {
-        tone: "done",
-        title: "You're already on a track.",
-        lead: `You already have a place on the ${o.placeTrack.name} track. A person has one track, so registering for ${name} did not change it.`,
-        repeatNote,
-        steps: [`Open your course to carry on with ${o.placeTrack.name}.`, "To change track, write to us."],
-        action: "open-course",
-      };
-    }
-  }
 
   if (o.enrolled) {
     return {

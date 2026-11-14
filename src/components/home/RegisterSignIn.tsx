@@ -32,7 +32,7 @@ export function RegisterSignIn({
   return (
     <div>
       <h2 className="text-2xl font-bold text-balance">
-        Register for the {chosen ? <span className="text-red-deep">{chosen.name}</span> : null} cohort
+        Start the {chosen ? <span className="text-red-deep">{chosen.name}</span> : null}{chosen?.kind === "challenge" ? (chosen.name.endsWith("Challenge") ? "" : " challenge") : " track"}
       </h2>
       <p className="mt-1 mb-6 text-sm text-muted">
         Start by signing in with Google. Your registration and your course belong to your Google email, so only you can make or change them.

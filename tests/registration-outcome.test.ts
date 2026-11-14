@@ -7,23 +7,15 @@ import { signInFailedPath } from "../src/lib/sd-offer";
 import { orderedErrors, REGISTRATION_FIELD_ORDER, validateRegistration, emptyRegistration } from "../src/lib/validation";
 
 const qa = getTrack("qa-engineer")!;
-const pm = getTrack("project-manager")!;
 
 const base: RegistrationOutcome = {
-  enrolled: true, sameTrack: true, duplicate: false, track: qa, email: "a@b.co",
+  enrolled: true, duplicate: false, track: qa, email: "a@b.co",
 };
 
 test("a new place: straight to Day 1", () => {
   const m = successModel(base);
   assert.equal(m.action, "start-day-1");
   assert.match(m.lead, /QA Engineer/);
-});
-
-test("a place already on another track is never reported as the new one", () => {
-  const m = successModel({ ...base, sameTrack: false, placeTrack: pm });
-  assert.equal(m.action, "open-course");
-  assert.match(m.lead, /Project Manager/);
-  assert.doesNotMatch(m.title + m.lead, /reserved/);
 });
 
 test("a registration saved without a place says so and offers a retry", () => {
@@ -38,7 +30,7 @@ test("a repeat registration is told nothing was duplicated", () => {
 });
 
 test("the success copy promises no email, price or date it cannot keep", () => {
-  for (const o of [base, { ...base, enrolled: false }, { ...base, sameTrack: false, placeTrack: pm }]) {
+  for (const o of [base, { ...base, enrolled: false }, { ...base, duplicate: true }]) {
     const text = JSON.stringify(successModel(o));
     assert.doesNotMatch(text, /₹|free|refund|certificate|guarantee|welcome email/i);
   }

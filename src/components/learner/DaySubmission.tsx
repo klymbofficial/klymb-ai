@@ -11,8 +11,8 @@ import { Celebrate } from "./Celebrate";
 import { submitOrQueue } from "@/lib/offlineQueue";
 
 export function DaySubmission({
-  day, checklist, submission, needsLinkedinPost, nextDay,
-}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean; nextDay?: number }) {
+  day, checklist, submission, needsLinkedinPost, nextDay, trackSlug,
+}: { day: number; checklist?: string[]; submission: Submission | null; needsLinkedinPost?: boolean; nextDay?: number; trackSlug: string }) {
   const [saved, setSaved] = useState(!!submission);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -55,6 +55,8 @@ export function DaySubmission({
       )}
 
       <form id={`day-form-${day}`} action={onSubmit} className="flex flex-1 flex-col gap-5">
+        {/* Which of their tracks this day belongs to; it travels with a queued offline submit too. */}
+        <input type="hidden" name="track" value={trackSlug} />
         <div>
           <label htmlFor={`url-${day}`} className="block text-[15px] font-semibold">Link to today&apos;s work</label>
           <p className="mt-1 text-xs text-muted">A file, folder or commit in your own GitHub repository, not the repository home. Each day needs its own link.</p>
@@ -114,9 +116,10 @@ export function DaySubmission({
                     ? "Saved on this device, not sent yet. It sends when you are back online."
                     : nextDay ? `Day ${day} submitted. Day ${nextDay} is open.` : `Day ${day} submitted. That's every day of the track.`}
                 </p>
+                {/* Somewhere to go: the next day, or back to the track's days once the last one is in. */}
                 {!queued && (nextDay
-                  ? <Link href={`/learn/day/${nextDay}`} className={learnerButton("primary", "w-full sm:w-auto sm:self-start")}>Start Day {nextDay}</Link>
-                  : <Link href="/learn#your-days" className={learnerButton("primary", "w-full sm:w-auto sm:self-start")}>Back to your dashboard</Link>)}
+                  ? <Link href={`/learn/tracks/${trackSlug}/day/${nextDay}`} className={learnerButton("primary", "w-full sm:w-auto sm:self-start")}>Start Day {nextDay}</Link>
+                  : <Link href={`/learn/tracks/${trackSlug}#your-days`} className={learnerButton("primary", "w-full sm:w-auto sm:self-start")}>Back to your track</Link>)}
               </motion.div>
             )}
           </AnimatePresence>

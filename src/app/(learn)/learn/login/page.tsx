@@ -4,15 +4,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LearnerLoginForm } from "@/components/learner/LearnerLoginForm";
 import { Wordmark } from "@/components/layout/Wordmark";
-import { getLearnerState, redirectCourseBuyer } from "@/lib/learner/data";
+import { getLearnerState } from "@/lib/learner/data";
 import { inAppBrowser } from "@/lib/sd-offer";
 import { continueOnThisDevice, signOutLearner } from "@/app/(learn)/learn/actions";
 
-export const metadata: Metadata = { title: "Learner sign-in", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Log in", robots: { index: false, follow: false } };
 
 export default async function LearnerLoginPage({ searchParams }: { searchParams: Promise<{ error?: string; welcome?: string }> }) {
   const { error, welcome } = await searchParams;
-  await redirectCourseBuyer();
   const state = await getLearnerState();
   // Another device holds this learner's slot: stay here and explain, never loop back to /learn.
   const blocked = state.state === "other-device" || error === "device" || error === "takeover-limit";
@@ -23,7 +22,7 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <Wordmark className="text-2xl" />
-          <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Learner sign-in</p>
+          <p className="mt-2 text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Log in</p>
         </div>
         <div className="card p-6 sm:p-8">
           {blocked ? (

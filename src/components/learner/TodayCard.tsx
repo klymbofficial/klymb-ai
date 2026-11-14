@@ -14,8 +14,16 @@ export interface TodayDay { day: number; title: string; mission: string; estimat
  * states shows is decided by `todayAction`, from the learner's submissions.
  */
 export function TodayCard({
-  action, day, total, canPractise,
-}: { action: TodayAction; day: TodayDay | null; total: number; /** The track has a voice-coach topic list. */ canPractise: boolean }) {
+  action, day, total, base, canPractise,
+}: {
+  action: TodayAction;
+  day: TodayDay | null;
+  total: number;
+  /** The track's own page, e.g. /learn/tracks/qa-engineer: a person can be on several. */
+  base: string;
+  /** The track has a voice-coach topic list. */
+  canPractise: boolean;
+}) {
   if (action.kind === "complete") {
     return (
       <Shell id="today-title" eyebrow="Track complete" icon={<CircleCheck aria-hidden="true" className="size-4" />}>
@@ -25,7 +33,7 @@ export function TodayCard({
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <a href="#your-days" className={learnerButton("primary")}>Review your days <ArrowRight aria-hidden="true" className="size-4" /></a>
-          {canPractise && <Link href="/learn/coach" className={learnerButton("secondary")}>Practise with the voice coach</Link>}
+          {canPractise && <Link href={`${base}/coach`} className={learnerButton("secondary")}>Practise with the voice coach</Link>}
           <a href="#achievements-title" className={learnerButton("secondary")}>Your badges</a>
         </div>
       </Shell>
@@ -47,7 +55,7 @@ export function TodayCard({
       <Shell id="today-title" eyebrow="Next step" icon={<Lock aria-hidden="true" className="size-4" />}>
         {title}
         <p className="mt-2 max-w-xl text-sm text-muted sm:text-base">Day {day.day} opens once you unlock the full course.</p>
-        <div className="mt-5"><Link href={`/learn/day/${day.day}`} className={learnerButton("primary")}>Unlock the full course <ArrowRight aria-hidden="true" className="size-4" /></Link></div>
+        <div className="mt-5"><Link href={`${base}/day/${day.day}`} className={learnerButton("primary")}>Unlock the full course <ArrowRight aria-hidden="true" className="size-4" /></Link></div>
       </Shell>
     );
   }
@@ -59,7 +67,7 @@ export function TodayCard({
         <p className="mt-2 max-w-xl text-sm text-muted sm:text-base">
           {MAX_NEW_DAYS_PER_DAY} new days is the most you can submit in one day. Day {day.day}: {day.title} opens for submission tomorrow.
         </p>
-        <div className="mt-5"><Link href={`/learn/day/${day.day}`} className={learnerButton("secondary")}>Read Day {day.day} now</Link></div>
+        <div className="mt-5"><Link href={`${base}/day/${day.day}`} className={learnerButton("secondary")}>Read Day {day.day} now</Link></div>
       </Shell>
     );
   }
@@ -70,7 +78,7 @@ export function TodayCard({
       {mission}
       {meta}
       <div className="mt-5">
-        <Link href={`/learn/day/${day.day}`} className={learnerButton("primary", "w-full sm:w-auto")}>
+        <Link href={`${base}/day/${day.day}`} className={learnerButton("primary", "w-full sm:w-auto")}>
           {action.started ? `Continue with Day ${day.day}` : `Start Day ${day.day}`} <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
       </div>

@@ -1,20 +1,24 @@
 import { allFree } from "@/data/tracks";
-import Image from "next/image";
 import Link from "next/link";
-import { signOutLearner } from "@/app/(learn)/learn/actions";
+import { currentEmail } from "@/auth";
 import { LearnerNav } from "@/components/learner/LearnerNav";
-import { learnerButton } from "@/components/learner/learner-ui";
 import { ReminderBell } from "@/components/pwa/ReminderBell";
-import { AdminLink } from "@/components/layout/AdminLink";
+import { AccountMenu } from "./AccountMenu";
 
-/** The signed-in bar shared by the dashboard and the day pages: the learner's own links, not the marketing menu. */
-export function LearnerTopBar({ name, image, coach = false }: { name: string; image?: string | null; /** Show the voice-coach link: the learner's track has topics to practise. */ coach?: boolean }) {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
+/**
+ * The signed-in bar shared by the dashboard, the track page, the day pages and
+ * the coach: the wordmark, which is the way back to the dashboard, the
+ * learner's own links rather than the marketing menu, and the account menu.
+ */
+export async function LearnerTopBar({
+  name, image, coach,
+}: {
+  name: string;
+  image?: string | null;
+  /** The voice coach of the track on this page, when that track has topics to practise. */
+  coach?: string;
+}) {
+  const email = await currentEmail();
 
   return (
     <>
@@ -34,25 +38,9 @@ export function LearnerTopBar({ name, image, coach = false }: { name: string; im
 
           <LearnerNav coach={coach} />
 
-          <div className="flex h-14 items-center gap-3 justify-self-end lg:h-auto">
-            <AdminLink className="rounded-md border border-line/50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors hover:border-red-deep hover:text-red-deep" />
+          <div className="flex h-14 items-center gap-2 justify-self-end lg:h-auto">
             <ReminderBell />
-            {image ? (
-              <Image src={image} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
-            ) : (
-              <span aria-hidden="true" className="grid size-7 place-items-center rounded-full bg-surface text-xs font-extrabold">
-                {initials || "?"}
-              </span>
-            )}
-            <span className="hidden text-xs font-extrabold uppercase tracking-[0.04em] sm:inline">{name}</span>
-            <form action={signOutLearner}>
-              <button
-                type="submit"
-                className={learnerButton("secondary", "ml-1 min-h-9! px-3! py-1.5! text-xs!")}
-              >
-                Sign out
-              </button>
-            </form>
+            <AccountMenu name={name} email={email} image={image} />
           </div>
         </div>
       </header>

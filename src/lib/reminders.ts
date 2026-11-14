@@ -20,6 +20,8 @@ export function slotForIstHour(hour: number): Slot | null {
 
 export interface ReminderInput {
   slot: Slot;
+  /** The track the reminder is for, so it opens that track's day. */
+  track?: string;
   name: string;
   day: number;
   title: string;
@@ -57,7 +59,8 @@ export function buildReminder(r: ReminderInput): Reminder | null {
   // Done for today: only the morning "it's open" ever goes out, and that is before they could finish.
   if (r.doneToday && r.slot !== "morning") return null;
 
-  const url = `/learn/day/${r.behind ? r.day - 1 : r.day}`;
+  const day = r.behind ? r.day - 1 : r.day;
+  const url = r.track ? `/learn/tracks/${r.track}/day/${day}` : `/learn/day/${day}`;
   const tag = `day-${r.day}`; // later reminders replace earlier ones, never pile up
   const icon = face(r.behind ? "missing" : r.slot === "morning" ? "excited" : r.slot === "midday" ? "surprised" : "sleepy");
   const done = (c: Copy): Reminder => ({ ...c, url, tag, loud: r.slot === "morning", icon });

@@ -16,14 +16,16 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   // A link that names a track we do not have: say so, rather than showing an empty picker with no explanation.
   const unknownTrack = !!track && !defaultTrack;
 
-  // Back from Google. Someone already enrolled has nothing to
-  // fill in: send them to their course rather than a form they have done. On
-  // another device the course page says so and offers to continue here.
+  // Back from Google. Someone already on this track has nothing to fill in:
+  // send them to it rather than a form they have done. A different track is a
+  // second place, so the form stays. On another device the course page says
+  // so and offers to continue here.
   const session = await auth();
   const email = verifiedEmailFrom(session);
   if (email) {
-    const { state } = await getLearnerState();
-    if (state === "enrolled" || state === "other-device") redirect("/learn");
+    const { state } = await getLearnerState(defaultTrack);
+    if (state === "other-device") redirect("/learn");
+    if (defaultTrack && state === "enrolled") redirect(`/learn/tracks/${defaultTrack}`);
   }
 
   const googleUser = email

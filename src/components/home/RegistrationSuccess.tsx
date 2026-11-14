@@ -59,10 +59,8 @@ export interface SuccessState extends RegistrationOutcome {
  * The words come from successModel, so each real outcome has its own answer.
  */
 export function RegistrationSuccess({ onRetry, repo, ...outcome }: SuccessState & { onRetry?: () => void }) {
-  const { track, placeTrack, email } = outcome;
+  const { track, email } = outcome;
   const m = successModel(outcome);
-  // The track the place is on, when we may say so; otherwise the one chosen.
-  const shownTrack = outcome.enrolled && !outcome.sameTrack ? placeTrack : track;
 
   return (
     <div className="flex flex-col items-center px-6 py-9 text-center sm:px-12 sm:py-12">
@@ -77,17 +75,17 @@ export function RegistrationSuccess({ onRetry, repo, ...outcome }: SuccessState 
 
       {/* What was saved, so a typo is caught here and not on Day 1. */}
       <dl aria-label="What was saved" className="mt-6 w-full max-w-md divide-y divide-white/10 rounded-xl bg-white/5 text-left text-sm ring-1 ring-white/10">
-        {shownTrack && (
+        {track && (
           <div className="flex justify-between gap-4 px-4 py-2.5">
             <dt className="text-white/55">Track</dt>
-            <dd className="text-right font-semibold text-white">{shownTrack.name}</dd>
+            <dd className="text-right font-semibold text-white">{track.name}</dd>
           </div>
         )}
         <div className="flex justify-between gap-4 px-4 py-2.5">
           <dt className="text-white/55">Email</dt>
           <dd className="min-w-0 break-words text-right font-semibold text-white">{email}</dd>
         </div>
-        {repo && outcome.sameTrack && (
+        {repo && (
           <div className="flex justify-between gap-4 px-4 py-2.5">
             <dt className="text-white/55">Repository</dt>
             <dd className="min-w-0 break-all text-right font-semibold text-white">{repo}</dd>
@@ -107,22 +105,19 @@ export function RegistrationSuccess({ onRetry, repo, ...outcome }: SuccessState 
         </ol>
       </div>
 
-      {!HIDE_MONEY && outcome.sameTrack && <p className="mt-6 text-[15px] text-white/80">{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>}
+      {!HIDE_MONEY && <p className="mt-6 text-[15px] text-white/80">{track?.price === 0 ? "This track is free: there is nothing to pay." : "No payment has been taken yet."}</p>}
 
-      {outcome.sameTrack && track?.available && track.price > 0 && (
+      {track?.available && track.price > 0 && (
         <>
           <p className="mt-6 text-sm text-white/75">Day 1 is free. Pay when you&apos;re ready to unlock Days 2 to 30.</p>
-          <PayButton email={email} price={priceNow(track.price)} />
+          <PayButton email={email} track={track.slug} price={priceNow(track.price)} />
         </>
       )}
 
       {/* Straight into the course: they are signed in already. */}
       <div className="mt-8 flex flex-col items-center gap-4">
         {m.action === "start-day-1" && (
-          <ButtonLink href="/learn" soft arrow className="rounded-full px-7">Start Day 1</ButtonLink>
-        )}
-        {m.action === "open-course" && (
-          <ButtonLink href="/learn" soft arrow className="rounded-full px-7">Open my course</ButtonLink>
+          <ButtonLink href={track ? `/learn/tracks/${track.slug}/day/1` : "/learn"} soft arrow className="rounded-full px-7">Start Day 1</ButtonLink>
         )}
         {m.action === "retry" && (
           <button

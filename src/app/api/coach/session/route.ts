@@ -23,7 +23,8 @@ const MAX_SDP = 64 * 1024;
  * row, no session.
  */
 export async function POST(req: Request) {
-  const state = await getLearnerState();
+  // Which of their tracks this practice is for; the topic must belong to it.
+  const state = await getLearnerState(new URL(req.url).searchParams.get("track") ?? undefined);
   // An API answers; it does not redirect a fetch to a sign-in page.
   if (state.state !== "enrolled") {
     return NextResponse.json({ error: "Sign in on your cohort account to use the coach." }, { status: 401 });

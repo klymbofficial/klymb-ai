@@ -76,7 +76,10 @@ export function RegistrationForm({
   const chosenTrack = getTrack(data.track);
   // Invite-only tracks are offered only to someone who arrived on their link.
   const invited = defaultTrack ? getTrack(defaultTrack) : undefined;
-  const trackOptions = invited && invited.listed === false ? [...tracks, invited] : tracks;
+  // A challenge, like an invite-only track, is offered when they came from its page.
+  const trackOptions = invited && !tracks.includes(invited) ? [...tracks, invited] : tracks;
+  const isChallenge = chosenTrack?.kind === "challenge";
+  const total = isChallenge ? 60 : 30;
   const busy = pending;
   // False on the server and until this form is hydrated. Before that a press
   // of Register would be a plain browser submit, which puts the name, email
@@ -147,10 +150,8 @@ export function RegistrationForm({
       setResult({
         enrolled: !!response.enrolled,
         duplicate: !!response.duplicate,
-        sameTrack: response.sameTrack !== false,
         email: response.email ?? data.email.trim(),
         track: chosenTrack,
-        placeTrack: response.placeTrack ? getTrack(response.placeTrack) : undefined,
         repo: response.repo,
       });
       onDoneChange?.(true);
@@ -175,11 +176,11 @@ export function RegistrationForm({
   return (
     <>
       <div className={bare ? "" : "rounded-card bg-card p-6 shadow-card sm:p-8"}>
-      {/* Names the cohort being joined, and follows the track picker below. */}
+      {/* Names the track being started, and follows the track picker below. */}
       {titled && (
         <>
           <h2 className="text-2xl font-bold text-balance">
-            Register for the {chosenTrack ? <span className="text-red-deep">{chosenTrack.name}</span> : null} cohort
+            Start the {chosenTrack ? <span className="text-red-deep">{chosenTrack.name}</span> : null}{isChallenge ? (chosenTrack?.name.endsWith("Challenge") ? "" : " challenge") : " track"}
           </h2>
           <p className="mt-1 mb-6 text-sm text-muted">Takes about a minute. Your name and email come from your Google account. Add the rest below.</p>
         </>
@@ -251,14 +252,14 @@ export function RegistrationForm({
           (public, about 30 seconds), then paste its link here. We check that it exists and is public when you register.
         </p>
         <p className="mt-3 rounded-lg border border-red-strong/25 bg-red-strong/5 px-3 py-2.5 text-xs leading-relaxed text-ink/85">
-          <strong className="font-bold text-red-strong">Important:</strong> this repository will be used throughout the cohort for verification. Make sure you type it correctly.
+          <strong className="font-bold text-red-strong">Important:</strong> this repository will be used throughout your {total} days for verification. Make sure you type it correctly.
         </p>
         <div className="mt-3 flex items-start gap-3">
           <input id="repoConfirm" type="checkbox" checked={data.repoConfirm} onChange={(e) => set("repoConfirm", e.target.checked)}
             aria-invalid={!!errors.repoConfirm} aria-describedby={errors.repoConfirm ? "repoConfirm-error" : undefined}
             className="mt-0.5 size-4 shrink-0 accent-red-strong" />
           <label htmlFor="repoConfirm" className="text-xs leading-relaxed text-ink/80">
-            I have provided the correct GitHub repository URL, which will be used throughout the cohort for verification.
+            I have provided the correct GitHub repository URL, which will be used throughout my {total} days for verification.
           </label>
         </div>
         {errors.repoConfirm && <p id="repoConfirm-error" className="mt-1.5 text-xs font-medium text-error">{errors.repoConfirm}</p>}

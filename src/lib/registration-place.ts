@@ -3,28 +3,28 @@ import { trackSlugs } from "@/data/tracks";
 import type { TrackSlug } from "@/types/program";
 
 /**
- * Does this email already hold a course place, and on which track?
+ * Which tracks does this email already hold a course place on? A person can
+ * hold several, one place per track.
  *
  * A failed read is its own answer, `{ ok: false }`, and the caller must stop:
  * it is NOT "no place". Treating an error as "no place" would let a
- * registration for another track be recorded over a learner who is already on
- * one (the record would then name the wrong track).
+ * registration go ahead without knowing what the learner already has.
  *
  * Three different answers, never blurred together:
- *   - `{ ok: true, track: null }`: the read worked and there is NO learner row.
- *   - `{ ok: true, track }`: there is a place, on a track this app knows.
+ *   - `{ ok: true, tracks: [] }`: the read worked and there is NO learner row.
+ *   - `{ ok: true, tracks }`: their places, each on a track this app knows.
  *   - `{ ok: false, reason }`: stop. Either the read failed ("error"), or a
- *     learner row exists but its track is one this app does not know, retired
- *     or corrupt ("unknown-track"). The second is also not "no place": there
- *     is a learner, and we cannot say which track they are on, so changing
- *     their registration could put the wrong one on record.
+ *     learner row exists on a track this app does not know, retired or
+ *     corrupt ("unknown-track"). The second is also not "no place": there is
+ *     a learner we cannot fully account for, so nothing is changed for them
+ *     until the team has looked.
  */
 export type PlaceLookup =
-  | { ok: true; track: TrackSlug | null }
+  | { ok: true; tracks: TrackSlug[] }
   | { ok: false; reason: "error" | "unknown-track" };
 
-export async function lookupPlaceTrack(sql: Pick<Db, "row">, email: string): Promise<PlaceLookup> {
-  const { data, error } = await sql.row<{ track: string }>`
+export async function lookupPlaces(sql: Pick<Db, "rows">, email: string): Promise<PlaceLookup> {
+  const { data, error } = await sql.rows<{ track: string }>`
     select track from course.learners where email = ${email}
   `;
   if (error) {
@@ -32,11 +32,12 @@ export async function lookupPlaceTrack(sql: Pick<Db, "row">, email: string): Pro
     console.error("course place lookup failed:", error.code);
     return { ok: false, reason: "error" };
   }
-  if (!data) return { ok: true, track: null };
-  if (!trackSlugs.includes(data.track as TrackSlug)) {
+  const tracks = (data ?? []).map((r) => r.track);
+  const unknown = tracks.find((t) => !trackSlugs.includes(t as TrackSlug));
+  if (unknown !== undefined) {
     // The slug only (it is a course label, not a person); never the address.
-    console.error("course place has an unknown track:", JSON.stringify(data.track));
+    console.error("course place has an unknown track:", JSON.stringify(unknown));
     return { ok: false, reason: "unknown-track" };
   }
-  return { ok: true, track: data.track as TrackSlug };
+  return { ok: true, tracks: tracks as TrackSlug[] };
 }

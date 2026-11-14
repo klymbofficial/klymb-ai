@@ -27,6 +27,11 @@ export interface CoachTopic {
 }
 
 const TOPICS: Record<TrackSlug, CoachTopic[]> = {
+  // The challenges have no spoken practice yet.
+  claude: [],
+  "artificial-intelligence": [],
+  "software-engineering": [],
+  "data-science": [],
   "junior-developer": [
     {
       id: "git-history",

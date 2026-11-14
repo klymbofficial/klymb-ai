@@ -116,11 +116,11 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 .tick { animation: tick 1.2s infinite; }
 
 /*
- * News-style ticker, left to right. The left padding is the bar's full width;
- * shifted back by the track's own width, the text starts just off the left
- * edge, and at rest it sits just off the right edge, where the loop restarts.
+ * News-style ticker, right to left, the way the announcement bar runs. The
+ * left padding is the bar's full width, so the text starts just off the right
+ * edge and slides out past the left one, where the loop restarts.
  */
-@keyframes ticker { from { transform: translateX(-100%) } to { transform: translateX(0) } }
+@keyframes ticker { from { transform: translateX(0) } to { transform: translateX(-100%) } }
 .ticker { overflow: hidden; white-space: nowrap; }
 .ticker-track { display: inline-block; padding-left: 100%; animation: ticker 22s linear infinite; }
 .ticker:hover .ticker-track { animation-play-state: paused; }

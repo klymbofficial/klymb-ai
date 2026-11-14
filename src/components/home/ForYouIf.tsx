@@ -42,7 +42,7 @@ export function ForYouIf() {
               <div className="rounded-card bg-ink p-6 text-paper">
                 <p className="text-lg font-extrabold">{picked.size} of 6. That is exactly what the 30 days fix.</p>
                 <p className="mt-1 text-sm text-white/70">One role, one real problem a day, and work you can show.</p>
-                <ButtonLink href="/tracks" variant="inverse" soft arrow className="mt-5 px-5 py-2.5 text-sm">Find your track</ButtonLink>
+                <ButtonLink href="/tracks" variant="inverse" soft arrow className="mt-5 px-5 py-2.5 text-sm">Choose your track</ButtonLink>
               </div>
             ) : (
               <p className="text-sm text-muted">{picked.size === 1 ? "One so far. Any others?" : "Two or more, and we should talk."}</p>

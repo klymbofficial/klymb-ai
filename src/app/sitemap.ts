@@ -2,7 +2,7 @@ import { HIDE_MONEY } from "@/lib/site-status";
 import type { MetadataRoute } from "next";
 import { availablePrograms, industries, roles } from "@/data/catalog";
 import { site } from "@/data/config";
-import { tracks } from "@/data/tracks";
+import { challenges, tracks } from "@/data/tracks";
 
 /** Every public page. Signed-in areas are deliberately absent. */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -24,6 +24,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Only programs you can take; the ones not built are kept out of search.
     ...availablePrograms.map((p) => page(`/courses/${p.slug}`, 0.6, "monthly")),
     page("/training-solutions", 0.5, "monthly"),
+    page("/challenges", 0.8, "monthly"),
+    page("/courses/agentic-ai", 0.8, "monthly"),
+    page("/hackathons", 0.7, "weekly"),
+    ...challenges.map((c) => page(`/challenges/${c.slug}`, 0.8, "monthly")),
     page("/system-design", 0.9, "weekly"),
     page("/learn/system-design", 0.8, "weekly"),
     page("/register", 0.9, "weekly"),

@@ -6,8 +6,10 @@ export const brand = {
   tagline: "Get ready for the AI era in 30 days.",
 };
 
+// One link per job: the catalogue, and one place that explains the 30 days.
 const allNavLinks = [
   { label: "Courses", href: "/courses" },
+  { label: "Challenges", href: "/challenges" },
   { label: "Organizations", href: "/organizations" },
   { label: "Program", href: "/program" },
   { label: "How It Works", href: "/#how-it-works" },
@@ -22,7 +24,7 @@ export const hero = {
     "Choose your target role, solve real workplace problems every day, complete weekly assessments and prepare for interviews with a structured career track.",
   /** The working professional's first question, answered in the hero. */
   timeLine: "1–2 hrs a day, in your own time. Start any day.",
-  primaryCta: { label: "Choose My Career Track", href: "/tracks" },
+  primaryCta: { label: "Choose your track", href: "/tracks" },
   secondaryCta: { label: "For organizations", href: "/organizations" },
 };
 
@@ -172,9 +174,9 @@ export const faqs: Faq[] = [
       "No prior experience in the target role is required, but you should be comfortable using a computer daily and committing 1–2 hours a day. Some tracks recommend basic familiarity with the domain; each track page lists who it is for.",
   },
   {
-    question: "Can I change my track?",
+    question: "Can I take more than one track?",
     answer:
-      "Not after you enroll. Each track has its own 30-day project and assessments, so switching mid-cohort would mean starting again. If something has changed for you, write to us and we will talk it through.",
+      "Yes. Start another track whenever you like: each one has its own 30 days and checkpoints, and runs at its own pace beside the first. Nothing you have done on one track is lost by starting another, and your dashboard shows them all.",
   },
   {
     question: "What happens every day?",
@@ -213,7 +215,7 @@ export const faqs: Faq[] = [
 ];
 
 export const urgency = {
-  headline: "The next cohort closes before your role does.",
+  headline: "Start any day. Your role is already changing.",
   support: "Secure your place and build the capability your next company is actively seeking.",
 };
 
@@ -224,7 +226,7 @@ export const footerLinks = {
     { label: "Program", href: "/program" },
     { label: "Career Tracks", href: "/tracks" },
     { label: "Register", href: "/register" },
-    { label: "Learner sign-in", href: "/learn/login" },
+    { label: "Log in", href: "/learn/login" },
     { label: "Contact", href: "/contact" },
   ],
   organizations: [

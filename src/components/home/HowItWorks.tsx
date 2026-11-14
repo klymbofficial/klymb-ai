@@ -173,7 +173,7 @@ export function HowItWorks() {
                       one action on this card, so it never scrolls out of reach. */}
                   {i === 0 && (
                     <div className="pt-2 pl-[3.875rem]">
-                      <ButtonLink href="/tracks" soft arrow className="px-4 py-2 text-xs">Choose Track</ButtonLink>
+                      <ButtonLink href="/tracks" soft arrow className="px-4 py-2 text-xs">Choose your track</ButtonLink>
                     </div>
                   )}
                 </motion.li>

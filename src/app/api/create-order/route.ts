@@ -14,8 +14,11 @@ import { checkRateLimit } from "@/lib/rate-limit";
  * registered for, looked up here, so it cannot be edited on the way.
  */
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => null)) as { email?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { email?: unknown; track?: unknown } | null;
   const email = normaliseEmail(body?.email);
+  // Someone on several tracks pays for each on its own: the button says which.
+  // Without it (the /pay page), their most recent registration is the one.
+  const wanted = typeof body?.track === "string" && getTrack(body.track) ? body.track : null;
   if (!email) return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
 
   const limit = await checkRateLimit("create_order", { limit: 10, windowMinutes: 60 });
@@ -28,12 +31,16 @@ export async function POST(req: Request) {
   // A registration, or failing that a learner enrolled directly by an admin.
   let { data: reg } = await sql.row<{ name: string; phone: string; track: string }>`
     select name, phone, track from course.registrations
-     where email = ${email} and cohort_start = ${cohort.startDate}
+     where email = ${email} and cohort_start = ${cohort.startDate} and (${wanted}::text is null or track = ${wanted})
+     order by created_at desc
+     limit 1
   `;
   if (!reg) {
     const { data: learner } = await sql.row<{ name: string; track: string }>`
       select name, track from course.learners
-       where email = ${email} and cohort_start = ${cohort.startDate}
+       where email = ${email} and cohort_start = ${cohort.startDate} and (${wanted}::text is null or track = ${wanted})
+       order by created_at desc
+       limit 1
     `;
     if (learner) reg = { name: learner.name, phone: "", track: learner.track };
   }
@@ -44,10 +51,10 @@ export async function POST(req: Request) {
 
   const { data: paid } = await sql.rows<{ id: string }>`
     select id from course.payments
-     where email = ${email} and cohort_start = ${cohort.startDate} and status = 'paid'
+     where email = ${email} and track = ${track.slug} and cohort_start = ${cohort.startDate} and status = 'paid'
      limit 1
   `;
-  if (paid?.length) return NextResponse.json({ error: "You have already paid for this cohort." }, { status: 409 });
+  if (paid?.length) return NextResponse.json({ error: "You have already paid for this track." }, { status: 409 });
 
   if (track.price === 0) return NextResponse.json({ error: "This track is free: no payment needed." }, { status: 400 });
 

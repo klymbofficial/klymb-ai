@@ -81,7 +81,7 @@ export function InterviewPrep({ track, enrolHref }: { track: Track; enrolHref: s
               ))}
             </ul>
             <div className="mt-auto pt-6">
-              <ButtonLink href={enrolHref} soft arrow className="rounded-md px-4! py-2! text-xs!">Enroll now</ButtonLink>
+              <ButtonLink href={enrolHref} soft arrow className="rounded-md px-4! py-2! text-xs!">Start this track</ButtonLink>
             </div>
           </Appear>
         </li>

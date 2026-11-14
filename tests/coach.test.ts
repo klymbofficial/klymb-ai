@@ -10,7 +10,10 @@ import {
 } from "../src/lib/coach/assessment";
 import { COACH_TOOLS, SESSION_TUNING, coachInstructions, realtimeSession } from "../src/lib/coach/prompt";
 import { findTopic, nextTopic, topicIds, topicsFor } from "../src/lib/coach/topics";
-import { trackSlugs } from "../src/data/tracks";
+import { allTracks } from "../src/data/tracks";
+
+/** The voice coach is for the career tracks; the 60-day challenges have none. */
+const trackSlugs = allTracks.filter((t) => t.kind !== "challenge").map((t) => t.slug);
 
 const topic = topicsFor("junior-developer")[0];
 const ids = topicIds("junior-developer");

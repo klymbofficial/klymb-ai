@@ -18,8 +18,8 @@ const EASE = [0.2, 0.7, 0.3, 1] as const;
  * open them. Sits on the page ground; it is secondary to the board above.
  */
 export function EvidenceProfile({
-  githubUsername, linkedinSlug, githubUrl, linkedinUrl,
-}: { githubUsername: string | null; linkedinSlug: string | null; githubUrl: string | null; linkedinUrl: string | null }) {
+  track, githubUsername, linkedinSlug, githubUrl, linkedinUrl,
+}: { track: string; githubUsername: string | null; linkedinSlug: string | null; githubUrl: string | null; linkedinUrl: string | null }) {
   const [state, action, pending] = useActionState(saveEvidenceProfile, null as { error?: string; saved?: boolean } | null);
   const complete = !!githubUsername && !!linkedinSlug;
 
@@ -38,6 +38,8 @@ export function EvidenceProfile({
 
   return (
     <form action={action} className="max-w-3xl">
+      {/* The track whose accounts these are: each track keeps its own, carried from the first. */}
+      <input type="hidden" name="track" value={track} />
       <h2 id="evidence" className="text-lg font-bold">Your accounts</h2>
       <p className="mt-1 text-sm leading-relaxed text-muted">
         {complete

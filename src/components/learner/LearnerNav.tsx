@@ -4,12 +4,21 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-/** The learner's own links, with the current page marked for everyone, not just by colour. */
-export function LearnerNav({ coach }: { coach: boolean }) {
+/**
+ * The learner's own links, with the current page marked for everyone, not just by colour.
+ * `coach` is the voice coach of the track on this page; a person can be on several tracks, so
+ * there is only a coach link where a page belongs to one of them.
+ */
+export function LearnerNav({ coach }: { coach?: string }) {
   const path = usePathname();
+  const onCoach = path.endsWith("/coach");
   const links = [
-    { href: "/learn", label: "Dashboard", current: path === "/learn" || path.startsWith("/learn/day") },
-    ...(coach ? [{ href: "/learn/coach", label: "Voice coach", current: path.startsWith("/learn/coach") }] : []),
+    {
+      href: "/learn",
+      label: "Dashboard",
+      current: !onCoach && (path === "/learn" || path.startsWith("/learn/tracks/") || path.startsWith("/learn/day")),
+    },
+    ...(coach ? [{ href: coach, label: "Voice coach", current: onCoach }] : []),
     { href: "/tracks", label: "Browse tracks", current: false },
   ];
   return (

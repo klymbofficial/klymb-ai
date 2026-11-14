@@ -33,7 +33,7 @@ export async function PaymentNotice({ email, track }: { email: string; track: Tr
             100% back when you complete all 30 days.
           </p>
         </div>
-        <PayButton email={email} price={price} tone="light" />
+        <PayButton email={email} track={track.slug} price={price} tone="light" />
       </div>
     </div>
   );

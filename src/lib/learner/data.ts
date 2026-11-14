@@ -1,12 +1,10 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { auth, currentEmail, verifiedEmailFrom } from "@/auth";
-import { hasCourseAccess } from "@/lib/access";
+import { auth, verifiedEmailFrom } from "@/auth";
 import { db } from "@/lib/db/client";
 import { checkDevice } from "@/lib/learner/device";
 import { normaliseEmail } from "@/lib/email";
-import { SD_COURSE } from "@/lib/sd-offer";
 import type { TrackSlug } from "@/types/program";
 
 export interface Learner {
@@ -39,17 +37,38 @@ export type LearnerState =
   | { state: "other-device" }
   /** Signed in, but the course database could not be read: not the same as "not enrolled". */
   | { state: "unavailable" }
+  /** Signed in with no track, or (when a track was asked for) not on that one. */
+  | { state: "not-enrolled"; email: string; tracks: TrackSlug[] }
+  | {
+      state: "enrolled";
+      /** The track asked for, or else the one started most recently. */
+      learner: Learner;
+      submissions: Submission[];
+      /** Every track this person is on, most recent first. */
+      tracks: TrackSlug[];
+      /** Stable per person whatever the track: their first track's row id. */
+      personId: string;
+    };
+
+type LearnerRow = Learner & { device_session: string | null; device_seen_at: string | null };
+
+type Enrolments =
+  | { state: "signed-out" }
+  | { state: "other-device" }
+  | { state: "unavailable" }
   | { state: "not-enrolled"; email: string }
-  | { state: "enrolled"; learner: Learner; submissions: Submission[] };
+  | { state: "enrolled"; email: string; rows: LearnerRow[]; personId: string };
 
 /**
- * Resolves the signed-in user to their cohort place.
+ * Every track place the signed-in user holds, once the one-device check has
+ * passed. A person has one row per track; the device slot is theirs, not the
+ * track's, so it is checked once across all of them.
  *
- * Identity is the Google-verified email on the session; the learner row is
- * matched on that email, so an enrolment created before their first sign-in
- * still finds them.
+ * Identity is the Google-verified email on the session; rows are matched on
+ * that email, so an enrolment created before their first sign-in still finds
+ * them.
  */
-export const getLearnerState = cache(async (): Promise<LearnerState> => {
+const getEnrolments = cache(async (): Promise<Enrolments> => {
   const session = await auth();
   const email = normaliseEmail(verifiedEmailFrom(session));
   if (!email) return { state: "signed-out" };
@@ -59,41 +78,77 @@ export const getLearnerState = cache(async (): Promise<LearnerState> => {
   const sql = db();
   if (!sql) return { state: "unavailable" };
 
-  // Exact match only: ownership of a cohort place must not be fuzzy.
-  const { data: learner, error: learnerError } = await sql.row<Learner & { device_session: string | null; device_seen_at: string | null }>`
+  // Exact match only: ownership of a track place must not be fuzzy.
+  const { data: rows, error: rowsError } = await sql.rows<LearnerRow & { created_at: string }>`
     select id, name, email, track, cohort_start, status, github_url, linkedin_url,
-           github_username, linkedin_slug, device_session, device_seen_at
+           github_username, linkedin_slug, device_session, device_seen_at, created_at
       from course.learners
      where email = ${email}
+     order by created_at desc
   `;
-
   // A failed read is not an empty one: say the data is unavailable instead of "not enrolled".
-  if (learnerError) return { state: "unavailable" };
-  if (!learner) return { state: "not-enrolled", email };
-  if (!(await checkDevice(learner, session?.user?.sid))) return { state: "other-device" };
+  if (rowsError) return { state: "unavailable" };
+  if (!rows?.length) return { state: "not-enrolled", email };
 
-  const { data: submissions, error: submissionsError } = await sql.rows<Submission>`
-    select day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers, linkedin_post_url
-      from course.day_submissions
-     where learner_id = ${learner.id}
-     order by day
-  `;
-
-  // Without the submissions every day would look unstarted, so don't show a half-empty course.
-  if (submissionsError) return { state: "unavailable" };
-
-  return { state: "enrolled", learner: learner as Learner, submissions: submissions ?? [] };
+  // The slot as it stands across their rows: the most recently used one wins.
+  const slot = [...rows].sort((a, b) => (b.device_seen_at ?? "").localeCompare(a.device_seen_at ?? ""))[0];
+  if (!(await checkDevice({ email, device_session: slot.device_session, device_seen_at: slot.device_seen_at }, session?.user?.sid))) {
+    return { state: "other-device" };
+  }
+  return { state: "enrolled", email, rows, personId: rows[rows.length - 1].id };
 });
 
-/** Whoever bought System Design lives in that course for now, ahead of any cohort dashboard. */
-export async function redirectCourseBuyer() {
-  const email = await currentEmail();
-  if (email && (await hasCourseAccess(email, SD_COURSE))) redirect("/learn/system-design");
+/** A track place's submissions, or null when they could not be read. */
+async function submissionsOf(learnerId: string): Promise<Submission[] | null> {
+  const sql = db();
+  if (!sql) return null;
+  const { data, error } = await sql.rows<Submission>`
+    select day, deliverable_url, note, status, submitted_at, reviewer_note, quiz_answers, linkedin_post_url
+      from course.day_submissions
+     where learner_id = ${learnerId}
+     order by day
+  `;
+  return error ? null : data ?? [];
 }
 
-export async function requireLearner() {
-  await redirectCourseBuyer();
-  const result = await getLearnerState();
+/**
+ * Resolves the signed-in user to one of their track places: `track` when it
+ * is given, otherwise the track they started most recently.
+ */
+export const getLearnerState = cache(async (track?: string): Promise<LearnerState> => {
+  const e = await getEnrolments();
+  if (e.state === "signed-out") return { state: "signed-out" };
+  if (e.state === "other-device") return { state: "other-device" };
+  if (e.state === "unavailable") return { state: "unavailable" };
+  if (e.state === "not-enrolled") return { state: "not-enrolled", email: e.email, tracks: [] };
+
+  const tracks = e.rows.map((r) => r.track);
+  const row = track ? e.rows.find((r) => r.track === track) : e.rows[0];
+  if (!row) return { state: "not-enrolled", email: e.email, tracks };
+  const submissions = await submissionsOf(row.id);
+  // Without the submissions every day would look unstarted, so don't show a half-empty course.
+  if (!submissions) return { state: "unavailable" };
+  return { state: "enrolled", learner: row, submissions, tracks, personId: e.personId };
+});
+
+/**
+ * All of the signed-in person's track places with their submissions, most recent first, for the dashboard.
+ * Throws when the course database cannot be read, so the learner error page offers a retry instead of
+ * the dashboard showing no tracks.
+ */
+export const getLearnerTracks = cache(async (): Promise<{ learner: Learner; submissions: Submission[] }[]> => {
+  const e = await getEnrolments();
+  if (e.state === "unavailable") throw new Error("Learner data is unavailable");
+  if (e.state !== "enrolled") return [];
+  return Promise.all(e.rows.map(async (learner) => {
+    const submissions = await submissionsOf(learner.id);
+    if (!submissions) throw new Error("Learner data is unavailable");
+    return { learner, submissions };
+  }));
+});
+
+export async function requireLearner(track?: string) {
+  const result = await getLearnerState(track);
   if (result.state === "signed-out") redirect("/learn/login");
   if (result.state === "other-device") redirect("/learn/login?error=device");
   // Rendered by the learner error page (retry), never mistaken for a missing enrolment.

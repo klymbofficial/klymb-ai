@@ -9,7 +9,7 @@ import { sendWelcome } from "@/lib/welcome";
 import { db } from "@/lib/db/client";
 import { ensureLearner, UNIQUE_VIOLATION } from "@/lib/learner/enrolment";
 import { enrolmentClient } from "@/lib/learner/enrolment-db";
-import { lookupPlaceTrack } from "@/lib/registration-place";
+import { lookupPlaces } from "@/lib/registration-place";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { clamp, LIMITS, parseRepoUrl, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
@@ -20,12 +20,8 @@ export type RegisterResult =
       /** The verified Google address the registration was made for. */
       email?: string;
       duplicate?: boolean;
-      /** A course place exists for this email now. */
+      /** A course place exists for this email on the track chosen in the form now. */
       enrolled?: boolean;
-      /** The place is on the track chosen in the form. False when this email already held a place on another track. */
-      sameTrack?: boolean;
-      /** Where the place really is. */
-      placeTrack?: TrackSlug;
       /** The canonical repository, owner/name, as saved. */
       repo?: string;
     }
@@ -97,28 +93,25 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   const repoError = await checkRepoExists(repo.owner, repo.repo);
   if (repoError) return { ok: false, errors: { github: repoError } };
 
-  // One person, one track. If this email already holds a course place, that
-  // place stays where it is: a second registration never moves it, so the
-  // registration record keeps the track the learner is really on. If the
-  // lookup itself fails, or a learner row exists on a track we do not know,
-  // stop before writing anything: neither is "no place", and carrying on
-  // could record this registration over a learner who is already on a track.
-  const place = await lookupPlaceTrack(sql, data.email);
+  // A person can hold several tracks, one place on each: registering for
+  // another track adds a place there and never moves or rewrites one they
+  // already have. Their places are read first, and if that read fails, or a
+  // place is on a track this app does not know (retired or corrupt), stop
+  // before writing anything: neither is "no place".
+  const place = await lookupPlaces(sql, data.email);
   if (!place.ok) {
     if (place.reason === "unknown-track") {
       return { ok: false, kind: "support", message: "We can't register this account automatically: it needs a quick check by our team. Nothing was changed." };
     }
     return { ok: false, kind: "unavailable", message: "Registration is not available right now." };
   }
-  const placeTrack = place.track;
-  const keptOnOtherTrack = !!placeTrack && placeTrack !== data.track;
-  const trackToStore = keptOnOtherTrack ? placeTrack : data.track;
+  const alreadyOnTrack = place.tracks.includes(data.track as TrackSlug);
 
   const { error } = await sql.run`
     insert into course.registrations
       (name, email, phone, track, job_role, experience, linkedin, github, consent, cohort_start)
     values (
-      ${data.name}, ${data.email}, ${data.phone}, ${trackToStore}, ${data.currentRole},
+      ${data.name}, ${data.email}, ${data.phone}, ${data.track}, ${data.currentRole},
       ${data.experience}, ${data.linkedin || null}, ${data.github || null},
       ${data.consent}, ${cohort.startDate}
     )
@@ -132,19 +125,21 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   }
 
   if (duplicate) {
-    // Their own registration (the address is the verified session's): keep their latest answers rather than the first ones.
+    // Already registered for this track: keep their latest answers rather
+    // than the first ones. Only this track's row: another track they are on
+    // keeps its own repository. The address is the verified session's.
     await sql.run`
       update course.registrations
-         set name = ${data.name}, phone = ${data.phone}, track = ${trackToStore},
+         set name = ${data.name}, phone = ${data.phone},
              job_role = ${data.currentRole}, experience = ${data.experience},
              linkedin = ${data.linkedin || null}, github = ${data.github || null}
-       where email = ${data.email} and cohort_start = ${cohort.startDate}
+       where email = ${data.email} and track = ${data.track} and cohort_start = ${cohort.startDate}
     `;
   }
 
   // Only tracks whose course is built enrol straight into Day 1. The others
   // hold a reserved place until their content opens.
-  let enrolled = keptOnOtherTrack;
+  let enrolled = false;
   if (getTrack(data.track)?.contentLive) {
     enrolled = await ensureLearner(enrolmentClient(sql), {
       email: data.email,
@@ -158,16 +153,14 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   }
 
   // A first registration gets the welcome email, after the response so the form never waits on it.
-  // Not when the place is on another track: it would welcome them to a track they are not on.
-  if (!duplicate && !keptOnOtherTrack) after(() => sendWelcome({ email: data.email, name: data.name, track: data.track }));
+  // Not when they were already on this track: they have been welcomed to it before.
+  if (!duplicate && !alreadyOnTrack) after(() => sendWelcome({ email: data.email, name: data.name, track: data.track }));
 
   return {
     ok: true,
     email: data.email,
     duplicate,
     enrolled,
-    sameTrack: !keptOnOtherTrack,
-    ...(placeTrack ? { placeTrack } : {}),
     repo: `${repo.owner}/${repo.repo}`,
   };
 }

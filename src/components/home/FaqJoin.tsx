@@ -57,7 +57,7 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
               className="-mb-4 w-36 shrink-0 select-none sm:w-60"
             />
             <div className="relative mb-6 flex-1 rounded-card border-2 border-ink bg-card p-5 sm:p-6">
-              <Eyebrow>Join the cohort</Eyebrow>
+              <Eyebrow>Start a track</Eyebrow>
               <p className="mt-2 text-base font-extrabold leading-snug text-balance sm:text-lg">{urgency.headline}</p>
               <p className="mt-2 text-sm text-muted">{urgency.support}</p>
               {/* The tail, pointing back at him. */}
@@ -68,7 +68,7 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
           {/* A short "start here" card instead of the full form: pick a track, then
               the registration page opens with it chosen. Sticks beside the FAQ. */}
           <div className="card p-6 sm:p-8 lg:sticky lg:top-24">
-            <h3 className="text-xl font-extrabold">Reserve your seat</h3>
+            <h3 className="text-xl font-extrabold">Choose your track</h3>
             <p className="mt-1 text-sm text-muted">{HIDE_MONEY ? "Pick your track. It takes a minute, and Day 1 opens straight away." : allFree ? "Every track is free right now. Register and start Day 1 today." : refund.headline}</p>
             <ul className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-2.5">
               {tracks.map((t) => (
@@ -88,7 +88,7 @@ export function FaqJoin({ defaultTrack }: { defaultTrack?: TrackSlug }) {
             </ul>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line/30 pt-5 text-sm">
               <Link href="/tracks" className="font-semibold underline underline-offset-4 hover:text-red-deep">Not sure? Compare the tracks</Link>
-              <Link href="/learn/login" className="text-muted underline underline-offset-4 hover:text-ink">Already registered? Sign in</Link>
+              <Link href="/learn/login" className="text-muted underline underline-offset-4 hover:text-ink">Already registered? Log in</Link>
             </div>
           </div>
         </div>

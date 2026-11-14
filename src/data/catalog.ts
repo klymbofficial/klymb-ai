@@ -89,6 +89,11 @@ const trackRoles: Record<TrackSlug, RoleSlug> = {
   "reporting-analyst": "reporting-analytics",
   // Invite-only: not in `tracks`, so never reaches the catalog. Kept so the map is total.
   "ai-product-manager": "project-management",
+  // The 60-day challenges: not in `tracks` either (they have /challenges). Kept so the map is total.
+  claude: "software-engineering",
+  "artificial-intelligence": "software-engineering",
+  "software-engineering": "software-engineering",
+  "data-science": "reporting-analytics",
 };
 
 const trackPrograms: Program[] = tracks

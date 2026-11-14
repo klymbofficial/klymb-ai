@@ -23,8 +23,13 @@ export interface EnrolInput {
  * database import so the tests can exercise the rule on its own.
  */
 export interface EnrolmentClient {
-  /** The learner's existing place, if they have one. */
-  findLearner(email: string): Promise<{ id: string } | null>;
+  /** The learner's existing place on this track, if they have one. */
+  findLearner(email: string, track: string): Promise<{ id: string } | null>;
+  /**
+   * The profile links from another of this person's tracks, so a second track
+   * starts with the GitHub and LinkedIn they already gave. Null on a first track.
+   */
+  findProfileLinks(email: string): Promise<ProfileLinks | null>;
   /**
    * The app.klymb.ai user holding this address, so a course place is attached
    * to the real account rather than only matching on the string. Null when
@@ -35,28 +40,45 @@ export interface EnrolmentClient {
   insertLearner(values: Record<string, unknown>): Promise<{ error: { code?: string } | null }>;
 }
 
+export interface ProfileLinks {
+  github_username: string | null;
+  github_url: string | null;
+  linkedin_slug: string | null;
+  linkedin_url: string | null;
+}
+
 /** Postgres unique violation: the row already exists, which is success here. */
 export const UNIQUE_VIOLATION = "23505";
 
 /**
- * Idempotent: a repeat registration never creates a second learner.
- * Returns true when a place exists afterwards, false when it does not.
+ * One place per person per track. Idempotent: registering for the same track
+ * again never creates a second learner, while a different track adds one, with
+ * the GitHub and LinkedIn from their earlier track carried over. The
+ * registration's own repository owner wins over the carried GitHub.
+ * Returns true when a place on this track exists afterwards, false when not.
  */
 export async function ensureLearner(client: EnrolmentClient, input: EnrolInput): Promise<boolean> {
-  if (await client.findLearner(input.email)) return true;
+  if (await client.findLearner(input.email, input.track)) return true;
 
+  const carried = await client.findProfileLinks(input.email);
+  const github = input.githubUsername
+    ? { github_username: input.githubUsername, github_url: input.githubUrl ?? null }
+    : carried?.github_username ? { github_username: carried.github_username, github_url: carried.github_url } : {};
   const { error } = await client.insertLearner({
     email: input.email,
     name: input.name,
     track: input.track,
     cohort_start: input.cohortStart,
     user_id: await client.findPlatformUserId(input.email),
-    ...(input.githubUsername ? { github_username: input.githubUsername, github_url: input.githubUrl ?? null } : {}),
+    ...github,
+    ...(carried?.linkedin_slug ? { linkedin_slug: carried.linkedin_slug, linkedin_url: carried.linkedin_url } : {}),
   });
 
   if (!error) return true;
-  // Someone else inserted the same address between our check and our insert.
-  if (error.code === UNIQUE_VIOLATION) return true;
+  // Someone else inserted this track between our check and our insert, which
+  // is success. Before the several-tracks migration has run, a second track
+  // also collides here, on the old one-row-per-email rule: that is not success.
+  if (error.code === UNIQUE_VIOLATION) return !!(await client.findLearner(input.email, input.track));
 
   console.error("enrolment failed:", error.code);
   return false;

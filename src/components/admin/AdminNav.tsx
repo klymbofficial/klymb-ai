@@ -15,6 +15,7 @@ const links = [
   { href: "/admin/learners", label: "Learners & progress" },
   { href: "/admin/companies", label: "Companies" },
   { href: "/admin/system-design", label: "System Design" },
+  { href: "/admin/hackathon", label: "Hackathon" },
   { href: "/admin/courses", label: "Course preview" },
   { href: "/admin/support", label: "Support" },
   { href: "/admin/audit", label: "Admin activity" },

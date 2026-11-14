@@ -1,6 +1,4 @@
-import { HIDE_MONEY } from "@/lib/site-status";
 import Link from "next/link";
-import { APP_URL } from "@/data/products";
 import { contact, socials } from "@/data/config";
 import { brand, footerLinks } from "@/data/program";
 import { entity } from "@/data/legal";
@@ -50,7 +48,17 @@ export function Footer() {
             </ul>
           </div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
-            <Column title="Programs" links={[{ label: "Courses", href: "/courses" }, ...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })), { label: "System Design", href: "/system-design" }, { label: HIDE_MONEY ? "app.klymb.ai ↗" : "app.klymb.ai: free platform ↗", href: APP_URL }]} />
+            <Column
+              title="Programs"
+              links={[
+                { label: "Courses", href: "/courses" },
+                { label: "60-day challenges", href: "/challenges" },
+                ...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })),
+                { label: "System Design", href: "/system-design" },
+                { label: "Agentic AI Systems", href: "/courses/agentic-ai" },
+                { label: "Hackathons", href: "/hackathons" },
+              ]}
+            />
             <Column title="Organizations" links={footerLinks.organizations} />
             <Column title="Klymb" links={footerLinks.klymb} />
             <Column title="Legal" links={footerLinks.legal} />

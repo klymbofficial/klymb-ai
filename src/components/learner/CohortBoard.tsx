@@ -3,6 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { dayActionLabel } from "@/lib/day-lock";
 import { learnerButton } from "@/components/learner/learner-ui";
 
 export interface BoardDay {
@@ -34,13 +35,22 @@ function formatLong(iso: string) {
 }
 
 /**
- * The learner's whole cohort on one surface: a calendar of the 30 days, the
+ * The learner's whole course on one surface: a calendar of its days, the
  * day list, and the detail of whichever day is selected.
  *
  * Selecting a day is local state: nothing is saved until they open the day
  * itself, so a learner can look ahead without changing anything.
  */
-export function CohortBoard({ days, initialDay, todayDay }: { days: BoardDay[]; initialDay: number; /** The day to do next, ringed on the calendar. Null when every day is submitted. */ todayDay: number | null }) {
+export function CohortBoard({
+  base, days, initialDay, todayDay,
+}: {
+  /** The track's own address. */
+  base: string;
+  days: BoardDay[];
+  initialDay: number;
+  /** The day to do next, ringed on the calendar. Null when every day is submitted. */
+  todayDay: number | null;
+}) {
   const [selected, setSelected] = useState(initialDay);
   const byDay = useMemo(() => new Map(days.map((d) => [d.day, d])), [days]);
   const active = byDay.get(selected) ?? days[0];
@@ -82,7 +92,7 @@ export function CohortBoard({ days, initialDay, todayDay }: { days: BoardDay[]; 
     <div className="card grid gap-8 rounded-slab p-4 sm:p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10 lg:p-10">
       {/* ── Calendar ─────────────────────────────────────────── */}
       <section aria-labelledby="your-30-days" className="min-w-0">
-        <h2 id="your-30-days" className="display text-3xl">Your 30 days</h2>
+        <h2 id="your-30-days" className="display text-3xl">Your {days.length} days</h2>
         <p className="mt-2 text-sm text-muted">A tick marks a submitted day. The ringed day is your next one. Pick any day to see its status.</p>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
@@ -208,13 +218,12 @@ export function CohortBoard({ days, initialDay, todayDay }: { days: BoardDay[]; 
         </dl>
 
         <Link
-          href={`/learn/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
+          href={`${base}/day/${active.lock === "previous" ? active.day - 1 : active.day}`}
           className={learnerButton("onDark", "mt-7 w-full")}
         >
-          {active.submitted ? "Review this day"
-            : active.lock === "previous" ? `Go to Day ${active.day - 1}`
+          {active.lock === "previous" ? `Go to Day ${active.day - 1}`
             : active.lock === "pay" ? "Unlock the full course"
-            : "Start learning"} <span aria-hidden="true">›</span>
+            : dayActionLabel(active.day, active.submitted)} <span aria-hidden="true">›</span>
         </Link>
       </section>
     </div>

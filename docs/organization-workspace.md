@@ -89,9 +89,11 @@ which needs a migration.
 
 ## Migration
 
-`db/migrations/0030_company_course_assignments.sql`. Main ends at 0025; the older
-audit branch (`claude/klymb-ux-flow-audit-377d4b`) holds `0025_several_tracks` and
-0026-0029 on a divergent line, so 0030 clashes with nothing on any branch.
+`db/migrations/0030_company_course_assignments.sql`. When it was written main
+ended at 0025, and the older audit branch (`claude/klymb-ux-flow-audit-377d4b`)
+held `0025_several_tracks` and 0026-0029 on a divergent line. That branch's five
+migrations reached main renumbered as 0034-0038, after 0030-0033, so nothing
+shares a number and a fresh database applies them in the order production did.
 `scripts/migrate.ts` applies unapplied files by name, so gaps are harmless.
 It adds one redundant unique constraint to `company_members` and one table; it is
 idempotent. **Not yet applied to any shared database.**

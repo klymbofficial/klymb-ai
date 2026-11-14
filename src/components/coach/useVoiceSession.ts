@@ -74,7 +74,7 @@ const rms = (data: Uint8Array) => {
   return Math.min(1, Math.sqrt(sum / data.length) * 3.2);
 };
 
-export function useVoiceSession(topicId: string) {
+export function useVoiceSession(topicId: string, track: string) {
   const [status, setStatus] = useState<CoachStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [captions, setCaptions] = useState<Caption[]>([]);
@@ -351,7 +351,7 @@ export function useVoiceSession(topicId: string) {
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      const response = await fetch(`/api/coach/session?topic=${encodeURIComponent(topicId)}`, {
+      const response = await fetch(`/api/coach/session?topic=${encodeURIComponent(topicId)}&track=${encodeURIComponent(track)}`, {
         method: "POST",
         headers: { "content-type": "application/sdp" },
         body: offer.sdp,
@@ -373,7 +373,7 @@ export function useVoiceSession(topicId: string) {
       setError("Something went wrong setting up the call. Try again.");
       teardown();
     }
-  }, [handle, send, teardown, topicId]);
+  }, [handle, send, teardown, topicId, track]);
 
   const toggleMute = useCallback(() => {
     const track = micRef.current?.getAudioTracks()[0];

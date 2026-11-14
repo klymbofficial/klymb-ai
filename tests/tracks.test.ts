@@ -31,7 +31,9 @@ test("a course never shows another track's days", () => {
   const missions = new Map<string, string>();
   for (const [slug, c] of Object.entries(curricula)) {
     for (const d of c.days.filter((x) => x.kind === "build")) {
-      const key = d.steps.join("\n");
+      // A challenge day carries its task as text rather than steps.
+      const key = d.steps.length ? d.steps.join("\n") : d.brief ?? "";
+      if (!key) continue;
       const seen = missions.get(key);
       assert.ok(!seen || seen === slug, `Day ${d.day} steps appear in both ${seen} and ${slug}`);
       missions.set(key, slug);

@@ -61,7 +61,7 @@ export function TrackDetail({ track }: { track: Track }) {
                 <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted sm:text-base">{track.description}</p>
               </Appear>
               <Appear delay={0.24} className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <ButtonLink href={enrolHref} soft arrow>Choose this track</ButtonLink>
+                <ButtonLink href={enrolHref} soft arrow>Start this track</ButtonLink>
                 <ButtonLink href="#curriculum" variant="secondary" soft className="border-line hover:bg-ink">See the 30 days</ButtonLink>
               </Appear>
               <Appear delay={0.28}>
@@ -77,7 +77,7 @@ export function TrackDetail({ track }: { track: Track }) {
               {!track.contentLive && (
                 <Appear delay={0.3}>
                   <p className="mt-6 max-w-xl rounded-card bg-surface/70 px-4 py-3 text-sm text-muted">
-                    Registration is open now. The {track.name} course is being finished for this cohort: your place is
+                    Registration is open now. The {track.name} course is being finished: your place is
                     reserved the moment you register, and we email you when Day 1 opens.
                   </p>
                 </Appear>
@@ -177,7 +177,7 @@ export function TrackDetail({ track }: { track: Track }) {
               title="Every day, planned."
               intro="Four weekly phases of daily problems, an assessment after each week, and interview prep on Days 29–30. Open a week to see every day."
             />
-            <ButtonLink href={enrolHref} soft arrow className="px-5 py-2.5 text-xs">Enroll now</ButtonLink>
+            <ButtonLink href={enrolHref} soft arrow className="px-5 py-2.5 text-xs">Start this track</ButtonLink>
           </Appear>
           <div className="mt-10"><TrackCurriculum track={track} /></div>
         </div>

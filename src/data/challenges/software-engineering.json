@@ -1,0 +1,2922 @@
+{
+ "days": [
+  {
+   "day": 1,
+   "week": 1,
+   "kind": "build",
+   "title": "Python Foundations Sprint (Syntax + Data Types)",
+   "mission": "Context: Before becoming a strong Software Engineer, you must be fluent in Python basics.",
+   "points": 10,
+   "estimateMinutes": 40,
+   "tags": [
+    "Easy",
+    "python",
+    "basics",
+    "io"
+   ],
+   "objectives": [
+    "Understand Python syntax",
+    "Work with variables and data types",
+    "Use input/output effectively"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · introduction.html",
+     "url": "https://docs.python.org/3/tutorial/introduction.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "Welcome to Day 1 - Python Mastery Sprint.\n\n**Context:** Before becoming a strong Software Engineer, you must be fluent in Python basics.\n\n**What to do:**\n- Learn and practice:\n  - Variables\n  - Data types (int, float, str, bool)\n  - Type casting\n  - Input/output\n\n**Task:**\nCreate a Python script that:\n1. Takes user name and age as input\n2. Prints a formatted message\n3. Converts age into integer and prints age after 5 years\n\n**Example Output:**\nHello Aaron, you are 20 years old.\nIn 5 years, you will be 25.\n\n**Submission:** Push `day1_basics.py`",
+   "linkedinTemplate": "🚀 Day 1/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Build Python foundations with variables, data types, and input/output.\n\n💻 What I Worked On Today: Practiced Python basics and wrote simple programs.\n\nKey Learnings: A strong foundation in Python is the first step in software engineering.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 1/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 2,
+   "week": 1,
+   "kind": "build",
+   "title": "Python Control Flow Mastery",
+   "mission": "Day 2 - Control Flow & Logic Building.",
+   "points": 10,
+   "estimateMinutes": 45,
+   "tags": [
+    "Easy",
+    "python",
+    "if-else",
+    "logic"
+   ],
+   "objectives": [
+    "Use conditional statements",
+    "Build decision-based logic",
+    "Handle edge cases"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · controlflow.html",
+     "url": "https://docs.python.org/3/tutorial/controlflow.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "Day 2 - Control Flow & Logic Building.\n\n**Context:** Decision making is core to programming.\n\n**What to do:**\n- Learn:\n  - if, elif, else\n  - comparison operators\n  - logical operators\n\n**Task:**\nBuild a program that:\n1. Takes marks as input\n2. Assigns grade based on score\n   - 90+ → A\n   - 75+ → B\n   - 50+ → C\n   - <50 → Fail\n3. Also check if student passed or failed\n\n**Bonus:** Add validation for invalid input\n\n**Submission:** Push `day2_control_flow.py`",
+   "linkedinTemplate": "🚀 Day 2/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Master Python control flow and logic building.\n\n💻 What I Worked On Today: Implemented conditional logic and loops to solve problems.\n\nKey Learnings: Control flow enables programs to make decisions.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 2/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 3,
+   "week": 1,
+   "kind": "build",
+   "title": "Loops + Data Structures (Lists, Strings, Dict)",
+   "mission": "Day 3 - Iteration + Core Data Structures.",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Easy-Medium",
+    "loops",
+    "lists",
+    "dict"
+   ],
+   "objectives": [
+    "Understand loops",
+    "Work with lists and dictionaries",
+    "Perform data processing"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · datastructures.html",
+     "url": "https://docs.python.org/3/tutorial/datastructures.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "Day 3 - Iteration + Core Data Structures.\n\n**Context:** Most real-world problems involve data processing.\n\n**What to do:**\n- Learn:\n  - for loop, while loop\n  - lists\n  - strings\n  - dictionaries\n\n**Task:**\n1. Take a list of numbers\n2. Print:\n   - sum\n   - max\n   - min\n3. Count frequency of each number using dictionary\n\n**Bonus:** Reverse list without using built-in functions\n\n**Submission:** Push `day3_data_structures.py`",
+   "linkedinTemplate": "🚀 Day 3/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Practice loops and core data structures like lists, strings, and dictionaries.\n\n💻 What I Worked On Today: Worked with collections and iteration to solve structured problems.\n\nKey Learnings: Structured thinking comes from using the right data structures.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 3/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 4,
+   "week": 1,
+   "kind": "build",
+   "title": "Build a CLI Calculator",
+   "mission": "Create a simple command-line calculator.",
+   "points": 10,
+   "estimateMinutes": 25,
+   "tags": [
+    "Easy",
+    "cli",
+    "calculator"
+   ],
+   "objectives": [
+    "Conditionals",
+    "Input handling"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [],
+   "quiz": [],
+   "brief": "Create a simple command-line calculator.\n\n**What to do:**\n- Take two numbers and operator\n- Perform calculation\n- Handle division by zero\n\n**Submission:** Push code",
+   "linkedinTemplate": "🚀 Day 4/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Build a command-line calculator to practice input, arithmetic, and program flow.\n\n💻 What I Worked On Today: Created a CLI calculator with working operations and user prompts.\n\nKey Learnings: Simple tools are built from clear logic and input handling.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 4/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 5,
+   "week": 1,
+   "kind": "build",
+   "title": "User Login Validator",
+   "mission": "Create a login system with username/password validation.",
+   "points": 10,
+   "estimateMinutes": 25,
+   "tags": [
+    "Easy",
+    "auth",
+    "logic"
+   ],
+   "objectives": [
+    "Strings",
+    "conditions"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [],
+   "quiz": [],
+   "brief": "Create a login system with username/password validation.\n\nBonus: limit attempts to 3.",
+   "linkedinTemplate": "🚀 Day 5/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Build a user login validator with username/password checks.\n\n💻 What I Worked On Today: Implemented validation rules for login input.\n\nKey Learnings: Input validation is important for reliability and security.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 5/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 6,
+   "week": 1,
+   "kind": "build",
+   "title": "FizzBuzz Automation",
+   "mission": "Print numbers 1 to N with FizzBuzz rules and save output to file.",
+   "points": 10,
+   "estimateMinutes": 30,
+   "tags": [
+    "Easy",
+    "loops"
+   ],
+   "objectives": [
+    "Loops",
+    "file handling"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [],
+   "quiz": [],
+   "brief": "Print numbers 1 to N with FizzBuzz rules and save output to file.",
+   "linkedinTemplate": "🚀 Day 6/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Automate FizzBuzz rules for a coding challenge.\n\n💻 What I Worked On Today: Wrote a FizzBuzz program that outputs the correct sequence.\n\nKey Learnings: Algorithmic thinking starts with simple rule-based problems.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 6/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 7,
+   "week": 1,
+   "kind": "build",
+   "title": "Mini Project: Stock Profit Analyzer",
+   "mission": "Given stock prices, find max profit.",
+   "points": 10,
+   "estimateMinutes": 40,
+   "tags": [
+    "Easy-Medium",
+    "arrays"
+   ],
+   "objectives": [
+    "Optimization",
+    "arrays"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [],
+   "quiz": [],
+   "brief": "Given stock prices, find max profit.\n\nBonus: show buy/sell day.",
+   "linkedinTemplate": "🚀 Day 7/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task : Build a stock profit analyzer to find the best buy/sell strategy.\n\n💻 What I Worked On Today: Analyzed price data and wrote logic to compute maximum profit.\n\nKey Learnings: Problem solving improves when you translate real examples into code.\n\n🚀 Want to start your own journey? Join the 60 Days Challenge here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for continuously guiding and inspiring us to improve every single day.\n\nGitHub Repo: {{github_link}}\n\nDay 7/60 ✅\n\n#Klymb AI #60DaysCodingChallenge #60DaysOfCode"
+  },
+  {
+   "day": 8,
+   "week": 2,
+   "kind": "build",
+   "title": "Understanding Arrays Through Real Data",
+   "mission": "Phase: Core Data Structures",
+   "points": 10,
+   "estimateMinutes": 40,
+   "tags": [
+    "Easy",
+    "arrays",
+    "data-processing"
+   ],
+   "objectives": [
+    "Understand array traversal",
+    "Work with real-world datasets",
+    "Relate data structures to real systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · find-numbers-with-even-number-of-digits",
+     "url": "https://leetcode.com/problems/find-numbers-with-even-number-of-digits/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · arrays-in-data-structure",
+     "url": "https://www.geeksforgeeks.org/arrays-in-data-structure/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Core Data Structures\n\n**Context:** Day 8 focuses on building intuition for arrays as the foundation of most software systems.\n\n**Real-World Impact:** Arrays power systems like analytics dashboards, logs processing, and user activity tracking in real-world applications.\n\n**What to do:**\n- Create an array of numbers (simulate user data)\n- Count how many numbers have even digits\n- Print results clearly\n- Write a short explanation of how arrays are used in real systems\n\n**Submission:**\n- Working code\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 8/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Understand arrays and apply them to real-world data processing.\n\n💻 What I Worked On Today:\n• Simulated real-world data using arrays\n• Processed the dataset to extract useful insights\n• Implemented logic to count specific patterns\n• Understood how data flows in structured formats\n\n🧠 Key Learnings:\n• Arrays are not just academic - they are used everywhere in production systems\n• Efficient traversal is critical when dealing with large datasets\n• Even simple structures can power complex applications\n\n🚀 Realization:\nAlmost every system I use daily (analytics, dashboards, logs) is powered by arrays behind the scenes.\n\n🚀 Want to start your own journey? Join here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for guiding us toward practical engineering thinking.\n\nGitHub Repo: {{github_link}}\n\nDay 8/60 ✅\n\n#SoftwareEngineering #DSA #LearningInPublic #Klymb #60DaysCodingChallenge"
+  },
+  {
+   "day": 9,
+   "week": 2,
+   "kind": "build",
+   "title": "Optimizing Systems with Prefix Sum",
+   "mission": "Phase: Core Data Structures",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Medium",
+    "software-engineering"
+   ],
+   "objectives": [
+    "Understand prefix sum",
+    "Optimize repeated computations",
+    "Think in terms of efficiency"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · range-sum-query-immutable",
+     "url": "https://leetcode.com/problems/range-sum-query-immutable/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · prefix-sum-array-implementation-applicat",
+     "url": "https://www.geeksforgeeks.org/prefix-sum-array-implementation-applications-competitive-programming/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Core Data Structures\n\n**Context:** Day 9 focuses on avoiding redundant computation using prefix sum optimization.\n\n**Real-World Impact:** Prefix sums are used in analytics systems and dashboards for fast data retrieval.\n\n**What to do:**\n- Build prefix sum array\n- Answer multiple queries efficiently\n- Compare brute force vs optimized solution\n- Document time complexity\n\n**Submission:**\n- Code\n- Explanation\n- GitHub repo\n- LinkedIn post",
+   "linkedinTemplate": "Day 9/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Optimize computations using prefix sums.\n\n💻 What I Worked On Today:\n• Built prefix sum arrays\n• Compared brute-force vs optimized solutions\n• Reduced computation time significantly\n• Implemented efficient query handling\n\n🧠 Key Learnings:\n• Optimization is what separates good code from great code\n• Avoiding repeated work is critical in large systems\n• Precomputation is a powerful technique\n\n🚀 Realization:\nSystems don’t recompute everything - they store smart intermediate results.\n\n🚀 Want to start your own journey? Join here: https://www.klymb.ai/challenges\n\nGrateful to @Anil Bajpai Sir for pushing us toward efficient thinking.\n\nGitHub Repo: {{github_link}}\n\nDay 9/60 ✅\n\n#SoftwareEngineering #Optimization #DSA #LearningInPublic"
+  },
+  {
+   "day": 10,
+   "week": 2,
+   "kind": "build",
+   "title": "Maximizing Performance with Kadane’s Algorithm",
+   "mission": "Phase: Problem Solving Patterns",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Medium",
+    "software-engineering"
+   ],
+   "objectives": [
+    "Understand Kadane’s Algorithm",
+    "Recognize optimization patterns",
+    "Apply logic to real systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · maximum-subarray",
+     "url": "https://leetcode.com/problems/maximum-subarray/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Problem Solving Patterns\n\n**Context:** Day 10 focuses on solving maximum subarray problems efficiently.\n\n**Real-World Impact:** Used in financial systems and analytics platforms to find optimal segments.\n\n**What to do:**\n- Solve maximum subarray problem\n- Track running sum\n- Explain real-world usage\n\n**Submission:**\n- Code\n- Explanation\n- GitHub repo\n- LinkedIn post",
+   "linkedinTemplate": "Day 10/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Solve maximum subarray problem using Kadane’s Algorithm.\n\n💻 What I Worked On Today:\n• Implemented optimized subarray solution\n• Learned how to track running results\n• Applied algorithm to real-world scenarios\n\n🧠 Key Learnings:\n• Optimization is about eliminating unnecessary computation\n• Small logic improvements can drastically improve performance\n• Algorithms are patterns, not just problems\n\n🚀 Realization:\nReal-world systems constantly search for optimal results efficiently.\n\nGitHub Repo: {{github_link}}\n\nDay 10/60 ✅\n\n#SoftwareEngineering #Algorithms #DSA"
+  },
+  {
+   "day": 11,
+   "week": 2,
+   "kind": "build",
+   "title": "Efficient Data Movement with Two Pointers",
+   "mission": "Phase: Problem Solving Patterns",
+   "points": 10,
+   "estimateMinutes": 40,
+   "tags": [
+    "Easy-Medium",
+    "software-engineering"
+   ],
+   "objectives": [
+    "Understand two-pointer technique",
+    "Optimize memory usage"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · move-zeroes",
+     "url": "https://leetcode.com/problems/move-zeroes/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Problem Solving Patterns\n\n**Context:** Day 11 focuses on optimizing in-place operations.\n\n**Real-World Impact:** Used in memory-efficient systems and large-scale data processing.\n\n**What to do:**\n- Solve Move Zeroes problem\n- Maintain order\n- Avoid extra space\n\n**Submission:**\n- Code\n- Explanation\n- GitHub repo",
+   "linkedinTemplate": "Day 11/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Optimize data movement using two pointers.\n\n💻 What I Worked On Today:\n• Implemented in-place array operations\n• Avoided unnecessary memory usage\n• Improved performance with better logic\n\n🧠 Key Learnings:\n• Memory optimization is critical in large systems\n• Efficient algorithms reduce system load\n\nGitHub Repo: {{github_link}}\n\nDay 11/60 ✅\n\n#SoftwareEngineering #Optimization"
+  },
+  {
+   "day": 12,
+   "week": 2,
+   "kind": "build",
+   "title": "Handling Text in Software Systems",
+   "mission": "Phase: String Processing",
+   "points": 10,
+   "estimateMinutes": 30,
+   "tags": [
+    "Easy",
+    "software-engineering"
+   ],
+   "objectives": [
+    "Understand string manipulation",
+    "Optimize memory usage"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · reverse-string",
+     "url": "https://leetcode.com/problems/reverse-string/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** String Processing\n\n**Context:** Day 12 focuses on string manipulation.\n\n**Real-World Impact:** Used in chat systems, logs, and search engines.\n\n**What to do:**\n- Reverse string\n- Analyze space usage\n\n**Submission:**\n- Code\n- Explanation\n- GitHub repo",
+   "linkedinTemplate": "Day 12/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Perform efficient string manipulation.\n\n💻 What I Worked On Today:\n• Reversed strings using optimized logic\n• Learned memory-efficient approaches\n\n🧠 Key Learnings:\n• Strings are everywhere in systems\n• Efficient processing improves performance\n\nGitHub Repo: {{github_link}}\n\nDay 12/60 ✅\n\n#SoftwareEngineering #Strings"
+  },
+  {
+   "day": 13,
+   "week": 2,
+   "kind": "build",
+   "title": "Fast Lookups with Hashing",
+   "mission": "Phase: Hashing & Lookup",
+   "points": 10,
+   "estimateMinutes": 35,
+   "tags": [
+    "Easy",
+    "software-engineering"
+   ],
+   "objectives": [
+    "Understand hashing",
+    "Improve lookup efficiency"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · valid-anagram",
+     "url": "https://leetcode.com/problems/valid-anagram/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Hashing & Lookup\n\n**Context:** Day 13 focuses on hashing for efficient lookups.\n\n**Real-World Impact:** Used in databases, caching, authentication systems.\n\n**What to do:**\n- Solve anagram problem\n- Use hashmap\n- Compare brute force\n\n**Submission:**\n- Code\n- Explanation\n- GitHub repo",
+   "linkedinTemplate": "Day 13/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Use hashing for fast lookups.\n\n💻 What I Worked On Today:\n• Implemented hashmap-based solution\n• Improved lookup performance\n\n🧠 Key Learnings:\n• Speed matters in systems\n• Hashing is widely used in real-world applications\n\nGitHub Repo: {{github_link}}\n\nDay 13/60 ✅\n\n#SoftwareEngineering #Hashing"
+  },
+  {
+   "day": 14,
+   "week": 2,
+   "kind": "build",
+   "title": "Build a Mini Data Processing System",
+   "mission": "Phase: Sprint Review",
+   "points": 10,
+   "estimateMinutes": 70,
+   "tags": [
+    "Medium",
+    "software-engineering"
+   ],
+   "objectives": [
+    "Integrate concepts",
+    "Think like an engineer"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · problemset",
+     "url": "https://leetcode.com/problemset/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Review\n\n**Context:** Day 14 focuses on integrating concepts into a system.\n\n**Real-World Impact:** Real systems combine multiple concepts to process data efficiently.\n\n**What to do:**\n- Process dataset\n- Apply hashing + arrays\n- Generate insights\n\n**Submission:**\n- Working system\n- README\n- GitHub repo",
+   "linkedinTemplate": "Day 14/60 @Klymb.ai 60 Days Coding Challenge:\n\n🎯 The Task: Build a mini data processing system.\n\n💻 What I Worked On Today:\n• Combined multiple concepts into a working system\n• Applied optimization techniques\n• Built something closer to real-world applications\n\n🧠 Key Learnings:\n• Real engineering is about integration, not isolated problems\n• Systems thinking is the next step after DSA\n\nGitHub Repo: {{github_link}}\n\nDay 14/60 ✅\n\n#SoftwareEngineering #SystemDesign"
+  },
+  {
+   "day": 15,
+   "week": 3,
+   "kind": "build",
+   "title": "The Duplicate Spy Detector",
+   "mission": "Phase: Algorithmic Thinking",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Easy-Medium",
+    "complexity",
+    "optimization",
+    "sets"
+   ],
+   "objectives": [
+    "Understand time complexity",
+    "Compare brute force vs optimized approaches",
+    "Think about scalability"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · contains-duplicate",
+     "url": "https://leetcode.com/problems/contains-duplicate/"
+    },
+    {
+     "kind": "read",
+     "label": "bigocheatsheet.com",
+     "url": "https://www.bigocheatsheet.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Algorithmic Thinking\nA secret agency intercepted a suspicious list of agent IDs. Your mission is to detect whether any duplicate IDs exist before the spies infiltrate the system.\n\nBuild two solutions:\n1. A brute-force checker\n2. An optimized version using sets\n\nThen compare which one scales better for 1 million IDs.\n\n**Real-World Impact:** Duplicate detection powers fraud prevention systems, authentication services, and transaction validation engines.\n\n**What to do:**\n- Implement brute-force duplicate detection\n- Implement optimized duplicate detection using sets\n- Compare execution speed\n- Write observations in README\n\n**Submission:**\n- Working code\n- Complexity comparison\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 15/60 🚀 | Klymb Coding Challenge\n\n🎯 Today’s Mission: Detect duplicate spy IDs before infiltration.\n\n💻 What I worked on:\n• Compared brute-force vs optimized solutions\n• Learned why scalability matters\n• Measured performance differences\n\n🧠 Biggest realization:\nGood engineering is not just about solving problems - it’s about solving them efficiently.\n\nGitHub Repo: {{github_link}}\n\n#SoftwareEngineering #DSA #Optimization"
+  },
+  {
+   "day": 16,
+   "week": 3,
+   "kind": "build",
+   "title": "The Infinite Staircase Puzzle",
+   "mission": "Phase: Recursive Thinking",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "recursion",
+    "memoization",
+    "dp"
+   ],
+   "objectives": [
+    "Understand recursion deeply",
+    "Learn memoization",
+    "Visualize recursive execution"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · climbing-stairs",
+     "url": "https://leetcode.com/problems/climbing-stairs/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · recursion",
+     "url": "https://visualgo.net/en/recursion"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Recursive Thinking\nA robot is climbing an infinite staircase. It can climb either 1 or 2 steps at a time.\n\nYour task is to calculate how many different ways the robot can reach step N.\n\nBonus Challenge: Optimize the solution so the robot doesn’t waste memory recalculating paths.\n\n**Real-World Impact:** Recursive thinking is used in AI search systems, pathfinding, compilers, and game engines.\n\n**What to do:**\n- Implement recursive solution\n- Optimize using memoization\n- Compare execution times\n- Explain recursion tree\n\n**Submission:**\n- Recursive solution\n- Optimized solution\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 16/60 🚀 | Recursive Thinking\n\n🎯 Built a staircase-solving robot using recursion.\n\n🧠 Key learning:\nRecursive problems explode quickly without optimization.\nMemoization changes everything.\n\nGitHub Repo: {{github_link}}\n\n#Recursion #DynamicProgramming #SoftwareEngineering"
+  },
+  {
+   "day": 17,
+   "week": 3,
+   "kind": "build",
+   "title": "Treasure Chest Combination Generator",
+   "mission": "Phase: Backtracking & Search",
+   "points": 10,
+   "estimateMinutes": 70,
+   "tags": [
+    "Medium",
+    "backtracking",
+    "search",
+    "recursion"
+   ],
+   "objectives": [
+    "Understand backtracking",
+    "Visualize recursion trees",
+    "Explore search-space problems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · subsets",
+     "url": "https://leetcode.com/problems/subsets/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · backtracking-introduction",
+     "url": "https://www.geeksforgeeks.org/backtracking-introduction/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Backtracking & Search\nYou discovered a magical treasure chest that opens only with the correct combination of gems.\n\nGiven a list of gems, generate ALL possible gem combinations the player can carry.\n\n**Real-World Impact:** Backtracking powers scheduling systems, recommendation engines, and AI decision trees.\n\n**What to do:**\n- Generate all subsets of a list\n- Visualize the decision tree\n- Count total combinations\n- Explain how backtracking works\n\n**Submission:**\n- Working solution\n- Recursion tree diagram\n- GitHub repository",
+   "linkedinTemplate": "Day 17/60 🚀 | Treasure Chest Puzzle\n\n💎 Generated all possible gem combinations using backtracking.\n\n🧠 Key realization:\nComplex problems become manageable when broken into decisions.\n\nGitHub Repo: {{github_link}}\n\n#Backtracking #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 18,
+   "week": 3,
+   "kind": "build",
+   "title": "Ancient Bracket Decoder",
+   "mission": "Phase: Stacks",
+   "points": 10,
+   "estimateMinutes": 45,
+   "tags": [
+    "Easy-Medium",
+    "stack",
+    "validation",
+    "parsing"
+   ],
+   "objectives": [
+    "Understand stack operations",
+    "Learn LIFO behavior",
+    "Validate structured input"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · valid-parentheses",
+     "url": "https://leetcode.com/problems/valid-parentheses/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · list",
+     "url": "https://visualgo.net/en/list"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Stacks\nAn ancient civilization stored messages using nested brackets.\n\nYour task is to verify whether a message is properly balanced before it can be decoded.\n\n**Real-World Impact:** Stacks are used in compilers, HTML validation, IDEs, and parsing engines.\n\n**What to do:**\n- Validate bracket sequences\n- Handle multiple bracket types\n- Test invalid edge cases\n- Explain stack behavior\n\n**Submission:**\n- Code implementation\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 18/60 🚀 | Ancient Bracket Decoder\n\n🧱 Used stacks to validate hidden messages.\n\n💡 Realization:\nStacks quietly power many developer tools we use daily.\n\nGitHub Repo: {{github_link}}\n\n#Stacks #SoftwareEngineering #DSA"
+  },
+  {
+   "day": 19,
+   "week": 3,
+   "kind": "build",
+   "title": "The Temperature Vault",
+   "mission": "Phase: Custom Data Structures",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "stack",
+    "design",
+    "min-stack"
+   ],
+   "objectives": [
+    "Design custom data structures",
+    "Track state efficiently",
+    "Understand auxiliary stacks"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · min-stack",
+     "url": "https://leetcode.com/problems/min-stack/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Custom Data Structures\nA futuristic vault stores temperature readings every second.\n\nYour mission is to build a system that can instantly return the minimum recorded temperature at any moment.\n\n**Real-World Impact:** Efficient tracking systems are used in monitoring tools, finance systems, and cloud infrastructure.\n\n**What to do:**\n- Build a Min Stack\n- Support push/pop/getMin\n- Maintain O(1) minimum lookup\n- Test with random inputs\n\n**Submission:**\n- Code\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 19/60 🚀 | Built a Temperature Vault System\n\n🌡️ Designed a custom stack that instantly tracks minimum temperature.\n\n🧠 Key learning:\nEngineering is about designing systems, not just solving problems.\n\nGitHub Repo: {{github_link}}\n\n#DataStructures #SoftwareEngineering"
+  },
+  {
+   "day": 20,
+   "week": 3,
+   "kind": "build",
+   "title": "Robot Calculator Arena",
+   "mission": "Phase: Expression Engines",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "stack",
+    "evaluation",
+    "expressions"
+   ],
+   "objectives": [
+    "Understand expression evaluation",
+    "Apply stacks practically",
+    "Process operations sequentially"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · evaluate-reverse-polish-notation",
+     "url": "https://leetcode.com/problems/evaluate-reverse-polish-notation/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Expression Engines\nTwo robots are battling in a calculator arena using Reverse Polish Notation (RPN).\n\nYour task is to build the engine that evaluates their mathematical attacks correctly.\n\n**Real-World Impact:** Expression evaluators are used in compilers, calculators, and query engines.\n\n**What to do:**\n- Evaluate Reverse Polish Notation expressions\n- Handle multiple operators\n- Test edge cases\n- Document stack flow\n\n**Submission:**\n- Working evaluator\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 20/60 🚀 | Robot Calculator Arena\n\n🤖 Built an engine to evaluate robot battle expressions.\n\n💡 Learned how stacks power expression evaluators and compilers.\n\nGitHub Repo: {{github_link}}\n\n#Stacks #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 21,
+   "week": 3,
+   "kind": "build",
+   "title": "The Forbidden Functions Tournament",
+   "mission": "Phase: Sprint Challenge",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium-Hard",
+    "challenge",
+    "fundamentals",
+    "algorithms"
+   ],
+   "objectives": [
+    "Strengthen fundamentals",
+    "Improve low-level reasoning",
+    "Adapt under constraints"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · all",
+     "url": "https://leetcode.com/problemset/all/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Challenge\nWelcome to the Week 3 finale.\n\nYou must solve 2 coding puzzles under one brutal constraint:\n❌ No built-in helper functions allowed.\n\nYou can’t use:\n• sort()\n• sum()\n• max()\n• min()\n\nBuild everything manually like a true engineer.\n\n**Real-World Impact:** Understanding low-level logic makes engineers better debuggers and system designers.\n\n**What to do:**\n- Solve one recursion problem\n- Solve one stack problem\n- Avoid built-in helper functions\n- Write reflection about the challenge\n\n**Submission:**\n- Solutions\n- Reflection document\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 21/60 🚀 | Forbidden Functions Tournament\n\n⚔️ Solved coding challenges without built-in helper functions.\n\n🧠 Biggest realization:\nWhen shortcuts disappear, fundamentals matter.\n\nGitHub Repo: {{github_link}}\n\n#ProblemSolving #SoftwareEngineering #DSA"
+  },
+  {
+   "day": 22,
+   "week": 4,
+   "kind": "build",
+   "title": "The Theme Park FastPass Simulator",
+   "mission": "Phase: Queues & Scheduling Systems",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "queue",
+    "scheduling",
+    "simulation"
+   ],
+   "objectives": [
+    "Understand FIFO behavior",
+    "Learn queue operations",
+    "Simulate scheduling systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · implement-queue-using-stacks",
+     "url": "https://leetcode.com/problems/implement-queue-using-stacks/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · list",
+     "url": "https://visualgo.net/en/list"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Queues & Scheduling Systems\n\nA futuristic theme park has thousands of visitors waiting for rides. Your mission is to build the ride scheduling system.\n\nVisitors join a queue, but VIP users can enter a priority lane.\n\nCan you design a system that processes visitors in the correct order without chaos?\n\n**Real-World Impact:** Queue systems power ticket booking apps, operating systems, customer support systems, and cloud task schedulers.\n\n**What to do:**\n- Implement a normal queue system\n- Add VIP priority handling\n- Process users in correct order\n- Visualize queue operations step-by-step\n\n**Submission:**\n- Working queue simulator\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 22/60 🚀 | Theme Park FastPass Simulator\n\n🎢 Built a ride scheduling system using queues.\n\n💻 What I explored:\n• FIFO scheduling\n• VIP priority handling\n• Real-world queue systems\n\n🧠 Biggest realization:\nQueues silently power many systems we use daily.\n\nGitHub Repo: {{github_link}}\n\n#Queues #SoftwareEngineering #DSA"
+  },
+  {
+   "day": 23,
+   "week": 4,
+   "kind": "build",
+   "title": "Train Carriage Reversal Challenge",
+   "mission": "Phase: Linked Lists",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "linked-list",
+    "pointers",
+    "visualization"
+   ],
+   "objectives": [
+    "Understand linked list structure",
+    "Manipulate pointers safely",
+    "Visualize node connections"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · reverse-linked-list",
+     "url": "https://leetcode.com/problems/reverse-linked-list/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · list",
+     "url": "https://visualgo.net/en/list"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Linked Lists\n\nA railway company accidentally connected train carriages in the wrong order.\n\nYour mission is to reverse the train without creating a collision.\n\nEach carriage is connected like a linked list node.\n\n**Real-World Impact:** Linked lists are used in memory management, browser history systems, and real-time applications.\n\n**What to do:**\n- Build a linked list representation of train carriages\n- Reverse the linked list\n- Print original and reversed train order\n- Explain pointer manipulation\n\n**Submission:**\n- Code implementation\n- Visualization diagram\n- GitHub repository",
+   "linkedinTemplate": "Day 23/60 🚀 | Train Carriage Reversal Challenge\n\n🚂 Reversed a train system using linked lists.\n\n🧠 Key learning:\nPointers feel confusing until you visualize them.\n\nGitHub Repo: {{github_link}}\n\n#LinkedList #SoftwareEngineering"
+  },
+  {
+   "day": 24,
+   "week": 4,
+   "kind": "build",
+   "title": "The Kingdom Alliance Merger",
+   "mission": "Phase: Merging Systems",
+   "points": 10,
+   "estimateMinutes": 55,
+   "tags": [
+    "Medium",
+    "merge",
+    "linked-list",
+    "sorting"
+   ],
+   "objectives": [
+    "Merge sorted structures efficiently",
+    "Work with pointer traversal",
+    "Understand system integration logic"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · merge-two-sorted-lists",
+     "url": "https://leetcode.com/problems/merge-two-sorted-lists/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Merging Systems\n\nTwo kingdoms maintain sorted records of their soldiers.\n\nYour mission is to merge both armies into one perfectly sorted master list without losing order.\n\n**Real-World Impact:** Merge operations are heavily used in databases, distributed systems, and search engines.\n\n**What to do:**\n- Create two sorted linked lists\n- Merge them into one sorted list\n- Handle duplicate values\n- Document merge strategy\n\n**Submission:**\n- Working implementation\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 24/60 🚀 | Kingdom Alliance Merger\n\n⚔️ Merged two sorted armies using linked lists.\n\n💡 Realization:\nLarge systems constantly merge structured data.\n\nGitHub Repo: {{github_link}}\n\n#LinkedLists #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 25,
+   "week": 4,
+   "kind": "build",
+   "title": "The Infinite Maze Trap",
+   "mission": "Phase: Cycle Detection",
+   "points": 10,
+   "estimateMinutes": 65,
+   "tags": [
+    "Medium",
+    "cycle-detection",
+    "linked-list",
+    "two-pointers"
+   ],
+   "objectives": [
+    "Understand Floyd’s Cycle Detection",
+    "Use two-pointer techniques",
+    "Prevent infinite execution paths"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · linked-list-cycle",
+     "url": "https://leetcode.com/problems/linked-list-cycle/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · cyclefinding",
+     "url": "https://visualgo.net/en/cyclefinding"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Cycle Detection\n\nA game developer accidentally created a maze where some paths loop forever.\n\nYour mission is to detect whether players are trapped inside an infinite cycle before the game launches.\n\n**Real-World Impact:** Cycle detection prevents infinite loops in operating systems, dependency graphs, and distributed systems.\n\n**What to do:**\n- Simulate maze paths using linked lists\n- Detect cycles using fast and slow pointers\n- Test multiple maze configurations\n- Explain why cycle detection matters\n\n**Submission:**\n- Cycle detection system\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 25/60 🚀 | Infinite Maze Trap\n\n🌀 Built a system to detect infinite loops in maze paths.\n\n🧠 Biggest learning:\nSmall logic mistakes can trap systems forever.\n\nGitHub Repo: {{github_link}}\n\n#CycleDetection #SoftwareEngineering"
+  },
+  {
+   "day": 26,
+   "week": 4,
+   "kind": "build",
+   "title": "The Secret Message Decoder",
+   "mission": "Phase: Two Pointer Optimization",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "two-pointers",
+    "optimization",
+    "linked-list"
+   ],
+   "objectives": [
+    "Master two-pointer traversal",
+    "Reduce redundant operations",
+    "Optimize linked list processing"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · remove-nth-node-from-end-of-list",
+     "url": "https://leetcode.com/problems/remove-nth-node-from-end-of-list/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Two Pointer Optimization\n\nAn encrypted communication system stores secret messages in a linked chain.\n\nOne corrupted message must be removed from the chain before the message is transmitted.\n\nYour task: remove the nth message from the end without counting the entire chain twice.\n\n**Real-World Impact:** Optimized traversal systems reduce latency in networking and real-time applications.\n\n**What to do:**\n- Build a linked list message chain\n- Remove nth node from end\n- Optimize using two pointers\n- Explain why single-pass traversal matters\n\n**Submission:**\n- Working implementation\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 26/60 🚀 | Secret Message Decoder\n\n📡 Removed corrupted messages using optimized traversal.\n\n💡 Key realization:\nSingle-pass solutions scale much better.\n\nGitHub Repo: {{github_link}}\n\n#TwoPointers #LinkedLists #SoftwareEngineering"
+  },
+  {
+   "day": 27,
+   "week": 4,
+   "kind": "build",
+   "title": "The Social Media Fraud Detector",
+   "mission": "Phase: Hashing Systems",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "hashing",
+    "fraud-detection",
+    "optimization"
+   ],
+   "objectives": [
+    "Use hashing for fast lookups",
+    "Track state efficiently",
+    "Apply algorithms to real systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · contains-duplicate-ii",
+     "url": "https://leetcode.com/problems/contains-duplicate-ii/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · hashing-data-structure",
+     "url": "https://www.geeksforgeeks.org/hashing-data-structure/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Hashing Systems\n\nA social media platform suspects bots are repeatedly posting duplicate content.\n\nYour mission is to detect suspicious repeated activity within a limited time window.\n\n**Real-World Impact:** Hashing powers fraud detection, spam filtering, and cybersecurity systems.\n\n**What to do:**\n- Track repeated activity using hashing\n- Detect duplicates within K distance\n- Simulate social media events\n- Explain why hashing improves performance\n\n**Submission:**\n- Fraud detection script\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 27/60 🚀 | Social Media Fraud Detector\n\n🕵️ Built a bot detection system using hashing.\n\n💡 Realization:\nHashing quietly powers modern internet systems.\n\nGitHub Repo: {{github_link}}\n\n#Hashing #CyberSecurity #SoftwareEngineering"
+  },
+  {
+   "day": 28,
+   "week": 4,
+   "kind": "build",
+   "title": "The Lost Treasure Coordinates",
+   "mission": "Phase: Pattern Recognition",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Easy-Medium",
+    "hashmap",
+    "two-sum",
+    "patterns"
+   ],
+   "objectives": [
+    "Recognize algorithmic patterns",
+    "Optimize pair searching",
+    "Understand hashmap-based lookup"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · two-sum",
+     "url": "https://leetcode.com/problems/two-sum/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Pattern Recognition\n\nA pirate captain left behind a treasure map with hidden coordinate pairs.\n\nYour mission is to find two coordinates that combine to reveal the treasure location.\n\nThe faster you find the pair, the more treasure you keep.\n\n**Real-World Impact:** Pair matching systems are used in financial transactions, recommendation systems, and search optimization.\n\n**What to do:**\n- Solve the Two Sum problem\n- Build brute-force and optimized solutions\n- Compare execution times\n- Visualize lookup process\n\n**Submission:**\n- Both implementations\n- Performance comparison\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 28/60 🚀 | Lost Treasure Coordinates\n\n🏴‍☠️ Used hashing to discover hidden treasure coordinates.\n\n🧠 Biggest realization:\nPattern recognition matters more than memorizing solutions.\n\nGitHub Repo: {{github_link}}\n\n#Hashing #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 29,
+   "week": 5,
+   "kind": "build",
+   "title": "The Viral Hashtag Tracker",
+   "mission": "Phase: Frequency Analysis",
+   "points": 10,
+   "estimateMinutes": 65,
+   "tags": [
+    "Medium",
+    "heap",
+    "frequency-analysis",
+    "hashmap"
+   ],
+   "objectives": [
+    "Understand heaps and frequency counting",
+    "Optimize large-scale ranking systems",
+    "Apply hashing with priority queues"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · top-k-frequent-elements",
+     "url": "https://leetcode.com/problems/top-k-frequent-elements/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · heap-data-structure",
+     "url": "https://www.geeksforgeeks.org/heap-data-structure/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Frequency Analysis\n\nA social media company wants to discover which hashtags are going viral in real time.\n\nYour mission is to build a system that finds the Top K most frequently used hashtags before trends disappear.\n\nThe faster your system works, the more accurate the trending page becomes.\n\n**Real-World Impact:** Frequency analysis powers trending systems on platforms like Twitter, YouTube, Spotify, and Instagram.\n\n**What to do:**\n- Analyze hashtag frequency\n- Find Top K most frequent elements\n- Compare sorting vs heap-based approaches\n- Visualize trending outputs\n\n**Submission:**\n- Working implementation\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 29/60 🚀 | Viral Hashtag Tracker\n\n📈 Built a real-time trending system using heaps + hashing.\n\n💻 What I explored:\n• Frequency analysis\n• Ranking systems\n• Efficient Top-K retrieval\n\n🧠 Biggest realization:\nTrending systems are basically optimized frequency engines.\n\nGitHub Repo: {{github_link}}\n\n#SoftwareEngineering #Heaps #Algorithms"
+  },
+  {
+   "day": 30,
+   "week": 5,
+   "kind": "build",
+   "title": "The Hacker Tournament Finals",
+   "mission": "Phase: Sprint Challenge",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium-Hard",
+    "challenge",
+    "optimization",
+    "interview-prep"
+   ],
+   "objectives": [
+    "Strengthen medium-level problem solving",
+    "Practice optimization thinking",
+    "Communicate engineering decisions"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · problemset",
+     "url": "https://leetcode.com/problemset/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Challenge\n\nWelcome to the Week 5 challenge arena.\n\nYou must solve TWO medium-level algorithm battles under strict time constraints.\n\nEvery wrong optimization costs you leaderboard points.\n\nBonus twist:\nYou must explain WHY your solution scales.\n\n**Real-World Impact:** Engineering interviews test optimization, communication, and reasoning - not just coding speed.\n\n**What to do:**\n- Solve 2 medium problems\n- Analyze time complexity\n- Record optimization decisions\n- Explain tradeoffs in README\n\n**Submission:**\n- Solutions\n- Complexity explanations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 30/60 🚀 | Hacker Tournament Finals\n\n⚔️ Solved medium-level engineering battles under pressure.\n\n🧠 Biggest realization:\nGood engineers explain WHY systems scale - not just HOW they work.\n\nGitHub Repo: {{github_link}}\n\n#SoftwareEngineering #DSA #InterviewPrep"
+  },
+  {
+   "day": 31,
+   "week": 5,
+   "kind": "build",
+   "title": "The Dutch Flag Sorting Machine",
+   "mission": "Phase: Sorting Systems",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "sorting",
+    "two-pointers",
+    "optimization"
+   ],
+   "objectives": [
+    "Understand in-place sorting",
+    "Master pointer manipulation",
+    "Reduce unnecessary operations"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · sort-colors",
+     "url": "https://leetcode.com/problems/sort-colors/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · sorting",
+     "url": "https://visualgo.net/en/sorting"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sorting Systems\n\nA robotics factory sorts colored capsules moving through conveyor belts.\n\nYour mission is to organize red, white, and blue capsules using the fewest operations possible.\n\nThe factory loses money for every unnecessary swap.\n\n**Real-World Impact:** Sorting algorithms power logistics systems, databases, search engines, and inventory management.\n\n**What to do:**\n- Solve the Sort Colors problem\n- Avoid built-in sorting\n- Optimize swaps\n- Visualize pointer movement\n\n**Submission:**\n- Optimized solution\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 31/60 🚀 | Dutch Flag Sorting Machine\n\n🏭 Built an optimized sorting system for robotic conveyors.\n\n💡 Key learning:\nThe smartest sorting systems minimize unnecessary movement.\n\nGitHub Repo: {{github_link}}\n\n#Sorting #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 32,
+   "week": 5,
+   "kind": "build",
+   "title": "The Hidden Number Vault",
+   "mission": "Phase: Binary Search",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Easy-Medium",
+    "binary-search",
+    "divide-and-conquer",
+    "search"
+   ],
+   "objectives": [
+    "Understand divide-and-conquer",
+    "Optimize search operations",
+    "Think logarithmically"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · binary-search",
+     "url": "https://leetcode.com/problems/binary-search/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · bst",
+     "url": "https://visualgo.net/en/bst"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Binary Search\n\nA hacker buried secret access codes inside a giant sorted vault.\n\nSearching one-by-one would take forever.\n\nYour mission is to crack the vault using divide-and-conquer logic before the timer runs out.\n\n**Real-World Impact:** Binary search powers databases, search engines, recommendation systems, and large-scale indexing.\n\n**What to do:**\n- Implement iterative binary search\n- Visualize search space shrinking\n- Compare linear vs binary search\n- Document performance differences\n\n**Submission:**\n- Working search system\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 32/60 🚀 | Hidden Number Vault\n\n🔍 Cracked giant search spaces using binary search.\n\n🧠 Biggest realization:\nHalving the problem repeatedly changes everything.\n\nGitHub Repo: {{github_link}}\n\n#BinarySearch #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 33,
+   "week": 5,
+   "kind": "build",
+   "title": "The Defective Robot Factory",
+   "mission": "Phase: Binary Search Variants",
+   "points": 10,
+   "estimateMinutes": 55,
+   "tags": [
+    "Medium",
+    "binary-search",
+    "debugging",
+    "optimization"
+   ],
+   "objectives": [
+    "Master binary search edge cases",
+    "Reduce expensive operations",
+    "Handle search boundaries safely"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · first-bad-version",
+     "url": "https://leetcode.com/problems/first-bad-version/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Binary Search Variants\n\nA robot factory accidentally released defective robots.\n\nYour mission is to identify the FIRST defective robot version before production collapses.\n\nYou can only test robots through an expensive API call, so minimize checks.\n\n**Real-World Impact:** Binary search variants are used in debugging, deployment systems, CI/CD pipelines, and failure detection.\n\n**What to do:**\n- Solve First Bad Version\n- Minimize API calls\n- Track search boundaries carefully\n- Explain edge-case handling\n\n**Submission:**\n- Working implementation\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 33/60 🚀 | Defective Robot Factory\n\n🤖 Built a failure detection system using binary search.\n\n💡 Key learning:\nEfficient debugging is critical in production systems.\n\nGitHub Repo: {{github_link}}\n\n#BinarySearch #Debugging #SoftwareEngineering"
+  },
+  {
+   "day": 34,
+   "week": 5,
+   "kind": "build",
+   "title": "The Energy Drink Analyzer",
+   "mission": "Phase: Sliding Window",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "sliding-window",
+    "analytics",
+    "optimization"
+   ],
+   "objectives": [
+    "Understand sliding windows",
+    "Optimize repeated computations",
+    "Analyze streaming data efficiently"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · maximum-average-subarray-i",
+     "url": "https://leetcode.com/problems/maximum-average-subarray-i/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sliding Window\n\nA gaming company wants to analyze player energy spikes during tournaments.\n\nYour mission is to find the maximum average energy boost within a fixed time window.\n\nThe system must process thousands of readings efficiently.\n\n**Real-World Impact:** Sliding window techniques power streaming analytics, financial monitoring, and real-time dashboards.\n\n**What to do:**\n- Solve Maximum Average Subarray\n- Implement fixed-size sliding window\n- Compare naive vs optimized solutions\n- Visualize window movement\n\n**Submission:**\n- Working implementation\n- Performance comparison\n- GitHub repository",
+   "linkedinTemplate": "Day 34/60 🚀 | Energy Drink Analyzer\n\n⚡ Built a streaming analytics system using sliding windows.\n\n🧠 Biggest realization:\nMoving windows are perfect for real-time analytics.\n\nGitHub Repo: {{github_link}}\n\n#SlidingWindow #Analytics #SoftwareEngineering"
+  },
+  {
+   "day": 35,
+   "week": 5,
+   "kind": "build",
+   "title": "The Hacker Signal Decoder",
+   "mission": "Phase: Advanced Sliding Window",
+   "points": 10,
+   "estimateMinutes": 70,
+   "tags": [
+    "Medium-Hard",
+    "sliding-window",
+    "strings",
+    "hashmap"
+   ],
+   "objectives": [
+    "Master variable sliding windows",
+    "Track dynamic constraints",
+    "Optimize substring problems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · longest-substring-without-repeating-char",
+     "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Advanced Sliding Window\n\nA cybersecurity team intercepted a mysterious hacker signal.\n\nYour mission is to identify the longest unique signal pattern before repetition occurs.\n\nRepeated characters corrupt the decoding process.\n\n**Real-World Impact:** Variable sliding windows are used in cybersecurity, network analysis, compression systems, and NLP pipelines.\n\n**What to do:**\n- Solve Longest Substring Without Repeating Characters\n- Track character frequencies dynamically\n- Optimize window expansion and shrinking\n- Visualize pointer movement\n\n**Submission:**\n- Optimized implementation\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 35/60 🚀 | Hacker Signal Decoder\n\n🔐 Built a system to detect the longest unique signal pattern.\n\n💡 Key realization:\nEfficient systems constantly adapt to changing constraints.\n\nGitHub Repo: {{github_link}}\n\n#SlidingWindow #CyberSecurity #SoftwareEngineering"
+  },
+  {
+   "day": 36,
+   "week": 6,
+   "kind": "build",
+   "title": "The Water Reservoir Architect",
+   "mission": "Phase: Two Pointer Optimization",
+   "points": 10,
+   "estimateMinutes": 65,
+   "tags": [
+    "Medium",
+    "two-pointers",
+    "optimization",
+    "greedy"
+   ],
+   "objectives": [
+    "Master two-pointer optimization",
+    "Reduce unnecessary comparisons",
+    "Understand greedy movement strategies"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · container-with-most-water",
+     "url": "https://leetcode.com/problems/container-with-most-water/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · two-pointers-technique",
+     "url": "https://www.geeksforgeeks.org/two-pointers-technique/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Two Pointer Optimization\n\nA futuristic city is running out of water.\n\nYour mission is to design the most efficient reservoir system using two giant walls that can store the maximum amount of water.\n\nThe city engineers want maximum capacity with minimum wasted space.\n\n**Real-World Impact:** Optimization problems like this appear in infrastructure planning, memory allocation, and resource balancing systems.\n\n**What to do:**\n- Solve Container With Most Water\n- Compare brute-force vs optimized two-pointer solution\n- Visualize pointer movement\n- Explain why moving the smaller wall works\n\n**Submission:**\n- Optimized implementation\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 36/60 🚀 | Water Reservoir Architect\n\n💧 Designed an optimized reservoir system using two pointers.\n\n💻 What I explored:\n• Brute-force vs optimized thinking\n• Pointer movement strategies\n• Area optimization\n\n🧠 Biggest realization:\nThe smartest systems eliminate impossible paths early.\n\nGitHub Repo: {{github_link}}\n\n#TwoPointers #Optimization #SoftwareEngineering"
+  },
+  {
+   "day": 37,
+   "week": 6,
+   "kind": "build",
+   "title": "The Cookie Distribution Crisis",
+   "mission": "Phase: Greedy Algorithms",
+   "points": 10,
+   "estimateMinutes": 50,
+   "tags": [
+    "Easy-Medium",
+    "greedy",
+    "sorting",
+    "resource-allocation"
+   ],
+   "objectives": [
+    "Understand greedy algorithms",
+    "Make locally optimal decisions",
+    "Optimize resource allocation"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · assign-cookies",
+     "url": "https://leetcode.com/problems/assign-cookies/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · greedy-algorithms",
+     "url": "https://www.geeksforgeeks.org/greedy-algorithms/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Greedy Algorithms\n\nA festival organizer must distribute cookies to children.\n\nEach child has a happiness requirement, and each cookie has a size.\n\nYour mission is to maximize the number of happy children using limited resources.\n\n**Real-World Impact:** Greedy algorithms are used in scheduling, resource allocation, networking, and logistics systems.\n\n**What to do:**\n- Solve Assign Cookies\n- Sort greed factors and cookie sizes\n- Maximize satisfied children\n- Explain greedy decisions\n\n**Submission:**\n- Working implementation\n- Greedy strategy explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 37/60 🚀 | Cookie Distribution Crisis\n\n🍪 Built a greedy allocation system for maximizing happiness.\n\n🧠 Key learning:\nSometimes the best global outcome comes from smart local decisions.\n\nGitHub Repo: {{github_link}}\n\n#GreedyAlgorithms #SoftwareEngineering #Optimization"
+  },
+  {
+   "day": 38,
+   "week": 6,
+   "kind": "build",
+   "title": "The Ancient Kingdom Family Tree",
+   "mission": "Phase: Trees",
+   "points": 10,
+   "estimateMinutes": 70,
+   "tags": [
+    "Medium",
+    "trees",
+    "traversal",
+    "recursion"
+   ],
+   "objectives": [
+    "Understand binary trees",
+    "Learn tree traversal patterns",
+    "Visualize recursive structures"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · binary-tree-inorder-traversal",
+     "url": "https://leetcode.com/problems/binary-tree-inorder-traversal/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · bst",
+     "url": "https://visualgo.net/en/bst"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Trees\n\nAn ancient kingdom preserved royal family records inside a giant hierarchical tree.\n\nYour mission is to traverse the royal lineage in the correct order to unlock hidden secrets.\n\n**Real-World Impact:** Tree traversals are used in file systems, databases, compilers, and DOM structures.\n\n**What to do:**\n- Build a binary tree\n- Perform inorder traversal\n- Visualize traversal order\n- Compare recursive vs iterative approaches\n\n**Submission:**\n- Tree traversal implementation\n- Visualization diagram\n- GitHub repository",
+   "linkedinTemplate": "Day 38/60 🚀 | Ancient Kingdom Family Tree\n\n🌳 Explored hierarchical systems using tree traversal.\n\n🧠 Biggest realization:\nTrees are everywhere once you start noticing system hierarchies.\n\nGitHub Repo: {{github_link}}\n\n#Trees #DataStructures #SoftwareEngineering"
+  },
+  {
+   "day": 39,
+   "week": 6,
+   "kind": "build",
+   "title": "The Dungeon Depth Scanner",
+   "mission": "Phase: Tree Depth Analysis",
+   "points": 10,
+   "estimateMinutes": 60,
+   "tags": [
+    "Medium",
+    "trees",
+    "dfs",
+    "recursion"
+   ],
+   "objectives": [
+    "Understand recursive depth traversal",
+    "Calculate tree height efficiently",
+    "Strengthen DFS intuition"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · maximum-depth-of-binary-tree",
+     "url": "https://leetcode.com/problems/maximum-depth-of-binary-tree/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · dfs",
+     "url": "https://visualgo.net/en/dfs"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Tree Depth Analysis\n\nA game engine generates massive underground dungeons.\n\nYour mission is to calculate the deepest possible level before players get trapped.\n\nThe dungeon structure behaves exactly like a binary tree.\n\n**Real-World Impact:** Depth calculations are used in AI search systems, recursive analysis, and hierarchical infrastructure monitoring.\n\n**What to do:**\n- Solve Maximum Depth of Binary Tree\n- Visualize recursive depth calculation\n- Compare DFS approaches\n- Handle edge cases\n\n**Submission:**\n- Depth calculator implementation\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 39/60 🚀 | Dungeon Depth Scanner\n\n🕳️ Built a recursive scanner to explore dungeon depth.\n\n💡 Key realization:\nRecursion becomes intuitive once you visualize the tree structure.\n\nGitHub Repo: {{github_link}}\n\n#Trees #DFS #SoftwareEngineering"
+  },
+  {
+   "day": 40,
+   "week": 6,
+   "kind": "build",
+   "title": "The Corrupted Kingdom Records",
+   "mission": "Phase: Tree Validation",
+   "points": 10,
+   "estimateMinutes": 70,
+   "tags": [
+    "Medium",
+    "bst",
+    "validation",
+    "trees"
+   ],
+   "objectives": [
+    "Understand BST properties",
+    "Validate hierarchical constraints",
+    "Track recursion boundaries safely"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · validate-binary-search-tree",
+     "url": "https://leetcode.com/problems/validate-binary-search-tree/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Tree Validation\n\nA digital kingdom archive stores records using Binary Search Trees.\n\nUnfortunately, corrupted entries have broken the structure.\n\nYour mission is to validate whether the kingdom records still follow BST rules.\n\n**Real-World Impact:** Validation systems are critical in databases, indexing systems, and distributed architectures.\n\n**What to do:**\n- Solve Validate Binary Search Tree\n- Track valid ranges during traversal\n- Test invalid tree structures\n- Document validation logic\n\n**Submission:**\n- Validation implementation\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 40/60 🚀 | Corrupted Kingdom Records\n\n📜 Built a validation engine for corrupted BST archives.\n\n🧠 Biggest realization:\nValidation systems are the backbone of reliable software.\n\nGitHub Repo: {{github_link}}\n\n#BST #Validation #SoftwareEngineering"
+  },
+  {
+   "day": 41,
+   "week": 6,
+   "kind": "build",
+   "title": "The Family Reunion Locator",
+   "mission": "Phase: Lowest Common Ancestor",
+   "points": 10,
+   "estimateMinutes": 65,
+   "tags": [
+    "Medium",
+    "bst",
+    "trees",
+    "lca"
+   ],
+   "objectives": [
+    "Understand ancestor relationships",
+    "Traverse BSTs efficiently",
+    "Use tree properties strategically"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · lowest-common-ancestor-of-a-binary-searc",
+     "url": "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Lowest Common Ancestor\n\nA genealogy company is trying to reconnect lost family members.\n\nYour mission is to identify the closest common ancestor between two people inside a massive family tree.\n\n**Real-World Impact:** Ancestor queries are used in file systems, network routing, organizational hierarchies, and version control systems.\n\n**What to do:**\n- Solve Lowest Common Ancestor of BST\n- Visualize ancestor traversal\n- Compare node values strategically\n- Explain BST traversal decisions\n\n**Submission:**\n- LCA implementation\n- Visualization diagram\n- GitHub repository",
+   "linkedinTemplate": "Day 41/60 🚀 | Family Reunion Locator\n\n🌳 Built an ancestor-finding system inside family trees.\n\n💡 Key learning:\nBST properties drastically simplify complex searches.\n\nGitHub Repo: {{github_link}}\n\n#Trees #BST #SoftwareEngineering"
+  },
+  {
+   "day": 42,
+   "week": 6,
+   "kind": "build",
+   "title": "The Island Survival Simulator",
+   "mission": "Phase: Graphs",
+   "points": 10,
+   "estimateMinutes": 80,
+   "tags": [
+    "Medium-Hard",
+    "graphs",
+    "dfs",
+    "bfs"
+   ],
+   "objectives": [
+    "Understand graph traversal",
+    "Apply DFS/BFS on grids",
+    "Track visited states efficiently"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · number-of-islands",
+     "url": "https://leetcode.com/problems/number-of-islands/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · graphds",
+     "url": "https://visualgo.net/en/graphds"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Graphs\n\nA satellite system discovered hundreds of disconnected islands after a massive flood.\n\nYour mission is to calculate how many separate islands still exist before rescue missions begin.\n\n**Real-World Impact:** Graph traversal powers mapping systems, social networks, recommendation engines, and distributed infrastructure analysis.\n\n**What to do:**\n- Solve Number of Islands\n- Traverse grid using DFS or BFS\n- Mark visited land cells\n- Visualize graph traversal\n\n**Submission:**\n- Island counter implementation\n- Traversal explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 42/60 🚀 | Island Survival Simulator\n\n🏝️ Built a rescue mapping system using graph traversal.\n\n🧠 Biggest realization:\nGraphs model the hidden connections behind many real-world systems.\n\nGitHub Repo: {{github_link}}\n\n#Graphs #DFS #BFS #SoftwareEngineering"
+  },
+  {
+   "day": 43,
+   "week": 7,
+   "kind": "build",
+   "title": "The Zombie City Escape Map",
+   "mission": "Phase: Graph Traversal",
+   "points": 10,
+   "estimateMinutes": 85,
+   "tags": [
+    "Medium-Hard",
+    "graphs",
+    "bfs",
+    "shortest-path"
+   ],
+   "objectives": [
+    "Understand BFS traversal",
+    "Find shortest paths efficiently",
+    "Explore graph levels systematically"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · shortest-path-in-binary-matrix",
+     "url": "https://leetcode.com/problems/shortest-path-in-binary-matrix/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · graphds",
+     "url": "https://visualgo.net/en/graphds"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Graph Traversal\n\nA zombie outbreak has trapped survivors inside a giant city grid.\n\nYour mission is to calculate the shortest escape route before the zombies spread.\n\nEvery move matters. A wrong traversal strategy could cost lives.\n\n**Real-World Impact:** Shortest-path systems are used in GPS navigation, robotics, delivery systems, and emergency response software.\n\n**What to do:**\n- Solve Shortest Path in Binary Matrix\n- Implement BFS traversal\n- Track visited locations carefully\n- Visualize level-by-level exploration\n\n**Submission:**\n- Working pathfinding system\n- Traversal explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 43/60 🚀 | Zombie City Escape Map\n\n🧟 Built a shortest-path survival system using BFS traversal.\n\n💻 What I explored:\n• Graph traversal strategies\n• Queue-based exploration\n• Path optimization\n\n🧠 Biggest realization:\nBFS feels like controlled wave expansion through a graph.\n\nGitHub Repo: {{github_link}}\n\n#Graphs #BFS #SoftwareEngineering"
+  },
+  {
+   "day": 44,
+   "week": 7,
+   "kind": "build",
+   "title": "The University Course Planner",
+   "mission": "Phase: Topological Sorting",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium-Hard",
+    "graphs",
+    "topological-sort",
+    "cycle-detection"
+   ],
+   "objectives": [
+    "Understand dependency graphs",
+    "Detect cycles in directed graphs",
+    "Learn topological ordering concepts"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · course-schedule",
+     "url": "https://leetcode.com/problems/course-schedule/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · graphds",
+     "url": "https://visualgo.net/en/graphds"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Topological Sorting\n\nA university accidentally created impossible degree schedules.\n\nSome courses depend on others, creating a giant prerequisite maze.\n\nYour mission is to determine whether students can actually graduate.\n\n**Real-World Impact:** Dependency graphs power package managers, CI/CD systems, build pipelines, and scheduling systems.\n\n**What to do:**\n- Solve Course Schedule\n- Detect cycles in dependency graph\n- Implement BFS or DFS solution\n- Visualize prerequisite relationships\n\n**Submission:**\n- Dependency checker\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 44/60 🚀 | University Course Planner\n\n🎓 Built a prerequisite validation system using graph traversal.\n\n🧠 Key realization:\nModern systems are basically giant dependency graphs.\n\nGitHub Repo: {{github_link}}\n\n#Graphs #TopologicalSort #SoftwareEngineering"
+  },
+  {
+   "day": 45,
+   "week": 7,
+   "kind": "build",
+   "title": "The Emergency Room Simulator",
+   "mission": "Phase: Priority Queues",
+   "points": 10,
+   "estimateMinutes": 75,
+   "tags": [
+    "Medium",
+    "priority-queue",
+    "heap",
+    "scheduling"
+   ],
+   "objectives": [
+    "Understand priority queues",
+    "Manage dynamically changing priorities",
+    "Design scheduling systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.python.org · heapq.html",
+     "url": "https://docs.python.org/3/library/heapq.html"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · priority-queue-set-1-introduction",
+     "url": "https://www.geeksforgeeks.org/priority-queue-set-1-introduction/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Priority Queues\n\nA hospital emergency room must prioritize patients based on severity.\n\nYour mission is to build the patient scheduling engine before the waiting room collapses into chaos.\n\n**Real-World Impact:** Priority queues power operating systems, network routing, cloud scheduling, and real-time systems.\n\n**What to do:**\n- Build a patient priority system\n- Use heaps or priority queues\n- Process highest-priority patients first\n- Simulate incoming emergency requests\n\n**Submission:**\n- Priority scheduling system\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 45/60 🚀 | Emergency Room Simulator\n\n🏥 Built a hospital scheduling engine using priority queues.\n\n💡 Biggest realization:\nNot all tasks should be treated equally in real systems.\n\nGitHub Repo: {{github_link}}\n\n#PriorityQueue #Heaps #SoftwareEngineering"
+  },
+  {
+   "day": 46,
+   "week": 7,
+   "kind": "build",
+   "title": "The Robot Energy Saver",
+   "mission": "Phase: Dynamic Programming",
+   "points": 10,
+   "estimateMinutes": 80,
+   "tags": [
+    "Medium",
+    "dynamic-programming",
+    "optimization",
+    "memoization"
+   ],
+   "objectives": [
+    "Understand overlapping subproblems",
+    "Optimize recursive solutions",
+    "Learn bottom-up thinking"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · min-cost-climbing-stairs",
+     "url": "https://leetcode.com/problems/min-cost-climbing-stairs/"
+    },
+    {
+     "kind": "read",
+     "label": "geeksforgeeks.org · dynamic-programming",
+     "url": "https://www.geeksforgeeks.org/dynamic-programming/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Dynamic Programming\n\nA robot must travel across dangerous rooftops while conserving battery.\n\nEach jump drains energy.\n\nYour mission is to calculate the minimum energy path before the robot shuts down.\n\n**Real-World Impact:** Dynamic programming powers optimization systems in finance, AI planning, robotics, and logistics.\n\n**What to do:**\n- Solve Min Cost Climbing Stairs\n- Compare recursion vs DP\n- Store intermediate results\n- Visualize state transitions\n\n**Submission:**\n- Optimized implementation\n- DP explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 46/60 🚀 | Robot Energy Saver\n\n🤖 Built an energy optimization system using Dynamic Programming.\n\n🧠 Biggest realization:\nDP is basically intelligent memory for repeated decisions.\n\nGitHub Repo: {{github_link}}\n\n#DynamicProgramming #Optimization #SoftwareEngineering"
+  },
+  {
+   "day": 47,
+   "week": 7,
+   "kind": "build",
+   "title": "The Treasure Dungeon Collector",
+   "mission": "Phase: Dynamic Programming",
+   "points": 10,
+   "estimateMinutes": 75,
+   "tags": [
+    "Medium",
+    "dynamic-programming",
+    "optimization",
+    "decision-making"
+   ],
+   "objectives": [
+    "Recognize optimal substructure",
+    "Avoid greedy traps",
+    "Build DP intuition"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · house-robber",
+     "url": "https://leetcode.com/problems/house-robber/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Dynamic Programming\n\nA treasure hunter explores a dungeon filled with gold rooms.\n\nSome rooms contain traps, so collecting treasure greedily could lead to disaster.\n\nYour mission is to maximize collected treasure without triggering alarms in adjacent rooms.\n\n**Real-World Impact:** Constraint optimization problems appear in resource planning, investment systems, and scheduling engines.\n\n**What to do:**\n- Solve House Robber\n- Compare greedy vs DP approaches\n- Track optimal substructure\n- Visualize decision choices\n\n**Submission:**\n- Optimized DP solution\n- README explanation\n- GitHub repository",
+   "linkedinTemplate": "Day 47/60 🚀 | Treasure Dungeon Collector\n\n💰 Built a treasure optimization system using Dynamic Programming.\n\n💡 Key realization:\nThe locally best choice is not always globally optimal.\n\nGitHub Repo: {{github_link}}\n\n#DynamicProgramming #Algorithms #SoftwareEngineering"
+  },
+  {
+   "day": 48,
+   "week": 7,
+   "kind": "build",
+   "title": "The Alien Language Translator",
+   "mission": "Phase: String Dynamic Programming",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Hard",
+    "dynamic-programming",
+    "strings",
+    "edit-distance"
+   ],
+   "objectives": [
+    "Understand 2D dynamic programming",
+    "Track transformation costs",
+    "Optimize string operations"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · edit-distance",
+     "url": "https://leetcode.com/problems/edit-distance/"
+    },
+    {
+     "kind": "read",
+     "label": "visualgo.net · dp",
+     "url": "https://visualgo.net/en/dp"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** String Dynamic Programming\n\nScientists intercepted messages from an alien civilization.\n\nYour mission is to determine whether one message can be transformed into another using minimum edits.\n\nEvery edit costs precious translation energy.\n\n**Real-World Impact:** Edit distance algorithms power autocorrect, spell checkers, DNA analysis, and NLP systems.\n\n**What to do:**\n- Solve Edit Distance\n- Build DP table visualization\n- Track insertion/deletion/replacement costs\n- Compare recursive vs DP solutions\n\n**Submission:**\n- Working implementation\n- DP visualization\n- GitHub repository",
+   "linkedinTemplate": "Day 48/60 🚀 | Alien Language Translator\n\n👽 Built a message transformation engine using Dynamic Programming.\n\n🧠 Biggest realization:\nComplex systems become manageable once you break them into smaller states.\n\nGitHub Repo: {{github_link}}\n\n#DynamicProgramming #Strings #SoftwareEngineering"
+  },
+  {
+   "day": 49,
+   "week": 7,
+   "kind": "build",
+   "title": "The Ultimate Engineering Gauntlet",
+   "mission": "Phase: Sprint Challenge",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "graphs",
+    "dynamic-programming",
+    "optimization"
+   ],
+   "objectives": [
+    "Combine multiple advanced concepts",
+    "Strengthen communication skills",
+    "Think like a senior engineer"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · problemset",
+     "url": "https://leetcode.com/problemset/"
+    },
+    {
+     "kind": "read",
+     "label": "bigocheatsheet.com",
+     "url": "https://www.bigocheatsheet.com/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Sprint Challenge\n\nWelcome to the hardest engineering tournament so far.\n\nYou must solve:\n• 1 Graph problem\n• 1 Dynamic Programming problem\n• 1 Optimization challenge\n\nBUT there’s a twist:\nYou must explain your entire thought process like an engineer presenting to a team.\n\n**Real-World Impact:** Senior engineers are evaluated not just on solutions, but on communication, scalability reasoning, and tradeoff analysis.\n\n**What to do:**\n- Solve 3 advanced problems\n- Record optimization decisions\n- Explain tradeoffs and edge cases\n- Create engineering-style documentation\n\n**Submission:**\n- Solutions\n- Engineering notes\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 49/60 🚀 | Ultimate Engineering Gauntlet\n\n⚔️ Solved advanced graph + DP + optimization challenges.\n\n🧠 Biggest realization:\nStrong engineers explain decisions clearly - not just code solutions.\n\nGitHub Repo: {{github_link}}\n\n#SoftwareEngineering #DynamicProgramming #Graphs #InterviewPrep"
+  },
+  {
+   "day": 50,
+   "week": 8,
+   "kind": "build",
+   "title": "The Superhero Academy Simulator",
+   "mission": "Phase: Object-Oriented Design",
+   "points": 10,
+   "estimateMinutes": 75,
+   "tags": [
+    "Medium",
+    "oop",
+    "inheritance",
+    "polymorphism"
+   ],
+   "objectives": [
+    "Understand inheritance and polymorphism",
+    "Design reusable systems",
+    "Structure scalable codebases"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "realpython.com · python3-object-oriented-programming",
+     "url": "https://realpython.com/python3-object-oriented-programming/"
+    },
+    {
+     "kind": "read",
+     "label": "docs.python.org · classes.html",
+     "url": "https://docs.python.org/3/tutorial/classes.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Object-Oriented Design\n\nA futuristic academy trains superheroes with different powers, energy levels, and combat styles.\n\nYour mission is to design a flexible simulator where heroes can inherit abilities, override attacks, and interact dynamically.\n\nThe academy wants a scalable system because hundreds of heroes will join later.\n\n**Real-World Impact:** Object-Oriented Programming powers game engines, enterprise software, banking systems, and large-scale applications.\n\n**What to do:**\n- Create a Hero base class\n- Implement inheritance for different hero types\n- Use method overriding for special attacks\n- Simulate hero battles\n\n**Submission:**\n- Working OOP simulation\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 50/60 🚀 | Superhero Academy Simulator\n\n🦸 Built a scalable hero battle system using Object-Oriented Programming.\n\n💻 What I explored:\n• Inheritance\n• Polymorphism\n• Reusable system design\n\n🧠 Biggest realization:\nOOP helps engineers design systems that scale naturally.\n\nGitHub Repo: {{github_link}}\n\n#OOP #SoftwareEngineering #Python"
+  },
+  {
+   "day": 51,
+   "week": 8,
+   "kind": "build",
+   "title": "The Food Delivery Empire",
+   "mission": "Phase: System Design",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "system-design",
+    "backend",
+    "architecture"
+   ],
+   "objectives": [
+    "Think in systems instead of isolated functions",
+    "Model relationships between entities",
+    "Understand backend architecture basics"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "roadmap.sh · system-design",
+     "url": "https://roadmap.sh/system-design"
+    },
+    {
+     "kind": "read",
+     "label": "refactoring.guru · design-patterns",
+     "url": "https://refactoring.guru/design-patterns"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** System Design\n\nA startup is launching a food delivery platform.\n\nOrders are exploding rapidly, and restaurants are struggling to manage requests.\n\nYour mission is to design a mini backend system that handles:\n• users\n• restaurants\n• orders\n• delivery tracking\n\n**Real-World Impact:** System design powers scalable platforms like Swiggy, Zomato, Uber, and Amazon.\n\n**What to do:**\n- Design core entities and relationships\n- Build simple order flow classes\n- Simulate order placement\n- Document architecture decisions\n\n**Submission:**\n- Mini backend simulation\n- Architecture notes\n- GitHub repository",
+   "linkedinTemplate": "Day 51/60 🚀 | Food Delivery Empire\n\n🍔 Designed a mini backend system for a food delivery platform.\n\n🧠 Biggest realization:\nSoftware engineering is really about designing interactions between systems.\n\nGitHub Repo: {{github_link}}\n\n#SystemDesign #Backend #SoftwareEngineering"
+  },
+  {
+   "day": 52,
+   "week": 8,
+   "kind": "build",
+   "title": "The Weather Intelligence Network",
+   "mission": "Phase: APIs",
+   "points": 10,
+   "estimateMinutes": 80,
+   "tags": [
+    "Medium",
+    "api",
+    "json",
+    "http"
+   ],
+   "objectives": [
+    "Understand APIs and HTTP requests",
+    "Parse JSON data",
+    "Handle real-world system failures"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "openweathermap.org · api",
+     "url": "https://openweathermap.org/api"
+    },
+    {
+     "kind": "read",
+     "label": "realpython.com · api-integration-in-python",
+     "url": "https://realpython.com/api-integration-in-python/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** APIs\n\nA global weather agency wants a smart dashboard that fetches live weather reports from different cities.\n\nYour mission is to build a weather intelligence client that communicates with APIs and displays useful insights.\n\n**Real-World Impact:** APIs power modern applications by enabling communication between independent systems.\n\n**What to do:**\n- Fetch weather data from a public API\n- Parse JSON responses\n- Display formatted weather summaries\n- Handle API failures gracefully\n\n**Submission:**\n- Working API integration\n- README explanation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 52/60 🚀 | Weather Intelligence Network\n\n🌦️ Built a live weather dashboard using APIs.\n\n💡 Key realization:\nModern applications are connected ecosystems communicating through APIs.\n\nGitHub Repo: {{github_link}}\n\n#APIs #Python #SoftwareEngineering"
+  },
+  {
+   "day": 53,
+   "week": 8,
+   "kind": "build",
+   "title": "The Secret Vault Database",
+   "mission": "Phase: Databases",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "database",
+    "sql",
+    "crud"
+   ],
+   "objectives": [
+    "Understand relational databases",
+    "Perform CRUD operations",
+    "Connect Python with SQL"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "sqlitetutorial.net",
+     "url": "https://www.sqlitetutorial.net/"
+    },
+    {
+     "kind": "read",
+     "label": "realpython.com · python-sql-libraries",
+     "url": "https://realpython.com/python-sql-libraries/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Databases\n\nA cybersecurity company stores sensitive vault records inside a secret database.\n\nYour mission is to build a secure storage system that can:\n• add records\n• search records\n• update records\n• delete records\n\n**Real-World Impact:** Databases power almost every modern application including banking, healthcare, e-commerce, and social media.\n\n**What to do:**\n- Create a SQLite database\n- Implement CRUD operations\n- Store secret vault records\n- Write efficient queries\n\n**Submission:**\n- Working database system\n- SQL query examples\n- GitHub repository",
+   "linkedinTemplate": "Day 53/60 🚀 | Secret Vault Database\n\n🗄️ Built a secure record management system using SQLite.\n\n🧠 Biggest realization:\nData becomes powerful only when organized efficiently.\n\nGitHub Repo: {{github_link}}\n\n#Databases #SQL #SoftwareEngineering"
+  },
+  {
+   "day": 54,
+   "week": 8,
+   "kind": "build",
+   "title": "The Smart Spam Detector - Part 1",
+   "mission": "Phase: Mini Project",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium",
+    "nlp",
+    "preprocessing",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Understand NLP preprocessing",
+    "Clean real-world text data",
+    "Prepare datasets for ML systems"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "kaggle.com · sms-spam-collection-dataset",
+     "url": "https://www.kaggle.com/datasets/uciml/sms-spam-collection-dataset"
+    },
+    {
+     "kind": "read",
+     "label": "nltk.org",
+     "url": "https://www.nltk.org/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Mini Project\n\nA messaging company is losing millions because spam messages keep bypassing filters.\n\nYour mission is to start building an AI-powered spam detection engine.\n\nToday’s focus:\n• collect and clean message data\n• preprocess text\n• understand spam patterns\n\n**Real-World Impact:** Spam detection systems power cybersecurity, email filtering, and online platform moderation.\n\n**What to do:**\n- Load SMS spam dataset\n- Clean and preprocess text\n- Remove stopwords and punctuation\n- Explore spam vs non-spam patterns\n\n**Submission:**\n- Preprocessing notebook/script\n- Data observations\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 54/60 🚀 | Smart Spam Detector - Part 1\n\n📩 Started building an AI-powered spam detection system.\n\n💻 What I explored:\n• Text preprocessing\n• NLP cleaning pipelines\n• Spam pattern analysis\n\n🧠 Biggest realization:\nAI systems are only as good as the quality of their data.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #NLP #SoftwareEngineering"
+  },
+  {
+   "day": 55,
+   "week": 8,
+   "kind": "build",
+   "title": "The Smart Spam Detector - Part 2",
+   "mission": "Phase: Mini Project",
+   "points": 10,
+   "estimateMinutes": 110,
+   "tags": [
+    "Medium-Hard",
+    "machine-learning",
+    "classification",
+    "nlp"
+   ],
+   "objectives": [
+    "Understand ML classification pipelines",
+    "Train NLP models",
+    "Evaluate prediction quality"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · tutorial.html",
+     "url": "https://scikit-learn.org/stable/tutorial/basic/tutorial.html"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · feature_extraction.html",
+     "url": "https://scikit-learn.org/stable/modules/feature_extraction.html"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Mini Project\n\nThe spam company now needs a working AI prediction engine.\n\nYour mission is to train a machine learning model that classifies spam messages automatically.\n\n**Real-World Impact:** Text classification systems power recommendation engines, moderation systems, and fraud detection tools.\n\n**What to do:**\n- Convert text into numerical vectors\n- Train a classification model\n- Evaluate model accuracy\n- Test predictions on custom messages\n\n**Submission:**\n- Working ML classifier\n- Accuracy evaluation\n- GitHub repository",
+   "linkedinTemplate": "Day 55/60 🚀 | Smart Spam Detector - Part 2\n\n🤖 Trained an AI model to classify spam messages automatically.\n\n🧠 Biggest realization:\nMachine learning is basically pattern recognition powered by data.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #NLP #AI"
+  },
+  {
+   "day": 56,
+   "week": 8,
+   "kind": "build",
+   "title": "The Smart Spam Detector - Part 3",
+   "mission": "Phase: Mini Project Deployment",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium-Hard",
+    "deployment",
+    "streamlit",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Deploy AI systems",
+    "Build interactive user interfaces",
+    "Transform prototypes into products"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "streamlit.io",
+     "url": "https://streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "docs.streamlit.io",
+     "url": "https://docs.streamlit.io/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Mini Project Deployment\n\nThe messaging company wants a real product instead of just a notebook.\n\nYour mission is to deploy the spam detector into a simple interactive application where users can test messages live.\n\n**Real-World Impact:** Deployment transforms ML experiments into usable products for real users.\n\n**What to do:**\n- Build a simple Streamlit or Flask UI\n- Allow users to input custom messages\n- Display spam predictions live\n- Polish project documentation\n\n**Submission:**\n- Working deployed app\n- README documentation\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 56/60 🚀 | Smart Spam Detector - Final Deployment\n\n🚀 Turned an AI spam classifier into a real interactive application.\n\n💡 Biggest realization:\nBuilding models is only half the journey - deployment creates real impact.\n\nGitHub Repo: {{github_link}}\n\n#MachineLearning #Deployment #SoftwareEngineering #AI"
+  },
+  {
+   "day": 57,
+   "week": 9,
+   "kind": "build",
+   "title": "The Spam Detector Performance Crisis",
+   "mission": "Phase: Final Product Optimization",
+   "points": 10,
+   "estimateMinutes": 100,
+   "tags": [
+    "Medium-Hard",
+    "optimization",
+    "deployment",
+    "machine-learning"
+   ],
+   "objectives": [
+    "Optimize production-ready systems",
+    "Improve maintainability",
+    "Think about scalability and UX"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "docs.streamlit.io",
+     "url": "https://docs.streamlit.io/"
+    },
+    {
+     "kind": "read",
+     "label": "scikit-learn.org · stable",
+     "url": "https://scikit-learn.org/stable/"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Final Product Optimization\n\nYour AI-powered spam detector has gone viral.\n\nThousands of users are testing messages every minute, but the system is slowing down.\n\nYour mission is to optimize the spam detection engine before the servers crash.\n\nThe company wants:\n• faster predictions\n• cleaner UI\n• better user experience\n• performance insights\n\n**Real-World Impact:** Optimization and scalability are critical in production AI systems used by millions of users.\n\n**What to do:**\n- Improve prediction speed\n- Refactor messy code\n- Enhance UI and user experience\n- Add prediction confidence scores\n- Document performance improvements\n\n**Submission:**\n- Optimized application\n- Performance comparison report\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 57/60 🚀 | Spam Detector Performance Crisis\n\n⚡ Optimized my AI spam detection system for speed and usability.\n\n💻 What I improved:\n• Faster predictions\n• Cleaner architecture\n• Better user experience\n• Confidence scoring\n\n🧠 Biggest realization:\nBuilding a model is only the beginning - optimization creates real products.\n\nGitHub Repo: {{github_link}}\n\n#SoftwareEngineering #MachineLearning #Optimization #AI"
+  },
+  {
+   "day": 58,
+   "week": 9,
+   "kind": "build",
+   "title": "The Ultimate Coding Arena",
+   "mission": "Phase: Mock Interview Arena",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Hard",
+    "mock-interview",
+    "debugging",
+    "system-design"
+   ],
+   "objectives": [
+    "Simulate real interview pressure",
+    "Communicate engineering decisions",
+    "Strengthen debugging skills"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "leetcode.com · problemset",
+     "url": "https://leetcode.com/problemset/"
+    },
+    {
+     "kind": "read",
+     "label": "interviewing.io · system-design-interview",
+     "url": "https://interviewing.io/guides/system-design-interview"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Mock Interview Arena\n\nYou have entered the final engineering tournament.\n\nYour mission is to survive a mock technical interview containing:\n• one DSA challenge\n• one debugging challenge\n• one system-design discussion\n\nThe catch:\nYou must explain your thinking clearly like a real engineer.\n\n**Real-World Impact:** Technical interviews evaluate communication, tradeoff analysis, and structured thinking - not just code.\n\n**What to do:**\n- Solve 1 timed DSA problem\n- Debug a broken implementation\n- Explain one system-design scenario\n- Record your reasoning process\n\n**Submission:**\n- Problem solutions\n- Debugging explanation\n- System design notes\n- GitHub repository",
+   "linkedinTemplate": "Day 58/60 🚀 | Ultimate Coding Arena\n\n⚔️ Simulated a real technical interview with DSA, debugging, and system design challenges.\n\n🧠 Biggest realization:\nInterview success depends heavily on communication and structured thinking.\n\nGitHub Repo: {{github_link}}\n\n#InterviewPrep #SoftwareEngineering #DSA"
+  },
+  {
+   "day": 59,
+   "week": 9,
+   "kind": "build",
+   "title": "The Engineer Portfolio Showcase",
+   "mission": "Phase: Portfolio Engineering",
+   "points": 10,
+   "estimateMinutes": 90,
+   "tags": [
+    "Medium",
+    "portfolio",
+    "github",
+    "career"
+   ],
+   "objectives": [
+    "Present technical work professionally",
+    "Communicate impact clearly",
+    "Build recruiter-friendly portfolios"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "github.com · awesome-github-profile-readme",
+     "url": "https://github.com/abhisheknaiidu/awesome-github-profile-readme"
+    },
+    {
+     "kind": "read",
+     "label": "roadmap.sh · projects",
+     "url": "https://roadmap.sh/projects"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Portfolio Engineering\n\nA recruiter is reviewing your profile in under 60 seconds.\n\nYour mission is to transform everything you built during the challenge into a polished engineering portfolio.\n\nYou must organize:\n• GitHub repositories\n• project READMEs\n• LinkedIn highlights\n• resume project descriptions\n\n**Real-World Impact:** Strong portfolios dramatically improve internship and job opportunities.\n\n**What to do:**\n- Polish GitHub repositories\n- Improve project documentation\n- Write resume-ready project descriptions\n- Create a portfolio README or website\n- Highlight best engineering projects\n\n**Submission:**\n- Portfolio repository\n- Updated READMEs\n- Resume project descriptions\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 59/60 🚀 | Engineer Portfolio Showcase\n\n🖥️ Turned my projects into a polished engineering portfolio.\n\n💡 Biggest realization:\nProjects become powerful only when you can communicate their impact clearly.\n\nGitHub Repo: {{github_link}}\n\n#Portfolio #SoftwareEngineering #GitHub #CareerGrowth"
+  },
+  {
+   "day": 60,
+   "week": 9,
+   "kind": "build",
+   "title": "The Final Engineering Boss Battle",
+   "mission": "Phase: Grand Finale",
+   "points": 10,
+   "estimateMinutes": 120,
+   "tags": [
+    "Medium",
+    "reflection",
+    "portfolio",
+    "career-growth"
+   ],
+   "objectives": [
+    "Develop engineering confidence",
+    "Communicate technical growth",
+    "Reflect on long-term consistency"
+   ],
+   "concepts": [],
+   "steps": [],
+   "deliverable": "Push today&#x27;s work to your GitHub repository, post on LinkedIn, and submit both links.",
+   "reviewerChecks": "The link opens today's work in your repository, and your LinkedIn post about it is public.",
+   "resources": [
+    {
+     "kind": "read",
+     "label": "canva.com",
+     "url": "https://www.canva.com/"
+    },
+    {
+     "kind": "read",
+     "label": "docs.github.com · get-started",
+     "url": "https://docs.github.com/en/get-started"
+    }
+   ],
+   "quiz": [],
+   "brief": "**Phase:** Grand Finale\n\nWelcome to the final day.\n\nYou started this journey learning basic Python.\nNow you’ve built:\n• algorithms\n• system designs\n• APIs\n• databases\n• AI-powered applications\n\nToday’s mission is simple:\nReflect, rebuild confidence, and prove your growth.\n\nYour final challenge:\nCreate a complete showcase presentation explaining:\n• your best project\n• biggest struggles\n• engineering lessons learned\n• how your thinking evolved over 60 days\n\n**Real-World Impact:** Reflection and communication are critical traits of high-level engineers and technical leaders.\n\n**What to do:**\n- Prepare a final project showcase\n- Explain engineering decisions clearly\n- Reflect on growth and consistency\n- Share your journey publicly\n\n**Submission:**\n- Final presentation or document\n- Project showcase\n- GitHub repository\n- LinkedIn reflection",
+   "linkedinTemplate": "Day 60/60 🚀 | Final Engineering Boss Battle\n\n🎉 Completed the 60 Days Coding Challenge.\n\nOver the last 60 days, I explored:\n• DSA and problem solving\n• System design\n• APIs and databases\n• Machine Learning and NLP\n• Deployment and portfolio building\n\n🧠 Biggest realization:\nConsistency compounds.\nSmall improvements every day completely changed the way I think as an engineer.\n\nGrateful to @Anil Bajpai Sir and the Klymb community for building such an incredible learning environment.\n\nGitHub Repo: {{github_link}}\n\nDay 60/60 ✅\n\n#SoftwareEngineering #MachineLearning #AI #LearningInPublic #Klymb #60DaysOfCode"
+  }
+ ],
+ "modules": [
+  {
+   "week": 1,
+   "name": "Python Foundations & Logic Building",
+   "days": "Days 1–7",
+   "summary": "Python Foundations Sprint (Syntax + Data Types)"
+  },
+  {
+   "week": 2,
+   "name": "Week 2",
+   "days": "Days 8–14",
+   "summary": "Understanding Arrays Through Real Data"
+  },
+  {
+   "week": 3,
+   "name": "Week 3",
+   "days": "Days 15–21",
+   "summary": "The Duplicate Spy Detector"
+  },
+  {
+   "week": 4,
+   "name": "Week 4",
+   "days": "Days 22–28",
+   "summary": "The Theme Park FastPass Simulator"
+  },
+  {
+   "week": 5,
+   "name": "The Algorithm Olympics",
+   "days": "Days 29–35",
+   "summary": "The Viral Hashtag Tracker"
+  },
+  {
+   "week": 6,
+   "name": "The Data Structures Adventure Realm",
+   "days": "Days 36–42",
+   "summary": "The Water Reservoir Architect"
+  },
+  {
+   "week": 7,
+   "name": "The Ultimate Systems Tournament",
+   "days": "Days 43–49",
+   "summary": "The Zombie City Escape Map"
+  },
+  {
+   "week": 8,
+   "name": "The Engineering Multiverse",
+   "days": "Days 50–56",
+   "summary": "The Superhero Academy Simulator"
+  },
+  {
+   "week": 9,
+   "name": "The Final Engineering Championship",
+   "days": "Days 57–60",
+   "summary": "The Spam Detector Performance Crisis"
+  }
+ ],
+ "quizzes": [
+  {
+   "week": 1,
+   "title": "Python Foundations & Logic Building",
+   "questions": [
+    {
+     "question": "What will be the output of: print(type('123'))?",
+     "options": [
+      "<class 'int'>",
+      "<class 'str'>",
+      "<class 'float'>",
+      "<class 'char'>"
+     ],
+     "answer": 1,
+     "explanation": "'123' is a string, so its type is str."
+    },
+    {
+     "question": "Which function is used to take input from the user in Python?",
+     "options": [
+      "get()",
+      "input()",
+      "scan()",
+      "read()"
+     ],
+     "answer": 1,
+     "explanation": "input() is used to take user input in Python."
+    },
+    {
+     "question": "What is the output of: int('10') + 5?",
+     "options": [
+      "105",
+      "15",
+      "Error",
+      "'105'"
+     ],
+     "answer": 1,
+     "explanation": "The string '10' is converted to integer 10, then added to 5."
+    },
+    {
+     "question": "Which operator is used for logical AND in Python?",
+     "options": [
+      "&&",
+      "&",
+      "and",
+      "AND"
+     ],
+     "answer": 2,
+     "explanation": "Python uses 'and' for logical AND operations."
+    },
+    {
+     "question": "What will be the output of: print(5 > 3 and 2 < 1)?",
+     "options": [
+      "True",
+      "False",
+      "Error",
+      "None"
+     ],
+     "answer": 1,
+     "explanation": "5 > 3 is True, but 2 < 1 is False. True AND False = False."
+    },
+    {
+     "question": "Which loop is best when the number of iterations is known?",
+     "options": [
+      "while loop",
+      "for loop",
+      "do-while loop",
+      "repeat loop"
+     ],
+     "answer": 1,
+     "explanation": "for loop is used when the number of iterations is predefined."
+    },
+    {
+     "question": "What will be the output of: len([1, 2, 3, 4])?",
+     "options": [
+      "3",
+      "4",
+      "5",
+      "Error"
+     ],
+     "answer": 1,
+     "explanation": "len() returns the number of elements in a list."
+    },
+    {
+     "question": "Which data structure stores key-value pairs?",
+     "options": [
+      "List",
+      "Tuple",
+      "Dictionary",
+      "Set"
+     ],
+     "answer": 2,
+     "explanation": "Dictionaries store data in key-value pairs."
+    },
+    {
+     "question": "What does this code do?\n\nnumbers = [1,2,2,3]\nfreq = {}\nfor n in numbers:\n    freq[n] = freq.get(n,0) + 1",
+     "options": [
+      "Sorts the list",
+      "Counts frequency of elements",
+      "Removes duplicates",
+      "Finds max value"
+     ],
+     "answer": 1,
+     "explanation": "It counts how many times each element appears using a dictionary."
+    },
+    {
+     "question": "What will be the output of: print([1,2,3][::-1])?",
+     "options": [
+      "[1,2,3]",
+      "[3,2,1]",
+      "Error",
+      "[2,3,1]"
+     ],
+     "answer": 1,
+     "explanation": "[::-1] reverses the list."
+    }
+   ]
+  },
+  {
+   "week": 5,
+   "title": "The Algorithm Olympics",
+   "questions": [
+    {
+     "question": "Which data structure is most useful for retrieving Top K frequent elements efficiently?",
+     "options": [
+      "Queue",
+      "Heap",
+      "Stack",
+      "Linked List"
+     ],
+     "answer": 1,
+     "explanation": "Heaps efficiently retrieve highest-priority elements."
+    },
+    {
+     "question": "What is the time complexity of binary search?",
+     "options": [
+      "O(n)",
+      "O(log n)",
+      "O(n²)",
+      "O(1)"
+     ],
+     "answer": 1,
+     "explanation": "Binary search repeatedly halves the search space."
+    },
+    {
+     "question": "Why is binary search faster than linear search?",
+     "options": [
+      "It sorts automatically",
+      "It checks every element",
+      "It reduces the search space exponentially",
+      "It uses recursion only"
+     ],
+     "answer": 2,
+     "explanation": "Binary search eliminates half the remaining elements each step."
+    },
+    {
+     "question": "What is the key benefit of sliding window optimization?",
+     "options": [
+      "Avoid repeated recalculations",
+      "Automatically sorts arrays",
+      "Uses recursion",
+      "Removes duplicates"
+     ],
+     "answer": 0,
+     "explanation": "Sliding windows maintain rolling computations efficiently."
+    },
+    {
+     "question": "Which technique is best for substring problems with dynamic constraints?",
+     "options": [
+      "Sorting",
+      "Variable Sliding Window",
+      "Heap",
+      "Binary Search"
+     ],
+     "answer": 1,
+     "explanation": "Variable windows adapt dynamically as constraints change."
+    },
+    {
+     "question": "Why are heaps commonly used in trending systems?",
+     "options": [
+      "They reduce memory usage",
+      "They retrieve top-ranked elements efficiently",
+      "They avoid loops",
+      "They sort instantly"
+     ],
+     "answer": 1,
+     "explanation": "Heaps are ideal for efficiently tracking top-ranked values."
+    },
+    {
+     "question": "What is the biggest challenge in binary search variants like First Bad Version?",
+     "options": [
+      "Sorting data",
+      "Handling edge conditions correctly",
+      "Reducing recursion",
+      "Using arrays"
+     ],
+     "answer": 1,
+     "explanation": "Most binary search bugs come from incorrect boundary updates."
+    },
+    {
+     "question": "Why are sliding windows important in streaming systems?",
+     "options": [
+      "They store all data permanently",
+      "They efficiently process moving subsets of data",
+      "They avoid optimization",
+      "They only work for strings"
+     ],
+     "answer": 1,
+     "explanation": "Streaming systems analyze continuously changing windows of data."
+    },
+    {
+     "question": "What engineering mindset is reinforced by Week 5?",
+     "options": [
+      "Memorization",
+      "Optimization and scalability",
+      "Writing longer code",
+      "Avoiding edge cases"
+     ],
+     "answer": 1,
+     "explanation": "Week 5 focuses heavily on efficient systems thinking."
+    },
+    {
+     "question": "What is the most important lesson from the Hacker Tournament Finals?",
+     "options": [
+      "Fast typing wins interviews",
+      "Optimization explanations matter as much as code",
+      "Brute force always works",
+      "Longer code is better"
+     ],
+     "answer": 1,
+     "explanation": "Engineering interviews evaluate communication and reasoning, not just coding."
+    }
+   ]
+  },
+  {
+   "week": 6,
+   "title": "The Data Structures Adventure Realm",
+   "questions": [
+    {
+     "question": "Why does the two-pointer solution for Container With Most Water work efficiently?",
+     "options": [
+      "It sorts the array first",
+      "It removes impossible solutions strategically",
+      "It uses recursion",
+      "It checks every pair"
+     ],
+     "answer": 1,
+     "explanation": "Moving the smaller pointer eliminates impossible larger-area combinations."
+    },
+    {
+     "question": "What is the core idea behind greedy algorithms?",
+     "options": [
+      "Explore every possibility",
+      "Use recursion only",
+      "Make the best local decision at each step",
+      "Always sort data"
+     ],
+     "answer": 2,
+     "explanation": "Greedy algorithms optimize locally in hopes of achieving a global optimum."
+    },
+    {
+     "question": "Which real-world system commonly behaves like a tree structure?",
+     "options": [
+      "Calculator",
+      "File System",
+      "Queue",
+      "HashMap"
+     ],
+     "answer": 1,
+     "explanation": "File systems naturally form hierarchical tree structures."
+    },
+    {
+     "question": "What traversal order does inorder traversal follow?",
+     "options": [
+      "Root → Left → Right",
+      "Left → Root → Right",
+      "Right → Left → Root",
+      "Root → Right → Left"
+     ],
+     "answer": 1,
+     "explanation": "Inorder traversal visits left subtree, root, then right subtree."
+    },
+    {
+     "question": "Why is recursion commonly used in tree problems?",
+     "options": [
+      "Trees are linear",
+      "Trees naturally contain recursive substructures",
+      "Recursion avoids loops",
+      "Recursion is always faster"
+     ],
+     "answer": 1,
+     "explanation": "Each subtree is itself another tree, making recursion intuitive."
+    },
+    {
+     "question": "What is the main purpose of BST validation?",
+     "options": [
+      "Sort the tree",
+      "Ensure nodes follow ordering constraints",
+      "Reduce recursion depth",
+      "Balance the tree automatically"
+     ],
+     "answer": 1,
+     "explanation": "BST validation checks whether node values satisfy BST rules."
+    },
+    {
+     "question": "Why are Lowest Common Ancestor queries useful?",
+     "options": [
+      "They compress trees",
+      "They identify shared hierarchical relationships",
+      "They sort graph nodes",
+      "They remove duplicates"
+     ],
+     "answer": 1,
+     "explanation": "LCA helps identify the nearest shared parent relationship."
+    },
+    {
+     "question": "What is the key idea behind DFS traversal?",
+     "options": [
+      "Explore neighbors level-by-level",
+      "Explore deeply before backtracking",
+      "Sort graph nodes",
+      "Always use heaps"
+     ],
+     "answer": 1,
+     "explanation": "DFS explores paths deeply before returning."
+    },
+    {
+     "question": "In the Number of Islands problem, what does each island represent?",
+     "options": [
+      "A stack",
+      "A connected component",
+      "A sorted array",
+      "A recursion limit"
+     ],
+     "answer": 1,
+     "explanation": "Each island is a connected region of land cells."
+    },
+    {
+     "question": "What is the biggest engineering lesson from Week 6?",
+     "options": [
+      "Trees and graphs model real-world relationships",
+      "Recursion should always be avoided",
+      "Optimization is unnecessary",
+      "Brute force scales well"
+     ],
+     "answer": 0,
+     "explanation": "Hierarchical and connected systems appear everywhere in software engineering."
+    }
+   ]
+  },
+  {
+   "week": 7,
+   "title": "The Ultimate Systems Tournament",
+   "questions": [
+    {
+     "question": "Why is BFS ideal for shortest path problems in unweighted graphs?",
+     "options": [
+      "It uses recursion",
+      "It explores nodes level-by-level",
+      "It sorts edges",
+      "It minimizes memory"
+     ],
+     "answer": 1,
+     "explanation": "BFS guarantees the shortest path in unweighted graphs by exploring levels progressively."
+    },
+    {
+     "question": "What does a cycle in a course prerequisite graph represent?",
+     "options": [
+      "Balanced schedule",
+      "Impossible dependency chain",
+      "Optimized traversal",
+      "Shortest path"
+     ],
+     "answer": 1,
+     "explanation": "Cycles mean courses depend on each other infinitely, making completion impossible."
+    },
+    {
+     "question": "Why are priority queues useful in scheduling systems?",
+     "options": [
+      "They automatically sort databases",
+      "They process highest-priority tasks first",
+      "They avoid recursion",
+      "They reduce storage usage"
+     ],
+     "answer": 1,
+     "explanation": "Priority queues ensure critical tasks are handled before lower-priority ones."
+    },
+    {
+     "question": "What is the key idea behind Dynamic Programming?",
+     "options": [
+      "Always use recursion",
+      "Store and reuse repeated computations",
+      "Avoid optimization",
+      "Sort inputs first"
+     ],
+     "answer": 1,
+     "explanation": "Dynamic Programming avoids repeated work by storing subproblem results."
+    },
+    {
+     "question": "What are overlapping subproblems?",
+     "options": [
+      "Independent computations",
+      "Repeated smaller computations inside larger problems",
+      "Graph edges",
+      "Invalid recursion"
+     ],
+     "answer": 1,
+     "explanation": "DP problems repeatedly solve the same smaller problems."
+    },
+    {
+     "question": "Why does the House Robber problem require DP instead of greedy logic?",
+     "options": [
+      "Greedy decisions can produce non-optimal results",
+      "DP is always faster",
+      "Greedy algorithms cannot use arrays",
+      "The problem is recursive only"
+     ],
+     "answer": 0,
+     "explanation": "Choosing the locally largest house can block globally optimal solutions."
+    },
+    {
+     "question": "What does Edit Distance measure?",
+     "options": [
+      "Memory usage",
+      "Minimum operations required to transform one string into another",
+      "String sorting complexity",
+      "Graph connectivity"
+     ],
+     "answer": 1,
+     "explanation": "Edit Distance counts insertions, deletions, and replacements needed for transformation."
+    },
+    {
+     "question": "Why is DP often visualized using tables?",
+     "options": [
+      "To reduce recursion depth",
+      "To track computed states systematically",
+      "To sort data automatically",
+      "To compress memory"
+     ],
+     "answer": 1,
+     "explanation": "DP tables help organize and reuse subproblem results efficiently."
+    },
+    {
+     "question": "What engineering skill does the Ultimate Engineering Gauntlet mainly reinforce?",
+     "options": [
+      "Typing speed",
+      "Systematic reasoning and communication",
+      "Code memorization",
+      "Avoiding edge cases"
+     ],
+     "answer": 1,
+     "explanation": "Senior engineering requires explaining tradeoffs and reasoning clearly."
+    },
+    {
+     "question": "What is the biggest lesson from Week 7?",
+     "options": [
+      "Complex systems become manageable when broken into states and relationships",
+      "Graphs should be avoided",
+      "Recursion is always inefficient",
+      "Brute force is enough for scaling"
+     ],
+     "answer": 0,
+     "explanation": "Graphs and DP teach how large systems can be decomposed into manageable structures."
+    }
+   ]
+  },
+  {
+   "week": 8,
+   "title": "The Engineering Multiverse",
+   "questions": [
+    {
+     "question": "What is the main benefit of Object-Oriented Programming?",
+     "options": [
+      "It avoids functions",
+      "It structures scalable and reusable systems",
+      "It removes debugging",
+      "It automatically optimizes code"
+     ],
+     "answer": 1,
+     "explanation": "OOP organizes software into reusable and maintainable components."
+    },
+    {
+     "question": "Why is inheritance useful in OOP systems?",
+     "options": [
+      "It duplicates code",
+      "It enables code reuse and hierarchy modeling",
+      "It removes classes",
+      "It speeds up databases"
+     ],
+     "answer": 1,
+     "explanation": "Inheritance allows child classes to reuse parent functionality."
+    },
+    {
+     "question": "What is the purpose of APIs in modern applications?",
+     "options": [
+      "Store passwords",
+      "Enable communication between systems",
+      "Replace databases",
+      "Avoid networking"
+     ],
+     "answer": 1,
+     "explanation": "APIs allow independent systems to exchange information."
+    },
+    {
+     "question": "Which format is most commonly used for API responses?",
+     "options": [
+      "PDF",
+      "CSV",
+      "JSON",
+      "TXT"
+     ],
+     "answer": 2,
+     "explanation": "JSON is lightweight and widely used for structured API communication."
+    },
+    {
+     "question": "What does CRUD stand for in databases?",
+     "options": [
+      "Create, Read, Update, Delete",
+      "Connect, Run, Upload, Download",
+      "Compile, Run, Undo, Deploy",
+      "Copy, Replace, Undo, Delete"
+     ],
+     "answer": 0,
+     "explanation": "CRUD represents the four fundamental database operations."
+    },
+    {
+     "question": "Why is preprocessing important in NLP systems?",
+     "options": [
+      "It reduces dataset quality",
+      "It cleans and standardizes text data",
+      "It trains the model automatically",
+      "It replaces machine learning"
+     ],
+     "answer": 1,
+     "explanation": "Preprocessing improves the quality and consistency of text data."
+    },
+    {
+     "question": "What is the role of TF-IDF or Bag-of-Words in NLP?",
+     "options": [
+      "Store images",
+      "Convert text into numerical representations",
+      "Deploy applications",
+      "Train databases"
+     ],
+     "answer": 1,
+     "explanation": "ML models require numerical vectors instead of raw text."
+    },
+    {
+     "question": "Why is model evaluation important in machine learning?",
+     "options": [
+      "To reduce code size",
+      "To measure prediction quality and reliability",
+      "To avoid datasets",
+      "To replace preprocessing"
+     ],
+     "answer": 1,
+     "explanation": "Evaluation helps determine how well a model performs."
+    },
+    {
+     "question": "What transforms an ML experiment into a usable product?",
+     "options": [
+      "Sorting data",
+      "Deployment and user interaction",
+      "Removing datasets",
+      "Adding more loops"
+     ],
+     "answer": 1,
+     "explanation": "Deployment allows real users to interact with the ML system."
+    },
+    {
+     "question": "What is the biggest engineering lesson from Week 8?",
+     "options": [
+      "Engineering combines systems, data, and user experience",
+      "Machine learning replaces software engineering",
+      "Databases are optional",
+      "APIs are only for large companies"
+     ],
+     "answer": 0,
+     "explanation": "Modern engineering integrates backend systems, data pipelines, APIs, and user-facing products."
+    }
+   ]
+  },
+  {
+   "week": 9,
+   "title": "The Final Engineering Championship",
+   "questions": [
+    {
+     "question": "Why is optimization important in production systems?",
+     "options": [
+      "To make code longer",
+      "To improve speed, scalability, and user experience",
+      "To avoid deployment",
+      "To remove documentation"
+     ],
+     "answer": 1,
+     "explanation": "Production systems must scale efficiently while maintaining strong user experience."
+    },
+    {
+     "question": "What is one major difference between solving coding problems and succeeding in interviews?",
+     "options": [
+      "Interviews only test syntax",
+      "Interviews heavily evaluate communication and reasoning",
+      "Coding problems are never asked",
+      "Interviews avoid debugging"
+     ],
+     "answer": 1,
+     "explanation": "Interviewers care deeply about how candidates explain their decisions and thought process."
+    },
+    {
+     "question": "Why are GitHub repositories important for engineers?",
+     "options": [
+      "They replace resumes completely",
+      "They publicly demonstrate technical work and consistency",
+      "They remove the need for interviews",
+      "They automatically generate jobs"
+     ],
+     "answer": 1,
+     "explanation": "GitHub repositories provide visible proof of engineering ability and growth."
+    },
+    {
+     "question": "What transforms a coding project into a portfolio-worthy project?",
+     "options": [
+      "Long variable names",
+      "Good presentation, documentation, and usability",
+      "More print statements",
+      "Avoiding explanations"
+     ],
+     "answer": 1,
+     "explanation": "Presentation and clarity dramatically improve project quality."
+    },
+    {
+     "question": "What is the role of preprocessing in NLP systems?",
+     "options": [
+      "To store databases",
+      "To clean and standardize text before training",
+      "To deploy websites",
+      "To replace ML models"
+     ],
+     "answer": 1,
+     "explanation": "Preprocessing improves text quality and model performance."
+    },
+    {
+     "question": "Why is deployment an important engineering skill?",
+     "options": [
+      "Because models are useful only when users can interact with them",
+      "Because deployment removes bugs",
+      "Because deployment avoids APIs",
+      "Because deployment replaces databases"
+     ],
+     "answer": 0,
+     "explanation": "Deployment converts prototypes into usable products."
+    },
+    {
+     "question": "What engineering mindset was reinforced throughout the challenge?",
+     "options": [
+      "Memorization over understanding",
+      "Systems thinking, optimization, and communication",
+      "Avoiding debugging",
+      "Using brute force everywhere"
+     ],
+     "answer": 1,
+     "explanation": "The challenge emphasized structured engineering thinking across multiple domains."
+    },
+    {
+     "question": "Why do recruiters value project-based learning?",
+     "options": [
+      "Projects show real implementation ability",
+      "Projects avoid coding",
+      "Projects automatically guarantee jobs",
+      "Projects replace algorithms"
+     ],
+     "answer": 0,
+     "explanation": "Projects demonstrate practical engineering and implementation skills."
+    },
+    {
+     "question": "What is the biggest benefit of learning publicly through LinkedIn and GitHub?",
+     "options": [
+      "It eliminates failure",
+      "It creates accountability, visibility, and confidence",
+      "It removes the need for practice",
+      "It guarantees followers"
+     ],
+     "answer": 1,
+     "explanation": "Public learning builds credibility and consistency over time."
+    },
+    {
+     "question": "What is the most important lesson from the full 60-day challenge?",
+     "options": [
+      "Consistency and systems thinking create massive long-term growth",
+      "Only advanced AI matters",
+      "DSA is enough for engineering",
+      "Projects are less important than syntax"
+     ],
+     "answer": 0,
+     "explanation": "Small daily improvements compounded into major engineering growth over time."
+    }
+   ]
+  }
+ ]
+}

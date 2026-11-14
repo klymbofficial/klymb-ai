@@ -89,7 +89,7 @@ export function DayExplorer({ tracks }: { tracks: ExplorerTrack[] }) {
             </div>
           ))}
           <Link href={`/tracks/${track.slug}`} className="inline-flex items-center gap-2 rounded-lg bg-ink px-5 py-3 text-sm font-bold text-paper hover:bg-red-strong">
-            See the full {track.name} track <span aria-hidden="true">→</span>
+            View track<span className="sr-only">: {track.name}</span> <span aria-hidden="true">→</span>
           </Link>
         </div>
       </div>

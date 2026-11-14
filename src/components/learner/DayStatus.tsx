@@ -8,11 +8,17 @@ const submittedOn = (iso: string) =>
 /**
  * Where this day stands and the one thing to do about it, above the long
  * mission and build steps. Not submitted: go and submit. Submitted: carry on
- * to the next day, or, on the last day, back to the dashboard.
+ * to the next day, or, on the last day, back to the track's page.
  */
 export function DayStatus({
-  day, submittedAt, next,
-}: { day: number; submittedAt: string | null; next: { day: number; title: string } | null }) {
+  day, submittedAt, next, base,
+}: {
+  day: number;
+  submittedAt: string | null;
+  next: { day: number; title: string } | null;
+  /** The track's own page, e.g. /learn/tracks/qa-engineer: a person can be on several. */
+  base: string;
+}) {
   if (!submittedAt) {
     return (
       <section aria-label={`Day ${day} status`} className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-line/25 bg-card p-4 shadow-card sm:p-5">
@@ -44,12 +50,12 @@ export function DayStatus({
       </div>
       <div className="flex w-full flex-wrap gap-3 sm:w-auto">
         {next ? (
-          <Link href={`/learn/day/${next.day}`} className={learnerButton("primary", "w-full sm:w-auto")}>
+          <Link href={`${base}/day/${next.day}`} className={learnerButton("primary", "w-full sm:w-auto")}>
             Continue to Day {next.day} <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         ) : (
-          <Link href="/learn#your-days" className={learnerButton("primary", "w-full sm:w-auto")}>
-            Back to your dashboard <ArrowRight aria-hidden="true" className="size-4" />
+          <Link href={`${base}#your-days`} className={learnerButton("primary", "w-full sm:w-auto")}>
+            Back to your track <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         )}
         <a href="#submit" className={learnerButton("secondary", "w-full sm:w-auto")}>Update submission</a>

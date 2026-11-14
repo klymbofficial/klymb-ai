@@ -56,7 +56,7 @@ export function TrackCard({ track }: { track: Track }) {
         href={`/tracks/${track.slug}`}
         className="-mt-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-strong px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-red-press"
       >
-        Explore this track<span className="sr-only">: {track.name}</span>
+        View track<span className="sr-only">: {track.name}</span>
         <svg className="transition-transform group-hover:translate-x-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
       </Link>
       </div>

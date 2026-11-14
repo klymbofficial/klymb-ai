@@ -61,6 +61,7 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
       <Row><LinkRow label="Replay Kamran’s tour" sub="The lesson screen in 5 stops." onClick={() => act((p) => ({ ...openLesson(p, dayOf(p.cur) ? p.cur : "0-0"), toured: false }))} /></Row>
       <Row><LinkRow label="Start over" sub="Clears progress, notes and scores on this device." onClick={() => { if (window.confirm("Start the course over on this device? Your progress here will be cleared.")) act((p) => ({ ...defaultState(), screen: "onboard", onboarded: false, lang: p.lang })); }} /></Row>
     </>],
+    ...(user ? [["Klymb.ai", <Row key="courses"><HrefRow label="All my courses" sub="Your dashboard, with every course you have." href="/learn" /></Row>] as [string, ReactNode]] : []),
     ["Help", <>
       <Row><HrefRow label="Email the team" sub={SUPPORT_EMAIL} href={`mailto:${SUPPORT_EMAIL}`} /></Row>
       <Row><HrefRow label="Refund policy" sub="What it takes to get your fee back." href="/refund-policy" /></Row>

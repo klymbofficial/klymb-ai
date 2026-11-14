@@ -25,7 +25,7 @@ function setShared(email: string, next: State | ((s: State) => State)) {
 
 /** Razorpay Standard Checkout for a registered learner. */
 /** `light` sits on a pale surface (dashboard, /pay); the default sits on the dark success card. */
-export function PayButton({ email, price, tone = "dark" }: { email: string; price?: number; tone?: "dark" | "light" }) {
+export function PayButton({ email, track, price, tone = "dark" }: { email: string; track?: string; price?: number; tone?: "dark" | "light" }) {
   const light = tone === "light";
   const state = useSyncExternalStore(subscribe, () => states.get(email) ?? IDLE, () => IDLE);
   const setState = (next: State | ((s: State) => State)) => setShared(email, next);
@@ -40,7 +40,7 @@ export function PayButton({ email, price, tone = "dark" }: { email: string; pric
     const res = await fetch("/api/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, track }),
     }).catch(() => null);
     const order = await res?.json().catch(() => null);
     if (!res?.ok || !order?.order_id) return fail(order?.error ?? "Could not start the payment. Please try again.");

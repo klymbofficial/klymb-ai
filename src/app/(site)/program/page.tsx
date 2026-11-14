@@ -9,7 +9,7 @@ import { DayExplorer } from "@/components/program/DayExplorer";
 import { trackImages } from "@/data/track-images";
 import { tracks } from "@/data/tracks";
 
-export const metadata: Metadata = { title: "The 30-Day Program" };
+export const metadata: Metadata = { title: "How It Works" };
 
 export default function ProgramPage() {
   // Only what the explorer draws crosses to the client, not whole tracks.
@@ -22,8 +22,8 @@ export default function ProgramPage() {
 
   return (
     <>
-      <PageHeader eyebrow="The program" title="A structured 30-day career transformation." intro="Not a video course. A daily rhythm of workplace problems, weekly checkpoints and interview practice for one chosen role.">
-        <ButtonLink href="/tracks" soft arrow>Choose my career track</ButtonLink>
+      <PageHeader eyebrow="How it works" title="A structured 30-day career transformation." intro="Not a video course. A daily rhythm of workplace problems, weekly checkpoints and interview practice for one chosen role.">
+        <ButtonLink href="/tracks" soft arrow>Choose your track</ButtonLink>
       </PageHeader>
       <ProgramTimeline />
       <Inclusions />

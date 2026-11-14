@@ -1,12 +1,9 @@
-import { redirect } from "next/navigation";
 import { Landing } from "@/components/landing/Landing";
-import { getLearnerState, redirectCourseBuyer } from "@/lib/learner/data";
+import { redirectToDashboard } from "@/lib/learner/courses";
 
 export default async function HomePage() {
-  // A signed-in learner wants their course or cohort, not the sales page.
-  await redirectCourseBuyer();
-  const learner = await getLearnerState();
-  if (learner.state === "enrolled") redirect("/learn");
+  // A signed-in learner wants their courses, not the sales page.
+  await redirectToDashboard();
 
   return <Landing />;
 }

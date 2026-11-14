@@ -17,8 +17,8 @@ export interface SidebarModule {
  * the design. Only titles are passed in, so the curriculum stays on the server.
  */
 export function ModuleSidebar({
-  modules, currentDay, submitted, query,
-}: { modules: SidebarModule[]; currentDay: number; submitted: number[]; /** Kept on every day link (admin preview). */ query?: string }) {
+  modules, currentDay, submitted, base, query,
+}: { modules: SidebarModule[]; currentDay: number; submitted: number[]; /** The track's own address, which day links sit under. */ base: string; /** Kept on every day link (admin preview). */ query?: string }) {
   const done = new Set(submitted);
   const currentWeek = modules.find((m) => m.days.some((d) => d.day === currentDay))?.week;
   const [open, setOpen] = useState<Set<number>>(() => new Set(currentWeek ? [currentWeek] : []));
@@ -73,7 +73,7 @@ export function ModuleSidebar({
                   return (
                     <li key={d.day}>
                       <Link
-                        href={`/learn/day/${d.day}${query ?? ""}`}
+                        href={`${base}/day/${d.day}${query ?? ""}`}
                         aria-current={isCurrent ? "page" : undefined}
                         className={clsx(
                           "group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200",

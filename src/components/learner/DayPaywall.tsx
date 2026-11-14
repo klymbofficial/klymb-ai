@@ -41,10 +41,10 @@ export function DayPaywall({
           One payment. 100% back when you complete all 30 days.{" "}
           <Link href="/refund-policy" className="font-semibold underline underline-offset-2">How the refund works</Link>
         </p>
-        <PayButton email={email} price={price} tone="light" />
+        <PayButton email={email} track={track.slug} price={price} tone="light" />
       </div>
 
-      <Link href="/learn/day/1" className="mt-6 inline-block text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink">
+      <Link href={`/learn/tracks/${track.slug}/day/1`} className="mt-6 inline-block text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink">
         Back to Day 1
       </Link>
     </div>
@@ -52,7 +52,7 @@ export function DayPaywall({
 }
 
 /** A day whose previous day isn't submitted yet: days unlock in order. */
-export function DayLocked({ day, title, previousDay, previousTitle }: { day: number; title: string; previousDay: number; previousTitle: string }) {
+export function DayLocked({ base, day, title, previousDay, previousTitle }: { base: string; day: number; title: string; previousDay: number; previousTitle: string }) {
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center sm:py-24">
       <span className="mx-auto grid size-14 place-items-center rounded-full bg-surface text-muted">
@@ -64,7 +64,7 @@ export function DayLocked({ day, title, previousDay, previousTitle }: { day: num
         Days unlock in order, so each one builds on the last. Submit Day {previousDay} and this day opens straight away.
       </p>
       <Link
-        href={`/learn/day/${previousDay}`}
+        href={`${base}/day/${previousDay}`}
         className="mt-8 inline-flex items-center gap-2 rounded-full bg-red-strong px-6 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]"
       >
         Go to Day {previousDay}{previousTitle ? `: ${previousTitle}` : ""}

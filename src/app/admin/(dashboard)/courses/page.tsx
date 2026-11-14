@@ -23,14 +23,14 @@ export default async function AdminCoursesPage() {
             <section key={t.slug} className="card p-5">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="display text-xl">{t.name}</h2>
-                <Link href={`/learn/day/1?track=${t.slug}`} className="text-sm font-bold text-red-deep underline underline-offset-2">Open Day 1 →</Link>
+                <Link href={`/learn/tracks/${t.slug}/day/1?preview=1`} className="text-sm font-bold text-red-deep underline underline-offset-2">Open Day 1 →</Link>
               </div>
               {t.listed === false && <p className="mt-1 text-xs text-muted">Invite-only: hidden from the public site.</p>}
               <ol className="mt-4 grid grid-cols-6 gap-1.5 sm:grid-cols-10">
                 {days.map((d) => (
                   <li key={d.day}>
                     <Link
-                      href={`/learn/day/${d.day}?track=${t.slug}`}
+                      href={`/learn/tracks/${t.slug}/day/${d.day}?preview=1`}
                       title={`Day ${d.day}: ${d.title}`}
                       className={`grid h-9 place-items-center rounded-md text-sm font-bold transition-colors ${d.kind === "build" ? "bg-surface hover:bg-red-tint" : "bg-red-strong text-white hover:bg-red-press"}`}
                     >

@@ -7,6 +7,7 @@ import { juniorDevCurriculum, juniorDevModules } from "./junior-developer";
 import { l1l2Curriculum, l1l2Modules } from "./l1-l2-support";
 import { qaCurriculum, qaModules } from "./qa-engineer";
 import { reportingAnalystCurriculum, reportingAnalystModules } from "./reporting-analyst";
+import { challengeContent } from "@/data/challenges";
 
 /** Asked in almost every interview, whatever the role. */
 const COMMON_QUESTIONS = [
@@ -56,7 +57,7 @@ function interviewPrep(day: CurriculumDay, track: Track | undefined): Curriculum
   };
 }
 
-/** The 30 days and four modules behind each track's learner app. */
+/** The days and weekly modules behind each track's learner app: 30 for a career track, 60 for a challenge. */
 const raw: Record<TrackSlug, { days: CurriculumDay[]; modules: CurriculumModule[] }> = {
   "project-manager": { days: pmCurriculum, modules: pmModules },
   "l1-l2-support": { days: l1l2Curriculum, modules: l1l2Modules },
@@ -64,6 +65,11 @@ const raw: Record<TrackSlug, { days: CurriculumDay[]; modules: CurriculumModule[
   "junior-developer": { days: juniorDevCurriculum, modules: juniorDevModules },
   "reporting-analyst": { days: reportingAnalystCurriculum, modules: reportingAnalystModules },
   "ai-product-manager": { days: aiPmCurriculum, modules: aiPmModules },
+  // The 60-day challenges: their own days and nine weekly modules.
+  claude: challengeContent.claude,
+  "artificial-intelligence": challengeContent["artificial-intelligence"],
+  "software-engineering": challengeContent["software-engineering"],
+  "data-science": challengeContent["data-science"],
 };
 
 export const curricula = Object.fromEntries(

@@ -88,11 +88,11 @@ function IconButton({
 }
 
 export function VoiceCoach({
-  topic, alternatives, trackName, day,
-}: { topic: CoachTopic; alternatives: CoachTopic[]; trackName: string; day: number }) {
+  topic, alternatives, track, trackName, day,
+}: { topic: CoachTopic; alternatives: CoachTopic[]; track: string; trackName: string; day: number }) {
   const [chosen, setChosen] = useState(topic);
   const [showCaptions, setShowCaptions] = useState(true);
-  const session = useVoiceSession(chosen.id);
+  const session = useVoiceSession(chosen.id, track);
   const { status, live, captions, muted, elapsed, error, skillsRecorded, firstReplyMs } = session;
 
   // The last thing the coach said is the question on the table, so it is the

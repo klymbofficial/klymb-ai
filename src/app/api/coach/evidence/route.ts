@@ -38,7 +38,8 @@ export async function POST(req: Request) {
   // Both the ownership check and the topic come from here, so the browser has
   // no say in either.
   const { data: session } = await sql.row<{ topic: string }>`
-    select topic from course.coach_sessions where id = ${id} and learner_id = ${state.learner.id}
+    select topic from course.coach_sessions
+     where id = ${id} and learner_id in (select id from course.learners where email = ${state.learner.email})
   `;
   if (!session) return NextResponse.json({ error: "That is not your session." }, { status: 404 });
 
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
          set summary = ${parsed.value.summary},
              first_reply_ms = ${parsed.value.firstReplyMs},
              ended_at = now()
-       where id = ${id} and learner_id = ${state.learner.id} and ended_at is null
+       where id = ${id} and learner_id in (select id from course.learners where email = ${state.learner.email}) and ended_at is null
     `;
     if (error) return NextResponse.json({ error: "Could not save that." }, { status: 503 });
     return NextResponse.json({ ok: true });

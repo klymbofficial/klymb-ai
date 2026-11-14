@@ -72,3 +72,8 @@ test("Kamran's face matches the moment", () => {
   assert.equal(at("night"), "/mascots/kamran-sleepy-v2.png");
   assert.equal(at("night", true), "/mascots/kamran-missing-v2.png");
 });
+
+test("a reminder opens its own track's day", () => {
+  const r = buildReminder({ ...base, track: "qa-engineer" });
+  assert.equal(r?.url, "/learn/tracks/qa-engineer/day/4");
+});

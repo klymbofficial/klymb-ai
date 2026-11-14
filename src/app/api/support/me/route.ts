@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
 import { getTrack } from "@/data/tracks";
+import { getCurriculum } from "@/data/curricula";
 import { streakEnding } from "@/lib/reminders";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,8 @@ export async function GET() {
   const done = submissions.map((x) => x.day);
   const doneSet = new Set(done);
   let day = 1;
-  while (day < 30 && doneSet.has(day)) day++;
+  const total = getCurriculum(learner.track)?.days.length ?? 30;
+  while (day < total && doneSet.has(day)) day++;
   const lock = await dayLock({ email: learner.email, track: learner.track, price: track?.price ?? 0, day, submittedDays: done });
   const rework = submissions.filter((x) => x.status === "needs_rework").map((x) => x.day);
 
@@ -25,6 +27,7 @@ export async function GET() {
     name: learner.name.split(" ")[0],
     email: learner.email,
     track: track?.name ?? learner.track,
+    slug: learner.track,
     day,
     submitted: doneSet.size,
     streak: streakEnding(doneSet, Math.max(...done, 0)),

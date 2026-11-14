@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db/client";
 
 /**
- * One device per learner. A sign-in claims the learner's single device slot;
+ * One device per person. A sign-in claims the person's single device slot;
  * a second device is refused while the first is still in use. The slot frees
  * itself after DEVICE_IDLE_DAYS without use (a lost phone never locks anyone
  * out for long), on sign-out, or when an admin resets it.
@@ -26,8 +26,12 @@ async function isAdmin(email: string) {
 export async function deviceBusy(email: string) {
   const sql = db();
   if (!sql || (await isAdmin(email))) return false;
+  // One row per track, all carrying the same slot: the most recently used one speaks for them.
   const { data } = await sql.row<{ device_session: string | null; device_seen_at: string | null }>`
-    select device_session, device_seen_at from course.learners where email = ${email}
+    select device_session, device_seen_at from course.learners
+     where email = ${email}
+     order by device_seen_at desc nulls last
+     limit 1
   `;
   return !!(data?.device_session && data.device_seen_at && data.device_seen_at > activeSince());
 }
@@ -44,11 +48,12 @@ export async function claimDevice(email: string, sid: string) {
 }
 
 /**
- * Checks a request's session against the learner's slot. An empty slot (a
- * learner enrolled after signing in) is claimed by this session. Returns
- * false when another device owns the slot.
+ * Checks a request's session against the person's slot, as it stands across
+ * all their track rows. An empty slot (a learner enrolled after signing in) is
+ * claimed by this session. Returns false when another device owns the slot.
+ * A track row added later starts empty and is brought into line here.
  */
-export async function checkDevice(learner: { id: string; email: string; device_session: string | null; device_seen_at: string | null }, sid: string | undefined) {
+export async function checkDevice(learner: { email: string; device_session: string | null; device_seen_at: string | null }, sid: string | undefined) {
   if (await isAdmin(learner.email)) return true;
   const sql = db();
   // A session without a device id predates the lock: it must sign in again.
@@ -60,16 +65,17 @@ export async function checkDevice(learner: { id: string; email: string; device_s
     const { data } = await sql.rows<{ id: string }>`
       update course.learners
          set device_session = ${sid}, device_seen_at = ${new Date().toISOString()}
-       where id = ${learner.id} and device_session is null
+       where email = ${learner.email} and device_session is null
       returning id
     `;
     return !!data?.length;
   }
   if (learner.device_session !== sid) return false;
   if (!learner.device_seen_at || Date.now() - new Date(learner.device_seen_at).getTime() > SEEN_REFRESH_MS) {
+    // Every row of theirs, a newly added track's empty one included.
     await sql.run`
-      update course.learners set device_seen_at = ${new Date().toISOString()}
-       where id = ${learner.id} and device_session = ${sid}
+      update course.learners set device_session = ${sid}, device_seen_at = ${new Date().toISOString()}
+       where email = ${learner.email} and (device_session = ${sid} or device_session is null)
     `;
   }
   return true;
@@ -85,12 +91,13 @@ export async function releaseDevice(email: string, sid: string | undefined) {
   `;
 }
 
-/** Admin: free a learner's slot so they can sign in on a new device now. */
+/** Admin: free a learner's slot so they can sign in on a new device now. The slot is the person's, so every track row is cleared. */
 export async function resetDevice(learnerId: string) {
   const sql = db();
   if (!sql) return false;
   const { error } = await sql.run`
-    update course.learners set device_session = null, device_seen_at = null where id = ${learnerId}
+    update course.learners set device_session = null, device_seen_at = null
+     where email = (select email from course.learners where id = ${learnerId})
   `;
   return !error;
 }
