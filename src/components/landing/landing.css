@@ -746,21 +746,21 @@ html.lenis { scroll-behavior: auto; }
 
 /* Phones: tighter cards, a smaller price and sticker, and list text that fits one line. */
 @media (max-width: 760px) {
-  .kl-pricing { padding: 56px 0; gap: 28px; }
+  .kl-pricing { padding: 32px 0 56px; gap: 20px; }
   .kl-badge { font-size: 13px; padding: 8px 14px; }
   .kl-plans { gap: 16px; }
   .kl-plan { border-radius: 24px; }
-  .kl-plan--single, .kl-plan-body { padding: 22px 20px; gap: 20px; }
+  .kl-plan--single, .kl-plan-body { padding: 20px 18px; gap: 16px; }
   .kl-plan-top { gap: 12px; }
   .kl-plan-sub { font-size: 14px; }
-  .kl-sticker { width: 68px; height: 68px; font-size: 10px; }
-  .kl-price-cur { font-size: 26px; }
-  .kl-price-num { font-size: min(72px, calc(38cqi - 30px)); }
-  .kl-price-per { font-size: 14px; margin-left: 8px; }
-  .kl-plan-list li { gap: 10px; font-size: 14px; padding: 10px 0; }
+  .kl-sticker { width: 60px; height: 60px; font-size: 9px; }
+  .kl-price-cur { font-size: 22px; }
+  .kl-price-num { font-size: min(56px, calc(38cqi - 30px)); }
+  .kl-price-per { font-size: 13px; margin-left: 8px; }
+  .kl-plan-list li { gap: 10px; font-size: 14px; padding: 8px 0; }
   .kl-tick { width: 20px; height: 20px; }
   .kl-included { font-size: 10px; padding: 3px 7px; }
-  .kl .kl-plan-cta { padding: 14px 20px; font-size: 15px; }
+  .kl .kl-plan-cta { padding: 12px 18px; font-size: 15px; }
 }
 
 /* ── Learner stories ─────────────────────────────────────────────────── */
@@ -910,6 +910,8 @@ html.lenis { scroll-behavior: auto; }
   .kl-wp-lede { font-size: 15px; }
   .kl-wp-final-title { font-size: 38px; }
   .kl-h2 { font-size: 32px; }
+  /* Who-it's-for ran into pricing with 96px + 56px of air between "Talk to our team" and "Pick your plan." */
+  .kl-who { padding: 56px 0 40px; gap: 28px; }
   .kl-panel-vlabel { font-size: 24px; }
   .kl-panel-detail h3 { font-size: 24px; }
   .kl-teams { padding: 20px; }
