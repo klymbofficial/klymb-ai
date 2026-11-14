@@ -5,18 +5,19 @@ import { currentEmail } from "@/auth";
 import { CourseFrame } from "@/components/course/course-frame";
 import { CourseHero } from "@/components/course/course-hero";
 import { CourseProgressProvider } from "@/components/course/course-progress";
-import { COURSES, getCourse } from "@/data/courses/registry";
+import { getCourse } from "@/data/courses/registry";
 import { readCourseProgress } from "@/lib/course-progress";
 import { frameModules } from "@/lib/course-frame";
 
-export function generateStaticParams() {
-  return COURSES.map((c) => ({ course: c.slug }));
-}
+/**
+ * A static route, not a /courses/[course] segment: /courses/[slug] is the
+ * catalogue's program page, and one folder cannot hold two dynamic segments.
+ * A static segment wins over the dynamic one beside it, as /courses/roles does.
+ */
+const SLUG = "agentic-ai";
 
-export const dynamicParams = false;
-
-export async function generateMetadata({ params }: { params: Promise<{ course: string }> }): Promise<Metadata> {
-  const course = getCourse((await params).course);
+export function generateMetadata(): Metadata {
+  const course = getCourse(SLUG);
   return course ? { title: course.title, description: course.tagline } : {};
 }
 
@@ -25,8 +26,8 @@ export async function generateMetadata({ params }: { params: Promise<{ course: s
  * picks up where they left off; reading a module asks them to log in, so their
  * progress is saved to their account.
  */
-export default async function CourseOverviewPage({ params }: { params: Promise<{ course: string }> }) {
-  const course = getCourse((await params).course);
+export default async function CourseOverviewPage() {
+  const course = getCourse(SLUG);
   if (!course) notFound();
   const email = await currentEmail();
   const progress = email ? await readCourseProgress(email, course.slug) : { done: [], quiz: {} };
