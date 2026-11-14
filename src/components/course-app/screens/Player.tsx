@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { MODULES } from "@/data/system-design/course-app";
 import {
   ALL_IDS, addNote, assessmentStep, practiceStep, audioTrack, checkStageFor, completeNext, dayOf, flowDone, revisitable, fmt, hasQuickCheck, lesson, lessonDay, lineAt, moduleIds, openLesson, pad, quickCheckAt,
@@ -23,7 +23,14 @@ import { SUB_SIZE_CLASS, VideoBar, canSubtitle, useMenu, usePlayerKeys } from ".
  * The lesson video on the dark grid: the 16:9 cut when there is one, else the
  * 9:16 one. Its own controls are hidden; the player's buttons drive it.
  */
-function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean; bar: ReactNode }) {
+/** Phones and tablets: no mouse to hover with, so the controls hide on their own while the video plays. */
+const TOUCH_QUERY = "(hover: none)";
+const watchTouch = (cb: () => void) => { const m = window.matchMedia(TOUCH_QUERY); m.addEventListener("change", cb); return () => m.removeEventListener("change", cb); };
+const useTouch = () => useSyncExternalStore(watchTouch, () => window.matchMedia(TOUCH_QUERY).matches, () => false);
+/** How long the controls stay up after the last tap while the video plays. */
+const BAR_IDLE_MS = 2500;
+
+function Video({ s, act, subs, bar, hold }: { s: CourseState; act: Act; subs?: boolean; bar: ReactNode; hold?: boolean }) {
   const day = dayOf(s.cur)!;
   const voice = audioTrack(s)!;
   const wide = !!voice.wide;
@@ -35,6 +42,19 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
   const last = useRef<{ id: string; t: number }>({ id: "", t: 0 });
   const errOffline = s.offline && !s.vidErr;
   const email = useCourseUser()?.email;
+  // On touch screens the controls fade out BAR_IDLE_MS after the last tap while playing; a tap brings them back.
+  const touch = useTouch();
+  const [shown, setShown] = useState(true);
+  const [pokes, setPokes] = useState(0);
+  // The tap that brings the controls back shouldn't also pause the video.
+  const revealing = useRef(false);
+  const barHidden = touch && s.playing && !hold && !shown;
+  useEffect(() => {
+    if (!touch || !s.playing || hold || !shown) return;
+    const id = setTimeout(() => setShown(false), BAR_IDLE_MS);
+    return () => clearTimeout(id);
+  }, [touch, s.playing, hold, shown, pokes]);
+  const poke = () => { revealing.current = barHidden; setShown(true); setPokes((n) => n + 1); };
 
   useEffect(() => {
     const v = ref.current;
@@ -71,7 +91,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
   };
 
   return (
-    <div id="lesson-watch" className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden rounded-none [--grid:23px] lg:rounded-xl lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
+    <div id="lesson-watch" onPointerDownCapture={poke} className={clsx("sd-grid @container relative flex flex-none scroll-mt-16 items-center justify-center overflow-hidden rounded-none [--grid:23px] lg:rounded-xl lg:[--grid:32px]", !wide && "py-3 lg:py-6")}>
       {(s.vidErr || errOffline) && (
         <div className="sd-a-in absolute inset-0 z-[3] flex flex-col justify-end gap-2 bg-sd-ink p-4 lg:p-7" style={{ animationDuration: ".3s" }}>
           <span className="flex text-sd-accent-400"><Icon name="alert" className="block size-5 flex-none lg:size-10" /></span>
@@ -93,7 +113,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
         controlsList="nodownload noplaybackrate"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
-        onClick={() => act(togglePlay)}
+        onClick={() => { if (revealing.current) { revealing.current = false; return; } act(togglePlay); }}
         onLoadedMetadata={(e) => {
           // Also runs after switching voice-over: carry on from the same moment, at the same speed and volume.
           const v = e.currentTarget;
@@ -119,7 +139,7 @@ function Video({ s, act, subs, bar }: { s: CourseState; act: Act; subs?: boolean
           <span className="sd-a-pop flex size-16 items-center justify-center rounded-xl bg-sd-accent-400 text-sd-ink shadow-[0_8px_24px_rgba(0,0,0,.35)]"><Icon name="play" size={28} /></span>
         </div>
       )}
-      {bar}
+      <div className={clsx("transition-opacity duration-300", barHidden && "pointer-events-none opacity-0")}>{bar}</div>
     </div>
   );
 }
@@ -235,7 +255,7 @@ export function Player({ s, act }: { s: CourseState; act: Act }) {
         <div className="flex flex-1 flex-col lg:col-start-1 lg:row-start-1">
           {watching ? (
             <>
-              <Video s={s} act={act} subs={subsOn} bar={<VideoBar s={s} act={act} ui={menu} />} />
+              <Video s={s} act={act} subs={subsOn} hold={!!menu.menu} bar={<VideoBar s={s} act={act} ui={menu} />} />
               <div className="mt-2.5 flex flex-wrap items-center gap-2 px-5 lg:px-0">
                 {qc && (
                   <span className="sd-tag sd-tag-neutral gap-1.5 rounded-md">
