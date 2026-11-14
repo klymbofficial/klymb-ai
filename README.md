@@ -29,6 +29,16 @@ npm start        # serve the production build
 npm run lint
 ```
 
+### Signing in on any port (several worktrees at once)
+
+Google only returns to redirect URIs registered in Google Cloud, so it works on
+one port. For everything else, set `AUTH_DEV_LOGIN=true` in `.env.local`, start
+each worktree on its own port (`npm run dev -- -p 3001`) and open
+`/dev-login`. Pick a fake person: learner (paid or not), admin or company HR.
+It is a 404 unless the flag is set, and never runs on a Vercel production
+deployment. Leave `AUTH_URL` unset locally, or every port sends you back to
+the one in it.
+
 Copy `.env.example` to `.env.local` (git-ignored) and set the same values in
 Vercel → Project Settings → Environment Variables. Never commit secrets.
 `DATABASE_URL` is the one the app cannot work without: see [`db/README.md`](db/README.md)
