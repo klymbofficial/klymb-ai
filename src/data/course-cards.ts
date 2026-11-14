@@ -64,8 +64,8 @@ const SD_LESSONS = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 
 /**
  * Not in the catalog yet. The Claude Challenge's page is /challenges/claude,
- * which comes with branch claude/klymb-ux-flow-audit-377d4b. The AI Cohort
- * has no page on klymb.ai.
+ * which comes with branch claude/klymb-ux-flow-audit-377d4b. The AI Cohort's
+ * page is /courses/ai-cohort.
  */
 const claude: LibraryCourse = {
   slug: "claude",
@@ -118,7 +118,7 @@ const aiCohort: LibraryCourse = {
   industries: ["any-industry"],
   open: true,
   free: true,
-  href: null,
+  href: "/courses/ai-cohort",
   card: { level: "Intermediate", hours: 40, lessons: 31, rating: 4.7, reviews: 1380, learners: 8900 },
 };
 
