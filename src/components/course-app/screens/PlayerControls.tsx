@@ -137,6 +137,7 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
   const opts = options(s, act, () => ui.setMenu(null));
   const open = ui.menu;
   const subOk = canSubtitle(s);
+  const quiet = s.muted || s.volume === 0;
   const full = useFullscreen();
   const seek = (e: MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -175,6 +176,13 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
         <button type="button" onClick={() => act(togglePlay)} aria-label={s.playing ? "Pause" : "Play"} className={barBtn}><Icon name={s.playing ? "pause" : "play"} size={22} /></button>
         <button type="button" onClick={() => act(back10)} aria-label="Back 10 seconds" className={barBtn}><Icon name="rotL" /></button>
         <button type="button" onClick={() => act(fwd10)} aria-label="Forward 10 seconds" className={barBtn}><Icon name="rotR" /></button>
+        <button type="button" onClick={() => act(toggleMute)} aria-label={quiet ? "Unmute" : "Mute"} title={quiet ? "Unmute (M)" : "Mute (M)"} className={barBtn}><Icon name={quiet ? "mute" : "volume"} /></button>
+        <input
+          type="range" min={0} max={1} step={0.05} value={quiet ? 0 : s.volume}
+          onChange={(e) => { const volume = Number(e.target.value); act((p) => ({ ...p, volume, muted: volume === 0 })); }}
+          aria-label="Volume" aria-valuetext={`${Math.round((quiet ? 0 : s.volume) * 100)}%`}
+          className="mr-1 hidden w-20 cursor-pointer accent-sd-accent-400 lg:block"
+        />
         <span className="pl-1 text-xs font-semibold whitespace-nowrap tabular-nums">{fmt(s.t)}<span className="max-[359px]:hidden"> / {fmt(d)}</span></span>
         <span className="flex-1" />
         <button type="button" onClick={() => ui.toggle("speed")} aria-label={`Playback speed ${speedLabel(s.speed)}`} aria-expanded={ui.menu === "speed"} className={clsx(barBase, "w-11 text-[13px] font-extrabold sm:w-10")}>{speedLabel(s.speed)}</button>
