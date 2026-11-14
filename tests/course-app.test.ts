@@ -357,3 +357,9 @@ test("passes from the server never disturb what this browser already holds", () 
   assert.equal(withServerPasses(elsewhere, { "0-0": 80 }).cur, "0-1");
   assert.deepEqual(withServerPasses(home(), { "0-9": 80 }).done, []);
 });
+
+test("closing or joining the WhatsApp group card is remembered between visits", () => {
+  assert.equal(defaultState(NOW).groupSeen, false);
+  const back = fromStored(JSON.parse(JSON.stringify(toStored({ ...defaultState(NOW), groupSeen: true }))), NOW);
+  assert.equal(back.groupSeen, true);
+});

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, localDate, nextStep, openFinal, openLesson, paceNow, pct, streak, type CourseState } from "@/lib/course-app";
 import { paceMessage, type Pace } from "@/lib/sd-pace";
 import { firstOpenLesson } from "./Course";
+import { GroupCard, useGroupLink } from "../Community";
 import { ReminderPrompt } from "../SdReminders";
 import { GoogleButton, firstName, useCourseUser } from "../user";
 import { Icon } from "../icons";
@@ -34,7 +35,8 @@ function greeting(now = new Date()) {
 }
 
 export function BellButton({ s, act, className }: { s: CourseState; act: Act; className?: string }) {
-  const unread = s.notifs.filter((n) => n.unread).length;
+  const group = useGroupLink();
+  const unread = s.notifs.filter((n) => n.unread).length + (group && !s.groupSeen ? 1 : 0);
   return (
     <button
       type="button"
@@ -131,6 +133,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
       </div>
 
       {pace && <PaceCard pace={pace} />}
+      <GroupCard s={s} act={act} />
 
       {referral?.state === "open" && <ReferralStrip r={referral} act={act} />}
       {user && dayOf(s.cur) && <ReminderPrompt />}

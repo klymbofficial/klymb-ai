@@ -10,6 +10,12 @@ import { lessonDay } from "@/lib/course-app";
 import { getOfferFunnel, getSdAnalytics, getSdLearner } from "@/lib/admin/system-design";
 import { trailLines, type Tone } from "@/lib/admin/sd-event-words";
 import { Chip, DayView, Panel, PlainWords, pct } from "@/components/admin/SystemDesignViews";
+import { WhatsAppAnnounce } from "@/components/admin/WhatsAppAnnounce";
+import { announcementStatus } from "@/lib/sd-community";
+import { SD_WHATSAPP_PUSH } from "@/lib/sd-whatsapp-announce";
+
+// The WhatsApp announcement sends one email at a time from this page's action.
+export const maxDuration = 300;
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dayName = (lesson: string | null) => (lesson && /^\d+-\d+$/.test(lesson) ? lessonDay(lesson) : lesson ?? "");
@@ -49,12 +55,12 @@ async function LearnerTrail({ anon }: { anon: string }) {
 }
 
 export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string }> }) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const { range, learner, day } = await searchParams;
   if (learner) return <LearnerTrail anon={learner} />;
 
   const days = rangeDays(range);
-  const [data, funnel] = await Promise.all([getSdAnalytics(days), getOfferFunnel(days)]);
+  const [data, funnel, announce] = await Promise.all([getSdAnalytics(days), getOfferFunnel(days), admin.owner ? announcementStatus() : null]);
   const title = (
     <PageTitle
       eyebrow="Course activity"
@@ -82,6 +88,14 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
     <>
       {title}
       <PlainWords data={data} days={days} />
+
+      {announce && (
+        <div className="mt-6">
+          <Panel title="WhatsApp group announcement" note={`Once only, to paid learners (granted seats and company learners are left out). Email: “Join the System Design learners' WhatsApp group”, with the join button. Phone: “${SD_WHATSAPP_PUSH.title}: ${SD_WHATSAPP_PUSH.body}” to ${announce.devices} devices.`}>
+            <WhatsAppAnnounce learners={announce.learners} devices={announce.devices} sentAt={announce.sent?.at ?? null} />
+          </Panel>
+        </div>
+      )}
 
       <div className="mt-6">
         <Panel title="Offer page funnel" note="People reaching each step of /system-design. Inside an app means Instagram and other in-app browsers. Excludes anyone who turned analytics off.">

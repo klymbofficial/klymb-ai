@@ -286,6 +286,23 @@ export function sdReferralEarnedEmail(p: { name: string; amount: string; siteUrl
   return { subject, html, text };
 }
 
+/** Sent once to every paid System Design learner when the learners' WhatsApp group opened. */
+export function sdWhatsAppGroupEmail(p: { name: string; groupUrl: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "Join the System Design learners' WhatsApp group";
+  const line = "There's now a WhatsApp group for everyone taking System Design Essentials. Ask doubts, share your designs and keep each other going on the daily lesson.";
+  const text = [`Hi ${p.name},`, "", line, "", `Join here: ${p.groupUrl}`, "", "The link is also on Home in the course app.", "", `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai"].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: "Ask doubts and learn with the rest of the batch.",
+    eyebrow: "System Design",
+    title: "Join the learners' group.",
+    intro: esc(line),
+    sections: [button(esc(p.groupUrl), "Join the WhatsApp group"), `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">The link is also on Home in the <a href="${site}/learn/system-design" style="color:${C.ink};font-weight:600">course app</a>.</p>`],
+  });
+  return { subject, html, text };
+}
+
 /** Sent once, on a new registration: a welcome, what the 30 days hold, and how to confirm the seat. */
 export function welcomeEmail(p: { name: string; trackName: string; becomes: string; price: string; free?: boolean; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

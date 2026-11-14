@@ -4,6 +4,7 @@ import { CourseApp } from "@/components/course-app/CourseApp";
 import { MODULES } from "@/data/system-design/course-app";
 import { hasCourseAccess, lessonPasses } from "@/lib/access";
 import { referralStanding } from "@/lib/referrals";
+import { SD_WHATSAPP_GROUP, hasPaidSeat } from "@/lib/sd-community";
 import { lessonContent } from "@/lib/sd-lessons";
 import { SD_COURSE, type ReferralStanding } from "@/lib/sd-offer";
 import { sdProgress } from "@/lib/sd-progress";
@@ -24,11 +25,11 @@ export default async function SystemDesignCoursePage() {
   const email = verifiedEmailFrom(session);
   const enrolled = !!email && (await hasCourseAccess(email, SD_COURSE));
   const referral: ReferralStanding = !email ? { view: null, why: "signin" } : enrolled ? await referralStanding(email) : { view: null, why: "buy" };
-  const [passes, progress] = email && enrolled ? await Promise.all([lessonPasses(email, SD_COURSE), sdProgress(email)]) : [{}, null];
+  const [passes, progress, paid] = email && enrolled ? await Promise.all([lessonPasses(email, SD_COURSE), sdProgress(email), hasPaidSeat(email)]) : [{}, null, false];
   return (
     <>
       <CourseOutline />
-      <CourseApp user={email ? { email, name: session?.user?.name ?? null } : null} lessons={lessonContent(enrolled)} enrolled={enrolled} referral={referral} passes={passes} progress={progress} />
+      <CourseApp user={email ? { email, name: session?.user?.name ?? null } : null} lessons={lessonContent(enrolled)} enrolled={enrolled} referral={referral} passes={passes} progress={progress} group={paid ? SD_WHATSAPP_GROUP : null} />
     </>
   );
 }
