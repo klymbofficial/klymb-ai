@@ -23,8 +23,12 @@ const RING = 119.4;
  * fully away (never over the hero's own button). Its ring fills with how far
  * down the page you are, and its number follows the section in view, with a
  * little bump on each change.
+ *
+ * Other pages pass their own link, label (and a `short` one for phones) and section steps (the Claude
+ * Challenge's "Start the challenge, free"); anything marked data-hero keeps
+ * it away.
  */
-export function JourneyDock() {
+export function JourneyDock({ href = "/courses", label = "Start your journey", short, steps = STEPS }: { href?: string; label?: string; short?: string; steps?: Record<string, string> } = {}) {
   const dock = useRef<HTMLAnchorElement>(null);
   const ring = useRef<SVGCircleElement>(null);
   const [on, setOn] = useState(false);
@@ -52,7 +56,7 @@ export function JourneyDock() {
       (es) =>
         es.forEach((en) => {
           if (!en.isIntersecting) return;
-          const next = STEPS[en.target.id];
+          const next = steps[en.target.id];
           if (!next || shown === next) return;
           shown = next;
           setStep(next);
@@ -60,7 +64,7 @@ export function JourneyDock() {
         }),
       { rootMargin: "-45% 0px -45% 0px" },
     );
-    Object.keys(STEPS).forEach((id) => {
+    Object.keys(steps).forEach((id) => {
       const s = document.getElementById(id);
       if (s) sectionIO.observe(s);
     });
@@ -78,14 +82,14 @@ export function JourneyDock() {
       sectionIO.disconnect();
       window.removeEventListener("scroll", onScroll);
     };
-  }, []);
+  }, [steps]);
 
   return (
     <Link
       ref={dock}
-      href="/courses"
+      href={href}
       className={on ? "kl-dock is-on" : "kl-dock"}
-      aria-label="Start your journey"
+      aria-label={label}
       aria-hidden={!on}
       tabIndex={on ? 0 : -1}
     >
@@ -96,7 +100,9 @@ export function JourneyDock() {
         </svg>
         <span className="kl-dock-step">{step}</span>
       </span>
-      <span className="kl-dock-title">Start your journey</span>
+      <span className="kl-dock-title">
+        {short ? <><span className="kl-dock-long">{label}</span><span className="kl-dock-short">{short}</span></> : label}
+      </span>
       <span className="kl-dock-go">
         <IconArrowUpRight size={18} />
       </span>

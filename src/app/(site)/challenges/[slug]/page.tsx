@@ -3,6 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Appear } from "@/components/motion/Appear";
 import { ButtonLink } from "@/components/ui/Button";
+import { ClaudeChallenge } from "@/components/challenge/ClaudeChallenge";
+import { libraryCourses } from "@/data/course-cards";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
@@ -32,6 +34,9 @@ export default async function ChallengePage({ params }: { params: Promise<{ slug
   const course = c?.kind === "challenge" ? getCurriculum(c.slug) : null;
   if (!c || !course) notFound();
   const start = `/register?track=${c.slug}`;
+
+  // The Claude challenge has its own page, from the Claude Design file "Klymb Claude Challenge".
+  if (c.slug === "claude") return <ClaudeChallenge weeks={course.modules.map((m) => m.name)} start={start} facts={libraryCourses.find((l) => l.slug === "claude")?.card ?? null} />;
 
   return (
     <>

@@ -1,0 +1,235 @@
+/*
+ * The Claude Challenge page (/challenges/claude), from the Claude Design file
+ * "Klymb Claude Challenge" (Modernist, all Archivo). It sits inside .kl, so it
+ * uses the homepage's tokens (landing.css); the brand red #83050B stands in for
+ * the design's accent, and on the dark ground the lifted red, --kl-red-400,
+ * carries the thin marks. Everything here is scoped to .kc.
+ */
+
+.kc { min-height: 60vh; }
+.kc-main { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 56px); }
+
+.kc-h1, .kc-h2, .kc-h3 { font-family: var(--kl-font); font-weight: 800; margin: 0; }
+.kc-h1 { font-size: clamp(46px, 8.6vw, 140px); line-height: 0.88; letter-spacing: -0.055em; margin-left: -0.04em; }
+.kc-h2 { font-size: clamp(34px, 5vw, 72px); line-height: 0.95; letter-spacing: -0.045em; }
+.kc-em { font-style: italic; color: var(--kl-red); padding-right: 0.06em; }
+.kc-eyebrow { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+.kc-section { padding: clamp(48px, 6vw, 80px) 0; border-top: 1px solid var(--kl-divider); display: grid; gap: 28px; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.kc-cta {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  min-width: 260px; padding: 18px 24px; border-radius: 999px;
+  font-family: var(--kl-font); font-weight: 800; font-size: 18px; line-height: 1.2;
+  transition: background-color .2s, color .2s, transform .16s var(--kl-ease);
+}
+.kc-cta:active { transform: scale(0.97); }
+.kl .kc-cta--red { background: var(--kl-red); color: var(--kl-bg); }
+.kl .kc-cta--red:hover { background: var(--kl-red-600); color: var(--kl-bg); }
+.kl .kc-cta--light { background: var(--kl-bg); color: var(--kl-ink); justify-self: start; }
+.kl .kc-cta--light:hover { background: var(--kl-ink); color: var(--kl-bg); }
+
+/* ── Hero ────────────────────────────────────────────────────────────── */
+.kc-hero { padding: clamp(32px, 5vw, 64px) 0 clamp(48px, 6vw, 80px); display: grid; gap: clamp(24px, 3vw, 40px); }
+/* The title, with the course card's facts beside it on a wide screen and under it on a phone. */
+.kc-hero-head { display: grid; gap: 20px; align-items: end; }
+.kc-hero-title { display: grid; gap: 14px; }
+/* The start button, with the course facts under it. */
+.kc-hero-aside { display: grid; gap: 16px; justify-items: start; }
+.kc-kicker { color: var(--kl-red-700); font-weight: 800; }
+.kc-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.kc-facts li {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--kl-divider); font-size: 14px; line-height: 1.2; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.kc-facts svg { flex: none; }
+.kc-facts li > svg[stroke] { color: color-mix(in srgb, var(--kl-ink) 60%, transparent); }
+.kc-facts strong { font-weight: 800; }
+.kc-facts-dim { color: color-mix(in srgb, var(--kl-ink) 62%, transparent); }
+@media (min-width: 1000px) {
+  .kc-hero-head { grid-template-columns: 1fr minmax(0, 360px); }
+  .kc-hero-aside { justify-items: end; padding-bottom: 0.6em; }
+  .kc-facts { justify-content: flex-end; }
+}
+@media (max-width: 760px) {
+  .kc-facts { gap: 6px; }
+  .kc-facts li { padding: 6px 11px; font-size: 13px; }
+}
+
+.kc-hint { margin: -8px 0 0; text-align: center; font-size: 15px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+
+.kc-compare {
+  position: relative; height: clamp(420px, 48vw, 520px); border-radius: 32px; overflow: hidden;
+  cursor: ew-resize; user-select: none; touch-action: pan-y; box-shadow: var(--kl-shadow-lg);
+}
+.kc-compare:focus-visible { outline: 3px solid var(--kl-red); outline-offset: 4px; }
+.kc-pane {
+  position: absolute; inset: 0; padding: clamp(20px, 3vw, 40px);
+  display: grid; align-content: space-between;
+}
+.kc-pane--after { background: var(--kl-ink); color: var(--kl-bg); justify-items: end; text-align: right; }
+.kc-pane--before { background: #e4e2e1; clip-path: inset(0 50% 0 0); }
+.kc-pane-label { color: color-mix(in srgb, var(--kl-ink) 70%, transparent); }
+.kc-pane--after .kc-pane-label { color: var(--kl-red-400); }
+.kc-pane-list { display: grid; gap: 10px; width: min(100%, 460px); }
+.kc-pane--after .kc-pane-list { justify-items: end; }
+.kc-big { font-family: var(--kl-font); font-weight: 800; font-size: clamp(40px, 6vw, 88px); line-height: 0.9; letter-spacing: -0.05em; }
+.kc-pane--before .kc-big { color: color-mix(in srgb, var(--kl-ink) 45%, transparent); }
+
+.kc-chip { display: flex; gap: 8px; align-items: center; padding: 10px 14px; border-radius: 14px; font-size: 15px; }
+.kc-pane--after .kc-chip { background: color-mix(in srgb, var(--kl-bg) 12%, transparent); }
+.kc-pane--after .kc-chip--hot { background: var(--kl-red); font-weight: 800; }
+.kc-pane--after .kc-chip svg { flex: none; stroke: var(--kl-red-400); }
+.kc-pane--before .kc-chip { justify-self: start; background: var(--kl-bg); }
+.kc-pane--before .kc-chip--muted { color: color-mix(in srgb, var(--kl-ink) 60%, transparent); }
+.kc-pane--before .kc-chip--empty { background: transparent; border: 1px dashed color-mix(in srgb, var(--kl-ink) 40%, transparent); color: color-mix(in srgb, var(--kl-ink) 60%, transparent); }
+
+.kc-handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; background: var(--kl-red); pointer-events: none; }
+.kc-knob {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 56px; height: 56px; border-radius: 50%; background: var(--kl-red); color: var(--kl-bg);
+  display: grid; place-items: center; box-shadow: var(--kl-shadow-lg);
+}
+
+/* ── Five skills ─────────────────────────────────────────────────────── */
+.kc-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 4px 0; scrollbar-width: none; }
+.kc-tabs::-webkit-scrollbar { display: none; }
+.kc-tab {
+  flex: none; cursor: pointer; padding: 12px 18px; border-radius: 999px;
+  font-family: var(--kl-font); font-weight: 800; font-size: 15px; line-height: 1.2;
+  background: transparent; color: var(--kl-ink); border: 1px solid var(--kl-divider);
+  transition: background-color .2s, color .2s;
+}
+.kc-tab:hover { background: color-mix(in srgb, var(--kl-ink) 7%, transparent); }
+.kc-tab[aria-selected="true"] { background: var(--kl-ink); color: var(--kl-bg); }
+
+.kc-switch, .kc-skillbar { display: none; }
+.kc-cards { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; align-items: stretch; }
+.kc-card { border-radius: 28px; padding: clamp(22px, 2.6vw, 32px); display: grid; gap: 16px; align-content: start; }
+.kc-card--before { background: #e4e2e1; }
+.kc-card--before .kc-eyebrow { color: color-mix(in srgb, var(--kl-ink) 70%, transparent); }
+.kc-card--after { background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg); }
+.kc-card--after .kc-eyebrow { color: var(--kl-red-400); }
+.kc-card-title { font-family: var(--kl-font); font-weight: 800; font-size: clamp(22px, 2.2vw, 30px); line-height: 1.1; letter-spacing: -0.02em; }
+.kc-card--before .kc-card-title { color: color-mix(in srgb, var(--kl-ink) 70%, transparent); }
+
+/* The conversations. Every message is laid out from the start, so nothing moves as they type. */
+.kc-chat { display: grid; gap: 14px; align-content: start; }
+.kc-msg { display: grid; gap: 6px; max-width: 100%; min-width: 0; }
+.kc-msg--user { justify-self: end; max-width: 94%; }
+.kc-msg--claude { justify-self: start; }
+.kc-who { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+.kc-bubble { position: relative; display: grid; gap: 8px; padding: 12px 16px; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.kc-msg--user .kc-bubble { border-radius: 20px 20px 6px 20px; }
+.kc-msg--claude .kc-bubble { border-radius: 6px 20px 20px 20px; }
+.kc-text { white-space: pre-wrap; }
+.kc-codeblock { display: block; white-space: pre; overflow-x: auto; max-width: 100%; font-family: ui-monospace, monospace; font-size: 13.5px; line-height: 1.5; padding: 10px 12px; border-radius: 12px; }
+
+.kc-card--before .kc-msg--user .kc-bubble { background: var(--kl-bg); }
+.kc-card--before .kc-msg--claude .kc-bubble { background: color-mix(in srgb, var(--kl-ink) 6%, transparent); color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kc-card--before .kc-codeblock { background: color-mix(in srgb, var(--kl-ink) 8%, transparent); }
+.kc-card--after .kc-msg--user .kc-bubble { background: color-mix(in srgb, var(--kl-bg) 22%, transparent); }
+.kc-card--after .kc-msg--claude .kc-bubble { background: color-mix(in srgb, var(--kl-bg) 9%, transparent); }
+.kc-card--after .kc-codeblock { background: color-mix(in srgb, #000 28%, transparent); }
+
+.kc-dots { position: absolute; left: 16px; top: 18px; display: flex; gap: 5px; }
+.kc-dots i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.35; animation: kc-dot 1s infinite ease-in-out; }
+.kc-dots i:nth-child(2) { animation-delay: .15s; }
+.kc-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes kc-dot { 0%, 60%, 100% { transform: translateY(0); opacity: 0.35; } 30% { transform: translateY(-4px); opacity: 1; } }
+/* The caret at the end of the text being typed; no width of its own, so lines never re-wrap. */
+.kc-caret { display: inline-block; width: 2px; height: 1.05em; margin-right: -2px; vertical-align: text-bottom; background: currentColor; animation: kc-blink 1s steps(1) infinite; }
+@keyframes kc-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .kc-dots i, .kc-caret { animation: none; } }
+
+/*
+ * Phones: instead of two tall cards stacked, one swipeable pair the height of
+ * a screen. The next card peeks in from the right, a Before/After switch
+ * mirrors the swipe, and each chat scrolls inside its card, following the
+ * text as it types.
+ */
+@media (max-width: 760px) {
+  .kc-tabs { display: none; }
+
+  /* Which of the five skills is playing: its name, n/5, and a dot each that fills as it plays. */
+  .kc-skillbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .kc-skillbar-name { display: flex; align-items: baseline; gap: 8px; font-family: var(--kl-font); font-weight: 800; font-size: 17px; line-height: 1.2; }
+  .kc-skillbar-count { font-size: 13px; font-weight: 600; color: color-mix(in srgb, var(--kl-ink) 55%, transparent); font-variant-numeric: tabular-nums; }
+  .kc-skillbar-dots { display: flex; align-items: center; }
+  .kc-dot {
+    position: relative; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer;
+  }
+  .kc-dot::before {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 999px;
+    background: color-mix(in srgb, var(--kl-ink) 22%, transparent);
+  }
+  .kc-dot[aria-current] { width: 40px; }
+  .kc-dot[aria-current]::before { width: 32px; margin-left: -16px; }
+  .kc-dot > span {
+    position: absolute; left: 4px; top: 50%; width: 32px; height: 8px; margin-top: -4px; border-radius: 999px;
+    background: var(--kl-red); transform-origin: left; transition: transform .08s linear;
+  }
+
+  .kc-switch { display: flex; align-items: center; gap: 4px; }
+  .kc-switch-btn {
+    cursor: pointer; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--kl-divider);
+    background: transparent; color: var(--kl-ink); font-family: var(--kl-font); font-weight: 800; font-size: 14px; line-height: 1.2;
+    transition: background-color .25s, color .25s, border-color .25s;
+  }
+  .kc-switch-btn[data-on] { background: var(--kl-ink); border-color: var(--kl-ink); color: var(--kl-bg); }
+  .kc-switch-btn[data-on]:last-of-type { background: var(--kl-red); border-color: var(--kl-red); }
+  .kc-switch-hint { margin-left: auto; font-size: 13px; color: color-mix(in srgb, var(--kl-ink) 60%, transparent); }
+
+  .kc-panel { display: grid; gap: 14px; }
+  .kc-cards {
+    display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin: 0 -16px; padding: 0 16px; scroll-padding: 0 16px;
+  }
+  .kc-cards::-webkit-scrollbar { display: none; }
+  .kc-card {
+    flex: 0 0 88%; scroll-snap-align: start; scroll-snap-stop: always;
+    display: flex; flex-direction: column; gap: 12px;
+    height: min(600px, 72svh); padding: 20px; border-radius: 24px;
+  }
+  .kc-card-title { font-size: 20px; }
+  .kc-chat {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: none;
+    margin: 0 -6px; padding: 8px 6px;
+    mask-image: linear-gradient(to bottom, transparent, #000 14px, #000 calc(100% - 22px), transparent);
+  }
+  .kc-chat::-webkit-scrollbar { display: none; }
+  .kc-bubble { font-size: 14px; padding: 10px 14px; }
+  .kc-codeblock { font-size: 12px; }
+  .kc-proof { align-self: flex-start; flex: none; }
+}
+
+.kc-proof { transition: opacity .5s var(--kl-ease); justify-self: start; display: flex; gap: 8px; align-items: center; padding: 8px 14px; border-radius: 999px; background: var(--kl-red); font-family: var(--kl-font); font-weight: 800; font-size: 14px; }
+
+/* ── 60 squares ──────────────────────────────────────────────────────── */
+.kc-days-head { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: end; }
+.kc-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 24px; align-items: start; }
+.kc-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.kc-sq { aspect-ratio: 1; border-radius: 8px; transition: background-color .25s; cursor: pointer; }
+.kc-weekcard { border-radius: 24px; padding: 24px; background: var(--kl-card); border: 1px solid var(--kl-divider); display: grid; gap: 10px; align-content: start; }
+.kc-weekcard .kc-eyebrow { color: var(--kl-red-700); }
+.kc-weekcard p { margin: 0; font-size: 14px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+
+/* ── Start ───────────────────────────────────────────────────────────── */
+.kc-start {
+  margin-bottom: 64px; border-radius: 32px; background: var(--kl-red); color: var(--kl-bg);
+  padding: clamp(32px, 6vw, 80px); display: grid; gap: 28px;
+}
+.kc-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 20px; list-style: none; margin: 0; padding: 0; }
+.kc-steps li { display: grid; gap: 6px; border-top: 1px solid var(--kl-bg); padding-top: 12px; font-family: var(--kl-font); font-weight: 800; }
+.kc-steps li span:first-child { font-size: 13px; }
+.kc-steps li span:last-child { font-size: 20px; line-height: 1.1; }
+.kc-start .kc-h2 { font-size: clamp(44px, 8vw, 120px); line-height: 0.9; letter-spacing: -0.05em; }
+
+/* The docked "Start the challenge, free" (JourneyDock): its short label on phones, where the long one would be cut off. */
+.kl-dock-short { display: none; }
+@media (max-width: 760px) {
+  .kl-dock-long { display: none; }
+  .kl-dock-short { display: inline; }
+}
