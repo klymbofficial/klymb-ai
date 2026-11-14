@@ -7,7 +7,8 @@ import { useEffect, useRef } from "react";
 import { TAB_SCREENS, fmt, hasQuickCheck, lesson, miniActive, openLesson, streak, togglePlay, type CourseState, type LessonContent, type Tab } from "@/lib/course-app";
 import type { ReferralStanding } from "@/lib/sd-offer";
 import type { SdProgress } from "@/lib/sd-pace";
-import { GroupProvider, useGroupLink } from "./Community";
+import { AnnouncementsProvider, GroupProvider, useExtraUnread } from "./Community";
+import type { Announcement } from "@/lib/sd-announcement-types";
 import { Icon, type IconName } from "./icons";
 import { Commitment, LeaveQuizDialog, Onboarding, PaywallSheet, QuickCheckSheet, Splash, StreakPop, Toast } from "./Overlays";
 import { ReferralProvider, ReferralSheet, SAMPLE_REFERRAL } from "./Referral";
@@ -63,10 +64,10 @@ function MiniPlayer({ s, act, className }: { s: CourseState; act: Act; className
 
 const INBOX = true;
 const NO_PASSES: Record<string, number> = {};
+const NO_ANNOUNCEMENTS: Announcement[] = [];
 
 function Sidebar({ s, act }: { s: CourseState; act: Act }) {
-  const group = useGroupLink();
-  const unread = s.notifs.filter((n) => n.unread).length + (group && !s.groupSeen ? 1 : 0);
+  const unread = s.notifs.filter((n) => n.unread).length + useExtraUnread(s);
   const st = streak(s);
   return (
     <aside className="hidden h-dvh flex-col gap-7 overflow-y-auto border-r-2 border-sd-divider py-6 lg:flex">
@@ -131,7 +132,7 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
  * `lessons` is what this viewer may open, read on the server: paid lessons
  * reach the browser only this way.
  */
-export function CourseApp({ user = null, lessons, enrolled, referral, passes = NO_PASSES, progress = null, group = null }: { user?: CourseUser | null; lessons: Record<string, LessonContent>; enrolled: boolean; referral: ReferralStanding; passes?: Record<string, number>; progress?: SdProgress | null; group?: string | null }) {
+export function CourseApp({ user = null, lessons, enrolled, referral, passes = NO_PASSES, progress = null, group = null, announcements = NO_ANNOUNCEMENTS }: { user?: CourseUser | null; lessons: Record<string, LessonContent>; enrolled: boolean; referral: ReferralStanding; passes?: Record<string, number>; progress?: SdProgress | null; group?: string | null; announcements?: Announcement[] }) {
   const { s, act, ready } = useCourseApp({ lessons, enrolled, passes, progress });
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -161,6 +162,7 @@ export function CourseApp({ user = null, lessons, enrolled, referral, passes = N
     <CourseUserProvider value={user}>
     <ReferralProvider value={standing}>
     <GroupProvider value={group}>
+    <AnnouncementsProvider value={announcements}>
     <div className="sd-app relative flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
       <Sidebar s={s} act={act} />
       <div
@@ -199,6 +201,7 @@ export function CourseApp({ user = null, lessons, enrolled, referral, passes = N
       {user && enrolled && showTabs && (standing.view?.state !== "open" || s.referralSeen) && <ReminderSheet />}
       {s.toast && <Toast text={s.toast} />}
     </div>
+    </AnnouncementsProvider>
     </GroupProvider>
     </ReferralProvider>
     </CourseUserProvider>

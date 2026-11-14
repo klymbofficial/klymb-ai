@@ -363,3 +363,9 @@ test("closing or joining the WhatsApp group card is remembered between visits", 
   const back = fromStored(JSON.parse(JSON.stringify(toStored({ ...defaultState(NOW), groupSeen: true }))), NOW);
   assert.equal(back.groupSeen, true);
 });
+
+test("announcements read in the inbox stay read between visits", () => {
+  assert.deepEqual(defaultState(NOW).annRead, []);
+  const back = fromStored(JSON.parse(JSON.stringify(toStored({ ...defaultState(NOW), annRead: ["3", "7"] }))), NOW);
+  assert.deepEqual(back.annRead, ["3", "7"]);
+});

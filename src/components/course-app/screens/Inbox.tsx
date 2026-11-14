@@ -1,9 +1,10 @@
 "use client";
 
 import clsx from "clsx";
+import { useEffect, useState } from "react";
 import type { NotifType } from "@/data/system-design/course-app";
 import { openNotification, type CourseState } from "@/lib/course-app";
-import { GroupNotice, useGroupLink } from "../Community";
+import { AnnouncementItem, GroupNotice, useAnnouncements, useGroupLink } from "../Community";
 import { Icon, type IconName } from "../icons";
 import { BackButton, EmptyState, ScreenTitle } from "../ui";
 import type { Act } from "../useCourseApp";
@@ -13,16 +14,25 @@ const NOTIF_ICON: Record<NotifType, IconName> = { reply: "msg", streak: "flame",
 export function Notifications({ s, act }: { s: CourseState; act: Act }) {
   const back = () => act((p) => ({ ...p, screen: p.tab }));
   const group = useGroupLink();
+  const ann = useAnnouncements();
+  // Unread as the inbox opened: they stay marked for this look, and count as read from now on.
+  const [fresh] = useState(() => new Set(ann.filter((a) => !s.annRead.includes(a.id)).map((a) => a.id)));
+  useEffect(() => {
+    if (fresh.size) act((p) => ({ ...p, annRead: [...new Set([...p.annRead, ...fresh])].slice(-50) }));
+  }, [fresh, act]);
   const unread = s.notifs.some((n) => n.unread);
   const groups = (["Today", "Earlier"] as const).map((g) => ({ g, items: s.notifs.filter((n) => n.group === g) })).filter((x) => x.items.length);
   return (
     <div className="sd-a-screen flex max-w-[760px] flex-col gap-[18px] px-5 pb-7 lg:p-0">
       <div className="-mx-2 lg:mx-0"><BackButton onClick={back} /></div>
       <ScreenTitle aside={unread && <button type="button" onClick={() => act((p) => ({ ...p, notifs: p.notifs.map((n) => ({ ...n, unread: false })) }))} className="sd-btn sd-btn-ghost">Mark all read</button>}>Notifications</ScreenTitle>
-      {group && (
+      {(group || ann.length > 0) && (
         <div>
           <h6 className="sd-h6 mb-2">From Klymb</h6>
-          <div className="border-t-2 border-sd-divider"><GroupNotice s={s} act={act} /></div>
+          <div className="border-t-2 border-sd-divider">
+            {ann.map((a) => <AnnouncementItem key={a.id} a={a} fresh={fresh.has(a.id)} />)}
+            <GroupNotice s={s} act={act} />
+          </div>
         </div>
       )}
       {groups.length > 0 ? (
@@ -53,7 +63,7 @@ export function Notifications({ s, act }: { s: CourseState; act: Act }) {
           ))}
           <div><button type="button" onClick={() => act((p) => ({ ...p, notifs: [] }))} className="sd-btn sd-btn-secondary">Clear all</button></div>
         </>
-      ) : !group && (
+      ) : !group && !ann.length && (
         <EmptyState
           icon="bell"
           titleClass="text-[28px] tracking-[-0.03em]"

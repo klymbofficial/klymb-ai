@@ -8,6 +8,8 @@ export type AuditAction =
   | "learner.device_reset"
   | "payment.refund"
   | "sd.whatsapp_announce"
+  | "announcement.post"
+  | "announcement.remove"
   | "admin.add"
   | "admin.remove"
   | "ticket.status"
