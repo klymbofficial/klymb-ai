@@ -151,17 +151,7 @@ html.lenis { scroll-behavior: auto; }
  */
 .kl-menu { display: none; }
 @media (max-width: 760px) {
-  .kl-navbar {
-    position: fixed; left: 0; right: 0; padding: 16px 16px 0; pointer-events: none;
-    border-bottom: 1px solid transparent; transition: background-color .3s ease, padding .3s ease, border-color .3s ease;
-  }
-  /* Past the hero photo: a frosted bar behind the pills (LandingNav), so content passes under a bar, not between pills. */
-  .kl-navbar.is-solid:not(.kl-navbar--site) {
-    padding: 10px 16px; pointer-events: auto;
-    background: color-mix(in srgb, var(--kl-bg) 90%, transparent);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    border-bottom-color: color-mix(in srgb, var(--kl-ink) 10%, transparent);
-  }
+  .kl-navbar { position: fixed; left: 0; right: 0; padding: 16px 16px 0; pointer-events: none; }
   .kl-nav {
     padding: 0; gap: 8px; border: 0; border-radius: 0; background: none; box-shadow: none;
     -webkit-backdrop-filter: none; backdrop-filter: none;
@@ -187,8 +177,8 @@ html.lenis { scroll-behavior: auto; }
 .kl-menu-btn.is-open span:first-child { transform: translateY(3.15px) rotate(45deg); }
 .kl-menu-btn.is-open span:last-child { transform: translateY(-3.15px) rotate(-45deg); }
 .kl-menu-panel {
-  position: absolute; top: calc(100% + 10px); right: 0; width: min(240px, calc(100vw - 32px)); padding: 4px 16px 14px;
-  border-radius: 20px; border: 1px solid color-mix(in srgb, var(--kl-ink) 10%, transparent);
+  position: absolute; top: calc(100% + 10px); right: 0; width: min(290px, calc(100vw - 32px)); padding: 6px 18px 18px;
+  border-radius: 24px; border: 1px solid color-mix(in srgb, var(--kl-ink) 10%, transparent);
   background: color-mix(in srgb, var(--kl-bg) 94%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   box-shadow: var(--kl-shadow-lg); transform-origin: top right;
   opacity: 0; transform: translateY(-6px) scale(.96); visibility: hidden;
@@ -197,12 +187,12 @@ html.lenis { scroll-behavior: auto; }
 .kl-menu-panel.is-open { opacity: 1; transform: none; visibility: visible; transition: opacity .25s ease, transform .35s var(--kl-ease), visibility 0s; }
 .kl-menu-panel ul { margin: 0; padding: 0; list-style: none; }
 .kl-menu-panel li a {
-  display: block; padding: 11px 2px; font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
+  display: block; padding: 14px 2px; font-weight: 800; font-size: 20px; letter-spacing: -0.01em;
   border-bottom: 1px solid color-mix(in srgb, var(--kl-ink) 12%, transparent);
 }
 .kl .kl-menu-panel li a:hover { color: var(--kl-red-700); }
 .kl .kl-menu-teams { color: var(--kl-red-700); }
-.kl .kl-menu-login { width: 100%; margin-top: 12px; padding: 10px 16px; border-radius: 999px; font-size: 14px; background: var(--kl-bg); }
+.kl .kl-menu-login { width: 100%; margin-top: 16px; padding: 14px 18px; border-radius: 999px; font-size: 16px; background: var(--kl-bg); }
 @media (prefers-reduced-motion: reduce) {
   .kl-menu-btn span, .kl-menu-panel, .kl-menu-panel.is-open { transition: none; }
 }
@@ -345,9 +335,8 @@ html.lenis { scroll-behavior: auto; }
   animation: kl-chip-in .5s cubic-bezier(.2, .9, .3, 1.2) backwards;
 }
 .kl-hp-chip svg { flex: none; color: var(--kl-red); }
-/* Below the face: the photo covers by height, so the face sits in the top quarter at any phone size. */
-.kl-hp-chip--a { left: 16px; top: 46%; animation-delay: .9s; }
-.kl-hp-chip--b { right: 16px; top: 150px; animation-delay: 1.05s; }
+.kl-hp-chip--a { left: 14px; top: 96px; animation-delay: .9s; }
+.kl-hp-chip--b { right: 14px; top: 150px; animation-delay: 1.05s; }
 @keyframes kl-chip-in { from { opacity: 0; transform: translateY(12px) scale(.9); } }
 
 .kl-hp-results {
@@ -744,25 +733,6 @@ html.lenis { scroll-behavior: auto; }
   display: flex; justify-content: space-between; align-items: center; text-align: left;
 }
 
-/* Phones: tighter cards, a smaller price and sticker, and list text that fits one line. */
-@media (max-width: 760px) {
-  .kl-pricing { padding: 56px 0; gap: 28px; }
-  .kl-badge { font-size: 13px; padding: 8px 14px; }
-  .kl-plans { gap: 16px; }
-  .kl-plan { border-radius: 24px; }
-  .kl-plan--single, .kl-plan-body { padding: 22px 20px; gap: 20px; }
-  .kl-plan-top { gap: 12px; }
-  .kl-plan-sub { font-size: 14px; }
-  .kl-sticker { width: 68px; height: 68px; font-size: 10px; }
-  .kl-price-cur { font-size: 26px; }
-  .kl-price-num { font-size: min(72px, calc(38cqi - 30px)); }
-  .kl-price-per { font-size: 14px; margin-left: 8px; }
-  .kl-plan-list li { gap: 10px; font-size: 14px; padding: 10px 0; }
-  .kl-tick { width: 20px; height: 20px; }
-  .kl-included { font-size: 10px; padding: 3px 7px; }
-  .kl .kl-plan-cta { padding: 14px 20px; font-size: 15px; }
-}
-
 /* ── Learner stories ─────────────────────────────────────────────────── */
 
 .kl-stories { padding: 24px 0 96px; display: grid; gap: 40px; }
@@ -864,14 +834,6 @@ html.lenis { scroll-behavior: auto; }
 @media (prefers-reduced-motion: reduce) {
   .kl-faq-panel, .kl-faq-a, .kl-faq-icon::before, .kl-faq-icon::after { transition: none; }
 }
-/* Phones: questions and answers at reading size, with less air between rows. */
-@media (max-width: 760px) {
-  .kl-faq { padding: 48px 0 64px; gap: 24px; }
-  .kl-faq-q { gap: 16px; padding: 18px 0; font-size: 17px; line-height: 1.3; }
-  .kl-faq-icon { width: 16px; height: 16px; }
-  .kl-faq-icon::before, .kl-faq-icon::after { width: 16px; height: 2px; margin: -1px 0 0 -8px; }
-  .kl-faq-a { padding-bottom: 20px; font-size: 15px; line-height: 1.55; }
-}
 
 /* ── Closing banner ──────────────────────────────────────────────────── */
 
@@ -903,22 +865,6 @@ html.lenis { scroll-behavior: auto; }
 .kl-footer-copy { margin-right: auto; }
 .kl-footer-copy .kl-brandword { color: var(--kl-ink); }
 .kl .kl-footer a:hover { color: var(--kl-red); }
-
-/* Phones: headings, quote and banner one step down, so a screen holds a heading plus its content. */
-@media (max-width: 760px) {
-  .kl .kl-wp-title { font-size: 42px; }
-  .kl-wp-lede { font-size: 15px; }
-  .kl-wp-final-title { font-size: 38px; }
-  .kl-h2 { font-size: 32px; }
-  .kl-panel-vlabel { font-size: 24px; }
-  .kl-panel-detail h3 { font-size: 24px; }
-  .kl-teams { padding: 20px; }
-  .kl-teams p { font-size: 15px; }
-  .kl-quote-mark { font-size: 110px; }
-  .kl-feature blockquote { font-size: 20px; line-height: 1.2; }
-  .kl-feature-who strong { font-size: 16px; }
-  .kl-close h2 { font-size: 40px; }
-}
 
 /* ── Journey dock and chat ───────────────────────────────────────────── */
 
@@ -957,8 +903,6 @@ html.lenis { scroll-behavior: auto; }
   .kl .kl-dock { left: 16px; transform: none; max-width: calc(100vw - 92px); }
   .kl .kl-dock:not(.is-on) { transform: translateY(160%); }
   .kl .kl-dock.is-on { transform: none; }
-  /* Out of the way while a plan card or the teams card is on screen (JourneyDock). */
-  .kl .kl-dock.is-on.is-yield { transform: translateY(160%); pointer-events: none; }
   .kl-chat-label { display: none; }
   .kl-chat { padding: 4px; gap: 0; }
 }

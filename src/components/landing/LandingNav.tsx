@@ -26,7 +26,6 @@ export function LandingNav({ site = false }: { site?: boolean }) {
   const base = site ? "/" : "";
   const brand = useRef<HTMLAnchorElement>(null);
   const bar = useRef<HTMLDivElement>(null);
-  const [solid, setSolid] = useState(false);
 
   // The nav's height, as --kl-nav-h on the page, for anything that sticks just below it.
   useEffect(() => {
@@ -39,16 +38,6 @@ export function LandingNav({ site = false }: { site?: boolean }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  // Phones: once the hero photo has scrolled off, the floating pills get a frosted bar behind them
-  // (landing.css), so the page no longer shows through around them or sits half-hidden under the logo.
-  useEffect(() => {
-    if (site) return;
-    const onScroll = () => setSolid(window.scrollY > window.innerHeight * 0.4);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [site]);
 
   useEffect(() => {
     const link = brand.current;
@@ -94,7 +83,7 @@ export function LandingNav({ site = false }: { site?: boolean }) {
   }, []);
 
   return (
-    <div ref={bar} className={site ? "kl-navbar kl-navbar--site" : solid ? "kl-navbar is-solid" : "kl-navbar"}>
+    <div ref={bar} className={site ? "kl-navbar kl-navbar--site" : "kl-navbar"}>
       <nav className="kl-nav" aria-label="Main">
         <Link href="/" ref={brand} className="kl-brand" aria-label="Klymb home">
           <span className="kl-logo" aria-hidden="true">
