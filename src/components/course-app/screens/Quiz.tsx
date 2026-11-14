@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { DIAGRAMS, QUESTIONS, TIMED_SECONDS } from "@/data/system-design/course-app";
-import { closeQuiz, isAnswered, nextQuestion, pad, paceNow, pickOption, setAnswer, type CourseState } from "@/lib/course-app";
+import { canGoBack, closeQuiz, isAnswered, nextQuestion, pad, paceNow, pickOption, prevQuestion, setAnswer, type CourseState } from "@/lib/course-app";
 import { FINAL_MARK, FINAL_TRIES } from "@/lib/sd-pace";
 import { Icon } from "../icons";
 import { BackButton, Bar, stagger } from "../ui";
@@ -180,6 +180,7 @@ export function QuizQuestion({ s, act }: { s: CourseState; act: Act }) {
         )}
       </div>
       <div className="sticky bottom-0 mt-auto flex gap-2 border-t-2 border-sd-divider bg-sd-bg px-5 pt-3 pb-4 lg:px-0 lg:pt-4 lg:pb-0">
+        {canGoBack(s) && <button type="button" onClick={() => act(prevQuestion)} disabled={sending} aria-label="Previous question" className="sd-btn sd-btn-secondary sd-btn-icon size-[52px] flex-none lg:size-12"><Icon name="chevL" /></button>}
         <button type="button" onClick={() => act(nextQuestion)} disabled={sending} className="sd-btn sd-btn-secondary h-[52px] w-24 justify-start lg:h-12 lg:w-[110px]">Skip</button>
         <button type="button" onClick={() => act(nextQuestion)} disabled={sending || !isAnswered(q, a)} className="sd-btn sd-btn-primary h-[52px] flex-1 justify-between text-base lg:h-12 lg:w-[220px] lg:flex-none">
           {sending ? "Grading…" : last ? "Finish" : "Next"}<Icon name="arrowR" />

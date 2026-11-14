@@ -16,7 +16,7 @@ const UI = {
   en: {
     title: "Check what you learned",
     count: (n: number) => `${n} questions`, time: "About 5 min", mark: `${PASS}% to pass`, passMark: (n: number) => `Pass mark ${n}%`, answersEnd: "Answers at the end", start: "Start assessment", retake: "Retake assessment",
-    scenario: "Scenario", skip: "Skip", next: "Next", finish: "Finish", of: (n: number, t: number) => `${n} of ${t} correct`,
+    scenario: "Scenario", back: "Previous question", skip: "Skip", next: "Next", finish: "Finish", of: (n: number, t: number) => `${n} of ${t} correct`,
     passed: "Passed", passedBody: (next: boolean) => (next ? `Next lesson unlocked. Pass mark is ${PASS}%.` : `Pass mark is ${PASS}%.`),
     failed: "Not passed yet", failedBody: `You need ${PASS}% to unlock the next lesson. Rewatch the lesson, then retake the assessment.`,
     answers: "Answers", answer: "Answer", yours: "You picked", skipped: "Skipped",
@@ -27,7 +27,7 @@ const UI = {
   hi: {
     title: "Dekho kitna samjha",
     count: (n: number) => `${n} sawaal`, time: "Lagbhag 5 min", mark: `${PASS}% se pass`, passMark: (n: number) => `Pass mark ${n}%`, answersEnd: "Jawab end mein", start: "Assessment shuru karo", retake: "Assessment dobara do",
-    scenario: "Scenario", skip: "Skip", next: "Next", finish: "Finish", of: (n: number, t: number) => `${t} mein se ${n} sahi`,
+    scenario: "Scenario", back: "Pichhla sawaal", skip: "Skip", next: "Next", finish: "Finish", of: (n: number, t: number) => `${t} mein se ${n} sahi`,
     passed: "Pass", passedBody: (next: boolean) => (next ? `Agla lesson khul gaya. Pass mark ${PASS}% hai.` : `Pass mark ${PASS}% hai.`),
     failed: "Abhi pass nahi", failedBody: `Agla lesson kholne ke liye ${PASS}% chahiye. Lesson dobara dekho, phir assessment do.`,
     answers: "Jawab", answer: "Jawab", yours: "Tumne chuna", skipped: "Skip kiya",
@@ -84,6 +84,7 @@ function Questions({ questions, lang, idx, busy, error, onIdx, onDone }: { quest
       <div className="sticky bottom-0 z-[4] -mx-5 mt-auto border-t border-sd-divider bg-sd-bg px-5 pt-2.5 pb-4 shadow-[0_-10px_20px_-14px_rgba(32,30,29,.25)] lg:mx-0 lg:px-10 lg:pt-3.5 lg:pb-[18px]">
         {error && <p role="alert" className="m-0 mb-2 text-[13px] font-semibold text-sd-accent-700">{error}</p>}
         <div className="flex items-center gap-3">
+          {idx > 0 && <button type="button" onClick={() => onIdx(idx - 1)} disabled={busy} aria-label={ui.back} title={ui.back} className="sd-btn sd-btn-secondary sd-btn-icon size-[52px] flex-none rounded-[10px]"><Icon name="chevL" size={18} /></button>}
           <button type="button" onClick={() => go(picks)} disabled={busy} className="sd-btn sd-btn-ghost h-[52px] px-3.5 text-[15px] text-sd-n-800">{ui.skip}</button>
           <span className="flex-1" />
           <button type="button" onClick={() => go(picks)} disabled={pick === undefined || busy} className="sd-btn sd-btn-primary h-[52px] flex-1 max-w-[280px] justify-between rounded-[10px] px-[18px] text-base">

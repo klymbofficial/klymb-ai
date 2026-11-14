@@ -5,7 +5,7 @@ import { LESSON_DAYS } from "../src/data/system-design/lessons";
 import { lessonContent } from "../src/lib/sd-lessons";
 import {
   ALL_IDS, addNote, checkStageFor, closeQuiz, completeNext, deepLink, defaultState, flowDone, fmt, fromStored, isAnswered, isSoon, lessonSteps, localDate,
-  markShared, migrateLegacy, miniActive, finalFailed, finishFinal, nextQuestion, nextStep, openFinal, openLesson, pickOption, practiceStart, previewState, revisitable, setAnswer, stageFor, streak, tick, toStored, togglePlay,
+  markShared, migrateLegacy, miniActive, finalFailed, finishFinal, nextQuestion, prevQuestion, nextStep, openFinal, openLesson, pickOption, practiceStart, previewState, revisitable, setAnswer, stageFor, streak, tick, toStored, togglePlay,
   setLessons, updateLesson, withServerPasses, type CourseState,
 } from "../src/lib/course-app";
 
@@ -55,6 +55,19 @@ test("the last answer sends the attempt to the server, and its grade opens the r
   assert.equal(graded.screen, "results");
   assert.deepEqual(graded.post, [1, 1, 1, 1, 1, 0]);
   assert.equal(graded.progress?.finals.length, 1);
+});
+
+test("Previous goes back a question with the answer kept, but never out of the timed one", () => {
+  let s: CourseState = { ...home(), screen: "quiz", quiz: { kind: "post", stage: "q", idx: 0, answers: {} } };
+  assert.equal(prevQuestion(s), s, "nothing before the first question");
+  s = nextQuestion(setAnswer(s, 2));
+  s = prevQuestion(s);
+  assert.equal(s.quiz.idx, 0);
+  assert.equal(s.quiz.answers[0], 2, "the earlier pick is still there to change");
+  const timed = QUESTIONS.findIndex((q) => q.type === "timed");
+  const onTimed: CourseState = { ...s, quiz: { ...s.quiz, idx: timed } };
+  assert.equal(prevQuestion(onTimed).quiz.idx, timed, "leaving would restart its clock");
+  assert.equal(prevQuestion({ ...s, quiz: { ...s.quiz, idx: 2, stage: "sending" } }).quiz.idx, 2, "not while grading");
 });
 
 test("the timed question moves on by itself when time runs out", () => {

@@ -551,6 +551,18 @@ export function nextQuestion(s: CourseState): CourseState {
   return { ...s, quiz: { ...q, stage: "sending" }, timeLeft: TIMED_SECONDS };
 }
 
+/**
+ * Back one question, answers kept. Not from the timed question: leaving it
+ * and coming back would restart its clock.
+ */
+export function canGoBack(s: CourseState): boolean {
+  return s.quiz.stage === "q" && s.quiz.idx > 0 && QUESTIONS[s.quiz.idx].type !== "timed";
+}
+
+export function prevQuestion(s: CourseState): CourseState {
+  return canGoBack(s) ? { ...s, quiz: { ...s.quiz, idx: s.quiz.idx - 1 } } : s;
+}
+
 /** The server's grade is back: 1 or 0 per question. */
 export function finishFinal(s: CourseState, results: number[], progress: SdProgress | null): CourseState {
   return { ...s, post: results, lastKind: "post", screen: "results", quiz: { ...s.quiz, stage: "intro", idx: 0 }, progress: progress ?? s.progress };
