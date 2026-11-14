@@ -27,7 +27,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
           The interview round everyone fears. <span className="text-red-soft">Made simple.</span>
         </h1>
         <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/75">
-          Leave your details and we&apos;ll WhatsApp you everything about the course.
+          Fill in your details and we&apos;ll share everything about the course with you.
         </p>
         <ul className="mt-5 flex max-w-md flex-wrap gap-2" aria-label="What the course covers">
           {topics.map((t) => (
