@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { BUILT_LESSONS, MODULES } from "@/data/system-design/course-app";
+import { inviteSenderName, readableBrandColor, type CompanyBrand } from "@/lib/company/brand";
 import { SUPPORT_EMAIL } from "@/data/support-faq";
 import { abtMailerReady, routesViaAbtMailer, sendViaAbtMailer } from "@/lib/abt-mailer";
 import { SD_REFERRAL } from "@/lib/sd-offer";
@@ -9,7 +10,12 @@ import { HIDE_MONEY } from "@/lib/site-status";
 const SENDER_NAME = "Klymb.ai";
 /** The address every mail says to write to: the support inbox, not the legal grievance contact on the policy pages. */
 export const MAIL_SUPPORT = SUPPORT_EMAIL;
-const SD_LIVE = `${BUILT_LESSONS.length} of the ${MODULES.reduce((n, m) => n + m.lessons.length, 0)} lessons are out today`;
+const SD_TOTAL = MODULES.reduce((n, m) => n + m.lessons.length, 0);
+const SD_LIVE = `${BUILT_LESSONS.length} of the ${SD_TOTAL} lessons are out today`;
+/** What the buyer gets today, in one sentence: all of it, or how much is out so far. */
+const SD_ACCESS = BUILT_LESSONS.length >= SD_TOTAL
+  ? `All ${SD_TOTAL} lessons are open to you now.`
+  : `This is early access: ${SD_LIVE}, and the rest are added as they are ready, at no extra cost.`;
 
 export type MailResult = { ok: true } | { ok: false; reason: string; skipped?: boolean };
 
@@ -32,12 +38,14 @@ export function mailReady() {
  * once. `skipped` means the mailer declined on purpose (a bounced or
  * unsubscribed address): not a failure, and retrying won't change it.
  */
-export async function sendMail({ to, subject, html, text, replyTo, kind, idempotencyKey, headers }: {
+export async function sendMail({ to, subject, html, text, replyTo, fromName = SENDER_NAME, kind, idempotencyKey, headers }: {
   to: { email: string; name?: string };
   subject: string;
   html: string;
   text: string;
   replyTo?: string;
+  /** The sender's display name ("Acme via Klymb.ai" for a company's mail). The address is always Klymb's verified one. */
+  fromName?: string;
   kind: string;
   idempotencyKey?: string;
   headers?: Record<string, string>;
@@ -64,7 +72,7 @@ export async function sendMail({ to, subject, html, text, replyTo, kind, idempot
       html,
       text,
       headers: headers ?? {},
-      from: { email: from, name: SENDER_NAME },
+      from: { email: from, name: fromName },
       replyTo: reply,
     });
     if (out.status === "SENT") return { ok: true };
@@ -77,7 +85,8 @@ export async function sendMail({ to, subject, html, text, replyTo, kind, idempot
     method: "POST",
     headers: { "api-key": apiKey, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      sender: { email: from, name: SENDER_NAME },
+      // The address is always Klymb's verified one; only the display name changes (e.g. "Acme via Klymb.ai").
+      sender: { email: from, name: fromName },
       to: [to],
       replyTo: { email: reply },
       subject,
@@ -104,31 +113,64 @@ const wordmark = (site: string, color: string) =>
 const row = (k: string, v: string) =>
   `<tr><td style="padding:10px 0;color:${C.muted};font-size:14px;border-bottom:1px solid ${C.line}">${k}</td><td style="padding:10px 0;text-align:right;font-weight:700;font-size:14px;color:${C.ink};border-bottom:1px solid ${C.line}">${esc(v)}</td></tr>`;
 
-const step = (n: number, title: string, body: string) =>
-  `<tr><td style="padding:0 14px 16px 0;vertical-align:top;width:30px"><div style="width:28px;height:28px;border-radius:14px;background:${C.maroon};color:#fff;font-weight:800;font-size:13px;line-height:28px;text-align:center">${n}</div></td><td style="padding:0 0 16px;vertical-align:top"><div style="font-weight:700;font-size:15px;color:${C.ink}">${title}</div><div style="font-size:13px;line-height:1.55;color:${C.muted};margin-top:2px">${body}</div></td></tr>`;
+const step = (n: number, title: string, body: string, accent: string = C.maroon) =>
+  `<tr><td style="padding:0 14px 16px 0;vertical-align:top;width:30px"><div style="width:28px;height:28px;border-radius:14px;background:${accent};color:#fff;font-weight:800;font-size:13px;line-height:28px;text-align:center">${n}</div></td><td style="padding:0 0 16px;vertical-align:top"><div style="font-weight:700;font-size:15px;color:${C.ink}">${title}</div><div style="font-size:13px;line-height:1.55;color:${C.muted};margin-top:2px">${body}</div></td></tr>`;
 
-const button = (href: string, label: string) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="border-radius:999px;background:${C.maroon}"><a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">${label} &rarr;</a></td></tr></table>`;
+const button = (href: string, label: string, accent: string = C.maroon) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="border-radius:999px;background:${accent}"><a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">${label} &rarr;</a></td></tr></table>`;
 
-const sectionTitle = (t: string) =>
-  `<div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${C.maroon};margin-bottom:14px">${t}</div>`;
+const sectionTitle = (t: string, accent: string = C.maroon) =>
+  `<div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${accent};margin-bottom:14px">${t}</div>`;
 
-/** The shared frame: maroon header (logo, eyebrow, headline), white body sections, linked footer. */
-function layout(o: { site: string; preview: string; eyebrow: string; title: string; intro: string; sections: string[]; supportEmail: string }) {
+/** A company's look for emails sent on its behalf. `color` is already checked to be readable under white text. */
+interface MailBrand { name: string; logoUrl: string | null; color: string }
+
+/** The header's top row: Klymb's icon and wordmark, or the company's logo and name. */
+function headerMark(site: string, brand?: MailBrand) {
+  if (!brand) {
+    return `<td style="padding-right:12px;vertical-align:middle"><img src="${site}/email/klymb-icon.png" width="34" height="34" alt="" style="display:block;border:0;border-radius:9px"></td>
+    <td style="vertical-align:middle;font-size:19px">${wordmark(site, "#ffffff")}</td>`;
+  }
+  const logo = brand.logoUrl
+    ? `<td style="padding-right:12px;vertical-align:middle"><img src="${esc(brand.logoUrl)}" height="34" alt="${esc(brand.name)}" style="display:block;border:0;border-radius:6px;background:#ffffff;max-width:140px;height:34px"></td>`
+    : "";
+  return `${logo}<td style="vertical-align:middle;font-size:19px;font-weight:900;letter-spacing:-0.3px;color:#ffffff">${esc(brand.name)}</td>`;
+}
+
+/** The footer under the card: Klymb's links, or a short "sent by Klymb.ai" line for a company's email. */
+function footer(site: string, brand?: MailBrand) {
+  if (brand) {
+    return `<span style="color:#8a8785">Sent for ${esc(brand.name)} by</span> ${wordmark(site, C.ink)}<br>
+  <a href="${site}/contact" style="color:#8a8785">Contact</a>`;
+  }
+  return `${wordmark(site, C.ink)}<br>
+  <a href="${site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${site}/contact" style="color:#8a8785">Contact</a>`;
+}
+
+/**
+ * The shared frame: maroon header (logo, eyebrow, headline), white body
+ * sections, linked footer. With a brand, the header and footer are the company's.
+ */
+function layout(o: { site: string; preview: string; eyebrow: string; title: string; intro: string; sections: string[]; supportEmail: string; brand?: MailBrand }) {
   const body = o.sections.map((sec) => `<tr><td style="background:#ffffff;padding:24px 30px 8px">${sec}</td></tr>`).join("");
+  const headerBg = o.brand
+    ? `background:${o.brand.color}`
+    : `background:${C.maroon};background-image:linear-gradient(135deg,#a50d16,${C.maroon} 55%,#4a0206)`;
+  // On a company's color, translucent white reads on any hue; Klymb's pinks only suit maroon.
+  const eyebrowColor = o.brand ? "rgba(255,255,255,0.78)" : "#ffd0cd";
+  const introColor = o.brand ? "rgba(255,255,255,0.9)" : "#ffe4e2";
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"></head>
 <body style="margin:0;background:${C.paper};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(o.preview)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td style="background:${C.maroon};background-image:linear-gradient(135deg,#a50d16,${C.maroon} 55%,#4a0206);border-radius:18px 18px 0 0;padding:26px 30px 30px">
+<tr><td style="${headerBg};border-radius:18px 18px 0 0;padding:26px 30px 30px">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    <td style="padding-right:12px;vertical-align:middle"><img src="${o.site}/email/klymb-icon.png" width="34" height="34" alt="" style="display:block;border:0;border-radius:9px"></td>
-    <td style="vertical-align:middle;font-size:19px">${wordmark(o.site, "#ffffff")}</td>
+    ${headerMark(o.site, o.brand)}
   </tr></table>
-  <div style="margin-top:26px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#ffd0cd">${o.eyebrow}</div>
+  <div style="margin-top:26px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${eyebrowColor}">${o.eyebrow}</div>
   <div style="margin-top:6px;font-size:30px;line-height:1.15;font-weight:900;color:#fff;letter-spacing:-0.5px">${o.title}</div>
-  <div style="margin-top:8px;font-size:15px;line-height:1.55;color:#ffe4e2">${o.intro}</div>
+  <div style="margin-top:8px;font-size:15px;line-height:1.55;color:${introColor}">${o.intro}</div>
 </td></tr>
 ${body}
 <tr><td style="background:#ffffff;border-radius:0 0 18px 18px;padding:6px 30px 28px">
@@ -137,8 +179,7 @@ ${body}
   </div>
 </td></tr>
 <tr><td align="center" style="padding:22px 10px 0;font-size:12px;line-height:1.7;color:#8a8785">
-  ${wordmark(o.site, C.ink)}<br>
-  <a href="${o.site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${o.site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${o.site}/contact" style="color:#8a8785">Contact</a>
+  ${footer(o.site, o.brand)}
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -187,7 +228,7 @@ export function sdReceiptEmail(p: { name: string; amount: string; paymentId: str
     `Amount paid: ${p.amount}`, `Payment ID: ${p.paymentId}`, "",
     "What happens next",
     `1. Open ${p.siteUrl}/learn/system-design and sign in with the Google account you paid with.`,
-    `2. This is early access: ${SD_LIVE}, and the rest are added as they are ready, at no extra cost.`,
+    `2. ${SD_ACCESS}`,
     `3. Finish on schedule and we refund 100% of your fee: one lesson a day, no missed days, and 70% or higher on the final assessment. Miss a day and you can keep learning, but the refund is gone. The conditions: ${p.siteUrl}/refund-policy`,
     ...(p.referral ? [`4. ${referralLine} Your link: ${p.referral.link}`] : []), "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
@@ -202,7 +243,7 @@ export function sdReceiptEmail(p: { name: string; amount: string; paymentId: str
       `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Amount paid", p.amount)}${row("Payment ID", p.paymentId)}</table>${button(`${site}/learn/system-design`, "Open the course")}`,
       `${sectionTitle("What happens next")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "Sign in with the same Google account", "The account you paid with is the one that holds your seat.")}
-        ${step(2, "This is early access", `${SD_LIVE[0].toUpperCase()}${SD_LIVE.slice(1)}. The rest are added as they are ready, at no extra cost.`)}
+        ${step(2, BUILT_LESSONS.length >= SD_TOTAL ? "Every lesson is open" : "This is early access", SD_ACCESS)}
         ${step(3, "Finish on schedule, get 100% back", `One lesson a day with no missed days, and 70% or higher on the final assessment. Miss a day and you can keep learning, but the refund is gone. <a href="${site}/refund-policy" style="color:${C.maroon}">How the refund works</a>`)}
         ${p.referral ? step(4, "Or get it back by referring friends", `${esc(referralLine!)} <a href="${esc(p.referral.link)}" style="color:${C.maroon}">Your link</a>`) : ""}
       </table>`,
@@ -245,6 +286,23 @@ export function sdReferralEarnedEmail(p: { name: string; amount: string; siteUrl
   return { subject, html, text };
 }
 
+/** Sent once to every paid System Design learner when the learners' WhatsApp group opened. */
+export function sdWhatsAppGroupEmail(p: { name: string; groupUrl: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "Join the System Design learners' WhatsApp group";
+  const line = "There's now a WhatsApp group for everyone taking System Design Essentials. Ask doubts, share your designs and keep each other going on the daily lesson.";
+  const text = [`Hi ${p.name},`, "", line, "", `Join here: ${p.groupUrl}`, "", "The link is also on Home in the course app.", "", `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai"].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: "Ask doubts and learn with the rest of the batch.",
+    eyebrow: "System Design",
+    title: "Join the learners' group.",
+    intro: esc(line),
+    sections: [button(esc(p.groupUrl), "Join the WhatsApp group"), `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">The link is also on Home in the <a href="${site}/learn/system-design" style="color:${C.ink};font-weight:600">course app</a>.</p>`],
+  });
+  return { subject, html, text };
+}
+
 /** Sent once, on a new registration: a welcome, what the 30 days hold, and how to confirm the seat. */
 export function welcomeEmail(p: { name: string; trackName: string; becomes: string; price: string; free?: boolean; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
@@ -258,7 +316,7 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
     "Week 1-4: one real workplace problem a day, about 90 to 120 minutes.",
     "Days 7, 14, 21, 28: a checkpoint you defend on camera.",
     "Days 29-30: interview prep on the most-asked questions.", "",
-    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders and feedback out of your spam folder.", "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders out of your spam folder.", "",
     `Sign in any time with this email: ${p.siteUrl}/learn`, "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
@@ -274,10 +332,10 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
         : `${sectionTitle("Day 1 is free")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Track", p.trackName)}${row("Day 1", "Free, open now")}${row("Days 2 to 30", `${p.price} · 100% back when you complete`)}</table>${button(`${site}/learn`, "Start Day 1 free")}`,
       `${sectionTitle("Your 30 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "One real problem a day", "About 90 to 120 minutes, built around the work this role actually does. Works offline too.")}
-        ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera and get written feedback.")}
+        ${step(2, "Four checkpoints you defend", "On Days 7, 14, 21 and 28 you defend your work on camera.")}
         ${step(3, "Interview prep", "Days 29 and 30: practise the most-asked questions for your role, so you walk into the real one ready.")}
       </table>
-      <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders, checkpoint feedback and receipt never land in spam.</div>
+      <div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders and receipt never land in spam.</div>
       <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">Sign in any time at <a href="${site}/learn" style="color:${C.maroon};font-weight:600">klymb.ai/learn</a> with this email, using Continue with Google.</div>`,
     ],
   });
@@ -330,7 +388,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
   const subject = `You're in: ${p.trackName} on Klymb.ai`;
   const steps = [
     { title: "Sign in", body: `Open ${p.siteUrl}/learn and choose Continue with Google using ${p.email}. It must be this exact account.` },
-    { title: "Create your course repository", body: `On GitHub, create a public repository named ${p.repoName}. Every artifact you produce goes here, and reviewers check your work against it.` },
+    { title: "Create your course repository", body: `On GitHub, create a public repository named ${p.repoName}. Every artifact you produce goes here, and your submissions link to it.` },
     { title: "Add GitHub and LinkedIn to your dashboard", body: "Both are needed before you can submit Day 1: submitted links are checked to be yours." },
     ...p.setup,
   ];
@@ -340,7 +398,7 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
     "Getting set up",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
     `Start here: ${p.siteUrl}/learn`, "",
-    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders and feedback out of your spam folder.", "",
+    "One small thing: reply to this email with a quick \"hi\". It keeps our reminders out of your spam folder.", "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
   const html = layout({
@@ -353,7 +411,34 @@ export function inviteEmail(p: { name: string; email: string; trackName: string;
       `${sectionTitle("Getting set up")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body))).join("")}
       </table>${button(`${site}/learn`, "Start Day 1")}`,
-      `<div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders and feedback never land in spam.</div>`,
+      `<div style="margin:4px 0 18px;padding:14px 16px;border-radius:12px;background:${C.paper};font-size:13px;line-height:1.6;color:${C.ink}"><strong>One small thing:</strong> reply to this email with a quick “hi”. It tells your inbox we are someone you know, so your daily reminders never land in spam.</div>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
+/**
+ * A company member's sign-in code. The code stays out of the subject and
+ * preview, so it doesn't show on a locked phone's notifications.
+ */
+export function signInCodeEmail(p: { code: string; minutes: number; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "Your Klymb.ai sign-in code";
+  const text = [
+    "Your Klymb.ai sign-in code is:", "", p.code, "",
+    `It works once and expires in ${p.minutes} minutes.`,
+    "If you didn't ask for it, you can ignore this email: nobody can sign in without the code.", "",
+    "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: "Here is the code you asked for.",
+    eyebrow: "Sign in",
+    title: "Your sign-in code",
+    intro: `Enter this code on the sign-in page. It works once and expires in ${p.minutes} minutes.`,
+    sections: [
+      `<div style="margin:6px 0 18px;padding:18px;border-radius:12px;background:${C.paper};text-align:center;font-size:34px;font-weight:900;letter-spacing:10px;color:${C.ink};font-family:ui-monospace,Menlo,Consolas,monospace">${esc(p.code)}</div>
+      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:4px 0 12px">If you didn't ask for this code, you can ignore this email: nobody can sign in without it.</div>`,
     ],
   });
   return { subject, html, text };
@@ -379,6 +464,48 @@ export function noteEmail(p: { subject: string; preview: string; eyebrow: string
     ],
   });
   return { subject: p.subject, html, text };
+}
+
+/**
+ * "You've been added" for a company member, in the company's look: their
+ * logo and name in the header, their color where it is readable, and their
+ * name in the sender ("Acme via Klymb.ai"). The sending address stays Klymb's.
+ */
+export function companyInviteEmail(p: { email: string; name: string | null; role: "hr" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const company = p.company.name;
+  const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
+  const brand: MailBrand = { name: company, logoUrl: p.company.logoUrl, color: accent };
+  const signIn = `${p.siteUrl}/org/sign-in`;
+
+  const subject = p.resend ? `Reminder: you've been added to ${company} on Klymb.ai` : `You've been added to ${company} on Klymb.ai`;
+  const intro = p.role === "hr" ? `You've been added as an HR contact for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
+  const steps = [
+    { title: "Open the sign-in page", body: `Go to ${signIn}.` },
+    { title: "Use this email", body: `Enter ${p.email}. We'll email you a 6-digit code: no password needed.` },
+  ];
+  const text = [
+    p.name ? `Hi ${p.name},` : "Hi,", "",
+    intro, "",
+    "Getting started",
+    ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
+    `Sign in: ${signIn}`, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "",
+    `Sent for ${company} by Klymb.ai`,
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail, brand,
+    preview: p.role === "hr" ? `You're the HR contact for ${company}.` : `${company} has given you a place on Klymb.ai.`,
+    eyebrow: p.resend ? "A reminder" : "You're invited",
+    title: p.name ? `Welcome, ${esc(p.name)}.` : "Welcome aboard.",
+    intro: esc(intro),
+    sections: [
+      `${sectionTitle("Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
+      </table>${button(esc(signIn), "Sign in", accent)}`,
+    ],
+  });
+  return { subject, html, text, fromName: inviteSenderName(company) };
 }
 
 /** The line under every reminder: how to stop them. One click, no sign-in. */
@@ -466,7 +593,7 @@ export function sdInviteEmail(p: { name: string; price: string; full: string; le
     sections: [
       `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Your price", p.price)}${row("Price after the offer", p.full)}</table>${button(esc(p.url), "Claim my seat")}`,
       `${sectionTitle("What you get")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${step(1, "Lessons out now", `${p.lessonsOut} of ${p.lessonsTotal} lessons today. The rest are added as they are ready, at no extra cost.`)}
+        ${step(1, "Lessons out now", p.lessonsOut >= p.lessonsTotal ? `All ${p.lessonsTotal} lessons are out.` : `${p.lessonsOut} of ${p.lessonsTotal} lessons today. The rest are added as they are ready, at no extra cost.`)}
         ${step(2, "Short lessons, one check each", "A few minutes of video, then a quick check. English or Hinglish.")}
         ${step(3, "Finish it, get 100% back", `Pass every lesson's check and the final assessment. <a href="${site}/refund-policy" style="color:${C.maroon}">How the refund works</a>`)}
       </table>`,

@@ -7,12 +7,23 @@ import { BarList } from "@/components/charts/BarList";
 import { rangeDays, RANGES } from "@/lib/admin/analytics";
 import { requireAdmin } from "@/lib/admin/auth";
 import { lessonDay } from "@/lib/course-app";
-import { getSdAnalytics, getSdLearner } from "@/lib/admin/system-design";
+import { getOfferFunnel, getSdAnalytics, getSdLearner } from "@/lib/admin/system-design";
 import { trailLines, type Tone } from "@/lib/admin/sd-event-words";
 import { Chip, DayView, Panel, PlainWords, pct } from "@/components/admin/SystemDesignViews";
+import { WhatsAppAnnounce } from "@/components/admin/WhatsAppAnnounce";
+import { announcementStatus } from "@/lib/sd-community";
+import { SD_WHATSAPP_PUSH } from "@/lib/sd-whatsapp-announce";
+
+// The WhatsApp announcement sends one email at a time from this page's action.
+export const maxDuration = 300;
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dayName = (lesson: string | null) => (lesson && /^\d+-\d+$/.test(lesson) ? lessonDay(lesson) : lesson ?? "");
+
+const FUNNEL_WORDS: Record<string, string> = {
+  view: "Opened the offer", form_start: "Started the form", claim: "Tapped Claim", blocked: "Told to leave the app", open_browser: "Tapped Open in browser", google: "Sent to Google",
+  order_failed: "Order failed", rzp_open: "Razorpay opened", rzp_closed: "Closed Razorpay", rzp_failed: "Payment failed", paid: "Paid",
+};
 
 const TONE: Record<Tone, string> = { learn: "bg-sky-500", win: "bg-emerald-500", miss: "bg-red-500", nav: "bg-line", setting: "bg-amber-500" };
 
@@ -44,12 +55,12 @@ async function LearnerTrail({ anon }: { anon: string }) {
 }
 
 export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string }> }) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const { range, learner, day } = await searchParams;
   if (learner) return <LearnerTrail anon={learner} />;
 
   const days = rangeDays(range);
-  const data = await getSdAnalytics(days);
+  const [data, funnel, announce] = await Promise.all([getSdAnalytics(days), getOfferFunnel(days), admin.owner ? announcementStatus() : null]);
   const title = (
     <PageTitle
       eyebrow="Course activity"
@@ -77,6 +88,23 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
     <>
       {title}
       <PlainWords data={data} days={days} />
+
+      {announce && (
+        <div className="mt-6">
+          <Panel title="WhatsApp group announcement" note={`Once only, to paid learners (granted seats and company learners are left out). Email: “Join the System Design learners' WhatsApp group”, with the join button. Phone: “${SD_WHATSAPP_PUSH.title}: ${SD_WHATSAPP_PUSH.body}” to ${announce.devices} devices.`}>
+            <WhatsAppAnnounce learners={announce.learners} devices={announce.devices} sentAt={announce.sent?.at ?? null} />
+          </Panel>
+        </div>
+      )}
+
+      <div className="mt-6">
+        <Panel title="Offer page funnel" note="People reaching each step of /system-design. Inside an app means Instagram and other in-app browsers. Excludes anyone who turned analytics off.">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-muted"><th className="py-1 font-semibold">Step</th><th className="py-1 text-right font-semibold">Inside an app</th><th className="py-1 text-right font-semibold">Real browser</th></tr></thead>
+            <tbody>{funnel.map((r) => <tr key={r.step} className="border-t border-line/25"><td className="py-1.5">{FUNNEL_WORDS[r.step]}</td><td className="py-1.5 text-right tabular-nums">{r.inApp}</td><td className="py-1.5 text-right tabular-nums">{r.browser}</td></tr>)}</tbody>
+          </table>
+        </Panel>
+      </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile label="Opened the course" value={t.visitors} hint={`Last ${days} days`} />
@@ -131,10 +159,12 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
       </div>
 
       <details className="group mt-10">
-        <summary className="cursor-pointer list-none text-sm font-bold underline underline-offset-4 [&::-webkit-details-marker]:hidden">More detail: language, device, screens, welcome, tour and sign-ins</summary>
+        <summary className="cursor-pointer list-none text-sm font-bold underline underline-offset-4 [&::-webkit-details-marker]:hidden">More detail: language, device, city, screens, welcome, tour and sign-ins</summary>
         <div className="mt-4 grid gap-6 lg:grid-cols-3">
           <Panel title="Language"><BarList rows={data.lang} unit="people" /></Panel>
           <Panel title="Device"><BarList rows={data.device} unit="people" /></Panel>
+          <Panel title="City (approximate)"><BarList rows={data.city} unit="people" emptyLabel="No city yet: it is recorded from today." /></Panel>
+          <Panel title="Country"><BarList rows={data.country} unit="people" emptyLabel="No country yet: it is recorded from today." /></Panel>
           <Panel title="Screens they open"><BarList rows={data.screens} unit="views" /></Panel>
           <Panel title="Welcome screen"><BarList rows={data.welcome} unit="people" /></Panel>
           <Panel title="Kamran’s tour"><BarList rows={data.tour} unit="people" /></Panel>

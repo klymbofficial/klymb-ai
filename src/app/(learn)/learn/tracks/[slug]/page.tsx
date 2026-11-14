@@ -9,18 +9,20 @@ import { EvidenceProfile } from "@/components/learner/EvidenceProfile";
 import { Achievements } from "@/components/learner/Achievements";
 import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { PaymentNotice } from "@/components/learner/PaymentNotice";
+import { TodayCard } from "@/components/learner/TodayCard";
+import { learnerButton } from "@/components/learner/learner-ui";
+import { todayAction } from "@/lib/learner/today";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { hasPaid } from "@/lib/access";
-import { dayActionLabel, dayLockFor, nextDayFor } from "@/lib/day-lock";
+import { dayLockFor } from "@/lib/day-lock";
 import { ProgressRing } from "@/components/learner/ProgressRing";
 import { CourseOfflineCache } from "@/components/pwa/CourseOfflineCache";
-import { ButtonLink } from "@/components/ui/Button";
 import { contact } from "@/data/config";
 import { getTrack, publicPath } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { topicsFor } from "@/lib/coach/topics";
 import { requireLearner } from "@/lib/learner/data";
-import { cohortDayDate } from "@/lib/learn";
+import { cohortDayDate, todayInIndia } from "@/lib/learn";
 import { getCurriculum } from "@/data/curricula";
 
 export const metadata: Metadata = { title: "My track", robots: { index: false, follow: false } };
@@ -30,11 +32,9 @@ export const metadata: Metadata = { title: "My track", robots: { index: false, f
  * learner's evidence. The dashboard at /learn lists every course and links here.
  */
 export default async function TrackHomePage({ params }: { params: Promise<{ slug: string }> }) {
-  const state = await requireLearner();
-  // No track here: the dashboard explains and offers one.
+  // Only the learner's own tracks have a page for them; not on this one (or on none): the dashboard explains.
+  const state = await requireLearner((await params).slug);
   if (state.state === "not-enrolled") redirect("/learn");
-  // Only the learner's own track has a page for them.
-  if ((await params).slug !== state.learner.track) redirect("/learn");
 
   const { learner, submissions } = state;
   const home = `/learn/tracks/${learner.track}`;
@@ -64,6 +64,7 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
       </>
     );
   }
+  const canPractise = topicsFor(learner.track).length > 0;
   const doneDays = new Set(submissions.map((s) => s.day));
   const paid = track.price > 0 ? await hasPaid(learner.email, learner.track) : true;
 
@@ -81,90 +82,77 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
     lock: ((l) => (l === "open" ? undefined : l))(dayLockFor({ day: d.day, price: track.price, paid, submittedDays: doneDays })),
   }));
 
-  // Null once every day is in: the track is complete, and nothing is "up next".
-  const next = nextDayFor(doneDays, days.length);
-  const nextDay = days.find((d) => d.day === next);
-  const coach = topicsFor(learner.track).length > 0;
+  // What to do today, from the learner's own submissions. Once every day is
+  // submitted there is no next day: the page says the track is complete.
+  const action = todayAction({ days, submissions, price: track.price, paid, today: todayInIndia() });
+  const todayDay = action.kind === "complete" ? null : days.find((d) => d.day === action.day) ?? null;
+  const todayEntry = todayDay ? curriculum.days.find((d) => d.day === todayDay.day) ?? null : null;
+  const focusDay = todayDay?.day ?? days[days.length - 1].day;
   // Streak: consecutive submitted days counting back from the latest one done.
   let streak = 0;
   for (let d = Math.max(0, ...doneDays); d >= 1 && doneDays.has(d); d--) streak++;
   const firstName = learner.name.split(" ")[0] || "there";
   const buddyMessage =
-    doneDays.size === days.length ? `All ${days.length} days done, ${firstName}. Proud of you.`
+    action.kind === "complete" ? `All ${days.length} days done, ${firstName}. Proud of you.`
     : doneDays.size === 0 ? `Hi ${firstName}, I'm Kamran. Day 1 is ready when you are.`
-    : streak >= 3 ? `${streak} days in a row! Day ${nextDay?.day} next.`
-    : `Welcome back, ${firstName}. Day ${nextDay?.day} is waiting.`;
+    : action.kind === "paced" ? `That's today's limit, ${firstName}. Day ${action.day} is ready tomorrow.`
+    : streak >= 3 ? `${streak} days in a row! Day ${action.day} next.`
+    : `Welcome back, ${firstName}. Day ${action.day} is waiting.`;
 
   return (
     <>
-      <LearnerTopBar name={learner.name} image={session?.user?.image} />
+      <LearnerTopBar name={learner.name} image={session?.user?.image} coach={canPractise ? `${home}/coach` : undefined} />
       <PaymentNotice email={learner.email} track={track} />
 
       {/* Deep red, lit from the top left and falling to near-black on the
           right; one soft glow drifts slowly behind the text. */}
       <div className="relative overflow-hidden bg-linear-to-br from-red via-red-press to-[#2a0204] text-white">
         <span aria-hidden="true" className="glow-drift pointer-events-none absolute -top-40 -left-24 size-[32rem] rounded-full bg-[radial-gradient(closest-side,rgba(255,255,255,0.14),transparent)]" />
-        <div className="relative mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-6 px-4 py-10 sm:px-8 sm:py-14">
-          <div>
-            <Appear y={10} className="mb-5">
-              <StudyBuddy message={buddyMessage} />
-            </Appear>
-            <Appear y={14}>
-              <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.kind === "challenge" ? track.name : `${track.name} track`}</h1>
-            </Appear>
-            <Appear y={14} delay={0.08}>
-              <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/80">
-                Started {formatDate(learner.cohort_start)}
-              </p>
+        <div className="relative mx-auto max-w-[96rem] px-4 py-8 sm:px-8 sm:py-12">
+          <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-6">
+            <div>
+              <Appear y={10} className="mb-5">
+                <StudyBuddy message={buddyMessage} />
+              </Appear>
+              <Appear y={14}>
+                <h1 className="display text-[clamp(1.75rem,4vw,2.75rem)] uppercase">{track.kind === "challenge" ? track.name : `${track.name} track`}</h1>
+              </Appear>
+              <Appear y={14} delay={0.08}>
+                <p className="display mt-2 text-[clamp(1.1rem,2.2vw,1.65rem)] uppercase text-white/80">
+                  Started {formatDate(learner.cohort_start)}
+                </p>
+              </Appear>
+            </div>
+            <Appear y={14} delay={0.12}>
+              <ProgressRing done={doneDays.size} total={days.length} streak={streak} />
             </Appear>
           </div>
 
-          <Appear y={14} delay={0.12}>
-            <ProgressRing done={doneDays.size} total={days.length} streak={streak} />
-          </Appear>
-
-          <Appear y={14} delay={0.16}>
-            <div className="flex flex-wrap items-center gap-5 rounded-card bg-black/25 px-6 py-4 ring-1 ring-white/10 backdrop-blur-sm transition-[background-color,transform] duration-300 hover:-translate-y-0.5 hover:bg-black/30">
-              {nextDay ? (
-                <>
-                  <div className="min-w-0">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">
-                      Up next · Day {nextDay.day}
-                    </p>
-                    <p className="mt-1 truncate text-lg font-extrabold">{nextDay.title}</p>
-                  </div>
-                  <ButtonLink href={`${home}/day/${nextDay.day}`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
-                    {dayActionLabel(nextDay.day, false)}
-                  </ButtonLink>
-                </>
-              ) : (
-                <>
-                  <div className="min-w-0">
-                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/60">Track complete</p>
-                    <p className="mt-1 text-lg font-extrabold">All {days.length} days submitted</p>
-                  </div>
-                  {/* What is left is practice and looking back: the coach if this track has one, else the days themselves. */}
-                  <ButtonLink href={coach ? `${home}/coach` : "#your-30-days"} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
-                    {coach ? "Practise with the voice coach" : "Review your days"}
-                  </ButtonLink>
-                </>
-              )}
-            </div>
+          <Appear y={14} delay={0.16} className="mt-8">
+            <TodayCard
+              action={action}
+              day={todayEntry && { day: todayEntry.day, title: todayEntry.title, mission: todayEntry.mission, estimateMinutes: todayEntry.estimateMinutes, kind: todayEntry.kind }}
+              total={days.length}
+              base={home}
+              canPractise={canPractise}
+            />
           </Appear>
         </div>
       </div>
 
       <CourseOfflineCache days={days.length} home={home} />
       <div className="mx-auto max-w-[96rem] px-4 py-10 sm:px-8">
-        <Appear>
-          <CohortBoard base={home} days={days} initialDay={nextDay?.day ?? days[days.length - 1].day} />
-        </Appear>
+        <div id="your-days" className="scroll-mt-6">
+          <Appear>
+            <CohortBoard base={home} days={days} initialDay={focusDay} todayDay={todayDay?.day ?? null} />
+          </Appear>
+        </div>
 
         <Achievements days={days.filter((d) => d.submitted).length} total={days.length} name={learner.name} course={track.name} courseUrl={publicPath(track)} />
 
         {/* The spoken practice, where a learner will actually look for it:
             the course page they open every day, not a menu. */}
-        {coach && (
+        {canPractise && (
           <Appear className="mt-12">
             <section className="flex flex-wrap items-center justify-between gap-5 rounded-card bg-night px-6 py-6 text-paper shadow-card">
               <div className="flex items-start gap-4">
@@ -174,14 +162,14 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
                 <div>
                   <h2 className="display text-xl">Practise out loud, five minutes</h2>
                   <p className="mt-1 max-w-lg text-sm text-white/60">
-                    The voice coach asks one question at a time on a single topic, and files what it heard for your reviewer.
+                    The voice coach asks one question at a time on a single topic, and saves a short summary of what it heard.
                     Interviews are spoken: reading an answer is not practising it.
                   </p>
                 </div>
               </div>
-              <ButtonLink href={`${home}/coach`} variant="inverse" arrow className="rounded-md px-5 py-2.5 text-xs">
+              <Link href={`${home}/coach`} className={learnerButton("onDark")}>
                 Start a session
-              </ButtonLink>
+              </Link>
             </section>
           </Appear>
         )}

@@ -15,6 +15,7 @@ identity everything authorises against, and every query filters on it.
 registrant with no app.klymb.ai account yet, which is fine; a registration here
 never creates a platform account.
 
+
 ## Why a separate schema
 
 - **Prisma stays out of our way.** app.klymb.ai's `schema.prisma` has no

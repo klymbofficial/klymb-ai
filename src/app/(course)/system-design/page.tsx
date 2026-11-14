@@ -8,7 +8,9 @@ import { OfferView } from "@/components/system-design-offer/OfferView";
 import { hasCourseAccess } from "@/lib/access";
 import { db } from "@/lib/db/client";
 import { inviterFor } from "@/lib/referrals";
-import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferState, type SdRole } from "@/lib/sd-offer";
+import { MODULES } from "@/data/system-design/course-app";
+import { site } from "@/data/config";
+import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferState, sdPriceNow, type SdRole } from "@/lib/sd-offer";
 
 const description = "System design, explained with real examples. Built for interviews.";
 
@@ -21,7 +23,8 @@ const invitedByOf = cache(async (ref: string | null) => (ref ? inviterFor(ref) :
 export async function generateMetadata({ searchParams }: { searchParams: Promise<Params> }): Promise<Metadata> {
   const invitedBy = await invitedByOf(refOf((await searchParams).ref));
   const title = invitedBy ? `${invitedBy} invited you to System Design` : "System Design";
-  return { title, description, openGraph: { title, description }, twitter: { title, description } };
+  // One URL for search, whatever ?ref or ?utm_campaign the link carried.
+  return { title, description, alternates: { canonical: "/system-design" }, openGraph: { title, description }, twitter: { title, description } };
 }
 
 export const viewport: Viewport = { themeColor: "#1a1716" };
@@ -65,6 +68,24 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
         inApp={inAppBrowser((await headers()).get("user-agent") ?? "")}
       />
       <CookieBanner />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd()).replace(/</g, "\\u003c") }} />
     </>
   );
+}
+
+/** The course as structured data, for search engines and AI assistants. The price is today's, as on the page. */
+function courseJsonLd() {
+  let day = 0;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: "System Design Essentials",
+    description: "21 days, 15 minutes a day, in Hinglish: from what system design is to designing a chat app, a ticket booking system and an AI assistant, with daily practice and a final assessment.",
+    url: `${site.url}/system-design`,
+    inLanguage: ["hi", "en"],
+    provider: { "@type": "Organization", name: "Klymb.ai", url: site.url },
+    offers: { "@type": "Offer", category: "Paid", price: sdPriceNow(), priceCurrency: "INR", url: `${site.url}/system-design` },
+    hasCourseInstance: { "@type": "CourseInstance", courseMode: "Online", courseWorkload: "PT15M" },
+    syllabusSections: MODULES.flatMap((m) => m.lessons.map(([name]) => ({ "@type": "Syllabus", name: `Day ${++day}: ${name}` }))),
+  };
 }

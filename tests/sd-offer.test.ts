@@ -1,13 +1,13 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import {
-  SD_OFFER, campaignOf, claimProblems, countdownParts, inAppBrowser, linkedInProblem, mobileOf, offPercent, offerPath, sdOfferEnd, sdOfferOpen, sdOfferState, sdPriceFor, sdPriceNow, signInFailedPath,
+  SD_OFFER, campaignOf, claimProblems, countdownParts, externalBrowserUrl, inAppBrowser, linkedInProblem, mobileOf, offPercent, offerPath, sdOfferEnd, sdOfferOpen, sdOfferState, sdPriceFor, sdPriceNow, signInFailedPath,
 } from "../src/lib/sd-offer";
 
-const DURING = new Date("2026-11-08T23:59:59+05:30");
-const AFTER = new Date("2026-11-09T00:00:00+05:30");
+const DURING = new Date("2026-11-14T23:59:59+05:30");
+const AFTER = new Date("2026-11-15T00:00:00+05:30");
 
-test("₹499 runs to the end of 8 November IST, and the end itself is the full price", () => {
+test("₹499 runs to the end of 14 November IST, and the end itself is the full price", () => {
   assert.equal(sdOfferOpen(DURING), true);
   assert.equal(sdPriceNow(DURING), 499);
   assert.equal(sdOfferOpen(AFTER), false);
@@ -110,4 +110,13 @@ test("a failed Google sign-in goes back where it started, and stays on this site
   assert.equal(signInFailedPath("/admin"), null, "admins stay on the admin sign-in");
   assert.equal(signInFailedPath(undefined), null);
   assert.equal(signInFailedPath("https://evil.example/system-design"), "/system-design?signin=failed", "only the path is ever used");
+});
+
+test("the way out of an app's browser: Chrome on Android, Safari on iPhone, and the campaign and referral kept", () => {
+  const page = "https://www.klymb.ai/system-design?utm_campaign=reel&ref=ABCD2345";
+  assert.equal(externalBrowserUrl(page, "Mozilla/5.0 (Linux; Android 14; wv) Instagram 300.0"), "intent://www.klymb.ai/system-design?utm_campaign=reel&ref=ABCD2345#Intent;scheme=https;package=com.android.chrome;end");
+  assert.equal(externalBrowserUrl(page, "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Instagram 300.0"), "x-safari-https://www.klymb.ai/system-design?utm_campaign=reel&ref=ABCD2345");
+  assert.equal(externalBrowserUrl(page, "Mozilla/5.0 (Macintosh)"), null, "nothing to open on a desktop");
+  assert.equal(externalBrowserUrl("javascript:alert(1)", "Android"), null);
+  assert.equal(externalBrowserUrl("not a link", "Android"), null);
 });

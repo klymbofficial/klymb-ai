@@ -1,5 +1,5 @@
 /**
- * The System Design offer: ₹499 until the end of 8 November 2026 (IST), then
+ * The System Design offer: ₹499 until the end of 14 November 2026 (IST), then
  * ₹1,999. Pure, so it is unit-tested and usable in the browser. The countdown
  * on the page and the amount on the order both read this, so they can't
  * disagree: when the clock reaches zero the price really changes.
@@ -10,10 +10,10 @@ export const SD_OFFER = {
   price: 499,
   /** What the course costs once the offer ends, so the struck-out price is a real one. */
   full: 1999,
-  /** Exclusive end: midnight IST at the start of 9 November. */
-  endsAt: "2026-11-09T00:00:00+05:30",
+  /** Exclusive end: midnight IST at the start of 15 November. */
+  endsAt: "2026-11-15T00:00:00+05:30",
   /** The last day of the offer, in words. */
-  endsLabel: "8 Nov",
+  endsLabel: "14 Nov",
 } as const;
 
 /** The course at a glance, on the offer page and the home page. */
@@ -147,6 +147,13 @@ export function referralState({ count, deadline, refunded }: { count: number; de
   return now < deadline ? "open" : "closed";
 }
 
+/**
+ * Whether they should be offered their link. Earning the refund, or being paid
+ * it, doesn't stop them referring: the refund comes once, the link keeps working.
+ * Only a window that closed short of three friends ends it.
+ */
+export const canRefer = (state: ReferralState) => state !== "closed";
+
 /** A buyer's referral offer, as the course and the receipt show it. */
 export interface ReferralView {
   code: string;
@@ -170,6 +177,15 @@ export type ReferralMiss = "signin" | "buy" | "granted" | "retry";
 export type ReferralStanding = { view: ReferralView; why: null } | { view: null; why: ReferralMiss };
 
 export const referralLink = (site: string, code: string) => `${site}/system-design?ref=${code}`;
+
+/**
+ * A lesson post tagging Klymb. The API turns this into a real mention of the
+ * company page. No ".ai": LinkedIn would read a domain, add a link card, and
+ * the card stops the image being pasted in.
+ */
+export function taggedPost(post: string, lang: "en" | "hi") {
+  return `${post}\n\n${lang === "hi" ? "@Klymb ke saath seekh raha hoon" : "Learning with @Klymb"}`;
+}
 
 /** A lesson post with their link on the end, in the lesson's language. */
 export function referralPost(post: string, link: string, lang: "en" | "hi") {
@@ -214,6 +230,13 @@ export function signInFailedPath(callback: string | undefined) {
     url.searchParams.set("signin", "failed");
     return `${url.pathname}${url.search}`;
   }
+  // Registration starts with Google, so backing out of it comes back here with
+  // the chosen track kept and nothing else: only a track slug is ever carried,
+  // never a name, an email or anything typed.
+  if (url.pathname === "/register") {
+    const track = url.searchParams.get("track") ?? "";
+    return /^[a-z0-9-]{1,40}$/.test(track) ? `/register?track=${track}&signin=failed` : "/register?signin=failed";
+  }
   return url.pathname.startsWith("/learn") ? "/learn/login?error=1" : null;
 }
 
@@ -224,4 +247,20 @@ export function signInFailedPath(callback: string | undefined) {
  */
 export function inAppBrowser(userAgent: string) {
   return /\b(Instagram|FBAN|FBAV|FB_IAB|LinkedInApp|Snapchat|musical_ly|BytedanceWebview|MicroMessenger)\b|\bLine\/|; wv\)/i.test(userAgent);
+}
+
+/**
+ * The link that takes a page out of an app's webview into a real browser:
+ * Chrome on Android, Safari on an iPhone (iOS 17 and later). Null on anything
+ * else, where the visitor uses the app's own menu instead.
+ */
+export function externalBrowserUrl(href: string, userAgent: string) {
+  let url: URL;
+  try { url = new URL(href); } catch { return null; }
+  const scheme = url.protocol.replace(":", "");
+  if (scheme !== "https" && scheme !== "http") return null;
+  const rest = `${url.host}${url.pathname}${url.search}`;
+  if (/Android/i.test(userAgent)) return `intent://${rest}#Intent;scheme=${scheme};package=com.android.chrome;end`;
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return `x-safari-${scheme}://${rest}`;
+  return null;
 }

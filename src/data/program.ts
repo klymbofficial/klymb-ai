@@ -8,9 +8,11 @@ export const brand = {
 
 // One link per job: the catalogue, and one place that explains the 30 days.
 const allNavLinks = [
-  { label: "Career Tracks", href: "/tracks" },
+  { label: "Courses", href: "/courses" },
   { label: "Challenges", href: "/challenges" },
-  { label: "How It Works", href: "/program" },
+  { label: "Organizations", href: "/organizations" },
+  { label: "Program", href: "/program" },
+  { label: "How It Works", href: "/#how-it-works" },
   { label: "Pricing", href: "/#pricing" },
 ];
 export const navLinks = HIDE_MONEY ? allNavLinks.filter((l) => l.href !== "/#pricing") : allNavLinks;
@@ -23,7 +25,7 @@ export const hero = {
   /** The working professional's first question, answered in the hero. */
   timeLine: "1–2 hrs a day, in your own time. Start any day.",
   primaryCta: { label: "Choose your track", href: "/tracks" },
-  secondaryCta: { label: "See how the 30 days work", href: "/#how-it-works" },
+  secondaryCta: { label: "For organizations", href: "/organizations" },
 };
 
 /** The story beat under the hero. */
@@ -51,7 +53,7 @@ export const sectionCopy = {
 export const inclusions = [
   { figure: "1", label: "Selected career track", detail: "Everything you do is specific to the role you want." },
   { figure: "30", label: "Practical daily challenges", detail: "One real workplace problem a day." },
-  { figure: "4", label: "Weekly assessments", detail: "After Days 7, 14, 21 and 28, with feedback." },
+  { figure: "4", label: "Weekly assessments", detail: "After Days 7, 14, 21 and 28." },
   { figure: "1+", label: "Role-specific project", detail: "Evidence you can show an interviewer." },
   { figure: "✓", label: "Interview preparation", detail: "Role-specific questions and answer frameworks." },
   { figure: "2", label: "Interview-prep days", detail: "Days 29 and 30: the most-asked questions." },
@@ -109,7 +111,7 @@ export const evidence: Evidence[] = [
 export const howItWorks = [
   { title: "Choose a track", body: "Pick one of five roles. Everything after this is specific to it." },
   { title: "Solve a daily workplace problem", body: "One realistic problem a day, the kind the role actually faces." },
-  { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28: scored, with feedback." },
+  { title: "Complete the weekly assessment", body: "After Days 7, 14, 21 and 28, on that week's work." },
   { title: "Build role-specific evidence", body: "Your work becomes a portfolio piece you can walk through." },
   { title: "Practice for interviews", body: "Role-specific questions, frameworks and practice answers." },
   { title: "Prepare for interviews", body: "Days 29 and 30: answer the most-asked questions for your role." },
@@ -174,7 +176,7 @@ export const faqs: Faq[] = [
   {
     question: "Can I take more than one track?",
     answer:
-      "Yes. Start another track whenever you like: each one has its own 30 days, checkpoints and reviewer, and runs at its own pace beside the first. Nothing you have done on one track is lost by starting another, and your dashboard shows them all.",
+      "Yes. Start another track whenever you like: each one has its own 30 days and checkpoints, and runs at its own pace beside the first. Nothing you have done on one track is lost by starting another, and your dashboard shows them all.",
   },
   {
     question: "What happens every day?",
@@ -184,7 +186,7 @@ export const faqs: Faq[] = [
   {
     question: "How do weekly assessments work?",
     answer:
-      "After Days 7, 14, 21 and 28 you complete an assessment based on that week's work. It is scored against a rubric and you receive feedback on what to improve.",
+      "After Days 7, 14, 21 and 28 you complete an assessment based on that week's work. Your answers are saved with your submission, and feedback appears on the day if a reviewer adds it.",
   },
   {
     question: "How do you prepare me for interviews?",
@@ -198,7 +200,7 @@ export const faqs: Faq[] = [
   {
     question: "What is included in the price?",
     answer:
-      "One career track with 30 daily problems, 4 weekly assessments with feedback, role-specific projects, progress tracking, interview preparation.",
+      "One career track with 30 daily problems, 4 weekly assessments, role-specific projects, progress tracking, interview preparation.",
   },
   {
     question: "Will you try to sell me another course?",
@@ -218,15 +220,22 @@ export const urgency = {
 };
 
 export const footerLinks = {
-  program: [
+  klymb: [
+    { label: "Why Klymb", href: "/why-klymb" },
+    { label: "About", href: "/about" },
+    { label: "Program", href: "/program" },
     { label: "Career Tracks", href: "/tracks" },
-    { label: "60-day challenges", href: "/challenges" },
-    { label: "How It Works", href: "/program" },
     { label: "Register", href: "/register" },
     { label: "Log in", href: "/learn/login" },
-  ],
-  company: [
     { label: "Contact", href: "/contact" },
+  ],
+  organizations: [
+    { label: "Organizations", href: "/organizations" },
+    { label: "Training Solutions", href: "/training-solutions" },
+    // For people a company has invited: HR, team heads and employees. Not SSO: an emailed code.
+    { label: "Company sign-in", href: "/org/sign-in" },
+  ],
+  legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Cookie Policy", href: "/cookies" },
     { label: "Terms", href: "/terms" },
@@ -246,7 +255,7 @@ export const whyRefund = {
   points: [
     { title: "You pay to commit", body: "A fee makes you show up on Day 12 when motivation is low. Free programs are easy to abandon." },
     { title: "You finish, you get it back", body: "Submit all 30 days, take the four assessments and complete both interview-prep days. We refund 100% of the fee." },
-    { title: "We only win if you finish", body: "Your completion is what we show the next cohort. That is why every assessment gets individual feedback." },
+    { title: "We only win if you finish", body: "Your completion is what we show the next cohort." },
   ],
   promises: [
     "No upsell. There is no advanced course to pitch you at the end.",

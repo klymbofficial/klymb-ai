@@ -9,7 +9,7 @@ import { FollowUps } from "@/components/lesson/FollowUps";
 import { LessonQuiz, score } from "@/components/lesson/LessonQuiz";
 import type { Day, DayCopy, Lang } from "@/data/system-design/types";
 import { useLinkedInPost } from "@/components/share/LinkedInPost";
-import { fetchImage, pasteKey, useShareImage, type LinkedInShare } from "@/lib/linkedin-share";
+import { fetchImage, useShareImage, type LinkedInShare } from "@/lib/linkedin-share";
 
 interface Progress { pre?: number[]; watched?: boolean; built?: number; post?: number[]; follow?: boolean[] }
 type StepKey = "call" | "watch" | "reveal" | "build" | "prove" | "follow" | "done";
@@ -37,7 +37,7 @@ const UI = {
     interviewMode: "Interview mode · 2 min answer",
     share: "Share on LinkedIn",
     download: "Download infographic", post: "Post on LinkedIn",
-    posted: { posted: "Posted on LinkedIn.", app: "Sent to LinkedIn. Tap Post there.", pasted: (key: string) => `Text is in. Press ${key} in the post to add the image, then tap Post.`, text: "Text is in. Attach the downloaded image, then tap Post." },
+    posted: { posted: "Posted on LinkedIn.", app: "Sent to LinkedIn. Tap Post there.", pasted: () => "Text is in. The image is in your Downloads: click the photo icon in LinkedIn, choose it, then tap Post.", text: "Text is in. Attach the downloaded image, then tap Post." },
     next: (n: number) => `Next · Day ${n}`, open: "Open →", redo: (n: number) => `Do Day ${n} again`, sources: "Sources",
     newHere: "New to system design? Start with Day 0 →",
   },
@@ -63,7 +63,7 @@ const UI = {
     interviewMode: "Interview mode · 2 min answer",
     share: "LinkedIn par share karo",
     download: "Infographic download karo", post: "LinkedIn pe post karo",
-    posted: { posted: "LinkedIn pe post ho gaya.", app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: (key: string) => `Text aa gaya. Post mein ${key} dabao, image aa jayegi. Phir Post dabao.`, text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
+    posted: { posted: "LinkedIn pe post ho gaya.", app: "LinkedIn pe bhej diya. Wahan Post dabao.", pasted: () => "Text aa gaya. Image Downloads mein hai: LinkedIn mein photo icon dabao, use chuno, phir Post dabao.", text: "Text aa gaya. Downloaded image attach karo, phir Post dabao." },
     next: (n: number) => `Agla · Day ${n}`, open: "Kholo →", redo: (n: number) => `Day ${n} phir se karo`, sources: "Sources",
     newHere: "System design mein naye ho? Day 0 se shuru karo →",
   },
@@ -375,7 +375,7 @@ function Unlocked({
   const shareImage = useShareImage(image, file, () => fetchImage(image));
   const linkedIn = useLinkedInPost({
     text: c.linkedin, image: shareImage, alt: c.cheatsheet.title, lang,
-    onShared: (how: LinkedInShare) => setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted(pasteKey()) : ui.posted[how]),
+    onShared: (how: LinkedInShare) => setPosted(how === "cancelled" ? "" : how === "pasted" ? ui.posted.pasted() : ui.posted[how]),
   });
 
   return (

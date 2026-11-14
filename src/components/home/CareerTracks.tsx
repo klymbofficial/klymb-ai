@@ -1,14 +1,18 @@
 import { sectionCopy } from "@/data/program";
+import { trackCount } from "@/data/public-story";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { TrackGrid } from "@/components/track/TrackGrid";
 
+const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+
 /**
- * All five tracks at once, as cards: the same grid as /tracks. Each card
+ * All the tracks at once, as cards: the same grid as /tracks. Each card
  * leads to the track's own page, which carries the full 30 days.
  */
 export function CareerTracks() {
-  const { eyebrow, title, intro } = sectionCopy.tracks;
+  const { eyebrow, intro } = sectionCopy.tracks;
+  const title = `${COUNT_WORDS[trackCount] ?? trackCount} roles. Pick the one you want next.`;
 
   return (
     <section id="tracks" aria-labelledby="tracks-title" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-16 sm:px-6 sm:py-20">

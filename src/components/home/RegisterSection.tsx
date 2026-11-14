@@ -12,6 +12,7 @@ import type { TrackSlug } from "@/types/program";
 import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { RegistrationForm, type GoogleUser } from "./RegistrationForm";
+import { RegisterSignIn } from "./RegisterSignIn";
 import { ExpertsStrip } from "./ExpertsStrip";
 import { OfferBadge, OfferPrice } from "@/components/ui/OfferPrice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
@@ -32,8 +33,16 @@ const INCLUDED_CHALLENGE = [
   { icon: MessagesSquare, title: "Badges to share", body: "First day, seven days, halfway and the finish." },
 ];
 
-export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: TrackSlug; googleUser?: GoogleUser }) {
+/**
+ * Signed out, the right-hand side is a single step: sign in with Google. The
+ * details form only exists once there is a verified Google account to register
+ * as, so there is nothing to type, send or save before that.
+ */
+export function RegisterSection({
+  defaultTrack, googleUser, unknownTrack, signInFailed, inApp,
+}: { defaultTrack?: TrackSlug; googleUser?: GoogleUser; unknownTrack?: boolean; signInFailed?: boolean; inApp?: boolean }) {
   const [slug, setSlug] = useState<TrackSlug | "">(defaultTrack ?? "");
+  const [done, setDone] = useState(false);
   const track = slug ? getTrack(slug) : undefined;
   const price = track?.price ?? priceFrom;
   const free = price === 0;
@@ -41,7 +50,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
   const total = isChallenge ? 60 : 30;
 
   return (
-    <section id="register" aria-labelledby="register-title" className="grid lg:h-dvh lg:grid-cols-[2fr_3fr]">
+    <section id="register" aria-labelledby="register-title" className="grid grid-cols-[minmax(0,1fr)] lg:h-dvh lg:grid-cols-[2fr_3fr]">
       {/* ── The value: what they get, what it costs, and that it comes back ── */}
       {/* Children never shrink: squeezed to the screen height, the cards clipped their own text. */}
       <div className="relative isolate flex flex-col gap-5 overflow-hidden bg-red-muted p-6 text-white sm:p-10 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:px-10 lg:py-8 [&>*]:shrink-0">
@@ -127,7 +136,7 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
         </Appear>
 
         {track && (
-          <Appear key={track.slug} delay={0.05} className="relative hidden sm:block">
+          <Appear key={`outcomes-${track.slug}`} delay={0.05} className="relative hidden sm:block">
             <p className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">
               <BriefcaseBusiness aria-hidden="true" className="size-3.5" /> You leave able to
             </p>
@@ -156,14 +165,21 @@ export function RegisterSection({ defaultTrack, googleUser }: { defaultTrack?: T
       <div className="flex flex-col px-5 py-8 sm:px-10 lg:h-full lg:overflow-y-auto lg:px-16 lg:py-8">
         <Wordmark className="self-start text-lg" />
         <div className="my-auto w-full max-w-2xl pt-8 lg:pt-6">
-          <div className="mb-6">
-            <StudyBuddy
-              tone="light"
-              size={88}
-              message={googleUser?.name ? `Hi ${googleUser.name.split(" ")[0]}, I'm Kamran. One minute here, then I'll see you on Day 1.` : `Hi, I'm Kamran, your study buddy for the next ${total} days. This takes about a minute.`}
-            />
-          </div>
-          <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} bare titled onTrackChange={setSlug} />
+          {/* Gone once the registration is saved: "this takes a minute" has nothing left to say. */}
+          {!done && (
+            <div className="mb-6">
+              <StudyBuddy
+                tone="light"
+                size={88}
+                message={googleUser ? `Hi ${googleUser.name.split(" ")[0] || "there"}, I'm Kamran. One minute here, then I'll see you on Day 1.` : `Hi, I'm Kamran, your study buddy for the next ${total} days. First, sign in with Google. Then it takes about a minute.`}
+              />
+            </div>
+          )}
+          {googleUser ? (
+            <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} unknownTrack={unknownTrack} bare titled onTrackChange={setSlug} onDoneChange={setDone} />
+          ) : (
+            <RegisterSignIn track={defaultTrack} unknownTrack={unknownTrack} failed={signInFailed} inApp={!!inApp} />
+          )}
         </div>
       </div>
     </section>

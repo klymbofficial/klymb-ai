@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { QUESTIONS, WELCOME } from "@/data/system-design/course-app";
 import { answerQuickCheck, closeQuickCheck, commit, fmt, lessonDay, localDate, openLesson, quickCheckAt, quickCheckOf, streak, type CourseState } from "@/lib/course-app";
+import { GroupStep } from "./Community";
 import { Icon } from "./icons";
 import { track } from "./track";
 import { GoogleButton, firstName, useCourseUser } from "./user";
@@ -323,6 +324,7 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
                 <span className="text-xl font-extrabold italic">{s.commitment!.name}</span>
                 <span className="text-xs text-sd-n-700">Signed {signed}</span>
               </div>
+              <GroupStep act={act} />
             </div>
             <button type="button" onClick={start} className="sd-a-in sd-btn sd-btn-primary sd-btn-block h-[52px] justify-between text-base" style={{ animationDelay: "500ms" }}>Start {lessonDay(s.cur)}<Icon name="arrowR" /></button>
           </>

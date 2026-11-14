@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         </p>
       </Section>
 
-      <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and, only if you allow cookies, aggregate analytics.">
+      <Section n="2." title="What we collect" plain="What you type into the registration form, what Google tells us when you sign in, the coursework you submit, and aggregate analytics, which is on by default and you can turn off.">
         <Facts rows={dataPoints.collected} />
         {!HIDE_MONEY && (
           <p>
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
         </ul>
       </Section>
 
-      <Section n="4." title="Our lawful basis" plain="Some things we do because you asked us to provide the programme; optional things, like analytics cookies and marketing contact, we do only with your consent.">
+      <Section n="4." title="Our lawful basis" plain="Some things we do because you asked us to provide the programme; marketing contact needs your consent, and analytics runs by default until you turn it off.">
         <p>
           <strong>Necessary to provide the service you asked for:</strong> creating your account, reserving your place,
           storing and reviewing your submissions, verifying evidence, issuing results, and keeping the service secure.
@@ -74,7 +74,14 @@ export default function PrivacyPage() {
         <p>
           <strong>Analytics:</strong> aggregate measurement runs by default and is not tied to your identity: we never
           send your name, email, phone or submissions to Google. You can switch it off at any time at{" "}
-          <Link href="/cookies">/cookies</Link>.
+          <Link href="/cookies">/cookies</Link>. For the System Design course we also note the approximate city and
+          country our hosting provider reads from your connection, to see where learners are; we do not store your IP
+          address for this.
+        </p>
+        <p>
+          <strong>Advertising:</strong> Meta Pixel runs only if you tap OK on the cookie notice. It tells Meta which of our
+          pages this browser opened and whether a purchase happened, so our ads reach people who visited. It never sends
+          your name, email, phone or submissions, and you can turn it off at <Link href="/cookies">/cookies</Link>.
         </p>
       </Section>
 
@@ -84,18 +91,18 @@ export default function PrivacyPage() {
           Reviewers and administrators of Klymb.ai see your submissions and evidence links in order to score your work.
           Nobody else can see another learner&apos;s submissions: access is enforced in the database itself, not only in the interface.
         </p>
-        <p><strong>We do not sell personal data, and we do not use advertising or cross-site tracking networks.</strong></p>
+        <p><strong>We do not sell personal data. The only advertising tool we use is Meta Pixel, and only if you allow it.</strong></p>
       </Section>
 
-      <Section n="6." title="International transfers" plain="Some of our providers store data outside India: mainly the United States and Japan.">
+      <Section n="6." title="International transfers" plain="Our database is in the United States, and some providers store data elsewhere outside India.">
         <p>
-          Our database is hosted in Tokyo, Japan, and our hosting and sign-in providers operate globally, including in the
-          United States. By using the service you understand that your data may be processed in those countries. We use
+          Our database is hosted in the United States. Our hosting and sign-in providers operate globally, and one small
+          service that signs a second device out runs in Tokyo, Japan, holding no personal records. By using the service you understand that your data may be processed in those countries. We use
           established providers and rely on their contractual protections.
         </p>
       </Section>
 
-      <Section n="7." title="How long we keep it" plain="Registrations and coursework stay while your cohort runs and for a period afterwards, so your record and certificate remain verifiable. Ask us to delete it and we will.">
+      <Section n="7." title="How long we keep it" plain="Registrations and coursework stay while your cohort runs and for a period afterwards, so your record and results stay available to you. Ask us to delete it and we will.">
         <ul>
           <li><strong>Registrations that do not enroll:</strong> kept for 24 months, so we can tell you when a track opens, then deleted.</li>
           <li><strong>Learner records and submissions:</strong> kept for 24 months after the cohort ends, so results and feedback remain available to you.</li>

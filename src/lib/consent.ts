@@ -1,6 +1,6 @@
 /** Cookie-consent state, shared by the banner, the analytics loader and the policy page. */
 export const CONSENT_COOKIE = "klymb_consent";
-export const CONSENT_VERSION = "2026-09-17";
+export const CONSENT_VERSION = "2026-11-13";
 export const CONSENT_MAX_AGE_DAYS = 180;
 
 export type ConsentChoice = "all" | "necessary";

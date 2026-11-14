@@ -24,6 +24,19 @@ export const emptyRegistration: RegistrationData = {
   name: "", email: "", phone: "", track: "", currentRole: "", experience: "", linkedin: "", github: "", repoConfirm: false, consent: false,
 };
 
+/**
+ * The fields in the order the form shows them, so "go to the first mistake"
+ * lands on the first one the person can see, not the first one validated.
+ */
+export const REGISTRATION_FIELD_ORDER: (keyof RegistrationData)[] = [
+  "name", "email", "phone", "track", "currentRole", "experience", "linkedin", "github", "repoConfirm", "consent",
+];
+
+/** Errors in the order the form shows them. */
+export function orderedErrors(errors: RegistrationErrors): [keyof RegistrationData, string][] {
+  return REGISTRATION_FIELD_ORDER.flatMap((k) => (errors[k] ? [[k, errors[k]] as [keyof RegistrationData, string]] : []));
+}
+
 /** Server-side ceilings. The form cannot be trusted to enforce any of them. */
 export const LIMITS = {
   name: 120,
@@ -49,7 +62,7 @@ export function validateRegistration(d: RegistrationData): RegistrationErrors {
   if (name.length < 2) e.name = "Enter your full name.";
   else if (name.length > LIMITS.name) e.name = `Keep your name under ${LIMITS.name} characters.`;
 
-  if (!normaliseEmail(d.email)) e.email = "Enter a valid email address.";
+  if (!normaliseEmail(d.email)) e.email = "Enter a valid email address, like name@example.com.";
 
   const phone = d.phone.replace(/[\s()-]/g, "");
   if (!/^\+?\d{10,15}$/.test(phone)) e.phone = "Enter a valid phone number (10–15 digits).";

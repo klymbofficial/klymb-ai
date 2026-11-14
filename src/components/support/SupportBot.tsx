@@ -10,6 +10,7 @@ import { SITE_CLOSED } from "@/lib/site-status";
 import { searchSupport } from "@/lib/support-search";
 import { dayActionLabel } from "@/lib/day-lock";
 import { SUPPORT_EMAIL, supportTopics, type SupportAnswer, type SupportTopic } from "@/data/support-faq";
+import { HELP_EVENT, type HelpEventDetail } from "./help-event";
 
 /** What /api/support/me returns for an enrolled learner. */
 interface Me {
@@ -62,6 +63,17 @@ const clampPos = (p: Pos): Pos => ({
 
 const boxAt = (p: Pos): Box => ({ left: p.x, top: p.y, right: p.x + LAUNCHER, bottom: p.y + LAUNCHER });
 
+const boxOf = (el: Element): Box => {
+  const r = el.getBoundingClientRect();
+  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+};
+
+/** Kamran's opening lines and the topic list. */
+const greetingFor = (learner: boolean): Msg[] => [
+  { id: nextId(), from: "kamran", kind: "text", lines: [learner ? "Hi! Stuck on something? Type your question, or pick a topic." : "Hi, I'm Kamran. Ask me anything about Klymb and how the 30 days work."] },
+  { id: nextId(), from: "kamran", kind: "topics" },
+];
+
 /** The panel opens above or below the launcher, whichever side has more room, and is pulled in from the screen's edges. */
 function placePanel(l: Box): Place {
   const vw = window.innerWidth;
@@ -101,13 +113,23 @@ export function SupportBot() {
   const drag = useRef<{ id: number; dx: number; dy: number; sx: number; sy: number; moved: boolean } | null>(null);
   // A drag ends in a click on the launcher; this lets the click know to do nothing.
   const dragged = useRef(false);
+  // The page's own button that opened the panel (the homepage's "Chat with us"), if not the launcher.
+  const opener = useRef<HTMLElement | null>(null);
   const learner = pathname.startsWith("/learn");
   const inCourse = pathname.startsWith("/learn/system-design");
+  // The homepage has its own "Chat with us" button, which opens this panel.
+  const launcherHidden = pathname === "/";
+
+  // Pages a company reads: the company topic leads there, and waits at the end elsewhere.
+  const forCompanies = /^\/(organizations|training-solutions|org)(\/|$)/.test(pathname);
 
   const topics = useMemo(() => {
-    const rank = (t: SupportTopic) => (inCourse && t.id === "system-design" ? -1 : t.audience === (learner ? "learner" : "public") ? 0 : t.audience === "both" ? 1 : 2);
+    const rank = (t: SupportTopic) =>
+      t.id === "companies" ? (forCompanies ? -1 : 3)
+      : inCourse && t.id === "system-design" ? -1
+      : t.audience === (learner ? "learner" : "public") ? 0 : t.audience === "both" ? 1 : 2;
     return [...supportTopics()].sort((a, b) => rank(a) - rank(b));
-  }, [learner, inCourse]);
+  }, [learner, inCourse, forCompanies]);
   const answers = useMemo(() => topics.flatMap((t) => t.items), [topics]);
 
   // Learner context, fetched once when the chat first opens on a learner page.
@@ -126,7 +148,7 @@ export function SupportBot() {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setOpen(false); launcher.current?.focus(); }
+      if (e.key === "Escape") { setOpen(false); (opener.current ?? launcher.current)?.focus(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -146,11 +168,28 @@ export function SupportBot() {
     const onResize = () => {
       const next = pos ? clampPos(pos) : null;
       if (next && pos && (next.x !== pos.x || next.y !== pos.y)) setPos(next);
-      if (open && launcher.current) setPlace(placePanel(next ? boxAt(next) : launcher.current.getBoundingClientRect()));
+      if (!open) return;
+      if (opener.current?.isConnected) setPlace(placePanel(boxOf(opener.current)));
+      else if (launcher.current) setPlace(placePanel(next ? boxAt(next) : boxOf(launcher.current)));
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [pos, open]);
+
+  // A button elsewhere on the page (see help-event.ts) opens or closes the panel beside itself.
+  useEffect(() => {
+    const onHelp = (e: Event) => {
+      const anchor = (e as CustomEvent<HelpEventDetail>).detail?.anchor ?? null;
+      opener.current = anchor;
+      if (open) { setOpen(false); return; }
+      setMsgs((m) => (m.length ? m : greetingFor(learner)));
+      if (anchor) setPlace(placePanel(boxOf(anchor)));
+      else if (launcher.current) setPlace(placePanel(boxOf(launcher.current)));
+      setOpen(true);
+    };
+    window.addEventListener(HELP_EVENT, onHelp);
+    return () => window.removeEventListener(HELP_EVENT, onHelp);
+  }, [open, learner]);
 
   // The System Design offer is a page of its own design, and the launcher would sit on its Claim button.
   if (pathname.startsWith("/admin") || pathname === "/system-design" || (SITE_CLOSED && !learner)) return null;
@@ -196,10 +235,7 @@ export function SupportBot() {
     moveTo(clampPos({ x: r.left + dx, y: r.top + dy }), true);
   };
 
-  const greeting = (): Msg[] => [
-    { id: nextId(), from: "kamran", kind: "text", lines: [learner ? "Hi! Stuck on something? Type your question, or pick a topic." : "Hi, I'm Kamran. Ask me anything about Klymb and how the 30 days work."] },
-    { id: nextId(), from: "kamran", kind: "topics" },
-  ];
+  const greeting = () => greetingFor(learner);
 
   /** The learner-specific line for an answer, if there is one. */
   const personal = (id: string): Draft[] => {
@@ -393,6 +429,7 @@ export function SupportBot() {
         onClick={() => {
           // The tap that ends a drag is not a request to open or close.
           if (dragged.current) { dragged.current = false; return; }
+          opener.current = null;
           if (!open && !msgs.length) setMsgs(greeting());
           if (!open && launcher.current) setPlace(placePanel(launcher.current.getBoundingClientRect()));
           setOpen(!open);
@@ -408,9 +445,10 @@ export function SupportBot() {
         aria-label={open ? "Close help" : "Help: ask Kamran"}
         className={clsx(
           "group pointer-events-auto fixed z-[60] grid size-16 cursor-grab place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 select-none hover:-translate-y-0.5 active:scale-95 active:cursor-grabbing",
+          launcherHidden && "hidden",
           // Home corner, until it is moved. The System Design app has a tab bar and mini player along the bottom.
           !pos && "right-4 sm:right-6",
-          !pos && (pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : pathname === "/" ? "bottom-20 lg:bottom-6" : "bottom-5 sm:bottom-6"),
+          !pos && (pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : "bottom-5 sm:bottom-6"),
         )}
       >
         <Image src="/mascots/kamran-excited-v2.png" alt="" width={64} height={64} draggable={false} className="size-16 rounded-full object-cover" />

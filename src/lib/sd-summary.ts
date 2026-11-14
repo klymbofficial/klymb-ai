@@ -57,6 +57,8 @@ const count = <T,>(xs: T[], key: (x: T) => string | null | undefined) => {
   for (const x of xs) { const k = key(x); if (k) m.set(k, (m.get(k) ?? 0) + 1); }
   return [...m.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
 };
+const COUNTRY = typeof Intl !== "undefined" && "DisplayNames" in Intl ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
+const countryName = (code: string) => { try { return COUNTRY?.of(code) ?? code; } catch { return code; } };
 const nums = (v: unknown) => (typeof v === "string" ? v.split(",").map(Number) : []);
 
 export function summarise(events: SdEventRow[], feedback: SdFeedbackRow[], days: Record<string, Day>) {
@@ -162,6 +164,8 @@ export function summarise(events: SdEventRow[], feedback: SdFeedbackRow[], days:
     lessons,
     lang: count([...lastPerAnon.values()], (e) => (e.lang === "hi" ? "Hinglish" : e.lang === "en" ? "English" : null)),
     device: count([...lastPerAnon.values()], (e) => (e.device === "phone" ? "Phone" : e.device === "desktop" ? "Desktop" : null)),
+    city: count([...lastPerAnon.values()], (e) => (typeof e.props?.city === "string" ? e.props.city : null)).slice(0, 12),
+    country: count([...lastPerAnon.values()], (e) => (typeof e.props?.country === "string" ? countryName(e.props.country) : null)).slice(0, 8),
     screens: count(events.filter((e) => e.event === "screen"), (e) => String(e.props?.screen ?? "")),
     welcome: count(events.filter((e) => e.event === "welcome"), (e) => (e.props?.choice === "day0" ? "Started Day 1" : "Took the baseline first")),
     tour: count(events.filter((e) => e.event === "tour"), (e) => (e.props?.action === "finished" ? "Finished the tour" : `Skipped at stop ${e.props?.at}`)),

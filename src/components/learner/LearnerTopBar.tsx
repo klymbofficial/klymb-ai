@@ -1,16 +1,23 @@
 import { allFree } from "@/data/tracks";
 import Link from "next/link";
 import { currentEmail } from "@/auth";
+import { LearnerNav } from "@/components/learner/LearnerNav";
 import { ReminderBell } from "@/components/pwa/ReminderBell";
 import { AccountMenu } from "./AccountMenu";
 
 /**
  * The signed-in bar shared by the dashboard, the track page, the day pages and
- * the coach: the wordmark, which is the way back to the dashboard, and the
- * account menu. Nothing between them: where to go next is each page's job,
- * from the dashboard's course cards to a track's own up-next card.
+ * the coach: the wordmark, which is the way back to the dashboard, the
+ * learner's own links rather than the marketing menu, and the account menu.
  */
-export async function LearnerTopBar({ name, image }: { name: string; image?: string | null }) {
+export async function LearnerTopBar({
+  name, image, coach,
+}: {
+  name: string;
+  image?: string | null;
+  /** The voice coach of the track on this page, when that track has topics to practise. */
+  coach?: string;
+}) {
   const email = await currentEmail();
 
   return (
@@ -22,11 +29,16 @@ export async function LearnerTopBar({ name, image }: { name: string; image?: str
       </div>
 
       <header className="border-b border-line/25 bg-card">
-        <div className="flex h-15 items-center justify-between gap-4 px-4 sm:px-8 lg:px-20">
-          <Link href="/learn" aria-label="Klymb.ai dashboard" className="display inline-flex items-baseline text-lg">
+        {/* Equal outer columns keep the nav at the true centre, whatever the
+            widths of the wordmark and the account block. */}
+        <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 px-4 sm:px-8 lg:h-15 lg:grid-cols-[1fr_auto_1fr] lg:px-20">
+          <Link href="/learn" aria-label="Klymb.ai dashboard" className="display inline-flex h-14 items-center justify-self-start text-lg lg:h-auto">
             KLYMB<span className="text-red">.AI</span>
           </Link>
-          <div className="flex items-center gap-2">
+
+          <LearnerNav coach={coach} />
+
+          <div className="flex h-14 items-center gap-2 justify-self-end lg:h-auto">
             <ReminderBell />
             <AccountMenu name={name} email={email} image={image} />
           </div>

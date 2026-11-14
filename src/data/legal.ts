@@ -30,6 +30,8 @@ export const entity = {
   incorporationDate: "06 September 2016",
   registrar: "Registrar of Companies, Kanpur",
   directors: ["Tarun Kumar Singh", "Gayatri Singh"],
+  /** From the Udyam Registration Certificate printed 3 November 2026. */
+  udyam: "UDYAM-UP-29-0268341",
   /** confirm: exactly as printed on the Certificate of Incorporation. */
   address: "1605, Tower 3, Panchsheel Wellington, Crossing Republik, Ghaziabad, Uttar Pradesh 201016, India",
   /** confirm: add the GSTIN here once registered; it is shown wherever it is set. */
@@ -45,6 +47,7 @@ export const entityRows: [string, string][] = [
   ["Date of incorporation", entity.incorporationDate],
   ["Registered with", entity.registrar],
   ["Directors", entity.directors.join(", ")],
+  ["Udyam Registration Number", entity.udyam],
   ...(entity.gstin ? ([["GSTIN", entity.gstin]] as [string, string][]) : []),
   ["Registered office", entity.address],
 ];
@@ -53,15 +56,15 @@ export const grievance = {
   /** confirm: the company's choice of Grievance Officer: a director by default. */
   name: "Tarun Kumar Singh",
   designation: "Director and Grievance Officer",
-  email: "klymbofficial@gmail.com",
+  email: "team@klymb.ai",
   address: entity.address,
   acknowledgeWithin: "24 hours",
   resolveWithin: "15 days",
 } as const;
 
 export const policyVersion = {
-  version: "2026-11-03",
-  effective: "3 November 2026",
+  version: "2026-11-13",
+  effective: "13 November 2026",
 } as const;
 
 /**
@@ -99,7 +102,9 @@ export const refund = {
  */
 export const sdRefund = {
   headline: `Finish System Design on schedule, one lesson a day with no missed days, score ${FINAL_MARK}% or higher on the final assessment, and we refund 100% of your fee.`,
-  earlyAccess: `System Design is sold in early access. ${BUILT_LESSONS.length} of its ${LESSON_TOTAL} lessons are live today. The rest are released as they are ready and are included in what you paid.`,
+  earlyAccess: BUILT_LESSONS.length >= LESSON_TOTAL
+    ? `All ${LESSON_TOTAL} lessons of System Design are live.`
+    : `System Design is sold in early access. ${BUILT_LESSONS.length} of its ${LESSON_TOTAL} lessons are live today. The rest are released as they are ready and are included in what you paid.`,
   /** confirm: is every one of these required? */
   conditions: [
     `All ${LESSON_TOTAL} lessons finished, from Day 1 to Day ${LESSON_TOTAL}, one a day. You can start Day 1 any day you like`,
@@ -107,7 +112,7 @@ export const sdRefund = {
     `At least ${FINAL_MARK}% on the final assessment, which opens the day after you pass Day ${LESSON_TOTAL} and must be taken that same day. You get ${FINAL_TRIES} tries and your best score counts. Tries after that are for practice`,
   ],
   /** confirm: is this right for early access? */
-  waiting: "If the next lesson is not out yet, those days do not count as missed. A new lesson must be passed on the day it comes out or the next day.",
+  waiting: BUILT_LESSONS.length >= LESSON_TOTAL ? "" : "If the next lesson is not out yet, those days do not count as missed. A new lesson must be passed on the day it comes out or the next day.",
   /** confirm: does a change this strict need notice for people who bought before it? */
   missed: "If you miss a day, you can keep learning and finish the course, but your streak resets and the refund is no longer available. There are no exceptions and a missed day cannot be made up.",
   /** confirm: the 60 days. */
@@ -153,6 +158,7 @@ export const dataPoints = {
     ["Cloudflare", "Storing and delivering course videos", "Global"],
     ["Supabase", "Live messages that sign a second device out, holding no personal records", "Tokyo, Japan"],
     ["Google", "Sign-in (OAuth) and Google Analytics 4", "Global"],
+    ["Meta", "Meta Pixel, only if you allow it on the cookie notice: measuring and showing our Instagram and Facebook ads", "Global"],
     ["LinkedIn", "Publishing the posts you confirm, with their image, to your own LinkedIn feed, only if you connect it", "Global"],
   ],
 } as const;

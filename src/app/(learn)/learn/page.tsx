@@ -225,6 +225,8 @@ export default async function DashboardPage() {
   const state = await getLearnerState();
   if (state.state === "signed-out") redirect("/learn/login");
   if (state.state === "other-device") redirect("/learn/login?error=device");
+  // Rendered by the learner error page (retry), never mistaken for a missing enrolment.
+  if (state.state === "unavailable") throw new Error("Learner data is unavailable");
 
   const session = await auth();
   const email = state.state === "enrolled" ? state.learner.email : state.email;

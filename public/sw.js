@@ -47,7 +47,8 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin || NEVER.test(url.pathname)) return;
 
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/_next/image")) {
+  // /fonts/ file names carry the font's version, so a cached copy is never stale either.
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/") || url.pathname.startsWith("/fonts/") || url.pathname.startsWith("/_next/image")) {
     event.respondWith(cacheFirst(req));
     return;
   }

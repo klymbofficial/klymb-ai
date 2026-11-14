@@ -98,8 +98,8 @@ function DiagramOptions({ s, act, anim }: { s: CourseState; act: Act; anim: stri
               <div key={ri} className="flex flex-col items-center">
                 {ri > 0 && <div className="h-3.5 w-0.5 bg-sd-ink lg:h-5" />}
                 <div className="flex gap-1 lg:gap-2">
-                  {row.map((n) => (
-                    <div key={n} className={clsx("min-w-10 rounded-xl border-[1.5px] border-sd-ink px-[5px] py-1.5 text-[10px] font-extrabold lg:min-w-16 lg:border-2 lg:px-3 lg:py-[9px] lg:text-[13px]", ri === 0 ? "bg-sd-ink text-sd-bg" : "bg-sd-bg")}>{n}</div>
+                  {row.map((n, ni) => (
+                    <div key={ni} className={clsx("min-w-10 rounded-xl border-[1.5px] border-sd-ink px-[5px] py-1.5 text-[10px] font-extrabold lg:min-w-16 lg:border-2 lg:px-3 lg:py-[9px] lg:text-[13px]", ri === 0 ? "bg-sd-ink text-sd-bg" : "bg-sd-bg")}>{n}</div>
                   ))}
                 </div>
               </div>

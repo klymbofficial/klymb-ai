@@ -1,6 +1,8 @@
-# System Design reminder emails at 20:00 IST (14:30 UTC). Vercel's free plan allows one cron a day, so GitHub runs these.
-# The endpoint decides who gets one and never mails anyone twice in a day, so a manual re-run is safe.
-# GitHub can start a scheduled run some minutes late. CRON_SECRET is a repository secret.
+# Backup for the System Design reminder emails. The main trigger is the Vercel cron in vercel.json
+# (14:30 UTC, which Vercel's free plan fires within that hour, so 19:30 to 20:30 IST).
+# GitHub has started this schedule 6 to 8 hours late, after midnight IST, when the endpoint skips;
+# it only helps on days it runs on time. The endpoint never mails anyone twice in a day, so running
+# after Vercel, or a manual re-run, is safe. CRON_SECRET is a repository secret.
 name: System Design reminders
 on:
   schedule:

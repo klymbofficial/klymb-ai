@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import clsx from "clsx";
 import { useRef, useState } from "react";
 import type { BuildTask, Lang } from "@/data/system-design/types";
@@ -132,7 +133,7 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
                       aria-hidden="true"
                       className={clsx("absolute top-1/2 -left-4 -mt-[5px] size-2.5 rounded-full border-2", got ? "border-sd-ink bg-sd-ink" : "border-sd-n-400 bg-sd-bg")}
                     />
-                    <span className={clsx("text-[10px] font-extrabold tracking-[0.08em] uppercase", got ? "text-sd-accent-400" : "text-sd-accent-700")}>{when}</span>
+                    {(got || rest.length > 0) && <span className={clsx("text-[10px] font-extrabold tracking-[0.08em] uppercase", got ? "text-sd-accent-400" : "text-sd-accent-700")}>{when}</span>}
                     {got ? (
                       <span className="flex items-center gap-1 text-sm leading-[1.25] font-extrabold text-sd-bg"><Icon name="check" size={14} stroke={3} />{label(got)}</span>
                     ) : (
@@ -203,10 +204,12 @@ export function DiagramBuilder({ task, lang, onDone }: { task: BuildTask; lang: 
         </div>
       </div>
 
-      {drag && (
+      {/* Outside the lesson: its entrance animation leaves a transform that would offset a fixed box from the pointer. */}
+      {drag && createPortal(
         <div aria-hidden="true" className="sd-shadow-lg pointer-events-none fixed z-[80] -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-sd-ink bg-sd-ink px-3.5 py-2.5 text-sm font-extrabold text-sd-bg" style={{ left: drag.x, top: drag.y }}>
           {label(drag.id)}
-        </div>
+        </div>,
+        document.querySelector(".sd-app") ?? document.body,
       )}
     </div>
   );

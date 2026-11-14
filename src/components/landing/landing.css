@@ -1,0 +1,969 @@
+/*
+ * The klymb.ai homepage, from the Claude Design file "Klymb Landing v3"
+ * (Modernist design system, all Archivo). Everything is scoped to .kl.
+ *
+ * The design's accent was #ec3013; here it is the brand red #83050B with the
+ * same ramp the System Design app uses (course-app.css). On the dark ground
+ * #83050B nearly disappears, so thin red marks there (the strike, the
+ * dock's ring, the India pips) use the lifted red, --kl-red-400, the way
+ * the rest of the site does.
+ */
+
+.kl {
+  --kl-bg: #f3f2f2;
+  --kl-ink: #201e1d;
+  --kl-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --kl-card: color-mix(in srgb, #f3f2f2 60%, white);
+  --kl-red: #83050b;
+  --kl-red-100: #f9eaeb;
+  --kl-red-300: #e8b4b7;
+  --kl-red-400: #f0868b;
+  --kl-red-600: #690409;
+  --kl-red-700: #83050b;
+  --kl-red-800: #5a0307;
+  --kl-red-900: #4a0206;
+  --kl-live: oklch(0.75 0.17 150);
+  --kl-font: var(--font-archivo), system-ui, sans-serif;
+  --kl-shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --kl-shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  --kl-gutter: clamp(20px, 4vw, 56px);
+  --kl-ease: cubic-bezier(.2, .8, .2, 1);
+
+  overflow-x: clip;
+  background: var(--kl-bg);
+  color: var(--kl-ink);
+  font-family: var(--kl-font);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* Archivo ships 400/600/800 in the design, so a plain <strong> lands on 800. */
+.kl strong { font-weight: 800; }
+.kl .kl-semibold { font-weight: 600; }
+.kl a { color: inherit; text-decoration: none; }
+.kl :focus-visible { outline: 2px solid var(--kl-red); outline-offset: 2px; }
+.kl .kl-dark :focus-visible { outline-color: var(--kl-red-400); }
+.kl ::selection { background: color-mix(in srgb, var(--kl-red) 30%, transparent); color: inherit; }
+.kl h1, .kl h2, .kl h3 { font-family: var(--kl-font); }
+
+/*
+ * Scroll motion (ScrollMotion.tsx). Lenis does the smooth scrolling, so the
+ * site's own scroll-behavior: smooth must not animate its steps a second time.
+ * data-reveal pieces rise in once as they come into view (ScrollMotion marks
+ * them data-in); --kl-delay staggers.
+ */
+html.lenis { scroll-behavior: auto; }
+.kl[data-motion] [data-reveal] {
+  opacity: 0; transform: translate3d(0, 36px, 0);
+  transition: opacity .9s var(--kl-ease), transform 1.1s var(--kl-ease); transition-delay: var(--kl-delay, 0ms);
+}
+.kl[data-motion] [data-reveal][data-in] { opacity: 1; transform: none; }
+
+.kl-nowrap { white-space: nowrap; }
+.kl-flex-none { flex: none; }
+
+.kl-wrap { max-width: 1440px; margin: 0 auto; padding: 0 var(--kl-gutter); }
+
+/* Wordmark in running text. */
+.kl-brandword { font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; }
+.kl-brandword--nav { letter-spacing: -0.01em; }
+.kl-dot { color: var(--kl-red); }
+
+/*
+ * Photos: cover-cropped. With scroll motion on, each is drawn 10% larger and
+ * ScrollMotion shifts it by --kl-py as it passes through the screen, so it
+ * drifts a little slower than the page without its edges ever showing.
+ */
+.kl-photo { position: absolute; inset: 0; overflow: hidden; }
+.kl-photo img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.kl[data-motion] .kl-photo img { transform: translate3d(0, var(--kl-py, 0px), 0) scale(1.1); will-change: transform; }
+
+.kl-stars { display: flex; gap: 2px; color: var(--kl-red); }
+
+/* Buttons (Modernist .btn, with the page's 12px radius). */
+.kl-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--kl-font); font-weight: 800; font-size: 14px; line-height: 1.2;
+  color: var(--kl-ink); background: transparent; border: 1px solid transparent;
+  padding: 8px 14.4px; border-radius: 12px;
+}
+.kl .kl-btn-primary { background: var(--kl-red); color: var(--kl-bg); }
+.kl .kl-btn-primary:hover { background: var(--kl-red-600); color: var(--kl-bg); }
+.kl .kl-btn-primary:active { background: var(--kl-red-900); }
+.kl-btn-secondary { border-color: var(--kl-divider); }
+.kl-btn-secondary:hover { background: color-mix(in srgb, var(--kl-ink) 7%, transparent); }
+.kl-btn-secondary:active { background: color-mix(in srgb, var(--kl-ink) 14%, transparent); }
+
+/* ── Nav ─────────────────────────────────────────────────────────────── */
+
+.kl-navbar { position: sticky; top: 0; z-index: 50; padding: 12px clamp(12px, 3vw, 40px) 0; }
+.kl-nav {
+  max-width: 1400px; margin: 0 auto; padding: 10px 10px 10px 20px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+  border: 1px solid var(--kl-divider); border-radius: 999px;
+  background: color-mix(in srgb, var(--kl-bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: var(--kl-shadow-md);
+}
+.kl .kl-brand {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  font-weight: 800; font-size: 22px; letter-spacing: -0.03em; color: var(--kl-ink);
+}
+.kl-logo { position: relative; display: inline-flex; align-items: baseline; }
+.kl-logo > span { display: inline-block; }
+
+/*
+ * Links that don't fit wrap onto a second row, which the 40px height hides.
+ * When even the first link doesn't fit (phones), the row would show a sliver
+ * of it ("mb."), so below that width the links are hidden altogether.
+ */
+.kl-navlinks {
+  flex: 1 1 auto; min-width: 0; height: 40px; overflow: hidden;
+  display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 0 2px;
+  container-type: inline-size;
+}
+.kl-navlink {
+  padding: 8px 12px; white-space: nowrap; letter-spacing: 0.12em; border-radius: 999px;
+  font-size: 15px; transition: background .2s, color .2s;
+}
+.kl .kl-navlink:hover { background: var(--kl-red-100); color: var(--kl-red-800); }
+.kl .kl-navlink--teams { color: var(--kl-red-700); display: flex; gap: 6px; align-items: center; }
+.kl .kl-navlink--teams:hover { color: var(--kl-red-700); }
+@container (max-width: 132px) { .kl-navlink { visibility: hidden; } }
+
+/* Site pages: Log in beside the money-back pill on desktop (phones have it in the menu). */
+.kl .kl-navlogin { flex: none; padding: 10px 16px; border-radius: 999px; font-size: 15px; white-space: nowrap; }
+
+.kl-pulse {
+  flex: none; display: flex; gap: 7px; align-items: center; padding: 10px 16px; border-radius: 999px;
+  background: var(--kl-red); color: var(--kl-bg); font-weight: 800; font-size: 15px; letter-spacing: 0.01em; white-space: nowrap;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--kl-red) 45%, transparent), var(--kl-shadow-md);
+  animation: kl-pulse 1.8s ease-out infinite;
+}
+/*
+ * Phones (Claude Design "Klymb Hero Mobile"): the nav floats over the hero
+ * photo as three pieces, the wordmark on frosted glass, the money-back pill
+ * and a round menu button. The section links and Log in live in the menu.
+ * The bar itself lets taps through to the page; only its pieces take them.
+ */
+.kl-menu { display: none; }
+@media (max-width: 760px) {
+  .kl-navbar {
+    position: fixed; left: 0; right: 0; padding: 16px 16px 0; pointer-events: none;
+    border-bottom: 1px solid transparent; transition: background-color .3s ease, padding .3s ease, border-color .3s ease;
+  }
+  /* Past the hero photo: a frosted bar behind the pills (LandingNav), so content passes under a bar, not between pills. */
+  .kl-navbar.is-solid:not(.kl-navbar--site) {
+    padding: 10px 16px; pointer-events: auto;
+    background: color-mix(in srgb, var(--kl-bg) 90%, transparent);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom-color: color-mix(in srgb, var(--kl-ink) 10%, transparent);
+  }
+  .kl-nav {
+    padding: 0; gap: 8px; border: 0; border-radius: 0; background: none; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .kl-nav > * { pointer-events: auto; }
+  .kl .kl-brand {
+    margin-right: auto; padding: 8px 14px; border-radius: 999px; font-size: 19px;
+    background: color-mix(in srgb, var(--kl-bg) 82%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  /* Site pages have no full-bleed photo to float over: the bar keeps its place in the flow. */
+  .kl-navbar--site { position: sticky; }
+  .kl-navlinks, .kl .kl-navlogin { display: none; }
+  .kl-pulse { gap: 5px; padding: 8px 12px; font-size: 12px; }
+  .kl-pulse svg { width: 14px; height: 14px; }
+  .kl-menu { display: block; position: relative; flex: none; }
+}
+.kl-menu-btn {
+  display: grid; place-content: center; gap: 4.5px; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  color: var(--kl-ink); background: color-mix(in srgb, var(--kl-bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.kl-menu-btn span { display: block; width: 13px; height: 1.8px; border-radius: 2px; background: currentColor; transition: transform .35s var(--kl-ease); }
+.kl-menu-btn.is-open span:first-child { transform: translateY(3.15px) rotate(45deg); }
+.kl-menu-btn.is-open span:last-child { transform: translateY(-3.15px) rotate(-45deg); }
+.kl-menu-panel {
+  position: absolute; top: calc(100% + 10px); right: 0; width: min(240px, calc(100vw - 32px)); padding: 4px 16px 14px;
+  border-radius: 20px; border: 1px solid color-mix(in srgb, var(--kl-ink) 10%, transparent);
+  background: color-mix(in srgb, var(--kl-bg) 94%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: var(--kl-shadow-lg); transform-origin: top right;
+  opacity: 0; transform: translateY(-6px) scale(.96); visibility: hidden;
+  transition: opacity .25s ease, transform .35s var(--kl-ease), visibility 0s linear .35s;
+}
+.kl-menu-panel.is-open { opacity: 1; transform: none; visibility: visible; transition: opacity .25s ease, transform .35s var(--kl-ease), visibility 0s; }
+.kl-menu-panel ul { margin: 0; padding: 0; list-style: none; }
+.kl-menu-panel li a {
+  display: block; padding: 11px 2px; font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
+  border-bottom: 1px solid color-mix(in srgb, var(--kl-ink) 12%, transparent);
+}
+.kl .kl-menu-panel li a:hover { color: var(--kl-red-700); }
+.kl .kl-menu-teams { color: var(--kl-red-700); }
+.kl .kl-menu-login { width: 100%; margin-top: 12px; padding: 10px 16px; border-radius: 999px; font-size: 14px; background: var(--kl-bg); }
+@media (prefers-reduced-motion: reduce) {
+  .kl-menu-btn span, .kl-menu-panel, .kl-menu-panel.is-open { transition: none; }
+}
+@keyframes kl-pulse {
+  from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--kl-red) 45%, transparent), var(--kl-shadow-md); }
+  to { box-shadow: 0 0 0 10px color-mix(in srgb, var(--kl-red) 0%, transparent), var(--kl-shadow-md); }
+}
+
+/* ── Hero ────────────────────────────────────────────────────────────── */
+
+/*
+ * The hero is exactly one screen under the nav (its height comes from
+ * LandingNav), photo included, on every screen: the grid takes whatever
+ * height is left.
+ */
+.kl-hero { padding: clamp(12px, 2.5vh, 32px) 0 0; min-height: calc(100svh - var(--kl-nav-h, 77px)); display: flex; flex-direction: column; }
+.kl-hero-stage { position: relative; flex: 1; display: flex; flex-direction: column; }
+/*
+ * The learner photo runs off the right edge, fading in from the left. It
+ * starts at the nav's lower edge and fades in from there, rather than running
+ * up behind the see-through nav as it did in the design. The two fades are
+ * intersected.
+ */
+.kl-hero-photo {
+  position: absolute; top: calc(-1 * clamp(12px, 2.5vh, 32px)); bottom: 0; right: calc(50% - 50vw);
+  width: min(62vw, 1000px); overflow: hidden; z-index: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 56px), linear-gradient(to right, transparent 0, #000 38%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 56px), linear-gradient(to right, transparent 0, #000 38%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.kl-hero-grid {
+  position: relative; z-index: 1; display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 56px clamp(32px, 5vw, 80px); align-items: stretch;
+  flex: 1; padding-bottom: clamp(20px, 4vh, 48px);
+}
+.kl-hero-left { display: flex; flex-direction: column; align-items: flex-start; gap: clamp(14px, 3vh, 28px); padding-top: clamp(8px, 2vh, 24px); }
+
+.kl-experts {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+  border: 1px solid var(--kl-divider); border-radius: 999px; background: var(--kl-bg); padding: 8px 16px; font-size: 14px;
+}
+.kl-experts-label { color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-logos { display: flex; gap: 14px; align-items: center; }
+.kl-logos img { display: block; height: 18px; width: auto; max-width: none; }
+.kl-logos .kl-logo-amazon { margin-top: 5px; }
+
+.kl-h1 {
+  font-weight: 800; font-size: clamp(32px, min(4.3vw, 8.4vh), 76px); line-height: 1.06; letter-spacing: -0.035em;
+  margin: 0 0 0 -0.04em; display: grid; max-width: 100%;
+}
+.kl-hl { grid-area: 1 / 1; }
+.kl-hl-line { display: block; white-space: nowrap; }
+.kl-w { display: inline-block; }
+.kl-w-accent { position: relative; font-style: italic; color: var(--kl-red); padding-right: 0.08em; }
+.kl-swoosh { position: absolute; left: 0; right: 0; bottom: -0.16em; width: 100%; height: 0.26em; overflow: visible; pointer-events: none; }
+
+/* The first headline plays in from the first paint; JS takes over for the swaps. */
+.kl-hl[data-first] .kl-w { animation: kl-word-in .7s var(--kl-ease) backwards; animation-delay: calc(var(--i) * 80ms); }
+.kl-hl[data-first] .kl-swoosh path { stroke-dasharray: 1 1; animation: kl-draw .6s cubic-bezier(.6, 0, .2, 1) 780ms both; }
+@keyframes kl-word-in { from { transform: translateY(0.6em) rotate(5deg); opacity: 0; filter: blur(8px); } }
+@keyframes kl-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+.kl-rating {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  padding: 12px 18px; border: 1px solid var(--kl-divider); border-radius: 16px; background: var(--kl-bg);
+}
+.kl-rating-text { font-size: 15px; }
+.kl-rating-text strong { font-size: 18px; }
+
+/* The placement card and the two buttons sit together at the foot of the column. */
+.kl-hero-left .kl-results { margin-top: auto; }
+.kl-cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.kl-hero-cta { min-width: 260px; padding: 18px 22px; font-size: 18px; display: flex; justify-content: space-between; gap: 16px; }
+/* The arrow nudges forward every couple of seconds, and keeps nudging, faster, while the button is hovered. */
+.kl-hero-arrow { animation: kl-nudge 2s cubic-bezier(.4, 0, .2, 1) infinite; }
+.kl-hero-cta:hover .kl-hero-arrow { animation-duration: 1s; }
+@keyframes kl-nudge {
+  0%, 50%, 100% { transform: translateX(0); }
+  20% { transform: translateX(6px); }
+  35% { transform: translateX(-1px); }
+}
+.kl .kl-hero-login { padding: 18px 26px; font-size: 18px; background: var(--kl-bg); }
+.kl .kl-hero-login:hover { background: color-mix(in srgb, var(--kl-ink) 7%, var(--kl-bg)); }
+.kl .kl-hero-login:active { background: color-mix(in srgb, var(--kl-ink) 14%, var(--kl-bg)); }
+
+.kl-hero-right { display: grid; gap: 12px; align-content: end; justify-items: end; min-height: 0; padding-top: clamp(8px, 2vh, 24px); }
+.kl-chip {
+  display: flex; gap: 10px; align-items: center; background: var(--kl-bg); border: 1px solid var(--kl-divider);
+  border-radius: 999px; box-shadow: var(--kl-shadow-md); padding: 10px 18px; font-weight: 800; font-size: 15px; white-space: nowrap;
+}
+.kl-chip svg { color: var(--kl-red); flex: none; }
+
+/* Two columns: the chips stand clear of the floating "Chat with us" in the corner. */
+@media (min-width: 830px) {
+  .kl-hero-right { padding-bottom: 72px; }
+}
+
+/*
+ * One column (small tablets, 761–829px): everything stacks in one flow so it
+ * fits the one screen. The two chips sit in a row under the rating; the
+ * placement card and the buttons settle at the bottom. (Phones get HeroPhone.)
+ */
+@media (max-width: 829px) {
+  .kl-hero-grid {
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: clamp(10px, 2.2vh, 20px); padding-top: clamp(6px, 1.5vh, 20px);
+  }
+  .kl-hero-left { display: contents; }
+  .kl-hero-right { order: 1; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; }
+  .kl-hero-left .kl-results { order: 2; margin-top: auto; }
+  .kl-cta-row { order: 3; }
+  .kl-chip { gap: 6px; padding: 8px 12px; font-size: 13px; }
+  .kl-chip svg { width: 15px; height: 15px; }
+}
+
+/* ── Hero on phones (HeroPhone, Claude Design "Klymb Hero Mobile") ───── */
+
+/*
+ * One screen tall and edge to edge: the photo fills the top half, behind the
+ * floating nav, and its lower edge steps down like a staircase, wiping in on
+ * load. The chips pop in over it and the placement card rises onto the steps.
+ */
+.kl-hero-phone { display: none; }
+@media (max-width: 760px) {
+  .kl-hero { display: none; }
+  .kl-hero-phone { display: flex; flex-direction: column; height: 100svh; min-height: 560px; margin: 0 calc(-1 * var(--kl-gutter)); }
+}
+.kl-hp-media { position: relative; flex: none; height: 50%; }
+.kl-hp-photo {
+  position: absolute; inset: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 66% 62%, 66% 78%, 33% 78%, 33% 94%, 0 94%);
+  animation: kl-stairs 1.1s cubic-bezier(.7, 0, .2, 1) backwards;
+}
+@keyframes kl-stairs { from { clip-path: polygon(0 0, 100% 0, 100% 0%, 66% 0%, 66% 0%, 33% 0%, 33% 0%, 0 0%); } }
+.kl-hp-chip {
+  position: absolute; display: flex; gap: 8px; align-items: center; padding: 8px 14px; border-radius: 999px;
+  background: var(--kl-bg); box-shadow: var(--kl-shadow-md); font-weight: 800; font-size: 13px; white-space: nowrap; pointer-events: none;
+  animation: kl-chip-in .5s cubic-bezier(.2, .9, .3, 1.2) backwards;
+}
+.kl-hp-chip svg { flex: none; color: var(--kl-red); }
+/* Below the face: the photo covers by height, so the face sits in the top quarter at any phone size. */
+.kl-hp-chip--a { left: 16px; top: 46%; animation-delay: .9s; }
+.kl-hp-chip--b { right: 16px; top: 150px; animation-delay: 1.05s; }
+@keyframes kl-chip-in { from { opacity: 0; transform: translateY(12px) scale(.9); } }
+
+.kl-hp-results {
+  position: absolute; z-index: 1; right: 12px; bottom: -6px; width: calc(66% - 18px); padding: 12px 14px;
+  display: grid; gap: 8px; border-radius: 20px; background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg);
+  animation: kl-hp-rise .6s var(--kl-ease) 1.2s backwards;
+}
+@keyframes kl-hp-rise { from { opacity: 0; transform: translateY(20px); } }
+.kl-hp-results-head { display: flex; justify-content: space-between; align-items: center; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.kl-hp-results-label { color: var(--kl-red-400); }
+.kl-hp-live { display: flex; gap: 5px; align-items: center; font-size: 11px; letter-spacing: 0.04em; text-transform: none; color: color-mix(in srgb, var(--kl-bg) 75%, transparent); }
+.kl-hp-live .kl-live-dot { width: 6px; height: 6px; }
+.kl-hp-results-body { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 12px; align-items: end; }
+.kl-hp-col { display: grid; gap: 2px; }
+.kl-hp-region { font-size: 10px; letter-spacing: 0.08em; }
+.kl-hp-tally { position: relative; justify-self: start; font-weight: 800; font-size: 30px; line-height: 0.9; letter-spacing: -0.04em; }
+.kl-hp-tally--india { color: var(--kl-red-400); }
+.kl-hp-rule { align-self: stretch; background: color-mix(in srgb, var(--kl-bg) 25%, transparent); }
+/* The pips from the wider hero, kept for their chase, sized to the smaller card. */
+.kl-hp-col .kl-pips { gap: 2px; margin-top: 5px; }
+.kl-hp-col .kl-pips > span { width: 8px; height: 3px; }
+/* The "+1"s rise from above the number, so they stay on the card. */
+.kl-hp-tally .kl-pop { left: 50%; top: -15px; margin-left: 0; font-size: 12px; }
+.kl-hp-results-label, .kl-hp-live { white-space: nowrap; }
+/* Very short phones: the photo is shorter, so the second chip rides a little higher, clear of the card. */
+@media (max-height: 600px) {
+  .kl-hp-chip--b { top: 138px; }
+}
+/* The narrowest phones: a wider card keeps its header on one line. */
+@media (max-width: 360px) {
+  .kl-hp-results { width: calc(80% - 18px); }
+  .kl-hp-results-head { letter-spacing: 0.06em; }
+}
+
+.kl-hp-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding: 22px 20px 18px; }
+.kl-hp-experts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-hp-marks { display: flex; gap: 10px; align-items: center; }
+.kl-hp-marks svg { display: block; flex: none; }
+.kl .kl-hp-h1 { margin: 0; font-size: min(35px, 9.4vw); line-height: 1; letter-spacing: -0.045em; height: 2.05em; }
+.kl-hp-rating { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.kl-hp-rating .kl-stars { gap: 1px; }
+.kl-hp-cta { display: grid; gap: 10px; }
+.kl-hp-join { display: flex; gap: 10px; align-items: center; justify-content: center; font-size: 12px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-hp-avatars { display: flex; }
+.kl-hp-avatars img {
+  display: block; width: 24px; height: 24px; max-width: none; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--kl-bg); margin-left: -8px;
+}
+.kl-hp-avatars img:first-child { margin-left: 0; }
+
+/* "Start your journey" as a slider: drag the knob right (or tap) and the red fills in behind it. */
+.kl .kl-slide {
+  position: relative; display: flex; align-items: center; height: 60px; border-radius: 999px; overflow: hidden;
+  background: var(--kl-ink); color: var(--kl-bg); touch-action: pan-y; user-select: none; -webkit-user-select: none;
+}
+.kl-slide-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 60px; border-radius: 999px; background: var(--kl-red); }
+.kl-slide-label { position: relative; flex: 1; padding-left: 72px; font-weight: 800; font-size: 17px; letter-spacing: -0.01em; white-space: nowrap; }
+.kl-slide-go { display: flex; gap: 6px; align-items: center; }
+.kl-slide-hint { font-weight: 400; font-size: 12px; letter-spacing: 0; color: color-mix(in srgb, var(--kl-bg) 65%, transparent); }
+.kl-slide-done { display: none; }
+.kl-slide-label.is-done { padding-left: 24px; }
+.kl-slide-label.is-done .kl-slide-go { display: none; }
+.kl-slide-label.is-done .kl-slide-done { display: inline; }
+.kl-slide-knob {
+  position: absolute; left: 4px; top: 4px; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--kl-bg); color: var(--kl-red); box-shadow: var(--kl-shadow-md); cursor: grab; touch-action: none;
+}
+.kl-slide-knob:active { cursor: grabbing; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kl-hp-photo, .kl-hp-chip, .kl-hp-results { animation: none; }
+}
+
+.kl-results {
+  width: min(100%, 360px); border-radius: 24px; background: var(--kl-ink); color: var(--kl-bg);
+  padding: 18px 20px 20px; box-shadow: var(--kl-shadow-lg); display: grid; gap: 14px;
+  animation: kl-fade-up .8s var(--kl-ease) .5s backwards;
+}
+@keyframes kl-fade-up { from { opacity: 0; transform: translateY(24px); } }
+.kl-results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.kl-results-label { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kl-red-400); }
+.kl-results-live { display: flex; gap: 6px; align-items: center; font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 75%, transparent); }
+.kl-live-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--kl-live); animation: kl-blink 1.6s linear infinite; }
+@keyframes kl-blink { 50% { opacity: .25; } }
+.kl-results-body { display: grid; grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr); align-items: stretch; gap: 20px; }
+.kl-results-col { display: grid; gap: 4px; }
+.kl-region {
+  justify-self: start; font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--kl-bg) 40%, transparent);
+}
+.kl-region--india { justify-self: stretch; border: 0; background: var(--kl-red); }
+.kl-tally {
+  position: relative; justify-self: start; font-weight: 800; font-size: clamp(36px, 3.6vw, 52px);
+  line-height: 0.9; letter-spacing: -0.04em;
+}
+.kl-tally--india { color: var(--kl-red-400); }
+.kl-pop { position: absolute; left: 100%; top: 0; margin-left: 6px; font-size: 14px; letter-spacing: 0; pointer-events: none; }
+.kl-results-note { font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 78%, transparent); }
+.kl-pips { display: flex; gap: 3px; margin-top: 4px; }
+.kl-pips > span { width: 10px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--kl-bg) 22%, transparent); }
+.kl-results-rule { width: 1px; align-self: stretch; background: color-mix(in srgb, var(--kl-bg) 25%, transparent); }
+
+/* ── Why Klymb ───────────────────────────────────────────────────────── */
+
+/* clip, not hidden: hidden would make the section a scroll box, and the phone version's strip couldn't stick. */
+.kl-why { background: var(--kl-ink); color: var(--kl-bg); border-radius: 32px; margin: 24px clamp(12px, 2vw, 24px) 0; overflow: hidden; overflow: clip; }
+.kl-why-inner {
+  max-width: 1440px; margin: 0 auto; padding: clamp(28px, 5vh, 64px) var(--kl-gutter);
+  display: grid; gap: clamp(20px, 4vh, 48px); min-height: calc(100vh - 96px); align-content: center;
+}
+.kl-why-head { min-width: 0; display: grid; gap: clamp(12px, 2.5vh, 28px); }
+.kl-why-title { font-weight: 800; font-size: clamp(34px, min(6.4vw, 8vh), 100px); line-height: 0.95; letter-spacing: -0.04em; margin: 0; }
+.kl-strike { position: relative; display: inline-block; color: color-mix(in srgb, var(--kl-bg) 55%, transparent); }
+.kl-strike svg { position: absolute; left: -4%; top: 28%; width: 108%; height: 44%; overflow: visible; pointer-events: none; color: var(--kl-red-400); }
+.kl-why-lede {
+  font-size: clamp(16px, min(2vw, 3vh), 28px); line-height: 1.35; margin: 0; display: grid; gap: 6px;
+  color: color-mix(in srgb, var(--kl-bg) 86%, transparent);
+}
+.kl-why-lede strong { color: var(--kl-bg); }
+
+/* The staircase scrolls sideways when the screen is narrower than it. */
+.kl-steps-scroll { overflow-x: auto; overflow-y: hidden; padding: 22px 20px 0 0; margin-right: -20px; }
+.kl-steps {
+  min-width: 560px; height: clamp(256px, 42vh, 420px); margin: 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end;
+}
+.kl-step {
+  position: relative; border-radius: 20px 20px 6px 6px; padding: 14px; display: grid; align-content: start; gap: 5px;
+  transform-origin: bottom; background: color-mix(in srgb, var(--kl-bg) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kl-bg) 18%, transparent);
+}
+.kl-step--1 { height: 30%; min-height: 110px; background: transparent; border: 2px dashed var(--kl-red-400); }
+.kl-step--2 { height: 56%; min-height: 185px; }
+.kl-step--3 { height: 78%; min-height: 215px; }
+.kl-step--4 { height: 98%; min-height: 250px; background: var(--kl-red); border: 0; }
+.kl-step-tag {
+  position: absolute; top: -15px; left: 14px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap; background: var(--kl-red); color: var(--kl-bg);
+}
+.kl-step--1 .kl-step-tag { background: var(--kl-bg); color: var(--kl-ink); }
+.kl-step--4 .kl-step-tag { background: var(--kl-bg); color: var(--kl-red-800); }
+.kl-step-num { font-weight: 800; font-size: 13px; color: var(--kl-red-400); margin-top: 10px; }
+.kl-step--4 .kl-step-num { color: var(--kl-bg); margin-top: 0; }
+.kl-step-title { font-weight: 800; font-size: clamp(16px, 1.6vw, 22px); line-height: 1.1; letter-spacing: -0.01em; }
+.kl-step-item { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.3; }
+.kl-step-tick { display: flex; color: var(--kl-red-400); }
+.kl-step-tick svg { flex: none; margin-top: 3px; }
+.kl-step--4 .kl-step-tick { color: var(--kl-bg); }
+.kl-flag { transform-origin: 20% 80%; margin-top: 8px; }
+.kl-refund {
+  margin-top: 6px; display: flex; gap: 8px; align-items: center; background: var(--kl-bg); color: var(--kl-red-800);
+  border-radius: 14px; padding: 8px 10px; font-weight: 800; font-size: 13px; line-height: 1.25;
+}
+
+/* ── Why Klymb on phones: the chat (Claude Design "Klymb Why Mobile") ─── */
+
+/* flow-root, so the strip's negative margin below can't collapse through and pull the whole section up. */
+.kl-why-phone { display: none; }
+@media (max-width: 760px) {
+  .kl-why-desk { display: none; }
+  .kl-why-phone { display: flow-root; }
+}
+
+/*
+ * "Your journey" sticks under the nav while the section scrolls by. Its dark
+ * glass also reaches up behind the nav (its height comes from LandingNav), as
+ * the design's bar filled the top of the screen, so the chat doesn't show
+ * around the nav pill. That extra height sits above the section's top edge,
+ * where the section clips it, so the strip takes no more room than designed.
+ */
+.kl-wp-bar {
+  position: sticky; top: 0; z-index: 5; display: flex; justify-content: flex-end; align-items: center;
+  margin-top: calc(-1 * var(--kl-nav-h, 76px)); padding: calc(var(--kl-nav-h, 76px) + 16px) 22px 12px;
+  background: color-mix(in srgb, var(--kl-ink) 86%, transparent);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+.kl-wp-journey { display: flex; gap: 6px; align-items: center; font-size: 12px; color: color-mix(in srgb, var(--kl-bg) 75%, transparent); }
+.kl-wp-track { display: block; width: 44px; height: 4px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--kl-bg) 18%, transparent); }
+.kl-wp-fill { display: block; width: 100%; height: 100%; background: var(--kl-red-400); transform-origin: left; transform: scaleX(0); }
+
+.kl-wp-head { padding: 28px 22px 8px; display: grid; gap: 18px; }
+.kl .kl-wp-title { margin: 0; display: grid; font-weight: 800; font-size: 54px; line-height: 0.92; letter-spacing: -0.05em; }
+.kl-wp-strike { position: relative; justify-self: start; color: color-mix(in srgb, var(--kl-bg) 45%, transparent); }
+.kl-wp-strike svg { position: absolute; left: -4%; top: 30%; width: 108%; height: 40%; overflow: visible; pointer-events: none; color: var(--kl-red-400); }
+.kl-wp-lede { margin: 0; display: grid; gap: 6px; font-size: 17px; line-height: 1.45; color: color-mix(in srgb, var(--kl-bg) 86%, transparent); }
+.kl-wp-lede strong { color: var(--kl-bg); }
+.kl-wp-hint { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--kl-red-400); }
+
+.kl-wp-chat { padding: 24px 16px 32px; display: grid; gap: 12px; }
+.kl-wp-step {
+  justify-self: center; display: flex; gap: 8px; align-items: center; margin: 18px 0 4px;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: color-mix(in srgb, var(--kl-bg) 65%, transparent);
+}
+.kl-wp-step:first-child { margin-top: 8px; }
+.kl-wp-step b { font-weight: 800; color: var(--kl-red-400); }
+
+.kl-wp-me {
+  justify-self: end; max-width: 78%; padding: 12px 16px; border-radius: 22px 22px 6px 22px;
+  background: var(--kl-red); color: var(--kl-bg); font-size: 16px; line-height: 1.35;
+}
+.kl-wp-me--icon { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.kl-wp-me--icon svg { flex: none; }
+.kl-wp-us {
+  justify-self: start; max-width: 82%; padding: 12px 16px; border-radius: 22px 22px 22px 6px;
+  background: color-mix(in srgb, var(--kl-bg) 12%, transparent); font-size: 16px; line-height: 1.35;
+}
+.kl-wp-typing {
+  justify-self: start; display: flex; gap: 5px; padding: 14px 16px; border-radius: 22px 22px 22px 6px;
+  background: color-mix(in srgb, var(--kl-bg) 12%, transparent);
+}
+.kl-wp-typing span { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--kl-bg); }
+
+.kl-wp-enrolled {
+  justify-self: end; display: flex; gap: 10px; align-items: center; padding: 10px 14px 10px 10px;
+  border-radius: 22px 22px 6px 22px; background: var(--kl-bg); color: var(--kl-ink);
+}
+.kl-wp-enrolled-tick { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--kl-red); color: var(--kl-bg); }
+.kl-wp-enrolled-text { display: grid; gap: 1px; }
+.kl-wp-enrolled-text strong { font-size: 17px; letter-spacing: -0.01em; }
+.kl-wp-enrolled-text span { font-size: 12px; color: color-mix(in srgb, var(--kl-ink) 70%, transparent); }
+
+.kl-wp-plan { width: 82%; max-width: none; padding: 14px 16px; display: grid; gap: 10px; }
+.kl-wp-plan-head {
+  display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--kl-bg) 72%, transparent);
+}
+.kl-wp-task { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+/* The design's filled dot was its accent; on this ground the brand red barely shows, so it is the lifted red. */
+.kl-wp-dot { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--kl-red-400); }
+.kl-wp-dot--todo { background: none; border: 2px solid color-mix(in srgb, var(--kl-bg) 45%, transparent); }
+
+.kl-wp-review {
+  justify-self: start; width: 86%; padding: 16px; display: grid; gap: 12px;
+  border-radius: 22px 22px 22px 6px; background: var(--kl-bg); color: var(--kl-ink);
+}
+.kl-wp-review-head { display: flex; justify-content: space-between; align-items: center; }
+.kl-wp-review-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--kl-red-700); }
+.kl-wp-review-badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--kl-red-100); color: var(--kl-red-800); }
+.kl-wp-scores { display: grid; gap: 8px; }
+.kl-wp-score { display: grid; gap: 4px; font-size: 13px; }
+.kl-wp-score-row { display: flex; justify-content: space-between; }
+.kl-wp-score-track { display: block; height: 6px; border-radius: 6px; overflow: hidden; background: #eae7e7; }
+.kl-wp-score-fill { display: block; height: 100%; border-radius: 6px; background: var(--kl-red); transform-origin: left; }
+.kl-wp-review-note { font-size: 13px; line-height: 1.4; color: color-mix(in srgb, var(--kl-ink) 75%, transparent); }
+
+.kl-wp-final {
+  position: relative; padding: 24px 20px 20px; display: grid; gap: 14px;
+  border-radius: 28px; background: var(--kl-red); color: var(--kl-bg);
+}
+.kl-wp-popper { transform-origin: 20% 80%; }
+.kl-wp-final-title { font-weight: 800; font-size: 48px; line-height: 0.9; letter-spacing: -0.05em; }
+.kl-wp-final-list { display: grid; gap: 8px; font-size: 15px; }
+.kl-wp-final-list > span { display: flex; gap: 10px; align-items: center; }
+.kl-wp-final-list svg { flex: none; }
+.kl-wp-refund {
+  display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 16px;
+  background: var(--kl-bg); color: var(--kl-red-800); font-weight: 800; font-size: 15px;
+}
+.kl-wp-confetti { position: absolute; top: 30px; pointer-events: none; }
+
+/* ── Section heads ───────────────────────────────────────────────────── */
+
+.kl-section-head { display: flex; flex-wrap: wrap; gap: 20px 40px; align-items: end; justify-content: space-between; }
+.kl-h2 { font-weight: 800; font-size: clamp(40px, 5.4vw, 80px); line-height: 0.98; letter-spacing: -0.035em; margin: 0; }
+.kl-h2 em { font-style: italic; color: var(--kl-red); padding-right: 0.06em; }
+
+/* ── Who it's for ────────────────────────────────────────────────────── */
+
+.kl-who { padding: 96px 0; display: grid; gap: 36px; }
+.kl-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; min-width: 260px; }
+.kl-tab {
+  display: grid; gap: 8px; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font: inherit; font-size: 13px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent);
+}
+.kl-tab:hover { color: var(--kl-ink); }
+.kl-tab-track { display: block; height: 4px; border-radius: 4px; background: var(--kl-divider); overflow: hidden; }
+.kl-tab-fill { display: block; height: 100%; background: var(--kl-red); transform-origin: left; transform: scaleX(0); }
+
+.kl-panels { display: flex; gap: 12px; height: clamp(480px, 72vh, 760px); }
+.kl-panel {
+  position: relative; flex: 1 1 0; min-width: 0; border-radius: 28px; overflow: hidden; cursor: pointer;
+  background: var(--kl-ink); color: var(--kl-bg); transition: flex-grow .8s var(--kl-ease); outline-offset: 3px;
+}
+.kl-panel.is-active { flex-grow: 3; }
+.kl-panel-photo { position: absolute; inset: 0; transition: filter .8s ease, transform 1.2s var(--kl-ease); filter: grayscale(1) brightness(0.55); }
+.kl-panel.is-active .kl-panel-photo { filter: none; }
+.kl-panel-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--kl-ink) 88%, transparent) 0%, color-mix(in srgb, var(--kl-ink) 40%, transparent) 45%, transparent 70%);
+}
+.kl-panel-num {
+  position: absolute; top: 24px; right: 24px; font-weight: 800; font-size: clamp(14px, 1.2vw, 16px);
+  line-height: 1; letter-spacing: 0.08em; color: var(--kl-bg); pointer-events: none;
+}
+.kl-panel-vlabel {
+  position: absolute; left: 22px; top: 24px; writing-mode: vertical-rl; transform: rotate(180deg);
+  font-weight: 800; font-size: clamp(34px, min(4.4vw, 7vh), 72px); line-height: 0.92; letter-spacing: -0.045em;
+  max-height: calc(100% - 48px); transition: opacity .4s ease .25s; opacity: 1; pointer-events: none;
+}
+.kl-panel.is-active .kl-panel-vlabel { opacity: 0; transition: opacity .4s ease; }
+/*
+ * Opening keeps the design's timing. Closing clears the details first and
+ * brings the vertical name in after them; with the same delay both ways (as
+ * in the design) the two overlapped for a moment on every switch.
+ */
+.kl-panel-detail {
+  position: absolute; left: 0; right: 0; top: 0; padding: clamp(22px, 2.6vw, 36px); display: grid; gap: 14px; max-width: 520px;
+  transition: opacity .25s ease, transform .3s ease; opacity: 0; transform: translateY(16px); pointer-events: none;
+}
+.kl-panel.is-active .kl-panel-detail { opacity: 1; transform: none; transition: opacity .5s ease .25s, transform .6s var(--kl-ease) .2s; }
+.kl-panel-for {
+  width: 100%; max-width: 300px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--kl-bg) 80%, transparent); border-top: 1px solid var(--kl-bg); padding-top: 10px;
+}
+.kl-panel-detail h3 { font-weight: 800; font-size: clamp(28px, 3.2vw, 48px); line-height: 0.95; letter-spacing: -0.04em; margin: 0; text-wrap: balance; }
+.kl-panel-detail p { font-size: clamp(15px, 1.2vw, 17px); line-height: 1.5; margin: 0; max-width: 34ch; color: color-mix(in srgb, var(--kl-bg) 88%, transparent); }
+.kl-panel-tags { display: grid; max-width: 300px; margin: 0; padding: 0; list-style: none; border-top: 1px solid color-mix(in srgb, var(--kl-bg) 45%, transparent); }
+.kl-panel-tags li {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--kl-bg) 45%, transparent);
+}
+
+/*
+ * Phones: three side-by-side panels left the open one too narrow for its
+ * heading and the closed ones too narrow for their names, so the panels
+ * stack and the open one grows tall instead; the names run across.
+ */
+@media (max-width: 760px) {
+  .kl-panels { flex-direction: column; height: clamp(600px, calc(100svh - 120px), 720px); }
+  .kl-panel-vlabel { writing-mode: horizontal-tb; transform: none; right: 64px; max-height: none; font-size: clamp(26px, 7.5vw, 34px); }
+  /* The "For" rule stops short of the panel number in the corner. */
+  .kl-panel-for { max-width: min(300px, calc(100% - 52px)); }
+}
+
+.kl-teams {
+  display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between;
+  padding: 24px 28px; border-radius: 20px; background: var(--kl-red); color: var(--kl-bg);
+}
+.kl-teams p { font-size: 18px; line-height: 1.5; margin: 0; max-width: 60ch; }
+/* The design's full stop was its accent on an accent band, so it vanished; here it shows. */
+.kl-teams .kl-dot { color: var(--kl-red-400); }
+.kl .kl-teams-btn { background: var(--kl-bg); color: var(--kl-red-800); border-radius: 999px; padding: 12px 20px; font-weight: 600; }
+.kl .kl-teams-btn:hover { background: var(--kl-ink); color: var(--kl-bg); }
+
+/* ── Pricing ─────────────────────────────────────────────────────────── */
+
+.kl-pricing { padding: 96px 0; display: grid; gap: 48px; }
+.kl-badge {
+  display: flex; gap: 8px; align-items: center; padding: 10px 16px; border-radius: 999px;
+  background: var(--kl-red-100); color: var(--kl-red-800); font-weight: 800; font-size: 15px;
+}
+.kl-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; align-items: stretch; }
+.kl-plan { position: relative; border-radius: 32px; display: flex; flex-direction: column; }
+.kl-plan--single { padding: clamp(28px, 3vw, 44px); gap: 28px; background: var(--kl-card); border: 1px solid var(--kl-divider); }
+.kl-plan--all { background: var(--kl-ink); color: var(--kl-bg); overflow: hidden; box-shadow: var(--kl-shadow-lg); }
+.kl-plan-glow {
+  position: absolute; right: -18%; top: -30%; width: 70%; aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--kl-red) 55%, transparent) 0%, transparent 70%);
+}
+.kl-plan-body { position: relative; padding: clamp(28px, 3vw, 44px); display: flex; flex-direction: column; gap: 28px; flex: 1; }
+.kl-plan-top { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.kl-plan-head { display: grid; gap: 6px; }
+.kl-kicker { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kl-red-700); }
+.kl-plan--all .kl-kicker { color: var(--kl-red-400); }
+.kl-plan-sub { font-size: 16px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-plan--all .kl-plan-sub { color: color-mix(in srgb, var(--kl-bg) 80%, transparent); }
+.kl-sticker {
+  flex: none; display: grid; place-items: center; text-align: center; width: 88px; height: 88px; border-radius: 50%;
+  background: var(--kl-bg); color: var(--kl-red-800); font-weight: 800; font-size: 12px; line-height: 1.1;
+  letter-spacing: 0.04em; text-transform: uppercase; transform: rotate(-12deg);
+}
+/* The price shrinks with its card where the design's size would push "per month" out of it. */
+.kl-price { display: flex; align-items: flex-start; gap: 4px; font-weight: 800; line-height: 0.8; letter-spacing: -0.06em; container-type: inline-size; }
+.kl-price-cur { font-size: clamp(32px, 3.4vw, 48px); margin-top: 0.2em; }
+.kl-plan--all .kl-price-cur { color: var(--kl-red-400); }
+.kl-price-num { font-size: min(clamp(96px, 11vw, 168px), calc(38cqi - 30px)); font-variant-numeric: tabular-nums; }
+.kl-price-per {
+  align-self: flex-end; font-size: 16px; letter-spacing: 0; line-height: 1.2; margin-left: 10px; padding-bottom: 0.6em;
+  color: color-mix(in srgb, var(--kl-ink) 72%, transparent); font-weight: 400;
+}
+.kl-plan--all .kl-price-per { color: color-mix(in srgb, var(--kl-bg) 80%, transparent); }
+.kl-plan-list { display: grid; margin: 0; padding: 0; list-style: none; border-bottom: 1px solid var(--kl-divider); }
+.kl-plan-list li { display: flex; gap: 12px; align-items: center; font-size: 16px; line-height: 1.35; padding: 11px 0; border-top: 1px solid var(--kl-divider); }
+.kl-plan--all .kl-plan-list, .kl-plan--all .kl-plan-list li { border-color: color-mix(in srgb, var(--kl-bg) 25%, transparent); }
+.kl-tick { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--kl-ink); color: var(--kl-bg); }
+.kl-plan--all .kl-tick { background: var(--kl-bg); color: var(--kl-ink); }
+.kl-plan--all .kl-tick--red { background: var(--kl-red); color: var(--kl-bg); }
+.kl-included {
+  margin-left: auto; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px;
+  border-radius: 999px; background: var(--kl-red); white-space: nowrap;
+}
+.kl .kl-plan-cta {
+  width: 100%; margin-top: auto; border-radius: 999px; padding: 16px 22px;
+  display: flex; justify-content: space-between; align-items: center; text-align: left;
+}
+
+/* Phones: tighter cards, a smaller price and sticker, and list text that fits one line. */
+@media (max-width: 760px) {
+  .kl-pricing { padding: 56px 0; gap: 28px; }
+  .kl-badge { font-size: 13px; padding: 8px 14px; }
+  .kl-plans { gap: 16px; }
+  .kl-plan { border-radius: 24px; }
+  .kl-plan--single, .kl-plan-body { padding: 22px 20px; gap: 20px; }
+  .kl-plan-top { gap: 12px; }
+  .kl-plan-sub { font-size: 14px; }
+  .kl-sticker { width: 68px; height: 68px; font-size: 10px; }
+  .kl-price-cur { font-size: 26px; }
+  .kl-price-num { font-size: min(72px, calc(38cqi - 30px)); }
+  .kl-price-per { font-size: 14px; margin-left: 8px; }
+  .kl-plan-list li { gap: 10px; font-size: 14px; padding: 10px 0; }
+  .kl-tick { width: 20px; height: 20px; }
+  .kl-included { font-size: 10px; padding: 3px 7px; }
+  .kl .kl-plan-cta { padding: 14px 20px; font-size: 15px; }
+}
+
+/* ── Learner stories ─────────────────────────────────────────────────── */
+
+.kl-stories { padding: 24px 0 96px; display: grid; gap: 40px; }
+.kl-proof { display: flex; gap: 14px; align-items: center; }
+.kl-avatars { display: flex; }
+.kl-avatars img {
+  display: block; width: 40px; height: 40px; max-width: none; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--kl-bg); margin-left: -12px;
+}
+.kl-avatars img:first-child { margin-left: 0; }
+.kl-proof-text { display: grid; gap: 2px; font-size: 14px; }
+
+.kl-feature {
+  margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  border-radius: 32px; overflow: hidden; background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg);
+}
+.kl-feature-photo { position: relative; min-height: clamp(360px, 40vw, 520px); }
+.kl-feature-chips { position: absolute; left: 20px; bottom: 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+.kl-feature-chip { padding: 8px 14px; border-radius: 999px; background: var(--kl-bg); color: var(--kl-ink); font-size: 13px; }
+.kl-feature-chip--now { background: var(--kl-red); color: var(--kl-bg); }
+.kl-feature-arrow { color: var(--kl-bg); }
+.kl-feature-quote { position: relative; padding: clamp(28px, 4vw, 56px); display: flex; flex-direction: column; gap: 28px; justify-content: space-between; }
+.kl-quote-mark {
+  position: absolute; right: clamp(16px, 3vw, 40px); top: -0.12em; font-weight: 800; font-size: clamp(160px, 18vw, 280px);
+  line-height: 1; color: var(--kl-red); pointer-events: none;
+}
+.kl-eyebrow-soft { position: relative; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kl-red-400); }
+.kl-feature blockquote { position: relative; margin: 0; font-weight: 800; font-size: clamp(26px, 2.8vw, 42px); line-height: 1.12; letter-spacing: -0.025em; }
+.kl-feature blockquote span { color: var(--kl-red-400); }
+.kl-feature figcaption {
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--kl-bg) 25%, transparent); padding-top: 20px;
+}
+.kl-feature-who { display: grid; gap: 2px; }
+.kl-feature-who strong { font-size: 18px; }
+.kl-feature-who span { font-size: 14px; color: color-mix(in srgb, var(--kl-bg) 78%, transparent); }
+.kl-verified {
+  margin-left: auto; display: flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--kl-bg) 35%, transparent); font-size: 13px;
+}
+
+/* The review row runs edge to edge, fading out at both ends. */
+.kl-reviews {
+  overflow: hidden; margin: 0 calc(-1 * var(--kl-gutter)); padding: 6px 0 6px var(--kl-gutter);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.kl-reviews.is-still { overflow-x: auto; }
+.kl-review-track { display: flex; width: max-content; }
+.kl-review {
+  flex: none; width: 340px; margin: 0 16px 0 0; border-radius: 24px; padding: 24px; background: var(--kl-card);
+  border: 1px solid var(--kl-divider); display: grid; gap: 18px; align-content: space-between;
+}
+.kl-review-top { display: grid; gap: 12px; }
+.kl-review blockquote { margin: 0; font-size: 17px; line-height: 1.45; }
+.kl-review figcaption { display: flex; gap: 12px; align-items: center; margin: 0; }
+.kl-avatar { position: relative; flex: none; width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display: block; }
+.kl-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.kl-review-who { display: grid; gap: 2px; font-size: 14px; }
+.kl-review-who strong { font-size: 15px; }
+.kl-review-who span { color: color-mix(in srgb, var(--kl-ink) 72%, transparent); }
+.kl-review-badge { margin-left: auto; flex: none; color: var(--kl-red); }
+
+/* ── FAQ ─────────────────────────────────────────────────────────────── */
+
+.kl-faq { border-top: 1px solid var(--kl-divider); padding: 72px 0 96px; display: flex; flex-wrap: wrap; gap: 40px 24px; }
+.kl-faq-side { flex: 1 1 220px; display: grid; gap: 12px; align-content: start; }
+.kl-faq-num { font-weight: 800; font-size: 15px; color: var(--kl-red); }
+/* Same size as the other section headings. */
+.kl .kl-faq-title { font-family: var(--kl-font); }
+.kl-faq-list { flex: 999 1 560px; min-width: 0; display: grid; border-top: 1px solid var(--kl-divider); }
+.kl-faq-item { border-bottom: 1px solid var(--kl-divider); }
+.kl-faq-item h3 { margin: 0; font: inherit; }
+.kl-faq-q {
+  width: 100%; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; align-items: center;
+  padding: 24px 0; border: 0; background: none; color: inherit; text-align: left;
+  font-family: var(--kl-font); font-weight: 800; font-size: clamp(20px, 1.8vw, 26px); line-height: 1.25; letter-spacing: -0.01em;
+  transition: color .2s ease;
+}
+.kl-faq-q:hover { color: var(--kl-red-700); }
+/* A plus whose upright bar turns flat as the answer opens, leaving a minus; it turns back on close. */
+.kl-faq-icon { position: relative; flex: none; width: 20px; height: 20px; color: var(--kl-red); }
+.kl-faq-icon::before, .kl-faq-icon::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 20px; height: 3px; margin: -1.5px 0 0 -10px;
+  border-radius: 2px; background: currentColor; transition: transform .45s var(--kl-ease);
+}
+.kl-faq-icon::after { transform: rotate(90deg); }
+.kl-faq-item.is-open .kl-faq-icon::after { transform: rotate(180deg); }
+.kl-faq-item.is-open .kl-faq-icon::before { transform: rotate(180deg); }
+/* The answer slides open to its own height (a 0fr → 1fr grid row) and its text fades and settles in. */
+.kl-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s var(--kl-ease); }
+.kl-faq-item.is-open .kl-faq-panel { grid-template-rows: 1fr; }
+.kl-faq-panel-inner { min-height: 0; overflow: hidden; }
+.kl-faq-a {
+  margin: 0; padding: 0 0 28px; font-size: 17px; line-height: 1.6; max-width: 60ch; color: color-mix(in srgb, var(--kl-ink) 78%, transparent);
+  opacity: 0; transform: translateY(-8px); transition: opacity .25s ease, transform .35s var(--kl-ease);
+}
+.kl-faq-item.is-open .kl-faq-a { opacity: 1; transform: none; transition: opacity .35s ease .1s, transform .45s var(--kl-ease) .05s; }
+@media (prefers-reduced-motion: reduce) {
+  .kl-faq-panel, .kl-faq-a, .kl-faq-icon::before, .kl-faq-icon::after { transition: none; }
+}
+/* Phones: questions and answers at reading size, with less air between rows. */
+@media (max-width: 760px) {
+  .kl-faq { padding: 48px 0 64px; gap: 24px; }
+  .kl-faq-q { gap: 16px; padding: 18px 0; font-size: 17px; line-height: 1.3; }
+  .kl-faq-icon { width: 16px; height: 16px; }
+  .kl-faq-icon::before, .kl-faq-icon::after { width: 16px; height: 2px; margin: -1px 0 0 -8px; }
+  .kl-faq-a { padding-bottom: 20px; font-size: 15px; line-height: 1.55; }
+}
+
+/* ── Closing banner ──────────────────────────────────────────────────── */
+
+.kl-close { position: relative; overflow: hidden; background: var(--kl-red); color: var(--kl-bg); border-radius: 32px; margin: 0 clamp(12px, 2vw, 24px); }
+.kl-close :focus-visible { outline-color: var(--kl-bg); }
+.kl-close-inner {
+  position: relative; max-width: 1440px; margin: 0 auto; padding: clamp(64px, 9vw, 120px) var(--kl-gutter);
+  display: grid; gap: clamp(40px, 5vw, 64px);
+}
+.kl-close-eyebrow { display: flex; gap: 10px; align-items: center; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; }
+.kl-close-eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--kl-bg); }
+.kl-close h2 {
+  font-weight: 800; font-size: clamp(52px, 9.5vw, 152px); line-height: 0.92; letter-spacing: -0.05em;
+  margin: 0 0 0 -0.05em; display: grid; gap: 0.04em;
+}
+.kl-climb { display: flex; align-items: flex-end; gap: clamp(12px, 1.6vw, 24px); padding-left: calc(var(--n) * clamp(28px, 9vw, 160px)); }
+.kl-climb--last { align-items: center; gap: 0.18em; }
+/* The design set "AI." in ink, which reads on its bright red but not on the brand red; it takes the lifted red instead. */
+.kl-climb em { font-style: italic; color: var(--kl-red-400); padding-right: 0.06em; }
+.kl-climb-arrow { width: 0.6em; height: 0.6em; color: var(--kl-bg); flex: none; }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+/* Bottom room so the journey dock and "Chat with us" never sit on the last links. */
+.kl-footer {
+  max-width: 1440px; margin: 0 auto; padding: 28px var(--kl-gutter) 112px;
+  display: flex; flex-wrap: wrap; gap: 12px 28px; font-size: 14px; color: color-mix(in srgb, var(--kl-ink) 72%, transparent);
+}
+.kl-footer-copy { margin-right: auto; }
+.kl-footer-copy .kl-brandword { color: var(--kl-ink); }
+.kl .kl-footer a:hover { color: var(--kl-red); }
+
+/* Phones: headings, quote and banner one step down, so a screen holds a heading plus its content. */
+@media (max-width: 760px) {
+  .kl .kl-wp-title { font-size: 42px; }
+  .kl-wp-lede { font-size: 15px; }
+  .kl-wp-final-title { font-size: 38px; }
+  .kl-h2 { font-size: 32px; }
+  .kl-panel-vlabel { font-size: 24px; }
+  .kl-panel-detail h3 { font-size: 24px; }
+  .kl-teams { padding: 20px; }
+  .kl-teams p { font-size: 15px; }
+  .kl-quote-mark { font-size: 110px; }
+  .kl-feature blockquote { font-size: 20px; line-height: 1.2; }
+  .kl-feature-who strong { font-size: 16px; }
+  .kl-close h2 { font-size: 40px; }
+}
+
+/* ── Journey dock and chat ───────────────────────────────────────────── */
+
+.kl .kl-dock {
+  position: fixed; left: 50%; bottom: clamp(16px, 2.5vw, 28px); z-index: 60;
+  transform: translate(-50%, 160%); opacity: 0; transition: transform .55s var(--kl-ease), opacity .4s ease;
+  display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 10px; border-radius: 999px;
+  background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg); max-width: calc(100vw - 120px);
+}
+.kl .kl-dock.is-on { transform: translate(-50%, 0); opacity: 1; }
+.kl .kl-dock:hover { background: var(--kl-red-800); color: var(--kl-bg); }
+.kl-dock-ring { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; }
+.kl-dock-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.kl-dock-track { stroke: color-mix(in srgb, var(--kl-bg) 22%, transparent); }
+.kl-dock-progress { stroke: var(--kl-red-400); }
+.kl-dock-step { font-weight: 800; font-size: 13px; }
+.kl-dock-title { min-width: 0; font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kl-dock-go { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--kl-red); color: var(--kl-bg); }
+
+.kl-chat {
+  position: fixed; right: clamp(16px, 2.5vw, 32px); bottom: clamp(16px, 2.5vw, 32px); z-index: 60;
+  display: flex; align-items: center; gap: 10px; padding: 12px 20px 12px 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--kl-ink); color: var(--kl-bg); font-family: var(--kl-font); font-weight: 800; font-size: 15px; line-height: 1.55;
+  box-shadow: var(--kl-shadow-lg);
+  transition: opacity .3s ease, transform .4s var(--kl-ease);
+}
+.kl-chat:hover { background: var(--kl-red); color: var(--kl-bg); }
+.kl-chat.is-tucked { opacity: 0; transform: translateY(16px) scale(.9); pointer-events: none; }
+.kl-chat-icon { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--kl-red); }
+.kl-chat-online {
+  position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--kl-live); border: 2px solid var(--kl-ink);
+}
+
+@media (max-width: 760px) {
+  .kl .kl-dock { left: 16px; transform: none; max-width: calc(100vw - 92px); }
+  .kl .kl-dock:not(.is-on) { transform: translateY(160%); }
+  .kl .kl-dock.is-on { transform: none; }
+  /* Out of the way while a plan card or the teams card is on screen (JourneyDock). */
+  .kl .kl-dock.is-on.is-yield { transform: translateY(160%); pointer-events: none; }
+  .kl-chat-label { display: none; }
+  .kl-chat { padding: 4px; gap: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kl-pulse, .kl-live-dot, .kl-results, .kl-hero-arrow,
+  .kl-hl[data-first] .kl-w, .kl-hl[data-first] .kl-swoosh path { animation: none; }
+}

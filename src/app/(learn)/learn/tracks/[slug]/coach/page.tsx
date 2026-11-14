@@ -65,7 +65,7 @@ export default async function CoachPage({ params }: { params: Promise<{ slug: st
           <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">Voice coach · {track.name}</p>
           <h1 className="display mt-3 text-[clamp(1.8rem,4vw,2.6rem)] text-balance">Practise out loud before the interview does</h1>
           <p className="mt-4 text-muted">
-            A spoken five-minute check on one topic at a time, with the evidence filed for your reviewer. It comes with the
+            A spoken five-minute check on one topic at a time, with a short summary saved after each session. It comes with the
             full course, along with Days 2 to 30, the four checkpoints and interview prep.
           </p>
           <div className="mt-8 rounded-card bg-surface p-6 text-left ring-1 ring-line/30">
@@ -107,7 +107,7 @@ export default async function CoachPage({ params }: { params: Promise<{ slug: st
           </h1>
           <p className="mt-4 max-w-2xl text-muted">
             Interviews are spoken, and reading an answer is not practising it. The coach asks one question at a time, follows
-            what you say, and files what it heard for your reviewer. Interrupt it whenever you want.
+            what you say, and saves a short summary of what it heard. Interrupt it whenever you want.
           </p>
         </Appear>
 
@@ -144,7 +144,7 @@ export default async function CoachPage({ params }: { params: Promise<{ slug: st
               ))}
             </ul>
             <p className="mt-4 text-xs text-muted">
-              Written by the coach at the end of each session, for the reviewer who reads it next to your deliverables. It is
+              Written by the coach at the end of each session and saved here for you. It is
               not a mark and it unlocks nothing.
             </p>
           </section>

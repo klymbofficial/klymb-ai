@@ -14,6 +14,19 @@ const LABELS: Record<string, string> = {
   "admin.add": "Added an admin",
   "admin.remove": "Removed an admin",
   "ticket.status": "Updated a support request",
+  "company.create": "Created a company",
+  "company.update": "Changed company settings",
+  "company.hr_add": "Added a company's first HR person",
+  "company.person_add": "Company HR added a person",
+  "company.people_import": "Company HR imported people (CSV)",
+  "company.person_remove": "Company HR removed a person",
+  "company.invite_resend": "Company HR resent an invite",
+  "company.team_create": "Company HR created a team",
+  "company.team_head": "Company HR chose a team head",
+  "company.person_move": "Company HR moved a person",
+  "company.course_assign": "Company HR assigned a course",
+  "company.course_unassign": "Company HR removed a course assignment",
+  "company.course_assign_all": "Company HR assigned a course to everyone without it",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -45,7 +58,7 @@ export default async function AdminAuditPage() {
       <PageTitle
         eyebrow="Security"
         title="Admin activity"
-        intro="Every enrolment, status change, removal, device reset, refund, support update and admin change, with who did it. Entries can't be edited or deleted."
+        intro="Every enrolment, status change, removal, device reset, refund, support update and admin change, and what a company's HR does to its own people and teams, with who did it. Entries can't be edited or deleted."
       />
       {entries.length === 0 ? (
         <EmptyState title="No admin actions yet" body="Actions taken in this admin appear here as they happen." />
@@ -53,7 +66,7 @@ export default async function AdminAuditPage() {
         <div className="card overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-line/30 text-xs uppercase tracking-wider text-muted">
-              <tr><th className="px-4 py-3">When (IST)</th><th className="px-4 py-3">Admin</th><th className="px-4 py-3">Action</th><th className="px-4 py-3">On</th><th className="px-4 py-3">Details</th></tr>
+              <tr><th className="px-4 py-3">When (IST)</th><th className="px-4 py-3">Who</th><th className="px-4 py-3">Action</th><th className="px-4 py-3">On</th><th className="px-4 py-3">Details</th></tr>
             </thead>
             <tbody className="divide-y divide-line/20">
               {entries.map((e) => (

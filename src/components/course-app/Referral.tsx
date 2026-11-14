@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { SD_REFERRAL, type ReferralStanding, type ReferralView } from "@/lib/sd-offer";
+import { SD_REFERRAL, canRefer, type ReferralStanding, type ReferralView } from "@/lib/sd-offer";
 import { Icon } from "./icons";
 import { track } from "./track";
 import type { Act } from "./useCourseApp";
@@ -97,20 +97,38 @@ function detail(r: ReferralView) {
   }
 }
 
-/** Where they stand on the Refer tab, with their link while it can still earn anything. */
+/** How many friends have bought with their link or code, against the target, in every state. */
+function joined(r: ReferralView) {
+  const { friends } = SD_REFERRAL;
+  return r.count > friends ? `${r.count} friends joined` : `${r.count} of ${friends} friends joined`;
+}
+
+function Joined({ r }: { r: ReferralView }) {
+  const side = r.state === "open" ? r.left : r.count >= SD_REFERRAL.friends ? "Goal reached" : r.state === "closed" ? "Window closed" : null;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-[13px] leading-[1.3]">
+        <span className="font-extrabold">{joined(r)}</span>
+        {side && <span className="text-sd-n-700">{side}</span>}
+      </div>
+      <div aria-hidden className="grid grid-cols-3 gap-1.5">
+        {Array.from({ length: SD_REFERRAL.friends }, (_, i) => <span key={i} className={clsx("h-1.5 rounded-full", i < r.count ? "bg-sd-accent" : "bg-sd-divider")} />)}
+      </div>
+    </div>
+  );
+}
+
+/** Where they stand on the Refer tab, with their link while they can refer. */
 export function ReferralCard({ r }: { r: ReferralView }) {
   const body = detail(r);
   return (
     <section aria-label="Get your fee back" className="flex flex-col gap-3 rounded-xl border-2 border-sd-divider p-4">
       <span className="sd-kicker text-sd-accent-700">Get your fee back</span>
-      <span className="text-lg leading-[1.2] font-extrabold tracking-[-0.01em] text-balance">{headline(r)}</span>
-      {r.state === "open" && (
-        <div role="img" aria-label={`${r.count} of ${SD_REFERRAL.friends} friends`} className="grid grid-cols-3 gap-1.5">
-          {Array.from({ length: SD_REFERRAL.friends }, (_, i) => <span key={i} className={clsx("h-1.5 rounded-full", i < r.count ? "bg-sd-accent" : "bg-sd-divider")} />)}
-        </div>
-      )}
+      <span className="text-lg leading-[1.2] font-extrabold tracking-[-0.01em] text-balance">{r.state === "open" ? `Get your ${r.amount} back with ${SD_REFERRAL.friends} friends.` : headline(r)}</span>
+      <Joined r={r} />
       {body && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">{body} <Link href="/refund-policy" className="underline underline-offset-2">T&amp;C apply.</Link></p>}
-      {r.state === "open" && <ShareLink r={r} />}
+      {(r.state === "earned" || r.state === "refunded") && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">Your link still works, so keep sharing it with friends.</p>}
+      {canRefer(r.state) && <ShareLink r={r} />}
     </section>
   );
 }

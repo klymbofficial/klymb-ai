@@ -238,6 +238,7 @@ test("the token is never sent to an upload URL that isn't LinkedIn's", async () 
 
 test("post text: hashtags stay hashtags, reserved characters show as typed", () => {
   assert.equal(toLittleText("Learn #SystemDesign with @Klymb (free) *now*"), "Learn {hashtag|\\#|SystemDesign} with \\@Klymb \\(free\\) \\*now\\*");
+  assert.equal(toLittleText("Learning with @Klymb (free)", { name: "KLYMB.AI", urn: "urn:li:organization:1" }), "Learning with @[KLYMB.AI](urn:li:organization:1) \\(free\\)");
   assert.equal(toLittleText("C# and #1 and #KlymbAI."), "C\\# and \\#1 and {hashtag|\\#|KlymbAI}.");
   assert.equal(toLittleText("#Learning_In_Public"), "{hashtag|\\#|Learning\\_In\\_Public}");
   assert.equal(toLittleText("plain 🚀 → https://klymb.ai/learn/system-design\n\nnext"), "plain 🚀 → https://klymb.ai/learn/system-design\n\nnext");

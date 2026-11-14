@@ -301,8 +301,9 @@ assessment reminder stops once it is passed. Every reminder has a one-click
 unsubscribe (`/api/sd/unsubscribe`), which sets `enrollments.reminders_off_at`.
 
 `0022_sd_mail.sql` and `0023_sd_followups.sql` add the columns these need; run `npm run db:migrate` first.
-The reminder job is `.github/workflows/sd-reminders.yml`, with `CRON_SECRET` as a
-repository secret, and is safe to re-run by hand.
+The reminder job is the Vercel cron in `vercel.json` (14:30 UTC; the free plan fires it
+within that hour). `.github/workflows/sd-reminders.yml` is a backup, with `CRON_SECRET` as
+a repository secret, since GitHub can start a schedule hours late. Both are safe to re-run.
 
 ## Project structure
 
@@ -313,7 +314,7 @@ src/
 │   ├── home/            Homepage sections + registration form
 │   ├── track/           TrackCard, TrackGrid, TrackDetail, TrackCurriculum
 │   ├── learn/           Dashboard/learning UI: TrackSwitcher, ProgressBar, WorkSubmission, InterviewPractice
-│   ├── layout/          AnnouncementBar, Header, Footer, Wordmark
+│   ├── layout/          Header, Footer, Wordmark
 │   └── ui/              Button, Container, Eyebrow, SectionHeader, Tag, Reveal, FormField, PageHeader, SourceLink, DemoNotice
 ├── data/                All editable content and config
 ├── lib/                 Validation, formatting, 30-day helpers

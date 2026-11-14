@@ -56,10 +56,14 @@ export const site = {
 };
 
 export const contact = {
-  email: "klymbofficial@gmail.com",
+  email: "team@klymb.ai",
 };
 
 export const socials = [
   { label: "Instagram", handle: "@klymb.ai", href: "https://www.instagram.com/klymb.ai/" },
+  { label: "YouTube (Hindi)", handle: "@Klymb_AI", href: "https://www.youtube.com/@Klymb_AI" },
+  { label: "YouTube (English)", handle: "@KlymbAI", href: "https://www.youtube.com/@KlymbAI" },
+  { label: "LinkedIn", handle: "klymbai", href: "https://www.linkedin.com/company/klymbai/" },
+  { label: "Threads", handle: "@klymb.ai", href: "https://www.threads.com/@klymb.ai" },
   { label: "X", handle: "@KlymbAI", href: "https://x.com/KlymbAI" },
 ];

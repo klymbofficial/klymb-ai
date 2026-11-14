@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useId, useState, type ReactNode } from "react";
 import { achievementCaption, achievementPng, achievementSvg, type Achievement } from "@/lib/achievement";
 import { useLinkedInPost } from "@/components/share/LinkedInPost";
-import { fetchImage, pasteKey, useShareImage } from "@/lib/linkedin-share";
+import { fetchImage, useShareImage } from "@/lib/linkedin-share";
 
 export function ShareAchievement({ badge, course, courseUrl, initialName = "", imageSrc, variant = "default", posterIcon }: {
   badge: Achievement; course: string; courseUrl: string; initialName?: string; imageSrc?: string;
@@ -47,7 +47,7 @@ export function ShareAchievement({ badge, course, courseUrl, initialName = "", i
     onShared: (how) => {
       if (how === "posted") setStatus("Posted on LinkedIn.");
       if (how === "app") setStatus("Sent to LinkedIn. Tap Post there.");
-      if (how === "pasted") setStatus(`Caption is in. Press ${pasteKey()} in the post to add your badge, then tap Post.`);
+      if (how === "pasted") setStatus("Caption is in. Your badge is in Downloads: click the photo icon in LinkedIn, choose it, then tap Post.");
       if (how === "text") setStatus("Caption is in. Attach the downloaded badge, then tap Post.");
     },
   });

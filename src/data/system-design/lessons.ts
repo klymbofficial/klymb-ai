@@ -13,11 +13,23 @@ import { essentialsDaySix } from "./essentials-day-6";
 import { essentialsDaySeven } from "./essentials-day-7";
 import { essentialsDayTen } from "./essentials-day-10";
 import { essentialsDayTwelve } from "./essentials-day-12";
+import { essentialsDayEight } from "./essentials-day-8";
+import { essentialsDayNine } from "./essentials-day-9";
+import { essentialsDayEleven } from "./essentials-day-11";
+import { essentialsDayThirteen } from "./essentials-day-13";
+import { essentialsDayFourteen } from "./essentials-day-14";
+import { essentialsDayFifteen } from "./essentials-day-15";
+import { essentialsDaySixteen } from "./essentials-day-16";
+import { essentialsDaySeventeen } from "./essentials-day-17";
+import { essentialsDayEighteen } from "./essentials-day-18";
+import { essentialsDayNineteen } from "./essentials-day-19";
+import { essentialsDayTwenty } from "./essentials-day-20";
+import { essentialsDayTwentyOne } from "./essentials-day-21";
 import type { QuickCheck } from "./course-app";
 import type { Day } from "./types";
 
 /** Every built lesson in full, by lesson id ("module-lesson", zero-based). */
-export const LESSON_DAYS: Record<string, Day> = { "0-0": essentialsDayOne, "0-1": essentialsDayTwo, "0-2": essentialsDayThree, "0-3": essentialsDayFour, "0-4": essentialsDayFive, "0-5": essentialsDaySix, "0-6": essentialsDaySeven, "1-1": essentialsDayTen, "1-3": essentialsDayTwelve };
+export const LESSON_DAYS: Record<string, Day> = { "0-0": essentialsDayOne, "0-1": essentialsDayTwo, "0-2": essentialsDayThree, "0-3": essentialsDayFour, "0-4": essentialsDayFive, "0-5": essentialsDaySix, "0-6": essentialsDaySeven, "1-1": essentialsDayTen, "1-3": essentialsDayTwelve, "0-7": essentialsDayEight, "1-0": essentialsDayNine, "1-2": essentialsDayEleven, "1-4": essentialsDayThirteen, "1-5": essentialsDayFourteen, "1-6": essentialsDayFifteen, "1-7": essentialsDaySixteen, "2-0": essentialsDaySeventeen, "2-1": essentialsDayEighteen, "2-2": essentialsDayNineteen, "2-3": essentialsDayTwenty, "2-4": essentialsDayTwentyOne };
 
 /** Ungraded in-video questions, by lesson id. None of the lessons has one yet. */
 export const QUICK_CHECKS: Record<string, QuickCheck> = {};

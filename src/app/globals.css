@@ -226,6 +226,53 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .modal-pop[open] { animation: none; }
 }
 
+/*
+ * Course library controls. A .morph surface (the filter panel, the phone
+ * search field) grows out of the button that opens it, from that button's box
+ * (--from-x across, --from-w wide, 2.25rem tall), and folds back into it; its
+ * .morph-in parts follow a beat behind. Open, the clip reaches past the
+ * surface so its shadow shows.
+ */
+.morph {
+  visibility: hidden;
+  clip-path: inset(0 calc(100% - var(--from-x, 0px) - var(--from-w, 7rem)) calc(100% - 2.25rem) var(--from-x, 0px) round 8px);
+  transition: clip-path .3s cubic-bezier(.4, 0, .2, 1), visibility 0s linear .3s;
+}
+.morph[data-open] {
+  visibility: visible;
+  clip-path: inset(-2rem -4rem -5rem round 16px);
+  transition: clip-path .5s cubic-bezier(.2, .9, .1, 1), visibility 0s;
+}
+.morph .morph-in { opacity: 0; transform: translateY(6px); transition: opacity .12s, transform .12s; }
+.morph[data-open] .morph-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity .3s ease-out, transform .45s cubic-bezier(.2, .9, .1, 1);
+  transition-delay: calc(90ms + var(--i, 0) * 50ms);
+}
+@keyframes badge-pop { from { transform: scale(.3); opacity: 0 } 60% { transform: scale(1.18); opacity: 1 } to { transform: none } }
+.badge-pop { animation: badge-pop .35s cubic-bezier(.2, .9, .1, 1); }
+/* A count that changes rolls up into place. */
+@keyframes count-tick { from { transform: translateY(45%); opacity: 0 } }
+.count-tick { display: inline-block; animation: count-tick .35s cubic-bezier(.2, .9, .1, 1); }
+
+/* Phones: the sticky course bar draws its edge only once the page has scrolled, where browsers can tie that to scroll. */
+@media (max-width: 639.98px) {
+  .course-bar { box-shadow: 0 1px 0 rgb(32 30 29 / .08); }
+  @supports (animation-timeline: scroll()) {
+    .course-bar { box-shadow: none; animation: course-bar-edge linear both; animation-timeline: scroll(root); animation-range: 0 48px; }
+  }
+}
+@keyframes course-bar-edge { to { box-shadow: 0 1px 0 rgb(32 30 29 / .08), 0 14px 24px -22px rgb(32 30 29 / .5); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .morph, .morph[data-open] { clip-path: none; }
+  .morph { opacity: 0; transition: opacity .15s, visibility 0s linear .15s; }
+  .morph[data-open] { opacity: 1; transition: opacity .15s, visibility 0s; }
+  .morph .morph-in, .morph[data-open] .morph-in { opacity: 1; transform: none; transition: none; }
+  .badge-pop, .count-tick { animation: none; }
+}
+
 /* Hero rings: a slow breath, barely there. */
 @keyframes ring-breathe { 0%, 100% { opacity: 1 } 50% { opacity: .45 } }
 .ring-breathe { animation: ring-breathe 5s ease-in-out infinite; }
@@ -251,7 +298,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .spotlight:hover::after { opacity: 1; }
 }
 
-/* Announcement ticker: two copies of the row slide left by exactly one copy. */
+/* Experts strip: two copies of the row slide left by exactly one copy. */
 .marquee-track { animation: marquee 40s linear infinite; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }

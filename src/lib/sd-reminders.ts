@@ -112,3 +112,85 @@ export function emailFromToken(token: unknown, secret: string | undefined): stri
   const want = macOf(secret, email);
   return given.length === want.length && timingSafeEqual(given, want) ? email : null;
 }
+
+export const SD_PUSH_SLOTS = ["morning", "evening", "night"] as const;
+export type SdPushSlot = (typeof SD_PUSH_SLOTS)[number];
+
+/** A lesson's own hook: the question at 8 AM, then what the learner would do at 5 PM. */
+const PUSH_HOOKS: Record<string, { morning: string; topic: string; evening: string; eveningBody: string }> = {
+  "0-0": { morning: "Last pair, do buyers. Kaise? 🤔", topic: "system design hota kya hai", evening: "Dono ko “Order confirmed”. Galti kahan hui?", eveningBody: "Stock check karna kaafi hai?" },
+  "0-1": { morning: "Tap se saved cart tak kya hota hai? 🤔", topic: "ek app andar se kaise chalti hai", evening: "Timeout aaya. Cart save hua ya nahi?", eveningBody: "Request ka poora raasta" },
+  "0-2": { morning: "Users badhe, app slow. Kyun? 🤔", topic: "apps slow kyun hoti hain", evening: "App slow hai. Pehle kya check karoge?", eveningBody: "Sirf servers badhana kaafi hai?" },
+  "0-3": { morning: "Teen servers. Request kiske paas jaaye? 🤔", topic: "load balancing kaise kaam karti hai", evening: "Ek server down. Ab kya hoga?", eveningBody: "Login bhi na toote, kaise?" },
+  "0-4": { morning: "Purane order ka price kyun nahi badalta? 🤔", topic: "database mein data kaise rakhte hain", evening: "Har column par index laga dein?", eveningBody: "Fayda bhi hai, cost bhi." },
+  "0-5": { morning: "Har baar database se kyun poochna? 🤔", topic: "caching kaise kaam karti hai", evening: "Cache mein purana price. Ab kya?", eveningBody: "Tez bhi, sahi bhi, kaise?" },
+  "0-6": { morning: "Database bhaari ho gaya. Ab kya? 🤔", topic: "replication aur sharding mein farak", evening: "Address badla, purana kyun dikh raha hai?", eveningBody: "Replica ya shard?" },
+  "1-1": { morning: "Ek service slow, poori app kyun ruke? 🤔", topic: "failure ke liye design kaise karte hain", evening: "Timeout aaya. Retry kar dein?", eveningBody: "Payment do baar na kat jaaye" },
+  "1-3": { morning: "Ek post, 10 lakh followers. Kaise? 🤔", topic: "social feed kaise banti hai", evening: "Post pehle bhejein ya feed khulne par?", eveningBody: "Dono ka trade-off" },
+  "0-7": { morning: "Email slow hai. Screen kyun ruke? 🤔", topic: "queues aur background work", evening: "Same task do baar aaya. Ab?", eveningBody: "Duplicate email kaise rokoge?" },
+  "1-0": { morning: "“Design a URL shortener.” Pehla sentence? 🤔", topic: "interview ka repeatable framework", evening: "Blank whiteboard. Pehle 30 seconds mein kya bologe?", eveningBody: "Chhe steps ka framework" },
+  "1-2": { morning: "Order confirm. Message kaise pahunche? 🤔", topic: "notification system kaise banta hai", evening: "“Sent” ka matlab delivered hai?", eveningBody: "Teen alag statuses" },
+  "1-4": { morning: "Ek seat, do log. Kaun jeetega? 🤔", topic: "ticket booking mein double booking kaise rokte hain", evening: "Hold expire, phir payment aayi. Ab?", eveningBody: "Do baar confirm nahi kar sakte" },
+  "1-5": { morning: "Send dabaya, net gaya. Message kahan hai? 🤔", topic: "chat system kaise banta hai", evening: "Saved, delivered ya read?", eveningBody: "Retry par duplicate kaise rokoge?" },
+  "1-6": { morning: "Net slow, phir bhi video chalti hai. Kaise? 🤔", topic: "video streaming kaise kaam karti hai", evening: "Upload ho gaya. Video ready hai?", eveningBody: "Do lanes ka design" },
+  "1-7": { morning: "Blank board. Aaj pehla step aapka 🤔", topic: "ek poora system scratch se design karna", evening: "File-sharing service, aap kaise banaoge?", eveningBody: "Khud solve karo, phir milao" },
+  "2-0": { morning: "Kya AI ko aapka order pata hai? 🤔", topic: "simple AI assistant kaise banta hai", evening: "Model confident hai. Toh sahi hai?", eveningBody: "App aur model ka farak" },
+  "2-1": { morning: "Policy kal badli. AI ko kaise pata chale? 🤔", topic: "RAG aur hybrid search", evening: "Source mila. Toh answer sahi hai?", eveningBody: "Retrieval ki do lanes" },
+  "2-2": { morning: "“AI model slow hai.” Measure kiya? 🤔", topic: "AI ki latency, cost aur model choices", evening: "Traffic spike aur budget. Kya karoge?", eveningBody: "Speed, cost aur quality" },
+  "2-3": { morning: "Fast answer, par doosri company ka data? 🤔", topic: "AI quality, safety aur tenant isolation", evening: "Document bole “rules ignore karo”. Ab?", eveningBody: "Permissions model ke bahar" },
+  "2-4": { morning: "Aakhri din: poora AI assistant, aapka design 🤔", topic: "AI system design capstone", evening: "Capstone: model ke naam se shuru karoge?", eveningBody: "Apni har choice defend karo" },
+};
+
+/** Where a learner stands today, which decides how a notification speaks to them. */
+export interface PushStanding {
+  /** They've watched or worked on this lesson without passing it yet. */
+  started: boolean;
+  /** Days in a row with a pass, ending yesterday. */
+  streak: number;
+  /** They had passed something, but not yesterday or today, so a streak has lapsed. */
+  lapsed: boolean;
+}
+
+/** The learner's standing, from the IST dates of their passes. */
+export function pushStanding(passDates: string[], started: boolean, today: string): PushStanding {
+  const days = new Set(passDates);
+  let streak = 0;
+  for (let at = Date.parse(`${today}T00:00:00Z`) - 864e5; days.has(new Date(at).toISOString().slice(0, 10)); at -= 864e5) streak++;
+  return { started, streak, lapsed: days.size > 0 && streak === 0 };
+}
+
+/** Kamran's face for the moment, as on the 30-day tracks. */
+const pushFace = (mood: "excited" | "surprised" | "sleepy" | "missing") => `/mascots/kamran-${mood}-v2.png`;
+
+/**
+ * One of the day's three notifications, in the order: started, lapsed, on a
+ * streak, everyone else. Each replaces the one before it, and only the
+ * morning's sounds: repeated alerts from one site are what Chrome's spam
+ * detection flags, which is also why none says "last call" or counts down.
+ */
+export function sdReminderPush(lesson: CourseLesson | null, slot: SdPushSlot, name: string | null | undefined, standing: PushStanding) {
+  const first = name?.trim().split(/\s+/)[0] || null;
+  const you = (text: string) => (first ? `${first}, ${text}` : `${text[0].toUpperCase()}${text.slice(1)}`);
+  const base = { url: `/learn/system-design${lesson ? `?lesson=${lesson.id}` : ""}`, tag: "sd-reminder", loud: slot === "morning" };
+  if (!lesson) return { ...base, title: you("bas final assessment baaki hai"), body: "Yeh kar lo aur course poora.", icon: pushFace("excited") };
+
+  const day = `Day ${lesson.position + 1}`;
+  const hook = PUSH_HOOKS[lesson.id];
+  const copy = (title: string, body: string, mood: Parameters<typeof pushFace>[0]) => ({ ...base, title, body, icon: pushFace(mood) });
+
+  if (standing.started) {
+    if (slot === "morning") return copy(you(`${day} shuru kiya tha`), "Jahan chhoda tha, wahin se aage badho.", "excited");
+    if (slot === "evening") return copy(`${day} poora kar lein?`, "Thoda sa aur, aur aaj ka concept clear.", "surprised");
+    return copy(you(`${day} poora ho sakta hai`), "Thoda waqt ho toh aaj hi khatam kar lo.", "sleepy");
+  }
+  if (standing.lapsed) {
+    if (slot === "morning") return copy(first ? `Koi baat nahi, ${first}` : "Koi baat nahi", `Aaj se nayi streak. ${day} ready hai.`, "missing");
+    if (slot === "evening") return copy(you("wapas aa jao"), `${day} se phir shuru karte hain. Ek lesson kaafi hai.`, "missing");
+    return copy("Aaj se nayi shuruaat?", `${day} kar lo, aur streak phir se chalu.`, "missing");
+  }
+  const streak = standing.streak >= 2 ? `${standing.streak} din ki streak` : null;
+  if (slot === "morning") return copy(hook?.morning ?? `${day} ready hai`, streak ? `${streak} chal rahi hai. ${day} ready hai.` : you(hook ? `aaj samjho ${hook.topic}. ${day} ready hai.` : `aaj ka lesson: ${lesson.title}.`), "excited");
+  if (slot === "evening") return copy(hook?.evening ?? `${day} abhi baaki hai`, `${hook?.eveningBody ?? lesson.title} ${day} mein approach samjho.`, "surprised");
+  if (streak) return copy(first ? `${streak}, ${first}` : streak, `${day} kar lo, aur streak chalti rahegi.`, "sleepy");
+  return copy(you("aaj ka lesson kar lein?"), `${day} abhi baaki hai. Thoda waqt ho toh ek concept aur clear kar lo.`, "sleepy");
+}

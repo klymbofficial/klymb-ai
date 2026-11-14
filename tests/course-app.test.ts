@@ -157,7 +157,7 @@ function fullProgress(id: string) {
 const LAST_BUILT = ALL_IDS.filter((id) => !isSoon(id)).at(-1)!;
 const FIRST_SOON = ALL_IDS.find((id) => isSoon(id))!;
 
-test("finishing a lesson whose next day isn't out yet goes home", () => {
+test("finishing a lesson whose next day isn't out yet goes home", { skip: !FIRST_SOON && "every day is out" }, () => {
   const s0 = updateLesson({ ...home(), screen: "player", cur: LAST_BUILT }, LAST_BUILT, fullProgress(LAST_BUILT), NOW);
   const s = completeNext(s0, false, NOW);
   assert.ok(s.done.includes(LAST_BUILT));
@@ -171,7 +171,7 @@ test("every built day can be finished from start to end", () => {
   }
 });
 
-test("coming-soon lessons don't open", () => {
+test("coming-soon lessons don't open", { skip: !FIRST_SOON && "every day is out" }, () => {
   assert.equal(isSoon(FIRST_SOON), true);
   const s = openLesson(home(), FIRST_SOON, NOW);
   assert.equal(s.screen, "home");
@@ -180,7 +180,8 @@ test("coming-soon lessons don't open", () => {
 
 test("the last lesson of the course stays put", () => {
   const last = ALL_IDS[ALL_IDS.length - 1];
-  const s = completeNext({ ...home(), screen: "player", cur: last, done: ALL_IDS.slice(0, -1) }, false, NOW);
+  const s0 = updateLesson({ ...home(), screen: "player", cur: last, done: ALL_IDS.slice(0, -1) }, last, fullProgress(last), NOW);
+  const s = completeNext(s0, false, NOW);
   assert.equal(s.screen, "recap");
   assert.equal(s.cur, last);
 });
@@ -290,6 +291,20 @@ test("the admin summary counts each learner once per step and finds where they s
   assert.equal(sum.totals.completedAny, 1);
 });
 
+test("the admin summary counts each visitor's latest city and country once", async () => {
+  const { summarise } = await import("../src/lib/sd-summary");
+  const ev = (anon: string, props: Record<string, unknown>) =>
+    ({ created_at: new Date(NOW).toISOString(), anon_id: anon, email: null, event: "lesson_open", lesson: "0-0", step: null, props, lang: "en", device: "phone" });
+  const sum = summarise([
+    ev("aaaaaaaa", { city: "Delhi", country: "IN" }), ev("aaaaaaaa", { city: "Delhi", country: "IN" }),
+    ev("bbbbbbbb", { city: "Bengaluru", country: "IN" }),
+    ev("cccccccc", { city: "Delhi", country: "IN" }),
+    ev("dddddddd", {}),
+  ], [], LESSON_DAYS);
+  assert.deepEqual(sum.city, [{ label: "Delhi", value: 2 }, { label: "Bengaluru", value: 1 }]);
+  assert.deepEqual(sum.country, [{ label: "India", value: 3 }]);
+});
+
 test("a passed lesson can be revisited, a lesson only watched cannot", () => {
   assert.equal(revisitable(home(), "0-1"), false);
   assert.equal(revisitable(updateLesson(home(), "0-1", { watched: true }, NOW), "0-1"), false);
@@ -341,4 +356,10 @@ test("passes from the server never disturb what this browser already holds", () 
   const elsewhere = { ...home(), cur: "0-1" };
   assert.equal(withServerPasses(elsewhere, { "0-0": 80 }).cur, "0-1");
   assert.deepEqual(withServerPasses(home(), { "0-9": 80 }).done, []);
+});
+
+test("closing or joining the WhatsApp group card is remembered between visits", () => {
+  assert.equal(defaultState(NOW).groupSeen, false);
+  const back = fromStored(JSON.parse(JSON.stringify(toStored({ ...defaultState(NOW), groupSeen: true }))), NOW);
+  assert.equal(back.groupSeen, true);
 });

@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { currentEmail } from "@/auth";
-import { hasCourseAccess } from "@/lib/access";
+import { hasCompanyAssignment, hasCourseAccess } from "@/lib/access";
 import { LESSON_COUNT } from "@/lib/course-app";
 import { db } from "@/lib/db/client";
 import { getLearnerState } from "@/lib/learner/data";
@@ -20,7 +20,9 @@ const UNDEFINED_TABLE = "42P01";
 
 /**
  * This email's System Design seat, or null without one. Read here rather than
- * in the course app, so the dashboard can show it beside a track.
+ * in the course app, so the dashboard can show it beside a track. A seat is a
+ * paid enrolment, or else a company's assignment of the course to an employee
+ * (which is deliberately not an enrolment: see hasCourseAccess).
  */
 export async function systemDesignSeat(email: string): Promise<SystemDesignSeat | null> {
   const sql = db();
@@ -39,7 +41,10 @@ export async function systemDesignSeat(email: string): Promise<SystemDesignSeat 
     if (seat.error.code !== UNDEFINED_TABLE) console.error("seat read failed:", seat.error.code, seat.error.message);
     return null;
   }
-  if (!seat.data) return null;
+  if (!seat.data) {
+    if (!(await hasCompanyAssignment(sql, email, SD_COURSE))) return null;
+    return { passed: Math.min(passes.data?.passed ?? 0, LESSON_COUNT), total: LESSON_COUNT, finished: false };
+  }
   return { passed: Math.min(passes.data?.passed ?? 0, LESSON_COUNT), total: LESSON_COUNT, finished: seat.data.finished };
 }
 
