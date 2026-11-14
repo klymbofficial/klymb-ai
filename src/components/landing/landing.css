@@ -187,8 +187,8 @@ html.lenis { scroll-behavior: auto; }
 .kl-menu-btn.is-open span:first-child { transform: translateY(3.15px) rotate(45deg); }
 .kl-menu-btn.is-open span:last-child { transform: translateY(-3.15px) rotate(-45deg); }
 .kl-menu-panel {
-  position: absolute; top: calc(100% + 10px); right: 0; width: min(290px, calc(100vw - 32px)); padding: 6px 18px 18px;
-  border-radius: 24px; border: 1px solid color-mix(in srgb, var(--kl-ink) 10%, transparent);
+  position: absolute; top: calc(100% + 10px); right: 0; width: min(240px, calc(100vw - 32px)); padding: 4px 16px 14px;
+  border-radius: 20px; border: 1px solid color-mix(in srgb, var(--kl-ink) 10%, transparent);
   background: color-mix(in srgb, var(--kl-bg) 94%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   box-shadow: var(--kl-shadow-lg); transform-origin: top right;
   opacity: 0; transform: translateY(-6px) scale(.96); visibility: hidden;
@@ -197,12 +197,12 @@ html.lenis { scroll-behavior: auto; }
 .kl-menu-panel.is-open { opacity: 1; transform: none; visibility: visible; transition: opacity .25s ease, transform .35s var(--kl-ease), visibility 0s; }
 .kl-menu-panel ul { margin: 0; padding: 0; list-style: none; }
 .kl-menu-panel li a {
-  display: block; padding: 14px 2px; font-weight: 800; font-size: 20px; letter-spacing: -0.01em;
+  display: block; padding: 11px 2px; font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
   border-bottom: 1px solid color-mix(in srgb, var(--kl-ink) 12%, transparent);
 }
 .kl .kl-menu-panel li a:hover { color: var(--kl-red-700); }
 .kl .kl-menu-teams { color: var(--kl-red-700); }
-.kl .kl-menu-login { width: 100%; margin-top: 16px; padding: 14px 18px; border-radius: 999px; font-size: 16px; background: var(--kl-bg); }
+.kl .kl-menu-login { width: 100%; margin-top: 12px; padding: 10px 16px; border-radius: 999px; font-size: 14px; background: var(--kl-bg); }
 @media (prefers-reduced-motion: reduce) {
   .kl-menu-btn span, .kl-menu-panel, .kl-menu-panel.is-open { transition: none; }
 }
@@ -903,6 +903,22 @@ html.lenis { scroll-behavior: auto; }
 .kl-footer-copy { margin-right: auto; }
 .kl-footer-copy .kl-brandword { color: var(--kl-ink); }
 .kl .kl-footer a:hover { color: var(--kl-red); }
+
+/* Phones: headings, quote and banner one step down, so a screen holds a heading plus its content. */
+@media (max-width: 760px) {
+  .kl .kl-wp-title { font-size: 42px; }
+  .kl-wp-lede { font-size: 15px; }
+  .kl-wp-final-title { font-size: 38px; }
+  .kl-h2 { font-size: 32px; }
+  .kl-panel-vlabel { font-size: 24px; }
+  .kl-panel-detail h3 { font-size: 24px; }
+  .kl-teams { padding: 20px; }
+  .kl-teams p { font-size: 15px; }
+  .kl-quote-mark { font-size: 110px; }
+  .kl-feature blockquote { font-size: 20px; line-height: 1.2; }
+  .kl-feature-who strong { font-size: 16px; }
+  .kl-close h2 { font-size: 40px; }
+}
 
 /* ── Journey dock and chat ───────────────────────────────────────────── */
 
