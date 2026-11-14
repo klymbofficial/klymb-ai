@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import codePhoto from "@/assets/tracks/junior-developer.jpg";
 import { JoinForm } from "@/components/join/JoinForm";
 
 /*
@@ -19,8 +21,9 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   return (
     <div className="grid min-h-dvh grid-cols-[minmax(0,1fr)] lg:grid-cols-[2fr_3fr]">
       <section className="relative isolate overflow-hidden bg-red-muted px-5 pb-14 pt-6 text-white sm:px-10 lg:flex lg:flex-col lg:justify-center lg:pb-10">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 -z-10 size-72 rounded-full bg-red-soft/15 blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-transparent to-red-muted-deep/80" />
+        {/* A code photo behind the panel, tinted brand maroon so the type stays readable, as on /register. */}
+        <Image src={codePhoto} alt="" aria-hidden="true" fill priority placeholder="blur" sizes="(min-width: 1024px) 40vw, 100vw" className="pointer-events-none -z-20 object-cover" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/80 via-red-muted/90 to-red-muted-deep/97" />
         <p className="display text-lg">KLYMB<span className="text-red-soft">.AI</span></p>
         <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">System Design</p>
         <h1 className="display display-soft mt-2 max-w-md text-[clamp(1.9rem,6vw,2.75rem)] leading-[1.05]">
