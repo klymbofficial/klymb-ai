@@ -189,7 +189,7 @@ export function SupportBot() {
   }, [open, learner]);
 
   // The System Design offer is a page of its own design, and the launcher would sit on its Claim button.
-  if (pathname.startsWith("/admin") || pathname === "/system-design" || (SITE_CLOSED && !learner)) return null;
+  if (pathname.startsWith("/admin") || pathname === "/system-design" || pathname === "/join" || (SITE_CLOSED && !learner)) return null;
 
   /** Moves the launcher, and the panel with it if it is open. `save` keeps the spot for next time. */
   const moveTo = (p: Pos, save = false) => {
