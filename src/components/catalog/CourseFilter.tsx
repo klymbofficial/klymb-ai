@@ -1,8 +1,9 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
-import { industries, programs, roles } from "@/data/catalog";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { industries, roles } from "@/data/catalog";
+import { libraryCourses } from "@/data/course-cards";
 
 export const STATUS = [["all", "All"], ["available", "Open"], ["unavailable", "Not available"]] as const;
 export const SORTS = [["open", "Open first"], ["az", "A to Z"]] as const;
@@ -11,17 +12,15 @@ export type Status = (typeof STATUS)[number][0];
 export type Sort = (typeof SORTS)[number][0];
 export type Facets = { role: string; industry: string; status: Status };
 
-const ROLE: readonly (readonly [string, string])[] = [["all", "All"], ...roles.map((r) => [r.slug, r.name] as const)];
-const INDUSTRY: readonly (readonly [string, string])[] = [["all", "All"], ...industries.map((i) => [i.slug, i.name] as const)];
+/** What the page opens on: only the featured courses. Searching leaves it, so a search looks at everything. */
+export const FEATURED_VIEW = "featured";
 
-/** Phones, below Tailwind's `sm`. The role tabs are hidden there, so roles move into this panel. */
-const PHONE = "(max-width: 639.98px)";
-const onPhoneChange = (cb: () => void) => {
-  const m = window.matchMedia(PHONE);
-  m.addEventListener("change", cb);
-  return () => m.removeEventListener("change", cb);
-};
-const usePhone = () => useSyncExternalStore(onPhoneChange, () => window.matchMedia(PHONE).matches, () => false);
+const ROLE: readonly (readonly [string, string])[] = [
+  [FEATURED_VIEW, "Featured"],
+  ["all", "All courses"],
+  ...roles.map((r) => [r.slug, r.name] as const),
+];
+const INDUSTRY: readonly (readonly [string, string])[] = [["all", "All"], ...industries.map((i) => [i.slug, i.name] as const)];
 
 /**
  * A `.morph` surface grows out of the button that opens it and folds back into
@@ -37,9 +36,9 @@ export function syncBox(from: HTMLElement | null, to: HTMLElement | null) {
 const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /**
- * One Filter button for the course library. It opens into a panel holding
- * every facet at once: status and sort as segmented switches, industry (and,
- * on phones, role) as chips. Each option shows how many courses it would
+ * One Filter button for the course library, on every screen. It opens into a
+ * panel holding every facet at once: which courses to show (Featured, all, or
+ * one role) and industry as chips, status and sort as segmented switches. Each option shows how many courses it would
  * leave, a strip of bars (one per course) previews a choice on hover, and a
  * badge on the button counts what is set. Choices apply as they are made.
  */
@@ -67,20 +66,17 @@ export function CourseFilter({
 }) {
   const [open, setOpen] = useState(false);
   const [preview, setPreview] = useState<Partial<Facets> | null>(null);
-  const phone = usePhone();
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
 
-  // On a phone the role lives in this panel, so it counts here and Clear resets it; elsewhere the tabs own it.
-  const active = Number(phone && role !== "all") + Number(industry !== "all") + Number(status !== "all") + Number(sort !== "open");
+  const active = Number(role !== FEATURED_VIEW) + Number(industry !== "all") + Number(status !== "all") + Number(sort !== "open");
   const now = matchesWith({});
   const current: Facets = { role, industry, status };
   // Hovering the option already chosen previews nothing.
   const previewing = !!preview && Object.entries(preview).some(([k, v]) => current[k as keyof Facets] !== v);
   const shown = previewing && preview ? matchesWith(preview) : now;
-  const o = phone ? 1 : 0;
 
   const toggle = (next: boolean, refocus = false) => {
     syncBox(trigger.current, panel.current);
@@ -90,7 +86,7 @@ export function CourseFilter({
   };
 
   const clear = () => {
-    if (phone) setRole("all");
+    setRole(FEATURED_VIEW);
     setIndustry("all");
     setStatus("all");
     setSort("open");
@@ -175,11 +171,11 @@ export function CourseFilter({
         {/* Beside the button: a bar per course, lit when it matches. Hovering an option previews it. */}
         <div className="morph-in flex h-[34px] items-center justify-end gap-2.5 pr-3.5" style={stagger(0)}>
           <span aria-hidden="true" className="flex h-4 items-end gap-[3px]">
-            {programs.map((p, i) => {
-              const hit = shown.has(p.slug);
+            {libraryCourses.map((c, i) => {
+              const hit = shown.has(c.slug);
               return (
                 <span
-                  key={p.slug}
+                  key={c.slug}
                   style={{ transitionDelay: `${i * 22}ms` }}
                   className={clsx(
                     "h-full w-[3px] origin-bottom rounded-full transition-[background-color,transform] duration-300 motion-reduce:transition-none",
@@ -191,28 +187,26 @@ export function CourseFilter({
           </span>
           <p className="text-[13px] whitespace-nowrap">
             <span className={clsx("nums font-semibold", previewing ? "text-muted" : "text-ink")}>{shown.size}</span>
-            <span className="text-muted"> of {programs.length}</span>
+            <span className="text-muted"> of {libraryCourses.length}</span>
           </p>
         </div>
 
         {/* On a phone the facets scroll inside the panel, so its foot (and Show) always fits on screen. */}
         <div className="px-3.5 max-sm:max-h-[calc(100dvh-17rem)] max-sm:overflow-y-auto max-sm:overscroll-contain sm:px-4">
-          {phone && (
-            <Facet i={1} label="Role">
-              {(labelId) => (
-                <Chips
-                  name="course-role"
-                  labelId={labelId}
-                  value={role}
-                  onChange={setRole}
-                  onPreview={(v) => setPreview(v ? { role: v } : null)}
-                  options={ROLE.map(([v, l]) => ({ value: v, label: l, count: matchesWith({ role: v }).size }))}
-                />
-              )}
-            </Facet>
-          )}
+          <Facet i={1} label="Show">
+            {(labelId) => (
+              <Chips
+                name="course-role"
+                labelId={labelId}
+                value={role}
+                onChange={setRole}
+                onPreview={(v) => setPreview(v ? { role: v } : null)}
+                options={ROLE.map(([v, l]) => ({ value: v, label: l, count: matchesWith({ role: v }).size }))}
+              />
+            )}
+          </Facet>
 
-          <Facet i={1 + o} label="Status">
+          <Facet i={2} label="Status">
             {(labelId) => (
               <Segmented
                 name="course-status"
@@ -226,7 +220,7 @@ export function CourseFilter({
             )}
           </Facet>
 
-          <Facet i={2 + o} label="Industry">
+          <Facet i={3} label="Industry">
             {(labelId) => (
               <Chips
                 name="course-industry"
@@ -239,7 +233,7 @@ export function CourseFilter({
             )}
           </Facet>
 
-          <Facet i={3 + o} label="Sort">
+          <Facet i={4} label="Sort">
             {(labelId) => (
               <Segmented
                 name="course-sort"
@@ -253,7 +247,7 @@ export function CourseFilter({
           </Facet>
         </div>
 
-        <div className="morph-in flex items-center justify-between gap-3 border-t border-[#ecebea] px-3.5 py-3 sm:px-4" style={stagger(4 + o)}>
+        <div className="morph-in flex items-center justify-between gap-3 border-t border-[#ecebea] px-3.5 py-3 sm:px-4" style={stagger(5)}>
           <button
             type="button"
             onClick={clear}
