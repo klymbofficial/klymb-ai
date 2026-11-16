@@ -9,6 +9,7 @@ import { courseSignIn } from "@/app/(course)/learn/system-design/actions";
 import { offerSignIn, offerSwitchAccount } from "@/app/(course)/system-design/actions";
 import { FINAL_MARK } from "@/lib/sd-pace";
 import { formatINR } from "@/lib/format";
+import { localEstimate, type LocalRate } from "@/lib/local-price";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
 import { metaTrack } from "@/lib/meta-pixel";
@@ -76,9 +77,9 @@ function Countdown({ endsAt, serverNow, onEnd }: { endsAt: number; serverNow: nu
  * first, for the email, and comes back here with the form as they left it.
  * Signed in, it saves their answers and opens Razorpay.
  */
-export function ClaimCard({ offer, email, name: startName, phone: startPhone, linkedin: startLinkedin, role: startRole, campaign, referral, coupon: startCoupon, resume, signInFailed, inApp }: {
+export function ClaimCard({ offer, email, name: startName, phone: startPhone, linkedin: startLinkedin, role: startRole, campaign, referral, coupon: startCoupon, local, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
-  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; resume: boolean; signInFailed: boolean; inApp: boolean;
+  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; local: LocalRate | null; resume: boolean; signInFailed: boolean; inApp: boolean;
 }) {
   const router = useRouter();
   const signIn = useRef<HTMLFormElement>(null);
@@ -229,6 +230,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
                 <span className="text-[52px] leading-[.9] font-extrabold tracking-[-.05em] lg:text-[64px]">{formatINR(price)}</span>
                 {discounted && <span className="text-xl font-bold text-[rgba(251,246,238,.7)] line-through decoration-[#f0868b] decoration-2">{formatINR(offer.full)}</span>}
               </div>
+              {local && <span className="text-[13px] font-semibold text-[#f3d48a]">{localEstimate(price, local)}. Charged in INR; your bank converts it.</span>}
             </div>
             {discounted && <span className="sd-offer-pop rounded-[10px] bg-[#e7c97a] px-3 py-2 text-[15px] leading-none font-extrabold text-[#2a1d05] shadow-[0_6px_18px_rgba(0,0,0,.25)]">{offPercent(price, offer.full)}% off</span>}
           </div>

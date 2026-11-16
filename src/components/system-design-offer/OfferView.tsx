@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { entity } from "@/data/legal";
 import { formatINR } from "@/lib/format";
+import type { LocalRate } from "@/lib/local-price";
 import { withCoupon } from "@/lib/sd-coupons";
 import { SD_OFFER, SD_STATS, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 import { ClaimCard } from "./ClaimCard";
@@ -17,9 +18,9 @@ import { RememberReferral } from "./RememberReferral";
  * column dissolves into the page, so the form can sit right under the video
  * with the details after it; the top bar is the way back up.
  */
-export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, coupon, resume, signInFailed, inApp }: {
+export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, coupon, local, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
-  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; resume: boolean; signInFailed: boolean; inApp: boolean;
+  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; local: LocalRate | null; resume: boolean; signInFailed: boolean; inApp: boolean;
 }) {
   return (
     <OfferBackdrop>
@@ -52,7 +53,7 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
         </div>
 
         <div id="claim" className="sd-offer-right flex scroll-mt-20 flex-col gap-4 max-lg:order-1 max-lg:mt-2">
-          <ClaimCard key={referral?.code} offer={offer} email={email} name={name} phone={phone} linkedin={linkedin} role={role} campaign={campaign} referral={referral} coupon={coupon} resume={resume} signInFailed={signInFailed} inApp={inApp} />
+          <ClaimCard key={referral?.code} offer={offer} email={email} name={name} phone={phone} linkedin={linkedin} role={role} campaign={campaign} referral={referral} coupon={coupon} local={local} resume={resume} signInFailed={signInFailed} inApp={inApp} />
           <p className="m-0 text-xs leading-[1.4] text-[#b9ad9f]">
             Sold by {entity.registeredName} ·{" "}
             <Link href="/terms" className="underline underline-offset-2">Terms</Link> ·{" "}
