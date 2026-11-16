@@ -5,7 +5,7 @@ import { todayInIndia } from "@/lib/learn";
 import { createOrder, razorpayKeys } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { referrerOf } from "@/lib/referrals";
-import { SD_COURSE, campaignOf, claimProblems, linkedInProblem, mobileOf, refOf, referralProblem, sdPriceFor, sdPriceNow, type SdRole } from "@/lib/sd-offer";
+import { SD_COURSE, campaignOf, claimProblems, linkedInProblem, phoneOf, refOf, referralProblem, sdPriceFor, sdPriceNow, type SdRole } from "@/lib/sd-offer";
 import { LIMITS, clamp } from "@/lib/validation";
 
 /**
@@ -22,12 +22,13 @@ export async function POST(req: Request) {
   const email = await currentEmail();
   if (!email) return NextResponse.json({ error: "Please sign in with Google again." }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { name?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown } | null;
   const name = clamp(body?.name, LIMITS.name);
+  const dial = String(body?.dial ?? "91");
   const phone = String(body?.phone ?? "");
   const role = String(body?.role ?? "");
   const linkedin = clamp(body?.linkedin, LIMITS.linkedin + 1);
-  const missing = claimProblems({ name, phone, role });
+  const missing = claimProblems({ name, dial, phone, role });
   if (missing.length) return NextResponse.json({ error: `Add ${missing.join(", ")}.` }, { status: 400 });
   const badLink = linkedInProblem(linkedin);
   if (badLink) return NextResponse.json({ error: badLink }, { status: 400 });
@@ -47,7 +48,8 @@ export async function POST(req: Request) {
   if (seat) return NextResponse.json({ error: "You already have this course.", enrolled: true }, { status: 409 });
 
   const now = new Date();
-  const contact = `+91${mobileOf(phone)}`;
+  // Checked above, so never null here: +<country code><number>, as Razorpay and WhatsApp want it.
+  const contact = phoneOf(dial, phone)!;
 
   let referrerEmail: string | null = null;
   const typedRef = clamp(body?.ref, 20);

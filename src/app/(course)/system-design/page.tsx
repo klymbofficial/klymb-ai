@@ -58,7 +58,7 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
         offer={sdOfferState(lead?.locked_price)}
         email={email}
         name={lead?.name ?? session?.user?.name ?? ""}
-        phone={lead?.phone.replace(/\D/g, "").slice(-10) ?? ""}
+        phone={lead?.phone ?? ""}
         linkedin={lead?.linkedin ?? ""}
         role={lead?.status ?? ""}
         campaign={campaignOf(params.utm_campaign)}

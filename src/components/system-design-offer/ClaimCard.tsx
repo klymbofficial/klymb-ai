@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { ArrowRight, Briefcase, GraduationCap } from "lucide-react";
+import { ArrowRight, Briefcase, ChevronDown, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
@@ -13,7 +13,7 @@ import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
 import { metaTrack } from "@/lib/meta-pixel";
 import { openInBrowser } from "./OpenInBrowser";
-import { SD_OFFER, claimProblems, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
+import { DIAL_CODES, INDIA_DIAL, SD_OFFER, claimProblems, phoneProblem, splitPhone, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -22,7 +22,7 @@ const ROLES: { key: SdRole; label: string; Icon: typeof Briefcase }[] = [
   { key: "working", label: "Working professional", Icon: Briefcase },
 ];
 
-interface Claim { name: string; phone: string; linkedin: string; role: SdRole | ""; ref: string }
+interface Claim { name: string; dial?: string; phone: string; linkedin: string; role: SdRole | ""; ref: string }
 
 /** The form, kept for the trip to Google and back: this tab only, and gone once read. */
 const DRAFT = "klymb.sd-claim";
@@ -83,7 +83,9 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const signIn = useRef<HTMLFormElement>(null);
   const restored = useRef(false);
   const [name, setName] = useState(startName);
-  const [phone, setPhone] = useState(startPhone);
+  // A saved number comes back split: the country picker and the rest.
+  const [dial, setDial] = useState(() => splitPhone(startPhone).dial);
+  const [phone, setPhone] = useState(() => splitPhone(startPhone).number);
   const [linkedin, setLinkedin] = useState(startLinkedin);
   const [role, setRole] = useState<SdRole | "">(startRole);
   const [ref, setRef] = useState(referral?.code ?? "");
@@ -93,9 +95,10 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const [blocked, setBlocked] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const missing = claimProblems({ name, phone, role });
+  const missing = claimProblems({ name, dial, phone, role });
   const badName = tried && missing.includes("your name");
-  const badPhone = tried && missing.includes("a 10-digit mobile number");
+  const badPhone = tried && missing.includes(phoneProblem(dial));
+  const india = dial === INDIA_DIAL;
   const badLinkedin = tried ? linkedInProblem(linkedin) : null;
   const badRef = tried ? referralCodeProblem(ref) : null;
   const fail = (message: string) => { setBusy(false); setError(message); };
@@ -154,6 +157,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     const draft = takeDraft();
     if (!draft) return;
     setName(draft.name);
+    setDial(draft.dial ?? INDIA_DIAL);
     setPhone(draft.phone);
     setLinkedin(draft.linkedin);
     setRole(draft.role);
@@ -172,7 +176,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     setError("");
     if (missing.length || linkedInProblem(linkedin) || referralCodeProblem(ref)) return setTried(true);
     step("claim");
-    const details = { name, phone, linkedin, role, ref };
+    const details = { name, dial, phone, linkedin, role, ref };
     if (email) return void pay(details);
     // Google refuses to sign anyone in from an app's own browser, so don't send them to its error.
     if (inApp) { step("blocked"); return setBlocked(true); }
@@ -219,12 +223,30 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               <span className={label}>Full name</span>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Aarav Sharma" autoComplete="name" maxLength={120} aria-invalid={badName} className={clsx(input, badName ? "border-[#83050b]" : "border-transparent")} />
             </label>
-            <div className="relative flex flex-col">
-              <label className="flex min-w-0 flex-col gap-1.5">
-                <span className={label}>Phone</span>
-                <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98765 43210" autoComplete="tel-national" maxLength={16} aria-invalid={badPhone} className={clsx(input, "pl-[58px]", badPhone ? "border-[#83050b]" : "border-transparent")} />
-              </label>
-              <span aria-hidden="true" className="pointer-events-none absolute bottom-[15px] left-3.5 font-bold text-[#605d5d]">+91</span>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="sd-phone" className={label}>Phone</label>
+              <div className="flex gap-2">
+                {/* The list names each country; the closed box shows just the flag and code, so it stays narrow. */}
+                <div className="relative w-[96px] flex-none">
+                  <select
+                    value={dial}
+                    onChange={(e) => setDial(e.target.value)}
+                    aria-label="Country code"
+                    autoComplete="tel-country-code"
+                    className={clsx(input, "cursor-pointer appearance-none border-transparent text-transparent")}
+                  >
+                    {DIAL_CODES.map((c) => (
+                      <option key={c.dial} value={c.dial} className="text-ink">{`${c.flag} ${c.name} (+${c.dial})`}</option>
+                    ))}
+                  </select>
+                  <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center gap-1 font-bold text-[#605d5d]">
+                    {DIAL_CODES.find((c) => c.dial === dial)?.flag} +{dial}
+                    <ChevronDown size={14} />
+                  </span>
+                </div>
+                <input id="sd-phone" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={india ? "98765 43210" : "Phone number"} autoComplete="tel-national" maxLength={20} aria-invalid={badPhone} className={clsx(input, "min-w-0", badPhone ? "border-[#83050b]" : "border-transparent")} />
+              </div>
+              {!india && <span className="text-xs leading-[1.4] text-[#605d5d]">Charged in Indian rupees (INR); your card&apos;s bank converts it.</span>}
             </div>
             <label className="flex min-w-0 flex-col gap-1.5">
               <span className={label}>LinkedIn profile <span className="font-normal text-[#605d5d]">(optional)</span></span>

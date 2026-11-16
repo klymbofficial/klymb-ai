@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import {
-  SD_OFFER, campaignOf, claimProblems, countdownParts, externalBrowserUrl, inAppBrowser, linkedInProblem, mobileOf, offPercent, offerPath, sdOfferEnd, sdOfferOpen, sdOfferState, sdPriceFor, sdPriceNow, signInFailedPath,
+  SD_OFFER, campaignOf, claimProblems, countdownParts, externalBrowserUrl, inAppBrowser, linkedInProblem, mobileOf, offPercent, phoneOf, splitPhone, offerPath, sdOfferEnd, sdOfferOpen, sdOfferState, sdPriceFor, sdPriceNow, signInFailedPath,
 } from "../src/lib/sd-offer";
 
 const DURING = new Date("2026-11-14T23:59:59+05:30");
@@ -54,10 +54,33 @@ test("mobile numbers are read the way people type them", () => {
   assert.equal(mobileOf(undefined), null);
 });
 
+test("phones from other countries are saved with their own code", () => {
+  assert.equal(phoneOf("91", "98765 43210"), "+919876543210");
+  assert.equal(phoneOf("91", "5876543210"), null, "India keeps the strict mobile rule");
+  assert.equal(phoneOf("1", "(415) 555-0123"), "+14155550123");
+  assert.equal(phoneOf("44", "07911 123456"), "+447911123456", "the UK's leading 0 is dropped");
+  assert.equal(phoneOf("44", "+44 7911 123456"), "+447911123456", "a pasted +44 isn't doubled");
+  assert.equal(phoneOf("971", "50 123 4567"), "+971501234567");
+  assert.equal(phoneOf("65", "8123 4567"), "+6581234567");
+  assert.equal(phoneOf("1", "12345"), null, "too short");
+  assert.equal(phoneOf("1", "1234567890123456"), null, "too long");
+  assert.equal(phoneOf("999", "4155550123"), null, "only listed codes");
+});
+
+test("a saved phone comes back as country code and number", () => {
+  assert.deepEqual(splitPhone("+919876543210"), { dial: "91", number: "9876543210" });
+  assert.deepEqual(splitPhone("+14155550123"), { dial: "1", number: "4155550123" });
+  assert.deepEqual(splitPhone("+971501234567"), { dial: "971", number: "501234567" });
+  assert.deepEqual(splitPhone("9876543210"), { dial: "91", number: "9876543210" }, "older saves without a code are Indian");
+  assert.deepEqual(splitPhone(""), { dial: "91", number: "" });
+});
+
 test("the form says exactly what is missing", () => {
   assert.deepEqual(claimProblems({ name: "Asha", phone: "9876543210", role: "student" }), []);
   assert.deepEqual(claimProblems({ name: " ", phone: "1", role: "" }), ["your name", "a 10-digit mobile number", "student or working professional"]);
   assert.deepEqual(claimProblems({ name: "Asha", phone: "9876543210", role: "founder" }), ["student or working professional"]);
+  assert.deepEqual(claimProblems({ name: "Asha", dial: "1", phone: "4155550123", role: "working" }), []);
+  assert.deepEqual(claimProblems({ name: "Asha", dial: "1", phone: "12", role: "working" }), ["a valid phone number"]);
 });
 
 test("the LinkedIn link is optional, but has to be one if it's given", () => {

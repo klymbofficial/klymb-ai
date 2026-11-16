@@ -74,11 +74,89 @@ export function mobileOf(value: unknown) {
   return /^[6-9]\d{9}$/.test(digits) ? digits : null;
 }
 
+/**
+ * The countries the phone field offers, India first. One code can cover
+ * several countries (+1 is the US and Canada), so each is listed once.
+ */
+export const DIAL_CODES = [
+  { dial: "91", name: "India", flag: "🇮🇳" },
+  { dial: "1", name: "US / Canada", flag: "🇺🇸" },
+  { dial: "44", name: "UK", flag: "🇬🇧" },
+  { dial: "971", name: "UAE", flag: "🇦🇪" },
+  { dial: "966", name: "Saudi Arabia", flag: "🇸🇦" },
+  { dial: "974", name: "Qatar", flag: "🇶🇦" },
+  { dial: "965", name: "Kuwait", flag: "🇰🇼" },
+  { dial: "968", name: "Oman", flag: "🇴🇲" },
+  { dial: "973", name: "Bahrain", flag: "🇧🇭" },
+  { dial: "65", name: "Singapore", flag: "🇸🇬" },
+  { dial: "60", name: "Malaysia", flag: "🇲🇾" },
+  { dial: "61", name: "Australia", flag: "🇦🇺" },
+  { dial: "64", name: "New Zealand", flag: "🇳🇿" },
+  { dial: "49", name: "Germany", flag: "🇩🇪" },
+  { dial: "33", name: "France", flag: "🇫🇷" },
+  { dial: "31", name: "Netherlands", flag: "🇳🇱" },
+  { dial: "353", name: "Ireland", flag: "🇮🇪" },
+  { dial: "46", name: "Sweden", flag: "🇸🇪" },
+  { dial: "41", name: "Switzerland", flag: "🇨🇭" },
+  { dial: "81", name: "Japan", flag: "🇯🇵" },
+  { dial: "977", name: "Nepal", flag: "🇳🇵" },
+  { dial: "880", name: "Bangladesh", flag: "🇧🇩" },
+  { dial: "94", name: "Sri Lanka", flag: "🇱🇰" },
+  { dial: "234", name: "Nigeria", flag: "🇳🇬" },
+  { dial: "254", name: "Kenya", flag: "🇰🇪" },
+  { dial: "27", name: "South Africa", flag: "🇿🇦" },
+] as const;
+
+export const INDIA_DIAL = "91";
+
+/**
+ * The whole number, as +<country code><number>, or null when it can't be one.
+ * India keeps the strict 10-digit mobile rule; elsewhere the number is 6 to 14
+ * digits (a leading trunk 0, as in UK 07…, is dropped) and 15 in all at most.
+ */
+export function phoneOf(dial: unknown, number: unknown): string | null {
+  const code = String(dial ?? INDIA_DIAL);
+  if (!DIAL_CODES.some((c) => c.dial === code)) return null;
+  if (code === INDIA_DIAL) {
+    const mobile = mobileOf(number);
+    return mobile ? `+91${mobile}` : null;
+  }
+  let digits = String(number ?? "").replace(/\D/g, "");
+  if (digits.startsWith(code) && digits.length - code.length >= 6 && String(number).trim().startsWith("+")) digits = digits.slice(code.length);
+  digits = digits.replace(/^0+/, "");
+  if (digits.length < 6 || digits.length > 14 || code.length + digits.length > 15) return null;
+  return `+${code}${digits}`;
+}
+
+/** A saved number back into the form: its country code and the rest. Anything without a known + code is Indian. */
+export function splitPhone(saved: string | null | undefined): { dial: string; number: string } {
+  const value = String(saved ?? "").trim();
+  if (value.startsWith("+")) {
+    const digits = value.replace(/\D/g, "");
+    const match = [...DIAL_CODES].sort((a, b) => b.dial.length - a.dial.length).find((c) => digits.startsWith(c.dial));
+    if (match) return { dial: match.dial, number: digits.slice(match.dial.length) };
+  }
+  return { dial: INDIA_DIAL, number: value.replace(/\D/g, "").slice(-10) };
+}
+
+/** Two numbers as the same phone: digits with country code, and a bare 10-digit one (or 0 and 10) is Indian. */
+function phoneKey(value: string) {
+  let digits = value.replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return digits.length === 10 ? `91${digits}` : digits;
+}
+
+/** The words the form uses when the phone is missing or wrong. */
+export function phoneProblem(dial: string) {
+  return dial === INDIA_DIAL ? "a 10-digit mobile number" : "a valid phone number";
+}
+
 /** What is still missing from the form, as the words for "Add …". Empty when it can be sent. */
-export function claimProblems({ name, phone, role }: { name: string; phone: string; role: string }) {
+export function claimProblems({ name, dial = INDIA_DIAL, phone, role }: { name: string; dial?: string; phone: string; role: string }) {
   const missing: string[] = [];
   if (name.trim().length < 2) missing.push("your name");
-  if (!mobileOf(phone)) missing.push("a 10-digit mobile number");
+  if (!phoneOf(dial, phone)) missing.push(phoneProblem(dial));
   if (role !== "student" && role !== "working") missing.push("student or working professional");
   return missing;
 }
@@ -120,7 +198,7 @@ export function referralCodeProblem(value: string) {
 /** Why this buyer can't use this referrer's code, if anything. The server asks, before any money moves. */
 export function referralProblem(referrer: { email: string; phone: string | null } | null, buyer: { email: string; phone: string }) {
   if (!referrer) return "That referral code isn't valid. Check it, or leave it blank.";
-  if (referrer.email === buyer.email || (referrer.phone && mobileOf(referrer.phone) === mobileOf(buyer.phone))) return "You can't use your own referral code.";
+  if (referrer.email === buyer.email || (referrer.phone && phoneKey(referrer.phone) === phoneKey(buyer.phone))) return "You can't use your own referral code.";
   return null;
 }
 

@@ -41,6 +41,10 @@ test("a bad code, your own code and your own phone are all refused before paying
   assert.match(referralProblem({ email: "other@gmail.com", phone: "98765 43210" }, buyer) ?? "", /your own/, "same phone, second account");
   assert.equal(referralProblem({ email: "other@gmail.com", phone: "+919000000000" }, buyer), null);
   assert.equal(referralProblem({ email: "other@gmail.com", phone: null }, buyer), null);
+  assert.match(referralProblem({ email: "other@gmail.com", phone: "09876543210" }, buyer) ?? "", /your own/, "a leading 0 is the same phone");
+  const abroad = { email: "new@gmail.com", phone: "+14155550123" };
+  assert.match(referralProblem({ email: "other@gmail.com", phone: "14155550123" }, abroad) ?? "", /your own/, "same US phone");
+  assert.equal(referralProblem({ email: "other@gmail.com", phone: "4155550123" }, abroad), null, "a bare 10 digits is Indian, so not the US number");
 });
 
 test("the window runs 10 days from purchase, to the minute", () => {
