@@ -62,6 +62,7 @@ test("phones from other countries are saved with their own code", () => {
   assert.equal(phoneOf("44", "+44 7911 123456"), "+447911123456", "a pasted +44 isn't doubled");
   assert.equal(phoneOf("971", "50 123 4567"), "+971501234567");
   assert.equal(phoneOf("65", "8123 4567"), "+6581234567");
+  assert.equal(phoneOf("92", "0300 1234567"), "+923001234567", "Pakistan, with its leading 0");
   assert.equal(phoneOf("1", "12345"), null, "too short");
   assert.equal(phoneOf("1", "1234567890123456"), null, "too long");
   assert.equal(phoneOf("999", "4155550123"), null, "only listed codes");

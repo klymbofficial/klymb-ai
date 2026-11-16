@@ -100,6 +100,7 @@ export const DIAL_CODES = [
   { dial: "41", name: "Switzerland", flag: "🇨🇭" },
   { dial: "81", name: "Japan", flag: "🇯🇵" },
   { dial: "977", name: "Nepal", flag: "🇳🇵" },
+  { dial: "92", name: "Pakistan", flag: "🇵🇰" },
   { dial: "880", name: "Bangladesh", flag: "🇧🇩" },
   { dial: "94", name: "Sri Lanka", flag: "🇱🇰" },
   { dial: "234", name: "Nigeria", flag: "🇳🇬" },
