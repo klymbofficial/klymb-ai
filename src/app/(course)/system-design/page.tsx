@@ -8,13 +8,14 @@ import { OfferView } from "@/components/system-design-offer/OfferView";
 import { hasCourseAccess } from "@/lib/access";
 import { db } from "@/lib/db/client";
 import { inviterFor } from "@/lib/referrals";
+import { couponOf, couponProblem, findCoupon } from "@/lib/sd-coupons";
 import { MODULES } from "@/data/system-design/course-app";
 import { site } from "@/data/config";
 import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferState, sdPriceNow, type SdRole } from "@/lib/sd-offer";
 
 const description = "System design, explained with real examples. Built for interviews.";
 
-type Params = { utm_campaign?: string; signin?: string; claim?: string; ref?: string };
+type Params = { utm_campaign?: string; signin?: string; claim?: string; ref?: string; coupon?: string };
 
 /** Who sent this link. The preview and the page both ask, so it's one query. */
 const invitedByOf = cache(async (ref: string | null) => (ref ? inviterFor(ref) : null));
@@ -51,6 +52,10 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
   // A code that leads nobody isn't kept, so the form never shows a dead one.
   const ref = refOf(params.ref);
   const invitedBy = await invitedByOf(ref);
+  // A code from the link is filled in; it's applied only if it works today.
+  const couponCode = couponOf(params.coupon);
+  const found = couponCode && sql ? (await findCoupon(sql, couponCode)).data : null;
+  const coupon = couponCode ? { code: couponCode, price: found && !couponProblem(found) ? found.price : null } : null;
 
   return (
     <>
@@ -63,6 +68,7 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
         role={lead?.status ?? ""}
         campaign={campaignOf(params.utm_campaign)}
         referral={invitedBy ? { code: ref!, invitedBy } : null}
+        coupon={coupon}
         resume={params.claim === "1"}
         signInFailed={params.signin === "failed"}
         inApp={inAppBrowser((await headers()).get("user-agent") ?? "")}

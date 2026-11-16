@@ -4,6 +4,7 @@ import { db } from "@/lib/db/client";
 import { todayInIndia } from "@/lib/learn";
 import { createOrder, razorpayKeys } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { couponOf, couponProblem, findCoupon, withCoupon } from "@/lib/sd-coupons";
 import { referrerOf } from "@/lib/referrals";
 import { SD_COURSE, campaignOf, claimProblems, linkedInProblem, phoneOf, refOf, referralProblem, sdPriceFor, sdPriceNow, type SdRole } from "@/lib/sd-offer";
 import { LIMITS, clamp } from "@/lib/validation";
@@ -17,12 +18,13 @@ import { LIMITS, clamp } from "@/lib/validation";
  * any price they locked earlier: someone who claims during the offer keeps its
  * price even if they finish paying after it ends. A referral code is checked
  * here, so a bad one is refused while they can still fix it, not after paying.
+ * So is a coupon code, which sets the price; the two can go together.
  */
 export async function POST(req: Request) {
   const email = await currentEmail();
   if (!email) return NextResponse.json({ error: "Please sign in with Google again." }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown; coupon?: unknown } | null;
   const name = clamp(body?.name, LIMITS.name);
   const dial = String(body?.dial ?? "91");
   const phone = String(body?.phone ?? "");
@@ -62,6 +64,20 @@ export async function POST(req: Request) {
     referrerEmail = referrer!.email;
   }
 
+  // The order stores the code in its own column only when one is used, so orders keep working before the coupon migration runs.
+  let couponCode: string | null = null;
+  let couponPrice: { price: number } | null = null;
+  const typedCoupon = clamp(body?.coupon, 30);
+  if (typedCoupon) {
+    const code = couponOf(typedCoupon);
+    const { data: coupon, error: couponError } = code ? await findCoupon(sql, code) : { data: null, error: null };
+    if (couponError) return NextResponse.json({ error: "Coupons aren't available right now. Leave the code blank, or try again later." }, { status: 500 });
+    const refused = couponProblem(coupon, now);
+    if (refused) return NextResponse.json({ error: refused }, { status: 400 });
+    couponCode = coupon!.code;
+    couponPrice = coupon;
+  }
+
   const { data: lead, error: leadError } = await sql.row<{ locked_price: number }>`
     insert into course.sd_preregistrations (email, name, phone, linkedin, status, locked_price, consent)
     values (${email}, ${name}, ${contact}, ${linkedin || null}, ${role as SdRole}, ${sdPriceNow(now)}, false)
@@ -76,19 +92,24 @@ export async function POST(req: Request) {
   }
 
   const order = await createOrder(keys, {
-    amount: sdPriceFor(lead?.locked_price, now) * 100,
+    amount: withCoupon(sdPriceFor(lead?.locked_price, now), couponPrice) * 100,
     receipt: `klymb-sd-${Date.now().toString(36)}`,
-    notes: { email, course: SD_COURSE },
+    notes: couponCode ? { email, course: SD_COURSE, coupon: couponCode } : { email, course: SD_COURSE },
   });
   if (!order.ok) {
     console.error("razorpay create order failed:", order.message);
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: order.status });
   }
 
-  const { error } = await sql.run`
-    insert into course.payments (email, track, cohort_start, amount, currency, razorpay_order_id, campaign, referrer_email)
-    values (${email}, ${SD_COURSE}, ${todayInIndia()}, ${order.amount}, ${order.currency}, ${order.id}, ${campaignOf(body?.campaign)}, ${referrerEmail})
-  `;
+  const { error } = couponCode
+    ? await sql.run`
+        insert into course.payments (email, track, cohort_start, amount, currency, razorpay_order_id, campaign, referrer_email, coupon_code)
+        values (${email}, ${SD_COURSE}, ${todayInIndia()}, ${order.amount}, ${order.currency}, ${order.id}, ${campaignOf(body?.campaign)}, ${referrerEmail}, ${couponCode})
+      `
+    : await sql.run`
+        insert into course.payments (email, track, cohort_start, amount, currency, razorpay_order_id, campaign, referrer_email)
+        values (${email}, ${SD_COURSE}, ${todayInIndia()}, ${order.amount}, ${order.currency}, ${order.id}, ${campaignOf(body?.campaign)}, ${referrerEmail})
+      `;
   if (error) {
     console.error("payments insert failed:", error.code, error.message);
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 500 });

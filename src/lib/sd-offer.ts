@@ -288,11 +288,12 @@ export function keptRef(stored: string | null, now = Date.now()) {
 }
 
 /** Back to the offer from Google, `claim` picking up the claim they started, with the campaign and referral they came in on. */
-export function offerPath(campaign: string | null, claim = false, ref: string | null = null) {
+export function offerPath(campaign: string | null, claim = false, ref: string | null = null, coupon: string | null = null) {
   const params = new URLSearchParams();
   if (claim) params.set("claim", "1");
   if (campaign) params.set("utm_campaign", campaign);
   if (ref) params.set("ref", ref);
+  if (coupon) params.set("coupon", coupon);
   const query = params.toString();
   return query ? `/system-design?${query}` : "/system-design";
 }

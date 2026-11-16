@@ -13,7 +13,8 @@ import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
 import { metaTrack } from "@/lib/meta-pixel";
 import { openInBrowser } from "./OpenInBrowser";
-import { DIAL_CODES, INDIA_DIAL, SD_OFFER, claimProblems, phoneProblem, splitPhone, countdownParts, linkedInProblem, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
+import { couponCodeProblem, withCoupon } from "@/lib/sd-coupons";
+import { DIAL_CODES, INDIA_DIAL, SD_OFFER, claimProblems, phoneProblem, splitPhone, countdownParts, linkedInProblem, offPercent, referralCodeProblem, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -22,7 +23,7 @@ const ROLES: { key: SdRole; label: string; Icon: typeof Briefcase }[] = [
   { key: "working", label: "Working professional", Icon: Briefcase },
 ];
 
-interface Claim { name: string; dial?: string; phone: string; linkedin: string; role: SdRole | ""; ref: string }
+interface Claim { name: string; dial?: string; phone: string; linkedin: string; role: SdRole | ""; ref: string; coupon?: string }
 
 /** The form, kept for the trip to Google and back: this tab only, and gone once read. */
 const DRAFT = "klymb.sd-claim";
@@ -75,9 +76,9 @@ function Countdown({ endsAt, serverNow, onEnd }: { endsAt: number; serverNow: nu
  * first, for the email, and comes back here with the form as they left it.
  * Signed in, it saves their answers and opens Razorpay.
  */
-export function ClaimCard({ offer, email, name: startName, phone: startPhone, linkedin: startLinkedin, role: startRole, campaign, referral, resume, signInFailed, inApp }: {
+export function ClaimCard({ offer, email, name: startName, phone: startPhone, linkedin: startLinkedin, role: startRole, campaign, referral, coupon: startCoupon, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
-  referral: { code: string; invitedBy: string } | null; resume: boolean; signInFailed: boolean; inApp: boolean;
+  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; resume: boolean; signInFailed: boolean; inApp: boolean;
 }) {
   const router = useRouter();
   const signIn = useRef<HTMLFormElement>(null);
@@ -89,6 +90,10 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const [linkedin, setLinkedin] = useState(startLinkedin);
   const [role, setRole] = useState<SdRole | "">(startRole);
   const [ref, setRef] = useState(referral?.code ?? "");
+  const [coupon, setCoupon] = useState(startCoupon?.code ?? "");
+  const [applied, setApplied] = useState<{ code: string; price: number } | null>(startCoupon?.price != null ? { code: startCoupon.code, price: startCoupon.price } : null);
+  const [couponError, setCouponError] = useState(startCoupon && startCoupon.price == null ? "That coupon code isn't active right now." : "");
+  const [checking, setChecking] = useState(false);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(signInFailed ? "Google sign-in did not complete. Please try again." : "");
@@ -101,6 +106,24 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const india = dial === INDIA_DIAL;
   const badLinkedin = tried ? linkedInProblem(linkedin) : null;
   const badRef = tried ? referralCodeProblem(ref) : null;
+  const badCoupon = (tried ? couponCodeProblem(coupon) : null) || couponError || null;
+  // The price shown is the one the server will charge: the coupon's, never above today's.
+  const price = withCoupon(offer.price, applied);
+  const discounted = price < offer.full;
+
+  /** Asks the server what the code gives, so the price on the page changes before they pay. */
+  async function applyCoupon() {
+    const code = coupon.trim().toUpperCase();
+    setCouponError("");
+    if (!code) return;
+    if (couponCodeProblem(code)) return setCouponError(couponCodeProblem(code)!);
+    setChecking(true);
+    const res = await fetch("/api/sd/coupon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) }).catch(() => null);
+    const out = await res?.json().catch(() => null);
+    setChecking(false);
+    if (res?.ok && typeof out?.price === "number") setApplied({ code, price: out.price });
+    else setCouponError(out?.error ?? "We couldn't check that code. Check your connection and try again.");
+  }
   const fail = (message: string) => { setBusy(false); setError(message); };
   const step = (s: OfferStep) => trackOffer(s, { inApp, campaign });
   const [started, setStarted] = useState(false);
@@ -162,6 +185,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     setLinkedin(draft.linkedin);
     setRole(draft.role);
     setRef(draft.ref);
+    if (draft.coupon) setCoupon(draft.coupon);
     if (email && resume) void pay(draft);
   });
 
@@ -174,9 +198,9 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   function claim(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (missing.length || linkedInProblem(linkedin) || referralCodeProblem(ref)) return setTried(true);
+    if (missing.length || linkedInProblem(linkedin) || referralCodeProblem(ref) || couponCodeProblem(coupon)) return setTried(true);
     step("claim");
-    const details = { name, dial, phone, linkedin, role, ref };
+    const details = { name, dial, phone, linkedin, role, ref, coupon };
     if (email) return void pay(details);
     // Google refuses to sign anyone in from an app's own browser, so don't send them to its error.
     if (inApp) { step("blocked"); return setBlocked(true); }
@@ -200,13 +224,13 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#e7c97a_1.2px,transparent_1.6px)] [background-size:16px_16px] opacity-[.18]" />
           <div className="relative flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-extrabold tracking-[.12em] text-[#f3d48a] uppercase">{offer.discounted && !offer.open ? "Your locked price · full course" : "Full course"}</span>
+              <span className="text-[11px] font-extrabold tracking-[.12em] text-[#f3d48a] uppercase">{applied && price < offer.price ? "With your coupon · full course" : offer.discounted && !offer.open ? "Your locked price · full course" : "Full course"}</span>
               <div className="flex items-baseline gap-3">
-                <span className="text-[52px] leading-[.9] font-extrabold tracking-[-.05em] lg:text-[64px]">{formatINR(offer.price)}</span>
-                {offer.discounted && <span className="text-xl font-bold text-[rgba(251,246,238,.7)] line-through decoration-[#f0868b] decoration-2">{formatINR(offer.full)}</span>}
+                <span className="text-[52px] leading-[.9] font-extrabold tracking-[-.05em] lg:text-[64px]">{formatINR(price)}</span>
+                {discounted && <span className="text-xl font-bold text-[rgba(251,246,238,.7)] line-through decoration-[#f0868b] decoration-2">{formatINR(offer.full)}</span>}
               </div>
             </div>
-            {offer.discounted && <span className="sd-offer-pop rounded-[10px] bg-[#e7c97a] px-3 py-2 text-[15px] leading-none font-extrabold text-[#2a1d05] shadow-[0_6px_18px_rgba(0,0,0,.25)]">{offer.off}% off</span>}
+            {discounted && <span className="sd-offer-pop rounded-[10px] bg-[#e7c97a] px-3 py-2 text-[15px] leading-none font-extrabold text-[#2a1d05] shadow-[0_6px_18px_rgba(0,0,0,.25)]">{offPercent(price, offer.full)}% off</span>}
           </div>
           {offer.open && (
             <div className="relative mt-4 flex flex-wrap items-center gap-2.5">
@@ -256,6 +280,21 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               <span className={label}>Referral code <span className="font-normal text-[#605d5d]">(optional)</span></span>
               <input type="text" value={ref} onChange={(e) => setRef(e.target.value.toUpperCase())} placeholder="From a friend's link" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} aria-invalid={!!badRef} className={clsx(input, badRef ? "border-[#83050b]" : "border-transparent")} />
             </label>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="sd-coupon" className={label}>Coupon code <span className="font-normal text-[#605d5d]">(optional)</span></label>
+              <div className="flex gap-2">
+                <input
+                  id="sd-coupon" type="text" value={coupon} placeholder="If you have one" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} aria-invalid={!!badCoupon}
+                  onChange={(e) => { setCoupon(e.target.value.toUpperCase()); setApplied(null); setCouponError(""); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyCoupon(); } }}
+                  className={clsx(input, "min-w-0 flex-1", badCoupon ? "border-[#83050b]" : "border-transparent")}
+                />
+                <button type="button" onClick={() => void applyCoupon()} disabled={checking || !coupon.trim() || !!applied} className="min-h-[50px] flex-none cursor-pointer rounded-[10px] border-2 border-[#83050b] bg-transparent px-4 text-sm font-extrabold text-[#83050b] disabled:cursor-default disabled:opacity-50">
+                  {checking ? "Checking…" : applied ? "Applied" : "Apply"}
+                </button>
+              </div>
+              {applied && <span role="status" className="text-[13px] font-semibold text-[#2f6b2f]">{applied.code} applied. You pay {formatINR(price)}.</span>}
+            </div>
             <div role="radiogroup" aria-label="I am a" className="flex flex-col gap-1.5">
               <span className={label}>I am a</span>
               <div className="grid grid-cols-2 gap-2">
@@ -287,6 +326,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
             {tried && missing.length > 0 && <p role="alert" className="m-0 text-[13px] font-semibold text-[#83050b]">Add {missing.join(", ")}.</p>}
             {badLinkedin && <p role="alert" className="m-0 text-[13px] font-semibold text-[#83050b]">{badLinkedin}</p>}
             {badRef && <p role="alert" className="m-0 text-[13px] font-semibold text-[#83050b]">{badRef}</p>}
+            {badCoupon && <p role="alert" className="m-0 text-[13px] font-semibold text-[#83050b]">{badCoupon}</p>}
             {error && <p role="alert" className="m-0 text-[13px] font-semibold text-[#83050b]">{error}</p>}
             {blocked && (
               <div role="alert" className="flex flex-col gap-2 rounded-[10px] bg-[rgba(131,5,11,.08)] p-3 text-[13px] leading-[1.4] font-semibold text-[#83050b]">
@@ -296,12 +336,13 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               </div>
             )}
             <button type="submit" disabled={busy} className="relative flex h-[58px] cursor-pointer items-center justify-between overflow-hidden rounded-xl border-0 bg-[#83050b] px-5 text-[17px] font-extrabold text-[#fbf6ee] shadow-[0_10px_24px_-8px_rgba(131,5,11,.7)] hover:bg-[#690409] disabled:cursor-wait disabled:opacity-80">
-              {busy ? (email ? "Reserving your seat…" : "Taking you to Google…") : `Claim my ${formatINR(offer.price)} seat`}<ArrowRight size={20} aria-hidden="true" />
+              {busy ? (email ? "Reserving your seat…" : "Taking you to Google…") : `Claim my ${formatINR(price)} seat`}<ArrowRight size={20} aria-hidden="true" />
             </button>
           </form>
           <form ref={signIn} action={offerSignIn} hidden>
             <input type="hidden" name="campaign" value={campaign ?? ""} />
             <input type="hidden" name="ref" value={ref} />
+            <input type="hidden" name="coupon" value={coupon} />
           </form>
 
           <p className="m-0 flex items-start gap-2.5 rounded-[10px] bg-[rgba(201,162,74,.16)] px-3 py-2.5 text-[13px] leading-[1.4] text-pretty">
@@ -312,6 +353,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
             <form action={offerSwitchAccount} className="text-xs leading-[1.4] text-[#605d5d]">
               <input type="hidden" name="campaign" value={campaign ?? ""} />
               <input type="hidden" name="ref" value={ref} />
+              <input type="hidden" name="coupon" value={coupon} />
               Buying as <span className="font-bold break-all text-ink">{email}</span>. <button type="submit" className="cursor-pointer border-0 bg-transparent p-0 underline underline-offset-2">Use a different account</button>
             </form>
           ) : (

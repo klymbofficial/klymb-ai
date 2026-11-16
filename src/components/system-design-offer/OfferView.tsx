@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { entity } from "@/data/legal";
 import { formatINR } from "@/lib/format";
+import { withCoupon } from "@/lib/sd-coupons";
 import { SD_OFFER, SD_STATS, type SdOfferState, type SdRole } from "@/lib/sd-offer";
 import { ClaimCard } from "./ClaimCard";
 import { IntroVideo } from "./IntroVideo";
@@ -16,9 +17,9 @@ import { RememberReferral } from "./RememberReferral";
  * column dissolves into the page, so the form can sit right under the video
  * with the details after it; the top bar is the way back up.
  */
-export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, resume, signInFailed, inApp }: {
+export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, coupon, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
-  referral: { code: string; invitedBy: string } | null; resume: boolean; signInFailed: boolean; inApp: boolean;
+  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; resume: boolean; signInFailed: boolean; inApp: boolean;
 }) {
   return (
     <OfferBackdrop>
@@ -30,7 +31,7 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
             <Link href="/" aria-label="Klymb.ai home" className="inline-flex py-2">
               <Image src="/brand/klymb-logo.svg" alt="" width={104} height={16} priority className="h-4 w-auto [filter:brightness(0)_invert(1)_sepia(.2)]" />
             </Link>
-            <a href="#claim" className="flex min-h-11 items-center rounded-[10px] bg-[#83050b] px-3.5 text-sm font-extrabold whitespace-nowrap text-[#fbf6ee] no-underline shadow-[0_6px_18px_rgba(0,0,0,.35)] lg:hidden">Get it for {formatINR(offer.price)}</a>
+            <a href="#claim" className="flex min-h-11 items-center rounded-[10px] bg-[#83050b] px-3.5 text-sm font-extrabold whitespace-nowrap text-[#fbf6ee] no-underline shadow-[0_6px_18px_rgba(0,0,0,.35)] lg:hidden">Get it for {formatINR(withCoupon(offer.price, coupon?.price != null ? { price: coupon.price } : null))}</a>
           </div>
           <h1 className="m-0 mt-2 text-[44px] leading-[.9] font-extrabold tracking-[-.055em] text-balance text-[#fbf6ee] lg:text-[clamp(48px,5.6cqw,80px)]">System design, <span className="text-[#f0868b]">phone pe.</span></h1>
           <p className="m-0 max-w-[32rem] text-[15px] leading-[1.45] text-pretty text-[#d9cfc2] lg:text-lg">21 days, 15 minutes a day. Go from “what is system design?” to designing a chat app, a ticket booking system and an AI assistant in an interview.</p>
@@ -51,7 +52,7 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
         </div>
 
         <div id="claim" className="sd-offer-right flex scroll-mt-20 flex-col gap-4 max-lg:order-1 max-lg:mt-2">
-          <ClaimCard key={referral?.code} offer={offer} email={email} name={name} phone={phone} linkedin={linkedin} role={role} campaign={campaign} referral={referral} resume={resume} signInFailed={signInFailed} inApp={inApp} />
+          <ClaimCard key={referral?.code} offer={offer} email={email} name={name} phone={phone} linkedin={linkedin} role={role} campaign={campaign} referral={referral} coupon={coupon} resume={resume} signInFailed={signInFailed} inApp={inApp} />
           <p className="m-0 text-xs leading-[1.4] text-[#b9ad9f]">
             Sold by {entity.registeredName} ·{" "}
             <Link href="/terms" className="underline underline-offset-2">Terms</Link> ·{" "}
