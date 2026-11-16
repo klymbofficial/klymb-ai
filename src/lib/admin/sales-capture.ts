@@ -60,5 +60,45 @@ export async function captureWebsiteLeads(opts: { cron?: boolean } = {}): Promis
   if (data?.latest) {
     await sql.run`update course.sales_sync_state set cursor_at = ${data.latest}, synced_at = now() where source = 'website'`;
   }
+  await signPaidLeads(sql);
   return data?.added ?? 0;
+}
+
+/**
+ * A lead who has paid is won: move them to Signed, dated when they paid, and
+ * clear the follow-up so they leave the Due list and the morning digest.
+ * "Paid" matches the badge in Sales (a paid or refunded payment on the lead's
+ * email, or on the email of a registration made with the lead's phone).
+ * Runs with every capture, so it catches payments within 15 minutes.
+ */
+async function signPaidLeads(sql: NonNullable<ReturnType<typeof db>>): Promise<void> {
+  const { error } = await sql.run`
+    with ids as (
+      select l.id, l.email from course.sales_leads l where l.email is not null and l.stage <> 'signed'
+      union
+      select l.id, lower(r.email) from course.sales_leads l
+        join course.registrations r on l.phone is not null and l.stage <> 'signed'
+         and right(regexp_replace(r.phone, '\\D', '', 'g'), 10) = right(l.phone, 10)
+      union
+      select l.id, p.email from course.sales_leads l
+        join course.sd_preregistrations p on l.phone is not null and l.stage <> 'signed'
+         and right(regexp_replace(p.phone, '\\D', '', 'g'), 10) = right(l.phone, 10)
+    ),
+    paid as (
+      select ids.id, min(pay.created_at) as paid_at from ids
+        join course.payments pay on lower(pay.email) = ids.email and pay.status in ('paid', 'refunded')
+       group by ids.id
+    )
+    update course.sales_leads l set
+      stage = 'signed',
+      stage_changed_at = now(),
+      signed_at = coalesce(l.signed_at, paid.paid_at),
+      next_follow_up = null,
+      notes = concat_ws(E'\n', nullif(l.notes, ''),
+                        'Paid ' || to_char(paid.paid_at at time zone 'Asia/Kolkata', 'DD Mon YYYY') || ', moved to Signed automatically'),
+      updated_at = now()
+    from paid
+    where l.id = paid.id and l.kind = 'b2c' and l.stage <> 'signed'
+  `;
+  if (error) console.error("signing paid leads failed:", error.code, error.message);
 }
