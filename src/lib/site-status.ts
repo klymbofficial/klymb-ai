@@ -6,7 +6,7 @@
 export const SITE_CLOSED = false;
 
 /** Paths that stay open while the site is closed. */
-const OPEN_PREFIXES = ["/admin", "/api", "/closed", "/_next", "/_vercel"];
+const OPEN_PREFIXES = ["/admin", "/sales", "/api", "/closed", "/_next", "/_vercel"];
 
 export function staysOpen(pathname: string) {
   if (OPEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return true;

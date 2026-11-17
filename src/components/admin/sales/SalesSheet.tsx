@@ -42,7 +42,8 @@ function ago(iso: string) {
  * the WhatsApp and Call buttons open the chat or the dialler and log the
  * touch in one tap. Built for working a list top to bottom.
  */
-export function SalesSheet({ rows, today, owners }: { rows: SheetRow[]; today: string; owners: { email: string; name: string | null }[] }) {
+/** `base` is where lead pages live: /admin/sales for owners, /sales for reps. Reps get no owner column. */
+export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssign = true }: { rows: SheetRow[]; today: string; owners: { email: string; name: string | null }[]; base?: string; canAssign?: boolean }) {
   const [error, setError] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
   // The row whose call is in progress: its outcome buttons are showing.
@@ -85,7 +86,7 @@ export function SalesSheet({ rows, today, owners }: { rows: SheetRow[]; today: s
               return (
                 <tr key={r.id} className={clsx("align-top", overdue && "bg-red-tint/40")}>
                   <td className="px-3 py-2">
-                    <Link href={`/admin/sales/leads/${r.id}`} className="font-bold hover:underline">{r.name}</Link>
+                    <Link href={`${base}/leads/${r.id}`} className="font-bold hover:underline">{r.name}</Link>
                     {r.paid && <span className="ml-1.5 bg-emerald-700 px-1 py-0.5 text-[10px] font-extrabold text-white">PAID</span>}
                     <span className="block truncate text-xs text-muted">{[r.org, labelOf(SOURCES, r.source)].filter(Boolean).join(" · ")}</span>
                   </td>
@@ -154,7 +155,7 @@ export function SalesSheet({ rows, today, owners }: { rows: SheetRow[]; today: s
                     <NoteCell row={r} onSave={(v) => save(r.id, "notes", v)} saved={saved("notes")} />
                   </td>
                   <td className="px-3 py-2">
-                    <select
+                    {canAssign ? <select
                       aria-label={`Owner of ${r.name}`}
                       defaultValue={r.owner_email ?? ""}
                       key={`${r.id}-${r.owner_email}`}
@@ -163,7 +164,7 @@ export function SalesSheet({ rows, today, owners }: { rows: SheetRow[]; today: s
                     >
                       <option value="">—</option>
                       {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email.split("@")[0]}</option>)}
-                    </select>
+                    </select> : <span className="px-1 text-xs text-muted">You</span>}
                   </td>
                 </tr>
               );

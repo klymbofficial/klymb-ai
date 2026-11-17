@@ -291,3 +291,12 @@ export function pace(actual: number, target: number, dayOfMonth: number, daysInM
 export function istToday(now: Date = new Date()): string {
   return new Date(now.getTime() + IST).toISOString().slice(0, 10);
 }
+
+/**
+ * Whether someone in Sales may open and work a lead. Owners may work any
+ * lead; a rep (intern) only the leads assigned to them.
+ */
+export function canWorkLead(user: { email: string; role: "owner" | "rep" }, ownerEmail: string | null): boolean {
+  if (user.role === "owner") return true;
+  return ownerEmail !== null && ownerEmail.toLowerCase() === user.email;
+}

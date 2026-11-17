@@ -26,23 +26,30 @@ export async function GET(req: Request) {
     select l.id, l.name, l.phone, l.stage, l.next_follow_up::text as next_follow_up, l.notes,
            l.owner_email, a.name as owner_name
       from course.sales_leads l
-      join course.admin_users a on a.email = l.owner_email
-     where l.next_follow_up <= ${today}::date and l.stage not in ('signed', 'rejected')
+      left join course.admin_users a on a.email = l.owner_email
+     where l.owner_email is not null and l.next_follow_up <= ${today}::date and l.stage not in ('signed', 'rejected')
      order by l.owner_email, l.next_follow_up, l.name
   `;
   if (error) return NextResponse.json({ error: "Read failed" }, { status: 500 });
+  // Active interns get their own digest, linking to /sales. Before
+  // 0041_sales_reps.sql has run this read fails and there are none.
+  const { data: repRows } = await sql.rows<{ email: string; name: string | null }>`
+    select email, name from course.sales_reps where active
+  `;
+  const reps = new Map((repRows ?? []).map((r) => [r.email, r.name]));
 
-  const byOwner = new Map<string, { name: string | null; leads: DueLead[] }>();
-  // Sales is owners only: nobody else gets a digest of leads they can't open.
-  for (const r of (data ?? []).filter((x) => isOwnerEmail(x.owner_email))) {
-    const o = byOwner.get(r.owner_email) ?? { name: r.owner_name, leads: [] };
+  const byOwner = new Map<string, { name: string | null; rep: boolean; leads: DueLead[] }>();
+  // Only people who can open Sales get a digest: owners, and active interns.
+  for (const r of (data ?? []).filter((x) => isOwnerEmail(x.owner_email) || reps.has(x.owner_email))) {
+    const rep = !isOwnerEmail(r.owner_email);
+    const o = byOwner.get(r.owner_email) ?? { name: rep ? reps.get(r.owner_email) ?? null : r.owner_name, rep, leads: [] };
     o.leads.push(r);
     byOwner.set(r.owner_email, o);
   }
 
   const results: Record<string, string> = {};
   for (const [email, o] of byOwner) {
-    const mail = salesDigestEmail({ name: o.name, today, leads: o.leads, siteUrl: site.url });
+    const mail = salesDigestEmail({ name: o.name, today, leads: o.leads, siteUrl: site.url, rep: o.rep });
     const r = await sendMail({
       to: { email, name: o.name ?? undefined },
       ...mail,

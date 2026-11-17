@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
+import { assignLeads } from "@/app/admin/sales-actions";
 import { ImportLeads, input, LeadForm } from "@/components/admin/sales/SalesForms";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
+import { SelectAll } from "@/components/admin/sales/TeamForms";
 import { requireOwner } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
@@ -61,7 +63,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
         <select name="owner" defaultValue={owner} className={input}>
           <option value="">Everyone</option>
           <option value="none">Unassigned</option>
-          {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email}</option>)}
+          {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email}{o.rep ? " (intern)" : ""}</option>)}
         </select>
         <button type="submit" className="border border-ink px-3 py-2 text-xs font-bold uppercase tracking-wider hover:bg-ink hover:text-paper">Filter</button>
         <span className="ml-auto text-xs text-muted">{leads.length === 500 ? "First 500" : `${leads.length} leads`}</span>
@@ -73,10 +75,22 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
           body={due ? "No follow-ups are due for this filter. Check the full list or add new leads." : "Add a lead, or import a sheet or a WhatsApp dashboard export."}
         />
       ) : (
+        // Tick leads, pick a person, Assign: how leads are handed to interns.
+        <form action={assignLeads}>
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-bold">Assign ticked leads to</span>
+          <select name="to" defaultValue="" className={input} aria-label="Assign ticked leads to">
+            <option value="" disabled>Pick someone</option>
+            {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email}{o.rep ? " (intern)" : ""}</option>)}
+            <option value="none">Nobody (unassign)</option>
+          </select>
+          <button type="submit" className="border border-ink px-3 py-2 font-bold uppercase tracking-wider hover:bg-ink hover:text-paper">Assign</button>
+        </div>
         <div className="card overflow-x-auto">
-          <table className="w-full min-w-[860px] text-left text-sm">
+          <table className="w-full min-w-[900px] text-left text-sm">
             <thead className="border-b border-line/30 text-xs uppercase tracking-wider text-muted">
               <tr>
+                <th className="w-10 py-3 pl-4"><SelectAll /></th>
                 <th className="px-4 py-3">Lead</th><th className="px-4 py-3">Stage</th><th className="px-4 py-3">Source</th>
                 <th className="px-4 py-3">Last touch</th><th className="px-4 py-3">Follow-up</th><th className="px-4 py-3">Owner</th>
               </tr>
@@ -84,6 +98,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
             <tbody className="divide-y divide-line/20">
               {leads.map((l) => (
                 <tr key={l.id} className="hover:bg-surface/60">
+                  <td className="py-3 pl-4"><input type="checkbox" name="id" value={l.id} aria-label={`Tick ${l.name}`} className="size-4 accent-ink" /></td>
                   <td className="px-4 py-3">
                     <Link href={`/admin/sales/leads/${l.id}`} className="font-bold underline-offset-4 hover:underline">{l.name}</Link>
                     {l.kind === "b2b" && <span className="ml-2 text-[11px] font-extrabold text-muted">B2B</span>}
@@ -104,6 +119,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
             </tbody>
           </table>
         </div>
+        </form>
       )}
     </>
   );

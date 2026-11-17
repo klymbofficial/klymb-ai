@@ -16,11 +16,13 @@ export interface DueLead {
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const SHOW = 25;
 
-export function salesDigestEmail(p: { name: string | null; today: string; leads: DueLead[]; siteUrl: string }) {
+/** `rep` sends the links to /sales, where interns work, instead of admin. */
+export function salesDigestEmail(p: { name: string | null; today: string; leads: DueLead[]; siteUrl: string; rep?: boolean }) {
+  const base = `${p.siteUrl}${p.rep ? "/sales" : "/admin/sales"}`;
   const overdue = p.leads.filter((l) => l.next_follow_up < p.today).length;
   const count = p.leads.length;
   const subject = `${count} follow-up${count === 1 ? "" : "s"} today${overdue ? ` (${overdue} overdue)` : ""}`;
-  const listUrl = `${p.siteUrl}/admin/sales/leads?due=1`;
+  const listUrl = p.rep ? base : `${base}/leads?due=1`;
   const shown = p.leads.slice(0, SHOW);
   const more = count - shown.length;
   const when = (l: DueLead) => (l.next_follow_up < p.today ? `overdue since ${l.next_follow_up}` : "today");
@@ -28,7 +30,7 @@ export function salesDigestEmail(p: { name: string | null; today: string; leads:
   const rows = shown.map((l) => `
     <tr>
       <td style="padding:8px 0;border-bottom:1px solid #eee">
-        <a href="${p.siteUrl}/admin/sales/leads/${l.id}" style="color:#201e1d;font-weight:700">${esc(l.name)}</a>
+        <a href="${base}/leads/${l.id}" style="color:#201e1d;font-weight:700">${esc(l.name)}</a>
         <span style="color:#5a5757"> · ${esc(formatPhone(l.phone))} · ${esc(labelOf(STAGES, l.stage))} · ${when(l)}</span>
         ${l.notes ? `<div style="color:#5a5757;font-size:13px">${esc(l.notes.slice(0, 140))}</div>` : ""}
       </td>

@@ -160,23 +160,30 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
       <section aria-labelledby="people" className="mt-8">
         <h2 id="people" className="display mb-3 text-2xl">By person</h2>
         <div className="card overflow-x-auto">
-          <table className="w-full min-w-[520px] text-left text-sm">
+          <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-line/30 text-xs uppercase tracking-wider text-muted">
-              <tr><th className="px-4 py-3">Who</th><th className="px-4 py-3 text-right">Outreach</th><th className="px-4 py-3 text-right">Conversations</th><th className="px-4 py-3 text-right">Hot leads owned</th><th className="px-4 py-3 text-right">Due</th></tr>
+              <tr><th className="px-4 py-3">Who</th><th className="px-4 py-3 text-right">Open leads</th><th className="px-4 py-3 text-right">Outreach</th><th className="px-4 py-3 text-right">Conversations</th><th className="px-4 py-3 text-right">Hot leads owned</th><th className="px-4 py-3 text-right">Signed</th><th className="px-4 py-3 text-right">Due</th></tr>
             </thead>
             <tbody className="divide-y divide-line/20 nums">
               {r.byOwner.map((o) => (
                 <tr key={o.email}>
-                  <td className="px-4 py-3 font-semibold">{who(o.email)}</td>
+                  <td className="px-4 py-3 font-semibold">
+                    {o.email === WHATSAPP_BY ? who(o.email) : (
+                      <Link href={`/admin/sales/leads?owner=${encodeURIComponent(o.email)}`} className="underline decoration-line/40 underline-offset-4 hover:decoration-ink" title={`See ${who(o.email)}'s leads`}>{who(o.email)} →</Link>
+                    )}
+                    {owners.find((x) => x.email === o.email)?.rep && <span className="ml-2 text-[11px] font-extrabold uppercase text-muted">Intern</span>}
+                  </td>
+                  <td className="px-4 py-3 text-right">{o.open}</td>
                   <td className="px-4 py-3 text-right">{o.touches}</td>
                   <td className="px-4 py-3 text-right">{o.conversations}</td>
                   <td className="px-4 py-3 text-right">{o.hot}</td>
+                  <td className="px-4 py-3 text-right font-bold">{o.signed}</td>
                   <td className="px-4 py-3 text-right">
                     {o.due ? <Link href={`/admin/sales/leads?due=1&owner=${encodeURIComponent(o.email)}`} className="font-bold text-red-deep underline">{o.due}</Link> : 0}
                   </td>
                 </tr>
               ))}
-              {r.byOwner.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-muted">No outreach logged yet.</td></tr>}
+              {r.byOwner.length === 0 && <tr><td colSpan={7} className="px-4 py-6 text-center text-muted">No outreach logged yet.</td></tr>}
             </tbody>
           </table>
         </div>

@@ -1,8 +1,8 @@
 import "server-only";
 import { isOwnerEmail } from "@/lib/admin/access";
-import { getSalesAdmin } from "@/lib/admin/auth";
+import { getSalesAdmin, getSalesUser } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
-import { HOT_STAGES, istToday, PAID_COUNTED_FROM, period, type Channel, type PeriodKey, type Source, type Stage } from "@/lib/sales";
+import { canWorkLead, HOT_STAGES, istToday, PAID_COUNTED_FROM, period, type Channel, type PeriodKey, type Source, type Stage } from "@/lib/sales";
 
 /**
  * Sales reads. Every function checks the admin first: the connection can read
@@ -47,7 +47,8 @@ export interface Touch {
   note: string | null;
 }
 
-export interface Owner { email: string; name: string | null }
+/** Someone leads can be given to: an owner, or an active rep (intern). */
+export interface Owner { email: string; name: string | null; rep?: boolean }
 
 export interface LeadFilter {
   stage?: string;
@@ -58,21 +59,47 @@ export interface LeadFilter {
 }
 
 export async function getOwners(): Promise<Owner[]> {
+  if (!(await getSalesUser())) return [];
+  const sql = db();
+  if (!sql) return [];
+  const [admins, reps] = await Promise.all([
+    sql.rows<Owner>`select email, name from course.admin_users order by coalesce(name, email)`,
+    // Before 0041_sales_reps.sql has run this fails, and there are simply no reps.
+    sql.rows<Owner>`select email, name from course.sales_reps where active order by coalesce(name, email)`,
+  ]);
+  // Owners and active reps can open Sales, so only they can be given leads.
+  const owners = (admins.data ?? []).filter((a) => isOwnerEmail(a.email));
+  const taken = new Set(owners.map((o) => o.email));
+  return [...owners, ...(reps.data ?? []).filter((r) => !taken.has(r.email)).map((r) => ({ ...r, rep: true }))];
+}
+
+/** Everyone who has ever been a rep, for the Team page. Owners only. */
+export interface Rep { email: string; name: string | null; active: boolean; created_at: string; open: number; views7d: number }
+
+export async function getReps(): Promise<Rep[]> {
   if (!(await getSalesAdmin())) return [];
   const sql = db();
   if (!sql) return [];
-  const { data } = await sql.rows<Owner>`select email, name from course.admin_users order by coalesce(name, email)`;
-  // Only owners can open Sales, so only they can be given leads.
-  return (data ?? []).filter((a) => isOwnerEmail(a.email));
+  const { data, error } = await sql.rows<Rep>`
+    select r.email, r.name, r.active, r.created_at,
+           (select count(*)::int from course.sales_leads l where l.owner_email = r.email and l.stage not in ('signed', 'rejected')) as open,
+           (select count(*)::int from course.sales_lead_views v where v.by_email = r.email and v.viewed_at > now() - interval '7 days') as views7d
+      from course.sales_reps r
+     order by r.active desc, r.created_at desc
+  `;
+  if (error && error.code !== "42P01") console.error("sales reps read failed:", error.code, error.message);
+  return data ?? [];
 }
 
 export async function getLeads(f: LeadFilter): Promise<Lead[]> {
-  if (!(await getSalesAdmin())) return [];
+  const user = await getSalesUser();
+  if (!user) return [];
   const sql = db();
   if (!sql) return [];
   const stage = f.stage || null;
   const source = f.source || null;
-  const owner = f.owner === "none" ? "" : f.owner || null;
+  // A rep only ever sees their own leads, whatever the filter asks for.
+  const owner = user.role === "rep" ? user.email : f.owner === "none" ? "" : f.owner || null;
   const due = f.due ? istToday() : null;
   const q = f.q?.trim() ? `%${f.q.trim().toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   const qDigits = f.q?.replace(/\D/g, "") || null;
@@ -120,13 +147,19 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
 }
 
 export async function getLead(id: string): Promise<{ lead: Lead; touches: Touch[] } | null> {
-  if (!(await getSalesAdmin())) return null;
+  const user = await getSalesUser();
+  if (!user) return null;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const sql = db();
   if (!sql) return null;
   const all = await getLeadsByIds([id]);
   const lead = all[0];
-  if (!lead) return null;
+  if (!lead || !canWorkLead(user, lead.owner_email)) return null;
+  // Each lead a rep opens is recorded, so an owner can see who looked at which numbers.
+  if (user.role === "rep") {
+    const { error } = await sql.run`insert into course.sales_lead_views (lead_id, by_email) values (${id}, ${user.email})`;
+    if (error) console.error("lead view log failed:", error.code, error.message);
+  }
   const { data } = await sql.rows<Touch>`
     select id, created_at, by_email, channel, replied, inbound, note
       from course.sales_touches where lead_id = ${id} order by created_at desc limit 200
@@ -173,7 +206,7 @@ export interface SalesReport {
   b2bSigned: { total: number; prev: number };
   target: { enrolments: number; b2b: number; hackathons: number; webinars: number } | null;
   bySource: { source: Source; leads: number; contacted: number; conversations: number; paid: number }[];
-  byOwner: { email: string; touches: number; conversations: number; hot: number; due: number }[];
+  byOwner: { email: string; touches: number; conversations: number; hot: number; due: number; open: number; signed: number }[];
   stages: Record<string, number>;
   dueToday: number;
 }
@@ -256,18 +289,20 @@ export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null
              count(paid.id)::int as paid
         from course.sales_leads l left join paid on paid.id = l.id
        group by l.source`,
-    sql.rows<{ email: string; touches: number; conversations: number; hot: number; due: number }>`
+    sql.rows<{ email: string; touches: number; conversations: number; hot: number; due: number; open: number; signed: number }>`
       with t as (
         select by_email as email, count(*) filter (where not inbound)::int as touches, count(distinct lead_id) filter (where replied)::int as conversations
           from course.sales_touches where created_at >= ${s} and created_at < ${e} group by by_email
       ), o as (
         select owner_email as email,
                count(*) filter (where stage = any(${hot}::text[]))::int as hot,
-               count(*) filter (where next_follow_up <= ${today}::date and stage not in ('signed', 'rejected'))::int as due
+               count(*) filter (where next_follow_up <= ${today}::date and stage not in ('signed', 'rejected'))::int as due,
+               count(*) filter (where stage not in ('signed', 'rejected'))::int as open,
+               count(*) filter (where stage = 'signed' and signed_at >= ${s} and signed_at < ${e})::int as signed
           from course.sales_leads where owner_email is not null group by owner_email
       )
       select coalesce(t.email, o.email) as email, coalesce(t.touches, 0) as touches, coalesce(t.conversations, 0) as conversations,
-             coalesce(o.hot, 0) as hot, coalesce(o.due, 0) as due
+             coalesce(o.hot, 0) as hot, coalesce(o.due, 0) as due, coalesce(o.open, 0) as open, coalesce(o.signed, 0) as signed
         from t full join o on o.email = t.email
        order by 2 desc`,
     sql.rows<{ stage: string; c: number }>`select stage, count(*)::int as c from course.sales_leads group by stage`,

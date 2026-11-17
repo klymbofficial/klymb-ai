@@ -32,7 +32,8 @@ function OwnerSelect({ owners, value, onChange, name = "Owner" }: { owners: Owne
 const blank: LeadInput = { name: "", phone: "", email: "", kind: "b2c", source: "socials", source_detail: "", org: "", owner_email: "", next_follow_up: "", notes: "" };
 
 /** Add a lead, or edit one when `lead` is given. */
-export function LeadForm({ owners, me, lead }: { owners: Owner[]; me: string; lead?: LeadInput & { id: string; stage: string } }) {
+/** `canAssign` is false for reps: their leads stay theirs, so there is no owner picker. */
+export function LeadForm({ owners, me, lead, base = "/admin/sales", canAssign = true }: { owners: Owner[]; me: string; lead?: LeadInput & { id: string; stage: string }; base?: string; canAssign?: boolean }) {
   const router = useRouter();
   const [v, setV] = useState<LeadInput & { stage: string }>(lead ?? { ...blank, owner_email: me, stage: "new" });
   const [busy, setBusy] = useState(false);
@@ -50,7 +51,7 @@ export function LeadForm({ owners, me, lead }: { owners: Owner[]; me: string; le
         setBusy(false);
         if (!r.ok) return setMsg({ ok: false, text: r.message });
         if (lead) setMsg({ ok: true, text: "Saved." });
-        else router.push(`/admin/sales/leads/${r.id}`);
+        else router.push(`${base}/leads/${r.id}`);
       }}
     >
       <label className={label}>Name<input required value={v.name} onChange={set("name")} className={input} /></label>
@@ -71,7 +72,7 @@ export function LeadForm({ owners, me, lead }: { owners: Owner[]; me: string; le
       </label>
       <label className={label}>Source detail<input value={v.source_detail} onChange={set("source_detail")} placeholder="ViCodathon, Batch 2…" className={input} /></label>
       <label className={label}>College / company<input value={v.org} onChange={set("org")} className={input} /></label>
-      <OwnerSelect owners={owners} value={v.owner_email} onChange={(owner_email) => setV({ ...v, owner_email })} />
+      {canAssign && <OwnerSelect owners={owners} value={v.owner_email} onChange={(owner_email) => setV({ ...v, owner_email })} />}
       {lead && (
         <label className={label}>
           Stage

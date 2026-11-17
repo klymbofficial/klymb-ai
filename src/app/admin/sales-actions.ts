@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSalesAdmin } from "@/lib/admin/auth";
+import { getSalesAdmin, getSalesUser, type SalesUser } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
-import { AUTO_FOLLOW_UP_DAYS, isChannel, isSource, isStage, istToday, normalisePhone, parseLeadsCsv, type Source } from "@/lib/sales";
+import { AUTO_FOLLOW_UP_DAYS, canWorkLead, isChannel, isSource, isStage, istToday, normalisePhone, parseLeadsCsv, type Source } from "@/lib/sales";
 
 export type SalesResult = { ok: true; id?: string } | { ok: false; message: string };
 
@@ -26,10 +26,27 @@ const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.tes
 const uuid = (v: unknown) => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v);
 
 function refresh(id?: string) {
-  revalidatePath("/admin/sales");
-  revalidatePath("/admin/sales/leads");
-  revalidatePath("/admin/sales/list");
-  if (id) revalidatePath(`/admin/sales/leads/${id}`);
+  // Owners work in /admin/sales, reps (interns) in /sales.
+  for (const p of ["/admin/sales", "/admin/sales/leads", "/admin/sales/list", "/admin/sales/board", "/admin/sales/team", "/sales", "/sales/list", "/sales/board"]) {
+    revalidatePath(p);
+  }
+  if (id) {
+    revalidatePath(`/admin/sales/leads/${id}`);
+    revalidatePath(`/sales/leads/${id}`);
+  }
+}
+
+/**
+ * The person in Sales, if they may work this lead: an owner always, a rep
+ * only when the lead is assigned to them. Every action on one lead asks here.
+ */
+async function userFor(leadId: string): Promise<SalesUser | null> {
+  const user = await getSalesUser();
+  if (!user || user.role === "owner") return user;
+  const sql = db();
+  if (!sql) return null;
+  const { data } = await sql.row<{ owner_email: string | null }>`select owner_email from course.sales_leads where id = ${leadId}`;
+  return data && canWorkLead(user, data.owner_email) ? user : null;
 }
 
 function clean(input: LeadInput) {
@@ -60,7 +77,7 @@ function duplicate(code: string | undefined) {
 }
 
 export async function createLead(input: LeadInput): Promise<SalesResult> {
-  const admin = await getSalesAdmin();
+  const admin = await getSalesUser();
   if (!admin) return { ok: false, message: "Not authorised." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
@@ -70,7 +87,7 @@ export async function createLead(input: LeadInput): Promise<SalesResult> {
   const { data, error } = await sql.row<{ id: string }>`
     insert into course.sales_leads (name, phone, email, kind, source, source_detail, org, owner_email, next_follow_up, notes, created_by)
     values (${v.name}, ${v.phone}, ${v.email}, ${v.kind}, ${v.source}, ${v.source_detail}, ${v.org},
-            ${v.owner_email ?? admin.email}, ${v.next_follow_up}::date, ${v.notes}, ${admin.email})
+            ${admin.role === "rep" ? admin.email : v.owner_email ?? admin.email}, ${v.next_follow_up}::date, ${v.notes}, ${admin.email})
     returning id
   `;
   if (error || !data) return { ok: false, message: duplicate(error?.code) };
@@ -79,8 +96,9 @@ export async function createLead(input: LeadInput): Promise<SalesResult> {
 }
 
 export async function updateLead(id: string, input: LeadInput & { stage: string }): Promise<SalesResult> {
-  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
+  const user = await userFor(id);
+  if (!user) return { ok: false, message: "Not authorised." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
   const c = clean(input);
@@ -90,7 +108,9 @@ export async function updateLead(id: string, input: LeadInput & { stage: string 
   const { data, error } = await sql.run`
     update course.sales_leads set
       name = ${v.name}, phone = ${v.phone}, email = ${v.email}, kind = ${v.kind}, source = ${v.source},
-      source_detail = ${v.source_detail}, org = ${v.org}, owner_email = ${v.owner_email},
+      source_detail = ${v.source_detail}, org = ${v.org},
+      -- A rep can't hand a lead to someone else.
+      owner_email = ${user.role === "rep" ? user.email : v.owner_email},
       next_follow_up = ${v.next_follow_up}::date, notes = ${v.notes},
       stage_changed_at = case when stage <> ${input.stage} then now() else stage_changed_at end,
       signed_at = case when ${input.stage} = 'signed' then coalesce(signed_at, now()) else null end,
@@ -112,9 +132,9 @@ export async function logTouch(
   leadId: string,
   t: { channel: string; replied: boolean; note: string; stage: string; next_follow_up: string },
 ): Promise<SalesResult> {
-  const admin = await getSalesAdmin();
-  if (!admin) return { ok: false, message: "Not authorised." };
   if (!uuid(leadId)) return { ok: false, message: "That lead no longer exists." };
+  const admin = await userFor(leadId);
+  if (!admin) return { ok: false, message: "Not authorised." };
   if (!isChannel(t.channel)) return { ok: false, message: "Pick a channel." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
@@ -243,7 +263,7 @@ export async function syncWhatsAppNow(): Promise<SyncActionResult> {
 
 /** The sheet's quick-add row: a name and a number (or email) is enough. Owned by whoever adds it. */
 export async function quickAddLead(raw: { name: string; contact: string; note: string; source: string }): Promise<SalesResult> {
-  const admin = await getSalesAdmin();
+  const admin = await getSalesUser();
   if (!admin) return { ok: false, message: "Not authorised." };
   const contact = raw.contact.trim();
   const isEmail = contact.includes("@");
@@ -256,8 +276,10 @@ export async function quickAddLead(raw: { name: string; contact: string; note: s
 
 /** One cell of the sheet: stage, next follow-up, notes or owner. */
 export async function updateLeadField(id: string, field: "stage" | "next_follow_up" | "notes" | "owner_email", value: string): Promise<SalesResult> {
-  if (!(await getSalesAdmin())) return { ok: false, message: "Not authorised." };
   if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
+  const user = await userFor(id);
+  if (!user) return { ok: false, message: "Not authorised." };
+  if (field === "owner_email" && user.role === "rep") return { ok: false, message: "Only an owner can reassign leads." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
 
@@ -299,4 +321,79 @@ export async function logCallOutcome(leadId: string, outcome: string): Promise<S
     stage: o.stage ?? "",
     next_follow_up: o.followDays ? addDays(istToday(), o.followDays) : "",
   });
+}
+
+// ── Team: interns who work leads (owners only) ───────────────
+
+/**
+ * Hands the ticked leads to one person, or back to nobody. A form action on
+ * the Leads page: ids come from the row checkboxes, `to` from the select.
+ */
+export async function assignLeads(form: FormData): Promise<void> {
+  if (!(await getSalesAdmin())) return;
+  const ids = form.getAll("id").filter(uuid) as string[];
+  const raw = String(form.get("to") ?? "");
+  if (!ids.length || !raw) return;
+  const to = raw === "none" ? null : normaliseEmail(raw);
+  if (raw !== "none" && !to) return;
+  const sql = db();
+  if (!sql) return;
+  // Only someone who can open Sales may be given leads.
+  if (to) {
+    const { getOwners } = await import("@/lib/admin/sales");
+    if (!(await getOwners()).some((o) => o.email === to)) return;
+  }
+  const { error } = await sql.run`
+    update course.sales_leads set owner_email = ${to}, updated_at = now() where id = any(${ids}::uuid[])
+  `;
+  if (error) console.error("lead assign failed:", error.code, error.message);
+  refresh();
+}
+
+export async function addRep(input: { email: string; name: string }): Promise<SalesResult> {
+  const admin = await getSalesAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
+  const email = normaliseEmail(input.email);
+  if (!email) return { ok: false, message: "Enter their Google email, like name@gmail.com." };
+  const name = text(input.name, 80);
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
+  const { error } = await sql.run`
+    insert into course.sales_reps (email, name, added_by) values (${email}, ${name}, ${admin.email})
+    on conflict (email) do update set active = true, removed_at = null, name = coalesce(excluded.name, course.sales_reps.name)
+  `;
+  if (error) {
+    console.error("add rep failed:", error.code, error.message);
+    return { ok: false, message: error.code === "42P01" ? "Run db/migrations/0041_sales_reps.sql in Neon first." : "That could not be saved." };
+  }
+  revalidatePath("/admin/sales/team");
+  return { ok: true };
+}
+
+/**
+ * Takes away a rep's access at once. Their open leads come back to the owner
+ * who removed them, so nobody is left without a follow-up; signed and
+ * rejected leads keep their name for the record.
+ */
+export async function removeRep(emailRaw: string): Promise<SalesResult> {
+  const admin = await getSalesAdmin();
+  if (!admin) return { ok: false, message: "Not authorised." };
+  const email = normaliseEmail(emailRaw);
+  if (!email) return { ok: false, message: "That is not a valid email." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "Unavailable right now." };
+  const { data, error } = await sql.row<{ moved: number }>`
+    with off as (
+      update course.sales_reps set active = false, removed_at = now() where email = ${email} and active returning email
+    ), moved as (
+      update course.sales_leads set owner_email = ${admin.email}, updated_at = now()
+       where owner_email in (select email from off) and stage not in ('signed', 'rejected')
+      returning 1
+    )
+    select (select count(*) from moved)::int as moved
+  `;
+  if (error) return { ok: false, message: "That could not be saved." };
+  refresh();
+  revalidatePath("/admin/sales/team");
+  return { ok: true, id: String(data?.moved ?? 0) };
 }

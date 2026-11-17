@@ -24,7 +24,7 @@ const short = (day: string) => new Date(`${day}T00:00:00+05:30`).toLocaleDateStr
  * Each card also has a stage menu, for keyboards and phones where dragging
  * isn't practical.
  */
-export function SalesBoard({ cards: initial, today, ownerName }: { cards: BoardCard[]; today: string; ownerName: Record<string, string> }) {
+export function SalesBoard({ cards: initial, today, ownerName, base = "/admin/sales" }: { cards: BoardCard[]; today: string; ownerName: Record<string, string>; base?: string }) {
   const [cards, setCards] = useState(initial);
   const [over, setOver] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -71,7 +71,7 @@ export function SalesBoard({ cards: initial, today, ownerName }: { cards: BoardC
                     onDragStart={(e) => { e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; }}
                     className="card cursor-grab p-3 text-sm active:cursor-grabbing"
                   >
-                    <Link href={`/admin/sales/leads/${c.id}`} className="font-bold hover:underline">{c.name}</Link>
+                    <Link href={`${base}/leads/${c.id}`} className="font-bold hover:underline">{c.name}</Link>
                     {c.paid && <span className="ml-1.5 bg-emerald-700 px-1 py-0.5 text-[10px] font-extrabold text-white">PAID</span>}
                     <p className="text-xs text-muted nums">{c.phone ? formatPhone(c.phone) : "—"}{c.org ? ` · ${c.org}` : ""}</p>
                     <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">

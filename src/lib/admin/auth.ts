@@ -55,3 +55,38 @@ export async function getSalesAdmin(): Promise<AdminSession | null> {
   const admin = await getAdmin();
   return admin?.owner ? admin : null;
 }
+
+/**
+ * Who may work in Sales, and how much.
+ *
+ * An owner sees and changes everything. A rep (an intern in
+ * course.sales_reps, active) signs in with Google like an admin but is not
+ * one: they reach /sales only, and only the leads whose owner_email is theirs.
+ * An owner who is also listed as a rep is treated as an owner.
+ */
+export interface SalesUser {
+  email: string;
+  name: string | null;
+  role: "owner" | "rep";
+}
+
+export const getSalesUser = cache(async (): Promise<SalesUser | null> => {
+  const admin = await getSalesAdmin();
+  if (admin) return { email: admin.email, name: admin.name, role: "owner" };
+  const sql = db();
+  if (!sql) return null;
+  // Google sign-ins only, as for admin.
+  const email = await currentAdminEmail();
+  if (!email) return null;
+  const { data } = await sql.row<{ email: string; name: string | null }>`
+    select email, name from course.sales_reps where email = ${email} and active
+  `;
+  return data && data.email === email ? { email, name: data.name, role: "rep" } : null;
+});
+
+/** For /sales pages: anyone else goes to the sales sign-in. */
+export async function requireSalesUser(): Promise<SalesUser> {
+  const user = await getSalesUser();
+  if (!user) redirect("/sales/login");
+  return user;
+}

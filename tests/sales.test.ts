@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { formatPhone, normalisePhone, pace, parseCsv, parseLeadsCsv, period } from "../src/lib/sales";
+import { canWorkLead, formatPhone, normalisePhone, pace, parseCsv, parseLeadsCsv, period } from "../src/lib/sales";
 
 test("phones become digits with a country code, Indian by default", () => {
   assert.equal(normalisePhone("98765 43210"), "919876543210");
@@ -93,4 +93,25 @@ test("the morning digest lists due leads, flags overdue ones and escapes names",
 test("addDays steps calendar days across a month end", async () => {
   const { addDays } = await import("../src/lib/sales");
   assert.equal(addDays("2026-11-30", 1), "2026-12-01");
+});
+
+test("an owner may work any lead; an intern only their own", () => {
+  const owner = { email: "boss@x.test", role: "owner" as const };
+  const intern = { email: "rohan@gmail.com", role: "rep" as const };
+  assert.equal(canWorkLead(owner, null), true);
+  assert.equal(canWorkLead(owner, "someone@x.test"), true);
+  assert.equal(canWorkLead(intern, "rohan@gmail.com"), true);
+  assert.equal(canWorkLead(intern, "ROHAN@gmail.com"), true);
+  assert.equal(canWorkLead(intern, "priya@gmail.com"), false);
+  assert.equal(canWorkLead(intern, null), false);
+});
+
+test("an intern's digest links to /sales, not admin", async () => {
+  const { salesDigestEmail } = await import("../src/lib/sales-digest");
+  const lead = { id: "11111111-1111-1111-1111-111111111111", name: "Asha", phone: null, stage: "new", next_follow_up: "2026-11-18", notes: null };
+  const rep = salesDigestEmail({ name: "Rohan", today: "2026-11-18", leads: [lead], siteUrl: "https://k.test", rep: true });
+  assert.match(rep.html, /https:\/\/k\.test\/sales\/leads\/1111/);
+  assert.doesNotMatch(rep.html, /\/admin\//);
+  const own = salesDigestEmail({ name: "S", today: "2026-11-18", leads: [lead], siteUrl: "https://k.test" });
+  assert.match(own.html, /\/admin\/sales\/leads\/1111/);
 });

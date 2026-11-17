@@ -7,9 +7,10 @@ const tabs = [
   { href: "/admin/sales", label: "Report" },
   { href: "/admin/sales/leads", label: "Leads" },
   { href: "/admin/sales/leads?due=1", label: "Due today", key: "due" },
+  { href: "/admin/sales/team", label: "Team", key: "team" },
 ];
 
-export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "list" | "board" }) {
+export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "list" | "board" | "team" }) {
   return (
     <nav aria-label="Sales" className="mb-6 flex gap-1 border-b border-line/25">
       {tabs.map((t) => {
@@ -25,6 +26,30 @@ export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "
           </Link>
         );
       })}
+    </nav>
+  );
+}
+
+const repTabs = [
+  { href: "/sales", label: "Today", key: "today" },
+  { href: "/sales/list", label: "My leads", key: "list" },
+  { href: "/sales/board", label: "Board", key: "board" },
+] as const;
+
+/** The tabs an intern sees at /sales. */
+export function RepTabs({ current }: { current: "today" | "list" | "board" }) {
+  return (
+    <nav aria-label="Sales" className="mb-6 flex gap-1 overflow-x-auto border-b border-line/25">
+      {repTabs.map((t) => (
+        <Link
+          key={t.href}
+          href={t.href}
+          aria-current={t.key === current ? "page" : undefined}
+          className={clsx("-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-bold", t.key === current ? "border-red-strong text-ink" : "border-transparent text-muted hover:text-ink")}
+        >
+          {t.label}
+        </Link>
+      ))}
     </nav>
   );
 }
