@@ -16,9 +16,14 @@ export interface PushMessage { title: string; body: string; url: string; tag?: s
 
 /** Sends one notification. Undelivered after 3 hours, it is dropped: a midday nudge arriving at night reads as spam. */
 /** Sends one notification. Returns "gone" when the device has unsubscribed, so the row can be deleted. */
-export async function sendPush(t: PushTarget, msg: PushMessage): Promise<"ok" | "gone" | "failed"> {
+/** `fast` is for live chat: high urgency, so a sleeping Android phone shows it at once instead of batching it. Reminders keep the default. */
+export async function sendPush(t: PushTarget, msg: PushMessage, opts: { fast?: boolean } = {}): Promise<"ok" | "gone" | "failed"> {
   try {
-    await webpush.sendNotification({ endpoint: t.endpoint, keys: { p256dh: t.p256dh, auth: t.auth } }, JSON.stringify(msg), { TTL: 60 * 60 * 3, urgency: "normal" });
+    await webpush.sendNotification(
+      { endpoint: t.endpoint, keys: { p256dh: t.p256dh, auth: t.auth } },
+      JSON.stringify(msg),
+      opts.fast ? { TTL: 60 * 60, urgency: "high" } : { TTL: 60 * 60 * 3, urgency: "normal" },
+    );
     return "ok";
   } catch (e) {
     const code = (e as { statusCode?: number }).statusCode;

@@ -141,7 +141,7 @@ export async function notifyTeam(thread: { id: string; name: string | null; emai
       tag: `chat-${thread.id}`,
       loud: true,
       action: "Reply",
-    });
+    }, { fast: true });
     if (r === "gone") await sql.run`delete from course.chat_push_subscriptions where endpoint = ${d.endpoint}`;
   }
 }
