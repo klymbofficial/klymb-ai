@@ -4,6 +4,7 @@ import { PageTitle } from "@/components/admin/PageTitle";
 import { assignLeads } from "@/app/admin/sales-actions";
 import { ImportLeads, input, LeadForm } from "@/components/admin/sales/SalesForms";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
+import { LeadSearch } from "@/components/admin/sales/LeadSearch";
 import { SelectAll } from "@/components/admin/sales/TeamForms";
 import { requireOwner } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
@@ -49,9 +50,10 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
         </div>
       )}
 
+      <LeadSearch />
       <form className="mb-4 flex flex-wrap items-end gap-2" method="get">
         {due && <input type="hidden" name="due" value="1" />}
-        <input name="q" defaultValue={sp.q} placeholder="Name, phone, email, college" className={`${input} w-60`} />
+        {sp.q && <input type="hidden" name="q" value={sp.q} />}
         <select name="stage" defaultValue={sp.stage ?? ""} className={input}>
           <option value="">All stages</option>
           {STAGES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
