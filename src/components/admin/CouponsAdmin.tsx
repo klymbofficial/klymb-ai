@@ -6,6 +6,8 @@ import { createCoupon, setCouponPaused, type CouponInput } from "@/app/admin/cou
 export interface CouponRow {
   code: string; price: number; max_uses: number | null; ends_at: string | null; paused_at: string | null;
   note: string | null; created_by: string; created_at: string; used: number;
+  /** People (by browser) who opened the offer page with this code. */
+  opened?: number;
 }
 
 const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none";
@@ -27,7 +29,7 @@ export function CouponsAdmin({ rows, siteUrl }: { rows: CouponRow[]; siteUrl: st
       <div className="card overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-line/30 text-xs uppercase tracking-wider text-muted">
-            <tr><th className="px-4 py-3">Code</th><th className="px-4 py-3">Price</th><th className="px-4 py-3">Used</th><th className="px-4 py-3">Last day</th><th className="px-4 py-3">Status</th><th className="px-4 py-3" /></tr>
+            <tr><th className="px-4 py-3">Code</th><th className="px-4 py-3">Price</th><th className="px-4 py-3">Used</th><th className="px-4 py-3">Opened by</th><th className="px-4 py-3">Last day</th><th className="px-4 py-3">Status</th><th className="px-4 py-3" /></tr>
           </thead>
           <tbody className="divide-y divide-line/20">
             {rows.map((r) => {
@@ -41,13 +43,14 @@ export function CouponsAdmin({ rows, siteUrl }: { rows: CouponRow[]; siteUrl: st
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">₹{r.price.toLocaleString("en-IN")}</td>
                   <td className="whitespace-nowrap px-4 py-3">{r.used}{r.max_uses !== null ? ` of ${r.max_uses}` : ""}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{r.opened ? <a href={`#opened-${r.code}`} className="underline">{r.opened} {r.opened === 1 ? "person" : "people"}</a> : <span className="text-muted">Not yet</span>}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">{r.ends_at ? day(r.ends_at) : "No end"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs font-semibold">{st}</td>
                   <td className="px-4 py-3"><Pause code={r.code} paused={!!r.paused_at} /></td>
                 </tr>
               );
             })}
-            {!rows.length && <tr><td colSpan={6} className="px-4 py-6 text-center text-muted">No coupon codes yet.</td></tr>}
+            {!rows.length && <tr><td colSpan={7} className="px-4 py-6 text-center text-muted">No coupon codes yet.</td></tr>}
           </tbody>
         </table>
       </div>

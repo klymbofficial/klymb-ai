@@ -8,7 +8,7 @@ import { readConsent } from "@/lib/consent";
  * Honours "Turn analytics off", and never gets in the way of a purchase.
  */
 
-export type OfferStep = "view" | "form_start" | "claim" | "blocked" | "open_browser" | "google" | "order_failed" | "rzp_open" | "rzp_closed" | "rzp_failed" | "paid";
+export type OfferStep = "view" | "form_start" | "coupon" | "claim" | "blocked" | "open_browser" | "google" | "order_failed" | "rzp_open" | "rzp_closed" | "rzp_failed" | "paid";
 
 const ANON_KEY = "klymb.sd.anon";
 
@@ -22,14 +22,15 @@ function anon() {
   }
 }
 
-export function trackOffer(step: OfferStep, props: { inApp: boolean; campaign: string | null }) {
+/** `coupon` is the code they came with or applied, so admin can see what each shared link led to. */
+export function trackOffer(step: OfferStep, props: { inApp: boolean; campaign: string | null; coupon?: string | null }) {
   try {
     const id = anon();
     if (!id || readConsent()?.choice === "necessary") return;
     const body = JSON.stringify({
       anon: id,
       device: window.innerWidth < 768 ? "phone" : "desktop",
-      events: [{ e: "offer", step, path: window.location.pathname, props: { inApp: props.inApp, ...(props.campaign ? { campaign: props.campaign } : {}) } }],
+      events: [{ e: "offer", step, path: window.location.pathname, props: { inApp: props.inApp, ...(props.campaign ? { campaign: props.campaign } : {}), ...(props.coupon ? { coupon: props.coupon } : {}) } }],
     });
     fetch("/api/sd/events", { method: "POST", headers: { "content-type": "application/json" }, body, keepalive: true }).catch(() => {});
   } catch { /* tracking never breaks the page */ }

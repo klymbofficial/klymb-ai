@@ -20,7 +20,7 @@ const dayName = (lesson: string | null) => (lesson && /^\d+-\d+$/.test(lesson) ?
 const onSiteNow = (seen: string | null) => !!seen && Date.now() - new Date(seen).getTime() < 60_000;
 /** The offer page's steps, in the words the System Design admin page uses. */
 const OFFER_WORDS: Record<string, string> = {
-  view: "Opened the offer page", form_start: "Started the offer form", claim: "Tapped Claim", blocked: "Was told to leave the in-app browser", open_browser: "Tapped Open in browser",
+  view: "Opened the offer page", form_start: "Started the offer form", coupon: "Applied a coupon code", claim: "Tapped Claim", blocked: "Was told to leave the in-app browser", open_browser: "Tapped Open in browser",
   google: "Went to Google sign-in", order_failed: "Order failed", rzp_open: "Opened Razorpay", rzp_closed: "Closed Razorpay", rzp_failed: "Payment failed", paid: "Paid",
 };
 const TONE: Record<Tone, string> = { learn: "bg-sky-500", win: "bg-emerald-500", miss: "bg-red-500", nav: "bg-line", setting: "bg-amber-500" };
@@ -36,7 +36,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
   const offer = act.events.filter((e) => e.event === "offer");
   const trail = [
     ...trailLines(act.events.filter((e) => e.event !== "offer")),
-    ...offer.map((e) => ({ at: e.created_at, lesson: null, text: OFFER_WORDS[e.step ?? ""] ?? `Offer page: ${e.step ?? "visit"}`, tone: (e.step === "paid" ? "win" : /failed/.test(e.step ?? "") ? "miss" : "nav") as Tone, detail: e.props?.inApp ? "in Instagram's browser" : undefined })),
+    ...offer.map((e) => ({ at: e.created_at, lesson: null, text: OFFER_WORDS[e.step ?? ""] ?? `Offer page: ${e.step ?? "visit"}`, tone: (e.step === "paid" ? "win" : /failed/.test(e.step ?? "") ? "miss" : "nav") as Tone, detail: [e.props?.coupon ? `code ${String(e.props.coupon)}` : "", e.props?.inApp ? "in Instagram's browser" : ""].filter(Boolean).join(" · ") || undefined })),
   ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 60);
   const anon = thread.anon_id ?? act.events.find((e) => e.anon_id)?.anon_id;
   const online = onSiteNow(thread.visitor_seen_at);

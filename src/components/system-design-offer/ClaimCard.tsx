@@ -122,11 +122,11 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     const res = await fetch("/api/sd/coupon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) }).catch(() => null);
     const out = await res?.json().catch(() => null);
     setChecking(false);
-    if (res?.ok && typeof out?.price === "number") setApplied({ code, price: out.price });
+    if (res?.ok && typeof out?.price === "number") { setApplied({ code, price: out.price }); trackOffer("coupon", { inApp, campaign, coupon: code }); }
     else setCouponError(out?.error ?? "We couldn't check that code. Check your connection and try again.");
   }
   const fail = (message: string) => { setBusy(false); setError(message); };
-  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign });
+  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign, coupon: applied?.code ?? startCoupon?.code ?? null });
   const [started, setStarted] = useState(false);
   const startForm = () => { if (!started) { setStarted(true); step("form_start"); } };
 
