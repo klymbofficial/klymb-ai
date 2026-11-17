@@ -96,7 +96,7 @@ self.addEventListener("push", (event) => {
       silent: !msg.loud,
       data: { url: msg.url },
       // Chrome adds its own Unsubscribe; this sits beside it and opens the day.
-      actions: [{ action: "open", title: "Do it now" }],
+      actions: [{ action: "open", title: msg.action || "Do it now" }],
     }),
   );
 });

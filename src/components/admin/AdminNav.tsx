@@ -25,12 +25,15 @@ const links = [
 const salesLink = { href: "/admin/sales", label: "Sales" };
 const ownerLinks = [{ href: "/admin/announcements", label: "Announcements" }, { href: "/admin/coupons", label: "Coupons" }, { href: "/admin/admins", label: "Admins" }];
 
-export function AdminNav({ owner = false }: { owner?: boolean }) {
+/** `chat` is set only for the live-chat owner, with how many chats are waiting on a reply. */
+export function AdminNav({ owner = false, chat = null }: { owner?: boolean; chat?: { unread: number } | null }) {
   const pathname = usePathname();
+  const chatLink = { href: "/admin/chat", label: chat?.unread ? `Live chat (${chat.unread})` : "Live chat" };
+  const base = owner ? [links[0], salesLink, ...links.slice(1), ...ownerLinks] : links;
   return (
     <nav aria-label="Admin sections">
       <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5">
-        {(owner ? [links[0], salesLink, ...links.slice(1), ...ownerLinks] : links).map((l) => {
+        {(chat ? [base[0], chatLink, ...base.slice(1)] : base).map((l) => {
           const active = l.href === "/admin" ? pathname === "/admin" : pathname.startsWith(l.href);
           return (
             <li key={l.href}>

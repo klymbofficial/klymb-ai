@@ -5,11 +5,15 @@ import { signOut } from "@/app/admin/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { requireAdmin } from "@/lib/admin/auth";
+import { isChatOwner } from "@/lib/live-chat";
+import { unreadCount } from "@/lib/live-chat-db";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
+  // Live chat shows in the menu for its one owner only.
+  const chat = isChatOwner(admin.email) ? { unread: await unreadCount() } : null;
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -27,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
         </div>
 
-        <AdminNav owner={admin.owner} />
+        <AdminNav owner={admin.owner} chat={chat} />
 
         <div className="mt-auto hidden flex-col gap-3 border-t border-white/15 pt-4 lg:flex">
           <div>

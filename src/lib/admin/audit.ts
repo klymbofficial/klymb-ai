@@ -31,7 +31,9 @@ export type AuditAction =
   | "company.course_unassign"
   | "company.course_assign_all"
   | "hackathon.score"
-  | "hackathon.results";
+  | "hackathon.results"
+  | "chat.reply"
+  | "chat.status";
 
 /**
  * Records an admin action. Never throws and never blocks the action itself:

@@ -11,6 +11,7 @@ import { searchSupport } from "@/lib/support-search";
 import { dayActionLabel } from "@/lib/day-lock";
 import { SUPPORT_EMAIL, supportTopics, type SupportAnswer, type SupportTopic } from "@/data/support-faq";
 import { HELP_EVENT, type HelpEventDetail } from "./help-event";
+import { ChatStart, ChatThreadView, useLiveChat } from "./LiveChat";
 
 /** What /api/support/me returns for an enrolled learner. */
 interface Me {
@@ -104,6 +105,12 @@ export function SupportBot() {
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState("");
   const [me, setMe] = useState<Me | null>(null);
+  // "chat" is the live chat with the team; "bot" is Kamran's answers.
+  const [view, setView] = useState<"bot" | "chat">("bot");
+  // Live chat not open yet (the tables aren't there): the email ticket instead.
+  const [ticketOnly, setTicketOnly] = useState(false);
+  const [chatQuestion, setChatQuestion] = useState("");
+  const chat = useLiveChat({ watching: open && view === "chat" });
   const lastQuestion = useRef("");
   const scroller = useRef<HTMLDivElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
@@ -154,6 +161,16 @@ export function SupportBot() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // The link in a reply email (?chat=open) opens the chat straight away.
+  useEffect(() => {
+    if (!chat.token || !new URLSearchParams(location.search).has("chat")) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the URL and the saved chat are only known after hydration
+    setView("chat");
+    setMsgs((m) => (m.length ? m : greetingFor(learner)));
+    if (launcher.current) setPlace(placePanel(boxOf(launcher.current)));
+    setOpen(true);
+  }, [chat.token, learner]);
+
   // The spot the learner last left the launcher in, kept on this device.
   useEffect(() => {
     try {
@@ -191,8 +208,8 @@ export function SupportBot() {
     return () => window.removeEventListener(HELP_EVENT, onHelp);
   }, [open, learner]);
 
-  // The System Design offer is a page of its own design, and the launcher would sit on its Claim button.
-  if (pathname.startsWith("/admin") || pathname === "/system-design" || pathname === "/join" || (SITE_CLOSED && !learner)) return null;
+  // The offer page shows the bot too, so buyers can talk to the team before paying.
+  if (pathname.startsWith("/admin") || pathname === "/join" || (SITE_CLOSED && !learner)) return null;
 
   /** Moves the launcher, and the panel with it if it is open. `save` keeps the spot for next time. */
   const moveTo = (p: Pos, save = false) => {
@@ -290,6 +307,17 @@ export function SupportBot() {
 
   const close = () => setOpen(false);
   const restart = () => { setMsgs(greeting()); lastQuestion.current = ""; };
+  // The last thing they asked Kamran starts the message to the team.
+  const talkToTeam = () => { setChatQuestion(lastQuestion.current); setView("chat"); };
+  const signedIn = me ? { name: me.name, email: me.email } : null;
+  const inChat = view === "chat";
+  const sendChat = async (text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    setInput("");
+    const problem = await chat.send(t);
+    if (problem) { setInput(t); window.alert(problem); }
+  };
 
   // Only the open panel and the launcher take taps, so the closed panel's invisible
   // box can't cover buttons underneath it. Both are fixed to the screen on their own:
@@ -309,12 +337,26 @@ export function SupportBot() {
         )}
       >
         <div className="flex items-center gap-3 bg-gradient-to-br from-red via-red-press to-[#2a0204] px-4 py-3 text-white">
-          <Mascot directions="/mascots/kamran-directions.webp" reactions="/mascots/kamran-reactions.webp" size={52} label="Kamran" className="shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="font-extrabold leading-tight">Kamran</p>
-            <p className="text-xs text-white/75">{me ? `Hi ${me.name} · ${me.track}` : "Klymb study buddy · answers in seconds"}</p>
-          </div>
-          {msgs.length > 2 && (
+          {inChat ? (
+            <>
+              <button type="button" onClick={() => setView("bot")} aria-label="Back to Kamran" className="grid size-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white">
+                <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold leading-tight">Klymb team</p>
+                <p className="text-xs text-white/75">Live chat · we reply here, or by email</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <Mascot directions="/mascots/kamran-directions.webp" reactions="/mascots/kamran-reactions.webp" size={52} label="Kamran" className="shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="font-extrabold leading-tight">Kamran</p>
+                <p className="text-xs text-white/75">{me ? `Hi ${me.name} · ${me.track}` : "Klymb study buddy · answers in seconds"}</p>
+              </div>
+            </>
+          )}
+          {!inChat && msgs.length > 2 && (
             <button type="button" onClick={restart} aria-label="Start over" className="grid size-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white">
               <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" /></svg>
             </button>
@@ -325,7 +367,21 @@ export function SupportBot() {
         </div>
 
         <div ref={scroller} aria-live="polite" className="flex-1 space-y-3 overflow-y-auto bg-surface/60 px-4 py-4">
+          {inChat ? (
+            chat.token ? (
+              <ChatThreadView msgs={chat.msgs} waiting={chat.waiting} email={chat.email} />
+            ) : ticketOnly ? (
+              <HandoffForm me={me} lastQuestion={chatQuestion} page={pathname} />
+            ) : (
+              <ChatStart signedIn={signedIn} question={chatQuestion} onStarted={chat.begin} onUnavailable={() => setTicketOnly(true)} />
+            )
+          ) : (<>
           {me && <ProgressCard me={me} />}
+          {chat.token && (
+            <button type="button" onClick={talkToTeam} className="flex w-full items-center justify-between rounded-2xl bg-ink px-4 py-3 text-left text-sm font-bold text-white">
+              <span>Your chat with our team{chat.unread ? ` · ${chat.unread} new` : ""}</span><span aria-hidden="true">→</span>
+            </button>
+          )}
 
           {msgs.map((m) => {
             if (m.from === "you") return <Bubble key={m.id} from="you">{m.text}</Bubble>;
@@ -371,6 +427,7 @@ export function SupportBot() {
                     {topics.map((t) => (
                       <Chip key={t.id} onClick={() => { setMsgs((x) => [...x, { id: nextId(), from: "you", text: t.title }]); reply({ from: "kamran", kind: "topic", topic: t }); }}>{t.title}</Chip>
                     ))}
+                    <Chip onClick={talkToTeam}>💬 Talk to our team</Chip>
                   </div>
                 );
               case "topic":
@@ -383,7 +440,12 @@ export function SupportBot() {
                   </div>
                 );
               case "handoff":
-                return <HandoffForm key={m.id} me={me} lastQuestion={m.question} page={pathname} />;
+                return (
+                  <div key={m.id} className="space-y-2">
+                    {!ticketOnly && <Choice onClick={talkToTeam}>💬 Chat live with our team instead</Choice>}
+                    <HandoffForm me={me} lastQuestion={m.question} page={pathname} />
+                  </div>
+                );
             }
           })}
 
@@ -395,19 +457,20 @@ export function SupportBot() {
               </div>
             </div>
           )}
+          </>)}
         </div>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); ask(input); }}
-          className="flex items-center gap-2 border-t border-line/30 bg-card px-3 py-2.5"
+          onSubmit={(e) => { e.preventDefault(); if (inChat) void sendChat(input); else ask(input); }}
+          className={clsx("flex items-center gap-2 border-t border-line/30 bg-card px-3 py-2.5", inChat && !chat.token && "hidden")}
         >
-          <label htmlFor="kamran-ask" className="sr-only">Ask Kamran</label>
+          <label htmlFor="kamran-ask" className="sr-only">{inChat ? "Message the Klymb team" : "Ask Kamran"}</label>
           <input
             id="kamran-ask"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your question…"
-            maxLength={300}
+            placeholder={inChat ? "Message our team…" : "Type your question…"}
+            maxLength={inChat ? 2000 : 300}
             autoComplete="off"
             tabIndex={open ? 0 : -1}
             className="min-w-0 flex-1 rounded-full bg-surface px-4 py-2.5 text-sm text-ink outline-none ring-1 ring-line/40 placeholder:text-muted focus:ring-2 focus:ring-red-strong/50"
@@ -442,7 +505,7 @@ export function SupportBot() {
         // Inline, because the site's own `touch-action: manipulation` on buttons outranks a utility class.
         style={{ touchAction: "none", ...(pos && { left: pos.x, top: pos.y }) }}
         aria-expanded={open}
-        aria-label={open ? "Close help" : "Help: ask Kamran"}
+        aria-label={open ? "Close help" : chat.unread ? `Help: ${chat.unread} new message${chat.unread > 1 ? "s" : ""} from our team` : "Help: ask Kamran"}
         className={clsx(
           "group pointer-events-auto fixed z-[60] grid size-16 cursor-grab place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 select-none hover:-translate-y-0.5 active:scale-95 active:cursor-grabbing",
           launcherHidden && "hidden",
@@ -452,6 +515,9 @@ export function SupportBot() {
         )}
       >
         <Image src="/mascots/kamran-excited-v2.png" alt="" width={64} height={64} draggable={false} className="size-16 rounded-full object-cover" />
+        {chat.unread > 0 && !(open && inChat) && (
+          <span className="pointer-events-none absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-red-strong px-1 text-[11px] font-extrabold text-white ring-2 ring-white">{chat.unread}</span>
+        )}
         {!open && (
           <span className={clsx("pointer-events-none absolute hidden whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white shadow-card group-hover:block sm:block", onLeft ? "left-full ml-3" : "right-full mr-3")}>
             Need help?
