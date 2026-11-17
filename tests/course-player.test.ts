@@ -57,10 +57,18 @@ test("subtitle languages per lesson, and the line at a moment", () => {
 });
 
 test("an audio language a lesson lacks falls back to the original voice-over", () => {
-  const tracks = audioTracks("0-0");
+  // Day 6 has only the Hinglish voice-over so far.
+  const tracks = audioTracks("0-5");
   assert.equal(tracks[0].lang, "Hinglish");
   assert.equal(tracks.length, 1, "one voice-over");
-  assert.equal(audioTrack({ ...base(), audio: "English" }, "0-0").lang, "Hinglish");
+  assert.equal(audioTrack({ ...base(), audio: "English" }, "0-5").lang, "Hinglish");
+});
+
+test("Days 1 to 5 have an English voice-over next to the Hinglish one", () => {
+  for (const id of ["0-0", "0-1", "0-2", "0-3", "0-4"]) {
+    assert.deepEqual(audioTracks(id).map((t) => t.lang), ["Hinglish", "English"], id);
+    assert.match(audioTrack({ ...base(), audio: "English" }, id).src, /-en\.mp4$/, id);
+  }
 });
 
 test("player settings are saved with progress", () => {
