@@ -10,9 +10,9 @@ import { normaliseEmail } from "@/lib/email";
 /** What visitors see as the sender of a reply. */
 export const TEAM_NAME = "Klymb team";
 
-const DEFAULT_CHAT_OWNER = "klymbofficial@gmail.com";
+const DEFAULT_CHAT_OWNER = "sarthakgupta.ksj@gmail.com";
 
-/** The one admin who can open /admin/chat: LIVE_CHAT_EMAIL, else the Klymb account. */
+/** The one admin who can open /admin/chat and gets its notifications: LIVE_CHAT_EMAIL, else Sarthak. */
 export function chatOwnerEmail(raw: string | undefined = process.env.LIVE_CHAT_EMAIL) {
   return normaliseEmail(raw) ?? DEFAULT_CHAT_OWNER;
 }

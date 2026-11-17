@@ -5,8 +5,8 @@ import {
   AWAY_MS, EMAIL_GAP_MS, chatAnonOf, chatBody, chatOwnerEmail, chatPage, chatTokenOf, hashChatToken, isChatOwner, newChatToken, shouldEmailReply, waitingTooLong,
 } from "../src/lib/live-chat";
 
-test("only the live-chat owner opens the chat, and it falls back to the Klymb account", () => {
-  assert.equal(chatOwnerEmail(undefined), "klymbofficial@gmail.com");
+test("only the live-chat owner opens the chat, and it falls back to Sarthak", () => {
+  assert.equal(chatOwnerEmail(undefined), "sarthakgupta.ksj@gmail.com");
   assert.equal(chatOwnerEmail("  Sarthak@Example.com "), "sarthak@example.com");
   assert.ok(isChatOwner("SARTHAK@example.com", "sarthak@example.com"));
   assert.ok(!isChatOwner("someone-else@example.com", "sarthak@example.com"));
