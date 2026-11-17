@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db/client";
 import { pushReady, sendPush } from "@/lib/push";
-import { chatOwnerEmail, hashChatToken, newChatToken } from "@/lib/live-chat";
+import { chatEmails, chatOwnerEmail, hashChatToken, newChatToken } from "@/lib/live-chat";
 
 export interface ChatThread {
   id: string;
@@ -44,6 +44,25 @@ export async function threadByToken(token: string) {
   if (!sql) return null;
   const { data } = await sql.row<ChatThread>`select * from course.chat_threads where token_hash = ${hashChatToken(token)}`;
   return data;
+}
+
+/**
+ * A visitor who chatted signed out and then signed in: the chat moves to their
+ * account's email, so the team sees that account's payments, course and trail.
+ * The email they typed first is kept in the context as `typedEmail`.
+ */
+export async function linkAccount(t: ChatThread, account: string): Promise<ChatThread> {
+  if (account === t.email) return t;
+  const sql = db();
+  if (!sql) return t;
+  const { data } = await sql.row<ChatThread>`
+    update course.chat_threads
+       set email = ${account},
+           context = context || jsonb_build_object('typedEmail', coalesce(context->>'typedEmail', email), 'signedInAt', now()::text)
+     where id = ${t.id}
+     returning *
+  `;
+  return data ?? t;
 }
 
 export async function threadById(id: string) {
@@ -166,30 +185,32 @@ export async function visitorActivity(t: ChatThread) {
   const empty = { events: [], payments: [], prereg: null, enrolled: false, checks: [], lead: null, tickets: [], chats: [] };
   if (!sql) return empty;
   const since = new Date(Date.now() - 120 * 864e5).toISOString();
+  // The signed-in account and the email typed before signing in, so nothing they did is missed.
+  const emails = chatEmails(t);
   const [events, payments, prereg, enrolled, checks, lead, tickets, chats] = await Promise.all([
     sql.rows<{ event: string; lesson: string | null; step: string | null; props: Record<string, unknown> | null; created_at: string; anon_id: string; path: string | null }>`
       select event, lesson, step, props, created_at, anon_id, path from course.sd_events
-       where created_at > ${since} and (anon_id = ${t.anon_id ?? ""} or email = ${t.email})
+       where created_at > ${since} and (anon_id = ${t.anon_id ?? ""} or email = any(${emails}::text[]))
        order by created_at limit 1000
     `,
     sql.rows<{ status: string; amount: number; currency: string; coupon_code: string | null; created_at: string; track: string }>`
-      select status, amount, currency, coupon_code, created_at, track from course.payments where email = ${t.email} order by created_at desc limit 20
+      select status, amount, currency, coupon_code, created_at, track from course.payments where email = any(${emails}::text[]) order by created_at desc limit 20
     `,
     sql.row<{ name: string; phone: string; status: string; linkedin: string | null; locked_price: number; created_at: string }>`
-      select name, phone, status, linkedin, locked_price, created_at from course.sd_preregistrations where email = ${t.email}
+      select name, phone, status, linkedin, locked_price, created_at from course.sd_preregistrations where email = any(${emails}::text[]) order by updated_at desc limit 1
     `,
-    sql.scalar<boolean>`select exists (select 1 from course.enrollments where email = ${t.email} and status = 'active')`,
+    sql.scalar<boolean>`select exists (select 1 from course.enrollments where email = any(${emails}::text[]) and status = 'active')`,
     sql.rows<{ lesson: string; best_score: number; passed_at: string | null }>`
-      select lesson, best_score, passed_at from course.lesson_checks where email = ${t.email} order by lesson
+      select lesson, best_score, passed_at from course.lesson_checks where email = any(${emails}::text[]) order by lesson
     `,
     sql.row<{ id: string; stage: string; source: string }>`
-      select id, stage, source from course.sales_leads where email = ${t.email} order by created_at desc limit 1
+      select id, stage, source from course.sales_leads where email = any(${emails}::text[]) order by created_at desc limit 1
     `,
     sql.rows<{ message: string; created_at: string; status: string }>`
-      select message, created_at, status from course.support_tickets where email = ${t.email} order by created_at desc limit 5
+      select message, created_at, status from course.support_tickets where email = any(${emails}::text[]) order by created_at desc limit 5
     `,
     sql.rows<{ id: string; created_at: string }>`
-      select id, created_at from course.chat_threads where email = ${t.email} and id <> ${t.id} order by created_at desc limit 5
+      select id, created_at from course.chat_threads where email = any(${emails}::text[]) and id <> ${t.id} order by created_at desc limit 5
     `,
   ]);
   return {

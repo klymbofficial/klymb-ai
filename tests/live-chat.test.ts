@@ -69,3 +69,10 @@ test("the live chat migration keeps emails lowercase and is safe to run twice", 
   assert.doesNotMatch(sql, /create table (?!if not exists)/);
   assert.match(sql, /token_hash text not null unique/);
 });
+
+test("a chat started signed out counts both emails once they sign in", async () => {
+  const { chatEmails } = await import("../src/lib/live-chat");
+  assert.deepEqual(chatEmails({ email: "a@x.com", context: {} }), ["a@x.com"]);
+  assert.deepEqual(chatEmails({ email: "account@gmail.com", context: { typedEmail: "Typed@X.com" } }), ["account@gmail.com", "typed@x.com"]);
+  assert.deepEqual(chatEmails({ email: "same@x.com", context: { typedEmail: "same@x.com" } }), ["same@x.com"]);
+});

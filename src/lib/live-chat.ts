@@ -58,3 +58,12 @@ export function waitingTooLong(msgs: { sender: "visitor" | "team"; created_at: s
   const last = msgs.at(-1);
   return !!last && last.sender === "visitor" && now - new Date(last.created_at).getTime() >= AWAY_MS;
 }
+
+/**
+ * Every email a chat belongs to: the one it has now (their signed-in account,
+ * once they sign in) and the one they typed before signing in, if different.
+ */
+export function chatEmails(t: { email: string; context: Record<string, string> | null }) {
+  const typed = normaliseEmail(t.context?.typedEmail);
+  return typed && typed !== t.email ? [t.email, typed] : [t.email];
+}

@@ -3,7 +3,7 @@ import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { chatAnonOf, chatBody, chatPage, chatTokenOf } from "@/lib/live-chat";
-import { addMessage, markSeen, messagesOf, notMigrated, notifyTeam, startThread, threadByToken, waitForMessages } from "@/lib/live-chat-db";
+import { addMessage, linkAccount, markSeen, messagesOf, notMigrated, notifyTeam, startThread, threadByToken, waitForMessages } from "@/lib/live-chat-db";
 
 export const dynamic = "force-dynamic";
 // A waiting GET is held open up to 20 seconds.
@@ -11,6 +11,14 @@ export const maxDuration = 30;
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status });
+
+/** The chat for this token, moved to the visitor's account if they've signed in since it started. */
+async function threadFor(token: string | null) {
+  const thread = token ? await threadByToken(token) : null;
+  if (!thread) return null;
+  const account = normaliseEmail(await currentEmail());
+  return account ? linkAccount(thread, account) : thread;
+}
 
 /** The visitor's side of a chat: only what they and the team wrote, never who on the team. */
 const visible = (m: { id: number; sender: "visitor" | "team"; body: string; created_at: string }) => ({ id: m.id, sender: m.sender, body: m.body, created_at: m.created_at });
@@ -49,8 +57,7 @@ export async function POST(req: Request) {
   }
 
   if (body?.action === "send") {
-    const token = chatTokenOf(body.token);
-    const thread = token ? await threadByToken(token) : null;
+    const thread = await threadFor(chatTokenOf(body.token));
     if (!thread) return fail("This chat has ended. Start a new one.", 404);
     const limit = await checkRateLimit("chat-send", { limit: 30, windowMinutes: 60, identity: thread.id });
     if (!limit.allowed) return fail("That's a lot of messages. Give us a moment to catch up.", 429);
@@ -65,8 +72,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const token = chatTokenOf(req.headers.get("x-chat-token"));
-  const thread = token ? await threadByToken(token) : null;
+  const thread = await threadFor(chatTokenOf(req.headers.get("x-chat-token")));
   if (!thread) return fail("No chat.", 404);
   const since = Math.max(0, Number(url.searchParams.get("since")) || 0);
   if (url.searchParams.get("seen") === "1") await markSeen(thread.id, "visitor");

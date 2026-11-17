@@ -52,7 +52,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
           <header className="border-b border-line/25 px-4 py-3">
             <p className="font-extrabold">{thread.name || thread.email}</p>
             <p className="text-xs text-muted">
-              {thread.email} · {online ? <span className="font-bold text-emerald-700">has the chat open now</span> : thread.visitor_seen_at ? `last seen ${when(thread.visitor_seen_at)}` : "not seen"}
+              {thread.email}{thread.context.typedEmail ? <> · <span className="font-bold text-ink">signed in</span> (typed {thread.context.typedEmail} at first)</> : ""} · {online ? <span className="font-bold text-emerald-700">has the chat open now</span> : thread.visitor_seen_at ? `last seen ${when(thread.visitor_seen_at)}` : "not seen"}
               {thread.status === "done" && " · marked done"}
             </p>
           </header>
@@ -73,6 +73,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
             <h2 className="mb-2 text-xs font-extrabold uppercase tracking-wider text-muted">Who</h2>
             <dl className="grid grid-cols-[90px_1fr] gap-x-2 gap-y-1">
               <dt className="text-muted">Started on</dt><dd>{thread.page ?? "—"}</dd>
+              <dt className="text-muted">Account</dt><dd>{thread.context.typedEmail ? <>Signed in as {thread.email}{thread.context.signedInAt ? `, ${when(thread.context.signedInAt)}` : ""}. History below covers both emails.</> : "Not signed in"}</dd>
               <dt className="text-muted">Course</dt><dd>{act.enrolled ? <span className="font-bold text-emerald-700">Has a System Design seat</span> : "No seat"}</dd>
               {act.prereg && <><dt className="text-muted">Offer form</dt><dd>{act.prereg.name} · {formatPhone(act.prereg.phone)} · {act.prereg.status}</dd></>}
               {act.prereg?.linkedin && <><dt className="text-muted">LinkedIn</dt><dd><a href={act.prereg.linkedin} target="_blank" rel="noreferrer" className="underline">Profile</a></dd></>}
