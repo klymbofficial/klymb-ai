@@ -3,9 +3,11 @@ import { currentEmail } from "@/auth";
 import { normaliseEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { chatAnonOf, chatBody, chatPage, chatTokenOf } from "@/lib/live-chat";
-import { addMessage, markSeen, messagesOf, notMigrated, notifyTeam, startThread, threadByToken } from "@/lib/live-chat-db";
+import { addMessage, markSeen, messagesOf, notMigrated, notifyTeam, startThread, threadByToken, waitForMessages } from "@/lib/live-chat-db";
 
 export const dynamic = "force-dynamic";
+// A waiting GET is held open up to 20 seconds.
+export const maxDuration = 30;
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status });
@@ -68,5 +70,7 @@ export async function GET(req: Request) {
   if (!thread) return fail("No chat.", 404);
   const since = Math.max(0, Number(url.searchParams.get("since")) || 0);
   if (url.searchParams.get("seen") === "1") await markSeen(thread.id, "visitor");
-  return NextResponse.json({ status: thread.status, messages: (await messagesOf(thread.id, since)).map(visible) }, { headers: { "Cache-Control": "no-store" } });
+  // `wait=1` holds the request until a new message arrives (or 20 seconds pass), so replies show up at once.
+  const msgs = url.searchParams.get("wait") === "1" ? await waitForMessages(thread.id, since, 20_000, req.signal) : await messagesOf(thread.id, since);
+  return NextResponse.json({ status: thread.status, messages: msgs.map(visible) }, { headers: { "Cache-Control": "no-store" } });
 }

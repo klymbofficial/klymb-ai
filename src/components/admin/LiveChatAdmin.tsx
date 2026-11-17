@@ -17,6 +17,30 @@ export function AutoRefresh({ ms }: { ms: number }) {
   return null;
 }
 
+/**
+ * Waits on the server for a message newer than `after` (in `thread`, or in any
+ * chat), then re-reads the page at once. The new page brings a new `after`,
+ * which starts the next wait. So a visitor's message shows in about a second.
+ */
+export function LiveRefresh({ after, thread }: { after: number; thread?: string }) {
+  const router = useRouter();
+  useEffect(() => {
+    const stop = new AbortController();
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    void (async () => {
+      while (!stop.signal.aborted) {
+        if (document.visibilityState !== "visible") { await sleep(1000); continue; }
+        const res = await fetch(`/api/chat/team?after=${after}${thread ? `&thread=${thread}` : ""}`, { cache: "no-store", signal: stop.signal }).catch(() => null);
+        const data = (await res?.json().catch(() => null)) as { changed?: boolean } | null;
+        if (data?.changed) { router.refresh(); return; }
+        if (!res?.ok && !stop.signal.aborted) await sleep(3000);
+      }
+    })();
+    return () => stop.abort();
+  }, [after, thread, router]);
+  return null;
+}
+
 /** Keeps the newest message in view as the conversation grows. */
 export function ScrollToEnd({ count }: { count: number }) {
   const ref = useRef<HTMLDivElement>(null);

@@ -6,8 +6,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /**
  * "Talk to our team" inside the Kamran bot. The chat's secret token lives in
  * this browser, so the conversation follows the visitor across pages and
- * reloads. Replies are checked every 2 seconds while the chat is on screen
- * and every 15 seconds otherwise, only while the tab is visible.
+ * reloads. While the chat is on screen, each request waits on the server until
+ * a reply arrives (long polling), so replies show up in about a second; with
+ * the chat closed it checks every 15 seconds. Only while the tab is visible.
  */
 
 export interface ChatMsg { id: number; sender: "visitor" | "team"; body: string; created_at: string }
@@ -39,10 +40,12 @@ export function useLiveChat({ watching }: { watching: boolean }) {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after hydration
   useEffect(() => { setToken(read(TOKEN_KEY)); setSeen(Number(read(SEEN_KEY)) || 0); setEmail(read(EMAIL_KEY)); }, []);
 
-  const pull = useCallback(async (markSeen: boolean) => {
-    if (!token) return;
-    const res = await fetch(`/api/chat?since=${last.current}${markSeen ? "&seen=1" : ""}`, { headers: { "x-chat-token": token }, cache: "no-store" }).catch(() => null);
-    if (res?.status === 404) { write(TOKEN_KEY, null); setToken(null); all.current = []; setMsgs([]); last.current = 0; return; }
+  /** Fetches new messages. `wait` holds the request on the server until one arrives. False when the request failed. */
+  const pull = useCallback(async (markSeen: boolean, wait = false, signal?: AbortSignal) => {
+    if (!token) return true;
+    const res = await fetch(`/api/chat?since=${last.current}${markSeen ? "&seen=1" : ""}${wait ? "&wait=1" : ""}`, { headers: { "x-chat-token": token }, cache: "no-store", signal }).catch(() => null);
+    if (!res) return false;
+    if (res.status === 404) { write(TOKEN_KEY, null); setToken(null); all.current = []; setMsgs([]); last.current = 0; return true; }
     const data = (await res?.json().catch(() => null)) as { messages?: ChatMsg[] } | null;
     const fresh = data?.messages ?? [];
     if (fresh.length) {
@@ -56,14 +59,28 @@ export function useLiveChat({ watching }: { watching: boolean }) {
       setSeen((s) => { if (top > s) write(SEEN_KEY, String(top)); return Math.max(s, top); });
     }
     setNow(Date.now());
+    return res.ok;
   }, [token]);
 
   useEffect(() => {
     if (!token) return;
-    const tick = () => { if (document.visibilityState === "visible") void pull(watching); };
-    tick();
-    const t = window.setInterval(tick, watching ? 2_000 : 15_000);
-    return () => window.clearInterval(t);
+    if (!watching) {
+      const tick = () => { if (document.visibilityState === "visible") void pull(false); };
+      tick();
+      const t = window.setInterval(tick, 15_000);
+      return () => window.clearInterval(t);
+    }
+    // On screen: one waiting request after another, so a reply lands the moment it's sent.
+    const stop = new AbortController();
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    void (async () => {
+      while (!stop.signal.aborted) {
+        if (document.visibilityState !== "visible") { await sleep(1000); continue; }
+        const ok = await pull(true, true, stop.signal);
+        if (!ok && !stop.signal.aborted) await sleep(3000); // offline or a server hiccup: back off a little
+      }
+    })();
+    return () => stop.abort();
   }, [token, watching, pull]);
 
 

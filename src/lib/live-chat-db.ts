@@ -203,3 +203,41 @@ export async function visitorActivity(t: ChatThread) {
     chats: chats.data ?? [],
   };
 }
+
+const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Long polling: holds the request until a message after `afterId` exists (in
+ * one chat, or any chat when `threadId` is null), checking every 700 ms, for
+ * at most `ms`. So a new message reaches the other side in about a second,
+ * with no extra service.
+ */
+export async function waitForMessages(threadId: string | null, afterId: number, ms: number, signal?: AbortSignal) {
+  const sql = db();
+  if (!sql) return [];
+  const end = Date.now() + ms;
+  for (;;) {
+    const fresh = threadId ? await messagesOf(threadId, afterId) : await newestAfter(afterId);
+    if (fresh.length || Date.now() >= end || signal?.aborted) return fresh;
+    await pause(700);
+  }
+}
+
+/** The newest message id, in one chat or across all of them. */
+export async function latestMessageId(threadId: string | null = null) {
+  const sql = db();
+  if (!sql) return 0;
+  const { data } = threadId
+    ? await sql.scalar<number>`select coalesce(max(id), 0)::int from course.chat_messages where thread_id = ${threadId}`
+    : await sql.scalar<number>`select coalesce(max(id), 0)::int from course.chat_messages`;
+  return data ?? 0;
+}
+
+async function newestAfter(afterId: number) {
+  const sql = db();
+  if (!sql) return [];
+  const { data } = await sql.rows<ChatMessage>`
+    select id, sender, body, page, created_at from course.chat_messages where id > ${afterId} order by id limit 50
+  `;
+  return data ?? [];
+}

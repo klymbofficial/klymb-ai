@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/admin/EmptyState";
-import { AutoRefresh, ChatPushToggle } from "@/components/admin/LiveChatAdmin";
+import { AutoRefresh, ChatPushToggle, LiveRefresh } from "@/components/admin/LiveChatAdmin";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { requireAdmin } from "@/lib/admin/auth";
 import { isChatOwner } from "@/lib/live-chat";
-import { listThreads, notMigrated } from "@/lib/live-chat-db";
+import { latestMessageId, listThreads, notMigrated } from "@/lib/live-chat-db";
 
 export const metadata: Metadata = { title: "Live chat", manifest: "/admin-chat.webmanifest" };
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export default async function LiveChatPage({ searchParams }: { searchParams: Pro
   const admin = await requireAdmin();
   if (!isChatOwner(admin.email)) notFound();
   const show = (await searchParams).show === "done" ? "done" : "open";
-  const { data: threads, error } = await listThreads(show);
+  const [{ data: threads, error }, latest] = await Promise.all([listThreads(show), latestMessageId()]);
   const tab = (key: "open" | "done", label: string) => (
     <Link href={key === "open" ? "/admin/chat" : "/admin/chat?show=done"} aria-current={show === key ? "page" : undefined} className={`-mb-px border-b-2 px-3 py-2 text-sm font-bold ${show === key ? "border-red-strong" : "border-transparent text-muted"}`}>{label}</Link>
   );
@@ -32,7 +32,8 @@ export default async function LiveChatPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageTitle eyebrow="Support" title="Live chat" intro="People who tapped “Talk to our team” in the chatbot. They see your replies as “Klymb team”." />
-      <AutoRefresh ms={5_000} />
+      {!error && <LiveRefresh after={latest} />}
+      <AutoRefresh ms={30_000} />
       <ChatPushToggle />
       <nav aria-label="Chats" className="mb-4 flex gap-1 border-b border-line/25">{tab("open", "Open")}{tab("done", "Done")}</nav>
       {error ? (

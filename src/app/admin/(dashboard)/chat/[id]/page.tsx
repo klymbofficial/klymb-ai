@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AutoRefresh, ReplyBox, ScrollToEnd } from "@/components/admin/LiveChatAdmin";
+import { AutoRefresh, LiveRefresh, ReplyBox, ScrollToEnd } from "@/components/admin/LiveChatAdmin";
 import { requireAdmin } from "@/lib/admin/auth";
 import { trailLines, type Tone } from "@/lib/admin/sd-event-words";
 import { lessonDay } from "@/lib/course-app";
@@ -43,7 +43,9 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
 
   return (
     <>
-      <AutoRefresh ms={3_000} />
+      <LiveRefresh after={msgs.at(-1)?.id ?? 0} thread={thread.id} />
+      {/* Slower, for "has the chat open now" and their activity. */}
+      <AutoRefresh ms={30_000} />
       <Link href="/admin/chat" className="mb-3 inline-block text-xs font-bold text-muted underline underline-offset-4">← All chats</Link>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <section className="card flex min-h-[60vh] flex-col overflow-hidden" aria-label="Conversation">
