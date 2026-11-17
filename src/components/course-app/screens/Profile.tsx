@@ -52,7 +52,8 @@ export function Profile({ s, act }: { s: CourseState; act: Act }) {
   const groups: [string, ReactNode][] = [
     ["Referrals", <Row key="refer"><LinkRow label="Refer friends" sub={referral ? headline(referral) : "Get your fee back when 3 friends buy."} onClick={() => act((p) => ({ ...p, screen: "refer", tab: "refer" }))} /></Row>],
     ["Learning", <>
-      <Row><Label label="Lesson language" sub="For questions and cheatsheets." /><Segmented value={s.lang} options={[["en", "English"], ["hi", "Hinglish"]]} onChange={(lang) => act((p) => ({ ...p, lang }))} /></Row>
+      <Row><Label label="Lesson language" sub="The text on the site: questions, practice and cheatsheets." /><Segmented value={s.lang} options={[["en", "English"], ["hi", "Hinglish"]]} onChange={(lang) => act((p) => ({ ...p, lang }))} /></Row>
+      <Row><Label label="Video language" sub="The voice in the videos. English is on Days 1 to 5 so far; other days play in Hinglish." /><Segmented value={s.audio} options={[["Hinglish", "Hinglish"], ["English", "English"]]} onChange={(audio) => act((p) => ({ ...p, audio }))} /></Row>
       <Row><Label label="Daily goal" sub="Passing one lesson a day keeps your streak." /><Segmented value={s.goal} options={[[5, "5 min"], [15, "15 min"], [30, "30 min"]]} onChange={(goal) => act((p) => ({ ...p, goal }))} /></Row>
     </>],
     ["This device", <>
