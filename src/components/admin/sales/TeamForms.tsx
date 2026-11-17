@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { addRep, removeRep } from "@/app/admin/sales-actions";
-import { input } from "@/components/admin/sales/SalesForms";
+import { useRef, useState } from "react";
+import { addRep, assignLeads, removeRep } from "@/app/admin/sales-actions";
+import { input } from "@/components/admin/sales/styles";
 
 const button = "bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50";
 
@@ -83,5 +83,52 @@ export function SelectAll() {
       }}
       className="size-4 accent-ink"
     />
+  );
+}
+
+/**
+ * The Leads table as a form: tick leads and a bar appears at the bottom of
+ * the screen to hand them to someone. Hidden until something is ticked.
+ */
+export function AssignForm({ owners, children }: { owners: { email: string; name: string | null; rep?: boolean }[]; children: React.ReactNode }) {
+  const ref = useRef<HTMLFormElement>(null);
+  const [count, setCount] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const recount = () => {
+    // Only boxes on screen: the table and the phone cards both carry them.
+    const boxes = ref.current?.querySelectorAll<HTMLInputElement>('input[name="id"]:checked') ?? [];
+    setCount([...boxes].filter((b) => b.offsetParent !== null).length);
+  };
+  return (
+    <form
+      ref={ref}
+      onChange={recount}
+      action={async (fd) => {
+        // Hidden duplicates (the other layout) are dropped so each lead is sent once.
+        const ids = [...(ref.current?.querySelectorAll<HTMLInputElement>('input[name="id"]:checked') ?? [])].filter((b) => b.offsetParent !== null).map((b) => b.value);
+        const clean = new FormData();
+        for (const id of ids) clean.append("id", id);
+        clean.set("to", String(fd.get("to") ?? ""));
+        setBusy(true);
+        await assignLeads(clean);
+        setBusy(false);
+        ref.current?.reset();
+        setCount(0);
+      }}
+    >
+      {children}
+      {count > 0 && (
+        <div className="sticky bottom-3 z-10 mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-ink p-3 text-xs text-paper shadow-lg">
+          <span className="font-bold">{count} ticked · assign to</span>
+          <select name="to" required defaultValue="" className="min-w-40 flex-1 bg-white px-2 py-2 text-sm text-ink sm:flex-none" aria-label="Assign ticked leads to">
+            <option value="" disabled>Pick someone</option>
+            {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email}{o.rep ? " (intern)" : ""}</option>)}
+            <option value="none">Nobody (unassign)</option>
+          </select>
+          <button type="submit" disabled={busy} className="bg-red-strong px-4 py-2 font-bold uppercase tracking-wider text-white disabled:opacity-60">{busy ? "Assigning…" : "Assign"}</button>
+          <button type="button" onClick={() => { ref.current?.reset(); setCount(0); }} className="ml-auto underline">Clear</button>
+        </div>
+      )}
+    </form>
   );
 }

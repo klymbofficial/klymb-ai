@@ -4,7 +4,7 @@ import { DeleteLead, LeadForm, OpenWhatsApp, TouchForm } from "@/components/admi
 import { StageBadge } from "@/components/admin/sales/SalesTabs";
 import type { SalesUser } from "@/lib/admin/auth";
 import type { Lead, Owner, Touch } from "@/lib/admin/sales";
-import { CHANNELS, formatPhone, labelOf, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
+import { CHANNELS, formatPhone, istToday, labelOf, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
 
 const when = (iso: string) =>
   new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
@@ -18,13 +18,23 @@ export function LeadDetail({ lead, touches, owners, user, base }: { lead: Lead; 
   const owner = user.role === "owner";
   const who = (email: string) => email === WHATSAPP_BY ? "WhatsApp dashboard" : owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
   const back = owner ? `${base}/leads` : `${base}/list`;
+  const today = istToday();
+  const open = lead.stage !== "signed" && lead.stage !== "rejected";
+  const due = open && lead.next_follow_up !== null && lead.next_follow_up <= today;
+  const followUpText = !open
+    ? "None, the lead is closed"
+    : !lead.next_follow_up
+      ? "Not set"
+      : lead.next_follow_up === today
+        ? "Today"
+        : new Date(`${lead.next_follow_up}T00:00:00+05:30`).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" }) + (due ? " (overdue)" : "");
 
   return (
     <>
       <PageTitle
         eyebrow={`${labelOf(SOURCES, lead.source)}${lead.source_detail ? ` · ${lead.source_detail}` : ""}${lead.kind === "b2b" ? " · B2B" : ""}`}
         title={lead.name}
-        intro={[formatPhone(lead.phone), lead.email, lead.org].filter(Boolean).join(" · ")}
+        intro={[lead.phone ? formatPhone(lead.phone) : null, lead.email, lead.org].filter(Boolean).join(" · ") || "No contact details yet"}
         actions={<Link href={back} className="text-xs font-bold uppercase tracking-wider underline underline-offset-4 hover:text-red-deep">← {owner ? "All leads" : "My leads"}</Link>}
       />
 
@@ -38,8 +48,33 @@ export function LeadDetail({ lead, touches, owners, user, base }: { lead: Lead; 
           </>
         )}
         {lead.email && <a href={`mailto:${lead.email}`} className="border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-surface">Email</a>}
-        {owner && lead.owner_email && <span className="text-xs text-muted">Owner: <b className="text-ink">{who(lead.owner_email)}</b></span>}
       </div>
+
+      {/* The lead at a glance, so nobody has to scroll to Details to know where things stand. */}
+      <dl className="card mb-6 grid grid-cols-2 gap-4 p-4 text-sm sm:grid-cols-4">
+        <div>
+          <dt className="text-[11px] font-bold uppercase tracking-wider text-muted">Next follow-up</dt>
+          <dd className={`mt-0.5 font-bold ${due ? "text-red-deep" : ""}`}>{followUpText}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-bold uppercase tracking-wider text-muted">Last touch</dt>
+          <dd className="mt-0.5">{touches[0] ? `${touches[0].inbound ? "They wrote" : labelOf(CHANNELS, touches[0].channel)} · ${when(touches[0].created_at)}` : "Not contacted yet"}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-bold uppercase tracking-wider text-muted">Owner</dt>
+          <dd className="mt-0.5">{lead.owner_email ? (lead.owner_email === user.email ? "You" : who(lead.owner_email)) : "Unassigned"}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-bold uppercase tracking-wider text-muted">Added</dt>
+          <dd className="mt-0.5">{when(lead.created_at)}</dd>
+        </div>
+        {lead.notes && (
+          <div className="col-span-2 sm:col-span-4">
+            <dt className="text-[11px] font-bold uppercase tracking-wider text-muted">Notes</dt>
+            <dd className="mt-0.5 whitespace-pre-line">{lead.notes}</dd>
+          </div>
+        )}
+      </dl>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <TouchForm key={`${lead.stage}-${touches.length}`} leadId={lead.id} stage={lead.stage} />

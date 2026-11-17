@@ -1,26 +1,27 @@
 import clsx from "clsx";
 import Link from "next/link";
 
+// Overview first, then the lists to work, then the team.
 const tabs = [
+  { href: "/admin/sales", label: "Report", key: "report" },
+  { href: "/admin/sales/leads?due=1", label: "Due today", key: "due" },
+  { href: "/admin/sales/leads", label: "All leads", key: "leads" },
   { href: "/admin/sales/list", label: "My list", key: "list" },
   { href: "/admin/sales/board", label: "Board", key: "board" },
-  { href: "/admin/sales", label: "Report" },
-  { href: "/admin/sales/leads", label: "Leads" },
-  { href: "/admin/sales/leads?due=1", label: "Due today", key: "due" },
   { href: "/admin/sales/team", label: "Team", key: "team" },
 ];
 
 export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "list" | "board" | "team" }) {
   return (
-    <nav aria-label="Sales" className="mb-6 flex gap-1 border-b border-line/25">
+    <nav aria-label="Sales" className="-mx-4 mb-6 flex gap-1 overflow-x-auto border-b border-line/25 px-4 sm:mx-0 sm:px-0">
       {tabs.map((t) => {
-        const key = t.key ?? (t.href.endsWith("leads") ? "leads" : "report");
+        const key = t.key;
         return (
           <Link
             key={t.href}
             href={t.href}
             aria-current={key === current ? "page" : undefined}
-            className={clsx("-mb-px border-b-2 px-3 py-2 text-sm font-bold", key === current ? "border-red-strong text-ink" : "border-transparent text-muted hover:text-ink")}
+            className={clsx("-mb-px whitespace-nowrap border-b-2 px-3 py-2 text-sm font-bold", key === current ? "border-red-strong text-ink" : "border-transparent text-muted hover:text-ink")}
           >
             {t.label}
           </Link>

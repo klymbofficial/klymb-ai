@@ -47,3 +47,8 @@ export function LeadSearch() {
     </div>
   );
 }
+
+/** A filter dropdown that applies as soon as it changes, no Filter button. */
+export function AutoSelect(props: React.ComponentProps<"select">) {
+  return <select {...props} onChange={(e) => e.currentTarget.form?.requestSubmit()} />;
+}

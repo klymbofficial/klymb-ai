@@ -31,7 +31,7 @@ export default async function SalesListPage({ searchParams }: { searchParams: Pr
       <PageTitle
         eyebrow="Sales"
         title={everyone ? "Everyone's list" : "My list"}
-        intro="Your people as a sheet. Change a stage, date or note and it saves. WA and Call open the chat or dialler and log the touch."
+        intro="Your people as a sheet. Change a stage, date or note and it saves. WhatsApp and Call open the chat or dialler and log it for you."
       />
       <SalesTabs current="list" />
       <div className="mb-3 flex flex-wrap items-center gap-2">

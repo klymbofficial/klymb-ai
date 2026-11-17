@@ -43,7 +43,7 @@ function ago(iso: string) {
  * touch in one tap. Built for working a list top to bottom.
  */
 /** `base` is where lead pages live: /admin/sales for owners, /sales for reps. Reps get no owner column. */
-export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssign = true }: { rows: SheetRow[]; today: string; owners: { email: string; name: string | null }[]; base?: string; canAssign?: boolean }) {
+export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssign = true, quickAdd = true }: { rows: SheetRow[]; today: string; owners: { email: string; name: string | null }[]; base?: string; canAssign?: boolean; quickAdd?: boolean }) {
   const [error, setError] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
   // The row whose call is in progress: its outcome buttons are showing.
@@ -62,26 +62,118 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
     if (!r.ok) setError(r.message);
   }
 
+  // The pieces each row is made of, shared by the desktop table and the phone cards.
+  const reachOut = (r: SheetRow, big = false) => {
+    const btn = big ? "px-3 py-2 text-xs" : "px-1.5 py-0.5 text-[11px]";
+    return (
+      <>
+        <span className="mt-1 flex flex-wrap gap-1">
+          {r.phone && (
+            <>
+              <a href={`https://wa.me/${r.phone}`} target="_blank" rel="noopener noreferrer" onClick={() => touch(r, "whatsapp")}
+                className={clsx(btn, "border border-emerald-700/40 font-bold text-emerald-800 hover:bg-emerald-50")} title="Open WhatsApp and log it">WhatsApp</a>
+              <a href={`tel:+${r.phone}`} onClick={() => setCalling(r.id)}
+                className={clsx(btn, "border border-line/50 font-bold hover:bg-surface")} title="Call and log it">Call</a>
+            </>
+          )}
+          {!r.phone && r.email && (
+            <a href={`mailto:${r.email}`} onClick={() => touch(r, "email")}
+              className={clsx(btn, "border border-line/50 font-bold hover:bg-surface")} title="Email and log it">Email</a>
+          )}
+          <button type="button" onClick={() => touch(r, r.last_channel ?? "whatsapp", true)}
+            className={clsx(btn, "border border-line/50 font-bold hover:bg-surface")} title="They replied: counts as a conversation">They replied</button>
+        </span>
+        {calling === r.id && (
+          <span role="group" aria-label="How did the call go?" className="mt-1.5 flex flex-wrap gap-1">
+            {CALL_OUTCOMES.map((o) => (
+              <button
+                key={o.key}
+                type="button"
+                onClick={async () => {
+                  setCalling(null);
+                  setError("");
+                  const res = await logCallOutcome(r.id, o.key);
+                  if (!res.ok) setError(res.message);
+                }}
+                className={clsx(btn, "bg-ink font-bold text-paper hover:bg-red-strong")}
+              >
+                {o.label}
+              </button>
+            ))}
+            <button type="button" onClick={() => setCalling(null)} className="px-1 text-[11px] text-muted underline">Skip</button>
+          </span>
+        )}
+      </>
+    );
+  };
+  const stageSelect = (r: SheetRow, saved: boolean) => (
+    <>
+      <select
+        aria-label={`Stage for ${r.name}`}
+        defaultValue={r.stage}
+        key={`${r.id}-${r.stage}`}
+        onChange={(ev) => save(r.id, "stage", ev.target.value)}
+        className={clsx("w-full px-1.5 py-1 text-xs font-bold", STAGE_BG[e(r.stage)])}
+      >
+        {STAGES.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
+      </select>
+      {saved && <span className="text-[10px] text-muted">Saved</span>}
+    </>
+  );
+  const followUp = (r: SheetRow, overdue: boolean, saved: boolean) => (
+    <>
+      <input
+        type="date"
+        aria-label={`Next follow-up for ${r.name}`}
+        defaultValue={r.next_follow_up ?? ""}
+        key={`${r.id}-${r.next_follow_up}`}
+        onChange={(ev) => save(r.id, "next_follow_up", ev.target.value)}
+        className={clsx(cell, "px-1 text-xs", overdue && "font-bold text-red-deep")}
+      />
+      {overdue && r.next_follow_up && r.next_follow_up < today && <span className="block px-1 text-[10px] font-bold text-red-deep">{daysLate(r.next_follow_up, today)} late</span>}
+      {saved && <span className="text-[10px] text-muted">Saved</span>}
+    </>
+  );
+  const lastTouch = (r: SheetRow) =>
+    r.last_touch_at
+      ? <>{labelOf(CHANNELS, r.last_channel ?? "")} · {ago(r.last_touch_at)}<span className="block text-muted">{r.touches} reached out</span></>
+      : <span className="text-muted">Not contacted yet</span>;
+  const ownerSelect = (r: SheetRow) => (
+    <select
+      aria-label={`Owner of ${r.name}`}
+      defaultValue={r.owner_email ?? ""}
+      key={`${r.id}-${r.owner_email}`}
+      onChange={(ev) => save(r.id, "owner_email", ev.target.value)}
+      className="w-full bg-transparent px-1 py-1 text-xs"
+    >
+      <option value="">Unassigned</option>
+      {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email.split("@")[0]}</option>)}
+    </select>
+  );
+  const isOverdue = (r: SheetRow) => r.next_follow_up !== null && r.next_follow_up <= today && !["signed", "rejected"].includes(r.stage);
+
   return (
     <div className="flex flex-col gap-3">
-      <QuickAdd onError={setError} />
+      {quickAdd && <QuickAdd onError={setError} />}
       {error && <p role="alert" className="text-xs font-semibold text-error">{error}</p>}
-      <div className="card overflow-x-auto">
-        <table className="w-full min-w-[1080px] table-fixed text-left text-sm">
+
+      {/* Laptop: a sheet. */}
+      <div className="card hidden overflow-x-auto md:block">
+        <table className={clsx("w-full table-fixed text-left text-sm", canAssign ? "min-w-[920px]" : "min-w-[820px]")}>
           <colgroup>
-            <col className="w-[17%]" /><col className="w-[15%]" /><col className="w-[13%]" /><col className="w-[12%]" />
-            <col className="w-[11%]" /><col className="w-[22%]" /><col className="w-[10%]" />
+            <col className="w-[18%]" /><col className="w-[17%]" /><col className="w-[13%]" /><col className="w-[12%]" />
+            <col className="w-[13%]" /><col className={canAssign ? "w-[17%]" : "w-[27%]"} />{canAssign && <col className="w-[10%]" />}
           </colgroup>
           <thead className="border-b border-line/30 text-[11px] uppercase tracking-wider text-muted">
             <tr>
-              <th className="px-3 py-2.5">Name</th><th className="px-3 py-2.5">Number · reach out</th><th className="px-3 py-2.5">Stage</th>
+              <th className="px-3 py-2.5">Name</th><th className="px-3 py-2.5">Reach out</th><th className="px-3 py-2.5">Stage</th>
               <th className="px-3 py-2.5">Last touch</th><th className="px-3 py-2.5">Follow-up</th><th className="px-3 py-2.5">Note</th>
-              <th className="px-3 py-2.5">Owner</th>
+              {canAssign && <th className="px-3 py-2.5">Owner</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-line/15">
             {rows.map((r) => {
-              const overdue = r.next_follow_up !== null && r.next_follow_up <= today && !["signed", "rejected"].includes(r.stage);
+              const overdue = isOverdue(r);
               const saved = (f: string) => flash === `${r.id}:${f}`;
               return (
                 <tr key={r.id} className={clsx("align-top", overdue && "bg-red-tint/40")}>
@@ -91,89 +183,56 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
                     <span className="block truncate text-xs text-muted">{[r.org, labelOf(SOURCES, r.source)].filter(Boolean).join(" · ")}</span>
                   </td>
                   <td className="px-3 py-2">
-                    <span className="block text-xs nums">{r.phone ? formatPhone(r.phone) : r.email}</span>
-                    <span className="mt-1 flex gap-1">
-                      {r.phone && (
-                        <>
-                          <a href={`https://wa.me/${r.phone}`} target="_blank" rel="noopener noreferrer" onClick={() => touch(r, "whatsapp")}
-                            className="border border-emerald-700/40 px-1.5 py-0.5 text-[11px] font-bold text-emerald-800 hover:bg-emerald-50" title="Open WhatsApp and log it">WA</a>
-                          <a href={`tel:+${r.phone}`} onClick={() => setCalling(r.id)}
-                            className="border border-line/50 px-1.5 py-0.5 text-[11px] font-bold hover:bg-surface" title="Call and log it">Call</a>
-                        </>
-                      )}
-                      <button type="button" onClick={() => touch(r, r.last_channel ?? "whatsapp", true)}
-                        className="border border-line/50 px-1.5 py-0.5 text-[11px] font-bold hover:bg-surface" title="They replied: counts as a conversation">Replied</button>
-                    </span>
-                    {calling === r.id && (
-                      <span role="group" aria-label="How did the call go?" className="mt-1.5 flex flex-wrap gap-1">
-                        {CALL_OUTCOMES.map((o) => (
-                          <button
-                            key={o.key}
-                            type="button"
-                            onClick={async () => {
-                              setCalling(null);
-                              setError("");
-                              const res = await logCallOutcome(r.id, o.key);
-                              if (!res.ok) setError(res.message);
-                            }}
-                            className="bg-ink px-1.5 py-0.5 text-[11px] font-bold text-paper hover:bg-red-strong"
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                        <button type="button" onClick={() => setCalling(null)} className="px-1 text-[11px] text-muted underline">Skip</button>
-                      </span>
-                    )}
+                    <span className="block truncate text-xs nums">{r.phone ? formatPhone(r.phone) : r.email}</span>
+                    {reachOut(r)}
                   </td>
-                  <td className="px-3 py-2">
-                    <select
-                      aria-label={`Stage for ${r.name}`}
-                      defaultValue={r.stage}
-                      key={`${r.id}-${r.stage}`}
-                      onChange={(e) => save(r.id, "stage", e.target.value)}
-                      className={clsx("w-full px-1.5 py-1 text-xs font-bold", STAGE_BG[e(r.stage)])}
-                    >
-                      {STAGES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                    </select>
-                    {saved("stage") && <span className="text-[10px] text-muted">Saved</span>}
-                  </td>
-                  <td className="px-3 py-2 text-xs nums">
-                    {r.last_touch_at ? <>{labelOf(CHANNELS, r.last_channel ?? "")} · {ago(r.last_touch_at)}<span className="block text-muted">{r.touches} reached out</span></> : <span className="text-muted">Not contacted</span>}
-                  </td>
-                  <td className="px-3 py-2">
-                    <input
-                      type="date"
-                      aria-label={`Next follow-up for ${r.name}`}
-                      defaultValue={r.next_follow_up ?? ""}
-                      key={`${r.id}-${r.next_follow_up}`}
-                      onChange={(e) => save(r.id, "next_follow_up", e.target.value)}
-                      className={clsx(cell, "text-xs", overdue && "font-bold text-red-deep")}
-                    />
-                    {saved("next_follow_up") && <span className="text-[10px] text-muted">Saved</span>}
-                  </td>
-                  <td className="px-3 py-2">
-                    <NoteCell row={r} onSave={(v) => save(r.id, "notes", v)} saved={saved("notes")} />
-                  </td>
-                  <td className="px-3 py-2">
-                    {canAssign ? <select
-                      aria-label={`Owner of ${r.name}`}
-                      defaultValue={r.owner_email ?? ""}
-                      key={`${r.id}-${r.owner_email}`}
-                      onChange={(e) => save(r.id, "owner_email", e.target.value)}
-                      className="w-full bg-transparent px-1 py-1 text-xs"
-                    >
-                      <option value="">—</option>
-                      {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email.split("@")[0]}</option>)}
-                    </select> : <span className="px-1 text-xs text-muted">You</span>}
-                  </td>
+                  <td className="px-3 py-2">{stageSelect(r, saved("stage"))}</td>
+                  <td className="px-3 py-2 text-xs nums">{lastTouch(r)}</td>
+                  <td className="px-2 py-2">{followUp(r, overdue, saved("next_follow_up"))}</td>
+                  <td className="px-3 py-2"><NoteCell row={r} onSave={(v) => save(r.id, "notes", v)} saved={saved("notes")} /></td>
+                  {canAssign && <td className="px-3 py-2">{ownerSelect(r)}</td>}
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
+      {/* Phone: one card per person, with big buttons. */}
+      <ul className="flex flex-col gap-2 md:hidden">
+        {rows.map((r) => {
+          const overdue = isOverdue(r);
+          const saved = (f: string) => flash === `${r.id}:${f}`;
+          return (
+            <li key={r.id} className={clsx("card p-3", overdue && "ring-1 ring-red-strong/30")}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <Link href={`${base}/leads/${r.id}`} className="font-bold underline-offset-4 hover:underline">{r.name}</Link>
+                  {r.paid && <span className="ml-1.5 bg-emerald-700 px-1 py-0.5 text-[10px] font-extrabold text-white">PAID</span>}
+                  <span className="block truncate text-xs text-muted">{[r.phone ? formatPhone(r.phone) : r.email, r.org].filter(Boolean).join(" · ")}</span>
+                </div>
+                <div className="w-36 shrink-0">{stageSelect(r, saved("stage"))}</div>
+              </div>
+              {reachOut(r, true)}
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                <div><span className="block text-[10px] font-bold uppercase tracking-wider text-muted">Follow-up</span>{followUp(r, overdue, saved("next_follow_up"))}</div>
+                <div className="nums"><span className="block text-[10px] font-bold uppercase tracking-wider text-muted">Last touch</span>{lastTouch(r)}</div>
+              </div>
+              <div className="mt-1"><NoteCell row={r} onSave={(v) => save(r.id, "notes", v)} saved={saved("notes")} /></div>
+              {canAssign && <div className="mt-1 flex items-center gap-2 text-xs"><span className="text-muted">Owner</span>{ownerSelect(r)}</div>}
+            </li>
+          );
+        })}
+      </ul>
+      {rows.length === 0 && <p className="card p-6 text-center text-sm text-muted">Nobody here yet.</p>}
     </div>
   );
+}
+
+/** "3 days" for a follow-up date that has passed. */
+function daysLate(date: string, today: string) {
+  const d = Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86400000);
+  return d === 1 ? "1 day" : `${d} days`;
 }
 
 /** Stage keys are safe class lookups; anything else falls back to plain. */
@@ -221,14 +280,14 @@ function QuickAdd({ onError }: { onError: (m: string) => void }) {
         nameRef.current?.focus();
       }}
     >
-      <span className="text-xs font-extrabold uppercase tracking-wider text-muted">Add</span>
-      <input ref={nameRef} required value={name} onChange={(ev) => setName(ev.target.value)} placeholder="Name" aria-label="Name" className={`${field} w-44`} />
-      <input required value={contact} onChange={(ev) => setContact(ev.target.value)} placeholder="Phone or email" aria-label="Phone or email" inputMode="tel" className={`${field} w-44`} />
-      <select value={source} onChange={(ev) => setSource(ev.target.value)} aria-label="Source" className={field}>
+      <span className="w-full text-xs font-extrabold uppercase tracking-wider text-muted sm:w-auto">Add someone</span>
+      <input ref={nameRef} required value={name} onChange={(ev) => setName(ev.target.value)} placeholder="Name" aria-label="Name" className={`${field} w-full sm:w-44`} />
+      <input required value={contact} onChange={(ev) => setContact(ev.target.value)} placeholder="Phone or email" aria-label="Phone or email" inputMode="tel" className={`${field} w-full sm:w-44`} />
+      <select value={source} onChange={(ev) => setSource(ev.target.value)} aria-label="Source" className={`${field} w-full sm:w-auto`}>
         {SOURCES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
       </select>
-      <input value={note} onChange={(ev) => setNote(ev.target.value)} placeholder="Note (optional)" aria-label="Note" className={`${field} min-w-48 flex-1`} />
-      <button type="submit" disabled={busy} className="bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50">{busy ? "Adding…" : "Add ↵"}</button>
+      <input value={note} onChange={(ev) => setNote(ev.target.value)} placeholder="Note (optional)" aria-label="Note" className={`${field} w-full sm:min-w-48 sm:flex-1`} />
+      <button type="submit" disabled={busy} className="w-full bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50 sm:w-auto">{busy ? "Adding…" : "Add ↵"}</button>
     </form>
   );
 }

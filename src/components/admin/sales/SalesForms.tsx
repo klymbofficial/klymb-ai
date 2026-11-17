@@ -5,7 +5,9 @@ import { useState } from "react";
 import { createLead, deleteLead, importLeads, logTouch, saveTarget, syncWhatsAppNow, updateLead, type LeadInput } from "@/app/admin/sales-actions";
 import { CHANNELS, SOURCES, STAGES } from "@/lib/sales";
 
-export const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none";
+import { input } from "@/components/admin/sales/styles";
+
+export { input };
 const label = "flex flex-col gap-1 text-xs font-bold";
 const button = "bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50";
 

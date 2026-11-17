@@ -17,7 +17,7 @@ export default async function RepTodayPage() {
       <PageTitle
         eyebrow="Today"
         title={first ? `Hi ${first}, here's your day` : "Your day"}
-        intro="Your follow-ups due today and overdue. Reach out with WA or Call (it's logged for you), pick the outcome, and the next date is set."
+        intro="Your follow-ups due today and overdue. Tap WhatsApp or Call (it's logged for you). After a call, pick how it went and the next date is set."
       />
       <RepTabs current="today" />
       {rows.length === 0 ? (
@@ -26,7 +26,7 @@ export default async function RepTodayPage() {
           <p className="mt-2 text-sm text-muted">Open <Link href="/sales/list" className="font-bold underline">My leads</Link> to reach out to someone new.</p>
         </div>
       ) : (
-        <SalesSheet rows={rows} today={istToday()} owners={[]} base="/sales" canAssign={false} />
+        <SalesSheet rows={rows} today={istToday()} owners={[]} base="/sales" canAssign={false} quickAdd={false} />
       )}
       <p className="mt-3 text-xs text-muted">{rows.length} due.</p>
     </>

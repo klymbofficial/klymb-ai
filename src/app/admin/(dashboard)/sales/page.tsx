@@ -75,7 +75,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
             </div>
             <div className="flex flex-col gap-3 text-sm">
               <p><span className="display nums text-2xl">{r.b2bSigned.total}</span><span className="text-muted"> / {t.b2b} B2B deals signed</span></p>
-              <p className="text-muted">Events planned: {t.hackathons} hackathon{t.hackathons === 1 ? "" : "s"}, {t.webinars} webinar{t.webinars === 1 ? "" : "s"}</p>
+              {(t.hackathons > 0 || t.webinars > 0) && <p className="text-muted">Events planned: {t.hackathons} hackathon{t.hackathons === 1 ? "" : "s"}, {t.webinars} webinar{t.webinars === 1 ? "" : "s"}</p>}
             </div>
           </div>
         ) : (
