@@ -13,6 +13,7 @@ export type AuditAction =
   | "coupon.create"
   | "coupon.pause"
   | "coupon.resume"
+  | "coupon.delete"
   | "admin.add"
   | "admin.remove"
   | "ticket.status"

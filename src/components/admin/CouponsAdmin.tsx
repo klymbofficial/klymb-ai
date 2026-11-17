@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createCoupon, setCouponPaused, type CouponInput } from "@/app/admin/coupon-actions";
+import { createCoupon, deleteCoupon, setCouponPaused, type CouponInput } from "@/app/admin/coupon-actions";
 
 export interface CouponRow {
   code: string; price: number; max_uses: number | null; ends_at: string | null; paused_at: string | null;
@@ -46,7 +46,7 @@ export function CouponsAdmin({ rows, siteUrl }: { rows: CouponRow[]; siteUrl: st
                   <td className="whitespace-nowrap px-4 py-3">{r.opened ? <a href={`#opened-${r.code}`} className="underline">{r.opened} {r.opened === 1 ? "person" : "people"}</a> : <span className="text-muted">Not yet</span>}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs">{r.ends_at ? day(r.ends_at) : "No end"}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-xs font-semibold">{st}</td>
-                  <td className="px-4 py-3"><Pause code={r.code} paused={!!r.paused_at} /></td>
+                  <td className="px-4 py-3"><span className="flex items-start gap-2"><Pause code={r.code} paused={!!r.paused_at} /><Remove code={r.code} used={r.used} /></span></td>
                 </tr>
               );
             })}
@@ -135,6 +135,32 @@ function Pause({ code, paused }: { code: string; paused: boolean }) {
         className="rounded-md border border-line/50 px-3 py-1.5 text-xs font-bold uppercase tracking-wider hover:bg-surface disabled:opacity-50"
       >
         {busy ? "Saving…" : paused ? "Turn on" : "Pause"}
+      </button>
+      {error && <span role="alert" className="text-xs text-error">{error}</span>}
+    </span>
+  );
+}
+
+/** Removes a code for good. Payments made with it keep it. */
+function Remove({ code, used }: { code: string; used: number }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  return (
+    <span className="flex flex-col items-start gap-1">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          const paid = used ? ` The ${used} payment${used === 1 ? "" : "s"} made with it keep${used === 1 ? "s" : ""} the code.` : "";
+          if (!window.confirm(`Remove ${code}? It stops working at checkout and can't be brought back (you can make the code again).${paid}`)) return;
+          setBusy(true);
+          const r = await deleteCoupon(code);
+          setBusy(false);
+          if (!r.ok) setError(r.message);
+        }}
+        className="rounded-md border border-error/40 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-error hover:bg-error-tint disabled:opacity-50"
+      >
+        {busy ? "Removing…" : "Remove"}
       </button>
       {error && <span role="alert" className="text-xs text-error">{error}</span>}
     </span>

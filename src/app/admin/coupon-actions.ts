@@ -57,3 +57,22 @@ export async function setCouponPaused(code: string, paused: boolean): Promise<Re
   revalidatePath("/admin/coupons");
   return { ok: true };
 }
+
+/**
+ * Deletes a code for good: it stops working at checkout and leaves the list.
+ * Payments already made keep the code and the price they paid (both are on
+ * the payment), so nothing paid is touched. Owners only.
+ */
+export async function deleteCoupon(code: string): Promise<Result> {
+  const admin = await getAdmin();
+  if (!admin?.owner) return { ok: false, message: "Only owners can remove coupon codes." };
+  const clean = couponOf(code);
+  const sql = db();
+  if (!clean || !sql) return { ok: false, message: "Unknown code." };
+  const { data, error } = await sql.run`delete from course.sd_coupons where code = ${clean}`;
+  if (error) return { ok: false, message: "That could not be removed." };
+  if (!data) return { ok: false, message: `${clean} was already removed.` };
+  await logAdmin(admin, "coupon.delete", clean);
+  revalidatePath("/admin/coupons");
+  return { ok: true };
+}
