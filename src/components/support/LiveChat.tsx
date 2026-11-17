@@ -6,8 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /**
  * "Talk to our team" inside the Kamran bot. The chat's secret token lives in
  * this browser, so the conversation follows the visitor across pages and
- * reloads. Replies are checked every 5 seconds while the chat is on screen
- * and every 30 seconds otherwise, only while the tab is visible.
+ * reloads. Replies are checked every 2 seconds while the chat is on screen
+ * and every 15 seconds otherwise, only while the tab is visible.
  */
 
 export interface ChatMsg { id: number; sender: "visitor" | "team"; body: string; created_at: string }
@@ -62,7 +62,7 @@ export function useLiveChat({ watching }: { watching: boolean }) {
     if (!token) return;
     const tick = () => { if (document.visibilityState === "visible") void pull(watching); };
     tick();
-    const t = window.setInterval(tick, watching ? 5_000 : 30_000);
+    const t = window.setInterval(tick, watching ? 2_000 : 15_000);
     return () => window.clearInterval(t);
   }, [token, watching, pull]);
 

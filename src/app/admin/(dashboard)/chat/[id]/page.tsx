@@ -43,7 +43,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ id:
 
   return (
     <>
-      <AutoRefresh ms={5_000} />
+      <AutoRefresh ms={3_000} />
       <Link href="/admin/chat" className="mb-3 inline-block text-xs font-bold text-muted underline underline-offset-4">← All chats</Link>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         <section className="card flex min-h-[60vh] flex-col overflow-hidden" aria-label="Conversation">

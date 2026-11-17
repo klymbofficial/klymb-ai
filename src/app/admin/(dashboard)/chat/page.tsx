@@ -32,7 +32,7 @@ export default async function LiveChatPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageTitle eyebrow="Support" title="Live chat" intro="People who tapped “Talk to our team” in the chatbot. They see your replies as “Klymb team”." />
-      <AutoRefresh ms={10_000} />
+      <AutoRefresh ms={5_000} />
       <ChatPushToggle />
       <nav aria-label="Chats" className="mb-4 flex gap-1 border-b border-line/25">{tab("open", "Open")}{tab("done", "Done")}</nav>
       {error ? (
