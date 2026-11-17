@@ -91,6 +91,33 @@ export function LeadForm({ owners, me, lead }: { owners: Owner[]; me: string; le
 }
 
 /** Log one outreach, and optionally move the stage and set the next follow-up. */
+/**
+ * Opens the chat and logs a WhatsApp touch in the same click, so reaching
+ * out shows in History and on the report without filling in the form.
+ * Logged once per page view, so a second click doesn't count twice.
+ */
+export function OpenWhatsApp({ leadId, phone }: { leadId: string; phone: string }) {
+  const router = useRouter();
+  const [logged, setLogged] = useState(false);
+  return (
+    <a
+      href={`https://wa.me/${phone}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => {
+        if (logged) return;
+        setLogged(true);
+        logTouch(leadId, { channel: "whatsapp", replied: false, note: "Opened WhatsApp from Sales", stage: "", next_follow_up: "" })
+          .then((r) => (r.ok ? router.refresh() : setLogged(false)))
+          .catch(() => setLogged(false));
+      }}
+      className="border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-surface"
+    >
+      Open WhatsApp{logged && <span className="ml-1.5 text-emerald-800">· logged</span>}
+    </a>
+  );
+}
+
 export function TouchForm({ leadId, stage }: { leadId: string; stage: string }) {
   const [channel, setChannel] = useState("whatsapp");
   const [replied, setReplied] = useState(false);

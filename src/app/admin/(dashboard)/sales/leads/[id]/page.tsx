@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
-import { DeleteLead, LeadForm, TouchForm } from "@/components/admin/sales/SalesForms";
+import { DeleteLead, LeadForm, OpenWhatsApp, TouchForm } from "@/components/admin/sales/SalesForms";
 import { StageBadge } from "@/components/admin/sales/SalesTabs";
 import { requireOwner } from "@/lib/admin/auth";
 import { getLead, getOwners } from "@/lib/admin/sales";
@@ -32,7 +32,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         {lead.phone && (
           <>
             <a href={`tel:+${lead.phone}`} className="border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-surface">Call</a>
-            <a href={`https://wa.me/${lead.phone}`} target="_blank" rel="noopener noreferrer" className="border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-surface">Open WhatsApp</a>
+            <OpenWhatsApp leadId={lead.id} phone={lead.phone} />
           </>
         )}
         {lead.email && <a href={`mailto:${lead.email}`} className="border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-surface">Email</a>}
