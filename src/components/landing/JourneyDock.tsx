@@ -9,10 +9,9 @@ import { IconArrowUpRight } from "./parts";
 const STEPS: Record<string, string> = {
   why: "02",
   who: "03",
-  pricing: "04",
-  stories: "05",
-  faq: "06",
-  close: "07",
+  stories: "04",
+  faq: "05",
+  close: "06",
 };
 
 /** The progress ring's circumference (r = 19). */

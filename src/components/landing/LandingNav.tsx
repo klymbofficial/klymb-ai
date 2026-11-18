@@ -9,7 +9,6 @@ import { reduceMotion } from "./motion";
 const LINKS = [
   { href: "#why", label: <>Why <Brand className="kl-brandword--nav" /></> },
   { href: "#who", label: "Who it's for" },
-  { href: "#pricing", label: "Pricing" },
   { href: "#faq", label: "FAQ" },
 ];
 

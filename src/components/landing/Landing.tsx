@@ -7,7 +7,6 @@ import { Hero } from "./Hero";
 import { HeroPhone } from "./HeroPhone";
 import { JourneyDock } from "./JourneyDock";
 import { LandingNav } from "./LandingNav";
-import { Plans } from "./Plans";
 import { ScrollMotion } from "./ScrollMotion";
 import { Stories } from "./Stories";
 import { WhoPanels } from "./WhoPanels";
@@ -17,7 +16,7 @@ import "./landing.css";
 
 /**
  * The klymb.ai homepage, built from the Claude Design file "Klymb Landing v3":
- * hero, why Klymb, who it's for, pricing, learner stories, FAQ and a closing
+ * hero, why Klymb, who it's for, learner stories, FAQ and a closing
  * banner, with the journey dock and "Chat with us" floating over the page.
  *
  * Prices and the money-back wording show here even while HIDE_MONEY is on:
@@ -36,7 +35,6 @@ export function Landing() {
         <WhySteps />
         <div className="kl-wrap">
           <WhoPanels />
-          <Plans />
           <Stories />
           <Faq />
         </div>
