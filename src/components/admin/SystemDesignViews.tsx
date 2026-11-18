@@ -57,13 +57,15 @@ export function PlainWords({ data, days }: { data: Data; days: number }) {
   const lines: string[] = [];
   lines.push(`In the last ${days} days, ${t.visitors} ${t.visitors === 1 ? "person" : "people"} opened the course. ${t.started} pressed Start on a day and ${t.completedAny} finished one. ${t.signedIn} signed in with Google.`);
   if (data.overview.played) lines.push(`Overview video: ${data.overview.played} played it, ${data.overview.finished} watched to the end.`);
+  const unopened: number[] = [];
   for (const l of data.lessons) {
     const opened = l.funnel[0].value;
-    if (!opened) { lines.push(`Day ${l.day} (${l.app}): nobody has opened it yet.`); continue; }
+    if (!opened) { unopened.push(l.day); continue; }
     const done = l.funnel[l.funnel.length - 1].value;
     const drop = biggestDrop(l);
     lines.push(`Day ${l.day} (${l.app}): ${opened} opened it, ${done} finished it.${drop ? ` The biggest drop is before “${l.funnel[drop.at].label}”: ${drop.lost} ${drop.lost === 1 ? "person stopped" : "people stopped"} there.` : ""}`);
   }
+  if (unopened.length) lines.push(`${dayRanges(unopened)}: nobody has opened ${unopened.length === 1 ? "it" : "them"} yet.`);
   const hardest = data.lessons.flatMap((l) => l.answers.filter((a) => a.answered > 0).map((a) => ({ ...a, day: l.day }))).sort((a, b) => a.right / a.answered - b.right / b.answered)[0];
   if (hardest) lines.push(`Hardest question so far (Day ${hardest.day}): “${hardest.prompt}”, ${Math.round((hardest.right / hardest.answered) * 100)}% got it right${hardest.answered < 3 ? ` (only ${hardest.answered} ${hardest.answered === 1 ? "answer" : "answers"} so far, so too early to judge)` : ""}.`);
   const fb = data.lessons.reduce((n, l) => n + l.feedback.count, 0);
@@ -179,3 +181,17 @@ export function DayView({ l }: { l: Lesson }) {
   );
 }
 
+
+/** [5, 6, 7, 9] → "Days 5–7 and 9". */
+function dayRanges(days: number[]): string {
+  const sorted = [...days].sort((a, b) => a - b);
+  const parts: string[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j++;
+    parts.push(j > i ? `${sorted[i]}–${sorted[j]}` : String(sorted[i]));
+    i = j;
+  }
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}` : parts[0];
+  return `${sorted.length === 1 ? "Day" : "Days"} ${list}`;
+}

@@ -52,6 +52,12 @@ const STEP_LABEL: Record<string, string> = {
   call: "Your call", watch: "Watch", reveal: "Learn", prove: "Prove it", estimate: "Estimate", build: "Build it", draw: "Draw it", design: "Design it", follow: "Follow-ups", done: "Done",
 };
 
+// What a finished step (a step_done event) reads as in "Right now".
+const DONE_LABEL: Record<string, string> = {
+  started: "pressed Start", pre: "answered Your call", watched: "watched the video", read: "read Learn", post: "finished Prove it",
+  est: "finished Estimate", built: "finished Build it", drawn: "finished Draw it", design: "finished Design it", follow: "finished Follow-ups",
+};
+
 const count = <T,>(xs: T[], key: (x: T) => string | null | undefined) => {
   const m = new Map<string, number>();
   for (const x of xs) { const k = key(x); if (k) m.set(k, (m.get(k) ?? 0) + 1); }
@@ -74,7 +80,8 @@ export function summarise(events: SdEventRow[], feedback: SdFeedbackRow[], days:
   const questions = new Map<string, { q: Question; day: number }>();
   for (const day of Object.values(days)) for (const q of [...day.copy.en.pre, ...day.copy.en.post]) questions.set(q.id, { q, day: day.day });
 
-  const lessons = Object.entries(days).map(([id, day]) => {
+  // In day order: the lesson map's keys are module-day ids, not in reading order.
+  const lessons = Object.entries(days).sort(([, a], [, b]) => a.day - b.day).map(([id, day]) => {
     const evs = events.filter((e) => e.lesson === id);
     const funnel = STAGES
       .filter((st) => st.key !== "est" || day.copy.en.estimates?.length)
@@ -146,7 +153,10 @@ export function summarise(events: SdEventRow[], feedback: SdFeedbackRow[], days:
     return {
       anon, email: emailOf.get(anon) ?? null, first: mine[0].created_at, last: last.created_at,
       events: mine.length, stepsDone: steps.size, done: done.filter(Boolean) as string[],
-      where: lastStep ? `${lastStep.lesson && /^\d+-\d+$/.test(lastStep.lesson) ? lessonDay(lastStep.lesson) : lastStep.lesson} · ${STEP_LABEL[lastStep.step ?? ""] ?? lastStep.step}` : "Browsing",
+      where: lastStep
+        ? `${lastStep.lesson && /^\d+-\d+$/.test(lastStep.lesson) ? lessonDay(lastStep.lesson) : lastStep.lesson} · ${
+            lastStep.event === "step_done" ? DONE_LABEL[lastStep.step ?? ""] ?? lastStep.step : `on ${STEP_LABEL[lastStep.step ?? ""] ?? lastStep.step}`}`
+        : "Browsing",
       device: last.device, lang: last.lang,
       minutes: Math.round((mine.filter((e) => e.event === "ping").length * PING_SECONDS) / 60),
     };

@@ -25,6 +25,9 @@ const SCREENS: Record<string, string> = {
 };
 
 const STEPS: Record<string, string> = {
+  started: "Pressed Start",
+  pre: "Answered the opening questions (Your call)",
+  post: "Finished the Prove it questions",
   watched: "Finished watching the video",
   read: "Read the story instead of watching",
   est: "Did the estimation exercise",

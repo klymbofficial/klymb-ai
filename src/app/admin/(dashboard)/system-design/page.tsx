@@ -54,9 +54,10 @@ async function LearnerTrail({ anon }: { anon: string }) {
   );
 }
 
-export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string }> }) {
+export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string; all?: string }> }) {
   const admin = await requireAdmin();
-  const { range, learner, day } = await searchParams;
+  const { range, learner, day, all } = await searchParams;
+  const showAll = all === "1";
   if (learner) return <LearnerTrail anon={learner} />;
 
   const days = rangeDays(range);
@@ -76,37 +77,31 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
         {title}
         <EmptyState
           title={data.reason === "no-table" ? "Activity tables aren't set up yet" : "Database not connected"}
-          body={data.reason === "no-table" ? "Run supabase/migrations/20261023000000_system_design_activity.sql in the Supabase SQL editor once. Activity starts recording right after." : "Supabase isn't configured for this environment."}
+          body={data.reason === "no-table" ? "Run the System Design activity migration in the Neon SQL editor once. Activity starts recording right after." : "DATABASE_URL isn't set for this environment."}
         />
       </>
     );
   }
   const t = data.totals;
-  const lesson = data.lessons.find((l) => l.id === day) ?? data.lessons[0];
+  // Days people have actually opened get tabs; the rest are summed up in "In plain words".
+  const openedDays = data.lessons.filter((l) => l.funnel[0].value > 0);
+  const dayTabs = openedDays.length ? openedDays : data.lessons;
+  const lesson = data.lessons.find((l) => l.id === day) ?? dayTabs[0];
+  const SHOWN = 25;
+  const learners = showAll ? data.learners.slice(0, 500) : data.learners.slice(0, SHOWN);
+  const opened = funnel.find((r) => r.step === "view");
+  const openedTotal = (opened?.inApp ?? 0) + (opened?.browser ?? 0);
+  const keep = (extra: Record<string, string>) => {
+    const q = new URLSearchParams({ ...(range ? { range } : {}), ...(day ? { day } : {}), ...extra });
+    return `/admin/system-design?${q}`;
+  };
 
   return (
     <>
       {title}
-      <PlainWords data={data} days={days} />
 
-      {announce && (
-        <div className="mt-6">
-          <Panel title="WhatsApp group announcement" note={`Once only, to paid learners (granted seats and company learners are left out). Email: “Join the System Design learners' WhatsApp group”, with the join button. Phone: “${SD_WHATSAPP_PUSH.title}: ${SD_WHATSAPP_PUSH.body}” to ${announce.devices} devices.`}>
-            <WhatsAppAnnounce learners={announce.learners} devices={announce.devices} sentAt={announce.sent?.at ?? null} />
-          </Panel>
-        </div>
-      )}
-
-      <div className="mt-6">
-        <Panel title="Offer page funnel" note="People reaching each step of /system-design. Inside an app means Instagram and other in-app browsers. Excludes anyone who turned analytics off.">
-          <table className="w-full text-sm">
-            <thead><tr className="text-left text-muted"><th className="py-1 font-semibold">Step</th><th className="py-1 text-right font-semibold">Inside an app</th><th className="py-1 text-right font-semibold">Real browser</th></tr></thead>
-            <tbody>{funnel.map((r) => <tr key={r.step} className="border-t border-line/25"><td className="py-1.5">{FUNNEL_WORDS[r.step]}</td><td className="py-1.5 text-right tabular-nums">{r.inApp}</td><td className="py-1.5 text-right tabular-nums">{r.browser}</td></tr>)}</tbody>
-          </table>
-        </Panel>
-      </div>
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      {/* The headline numbers first. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatTile label="Opened the course" value={t.visitors} hint={`Last ${days} days`} />
         <StatTile label="Started a day" value={t.started} hint={`${pct(t.started, t.visitors)} of them`} />
         <StatTile label="Finished a day" value={t.completedAny} hint={`${pct(t.completedAny, t.started)} of starters`} tone="red" />
@@ -114,17 +109,25 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
         <StatTile label="Rating" value={t.avgRating ?? "–"} hint={`${t.feedback} ${t.feedback === 1 ? "response" : "responses"}`} />
       </div>
 
-      <div className="mt-8">
-        <Panel title="Who’s taking the course" note="Most recent first. Click a name to see everything they did, step by step.">
+      <nav aria-label="On this page" className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
+        {[["learners", "Learners"], ["day", "Day by day"], ["said", "What they said"], ["funnel", "Offer funnel"], ...(announce ? [["announce", "WhatsApp group"]] : []), ["more", "More detail"]].map(([id, label]) => (
+          <a key={id} href={`#${id}`} className="rounded-full border border-line/50 bg-white px-3 py-1.5 hover:bg-ink hover:text-paper">{label}</a>
+        ))}
+      </nav>
+
+      <div className="mt-6"><PlainWords data={data} days={days} /></div>
+
+      <div id="learners" className="mt-8 scroll-mt-6">
+        <Panel title="Who’s taking the course" note={`Most recent first. Click a name to see everything they did, step by step.${data.learners.length > SHOWN && !showAll ? ` Showing the latest ${SHOWN} of ${data.learners.length}.` : ""}`}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-sm">
               <thead className="text-xs uppercase tracking-[0.1em] text-muted"><tr><th className="py-2 pr-3">Learner</th><th className="py-2 pr-3">Right now</th><th className="py-2 pr-3">Finished</th><th className="py-2 pr-3">Time spent</th><th className="py-2 pr-3">On</th><th className="py-2">Last seen</th></tr></thead>
               <tbody className="divide-y divide-line/25">
-                {data.learners.slice(0, 200).map((l) => (
+                {learners.map((l) => (
                   <tr key={l.anon}>
-                    <td className="py-2.5 pr-3"><Link className="font-bold underline underline-offset-4" href={`/admin/system-design?learner=${l.anon}`}>{l.email ?? `Anonymous ${l.anon.slice(0, 8)}`}</Link></td>
+                    <td className="py-2.5 pr-3"><Link className="font-bold underline underline-offset-4" href={`/admin/system-design?learner=${l.anon}`}>{l.email ?? <span className="font-semibold text-muted">Anonymous · {l.anon.slice(0, 6)}</span>}</Link></td>
                     <td className="py-2.5 pr-3">{l.where === "Browsing" ? <span className="text-muted">Just looking around</span> : l.where}</td>
-                    <td className="py-2.5 pr-3">{l.done.length ? l.done.map((d) => <Chip key={d} tone="ok">{dayName(d)}</Chip>) : <span className="text-muted">–</span>}</td>
+                    <td className="py-2.5 pr-3">{l.done.length ? <span className="flex flex-wrap gap-1">{l.done.map((d) => <Chip key={d} tone="ok">{dayName(d)}</Chip>)}</span> : <span className="text-muted">–</span>}</td>
                     <td className="nums py-2.5 pr-3">{l.minutes ? `${l.minutes} min` : <span className="text-muted">under a minute</span>}</td>
                     <td className="py-2.5 pr-3">{l.device === "phone" ? "Phone" : l.device === "desktop" ? "Laptop" : "–"}{l.lang ? ` · ${l.lang === "hi" ? "Hinglish" : "English"}` : ""}</td>
                     <td className="py-2.5 text-muted">{when(l.last)}</td>
@@ -134,16 +137,26 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
             </table>
             {!data.learners.length && <p className="py-6 text-center text-sm text-muted">No activity yet in this window.</p>}
           </div>
+          {data.learners.length > SHOWN && (
+            <p className="mt-3 text-sm">
+              {showAll
+                ? <Link href={`${keep({})}#learners`} className="font-bold underline underline-offset-4">Show only the latest {SHOWN}</Link>
+                : <Link href={`${keep({ all: "1" })}#learners`} className="font-bold underline underline-offset-4">Show all {Math.min(500, data.learners.length)} learners</Link>}
+            </p>
+          )}
         </Panel>
       </div>
 
-      <div className="mt-10 flex flex-wrap items-end justify-between gap-3">
+      <div id="day" className="mt-10 flex scroll-mt-6 flex-wrap items-end justify-between gap-3">
         <h2 className="display text-3xl">Day {lesson.day} · {lesson.app}</h2>
-        <RangeTabs param="day" current={lesson.id} options={data.lessons.map((l) => ({ key: l.id, label: `Day ${l.day}` }))} />
+        <RangeTabs param="day" current={lesson.id} options={dayTabs.map((l) => ({ key: l.id, label: `Day ${l.day}` }))} />
       </div>
+      {openedDays.length > 0 && openedDays.length < data.lessons.length && (
+        <p className="mt-1 text-xs text-muted">Only days someone has opened have a tab. {data.lessons.length - openedDays.length} more {data.lessons.length - openedDays.length === 1 ? "day hasn’t" : "days haven’t"} been opened yet.</p>
+      )}
       <div className="mt-4"><DayView l={lesson} /></div>
 
-      <div className="mt-10">
+      <div id="said" className="mt-10 scroll-mt-6">
         <Panel title="What learners said" note="Their answer to “What should we improve?”, newest first.">
           {data.comments.length ? (
             <ul className="divide-y divide-line/25">
@@ -158,13 +171,45 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
         </Panel>
       </div>
 
-      <details className="group mt-10">
+      <div id="funnel" className="mt-10 scroll-mt-6">
+        <Panel title="Offer page funnel" note="People reaching each step of /system-design. Inside an app means Instagram and other in-app browsers. Excludes anyone who turned analytics off.">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
+              <thead><tr className="text-left text-xs uppercase tracking-[0.1em] text-muted"><th className="py-2 font-semibold">Step</th><th className="py-2 text-right font-semibold">Inside an app</th><th className="py-2 text-right font-semibold">Real browser</th><th className="py-2 text-right font-semibold">Total</th><th className="py-2 text-right font-semibold">Of everyone who opened</th></tr></thead>
+              <tbody>
+                {funnel.map((r) => {
+                  const total = r.inApp + r.browser;
+                  return (
+                    <tr key={r.step} className={`border-t border-line/25 ${total ? "" : "text-muted"}`}>
+                      <td className={`py-1.5 ${r.step === "paid" ? "font-bold" : ""}`}>{FUNNEL_WORDS[r.step]}</td>
+                      <td className="py-1.5 text-right tabular-nums">{r.inApp}</td>
+                      <td className="py-1.5 text-right tabular-nums">{r.browser}</td>
+                      <td className="py-1.5 text-right font-bold tabular-nums">{total}</td>
+                      <td className="py-1.5 text-right tabular-nums">{r.step === "view" || !openedTotal ? "" : total > openedTotal ? "–" : pct(total, openedTotal)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
+
+      {announce && (
+        <div id="announce" className="mt-10 scroll-mt-6">
+          <Panel title="WhatsApp group announcement" note={`Once only, to paid learners (granted seats and company learners are left out). Email: “Join the System Design learners' WhatsApp group”, with the join button. Phone: “${SD_WHATSAPP_PUSH.title}: ${SD_WHATSAPP_PUSH.body}” to ${announce.devices} devices.`}>
+            <WhatsAppAnnounce learners={announce.learners} devices={announce.devices} sentAt={announce.sent?.at ?? null} />
+          </Panel>
+        </div>
+      )}
+
+      <details id="more" className="group mt-10 scroll-mt-6">
         <summary className="cursor-pointer list-none text-sm font-bold underline underline-offset-4 [&::-webkit-details-marker]:hidden">More detail: language, device, city, screens, welcome, tour and sign-ins</summary>
         <div className="mt-4 grid gap-6 lg:grid-cols-3">
           <Panel title="Language"><BarList rows={data.lang} unit="people" /></Panel>
           <Panel title="Device"><BarList rows={data.device} unit="people" /></Panel>
-          <Panel title="City (approximate)"><BarList rows={data.city} unit="people" emptyLabel="No city yet: it is recorded from today." /></Panel>
-          <Panel title="Country"><BarList rows={data.country} unit="people" emptyLabel="No country yet: it is recorded from today." /></Panel>
+          <Panel title="City (approximate)"><BarList rows={data.city} unit="people" emptyLabel="No city recorded yet." /></Panel>
+          <Panel title="Country"><BarList rows={data.country} unit="people" emptyLabel="No country recorded yet." /></Panel>
           <Panel title="Screens they open"><BarList rows={data.screens} unit="views" /></Panel>
           <Panel title="Welcome screen"><BarList rows={data.welcome} unit="people" /></Panel>
           <Panel title="Kamran’s tour"><BarList rows={data.tour} unit="people" /></Panel>
