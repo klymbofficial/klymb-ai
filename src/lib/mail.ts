@@ -303,6 +303,32 @@ export function sdWhatsAppGroupEmail(p: { name: string; groupUrl: string; siteUr
   return { subject, html, text };
 }
 
+/** Sent once to each person who registers for the live webinar on /webinar. */
+export function webinarConfirmationEmail(p: { name: string; title: string; date: string; time: string; groupUrl: string; calendarUrl: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = `You're registered: ${p.title}, ${p.date}`;
+  const line = `Your seat for the free live webinar on ${p.title} is confirmed. Join the WhatsApp group now: the Google Meet link is shared there, and by email, on the day.`;
+  const text = [
+    `Hi ${p.name},`, "", line, "",
+    `When: ${p.date}, ${p.time}`, "Where: Google Meet (link on the day)", "",
+    `Join the WhatsApp group: ${p.groupUrl}`, `Add it to your calendar: ${p.calendarUrl}`, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: `${p.date}, ${p.time}. Join the WhatsApp group for the link.`,
+    eyebrow: "Free live webinar",
+    title: "You're registered.",
+    intro: esc(line),
+    sections: [
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("Webinar", p.title)}${row("Date", p.date)}${row("Time", p.time)}${row("Where", "Google Meet, link on the day")}</table>`,
+      button(esc(p.groupUrl), "Join the WhatsApp group"),
+      `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}"><a href="${esc(p.calendarUrl)}" style="color:${C.ink};font-weight:600">Add it to Google Calendar</a> so you don't miss it.</p>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
 /** An announcement an owner posted for System Design learners, when they ticked "Also email". */
 export function sdAnnouncementEmail(p: { name: string; title: string; body: string; link: { url: string; label: string } | null; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

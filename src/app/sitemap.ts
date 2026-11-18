@@ -29,6 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/hackathons", 0.7, "weekly"),
     ...challenges.map((c) => page(`/challenges/${c.slug}`, 0.8, "monthly")),
     page("/system-design", 0.9, "weekly"),
+    page("/webinar", 0.8, "weekly"),
     page("/learn/system-design", 0.8, "weekly"),
     page("/register", 0.9, "weekly"),
     page("/why-klymb", 0.7, "monthly"),
