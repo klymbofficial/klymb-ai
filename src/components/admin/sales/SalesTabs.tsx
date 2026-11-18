@@ -57,10 +57,9 @@ export function RepTabs({ current }: { current: "today" | "list" | "board" }) {
 
 const STAGE_TONE: Record<string, string> = {
   new: "bg-surface text-ink",
-  warm: "bg-amber-100 text-amber-900",
-  potential: "bg-sky-100 text-sky-900",
-  positive: "bg-emerald-100 text-emerald-900",
-  almost: "bg-emerald-200 text-emerald-950",
+  connected: "bg-amber-100 text-amber-900",
+  interested: "bg-emerald-100 text-emerald-900",
+  follow_up: "bg-sky-100 text-sky-900",
   signed: "bg-ink text-paper",
   rejected: "bg-red-tint text-red-deep",
 };

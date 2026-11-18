@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
-import { DeleteLead, LeadForm, OpenWhatsApp, TouchForm } from "@/components/admin/sales/SalesForms";
+import { DeleteLead, LeadForm, OpenWhatsApp, StatusNoteField, TouchForm } from "@/components/admin/sales/SalesForms";
 import { StageBadge } from "@/components/admin/sales/SalesTabs";
 import type { SalesUser } from "@/lib/admin/auth";
 import type { Lead, Owner, Touch } from "@/lib/admin/sales";
@@ -40,6 +40,7 @@ export function LeadDetail({ lead, touches, owners, user, base }: { lead: Lead; 
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <StageBadge stage={lead.stage} label={labelOf(STAGES, lead.stage)} />
+        <StatusNoteField key={lead.status_note ?? ""} leadId={lead.id} value={lead.status_note} />
         {lead.paid && <span className="bg-emerald-700 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-white">Paid, matched from payments</span>}
         {lead.phone && (
           <>

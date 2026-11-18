@@ -16,6 +16,7 @@ export interface BoardCard {
   next_follow_up: string | null;
   owner_email: string | null;
   paid: boolean;
+  status_note?: string | null;
 }
 
 const short = (day: string) => new Date(`${day}T00:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
@@ -75,6 +76,7 @@ export function SalesBoard({ cards: initial, today, ownerName, base = "/admin/sa
                     <Link href={`${base}/leads/${c.id}`} className="font-bold hover:underline">{c.name}</Link>
                     {c.paid && <span className="ml-1.5 bg-emerald-700 px-1 py-0.5 text-[10px] font-extrabold text-white">PAID</span>}
                     <p className="truncate text-xs text-muted nums">{[c.phone ? formatPhone(c.phone) : c.email, c.org].filter(Boolean).join(" · ") || "No contact details"}</p>
+                    {c.status_note && <p className="truncate text-xs italic text-muted">{c.status_note}</p>}
                     <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">
                       <span className={clsx("font-bold nums", due ? "text-red-deep" : "text-muted")}>
                         {c.next_follow_up ? (c.next_follow_up === today ? "Today" : due ? `Overdue · ${short(c.next_follow_up)}` : short(c.next_follow_up)) : "No follow-up"}

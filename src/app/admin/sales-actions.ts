@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSalesAdmin, getSalesUser, type SalesUser } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
-import { AUTO_FOLLOW_UP_DAYS, canWorkLead, isChannel, isSource, isStage, istToday, normalisePhone, parseLeadsCsv, type Source } from "@/lib/sales";
+import { AUTO_FOLLOW_UP_DAYS, canWorkLead, isChannel, isSource, isStage, istToday, normalisePhone, parseLeadsCsv, STATUS_NOTE_MAX, type Source } from "@/lib/sales";
 
 export type SalesResult = { ok: true; id?: string } | { ok: false; message: string };
 
@@ -124,7 +124,7 @@ export async function updateLead(id: string, input: LeadInput & { stage: string 
 }
 
 /**
- * One outreach. A reply moves a new lead to warm, and the optional stage and
+ * One outreach. A reply moves a new lead to connected, and the optional stage and
  * follow-up date are saved in the same step, which is how the team works a
  * call list: log it, set when to try next, move on.
  */
@@ -154,8 +154,8 @@ export async function logTouch(
   const today = istToday();
   await sql.run`
     update course.sales_leads set
-      stage = coalesce(${stage}::text, case when ${t.replied}::boolean and stage = 'new' then 'warm' else stage end),
-      stage_changed_at = case when coalesce(${stage}::text, case when ${t.replied}::boolean and stage = 'new' then 'warm' else stage end) <> stage
+      stage = coalesce(${stage}::text, case when ${t.replied}::boolean and stage = 'new' then 'connected' else stage end),
+      stage_changed_at = case when coalesce(${stage}::text, case when ${t.replied}::boolean and stage = 'new' then 'connected' else stage end) <> stage
                               then now() else stage_changed_at end,
       signed_at = case when ${stage}::text = 'signed' then coalesce(signed_at, now())
                        when ${stage}::text is null then signed_at else null end,
@@ -275,7 +275,7 @@ export async function quickAddLead(raw: { name: string; contact: string; note: s
 }
 
 /** One cell of the sheet: stage, next follow-up, notes or owner. */
-export async function updateLeadField(id: string, field: "stage" | "next_follow_up" | "notes" | "owner_email", value: string): Promise<SalesResult> {
+export async function updateLeadField(id: string, field: "stage" | "next_follow_up" | "notes" | "status_note" | "owner_email", value: string): Promise<SalesResult> {
   if (!uuid(id)) return { ok: false, message: "That lead no longer exists." };
   const user = await userFor(id);
   if (!user) return { ok: false, message: "Not authorised." };
@@ -296,6 +296,8 @@ export async function updateLeadField(id: string, field: "stage" | "next_follow_
   } else if (field === "next_follow_up") {
     if (value && !date(value)) return { ok: false, message: "Pick a date." };
     result = await sql.run`update course.sales_leads set next_follow_up = ${value || null}::date, updated_at = now() where id = ${id}`;
+  } else if (field === "status_note") {
+    result = await sql.run`update course.sales_leads set status_note = ${text(value, STATUS_NOTE_MAX)}, updated_at = now() where id = ${id}`;
   } else if (field === "notes") {
     result = await sql.run`update course.sales_leads set notes = ${text(value, 2000)}, updated_at = now() where id = ${id}`;
   } else if (field === "owner_email") {

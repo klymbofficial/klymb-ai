@@ -29,7 +29,7 @@ test("lead import maps common headers, cleans values and skips bad rows", () => 
   const r = parseLeadsCsv(csv, "bought");
   assert.deepEqual(r.missingHeaders, []);
   assert.equal(r.rows.length, 2);
-  assert.deepEqual(r.rows[0], { name: "Asha", phone: "919876543210", email: "asha@x.com", source: "webinar", source_detail: null, org: "IIT", stage: "warm", notes: null });
+  assert.deepEqual(r.rows[0], { name: "Asha", phone: "919876543210", email: "asha@x.com", source: "webinar", source_detail: null, org: "IIT", stage: "connected", notes: null });
   assert.equal(r.rows[1].source, "bought");
   assert.equal(r.rows[1].stage, "new");
   assert.deepEqual(r.skipped.map((s) => s.line), [3, 4, 5]);
@@ -72,7 +72,7 @@ test("rows pasted from Google Sheets are tab-separated and may have no header", 
   assert.deepEqual(r.missingHeaders, []);
   assert.deepEqual(r.rows.map((x) => [x.name, x.phone, x.notes]), [["Asha Verma", "919876543210", "Asked about EMI"], ["Ravi", "919876500002", null]]);
   const withHeader = parseLeadsCsv("Name\tMobile\tStatus\nMeena\t9876500003\tWarm", "other");
-  assert.equal(withHeader.rows[0].stage, "warm");
+  assert.equal(withHeader.rows[0].stage, "connected");
 });
 
 test("the morning digest lists due leads, flags overdue ones and escapes names", async () => {
@@ -80,13 +80,13 @@ test("the morning digest lists due leads, flags overdue ones and escapes names",
   const mail = salesDigestEmail({
     name: "Sarthak", today: "2026-11-14", siteUrl: "https://www.klymb.ai",
     leads: [
-      { id: "a", name: "Asha <b>", phone: "919876500001", stage: "positive", next_follow_up: "2026-11-12", notes: "EMI?" },
-      { id: "b", name: "Ravi", phone: null, stage: "warm", next_follow_up: "2026-11-14", notes: null },
+      { id: "a", name: "Asha <b>", phone: "919876500001", stage: "interested", next_follow_up: "2026-11-12", notes: "EMI?" },
+      { id: "b", name: "Ravi", phone: null, stage: "connected", next_follow_up: "2026-11-14", notes: null },
     ],
   });
   assert.equal(mail.subject, "2 follow-ups today (1 overdue)");
   assert.ok(mail.html.includes("Asha &lt;b&gt;"));
-  assert.ok(mail.text.includes("Asha <b> (+91 98765 00001), Positive, overdue since 2026-11-12: EMI?"));
+  assert.ok(mail.text.includes("Asha <b> (+91 98765 00001), Shown interest, overdue since 2026-11-12: EMI?"));
   assert.ok(mail.html.includes("https://www.klymb.ai/admin/sales/leads/a"));
 });
 
@@ -120,4 +120,11 @@ test("column names with underscores or dashes are read like spaced ones", () => 
   const r = parseLeadsCsv("name,phone,source_detail,E-mail\nAsha,9876500001,ViCodathon 2026,a@x.com", "other");
   assert.equal(r.rows[0].source_detail, "ViCodathon 2026");
   assert.equal(r.rows[0].email, "a@x.com");
+});
+
+test("the stages are New, Connected, Shown interest, Need follow-up, Signed and Rejected, and old names still import", async () => {
+  const { STAGES, parseLeadsCsv } = await import("../src/lib/sales");
+  assert.deepEqual(STAGES.map((s) => s.label), ["New", "Connected", "Shown interest", "Need follow-up", "Signed", "Rejected"]);
+  const r = parseLeadsCsv("name,phone,stage\nA,9876543210,Potential convert\nB,9876543211,Need follow-up\nC,9876543212,almost", "other");
+  assert.deepEqual(r.rows.map((x) => x.stage), ["interested", "follow_up", "interested"]);
 });

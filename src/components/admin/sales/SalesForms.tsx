@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createLead, deleteLead, importLeads, logTouch, saveTarget, syncWhatsAppNow, updateLead, type LeadInput } from "@/app/admin/sales-actions";
-import { CHANNELS, SOURCES, STAGES } from "@/lib/sales";
+import { createLead, deleteLead, importLeads, logTouch, saveTarget, syncWhatsAppNow, updateLead, updateLeadField, type LeadInput } from "@/app/admin/sales-actions";
+import { CHANNELS, SOURCES, STAGES, STATUS_NOTE_MAX } from "@/lib/sales";
 
 import { input } from "@/components/admin/sales/styles";
 
@@ -351,5 +351,31 @@ export function SyncWhatsApp({ syncedAt, lastError, configured }: { syncedAt: st
       )}
       {msg && <span role={msg.ok ? "status" : "alert"} className={`font-semibold ${msg.ok ? "text-ink" : "text-error"}`}>{msg.text}</span>}
     </div>
+  );
+}
+
+/** The lead's one-line status beside its stage ("call after exams"), saved when you leave the box. */
+export function StatusNoteField({ leadId, value }: { leadId: string; value: string | null }) {
+  const [saved, setSaved] = useState(value ?? "");
+  const [state, setState] = useState<"" | "saving" | "saved" | "error">("");
+  return (
+    <label className="flex min-w-0 flex-1 items-center gap-2 text-xs">
+      <span className="font-bold text-muted">Status</span>
+      <input
+        defaultValue={value ?? ""}
+        maxLength={STATUS_NOTE_MAX}
+        placeholder="e.g. call after exams"
+        onBlur={async (ev) => {
+          const v = ev.target.value.trim();
+          if (v === saved) return;
+          setState("saving");
+          const r = await updateLeadField(leadId, "status_note", v);
+          if (r.ok) { setSaved(v); setState("saved"); } else setState("error");
+        }}
+        onKeyDown={(ev) => { if (ev.key === "Enter") ev.currentTarget.blur(); }}
+        className={`${input} min-w-0 flex-1 py-1.5 text-xs`}
+      />
+      <span className="w-12 text-[10px] text-muted" role="status">{state === "saving" ? "Saving" : state === "saved" ? "Saved" : state === "error" ? "Not saved" : ""}</span>
+    </label>
   );
 }

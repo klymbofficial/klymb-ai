@@ -29,6 +29,8 @@ export interface Lead {
   owner_email: string | null;
   next_follow_up: string | null;
   notes: string | null;
+  /** One short line beside the stage, e.g. "call after exams". */
+  status_note: string | null;
   touches: number;
   last_touch_at: string | null;
   last_channel: Channel | null;
@@ -121,7 +123,7 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
         join course.payments pay on lower(pay.email) = ids.email and pay.status in ('paid', 'refunded')
     )
     select l.id, l.created_at, l.name, l.phone, l.email, l.kind, l.source, l.source_detail, l.org,
-           l.stage, l.stage_changed_at, l.owner_email, l.next_follow_up::text as next_follow_up, l.notes,
+           l.stage, l.stage_changed_at, l.owner_email, l.next_follow_up::text as next_follow_up, l.notes, l.status_note,
            coalesce(t.n, 0)::int as touches, t.last_at as last_touch_at, t.last_channel,
            coalesce(t.replied, false) as replied,
            (paid.id is not null) as paid
@@ -172,7 +174,7 @@ async function getLeadsByIds(ids: string[]): Promise<Lead[]> {
   if (!sql) return [];
   const { data } = await sql.rows<Lead>`
     select l.id, l.created_at, l.name, l.phone, l.email, l.kind, l.source, l.source_detail, l.org,
-           l.stage, l.stage_changed_at, l.owner_email, l.next_follow_up::text as next_follow_up, l.notes,
+           l.stage, l.stage_changed_at, l.owner_email, l.next_follow_up::text as next_follow_up, l.notes, l.status_note,
            (select count(*)::int from course.sales_touches t where t.lead_id = l.id and not t.inbound) as touches,
            (select max(created_at) from course.sales_touches t where t.lead_id = l.id) as last_touch_at,
            (select channel from course.sales_touches t where t.lead_id = l.id order by created_at desc limit 1) as last_channel,
