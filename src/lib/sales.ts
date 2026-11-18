@@ -138,7 +138,7 @@ export function parseCsv(text: string): string[][] {
 const HEADER_ALIASES: Record<string, string[]> = {
   name: ["name", "full name", "student name", "contact", "contact name"],
   phone: ["phone", "mobile", "number", "phone number", "mobile number", "whatsapp", "contact number"],
-  email: ["email", "email address", "mail", "e-mail"],
+  email: ["email", "email address", "mail", "e mail"],
   source: ["source", "lead source", "channel"],
   source_detail: ["source detail", "detail", "campaign", "event", "list"],
   org: ["org", "college", "company", "organisation", "organization", "institute"],
@@ -170,7 +170,8 @@ const clip = (v: string | undefined, max: number) => (v?.trim() ? v.trim().slice
 /** Reads a sheet export. Needs a name column and a phone or email column. */
 export function parseLeadsCsv(text: string, defaultSource: Source, maxRows = 2000): ImportParse {
   let table = parseCsv(text);
-  let header = (table[0] ?? []).map((h) => h.trim().toLowerCase());
+  // "source_detail", "Source-Detail" and "source detail" are the same column.
+  let header = (table[0] ?? []).map((h) => h.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " "));
   // Rows pasted without their header: read them as name, phone, note.
   const known = Object.values(HEADER_ALIASES).flat();
   if (!header.some((h) => known.includes(h)) && table[0] && normalisePhone(table[0][1] ?? "")) {

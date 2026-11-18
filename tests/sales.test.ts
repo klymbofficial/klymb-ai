@@ -115,3 +115,9 @@ test("an intern's digest links to /sales, not admin", async () => {
   const own = salesDigestEmail({ name: "S", today: "2026-11-18", leads: [lead], siteUrl: "https://k.test" });
   assert.match(own.html, /\/admin\/sales\/leads\/1111/);
 });
+
+test("column names with underscores or dashes are read like spaced ones", () => {
+  const r = parseLeadsCsv("name,phone,source_detail,E-mail\nAsha,9876500001,ViCodathon 2026,a@x.com", "other");
+  assert.equal(r.rows[0].source_detail, "ViCodathon 2026");
+  assert.equal(r.rows[0].email, "a@x.com");
+});
