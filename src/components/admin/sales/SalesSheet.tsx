@@ -4,7 +4,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { logCallOutcome, logTouch, quickAddLead, updateLeadField } from "@/app/admin/sales-actions";
-import { CALL_OUTCOMES, CHANNELS, formatPhone, labelOf, SOURCES, STAGES, STATUS_NOTE_MAX } from "@/lib/sales";
+import { CALL_OUTCOMES, formatPhone, labelOf, SOURCES, STAGES, STATUS_NOTE_MAX } from "@/lib/sales";
 
 export interface SheetRow {
   id: string;
@@ -29,14 +29,6 @@ const STAGE_BG: Record<string, string> = {
   new: "bg-surface", connected: "bg-amber-100", interested: "bg-emerald-100", follow_up: "bg-sky-100",
   signed: "bg-ink text-paper", rejected: "bg-red-tint text-red-deep",
 };
-
-function ago(iso: string) {
-  const mins = Math.round((Date.now() - Date.parse(iso)) / 60000);
-  if (mins < 60) return `${Math.max(1, mins)}m ago`;
-  const h = Math.round(mins / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.round(h / 24)}d ago`;
-}
 
 /**
  * The sales sheet: one row per person, every cell saves as you leave it, and
@@ -136,10 +128,6 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
       {saved && <span className="text-[10px] text-muted">Saved</span>}
     </>
   );
-  const lastTouch = (r: SheetRow) =>
-    r.last_touch_at
-      ? <>{labelOf(CHANNELS, r.last_channel ?? "")} · {ago(r.last_touch_at)}<span className="block text-muted">{r.touches} reached out</span></>
-      : <span className="text-muted">Not contacted yet</span>;
   const ownerSelect = (r: SheetRow) => (
     <select
       aria-label={`Owner of ${r.name}`}
@@ -163,13 +151,13 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
       <div className="card hidden overflow-x-auto md:block">
         <table className={clsx("w-full table-fixed text-left text-sm", canAssign ? "min-w-[920px]" : "min-w-[820px]")}>
           <colgroup>
-            <col className="w-[17%]" /><col className="w-[16%]" /><col className="w-[15%]" /><col className="w-[12%]" />
-            <col className="w-[13%]" /><col className={canAssign ? "w-[17%]" : "w-[27%]"} />{canAssign && <col className="w-[10%]" />}
+            <col className="w-[19%]" /><col className="w-[17%]" /><col className="w-[17%]" />
+            <col className="w-[14%]" /><col className={canAssign ? "w-[21%]" : "w-[33%]"} />{canAssign && <col className="w-[12%]" />}
           </colgroup>
           <thead className="border-b border-line/30 text-[11px] uppercase tracking-wider text-muted">
             <tr>
               <th className="px-3 py-2.5">Name</th><th className="px-3 py-2.5">Reach out</th><th className="px-3 py-2.5">Stage</th>
-              <th className="px-3 py-2.5">Last touch</th><th className="px-3 py-2.5">Follow-up</th><th className="px-3 py-2.5">Note</th>
+              <th className="px-3 py-2.5">Follow-up</th><th className="px-3 py-2.5">Note</th>
               {canAssign && <th className="px-3 py-2.5">Owner</th>}
             </tr>
           </thead>
@@ -189,7 +177,6 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
                     {reachOut(r)}
                   </td>
                   <td className="px-3 py-2">{stageSelect(r, saved("stage"))}</td>
-                  <td className="px-3 py-2 text-xs nums">{lastTouch(r)}</td>
                   <td className="px-2 py-2">{followUp(r, overdue, saved("next_follow_up"))}</td>
                   <td className="px-3 py-2"><NoteCell row={r} onSave={(v) => save(r.id, "notes", v)} saved={saved("notes")} /></td>
                   {canAssign && <td className="px-3 py-2">{ownerSelect(r)}</td>}
@@ -216,9 +203,8 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
                 <div className="w-36 shrink-0">{stageSelect(r, saved("stage"))}</div>
               </div>
               {reachOut(r, true)}
-              <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                <div><span className="block text-[10px] font-bold uppercase tracking-wider text-muted">Follow-up</span>{followUp(r, overdue, saved("next_follow_up"))}</div>
-                <div className="nums"><span className="block text-[10px] font-bold uppercase tracking-wider text-muted">Last touch</span>{lastTouch(r)}</div>
+              <div className="mt-2 text-xs">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">Follow-up</span>{followUp(r, overdue, saved("next_follow_up"))}
               </div>
               <div className="mt-1"><NoteCell row={r} onSave={(v) => save(r.id, "notes", v)} saved={saved("notes")} /></div>
               {canAssign && <div className="mt-1 flex items-center gap-2 text-xs"><span className="text-muted">Owner</span>{ownerSelect(r)}</div>}

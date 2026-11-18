@@ -6,9 +6,9 @@ import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireOwner } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
-import { istToday, STAGES } from "@/lib/sales";
+import { istToday, SOURCES, STAGES } from "@/lib/sales";
 
-type Search = { who?: string; stage?: string; q?: string };
+type Search = { who?: string; stage?: string; source?: string; q?: string };
 
 export default async function SalesListPage({ searchParams }: { searchParams: Promise<Search> }) {
   // Website form fills arrive as leads before anything is read.
@@ -17,7 +17,7 @@ export default async function SalesListPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const everyone = sp.who === "all";
   const [rows, owners] = await Promise.all([
-    getLeads({ owner: everyone ? undefined : admin.email, stage: sp.stage, q: sp.q }),
+    getLeads({ owner: everyone ? undefined : admin.email, stage: sp.stage, source: sp.source, q: sp.q }),
     getOwners(),
   ]);
   const href = (patch: Partial<Search>) => {
@@ -43,8 +43,14 @@ export default async function SalesListPage({ searchParams }: { searchParams: Pr
         <form method="get" className="ml-auto">
           {everyone && <input type="hidden" name="who" value="all" />}
           {sp.stage && <input type="hidden" name="stage" value={sp.stage} />}
+          {sp.source && <input type="hidden" name="source" value={sp.source} />}
           <input name="q" defaultValue={sp.q} placeholder="Search name, number, college" className="w-56 border border-line/50 bg-white px-2.5 py-1.5 text-sm focus:border-ink focus:outline-none" />
         </form>
+      </div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-muted">Source</span>
+        <Link href={href({ source: "" })} className={chip(!sp.source)}>All sources</Link>
+        {SOURCES.map((s) => <Link key={s.key} href={href({ source: s.key })} className={chip(sp.source === s.key)}>{s.label}</Link>)}
       </div>
       <SalesSheet rows={rows} today={istToday()} owners={owners} />
       <p className="mt-3 text-xs text-muted">
