@@ -87,7 +87,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile label="Total outreach" value={r.outreach.total} hint={vs(r.outreach.total, r.outreach.prev, unit)} />
         <StatTile label="Conversations" value={r.conversations.total} hint={`${pct(r.conversations.total, r.outreach.total)} of outreach`} />
-        <StatTile label="Potential conversions" value={r.hotNow} hint="Potential, positive or almost won, right now" tone="red" />
+        <StatTile label="Potential conversions" value={r.hotNow} hint="Shown interest or need follow-up, right now" tone="red" />
         <StatTile label="New leads" value={r.newLeads.total} hint={vs(r.newLeads.total, r.newLeads.prev, unit)} />
         <Link href="/admin/sales/leads?due=1&owner=" className="contents">
           <StatTile label="Follow-ups due" value={r.dueToday} hint="Today or overdue, whole team" tone={r.dueToday ? "red" : "muted"} />

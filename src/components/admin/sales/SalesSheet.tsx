@@ -4,7 +4,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { logCallOutcome, logTouch, quickAddLead, updateLeadField } from "@/app/admin/sales-actions";
-import { CALL_OUTCOMES, CHANNELS, formatPhone, labelOf, SOURCES, STAGES } from "@/lib/sales";
+import { CALL_OUTCOMES, CHANNELS, formatPhone, labelOf, SOURCES, STAGES, STATUS_NOTE_MAX } from "@/lib/sales";
 
 export interface SheetRow {
   id: string;
@@ -16,6 +16,7 @@ export interface SheetRow {
   stage: string;
   next_follow_up: string | null;
   notes: string | null;
+  status_note: string | null;
   last_touch_at: string | null;
   last_channel: string | null;
   touches: number;
@@ -25,8 +26,8 @@ export interface SheetRow {
 
 const cell = "w-full border border-transparent bg-transparent px-2 py-1.5 text-sm hover:border-line/40 focus:border-ink focus:bg-white focus:outline-none";
 const STAGE_BG: Record<string, string> = {
-  new: "bg-surface", warm: "bg-amber-100", potential: "bg-sky-100", positive: "bg-emerald-100",
-  almost: "bg-emerald-200", signed: "bg-ink text-paper", rejected: "bg-red-tint text-red-deep",
+  new: "bg-surface", connected: "bg-amber-100", interested: "bg-emerald-100", follow_up: "bg-sky-100",
+  signed: "bg-ink text-paper", rejected: "bg-red-tint text-red-deep",
 };
 
 function ago(iso: string) {
@@ -49,7 +50,7 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
   // The row whose call is in progress: its outcome buttons are showing.
   const [calling, setCalling] = useState<string | null>(null);
 
-  async function save(id: string, field: "stage" | "next_follow_up" | "notes" | "owner_email", value: string) {
+  async function save(id: string, field: "stage" | "next_follow_up" | "notes" | "status_note" | "owner_email", value: string) {
     setError("");
     const r = await updateLeadField(id, field, value);
     if (!r.ok) setError(r.message);
@@ -117,6 +118,7 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
       >
         {STAGES.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
       </select>
+      <StatusNote row={r} onSave={(v) => save(r.id, "status_note", v)} />
       {saved && <span className="text-[10px] text-muted">Saved</span>}
     </>
   );
@@ -161,7 +163,7 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
       <div className="card hidden overflow-x-auto md:block">
         <table className={clsx("w-full table-fixed text-left text-sm", canAssign ? "min-w-[920px]" : "min-w-[820px]")}>
           <colgroup>
-            <col className="w-[18%]" /><col className="w-[17%]" /><col className="w-[13%]" /><col className="w-[12%]" />
+            <col className="w-[17%]" /><col className="w-[16%]" /><col className="w-[15%]" /><col className="w-[12%]" />
             <col className="w-[13%]" /><col className={canAssign ? "w-[17%]" : "w-[27%]"} />{canAssign && <col className="w-[10%]" />}
           </colgroup>
           <thead className="border-b border-line/30 text-[11px] uppercase tracking-wider text-muted">
@@ -237,6 +239,26 @@ function daysLate(date: string, today: string) {
 
 /** Stage keys are safe class lookups; anything else falls back to plain. */
 function e(stage: string) { return stage in STAGE_BG ? stage : "new"; }
+
+/** A one-line status beside the stage ("call after exams"), saved when you leave it. */
+function StatusNote({ row, onSave }: { row: SheetRow; onSave: (v: string) => void }) {
+  const initial = useRef(row.status_note ?? "");
+  return (
+    <input
+      aria-label={`Status note for ${row.name}`}
+      defaultValue={row.status_note ?? ""}
+      key={`${row.id}-status`}
+      maxLength={STATUS_NOTE_MAX}
+      placeholder="Status note…"
+      onBlur={(ev) => {
+        const v = ev.target.value.trim();
+        if (v !== initial.current) { initial.current = v; onSave(v); }
+      }}
+      onKeyDown={(ev) => { if (ev.key === "Enter") ev.currentTarget.blur(); }}
+      className="mt-1 w-full border border-transparent bg-transparent px-1.5 py-1 text-[11px] italic hover:border-line/40 focus:border-ink focus:bg-white focus:not-italic focus:outline-none"
+    />
+  );
+}
 
 function NoteCell({ row, onSave, saved }: { row: SheetRow; onSave: (v: string) => void; saved: boolean }) {
   const initial = useRef(row.notes ?? "");

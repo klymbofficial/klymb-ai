@@ -6,10 +6,9 @@
 
 export const STAGES = [
   { key: "new", label: "New", hint: "Not spoken to yet" },
-  { key: "warm", label: "Warm", hint: "Replied, curious" },
-  { key: "potential", label: "Potential convert", hint: "Has a real need" },
-  { key: "positive", label: "Positive", hint: "Wants to join" },
-  { key: "almost", label: "Almost won", hint: "Payment or approval pending" },
+  { key: "connected", label: "Connected", hint: "Spoke or chatted with them" },
+  { key: "interested", label: "Shown interest", hint: "Interested in joining" },
+  { key: "follow_up", label: "Need follow-up", hint: "Waiting on them, follow up" },
   { key: "signed", label: "Signed", hint: "Paid or contract signed" },
   { key: "rejected", label: "Rejected", hint: "Said no" },
 ] as const;
@@ -46,7 +45,13 @@ export function addDays(day: string, n: number): string {
 /** The by_email on touches the WhatsApp dashboard sync writes. */
 export const WHATSAPP_BY = "whatsapp-dashboard";
 
-export const HOT_STAGES: readonly Stage[] = ["potential", "positive", "almost"];
+export const HOT_STAGES: readonly Stage[] = ["interested", "follow_up"];
+
+/** The stages before Nov 2026, still read from old sheets and imports. */
+const OLD_STAGES: Record<string, Stage> = { warm: "connected", potential: "interested", positive: "interested", almost: "interested", "potential convert": "interested", "almost won": "interested" };
+
+/** The longest status note: one short line. */
+export const STATUS_NOTE_MAX = 120;
 
 export const SOURCES = [
   { key: "socials", label: "Socials" },
@@ -214,7 +219,7 @@ export function parseLeadsCsv(text: string, defaultSource: Source, maxRows = 200
       source: isSource(rawSource) ? rawSource : (SOURCES.find((s) => s.label.toLowerCase() === rawSource)?.key ?? defaultSource),
       source_detail: clip(get("source_detail"), 120),
       org: clip(get("org"), 120),
-      stage: isStage(rawStage) ? rawStage : (STAGES.find((s) => s.label.toLowerCase() === rawStage)?.key ?? "new"),
+      stage: isStage(rawStage) ? rawStage : (STAGES.find((s) => s.label.toLowerCase() === rawStage)?.key ?? OLD_STAGES[rawStage ?? ""] ?? "new"),
       notes: clip(get("notes"), 2000),
     });
   });
