@@ -78,3 +78,13 @@ test("only klymbofficial can refund, whatever else they are", () => {
   assert.equal(canRefund({ email: "klymbofficial@gmail.com.evil.com" }), false);
   assert.equal(canRefund(null), false);
 });
+
+test("sales managers get the whole Sales CRM without being owners", async () => {
+  const { isSalesManager, salesManagerEmails, isOwnerEmail } = await import("../src/lib/admin/access");
+  const list = salesManagerEmails(undefined);
+  assert.ok(list.includes("anilbajpai1987@gmail.com"));
+  assert.ok(isSalesManager("SKSohail.Swaraj@gmail.com", list));
+  assert.ok(!isSalesManager("someone@else.com", list));
+  assert.ok(!isOwnerEmail("anilbajpai1987@gmail.com", ["klymbofficial@gmail.com"]));
+  assert.deepEqual(salesManagerEmails(" A@x.com , b@y.com "), ["a@x.com", "b@y.com"]);
+});
