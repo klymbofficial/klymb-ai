@@ -13,6 +13,9 @@ const WAYS_BACK = [
   { tag: "Or share it", title: `${SD_REFERRAL.friends} friends buy, get 100% back`, body: `${SD_REFERRAL.friends} friends buy with your link within ${SD_REFERRAL.days} days of your purchase. You keep the course.` },
 ] as const;
 
+/** Who the interview call is for. The ad and this page say the same thing. */
+const INTERVIEW_CALL_WHO = "Only for final-year students, graduates and working professionals who finish the course.";
+
 const DAY_STEPS = [
   ["Watch", "One 5 to 7 minute video in Hinglish."],
   ["Pass", "Five questions on what you watched. Three right and the day is done."],
@@ -25,6 +28,7 @@ const QUESTIONS = [
   ["Do I need a laptop?", "No. Every lesson, question and diagram works on your phone."],
   ["When does it start?", "The day you choose. The daily schedule begins once you pass Day 1."],
   ["What if I miss a day?", "You keep the course and carry on learning. Only the refund for finishing on schedule is gone."],
+  ["Who gets the interview call?", INTERVIEW_CALL_WHO],
 ] as const;
 
 /** What the fee buys, for someone who hasn't decided: how it comes back, a day, the 21 days, and the usual questions. */
@@ -47,6 +51,15 @@ export function OfferProof() {
           ))}
         </div>
         <p className="m-0 text-xs text-[#b9ad9f]">The fee is refunded once. <Link href="/refund-policy" className="underline underline-offset-2">Full refund terms</Link></p>
+      </section>
+
+      <section aria-labelledby="sd-interview" className="flex flex-col gap-3.5">
+        <p className={kicker}>After you finish</p>
+        <h2 id="sd-interview" className={heading}>Get an interview call.</h2>
+        <div className={`${card} flex flex-col gap-1.5 p-4`}>
+          <p className="m-0 text-base leading-[1.4] font-extrabold text-[#fbf6ee]">Finish the course and get an interview call.</p>
+          <p className="m-0 text-sm leading-[1.45] text-pretty text-[#d9cfc2]">*{INTERVIEW_CALL_WHO}</p>
+        </div>
       </section>
 
       <section aria-labelledby="sd-day" className="flex flex-col gap-3.5">
