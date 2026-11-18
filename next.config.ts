@@ -88,6 +88,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // The System Design bonus PDF is kept out of public/ and read by its route only.
+  outputFileTracingIncludes: {
+    "/api/sd/bonus": ["./src/data/system-design/bonus/**/*"],
+  },
   images: {
     remotePatterns: [
       // YouTube thumbnails for the day pages' reference resources.

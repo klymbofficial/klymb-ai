@@ -4,6 +4,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import Link from "next/link";
 import { ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, dayOf, fmt, isSoon, lesson, lessonDay, localDate, nextStep, openFinal, openLesson, paceNow, pct, streak, type CourseState } from "@/lib/course-app";
+import { SD_BONUS, SD_BONUS_URL } from "@/lib/sd-bonus";
 import { paceMessage, type Pace } from "@/lib/sd-pace";
 import { firstOpenLesson } from "./Course";
 import { GroupCard, useExtraUnread } from "../Community";
@@ -81,6 +82,31 @@ function PaceCard({ pace }: { pace: Pace }) {
       </span>
     </div>
   );
+}
+
+/**
+ * The bonus PDF. Locked until Day 21 is passed; the route checks the pass on
+ * the server too, so this only decides what the learner sees.
+ */
+function BonusCard({ s, signedIn }: { s: CourseState; signedIn: boolean }) {
+  const open = signedIn && s.done.includes(SD_BONUS.unlockLesson);
+  const body = (
+    <>
+      <span className={clsx("flex size-11 flex-none items-center justify-center rounded-[10px]", open ? "bg-sd-accent text-sd-bg" : "bg-sd-ink/6 text-sd-n-600")}>
+        <Icon name={open ? "gift" : "lock"} size={20} />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-[11px] font-extrabold tracking-[0.12em] text-sd-accent uppercase">Bonus</span>
+        <span className="text-[15px] leading-[1.25] font-extrabold">{SD_BONUS.title}</span>
+        <span className="text-xs text-sd-n-700">{open ? "PDF · " + SD_BONUS.sub : `Unlocks when you pass ${SD_BONUS.unlockLabel}`}</span>
+      </span>
+      {open && <span className="flex text-sd-accent"><Icon name="download" size={20} /></span>}
+    </>
+  );
+  const cls = "mt-6 flex w-full items-center gap-3 rounded-xl border border-sd-divider p-3.5 text-left";
+  return open
+    ? <a href={SD_BONUS_URL} download className={clsx(cls, "hover:bg-sd-accent-100")}>{body}</a>
+    : <div className={clsx(cls, "border-dashed")} aria-label={`Bonus: ${SD_BONUS.title}. Unlocks when you pass ${SD_BONUS.unlockLabel}.`}>{body}</div>;
 }
 
 export function Home({ s, act }: { s: CourseState; act: Act }) {
@@ -230,6 +256,7 @@ export function Home({ s, act }: { s: CourseState; act: Act }) {
               </button>
             ))}
           </div>
+          <BonusCard s={s} signedIn={!!user} />
           <h6 className="sd-h6 mt-6 mb-2">Course intro</h6>
           <OverviewVideo />
         </section>
