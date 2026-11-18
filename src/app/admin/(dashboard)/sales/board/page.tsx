@@ -3,13 +3,13 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { SalesBoard } from "@/components/admin/sales/SalesBoard";
 import { SalesTabs } from "@/components/admin/sales/SalesTabs";
-import { requireOwner } from "@/lib/admin/auth";
+import { requireSalesAdmin } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
 import { istToday } from "@/lib/sales";
 
 export default async function SalesBoardPage({ searchParams }: { searchParams: Promise<{ who?: string; source?: string; q?: string }> }) {
-  const admin = await requireOwner();
+  const admin = await requireSalesAdmin();
   await captureWebsiteLeads();
   const sp = await searchParams;
   const everyone = sp.who === "all";

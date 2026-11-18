@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signOut } from "@/app/admin/actions";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Wordmark } from "@/components/layout/Wordmark";
+import { isSalesManager } from "@/lib/admin/access";
 import { requireAdmin } from "@/lib/admin/auth";
 import { isChatOwner } from "@/lib/live-chat";
 import { unreadCount } from "@/lib/live-chat-db";
@@ -31,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
         </div>
 
-        <AdminNav owner={admin.owner} chat={chat} />
+        <AdminNav owner={admin.owner} sales={isSalesManager(admin.email)} chat={chat} />
 
         <div className="mt-auto hidden flex-col gap-3 border-t border-white/15 pt-4 lg:flex">
           <div>

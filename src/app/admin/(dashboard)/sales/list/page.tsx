@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { SalesSheet } from "@/components/admin/sales/SalesSheet";
 import { SalesTabs } from "@/components/admin/sales/SalesTabs";
-import { requireOwner } from "@/lib/admin/auth";
+import { requireSalesAdmin } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
 import { istToday, SOURCES, STAGES } from "@/lib/sales";
@@ -13,7 +13,7 @@ type Search = { who?: string; stage?: string; source?: string; q?: string };
 export default async function SalesListPage({ searchParams }: { searchParams: Promise<Search> }) {
   // Website form fills arrive as leads before anything is read.
   await captureWebsiteLeads();
-  const admin = await requireOwner();
+  const admin = await requireSalesAdmin();
   const sp = await searchParams;
   const everyone = sp.who === "all";
   const [rows, owners] = await Promise.all([
