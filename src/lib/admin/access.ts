@@ -34,7 +34,7 @@ export function ownerEmails(raw: string | undefined = process.env.ADMIN_OWNER_EM
  * import, report) without owner powers. SALES_MANAGER_EMAILS, comma
  * separated, replaces this default list when set.
  */
-const DEFAULT_SALES_MANAGERS = "anilbajpai1987@gmail.com,suyash.22b0131169@abes.ac.in,sksohail.swaraj@gmail.com";
+const DEFAULT_SALES_MANAGERS = "anilbajpai1987@gmail.com,contactsuyashgupta@gmail.com,sksohail.swaraj@gmail.com";
 
 export function salesManagerEmails(raw: string | undefined = process.env.SALES_MANAGER_EMAILS): string[] {
   return (raw?.trim() ? raw : DEFAULT_SALES_MANAGERS)
