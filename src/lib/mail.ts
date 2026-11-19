@@ -332,8 +332,8 @@ export function webinarConfirmationEmail(p: { name: string; title: string; date:
 /** Sent when someone applies for the sales internship on /internship. */
 export function internshipApplicationEmail(p: { name: string; starts: string; months: number; pct: number; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
-  const subject = "We got your application: Klymb.ai sales internship";
-  const line = `Thanks for applying to the Klymb.ai sales internship. We read every application and call the people we shortlist for a short chat. If you're shortlisted, we'll reach you on WhatsApp or email within a few days.`;
+  const subject = "We got your application: BDE Intern at Klymb.ai";
+  const line = `Thanks for applying to be a BDE Intern (Business Development Executive) at Klymb.ai. We read every application and call the people we shortlist for a short chat. If you're shortlisted, we'll reach you on WhatsApp or email within a few days.`;
   const text = [
     `Hi ${p.name},`, "", line, "",
     `Starts: ${p.starts}`, `Length: ${p.months} months`, `Pay: ${p.pct}% commission on every course sold through your personal link`, "",
@@ -342,7 +342,7 @@ export function internshipApplicationEmail(p: { name: string; starts: string; mo
   const html = layout({
     site, supportEmail: p.supportEmail,
     preview: "Thanks for applying. Shortlisted applicants get a short call.",
-    eyebrow: "Sales internship",
+    eyebrow: "BDE Intern",
     title: "Application received.",
     intro: esc(line),
     sections: [
