@@ -12,7 +12,8 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
       <a href="#learn-main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-paper">
         Skip to content
       </a>
-      <div id="learn-main" className="flex-1"><MotionProvider>{children}</MotionProvider></div>
+      {/* At least one screen tall, so the footer always starts below the fold and stays put while short pages load or change. svh, not dvh: it doesn't shift as a phone's address bar comes and goes. */}
+      <div id="learn-main" className="min-h-svh flex-1"><MotionProvider>{children}</MotionProvider></div>
       <Footer />
       <OfflineSync />
       <DeviceWatch />

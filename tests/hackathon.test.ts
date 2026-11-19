@@ -7,7 +7,8 @@ const form = (o: Record<string, string>) => { const f = new FormData(); for (con
 const dates = { registrationClosesUtc: "2026-12-04T12:30:00Z", kickoffUtc: "2026-12-04T14:30:00Z", deadlineUtc: "2026-12-06T15:15:00Z" };
 
 test("no dates means coming soon, whatever the clock says", () => {
-  assert.equal(hackathonPhase(false), "coming-soon");
+  const none = { registrationClosesUtc: null, kickoffUtc: null, deadlineUtc: null };
+  assert.equal(hackathonPhase(false, Date.now(), none), "coming-soon");
 });
 
 test("the phase follows the dates, and published results come last", () => {
