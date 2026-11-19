@@ -332,21 +332,21 @@ export function webinarConfirmationEmail(p: { name: string; title: string; date:
 /** Sent when someone applies for the sales internship on /internship. */
 export function internshipApplicationEmail(p: { name: string; starts: string; months: number; pct: number; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
-  const subject = "We got your application: BDE Intern at Klymb.ai";
-  const line = `Thanks for applying to be a BDE Intern (Business Development Executive) at Klymb.ai. We read every application and call the people we shortlist for a short chat. If you're shortlisted, we'll reach you on WhatsApp or email within a few days.`;
+  const subject = "We got your application: Growth & Community Intern at Klymb.ai";
+  const line = `Thanks for applying to be a Growth & Community Intern at Klymb.ai. We read every application and call the people we shortlist for a short chat. If you're shortlisted, we'll reach you on WhatsApp or email within a few days.`;
   const text = [
     `Hi ${p.name},`, "", line, "",
-    `Starts: ${p.starts}`, `Length: ${p.months} months`, `Pay: ${p.pct}% commission on every course sold through your personal link`, "",
+    `Starts: ${p.starts}`, `Length: ${p.months} months`, `Earnings: ${p.pct}% on every paid enrollment through your personal link (no fixed stipend)`, "",
     `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
     preview: "Thanks for applying. Shortlisted applicants get a short call.",
-    eyebrow: "BDE Intern",
+    eyebrow: "Growth & Community Intern",
     title: "Application received.",
     intro: esc(line),
     sections: [
-      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("Starts", p.starts)}${row("Length", `${p.months} months`)}${row("Pay", `${p.pct}% commission on every sale`)}</table>`,
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("Starts", p.starts)}${row("Length", `${p.months} months`)}${row("Earnings", `${p.pct}% on every paid enrollment`)}</table>`,
       button(`${site}/internship`, "See the internship"),
     ],
   });

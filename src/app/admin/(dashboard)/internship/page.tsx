@@ -41,8 +41,8 @@ export default async function AdminInternshipPage({ searchParams }: { searchPara
   return (
     <>
       <PageTitle
-        eyebrow="BDE internship"
-        title="BDE Intern applications"
+        eyebrow="Growth & Community internship"
+        title="Growth & Community Intern applications"
         intro={`Starts ${INTERNSHIP.startsLabel}: ${INTERNSHIP.months} months, ${INTERNSHIP.commissionPct}% commission. Shortlist, call, then accept or reject. Accepting someone also adds them as a sales rep.`}
         actions={<div className="flex items-center gap-2"><Link href="/internship" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Open page</Link><ExportCsv rows={csv} filename="klymb-internship" /></div>}
       />

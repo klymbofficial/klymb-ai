@@ -7,8 +7,8 @@ import { CookieBanner } from "@/components/legal/CookieBanner";
 import { InternshipForm } from "@/components/internship/InternshipForm";
 import { INTERNSHIP } from "@/lib/internship";
 
-const title = "BDE Intern (Business Development Executive) at Klymb.ai";
-const description = `A ${INTERNSHIP.months}-month remote BDE (Business Development Executive) internship starting ${INTERNSHIP.startsLabel}. Earn ${INTERNSHIP.commissionPct}% of every course you sell through your own link. For students and working professionals.`;
+const title = "Growth & Community Intern at Klymb.ai";
+const description = `Build connections. Help others upskill. Grow with Klymb.ai. A remote, ${INTERNSHIP.months}-month internship from ${INTERNSHIP.startsLabel}: earn ${INTERNSHIP.commissionPct}% on every paid enrollment through your personal link.`;
 
 export const metadata: Metadata = {
   title, description,
@@ -18,17 +18,17 @@ export const metadata: Metadata = {
 };
 
 const FACTS = [
-  { Icon: CalendarDays, text: `Starts ${INTERNSHIP.startsLabel}` },
-  { Icon: Timer, text: `${INTERNSHIP.months} months` },
   { Icon: Laptop, text: "Remote" },
-  { Icon: IndianRupee, text: `${INTERNSHIP.commissionPct}% per sale` },
+  { Icon: Timer, text: `${INTERNSHIP.months} months` },
+  { Icon: IndianRupee, text: "Performance-based earnings" },
+  { Icon: CalendarDays, text: `Starts ${INTERNSHIP.startsLabel}` },
 ] as const;
 
 const STEPS: [string, string][] = [
   ["Apply", "Two minutes. Tell us who you are and why you'd be good at this."],
   ["A short call", "We call the people we shortlist for a quick chat, usually within a few days."],
   ["Your own link", "Once you're in, you get a personal link for our courses. Every purchase through it is counted as yours, and you can see your sales as they happen."],
-  [`Earn ${INTERNSHIP.commissionPct}% of every sale`, `${INTERNSHIP.commissionPct}% of what each buyer actually pays, added up and paid to you after the end of each month. A buyer's refund doesn't reduce what you've earned.`],
+  [`Earn ${INTERNSHIP.commissionPct}% on every paid enrollment`, `${INTERNSHIP.commissionPct}% of what each buyer actually pays, added up and paid to you after the end of each month. A buyer's refund doesn't reduce what you've earned.`],
 ];
 
 /** The internship, laid out like /webinar: what it is on the left, the application beside it (under it on a phone). */
@@ -41,10 +41,13 @@ export default function InternshipPage() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/85 via-red-muted/92 to-red-muted-deep/97" />
           <div className="mx-auto w-full max-w-xl">
             <Link href="/" className="display text-lg text-white no-underline">KLYMB<span className="text-red-soft">.AI</span></Link>
-            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">BDE Intern · Business Development Executive</p>
+            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">Growth &amp; Community Intern</p>
             <h1 className="display display-soft mt-2 text-[clamp(1.9rem,6vw,3rem)] leading-[1.05]">
-              Sell courses that get people hired. <span className="text-red-soft">Earn {INTERNSHIP.commissionPct}% of every sale.</span>
+              Build connections. Help others upskill. <span className="text-red-soft">Grow with Klymb.ai.</span>
             </h1>
+            <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/80">
+              Connect learners with relevant courses, grow your network, and gain practical experience in outreach and business development. Earn {INTERNSHIP.commissionPct}% on every paid enrollment through your personal link.
+            </p>
             <ul className="mt-5 flex flex-wrap gap-2" aria-label="The role at a glance">
               {FACTS.map(({ Icon, text }) => (
                 <li key={text} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15">
@@ -69,7 +72,7 @@ export default function InternshipPage() {
               ))}
             </ol>
             <p className="mt-5 text-sm leading-relaxed text-white/70">
-              Commission only: there&apos;s no fixed stipend, so what you earn depends on what you sell. For students and working professionals who enjoy talking to people.
+              This is a commission-based opportunity with no fixed stipend.
             </p>
           </div>
         </section>
