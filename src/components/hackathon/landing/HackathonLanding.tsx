@@ -1,8 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { Briefs } from "@/components/hackathon/Briefs";
-import { NotifyButton } from "@/components/hackathon/NotifyButton";
 import { HACKATHON, type HackathonPhase } from "@/data/hackathon";
 import type { myTeam, publishedResults } from "@/lib/hackathon";
 import { FaqAccordion } from "./FaqAccordion";
@@ -24,15 +22,10 @@ type Props = {
   results: Awaited<ReturnType<typeof publishedResults>>;
   /** The signed-in person's team, if they have one. */
   team: Awaited<ReturnType<typeof myTeam>>;
-  email: string | null;
-  interested: boolean;
-  /**
-   * Inside the learner app (/learn/hackathon): the hero's buttons jump to the
-   * registration or team section passed as `middle`, which sits under the hero.
-   * On the public page (/hackathons) they lead to /learn/hackathon.
-   */
+  /** Inside the learner app (/learn/hackathon), under its sidebar or phone bar. */
   inApp?: boolean;
-  middle?: ReactNode;
+  /** The person's own part (HackathonMine): registration, or their team. The hero's buttons jump to it. */
+  middle: ReactNode;
 };
 
 /**
@@ -41,7 +34,7 @@ type Props = {
  * soon, registration, the live build, judging, then the winners. The
  * problem statements appear at kickoff.
  */
-export function HackathonLanding({ phase, results, team, email, interested, inApp = false, middle }: Props) {
+export function HackathonLanding({ phase, results, team, inApp = false, middle }: Props) {
   const h = HACKATHON;
   const showBriefs = phase === "live" || phase === "judging" || phase === "results";
 
@@ -59,17 +52,17 @@ export function HackathonLanding({ phase, results, team, email, interested, inAp
     : phase === "live" && h.deadlineUtc ? { targetIso: h.deadlineUtc, label: "Time until submissions close" }
     : null;
 
-  const teamHref = inApp ? "#your-team" : "/learn/hackathon";
   const cta =
-    phase === "registration" ? { href: team ? teamHref : inApp ? "#register" : "/learn/hackathon", label: team ? "Go to your team" : "Register" }
-    : team && (phase === "closed" || phase === "live" || phase === "judging") ? { href: phase === "live" && inApp ? "#your-entry" : teamHref, label: phase === "live" ? "Submit your entry" : "Go to your team" }
+    phase === "registration" ? { href: team ? "#your-team" : "#register", label: team ? "Go to your team" : "Register" }
+    : team && (phase === "closed" || phase === "live" || phase === "judging") ? { href: phase === "live" ? "#your-entry" : "#your-team", label: phase === "live" ? "Submit your entry" : "Go to your team" }
     : phase === "results" ? { href: "#winners", label: "See the winners" }
+    : phase === "coming-soon" ? { href: "#register", label: "Get notified" }
     : null;
 
   const message = team ? (
-    <p><strong>You&rsquo;re registered</strong><br />{inApp ? <>Your team, its code and your entry are <a href="#your-team">just below</a>.</> : <>Your team, its code and your entry are on <Link href="/learn/hackathon">your hackathon page</Link>.</>}</p>
+    <p><strong>You&rsquo;re registered</strong><br />Your team, its code and your entry are <a href="#your-team">just below</a>.</p>
   ) : phase === "registration" ? (
-    <p><strong>Register to take part</strong><br />Solo or a team of up to three. {h.registrationClosesLabel}.</p>
+    <p><strong>Register to take part</strong><br />Free, no course needed. Solo or a team of up to three. {h.registrationClosesLabel}.</p>
   ) : phase === "coming-soon" ? (
     <p><strong>Dates coming soon</strong><br />Get an email the moment registration opens.</p>
   ) : (
@@ -91,11 +84,6 @@ export function HackathonLanding({ phase, results, team, email, interested, inAp
 
       {middle}
 
-      {phase === "coming-soon" && !inApp && (
-        <div className="hk-section" style={{ marginTop: 0, textAlign: "center" }}>
-          {email ? <NotifyButton already={interested} /> : <Link className="hk-btn hk-btn--primary" href="/learn/login">Log in to get notified</Link>}
-        </div>
-      )}
 
       {phase === "results" && (
         <section id="winners" aria-labelledby="winners-title" className="hk-section">
