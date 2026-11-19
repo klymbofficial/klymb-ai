@@ -19,15 +19,39 @@ const COPY: Record<Exclude<State, "hidden" | "busy">, { title: string; body: str
   error: { title: "That didn't work", body: "Check your connection and try again." },
 };
 
+export type PopoverBox = { position: "fixed"; left: number; width: number; top?: number; bottom?: number };
+
+/**
+ * Where the reminders panel sits, on screen: beside the bell (right edge
+ * lined up with it), kept `margin` in from both sides of the viewport, and
+ * above or below the bell. Measured on open, so it stays on screen wherever
+ * the bell is, including the bottom-left of the sidebar and a 375px phone.
+ */
+export function popoverBox(
+  anchor: { top: number; bottom: number; right: number },
+  view: { width: number; height: number },
+  placement: "above" | "below",
+  maxWidth = 304,
+  margin = 16,
+  gap = 8,
+): PopoverBox {
+  const width = Math.min(maxWidth, view.width - margin * 2);
+  const left = Math.min(Math.max(anchor.right - width, margin), view.width - margin - width);
+  return placement === "above"
+    ? { position: "fixed", left, width, bottom: view.height - anchor.top + gap }
+    : { position: "fixed", left, width, top: anchor.bottom + gap };
+}
+
 /**
  * Daily reminders, from a bell in the top bar instead of a card on the page:
  * a one-time setting shouldn't take space every day. A red dot invites people
  * who haven't turned reminders on. One tap asks the browser for permission and
  * saves this device; iPhones need Klymb on the home screen first.
  */
-export function ReminderBell() {
+export function ReminderBell({ placement = "below" }: { placement?: "above" | "below" } = {}) {
   const [state, setState] = useState<State>("hidden");
   const [open, setOpen] = useState(false);
+  const [box, setBox] = useState<PopoverBox | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
@@ -48,14 +72,20 @@ export function ReminderBell() {
     return () => { cancelled = true; };
   }, [key]);
 
-  // Close on an outside tap or Escape.
+  // Close on an outside tap, Escape, or a resize (the panel is placed from where the bell was).
   useEffect(() => {
     if (!open) return;
     const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const close = () => setOpen(false);
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", close);
+    };
   }, [open]);
 
   async function enable() {
@@ -84,6 +114,15 @@ export function ReminderBell() {
     setState("ask");
   }
 
+  // Opening measures the bell and places the panel on screen; closing needs no measuring.
+  function toggle() {
+    if (!open && wrap.current) {
+      const r = wrap.current.getBoundingClientRect();
+      setBox(popoverBox(r, { width: window.innerWidth, height: window.innerHeight }, placement));
+    }
+    setOpen(!open);
+  }
+
   if (state === "hidden") return null;
   const copy = state === "busy" ? null : COPY[state];
   const nudge = state === "ask" || state === "ios-install";
@@ -92,7 +131,7 @@ export function ReminderBell() {
     <div ref={wrap} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label={state === "on" ? "Reminders on" : "Reminders off: turn on"}
@@ -110,8 +149,10 @@ export function ReminderBell() {
       <div
         role="dialog"
         aria-label="Daily reminders"
+        style={box ?? undefined}
         className={clsx(
-          "absolute top-full right-0 z-50 mt-2 w-[min(19rem,calc(100vw-2rem))] origin-top-right rounded-card bg-card p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)] ring-1 ring-line/40",
+          "z-50 max-w-[calc(100vw-2rem)] rounded-card bg-card p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)] ring-1 ring-line/40",
+          placement === "above" ? "origin-bottom-left" : "origin-top-right",
           "transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
         )}

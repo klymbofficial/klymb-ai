@@ -39,7 +39,7 @@ export async function LearnerTopBar({
         <KlymbLogo href="/dashboard" label="Klymb.ai dashboard" short={compact} className={`h-20 shrink-0 ${compact ? "justify-center" : "px-3"}`} />
         <LearnerNav coach={coach} variant="rail" compact={compact} />
         <div className={`mt-auto flex flex-col gap-1 border-t border-ink/10 py-4 ${compact ? "items-center" : ""}`}>
-          <ReminderBell />
+          <ReminderBell placement="above" />
           <AccountMenu name={name} email={email} image={image} placement="up" compact={compact} />
         </div>
       </aside>
