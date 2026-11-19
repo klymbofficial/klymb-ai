@@ -69,6 +69,17 @@ export async function resolveMember(
   };
 }
 
+/**
+ * The workspace a URL asks for, as the slug the database stores, or null when
+ * it can't be one (the same shape migration 0010 enforces). Checked before any
+ * query, so a malformed address never reaches the database.
+ */
+export function workspaceSlug(slug: unknown): string | null {
+  if (typeof slug !== "string") return null;
+  const value = slug.toLowerCase();
+  return value.length <= 60 && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(value) ? value : null;
+}
+
 /** True when the member belongs to the company named in the URL. */
 export function belongsTo(member: CompanyMember | null, slug: unknown): member is CompanyMember {
   return member !== null && typeof slug === "string" && slug.toLowerCase() === member.companySlug;

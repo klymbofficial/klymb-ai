@@ -7,12 +7,17 @@ import { Button } from "@/components/ui/Button";
 const input =
   "block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none";
 
-/** Two steps on one page: the email, then the 6-digit code sent to it. */
-export function CompanySignInForm() {
+/**
+ * Two steps on one page: the email, then the 6-digit code sent to it. `next`
+ * (already checked by the page) rides along in both steps; the action checks
+ * it again before following it.
+ */
+export function CompanySignInForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState(companySignIn, { step: "email" } as SignInState);
 
   return (
     <form action={action} className="mt-6 flex flex-col gap-4" noValidate>
+      {next && <input type="hidden" name="next" value={next} />}
       {state.step === "email" ? (
         <>
           <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">

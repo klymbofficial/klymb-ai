@@ -32,9 +32,10 @@ export async function ensureDevUser(user: DevUser): Promise<void> {
       `;
       return;
     case "company": {
+      const company = user.company ?? DEV_COMPANY;
       const { data } = await sql.rows<{ id: string }>`
         insert into course.companies (slug, name)
-        values (${DEV_COMPANY.slug}, ${DEV_COMPANY.name})
+        values (${company.slug}, ${company.name})
         on conflict (slug) do update set name = excluded.name
         returning id
       `;

@@ -272,6 +272,6 @@ test("both pages are HR-only: other roles get a role panel and nothing is loaded
     assert.ok(role < src.indexOf("db()"), `${page} checks the role before touching the database`);
   }
   const layout = read("src/app/org/[slug]/layout.tsx");
-  assert.match(layout, /getMember\(\)/);
+  assert.match(layout, /getWorkspaceMember\(slug\)/);
   assert.match(layout, /allowCompany\(member, slug\)/);
 });

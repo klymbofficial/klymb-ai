@@ -7,7 +7,14 @@ on this branch, not against plans.
 
 - **Entry:** klymb.ai/org/sign-in (linked from the site footer, and from invite
   emails). Invited people ask for a 6-digit emailed code. `/org` sends a signed-in
-  member to `/org/<slug>`.
+  member to `/org/<slug>`. A signed-out visitor to any `/org/<slug>/…` page is
+  sent to `/org/sign-in?next=…` and returned to that page afterwards
+  (`src/lib/company/return-path.ts`; `src/proxy.ts` passes the path to the layout).
+  Only a path inside a workspace on this site is followed.
+- **Workspace from the link:** every `/org/<slug>` page, layout and action
+  resolves the viewer's membership of the company the URL names
+  (`workspaceLookup` in `src/lib/company/lookup.ts`), not "their" company. A
+  member of another company gets a 404.
 - **Roles:** HR (People, Teams, Learning), team head (their team's Learning),
   employee (their own). Access is read from `course.company_members` on every
   request; removing a person ends access at once.
@@ -96,7 +103,9 @@ migrations reached main renumbered as 0034-0038, after 0030-0033, so nothing
 shares a number and a fresh database applies them in the order production did.
 `scripts/migrate.ts` applies unapplied files by name, so gaps are harmless.
 It adds one redundant unique constraint to `company_members` and one table; it is
-idempotent. **Not yet applied to any shared database.**
+idempotent. On 2026-11-10 a read-only check found it in `course.schema_migrations`
+on Neon's `production` branch with a checksum matching this file. Not verified:
+that Vercel's Production `DATABASE_URL` points at that branch.
 
 ## Verification status
 

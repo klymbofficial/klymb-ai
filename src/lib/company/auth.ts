@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { auth, companyEmailFrom } from "@/auth";
 import { allowCompany, resolveMember, type CompanyMember, type CompanyRole } from "@/lib/company/access";
-import { memberLookup } from "@/lib/company/lookup";
+import { memberLookup, workspaceLookup } from "@/lib/company/lookup";
 import { db } from "@/lib/db/client";
 
 /**
@@ -28,11 +28,22 @@ import { db } from "@/lib/db/client";
  * (tests/company-access-db.test.ts).
  *
  * `cache` memoises it for one request only, as with getAdmin.
+ *
+ * getMember is the person's workspace when none is named (/org, the sign-in
+ * page). Pages under /org/[slug] use getWorkspaceMember, which resolves the
+ * workspace from the requested link.
  */
 export const getMember = cache(async (): Promise<CompanyMember | null> => {
   const sql = db();
   if (!sql) return null;
   return resolveMember(companyEmailFrom(await auth()), memberLookup(sql));
+});
+
+/** The signed-in person's membership of the workspace this slug names, or null. */
+export const getWorkspaceMember = cache(async (slug: string): Promise<CompanyMember | null> => {
+  const sql = db();
+  if (!sql) return null;
+  return resolveMember(companyEmailFrom(await auth()), workspaceLookup(sql, slug));
 });
 
 /** Any company member. Everyone else gets a 404. */
@@ -47,7 +58,7 @@ export async function requireMember(): Promise<CompanyMember> {
  * slug only picks the company; access still comes from the login.
  */
 export async function requireCompany(slug: string, roles?: readonly CompanyRole[]): Promise<CompanyMember> {
-  const member = await getMember();
+  const member = await getWorkspaceMember(slug);
   if (!allowCompany(member, slug, roles)) notFound();
   return member;
 }
@@ -57,6 +68,7 @@ export async function requireCompany(slug: string, roles?: readonly CompanyRole[
  * or null. Actions answer null with an error message rather than a 404.
  */
 export async function hrFor(slug: unknown): Promise<CompanyMember | null> {
-  const member = await getMember();
+  if (typeof slug !== "string") return null;
+  const member = await getWorkspaceMember(slug);
   return allowCompany(member, slug, ["hr"]) ? member : null;
 }

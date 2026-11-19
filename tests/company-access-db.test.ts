@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { after, before, describe, test } from "node:test";
 import { Client } from "pg";
 import { allowCompany, resolveMember } from "../src/lib/company/access";
-import { memberLookup } from "../src/lib/company/lookup";
+import { memberLookup, workspaceLookup } from "../src/lib/company/lookup";
 import { connectionOptions } from "../src/lib/db/connection";
 import type { Db, DbError } from "../src/lib/db/client";
 
@@ -106,6 +106,19 @@ describe("company access against a real database", { skip }, () => {
     assert.equal(allowCompany(member, `globex-${run}`), false);
     const rival = await resolveMember(email("rival"), memberLookup(sql));
     assert.equal(allowCompany(rival, `acme-${run}`, ["hr"]), false);
+  });
+
+  test("the workspace lookup finds a member only in the workspace the link names", async () => {
+    const head = await resolveMember(email("head"), workspaceLookup(sql, `acme-${run}`));
+    assert.ok(head);
+    assert.equal(head.companyId, ids.acme);
+    assert.equal(head.role, "head");
+    // Company A's people are nobody on company B's link, and the reverse.
+    assert.equal(await resolveMember(email("hr"), workspaceLookup(sql, `globex-${run}`)), null);
+    assert.equal(await resolveMember(email("rival"), workspaceLookup(sql, `acme-${run}`)), null);
+    assert.ok(await resolveMember(email("rival"), workspaceLookup(sql, `globex-${run}`)));
+    // No wildcard in the slug either.
+    assert.equal(await resolveMember(email("hr"), workspaceLookup(sql, `acme-${run.slice(0, 4)}`)), null);
   });
 
   test("the lookup is exact: no wildcard or case tricks", async () => {

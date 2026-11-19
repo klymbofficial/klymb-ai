@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import type { Db } from "../src/lib/db/client";
-import { memberLookup } from "../src/lib/company/lookup";
+import { memberLookup, workspaceLookup } from "../src/lib/company/lookup";
 import {
   allowCompany,
   belongsTo,
@@ -177,6 +177,69 @@ test("the lookup asks by exact email, as a parameter, never pasted into the SQL"
   assert.match(seen[0].text, /where m\.email = \$/);
   assert.doesNotMatch(seen[0].text, /ilike|like/i);
   assert.doesNotMatch(seen[0].text, /dev@acme\.com/);
+});
+
+// ── The workspace comes from the URL (workspaceLookup) ──────
+// requireCompany, hrFor and the /org/[slug] layout resolve the member through
+// workspaceLookup(db, slug): the role is the one held in the workspace the
+// link names, and a member of another company is nobody there.
+
+/** A fake database that answers the workspace query by email and slug, or returns `forced`. */
+function workspaceDb(opts: { forced?: MemberRow; seen?: { text: string; values: unknown[] }[] } = {}): Pick<Db, "row"> {
+  return {
+    async row<T>(strings: TemplateStringsArray, ...values: unknown[]) {
+      opts.seen?.push({ text: strings.join("$"), values });
+      const found = opts.forced ?? table.find((r) => r.email === values[0] && r.company_slug === values[1]) ?? null;
+      return { data: found as T | null, error: null };
+    },
+  };
+}
+
+const inWorkspace = async (email: unknown, slug: unknown, roles?: ("hr" | "head" | "employee")[], db = workspaceDb()) =>
+  allowCompany(await resolveMember(email, workspaceLookup(db, slug)), slug, roles);
+
+test("workspace: a member is resolved in the workspace the link names, and only there", async () => {
+  assert.equal(await inWorkspace("dev@acme.com", "acme"), true);
+  assert.equal(await inWorkspace("hr@acme.com", "acme", ["hr"]), true);
+  // Company A's people get nothing on company B's link, and the reverse.
+  assert.equal(await inWorkspace("hr@acme.com", "globex"), false);
+  assert.equal(await inWorkspace("hr@globex.com", "acme", ["hr"]), false);
+  assert.equal(await inWorkspace("dev@globex.com", "acme"), false);
+});
+
+test("workspace: the slug is matched as the database stores it, case aside", async () => {
+  assert.equal(await inWorkspace("dev@acme.com", "ACME"), true);
+});
+
+test("workspace: a malformed slug never reaches the database", async () => {
+  for (const slug of ["", "acme/../globex", "acme%2f", "-acme", "acme--x", "a".repeat(61), null, 7, ["acme"]]) {
+    const seen: { text: string; values: unknown[] }[] = [];
+    assert.equal(await resolveMember("dev@acme.com", workspaceLookup(workspaceDb({ seen }), slug)), null, String(slug));
+    assert.equal(seen.length, 0, `${String(slug)} was queried`);
+  }
+});
+
+test("workspace: a row for another company is refused even if the query returned it", async () => {
+  const globexRow = table.find((r) => r.email === "hr@globex.com")!;
+  const db = workspaceDb({ forced: { ...globexRow, email: "hr@acme.com" } });
+  assert.equal(await resolveMember("hr@acme.com", workspaceLookup(db, "acme")), null);
+});
+
+test("workspace: the lookup asks by email and slug as parameters, never pasted into the SQL", async () => {
+  const seen: { text: string; values: unknown[] }[] = [];
+  await inWorkspace("dev@acme.com", "acme", undefined, workspaceDb({ seen }));
+  assert.equal(seen.length, 1);
+  assert.deepEqual(seen[0].values, ["dev@acme.com", "acme"]);
+  assert.match(seen[0].text, /where m\.email = \$ and c\.slug = \$ and m\.removed_at is null/);
+  assert.doesNotMatch(seen[0].text, /ilike|like/i);
+});
+
+test("workspace: every /org/[slug] check goes through the workspace lookup", () => {
+  const auth = readFileSync("src/lib/company/auth.ts", "utf8");
+  const body = (name: string) => auth.slice(auth.indexOf(`function ${name}`), auth.indexOf("\n}\n", auth.indexOf(`function ${name}`)));
+  assert.match(body("requireCompany"), /getWorkspaceMember\(slug\)/);
+  assert.match(body("hrFor"), /getWorkspaceMember\(slug\)/);
+  assert.match(auth, /workspaceLookup\(sql, slug\)/);
 });
 
 // ── Whose data a member may see ─────────────────────────────

@@ -20,17 +20,26 @@ export interface DevUser {
   label: string;
   /** What the account has, shown on the picker. */
   blurb: string;
+  /** For a company person: the fake company they belong to. */
+  company?: DevCompany;
 }
 
-/** The fake company the company user belongs to. */
-export const DEV_COMPANY = { slug: "dev-company", name: "Dev Company" } as const;
+export interface DevCompany {
+  slug: string;
+  name: string;
+}
+
+/** Two fake companies, so a member of one can be checked against the other's pages. */
+export const DEV_COMPANY: DevCompany = { slug: "dev-company", name: "Dev Company" };
+export const DEV_COMPANY_TWO: DevCompany = { slug: "dev-company-two", name: "Dev Company Two" };
 
 /** Every address is on the reserved .test domain, so none can be a real mailbox. */
 export const DEV_USERS: readonly DevUser[] = [
   { email: "dev-learner-paid@klymb.test", name: "Dev Learner (paid)", role: "learner-paid", label: "Learner, paid", blurb: "Has a System Design seat. Opens /learn." },
   { email: "dev-learner-free@klymb.test", name: "Dev Learner (free)", role: "learner-free", label: "Learner, not paid", blurb: "Signed in, no seat. Sees the locked state." },
   { email: "dev-admin@klymb.test", name: "Dev Admin", role: "admin", label: "Admin", blurb: "On the admin list. Opens /admin." },
-  { email: "dev-company@klymb.test", name: "Dev HR", role: "company", label: "Company HR", blurb: `HR at ${DEV_COMPANY.name}. Opens /org.` },
+  { email: "dev-company@klymb.test", name: "Dev HR", role: "company", company: DEV_COMPANY, label: "Company HR", blurb: `HR at ${DEV_COMPANY.name}. Opens /org.` },
+  { email: "dev-company-two@klymb.test", name: "Dev HR Two", role: "company", company: DEV_COMPANY_TWO, label: "Company HR, second company", blurb: `HR at ${DEV_COMPANY_TWO.name}. ${DEV_COMPANY.name}'s pages are a 404 for them.` },
 ];
 
 type Env = Record<string, string | undefined>;
@@ -56,7 +65,7 @@ export function devLandingPath(user: DevUser): string {
     case "admin":
       return "/admin";
     case "company":
-      return `/org/${DEV_COMPANY.slug}`;
+      return `/org/${(user.company ?? DEV_COMPANY).slug}`;
     default:
       return "/learn";
   }

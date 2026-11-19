@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import type { Session } from "next-auth";
 import { adminEmailFrom, companyEmailFrom, verifiedEmailFrom } from "../src/auth";
-import { DEV_USERS, devLoginEnabled, devUserByEmail } from "../src/lib/dev-login";
+import { DEV_COMPANY, DEV_COMPANY_TWO, DEV_USERS, devLandingPath, devLoginEnabled, devUserByEmail } from "../src/lib/dev-login";
 
 const session = (user: Record<string, unknown> | null): Session =>
   ({ user, expires: "2099-01-01" }) as unknown as Session;
@@ -82,4 +82,11 @@ test("a dev session for an address outside the list is nothing, even while enabl
     assert.equal(verifiedEmailFrom(s), null);
     assert.equal(adminEmailFrom(s), null);
   });
+});
+
+test("there are two dev companies, each with its own HR person, landing in their own workspace", () => {
+  const company = DEV_USERS.filter((u) => u.role === "company");
+  assert.deepEqual(company.map((u) => u.company?.slug).sort(), [DEV_COMPANY.slug, DEV_COMPANY_TWO.slug].sort());
+  assert.notEqual(DEV_COMPANY.slug, DEV_COMPANY_TWO.slug);
+  for (const u of company) assert.equal(devLandingPath(u), `/org/${u.company!.slug}`, u.email);
 });
