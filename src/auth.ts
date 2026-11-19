@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import NextAuth, { CredentialsSignin, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import authConfig from "@/auth.config";
+import { devLoginEnabled, devUserByEmail } from "@/lib/dev-login";
 import { normaliseEmail } from "@/lib/email";
 
 /** The "email-code" sign-in was refused by the rate limiter, not a wrong code. */
@@ -31,6 +32,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return null;
       },
     }),
+    // Dev sign-in: a fixed list of fake people, so any worktree on any port can
+    // be authenticated without Google. Refuses unless devLoginEnabled(), which
+    // needs AUTH_DEV_LOGIN=true and a dev or preview environment (never Vercel
+    // production). Checked here, in the callbacks and in verifiedEmailFrom, so
+    // a token minted where it was on stops working where it is off.
+    Credentials({
+      id: "dev-login",
+      name: "Dev sign-in",
+      credentials: { email: {} },
+      async authorize(credentials) {
+        if (!devLoginEnabled()) return null;
+        const user = devUserByEmail(credentials.email);
+        if (!user) return null;
+        // Loaded on demand: the module is server-only and touches the database.
+        const { ensureDevUser } = await import("@/lib/dev-login-seed");
+        await ensureDevUser(user);
+        return { id: user.email, email: user.email, name: user.name };
+      },
+    }),
   ],
   callbacks: {
     ...authConfig.callbacks,
@@ -47,14 +67,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Said outright, not left to the default: a code proves the mailbox to
         // company pages only, never to admin.
         token.emailIsVerified = false;
+      } else if (params.account?.provider === "dev-login") {
+        // Only a person from DEV_USERS, only while enabled; authorize checked both.
+        token.signInMethod = devLoginEnabled() ? "dev" : undefined;
+        token.emailIsVerified = devLoginEnabled();
       } else if (params.profile) {
         token.signInMethod = "google";
       }
-      // A fresh Google sign-in gets its own session id and takes the learner's device slot.
-      if (params.profile) {
+      // A fresh Google (or dev) sign-in gets its own session id and takes the learner's device slot.
+      const fresh = params.profile || params.account?.provider === "dev-login";
+      if (fresh) {
         const sid = randomUUID();
         token.sid = sid;
-        const email = normaliseEmail(params.profile.email);
+        const email = normaliseEmail(params.profile ? params.profile.email : params.user?.email);
         // Loaded on demand: the device module is server-only and touches the database.
         const device = await import("@/lib/learner/device");
         if (email && !(await device.deviceBusy(email))) await device.claimDevice(email, sid);
@@ -66,7 +91,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.sid = typeof params.token.sid === "string" ? params.token.sid : undefined;
         const method = params.token.signInMethod;
-        session.user.signInMethod = method === "google" || method === "email-code" ? method : undefined;
+        session.user.signInMethod =
+          method === "google" || method === "email-code" || method === "dev" ? method : undefined;
       }
       return session;
     },
@@ -86,6 +112,12 @@ export function verifiedEmailFrom(session: Session | null): string | null {
   if (session.user.emailIsVerified !== true) return null;
   // A code sign-in never counts here, even if a flag were somehow set.
   if (session.user.signInMethod === "email-code") return null;
+  // A dev session counts only where the dev sign-in is on right now, and only
+  // for a person on the fixed list. A token carried to an environment where it
+  // is off, or one with any other address, is nothing.
+  if (session.user.signInMethod === "dev") {
+    if (!devLoginEnabled() || !devUserByEmail(session.user.email)) return null;
+  }
   return normaliseEmail(session.user.email);
 }
 
@@ -103,7 +135,8 @@ export async function currentEmail(): Promise<string | null> {
  */
 export function adminEmailFrom(session: Session | null): string | null {
   const method = session?.user?.signInMethod;
-  if (method !== undefined && method !== "google") return null;
+  // "dev" passes this test and is then held to devLoginEnabled() by verifiedEmailFrom.
+  if (method !== undefined && method !== "google" && method !== "dev") return null;
   return verifiedEmailFrom(session);
 }
 
