@@ -52,10 +52,19 @@
   overflow-x: clip;
 }
 
-.hk :where(h1, h2, h3, p, ol, ul) { margin: 0; }
-.hk :where(ol, ul) { padding: 0; list-style: none; }
-.hk :where(h1, h2, h3, .hk-count__value, .tl-tab) { font-family: var(--hk-font-heading); }
-.hk :where(a, button, [tabindex]):focus-visible { outline: 2px solid var(--hk-red); outline-offset: 4px; border-radius: 6px; }
+/* Inside the learner app the sidebar replaces the site nav: no bar above the hero from 1024px, the two-row phone bar below it. */
+.hk.hk--app { --hk-nav-h: 104px; }
+@media (min-width: 1024px) { .hk.hk--app { --hk-nav-h: 0px; } }
+.hk .hk-mine { scroll-margin-top: 24px; }
+.hk .hk-mine .card { box-shadow: none; }
+
+/* Resets in Tailwind's base layer, so utility classes (mt-1, list styles) on forms inside the page still win. */
+@layer base {
+  .hk :where(h1, h2, h3, p, ol, ul) { margin: 0; }
+  .hk :where(ol, ul) { padding: 0; list-style: none; }
+  .hk :where(h1, h2, h3, .hk-count__value, .tl-tab) { font-family: var(--hk-font-heading); }
+  .hk :where(a, button, [tabindex]):focus-visible { outline: 2px solid var(--hk-red); outline-offset: 4px; border-radius: 6px; }
+}
 
 .hk .hk-h2 { font-size: clamp(1.35rem, 2.6cqw, 2.5rem); font-weight: 800; letter-spacing: -.015em; color: var(--hk-ink); }
 .hk .hk-section { margin-inline: var(--hk-gutter); margin-top: clamp(40px, 5cqw, 82px); }

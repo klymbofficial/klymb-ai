@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { registerForHackathon, type FormResult } from "@/app/(learn)/learn/hackathon/actions";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/FormField";
+import { CollegeField } from "./CollegeField";
 
 /** Solo, a new team, or joining one by its code: one form, the person's details prefilled from their profile. */
 export function RegisterForm({ defaults, maxTeamSize }: { defaults: { name: string; phone: string; college: string; graduationYear: string }; maxTeamSize: number }) {
@@ -32,7 +33,7 @@ export function RegisterForm({ defaults, maxTeamSize }: { defaults: { name: stri
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField id="name" label="Full name" defaultValue={v?.name ?? defaults.name} autoComplete="name" error={e.name} />
         <TextField id="phone" label="Phone" type="tel" defaultValue={v?.phone ?? defaults.phone} autoComplete="tel" error={e.phone} />
-        <TextField id="college" label="College" defaultValue={v?.college ?? defaults.college} error={e.college} />
+        <CollegeField defaultValue={v?.college ?? defaults.college} error={e.college} />
         <TextField id="graduationYear" label="Graduation year" inputMode="numeric" defaultValue={v?.graduationYear ?? defaults.graduationYear} placeholder="2027" error={e.graduationYear} />
       </div>
 
