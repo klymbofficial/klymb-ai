@@ -35,10 +35,11 @@ const repTabs = [
   { href: "/sales", label: "Today", key: "today" },
   { href: "/sales/list", label: "My leads", key: "list" },
   { href: "/sales/board", label: "Board", key: "board" },
+  { href: "/sales/earnings", label: "Earnings", key: "earnings" },
 ] as const;
 
 /** The tabs an intern sees at /sales. */
-export function RepTabs({ current }: { current: "today" | "list" | "board" }) {
+export function RepTabs({ current }: { current: "today" | "list" | "board" | "earnings" }) {
   return (
     <nav aria-label="Sales" className="mb-6 flex gap-1 overflow-x-auto border-b border-line/25">
       {repTabs.map((t) => (

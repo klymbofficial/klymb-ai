@@ -329,6 +329,30 @@ export function webinarConfirmationEmail(p: { name: string; title: string; date:
   return { subject, html, text };
 }
 
+/** Sent when someone applies for the sales internship on /internship. */
+export function internshipApplicationEmail(p: { name: string; starts: string; months: number; pct: number; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "We got your application: Klymb.ai sales internship";
+  const line = `Thanks for applying to the Klymb.ai sales internship. We read every application and call the people we shortlist for a short chat. If you're shortlisted, we'll reach you on WhatsApp or email within a few days.`;
+  const text = [
+    `Hi ${p.name},`, "", line, "",
+    `Starts: ${p.starts}`, `Length: ${p.months} months`, `Pay: ${p.pct}% commission on every course sold through your personal link`, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: "Thanks for applying. Shortlisted applicants get a short call.",
+    eyebrow: "Sales internship",
+    title: "Application received.",
+    intro: esc(line),
+    sections: [
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("Starts", p.starts)}${row("Length", `${p.months} months`)}${row("Pay", `${p.pct}% commission on every sale`)}</table>`,
+      button(`${site}/internship`, "See the internship"),
+    ],
+  });
+  return { subject, html, text };
+}
+
 /** An announcement an owner posted for System Design learners, when they ticked "Also email". */
 export function sdAnnouncementEmail(p: { name: string; title: string; body: string; link: { url: string; label: string } | null; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

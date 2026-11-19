@@ -12,6 +12,7 @@ import { formatINR } from "@/lib/format";
 import { localEstimate, type LocalRate } from "@/lib/local-price";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
+import { keptIntern } from "./RememberIntern";
 import { metaTrack } from "@/lib/meta-pixel";
 import { openInBrowser } from "./OpenInBrowser";
 import { couponCodeProblem, withCoupon } from "@/lib/sd-coupons";
@@ -112,7 +113,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const discounted = price < offer.full;
 
   const fail = (message: string) => { setBusy(false); setError(message); };
-  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign, coupon: applied?.code ?? startCoupon?.code ?? null });
+  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign, coupon: applied?.code ?? startCoupon?.code ?? null, intern: keptIntern() });
   const [started, setStarted] = useState(false);
   const startForm = () => { if (!started) { setStarted(true); step("form_start"); } };
 
@@ -125,7 +126,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     const res = await fetch("/api/sd/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...details, campaign }),
+      body: JSON.stringify({ ...details, campaign, intern: keptIntern() }),
     }).catch(() => null);
     const order = await res?.json().catch(() => null);
     if (order?.enrolled) return router.push("/learn/system-design");

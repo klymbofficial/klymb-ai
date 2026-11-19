@@ -24,6 +24,7 @@ const links = [
 
 // Owners only: Sales holds every lead's number and notes.
 const salesLink = { href: "/admin/sales", label: "Sales" };
+const internLink = { href: "/admin/internship", label: "Internship" };
 const ownerLinks = [{ href: "/admin/announcements", label: "Announcements" }, { href: "/admin/coupons", label: "Coupons" }, { href: "/admin/admins", label: "Admins" }];
 
 /** `chat` is set only for the live-chat owner, with how many chats are waiting on a reply. */
@@ -31,7 +32,7 @@ const ownerLinks = [{ href: "/admin/announcements", label: "Announcements" }, { 
 export function AdminNav({ owner = false, sales = false, chat = null }: { owner?: boolean; sales?: boolean; chat?: { unread: number } | null }) {
   const pathname = usePathname();
   const chatLink = { href: "/admin/chat", label: chat?.unread ? `Live chat (${chat.unread})` : "Live chat" };
-  const base = owner ? [links[0], salesLink, ...links.slice(1), ...ownerLinks] : sales ? [links[0], salesLink, ...links.slice(1)] : links;
+  const base = owner ? [links[0], salesLink, internLink, ...links.slice(1), ...ownerLinks] : sales ? [links[0], salesLink, internLink, ...links.slice(1)] : links;
   return (
     <nav aria-label="Admin sections">
       <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:gap-0.5">
