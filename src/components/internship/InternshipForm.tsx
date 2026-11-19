@@ -75,7 +75,7 @@ export function InternshipForm() {
           Thanks, {name.split(" ")[0] || "there"}. We read every application and call the people we shortlist for a short chat, usually within a few days.
           {done.emailed && " We've emailed you a copy of the details."}
         </p>
-        <p className="mx-auto mt-4 max-w-sm text-sm text-muted">The internship starts on {INTERNSHIP.startsLabel}.</p>
+        <p className="mx-auto mt-4 max-w-sm text-sm text-muted">The BDE internship starts on {INTERNSHIP.startsLabel}.</p>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function InternshipForm() {
   return (
     <form noValidate onSubmit={submit} className="flex flex-col gap-5">
       <div>
-        <h2 className="display text-2xl sm:text-3xl">Apply for the internship</h2>
+        <h2 className="display text-2xl sm:text-3xl">Apply as a BDE Intern</h2>
         <p className="mt-1 text-sm text-muted">Takes about two minutes. Starts {INTERNSHIP.startsLabel}.</p>
       </div>
 

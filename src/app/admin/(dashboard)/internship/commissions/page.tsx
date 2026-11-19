@@ -41,7 +41,7 @@ export default async function InternCommissionsPage({ searchParams }: { searchPa
   return (
     <>
       <PageTitle
-        eyebrow="Sales internship"
+        eyebrow="BDE internship"
         title="Interns & commissions"
         intro={`${INTERNSHIP.commissionPct}% of what each buyer pays through an intern's link, rounded to the rupee, by the month of the order. Refunds don't reduce it. Pay after the month ends, then mark it paid here.`}
         actions={<ExportCsv rows={csv} filename={`klymb-intern-commissions-${month}`} />}

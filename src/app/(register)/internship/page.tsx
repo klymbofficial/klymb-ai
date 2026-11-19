@@ -7,8 +7,8 @@ import { CookieBanner } from "@/components/legal/CookieBanner";
 import { InternshipForm } from "@/components/internship/InternshipForm";
 import { INTERNSHIP } from "@/lib/internship";
 
-const title = "Sales internship at Klymb.ai";
-const description = `A ${INTERNSHIP.months}-month remote sales internship starting ${INTERNSHIP.startsLabel}. Earn ${INTERNSHIP.commissionPct}% of every course you sell through your own link. For students and working professionals.`;
+const title = "BDE Intern (Business Development Executive) at Klymb.ai";
+const description = `A ${INTERNSHIP.months}-month remote BDE (Business Development Executive) internship starting ${INTERNSHIP.startsLabel}. Earn ${INTERNSHIP.commissionPct}% of every course you sell through your own link. For students and working professionals.`;
 
 export const metadata: Metadata = {
   title, description,
@@ -41,11 +41,11 @@ export default function InternshipPage() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/85 via-red-muted/92 to-red-muted-deep/97" />
           <div className="mx-auto w-full max-w-xl">
             <Link href="/" className="display text-lg text-white no-underline">KLYMB<span className="text-red-soft">.AI</span></Link>
-            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">Sales internship · commission based</p>
+            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">BDE Intern · Business Development Executive</p>
             <h1 className="display display-soft mt-2 text-[clamp(1.9rem,6vw,3rem)] leading-[1.05]">
               Sell courses that get people hired. <span className="text-red-soft">Earn {INTERNSHIP.commissionPct}% of every sale.</span>
             </h1>
-            <ul className="mt-5 flex flex-wrap gap-2" aria-label="The internship at a glance">
+            <ul className="mt-5 flex flex-wrap gap-2" aria-label="The role at a glance">
               {FACTS.map(({ Icon, text }) => (
                 <li key={text} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15">
                   <Icon size={14} aria-hidden="true" className="text-red-soft" />{text}
@@ -74,7 +74,7 @@ export default function InternshipPage() {
           </div>
         </section>
 
-        <section id="apply" className="relative -mt-8 scroll-mt-4 rounded-t-3xl bg-card px-5 pb-10 pt-7 sm:px-10 lg:sticky lg:top-0 lg:mt-0 lg:flex lg:max-h-dvh lg:min-h-dvh lg:items-center lg:self-start lg:overflow-y-auto lg:rounded-none lg:px-16 lg:py-10">
+        <section id="apply" className="relative -mt-8 scroll-mt-4 rounded-t-3xl bg-card px-5 pb-10 pt-7 sm:px-10 lg:mt-0 lg:rounded-none lg:px-16 lg:py-14">
           <div className="mx-auto w-full max-w-lg">
             <InternshipForm />
             <p className="mt-6 text-xs leading-relaxed text-muted">
