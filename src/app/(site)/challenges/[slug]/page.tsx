@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Appear } from "@/components/motion/Appear";
 import { ButtonLink } from "@/components/ui/Button";
 import { ClaudeChallenge } from "@/components/challenge/ClaudeChallenge";
-import { libraryCourses } from "@/data/course-cards";
+import { isListed, libraryCourses } from "@/data/course-cards";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getCurriculum } from "@/data/curricula";
 import { trackImages } from "@/data/track-images";
@@ -33,6 +33,8 @@ export default async function ChallengePage({ params }: { params: Promise<{ slug
   const c = getTrack((await params).slug);
   const course = c?.kind === "challenge" ? getCurriculum(c.slug) : null;
   if (!c || !course) notFound();
+  // Not listed on the live site: the course list instead.
+  if (!isListed(c.slug)) redirect("/courses");
   const start = `/register?track=${c.slug}`;
 
   // The Claude challenge has its own page, from the Claude Design file "Klymb Claude Challenge".

@@ -5,6 +5,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Spatial404 } from "@/components/motion/Spatial404";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
 import { tracks } from "@/data/tracks";
+import { listed } from "@/data/course-cards";
 
 export const metadata: Metadata = { title: "Page not found", robots: { index: false, follow: true } };
 
@@ -27,7 +28,7 @@ export default function NotFound() {
         <ButtonLink href="/" variant="secondary" soft className="border-line hover:bg-ink">Home</ButtonLink>
       </div>
       <ul className="mt-10 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-        {tracks.map((t) => (
+        {listed(tracks).map((t) => (
           <li key={t.slug}><Link href={`/tracks/${t.slug}`} className="font-semibold underline underline-offset-4 hover:text-red-deep">{t.name}</Link></li>
         ))}
         <li><Link href="/contact" className="font-semibold underline underline-offset-4 hover:text-red-deep">Contact</Link></li>

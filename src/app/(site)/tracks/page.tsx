@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { listed } from "@/data/course-cards";
 import Link from "next/link";
 import { Appear } from "@/components/motion/Appear";
 import { EndingTitles } from "@/components/track/EndingTitles";
@@ -9,6 +11,8 @@ import { tracks } from "@/data/tracks";
 export const metadata: Metadata = { title: "Career Tracks" };
 
 export default function TracksPage() {
+  // On the live site no career track is listed yet, so the page goes to the course list. Local dev lists them all.
+  if (listed(tracks).length === 0) redirect("/courses");
   return (
     <>
       <section aria-labelledby="tracks-title" className="mx-auto max-w-7xl px-4 pb-6 sm:px-6">

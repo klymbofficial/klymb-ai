@@ -3,6 +3,7 @@
 import { after } from "next/server";
 import { auth, verifiedEmailFrom } from "@/auth";
 import { getTrack, isOneClickStart } from "@/data/tracks";
+import { isListed } from "@/data/course-cards";
 import { db } from "@/lib/db/client";
 import { todayInIndia } from "@/lib/learn";
 import { enrolLearner } from "@/lib/learner/enrolment";
@@ -43,7 +44,7 @@ export type StartResult =
 export async function startChallenge(track: string): Promise<StartResult> {
   // Only a challenge that is open and built starts this way. The browser names which one and nothing else.
   const found = typeof track === "string" ? getTrack(track) : undefined;
-  if (!found || !isOneClickStart(found)) {
+  if (!found || !isOneClickStart(found) || !isListed(found.slug)) {
     return { ok: false, kind: "unknown", message: "That challenge isn't open for sign-up." };
   }
 

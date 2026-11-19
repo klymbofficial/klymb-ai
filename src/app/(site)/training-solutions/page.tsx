@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/catalog/StatusBadge";
 import { Appear } from "@/components/motion/Appear";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { availableIn, contactMailto, industries, programsForIndustry, programsForRole, roles, type Program } from "@/data/catalog";
+import { listed } from "@/data/course-cards";
 
 export const metadata: Metadata = {
   title: "Training solutions for teams",
@@ -136,7 +137,7 @@ export default function TrainingSolutionsPage() {
         <h2 id="ind-title" className="display mt-2 text-[clamp(1.5rem,3vw,2.1rem)]">Which industry is your team in?</h2>
         <ul className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {industries.map((i) => (
-            <TeamCard key={i.slug} title={i.name} href={`/courses/industries/${i.slug}`} list={programsForIndustry(i.slug)} subject={`Team training for ${i.name}`} />
+            <TeamCard key={i.slug} title={i.name} href={`/courses/industries/${i.slug}`} list={listed(programsForIndustry(i.slug))} subject={`Team training for ${i.name}`} />
           ))}
         </ul>
       </section>
@@ -146,7 +147,7 @@ export default function TrainingSolutionsPage() {
         <h2 id="role-title" className="display mt-2 text-[clamp(1.5rem,3vw,2.1rem)]">What job does your team do?</h2>
         <ul className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {roles.map((r) => (
-            <TeamCard key={r.slug} title={r.name} href={`/courses/roles/${r.slug}`} list={programsForRole(r.slug)} subject={`Team training for ${r.name}`} />
+            <TeamCard key={r.slug} title={r.name} href={`/courses/roles/${r.slug}`} list={listed(programsForRole(r.slug))} subject={`Team training for ${r.name}`} />
           ))}
         </ul>
       </section>

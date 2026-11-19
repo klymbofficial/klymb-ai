@@ -186,3 +186,6 @@ export const isListed = (slug: string) => process.env.NODE_ENV === "development"
 
 /** The library's cards, as this build lists them. */
 export const listedCourses = libraryCourses.filter((c) => isListed(c.slug));
+
+/** Any list of courses or tracks (each with a slug), kept to the ones this build lists, in their order. */
+export const listed = <T extends { slug: string }>(items: readonly T[]): T[] => items.filter((i) => isListed(i.slug));

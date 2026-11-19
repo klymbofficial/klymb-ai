@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { experienceOptions, roleOptions } from "@/data/program";
 import { contact, enrolment } from "@/data/config";
 import { getTrack, tracks } from "@/data/tracks";
+import { isListed, listed } from "@/data/course-cards";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/FormField";
 import { SelectField } from "@/components/ui/Select";
@@ -77,7 +78,8 @@ export function RegistrationForm({
   // Invite-only tracks are offered only to someone who arrived on their link.
   const invited = defaultTrack ? getTrack(defaultTrack) : undefined;
   // A challenge, like an invite-only track, is offered when they came from its page.
-  const trackOptions = invited && !tracks.includes(invited) ? [...tracks, invited] : tracks;
+  const offered = listed(tracks);
+  const trackOptions = invited && isListed(invited.slug) && !offered.includes(invited) ? [...offered, invited] : offered;
   const isChallenge = chosenTrack?.kind === "challenge";
   const total = isChallenge ? 60 : 30;
   const busy = pending;

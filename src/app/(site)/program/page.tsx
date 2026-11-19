@@ -1,5 +1,6 @@
 import { HIDE_MONEY } from "@/lib/site-status";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Inclusions } from "@/components/home/Inclusions";
 import { Pricing } from "@/components/home/Pricing";
 import { ButtonLink } from "@/components/ui/Button";
@@ -8,10 +9,13 @@ import { ProgramTimeline } from "@/components/program/ProgramTimeline";
 import { DayExplorer } from "@/components/program/DayExplorer";
 import { trackImages } from "@/data/track-images";
 import { tracks } from "@/data/tracks";
+import { listed } from "@/data/course-cards";
 
 export const metadata: Metadata = { title: "How It Works" };
 
 export default function ProgramPage() {
+  // The 30-day tracks are explained here; none is listed on the live site yet, so go to the course list.
+  if (listed(tracks).length === 0) redirect("/courses");
   // Only what the explorer draws crosses to the client, not whole tracks.
   const explorer = tracks.map((t) => ({
     slug: t.slug,
