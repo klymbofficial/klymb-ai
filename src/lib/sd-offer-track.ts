@@ -23,14 +23,14 @@ function anon() {
 }
 
 /** `coupon` is the code they came with or applied, so admin can see what each shared link led to. */
-export function trackOffer(step: OfferStep, props: { inApp: boolean; campaign: string | null; coupon?: string | null }) {
+export function trackOffer(step: OfferStep, props: { inApp: boolean; campaign: string | null; coupon?: string | null; intern?: string | null }) {
   try {
     const id = anon();
     if (!id || readConsent()?.choice === "necessary") return;
     const body = JSON.stringify({
       anon: id,
       device: window.innerWidth < 768 ? "phone" : "desktop",
-      events: [{ e: "offer", step, path: window.location.pathname, props: { inApp: props.inApp, ...(props.campaign ? { campaign: props.campaign } : {}), ...(props.coupon ? { coupon: props.coupon } : {}) } }],
+      events: [{ e: "offer", step, path: window.location.pathname, props: { inApp: props.inApp, ...(props.campaign ? { campaign: props.campaign } : {}), ...(props.coupon ? { coupon: props.coupon } : {}), ...(props.intern ? { intern: props.intern } : {}) } }],
     });
     fetch("/api/sd/events", { method: "POST", headers: { "content-type": "application/json" }, body, keepalive: true }).catch(() => {});
   } catch { /* tracking never breaks the page */ }

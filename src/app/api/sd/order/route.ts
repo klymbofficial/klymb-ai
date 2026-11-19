@@ -5,6 +5,8 @@ import { todayInIndia } from "@/lib/learn";
 import { createOrder, razorpayKeys } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { couponOf, couponProblem, findCoupon, withCoupon } from "@/lib/sd-coupons";
+import { findInternCode } from "@/lib/intern-codes";
+import { internCodeOf } from "@/lib/internship";
 import { referrerOf } from "@/lib/referrals";
 import { SD_COURSE, campaignOf, claimProblems, linkedInProblem, phoneOf, refOf, referralProblem, sdPriceFor, sdPriceNow, type SdRole } from "@/lib/sd-offer";
 import { LIMITS, clamp } from "@/lib/validation";
@@ -24,7 +26,7 @@ export async function POST(req: Request) {
   const email = await currentEmail();
   if (!email) return NextResponse.json({ error: "Please sign in with Google again." }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown; coupon?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown; coupon?: unknown; intern?: unknown } | null;
   const name = clamp(body?.name, LIMITS.name);
   const dial = String(body?.dial ?? "91");
   const phone = String(body?.phone ?? "");
@@ -91,10 +93,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 500 });
   }
 
+  // The intern whose link they came through, if it's a live code and not their own. Never blocks the purchase.
+  const internTyped = internCodeOf(body?.intern);
+  const internHit = internTyped ? await findInternCode(sql, internTyped).catch(() => null) : null;
+  const internCode = internHit?.data && internHit.data.email !== email ? internHit.data.code : null;
+
   const order = await createOrder(keys, {
     amount: withCoupon(sdPriceFor(lead?.locked_price, now), couponPrice) * 100,
     receipt: `klymb-sd-${Date.now().toString(36)}`,
-    notes: couponCode ? { email, course: SD_COURSE, coupon: couponCode } : { email, course: SD_COURSE },
+    notes: { email, course: SD_COURSE, ...(couponCode ? { coupon: couponCode } : {}), ...(internCode ? { intern: internCode } : {}) },
   });
   if (!order.ok) {
     console.error("razorpay create order failed:", order.message);
@@ -113,6 +120,10 @@ export async function POST(req: Request) {
   if (error) {
     console.error("payments insert failed:", error.code, error.message);
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 500 });
+  }
+  if (internCode) {
+    const credit = await sql.run`update course.payments set intern_code = ${internCode} where razorpay_order_id = ${order.id}`;
+    if (credit.error) console.error("intern credit failed:", credit.error.code, credit.error.message);
   }
 
   return NextResponse.json({

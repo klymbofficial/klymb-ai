@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { ExportCsv } from "@/components/admin/ExportCsv";
 import { InternActions } from "@/components/admin/InternActions";
+import { InternTabs } from "@/components/admin/InternTabs";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { requireSalesAdmin } from "@/lib/admin/auth";
@@ -45,6 +46,7 @@ export default async function AdminInternshipPage({ searchParams }: { searchPara
         intro={`Starts ${INTERNSHIP.startsLabel}: ${INTERNSHIP.months} months, ${INTERNSHIP.commissionPct}% commission. Shortlist, call, then accept or reject. Accepting someone also adds them as a sales rep.`}
         actions={<div className="flex items-center gap-2"><Link href="/internship" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Open page</Link><ExportCsv rows={csv} filename="klymb-internship" /></div>}
       />
+      <InternTabs current="applications" />
       {rows === null ? (
         <EmptyState title="Can't read applications" body="The internship_applications table isn't there yet. Run db/migrations/0044_internship_applications.sql in the Neon SQL editor." />
       ) : (

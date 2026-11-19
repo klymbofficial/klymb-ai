@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { saveInternNote, setInternStatus } from "@/app/admin/internship-actions";
+import { makeInternLink, recordPayout, saveInternNote, setInternStatus } from "@/app/admin/internship-actions";
 import type { InternStatus } from "@/lib/internship";
 
 const NEXT: { key: InternStatus; label: string; tone: string }[] = [
@@ -45,5 +45,42 @@ export function InternActions({ id, status, note }: { id: string; status: Intern
       />
       {msg && <span role="status" className="text-[11px] text-muted">{msg}</span>}
     </div>
+  );
+}
+
+/** "Mark paid": what was paid to one intern for one month. */
+export function PayoutForm({ email, month, suggested }: { email: string; month: string; suggested: number }) {
+  const router = useRouter();
+  const [rupees, setRupees] = useState(suggested > 0 ? String(suggested / 100) : "");
+  const [method, setMethod] = useState("upi");
+  const [reference, setReference] = useState("");
+  const [msg, setMsg] = useState("");
+  const [pending, start] = useTransition();
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); start(async () => { const r = await recordPayout({ email, month, rupees, method, reference }); setMsg(r.ok ? "Saved." : r.message); if (r.ok) { setReference(""); router.refresh(); } }); }}
+      className="flex flex-wrap items-center gap-1.5"
+    >
+      <input aria-label="Amount paid in rupees" inputMode="decimal" value={rupees} onChange={(e) => setRupees(e.target.value)} placeholder="₹" className="w-20 border border-line/50 bg-white px-2 py-1 text-xs" />
+      <select aria-label="How it was paid" value={method} onChange={(e) => setMethod(e.target.value)} className="border border-line/50 bg-white px-1.5 py-1 text-xs">
+        <option value="upi">UPI</option><option value="bank">Bank</option><option value="other">Other</option>
+      </select>
+      <input aria-label="Reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="UTR / ref" maxLength={120} className="w-24 border border-line/50 bg-white px-2 py-1 text-xs" />
+      <button type="submit" disabled={pending || !rupees} className="bg-ink px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-paper disabled:opacity-40">Mark paid</button>
+      {msg && <span role="status" className="w-full text-[11px] text-muted">{msg}</span>}
+    </form>
+  );
+}
+
+/** For a rep who has no personal link yet. */
+export function MakeLink({ email, name }: { email: string; name: string }) {
+  const router = useRouter();
+  const [msg, setMsg] = useState("");
+  const [pending, start] = useTransition();
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button type="button" disabled={pending} onClick={() => start(async () => { const r = await makeInternLink(email, name); setMsg(r.ok ? `Link made: ${r.code}` : r.message); router.refresh(); })} className="border border-line/50 px-2 py-1 text-[11px] font-bold hover:bg-surface disabled:opacity-50">Make link</button>
+      {msg && <span role="status" className="text-[11px] text-muted">{msg}</span>}
+    </span>
   );
 }

@@ -35,7 +35,9 @@ export type AuditAction =
   | "hackathon.results"
   | "chat.reply"
   | "chat.status"
-  | "internship.status";
+  | "internship.status"
+  | "internship.payout"
+  | "internship.code";
 
 /**
  * Records an admin action. Never throws and never blocks the action itself:

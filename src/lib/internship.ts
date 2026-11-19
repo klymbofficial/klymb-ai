@@ -80,3 +80,57 @@ export function internshipApplicationOf(body: unknown): { ok: true; row: Interns
     },
   };
 }
+
+// ── Personal links and commission ───────────────────────────
+
+/** An intern's code as typed or linked: 4 to 20 letters and digits, upper case. */
+export function internCodeOf(value: unknown) {
+  const code = typeof value === "string" ? value.trim().toUpperCase() : "";
+  return /^[A-Z0-9]{4,20}$/.test(code) ? code : null;
+}
+
+/** A new code from their first name and two digits, e.g. ROHAN27. */
+export function makeInternCode(name: string, random: () => number = Math.random) {
+  const first = name.normalize("NFKD").replace(/[^A-Za-z ]/g, "").trim().split(/\s+/)[0]?.toUpperCase().slice(0, 10) ?? "";
+  const base = first.length >= 2 ? first : "KLYMB";
+  return `${base}${String(Math.floor(random() * 90) + 10)}`;
+}
+
+/** The share link for a code. */
+export const internLink = (siteUrl: string, code: string) => `${siteUrl}/i/${code}`;
+
+/** Commission in paise on an order of `amountPaise`: 20% of what the buyer paid, rounded to the nearest rupee (₹499 → ₹100). */
+export const commissionOf = (amountPaise: number) => Math.round((amountPaise * INTERNSHIP.commissionPct) / 100 / 100) * 100;
+
+/** "2026-12": the India-time month an order falls in. */
+export function monthOf(iso: string | Date) {
+  const d = new Date(new Date(iso).getTime() + 5.5 * 3600_000);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/** "December 2026" for "2026-12". */
+export const monthLabel = (month: string) => new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-IN", { month: "long", year: "numeric", timeZone: "UTC" });
+
+/** How long a link's code is remembered in the buyer's browser. */
+export const INTERN_KEEP_DAYS = 30;
+
+export interface CreditedSale { intern_code: string; amount: number; status: string; created_at: string; email: string }
+export interface Payout { email: string; month: string; amount: number; paid_at: string; method: string; reference: string | null }
+
+/** One intern's numbers: sales and commission for `month`, and everything earned and paid so far. Amounts in paise. */
+export function internTotals(sales: CreditedSale[], payouts: Payout[], month: string) {
+  const counted = sales.filter((s) => s.status === "paid" || s.status === "refunded");
+  const inMonth = counted.filter((s) => monthOf(s.created_at) === month);
+  const earned = counted.reduce((t, s) => t + commissionOf(s.amount), 0);
+  const paid = payouts.reduce((t, p) => t + p.amount, 0);
+  return {
+    monthSales: inMonth.length,
+    monthRevenue: inMonth.reduce((t, s) => t + s.amount, 0),
+    monthCommission: inMonth.reduce((t, s) => t + commissionOf(s.amount), 0),
+    monthPaid: payouts.filter((p) => p.month.slice(0, 7) === month).reduce((t, p) => t + p.amount, 0),
+    sales: counted.length,
+    earned,
+    paid,
+    owed: Math.max(0, earned - paid),
+  };
+}
