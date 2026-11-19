@@ -36,7 +36,7 @@ export default function InternshipPage() {
   return (
     <>
       <div className="grid min-h-dvh grid-cols-[minmax(0,1fr)] lg:grid-cols-[1fr_1fr]">
-        <section className="relative isolate overflow-hidden bg-red-muted px-5 pb-14 pt-6 text-white sm:px-10 lg:flex lg:flex-col lg:justify-center lg:px-14 lg:py-12">
+        <section className="relative isolate overflow-hidden bg-red-muted px-5 pb-14 pt-6 text-white sm:px-10 lg:px-14 lg:pb-14 lg:pt-12">
           <Image src={presenting} alt="" aria-hidden="true" fill priority placeholder="blur" sizes="(min-width: 1024px) 50vw, 100vw" className="pointer-events-none -z-20 object-cover" />
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/85 via-red-muted/92 to-red-muted-deep/97" />
           <div className="mx-auto w-full max-w-xl">

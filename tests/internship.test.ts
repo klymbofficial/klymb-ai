@@ -25,8 +25,9 @@ test("a full application becomes a clean row", () => {
 });
 
 test("name, email, phone, role, time and a reason are needed; a bad LinkedIn link is caught", () => {
-  const missing = internshipProblems({ name: "", email: "x", dial: "91", phone: "12", role: "", hours: "", why: "short", linkedin: "not a link" });
-  assert.equal(missing.length, 7);
+  const missing = internshipProblems({ name: "", email: "x", dial: "91", phone: "12", city: " ", role: "", hours: "", why: "short", linkedin: "not a link" });
+  assert.equal(missing.length, 8);
+  assert.ok(missing.includes("your city"));
   const r = internshipApplicationOf({ ...good, hours: "lots" });
   assert.ok(!r.ok);
 });

@@ -38,11 +38,12 @@ export interface InternshipForm {
 }
 
 /** What is still missing, as the words for "Add …". Empty when the form can be sent. */
-export function internshipProblems(f: Pick<InternshipForm, "name" | "email" | "dial" | "phone" | "role" | "hours" | "why" | "linkedin">) {
+export function internshipProblems(f: Pick<InternshipForm, "name" | "email" | "dial" | "phone" | "city" | "role" | "hours" | "why" | "linkedin">) {
   const missing: string[] = [];
   if (f.name.trim().length < 2) missing.push("your name");
   if (!normaliseEmail(f.email)) missing.push("a valid email");
   if (!phoneOf(f.dial || INDIA_DIAL, f.phone)) missing.push(phoneProblem(f.dial || INDIA_DIAL));
+  if (f.city.trim().length < 2) missing.push("your city");
   if (f.role !== "student" && f.role !== "working") missing.push("student or working professional");
   if (!HOURS.some((h) => h.key === f.hours)) missing.push("how much time you can give");
   if (f.why.trim().length < INTERNSHIP_LIMITS.whyMin) missing.push("a few lines on why you want this");
@@ -54,7 +55,7 @@ const line = (v: unknown, max: number) => (typeof v === "string" ? v.trim().repl
 const para = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 export interface InternshipRow {
-  name: string; email: string; phone: string; city: string | null; role: SdRole; org: string | null;
+  name: string; email: string; phone: string; city: string; role: SdRole; org: string | null;
   linkedin: string | null; instagram: string | null; hours: Hours; sales_experience: string | null; why: string;
 }
 
@@ -63,6 +64,7 @@ export function internshipApplicationOf(body: unknown): { ok: true; row: Interns
   const b = (body ?? {}) as Record<string, unknown>;
   const f = {
     name: line(b.name, INTERNSHIP_LIMITS.name), email: String(b.email ?? ""), dial: String(b.dial ?? INDIA_DIAL), phone: String(b.phone ?? ""),
+    city: line(b.city, INTERNSHIP_LIMITS.city),
     role: (b.role === "student" || b.role === "working" ? b.role : "") as SdRole | "",
     hours: (HOURS.some((h) => h.key === b.hours) ? b.hours : "") as Hours | "",
     why: para(b.why, INTERNSHIP_LIMITS.why), linkedin: line(b.linkedin, INTERNSHIP_LIMITS.linkedin),
@@ -74,7 +76,7 @@ export function internshipApplicationOf(body: unknown): { ok: true; row: Interns
     ok: true,
     row: {
       name: f.name, email: normaliseEmail(f.email)!, phone: phoneOf(f.dial, f.phone)!, role: f.role as SdRole, hours: f.hours as Hours, why: f.why,
-      city: line(b.city, INTERNSHIP_LIMITS.city) || null, org: line(b.org, INTERNSHIP_LIMITS.org) || null,
+      city: f.city, org: line(b.org, INTERNSHIP_LIMITS.org) || null,
       linkedin: f.linkedin || null, instagram: instagram || null,
       sales_experience: para(b.experience, INTERNSHIP_LIMITS.experience) || null,
     },

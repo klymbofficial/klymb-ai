@@ -62,7 +62,7 @@ export function InternshipForm() {
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ emailed: boolean } | null>(null);
 
-  const missing = internshipProblems({ name, email, dial, phone, role, hours, why, linkedin });
+  const missing = internshipProblems({ name, email, dial, phone, city, role, hours, why, linkedin });
   const wrong = (what: string) => tried && missing.includes(what);
   const india = dial === INDIA_DIAL;
 
@@ -133,8 +133,8 @@ export function InternshipForm() {
       </div>
 
       <div>
-        <label htmlFor="i-city" className="text-[13px] font-bold">City {optional}</label>
-        <input id="i-city" value={city} onChange={(e) => setCity(e.target.value)} autoComplete="address-level2" placeholder="Delhi, Pune, Bengaluru…" maxLength={INTERNSHIP_LIMITS.city} className={clsx(input, ok)} />
+        <label htmlFor="i-city" className="text-[13px] font-bold">City</label>
+        <input id="i-city" value={city} onChange={(e) => setCity(e.target.value)} autoComplete="address-level2" placeholder="Delhi, Pune, Bengaluru…" maxLength={INTERNSHIP_LIMITS.city} aria-invalid={wrong("your city")} className={clsx(input, wrong("your city") ? bad : ok)} />
       </div>
 
       <Pills label="You are" value={role} options={ROLES} onPick={setRole} invalid={tried && !role} />
