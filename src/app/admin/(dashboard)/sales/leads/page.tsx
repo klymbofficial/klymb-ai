@@ -9,9 +9,9 @@ import { AssignForm, SelectAll } from "@/components/admin/sales/TeamForms";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
-import { CHANNELS, formatPhone, istToday, labelOf, SOURCES, STAGES } from "@/lib/sales";
+import { CHANNELS, formatPhone, istToday, labelOf, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
 
-type Search = { stage?: string; source?: string; owner?: string; due?: string; q?: string; add?: string };
+type Search = { stage?: string; source?: string; owner?: string; by?: string; due?: string; q?: string; add?: string };
 
 const shortDate = (iso: string) =>
   new Date(iso.length === 10 ? `${iso}T00:00:00+05:30` : iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
@@ -25,11 +25,12 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
   // "Due today" is your own list unless an owner is picked.
   const owner = sp.owner ?? (due ? admin.email : "");
   const [leads, owners] = await Promise.all([
-    getLeads({ stage: sp.stage, source: sp.source, owner: owner || undefined, due, q: sp.q }),
+    getLeads({ stage: sp.stage, source: sp.source, owner: owner || undefined, by: sp.by, due, q: sp.q }),
     getOwners(),
   ]);
   const today = istToday();
-  const filtered = Boolean(sp.stage || sp.source || sp.owner || sp.q);
+  const filtered = Boolean(sp.stage || sp.source || sp.owner || sp.by || sp.q);
+  const who = (email: string) => email === WHATSAPP_BY ? "WhatsApp dashboard" : owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
   const ownerName = (email: string | null) => (email ? owners.find((o) => o.email === email)?.name ?? email.split("@")[0] : "—");
 
   return (
@@ -65,9 +66,14 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
           {SOURCES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
         </AutoSelect>
         <AutoSelect name="owner" defaultValue={owner} aria-label="Owner" className={`${input} min-w-0 flex-1 sm:flex-none`}>
-          <option value="">Everyone</option>
+          <option value="">Any owner</option>
           <option value="none">Unassigned</option>
-          {owners.map((o) => <option key={o.email} value={o.email}>{o.name ?? o.email}{o.rep ? " (intern)" : ""}</option>)}
+          {owners.map((o) => <option key={o.email} value={o.email}>Owner: {o.name ?? o.email}{o.rep ? " (intern)" : ""}</option>)}
+        </AutoSelect>
+        <AutoSelect name="by" defaultValue={sp.by ?? ""} aria-label="Reached out" className={`${input} min-w-0 flex-1 sm:flex-none`}>
+          <option value="">Contacted or not</option>
+          <option value="none">Not contacted yet</option>
+          {owners.map((o) => <option key={o.email} value={o.email}>Contacted by {o.name ?? o.email}</option>)}
         </AutoSelect>
         <noscript><button type="submit" className="border border-ink px-3 py-2 text-xs font-bold uppercase">Filter</button></noscript>
         {filtered && <Link href={due ? "/admin/sales/leads?due=1" : "/admin/sales/leads"} className="text-xs font-bold underline underline-offset-4">Clear filters</Link>}
@@ -104,7 +110,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
                     <td className="px-4 py-3"><StageBadge stage={l.stage} label={labelOf(STAGES, l.stage)} />{l.status_note && <span className="mt-1 block max-w-48 text-xs italic text-muted">{l.status_note}</span>}</td>
                     <td className="px-4 py-3 text-xs">{labelOf(SOURCES, l.source)}{l.source_detail && <span className="block text-muted">{l.source_detail}</span>}</td>
                     <td className="px-4 py-3 text-xs nums">
-                      {l.last_touch_at ? <>{shortDate(l.last_touch_at)} · {labelOf(CHANNELS, l.last_channel ?? "")}<span className="block text-muted">{l.touches} touch{l.touches === 1 ? "" : "es"}{l.replied ? ", replied" : ""}</span></> : <span className="text-muted">Not contacted yet</span>}
+                      {l.last_touch_at ? <>{shortDate(l.last_touch_at)} · {labelOf(CHANNELS, l.last_channel ?? "")}{l.last_by && <span className="block font-semibold">by {who(l.last_by)}</span>}<span className="block text-muted">{l.touches} touch{l.touches === 1 ? "" : "es"}{l.replied ? ", replied" : ""}</span></> : <span className="text-muted">Not contacted yet</span>}
                     </td>
                     <td className="px-4 py-3 text-xs nums"><FollowUp date={l.next_follow_up} today={today} /></td>
                     <td className="px-4 py-3 text-xs">{ownerName(l.owner_email)}</td>
@@ -130,6 +136,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
                     <FollowUp date={l.next_follow_up} today={today} />
                     <span className="text-muted">{labelOf(SOURCES, l.source)}</span>
                     <span className="text-muted">{ownerName(l.owner_email)}</span>
+                    <span className={l.last_by ? "font-semibold" : "text-muted"}>{l.last_by ? `Contacted by ${who(l.last_by)}` : "Not contacted yet"}</span>
                     {l.paid && <span className="font-extrabold text-emerald-800">PAID</span>}
                   </p>
                 </div>

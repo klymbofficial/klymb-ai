@@ -34,6 +34,8 @@ export interface Lead {
   touches: number;
   last_touch_at: string | null;
   last_channel: Channel | null;
+  /** Who on the team last reached out (not a message they sent us). */
+  last_by: string | null;
   replied: boolean;
   paid: boolean;
 }
@@ -58,6 +60,8 @@ export interface LeadFilter {
   owner?: string;
   due?: boolean;
   q?: string;
+  /** "none": nobody has reached out yet; an email: that person has reached out at least once. */
+  by?: string;
 }
 
 export async function getOwners(): Promise<Owner[]> {
@@ -105,6 +109,7 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
   const due = f.due ? istToday() : null;
   const q = f.q?.trim() ? `%${f.q.trim().toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
   const qDigits = f.q?.replace(/\D/g, "") || null;
+  const by = f.by === "none" ? "none" : f.by?.trim().toLowerCase() || null;
 
   const { data, error } = await sql.rows<Lead>`
     with ids as (
@@ -124,19 +129,24 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
     )
     select l.id, l.created_at, l.name, l.phone, l.email, l.kind, l.source, l.source_detail, l.org,
            l.stage, l.stage_changed_at, l.owner_email, l.next_follow_up::text as next_follow_up, l.notes, l.status_note,
-           coalesce(t.n, 0)::int as touches, t.last_at as last_touch_at, t.last_channel,
+           coalesce(t.n, 0)::int as touches, t.last_at as last_touch_at, t.last_channel, t.last_by,
            coalesce(t.replied, false) as replied,
            (paid.id is not null) as paid
       from course.sales_leads l
       left join lateral (
         select count(*) filter (where not inbound) as n, max(created_at) as last_at, bool_or(replied) as replied,
-               (array_agg(channel order by created_at desc))[1] as last_channel
+               (array_agg(channel order by created_at desc))[1] as last_channel,
+               (array_agg(by_email order by created_at desc) filter (where not inbound))[1] as last_by,
+               array_agg(distinct by_email) filter (where not inbound) as reached_by
           from course.sales_touches where lead_id = l.id
       ) t on true
       left join paid on paid.id = l.id
      where (${stage}::text is null or l.stage = ${stage})
        and (${source}::text is null or l.source = ${source})
        and (${owner}::text is null or coalesce(l.owner_email, '') = ${owner})
+       and (${by}::text is null
+            or (${by} = 'none' and coalesce(t.n, 0) = 0)
+            or ${by} = any(coalesce(t.reached_by, '{}'::text[])))
        and (${due}::date is null or (l.next_follow_up <= ${due}::date and l.stage not in ('signed', 'rejected')))
        and (${q}::text is null
             or lower(l.name) like ${q} or l.email like ${q} or lower(coalesce(l.org, '')) like ${q}
@@ -178,6 +188,7 @@ async function getLeadsByIds(ids: string[]): Promise<Lead[]> {
            (select count(*)::int from course.sales_touches t where t.lead_id = l.id and not t.inbound) as touches,
            (select max(created_at) from course.sales_touches t where t.lead_id = l.id) as last_touch_at,
            (select channel from course.sales_touches t where t.lead_id = l.id order by created_at desc limit 1) as last_channel,
+           (select by_email from course.sales_touches t where t.lead_id = l.id and not t.inbound order by created_at desc limit 1) as last_by,
            exists (select 1 from course.sales_touches t where t.lead_id = l.id and t.replied) as replied,
            exists (
              select 1 from course.payments pay
