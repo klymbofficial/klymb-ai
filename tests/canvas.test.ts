@@ -7,7 +7,7 @@ import { lessonContent } from "../src/lib/sd-lessons";
 
 setLessons(lessonContent(true));
 const NOW = new Date(2026, 10, 2, 9).getTime();
-const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
+const home = (): CourseState => ({ ...defaultState(NOW), screen: "course", onboarded: true });
 const day1 = LESSON_DAYS["0-0"].copy.en.canvas!;
 const day2 = LESSON_DAYS["0-1"].copy.en.canvas!;
 

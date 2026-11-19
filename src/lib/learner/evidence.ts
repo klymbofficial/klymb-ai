@@ -23,10 +23,21 @@ export function normaliseLinkedinSlug(input: string): string | null {
   return /^[A-Za-z0-9\u00C0-\u024F-]{3,100}$/.test(slug) ? slug.toLowerCase() : null;
 }
 
+/**
+ * Whether a submission today would be refused for want of an account. Every
+ * GitHub link is checked against the GitHub username, and a day that asks for
+ * a LinkedIn post checks it against the LinkedIn slug, so that is the only day
+ * a missing LinkedIn blocks anyone. Decides when a day page asks for the
+ * accounts: a person who is not blocked is not nagged.
+ */
+export function accountsMissing(accounts: { githubUsername: string | null; linkedinSlug: string | null }, needsLinkedin: boolean): boolean {
+  return !accounts.githubUsername || (needsLinkedin && !accounts.linkedinSlug);
+}
+
 /** The deliverable must live under the learner's own GitHub account. */
 export function checkGithubUrl(url: string, username: string | null): string | null {
   if (!/^https?:\/\/(www\.)?github\.com\//i.test(url)) return null; // not a GitHub link; other hosts are allowed
-  if (!username) return "Add your GitHub username to your profile first, so we can check this link is yours.";
+  if (!username) return "Save your GitHub and LinkedIn under “Your accounts” first, so we can check this link is yours.";
   const owner = url.match(/github\.com\/([A-Za-z0-9-]{1,39})/i)?.[1];
   return owner?.toLowerCase() === username.toLowerCase()
     ? null
@@ -39,7 +50,7 @@ export function checkLinkedinPostUrl(url: string, slug: string | null): string |
   if (!/^https?:\/\/(www\.)?linkedin\.com\/(posts|feed\/update)\//i.test(url)) {
     return "That is not a LinkedIn post link. Open your post, use Copy link to post, and paste that.";
   }
-  if (!slug) return "Add your LinkedIn profile to your profile page first, so we can check the post is yours.";
+  if (!slug) return "Save your GitHub and LinkedIn under “Your accounts” first, so we can check the post is yours.";
   const author = url.match(/linkedin\.com\/posts\/([A-Za-z0-9-]{3,100})_/i)?.[1];
   if (!author) return null; // feed/update links carry no author segment; a reviewer checks those
   return author.toLowerCase() === slug.toLowerCase()

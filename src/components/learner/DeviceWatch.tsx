@@ -17,7 +17,7 @@ const BACKUP_EVERY_MS = 60_000;
  */
 export function DeviceWatch() {
   const pathname = usePathname() ?? "";
-  const active = pathname.startsWith("/learn") && !pathname.startsWith("/learn/login");
+  const active = (pathname.startsWith("/learn") && !pathname.startsWith("/learn/login")) || pathname.startsWith("/dashboard");
 
   useEffect(() => {
     if (!active) return;

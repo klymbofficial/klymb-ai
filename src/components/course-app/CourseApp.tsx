@@ -2,10 +2,10 @@
 
 import "./course-app.css";
 import clsx from "clsx";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { TAB_SCREENS, fmt, hasQuickCheck, lesson, miniActive, openLesson, streak, togglePlay, type CourseState, type LessonContent, type Tab } from "@/lib/course-app";
+import { KlymbLogo } from "@/components/layout/KlymbLogo";
 import type { ReferralStanding } from "@/lib/sd-offer";
 import type { SdProgress } from "@/lib/sd-pace";
 import { AnnouncementsProvider, GroupProvider, useExtraUnread } from "./Community";
@@ -14,8 +14,7 @@ import { Icon, type IconName } from "./icons";
 import { Commitment, LeaveQuizDialog, Onboarding, PaywallSheet, QuickCheckSheet, Splash, StreakPop, Toast } from "./Overlays";
 import { ReferralProvider, ReferralSheet, SAMPLE_REFERRAL } from "./Referral";
 import { ReminderSheet } from "./SdReminders";
-import { Course } from "./screens/Course";
-import { Home } from "./screens/Home";
+import { BellButton, Course } from "./screens/Course";
 import { Notifications } from "./screens/Inbox";
 import { Player } from "./screens/Player";
 import { Profile } from "./screens/Profile";
@@ -27,11 +26,10 @@ import { Results } from "./screens/Results";
 import { useCourseApp, type Act } from "./useCourseApp";
 import { CourseUserProvider, type CourseUser } from "./user";
 
-const TABS: [Tab, string, IconName][] = [["home", "Home", "home"], ["course", "Course", "layers"], ["progress", "Progress", "chart"], ["refer", "Refer", "gift"], ["profile", "Profile", "user"]];
+const TABS: [Tab, string, IconName][] = [["course", "Course", "layers"], ["progress", "Progress", "chart"], ["refer", "Refer", "gift"], ["profile", "Profile", "user"]];
 
 function Screen({ s, act }: { s: CourseState; act: Act }) {
   switch (s.screen) {
-    case "home": return <Home s={s} act={act} />;
     case "course": return <Course s={s} act={act} />;
     case "progress": return <Progress s={s} />;
     case "refer": return <Refer />;
@@ -72,10 +70,10 @@ function Sidebar({ s, act }: { s: CourseState; act: Act }) {
   const st = streak(s);
   return (
     <aside className="hidden h-dvh flex-col gap-7 overflow-y-auto border-r-2 border-sd-divider py-6 lg:flex">
-      {/* The way out to every course on the dashboard, a track included. */}
-      <div className="flex flex-col gap-2 px-6">
-        <Link href="/learn" aria-label="Klymb.ai dashboard" className="self-start"><Image src="/brand/klymb-logo.svg" alt="" width={117} height={18} className="h-[18px] w-auto" priority /></Link>
-        <Link href="/learn" className="self-start text-xs font-bold text-sd-n-700 underline underline-offset-2 hover:text-sd-ink">← All my courses</Link>
+      {/* The way out to the Klymb.ai dashboard, where every course is. */}
+      <div className="flex flex-col gap-1 px-6">
+        <KlymbLogo href="/dashboard" label="Klymb.ai dashboard" className="min-h-11 self-start" />
+        <Link href="/dashboard" className="inline-flex min-h-11 items-center self-start text-sm font-bold text-sd-n-700 underline underline-offset-2 hover:text-sd-ink">← Dashboard</Link>
       </div>
       <div className="px-6">
         <div className="text-[11px] font-semibold tracking-[0.1em] text-sd-accent-700 uppercase">Course</div>
@@ -109,9 +107,30 @@ function Sidebar({ s, act }: { s: CourseState; act: Act }) {
   );
 }
 
+/**
+ * Phones: the way back to the Klymb.ai dashboard, on every tab, with the bell
+ * and the streak beside it. Wide screens have the sidebar's link instead.
+ */
+function MobileBar({ s, act }: { s: CourseState; act: Act }) {
+  const st = streak(s);
+  return (
+    <div className="flex flex-none items-center justify-between gap-2 border-b border-sd-divider bg-sd-bg px-2 pt-[max(4px,env(safe-area-inset-top))] pb-1 lg:hidden">
+      <Link href="/dashboard" className="inline-flex min-h-11 items-center gap-1 rounded-lg pr-3 pl-1.5 text-sm font-extrabold hover:bg-sd-accent-100">
+        <Icon name="chevL" size={20} />Dashboard
+      </Link>
+      <div className="flex items-center gap-1.5">
+        <BellButton s={s} act={act} />
+        <button type="button" onClick={() => act((p) => ({ ...p, screen: "progress", tab: "progress" }))} aria-label={`Streak: ${st.current} ${st.current === 1 ? "day" : "days"}`} className="flex h-11 cursor-pointer items-center gap-1.5 rounded-lg border border-sd-divider px-2.5 text-[13px] font-extrabold hover:bg-sd-accent-100">
+          <span className="flex text-sd-accent"><Icon name="flame" size={16} /></span>{st.current}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TabBar({ s, act }: { s: CourseState; act: Act }) {
   return (
-    <nav aria-label="Course" className="grid flex-none grid-cols-5 border-t-2 border-sd-divider bg-sd-bg pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Course" className="grid flex-none grid-cols-4 border-t-2 border-sd-divider bg-sd-bg pb-[env(safe-area-inset-bottom)] lg:hidden">
       {TABS.map(([k, label, icon]) => {
         const on = s.tab === k;
         return (
@@ -170,10 +189,11 @@ export function CourseApp({ user = null, lessons, enrolled, referral, passes = N
     <AnnouncementsProvider value={announcements}>
     <div className="sd-app relative flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
       <Sidebar s={s} act={act} />
+      {showTabs && <MobileBar s={s} act={act} />}
       <div
         ref={scroller}
         onScroll={(e) => e.currentTarget.style.setProperty("--sy", String(Math.round(e.currentTarget.scrollTop)))}
-        className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pt-[max(8px,env(safe-area-inset-top))] lg:h-dvh lg:px-10 lg:pt-7 lg:pb-10"
+        className={clsx("flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain lg:h-dvh lg:px-10 lg:pt-7 lg:pb-10", showTabs ? "pt-3" : "pt-[max(8px,env(safe-area-inset-top))]")}
       >
         {s.offline && (
           <div className="sd-a-in mb-2 flex flex-none items-center gap-2.5 bg-sd-ink px-5 py-2.5 text-[13px] text-sd-bg lg:mb-5 lg:px-4" style={{ animationDuration: ".3s" }} role="status">

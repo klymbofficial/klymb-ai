@@ -24,7 +24,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const email = verifiedEmailFrom(session);
   if (email) {
     const { state } = await getLearnerState(defaultTrack);
-    if (state === "other-device") redirect("/learn");
+    if (state === "other-device") redirect("/dashboard");
     if (defaultTrack && state === "enrolled") redirect(`/learn/tracks/${defaultTrack}`);
   }
 

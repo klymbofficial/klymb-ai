@@ -11,7 +11,7 @@ import {
 setLessons(lessonContent(true));
 
 const NOW = new Date(2026, 9, 24, 9, 0, 0).getTime();
-const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
+const home = (): CourseState => ({ ...defaultState(NOW), screen: "course", onboarded: true });
 const qs = LESSON_DAYS["0-0"].copy.en.post;
 const best = qs.map((q) => q.choices.findIndex((c) => c.best));
 /** The best picks, with the first `wrong` of them swapped for a wrong choice. */
@@ -76,7 +76,7 @@ test("a locked lesson won't open from the course list, but a shared link still d
   const s = home();
   assert.equal(isLocked(s, "0-0"), false, "the first lesson is always open");
   const blocked = openLesson(s, "0-1", NOW);
-  assert.equal(blocked.screen, "home");
+  assert.equal(blocked.screen, "course");
   assert.match(blocked.toast ?? "", /unlock/);
   assert.equal(deepLink(s, "0-1", NOW).screen, "player");
 });

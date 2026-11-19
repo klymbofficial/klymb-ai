@@ -22,7 +22,7 @@ export function CourseOfflineCache({ days, home }: { days: number; home?: string
     const run = async () => {
       const learn = await caches.open(LEARN);
       const assets = new Set<string>();
-      const urls = ["/learn", ...(home ? [home] : []), ...Array.from({ length: days }, (_, i) => `${home ?? "/learn"}/day/${i + 1}`)];
+      const urls = ["/dashboard", ...(home ? [home] : []), ...Array.from({ length: days }, (_, i) => `${home ?? "/learn"}/day/${i + 1}`)];
       for (const url of urls) {
         try {
           const res = await fetch(url, { credentials: "same-origin", redirect: "follow" });

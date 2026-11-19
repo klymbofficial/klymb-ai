@@ -1,71 +1,16 @@
 "use client";
 
 import clsx from "clsx";
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getIndustry, getRole, roles } from "@/data/catalog";
-import { FEATURED, libraryCourses, type Level, type LibraryCourse, type Tint } from "@/data/course-cards";
-import { trackImages } from "@/data/track-images";
-import { CourseArt, hasCourseArt } from "./CourseArt";
+import { FEATURED, listedCourses, type LibraryCourse, type MyCourse } from "@/data/course-cards";
 import { CompactSearch } from "./CompactSearch";
 import { CourseFilter, FEATURED_VIEW, STATUS, type Facets, type Sort, type Status } from "./CourseFilter";
-
-/** The art ground, its ruled lines and the colour of the big letters. */
-const TINTS: Record<Tint, { bg: string; grid: string; ink: string }> = {
-  clay: { bg: "#fbeae1", grid: "rgba(156,67,32,0.13)", ink: "#9c4320" },
-  violet: { bg: "#ecebfb", grid: "rgba(74,58,166,0.13)", ink: "#4a3aa6" },
-  green: { bg: "#e1f1e9", grid: "rgba(29,106,80,0.13)", ink: "#1d6a50" },
-  blue: { bg: "#e1edfb", grid: "rgba(31,79,143,0.13)", ink: "#1f4f8f" },
-  amber: { bg: "#fbf1da", grid: "rgba(134,88,10,0.13)", ink: "#86580a" },
-  rose: { bg: "#fbe7e8", grid: "rgba(131,5,11,0.1)", ink: "#83050b" },
-  slate: { bg: "#ecebea", grid: "rgba(32,30,29,0.08)", ink: "#6b6867" },
-};
-
-const LEVEL_BARS: Record<Level, number> = { Beginner: 1, Intermediate: 2, Advanced: 3 };
-
-/** 12400 → "12.4k", 640 → "640". */
-const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k` : String(n));
+import { LibraryCard } from "./LibraryCard";
 
 const tagsOf = (c: LibraryCourse) =>
   [...c.roles.map((r) => getRole(r)?.name), ...c.industries.map((i) => getIndustry(i)?.name)].filter(Boolean).join(" · ");
-
-// Saved courses live only in this browser: there is no account-side list.
-const SAVED_KEY = "klymb.savedCourses";
-const savedListeners = new Set<() => void>();
-const readSaved = () => {
-  try {
-    return window.localStorage.getItem(SAVED_KEY) ?? "[]";
-  } catch {
-    return "[]";
-  }
-};
-const parseSaved = (raw: string): string[] => {
-  try {
-    const v: unknown = JSON.parse(raw);
-    return Array.isArray(v) ? v.filter((s): s is string => typeof s === "string") : [];
-  } catch {
-    return [];
-  }
-};
-const subscribeSaved = (fn: () => void) => {
-  savedListeners.add(fn);
-  window.addEventListener("storage", fn);
-  return () => {
-    savedListeners.delete(fn);
-    window.removeEventListener("storage", fn);
-  };
-};
-function toggleSaved(slug: string) {
-  const list = parseSaved(readSaved());
-  const next = list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
-  try {
-    window.localStorage.setItem(SAVED_KEY, JSON.stringify(next));
-  } catch {
-    return;
-  }
-  savedListeners.forEach((l) => l());
-}
 
 /** Whether a course survives the search, the view ("featured", "all" or a role) and both filters. */
 function matches(c: LibraryCourse, f: Facets & { q: string }) {
@@ -80,6 +25,20 @@ function matches(c: LibraryCourse, f: Facets & { q: string }) {
   return true;
 }
 
+/** The signed-in learner's courses, by library slug, read after the page loads so the page stays the same for everyone. */
+function useMyCourses() {
+  const [mine, setMine] = useState<Record<string, MyCourse>>({});
+  useEffect(() => {
+    let live = true;
+    fetch("/api/learner/courses", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { courses?: Record<string, MyCourse> } | null) => { if (live && d?.courses) setMine(d.courses); })
+      .catch(() => { /* offline or signed out: every card offers to enrol */ });
+    return () => { live = false; };
+  }, []);
+  return mine;
+}
+
 /**
  * The course library: search, one Filter button for what to show (the
  * featured courses it opens on, every course, or one role), industry, status
@@ -88,16 +47,20 @@ function matches(c: LibraryCourse, f: Facets & { q: string }) {
  *
  * On phones the cards come first: the heading and search box give way to one
  * slim bar (Filter and a search icon) that sticks under the menu.
+ *
+ * `frame`: "site" under the public pages' floating menu (/courses), "learner"
+ * in the dashboard's frame (/dashboard/library), whose top bar on phones
+ * scrolls away, so the course bar sticks to the top of the screen there.
  */
-export function CourseLibrary() {
+export function CourseLibrary({ frame = "site" }: { frame?: "site" | "learner" }) {
   const [q, setQ] = useState("");
   const [role, setRole] = useState(FEATURED_VIEW);
   const [industry, setIndustry] = useState("all");
   const [status, setStatus] = useState<Status>("all");
   const [sort, setSort] = useState<Sort>("open");
   const search = useRef<HTMLInputElement>(null);
-  const savedRaw = useSyncExternalStore(subscribeSaved, readSaved, () => "[]");
-  const saved = useMemo(() => new Set(parseSaved(savedRaw)), [savedRaw]);
+  const mine = useMyCourses();
+  const enrolled = listedCourses.filter((c) => mine[c.slug]);
 
   // "/" jumps to the search box from anywhere on the page. On phones the box is hidden and CompactSearch answers instead.
   useEffect(() => {
@@ -125,9 +88,9 @@ export function CourseLibrary() {
   }, [q, role, industry, status, sort]);
 
   const list = useMemo(() => {
-    const shown = libraryCourses.filter((c) => matches(c, { q, role, industry, status }));
+    const shown = listedCourses.filter((c) => matches(c, { q, role, industry, status }));
     // The featured courses keep their own order; a search or another view uses the catalog's.
-    const order = (role === FEATURED_VIEW && !q.trim() ? FEATURED : libraryCourses.map((c) => c.slug));
+    const order = (role === FEATURED_VIEW && !q.trim() ? FEATURED : listedCourses.map((c) => c.slug));
     return [...shown].sort(sort === "az"
       ? (a, b) => a.name.localeCompare(b.name)
       : (a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
@@ -143,10 +106,10 @@ export function CourseLibrary() {
 
   // What the page would show with one facet swapped, for the counts and previews in the filter panel.
   const matchesWith = (over: Partial<Facets>) =>
-    new Set(libraryCourses.filter((c) => matches(c, { q, role, industry, status, ...over })).map((c) => c.slug));
+    new Set(listedCourses.filter((c) => matches(c, { q, role, industry, status, ...over })).map((c) => c.slug));
 
   // Roles with something open, offered when a search finds nothing.
-  const suggestions = roles.filter((r) => libraryCourses.some((c) => c.open && c.roles.includes(r.slug)));
+  const suggestions = roles.filter((r) => listedCourses.some((c) => c.open && c.roles.includes(r.slug)));
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-9 px-4 pt-3 pb-22 sm:px-6 sm:pt-9">
@@ -177,6 +140,17 @@ export function CourseLibrary() {
         </div>
       </section>
 
+      {enrolled.length > 0 && (
+        <nav aria-label="Your courses" className="flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-ink/15 py-3 max-sm:-mt-1">
+          <span className="text-xs font-extrabold uppercase tracking-[0.14em]">Enrolled</span>
+          {enrolled.map((c) => (
+            <Link key={c.slug} href={mine[c.slug].href} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ink/20 bg-card px-4 text-sm font-semibold hover:border-red-deep hover:text-red-deep">
+              {c.name}<span className="text-muted">· {mine[c.slug].label}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
+
       <section ref={listTop} aria-labelledby="grid-title" className="flex flex-col gap-4">
         {/* `contents` on phones, so the sticky bar's containing box is the whole list, not this wrapper. */}
         <div className="flex flex-col gap-3.5 max-sm:contents">
@@ -184,7 +158,7 @@ export function CourseLibrary() {
             Phones: a slim frosted bar that sticks just under the site menu (62px tall there), its glass reaching up
             behind the menu so cards pass under one surface. The pills and Reset give way to the badge and Clear.
           */}
-          <div className="course-bar relative flex flex-wrap items-center gap-2.5 max-sm:sticky max-sm:top-[62px] max-sm:z-40 max-sm:-mx-4 max-sm:flex-nowrap max-sm:px-4 max-sm:py-2 max-sm:before:absolute max-sm:before:inset-x-0 max-sm:before:-top-[62px] max-sm:before:bottom-0 max-sm:before:-z-10 max-sm:before:bg-paper/90 max-sm:before:backdrop-blur-md">
+          <div className={clsx("course-bar relative flex flex-wrap items-center gap-2.5 max-sm:sticky max-sm:z-40 max-sm:-mx-4 max-sm:flex-nowrap max-sm:px-4 max-sm:py-2 max-sm:before:absolute max-sm:before:inset-x-0 max-sm:before:bottom-0 max-sm:before:-z-10 max-sm:before:bg-paper/90 max-sm:before:backdrop-blur-md", frame === "site" ? "max-sm:top-[62px] max-sm:before:-top-[62px]" : "max-sm:top-0 max-sm:before:top-0")}>
             <CourseFilter
               role={role}
               industry={industry}
@@ -207,14 +181,14 @@ export function CourseLibrary() {
             )}
             <p id="grid-title" aria-live="polite" className="ml-auto text-[13px] whitespace-nowrap text-muted">
               <span className="max-sm:hidden">Showing </span>
-              <span key={list.length} className="count-tick nums font-semibold text-ink">{list.length}</span> of {libraryCourses.length} courses
+              <span key={list.length} className="count-tick nums font-semibold text-ink">{list.length}</span> of {listedCourses.length} courses
             </p>
           </div>
         </div>
 
         {list.length > 0 ? (
           <ul className="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(max(280px,calc((100%-48px)/3)),1fr))]">
-            {list.map((c) => <li key={c.slug}><LibraryCard course={c} saved={saved.has(c.slug)} /></li>)}
+            {list.map((c) => <li key={c.slug}><LibraryCard course={c} mine={mine[c.slug]} /></li>)}
           </ul>
         ) : (
           <div className="flex flex-col items-center rounded-card bg-card px-6 py-12 text-center shadow-card">
@@ -235,114 +209,5 @@ export function CourseLibrary() {
         )}
       </section>
     </div>
-  );
-}
-
-function LevelBars({ level }: { level: Level }) {
-  const on = LEVEL_BARS[level];
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" className="shrink-0">
-      {[[1, 8, 5], [5.5, 5, 8], [10, 2, 11]].map(([x, y, h], i) => (
-        <rect key={x} x={x} y={y} width="3" height={h} rx="1" className={i < on ? "fill-red-deep" : "fill-[#d6d4d3]"} />
-      ))}
-    </svg>
-  );
-}
-
-function LibraryCard({ course: c, saved }: { course: LibraryCourse; saved: boolean }) {
-  const t = TINTS[c.tint];
-  const d = c.card;
-  // A career track keeps its photograph; the featured courses are drawn; the rest get their letters.
-  const photo = hasCourseArt(c.slug) ? undefined : (trackImages as Record<string, (typeof trackImages)[keyof typeof trackImages] | undefined>)[c.slug];
-  const linked = c.href !== null;
-  const cta = !c.open ? "How to ask about this" : linked ? "Enroll" : "Coming soon";
-  return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-card border border-[#e2e0df] bg-card shadow-card transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-float">
-      <div
-        className="relative aspect-[19/10] overflow-hidden"
-        style={{
-          backgroundColor: t.bg,
-          backgroundImage: `linear-gradient(${t.grid} 1px, transparent 1px), linear-gradient(90deg, ${t.grid} 1px, transparent 1px)`,
-          backgroundSize: "26px 26px",
-        }}
-      >
-        {hasCourseArt(c.slug) ? (
-          <CourseArt slug={c.slug} />
-        ) : photo ? (
-          <Image src={photo.src} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
-        ) : (
-          <span aria-hidden="true" className="absolute bottom-4 left-5 text-[64px] leading-none font-extrabold tracking-[-0.04em]" style={{ color: t.ink }}>
-            {c.glyph}
-          </span>
-        )}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-          <span className="rounded-lg bg-white/95 px-2.5 py-1 text-[13px] font-semibold text-ink">{c.category}</span>
-          {c.badge && <span className="rounded-lg bg-ink px-2.5 py-1 text-[13px] font-bold text-white">{c.badge}</span>}
-          {c.free && <span className="rounded-lg bg-[#e1f4e8] px-2.5 py-1 text-[13px] font-bold text-[#17653a]">Free</span>}
-        </div>
-        <button
-          type="button"
-          onClick={() => toggleSaved(c.slug)}
-          aria-pressed={saved}
-          aria-label={`Save ${c.name}`}
-          className="absolute top-3 right-3 z-10 grid size-9 place-items-center rounded-xl bg-white/95 text-ink shadow-[0_1px_2px_rgba(32,30,29,0.08)] hover:bg-white"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z" /></svg>
-        </button>
-        {!c.open && (
-          <span className="absolute right-3 bottom-3 rounded-full bg-ink px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-white">Not available</span>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col px-5 pt-4 pb-5">
-        <h3 className="text-[17px] leading-snug font-bold">
-          {linked ? (
-            <Link href={c.href!} className="after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-3 focus-visible:after:outline-red">
-              {c.name}
-            </Link>
-          ) : (
-            c.name
-          )}
-        </h3>
-
-        {d ? (
-          <>
-            <ul className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              <li className="inline-flex items-center gap-1.5"><LevelBars level={d.level} />{d.level}</li>
-              <li className="inline-flex items-center gap-1.5">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0 text-muted" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-                <span className="nums">{d.hours}</span> hours
-              </li>
-              <li className="text-muted"><span className="nums">{d.lessons}</span> {d.unit ?? "lessons"}</li>
-            </ul>
-            {d.rating !== undefined && d.reviews !== undefined && d.learners !== undefined && (
-              <p className="mt-2 flex flex-wrap items-center gap-x-1.5 text-sm">
-                <svg width="15" height="15" viewBox="0 0 24 24" className="shrink-0 fill-[#b4461f]" aria-hidden="true"><path d="m12 2.5 2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" /></svg>
-                <strong className="nums font-bold">{d.rating.toFixed(1)}</strong>
-                <span className="nums text-muted">({compact(d.reviews)})</span>
-                <span aria-hidden="true" className="text-line">·</span>
-                <span className="nums text-muted">{compact(d.learners)} learners</span>
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="mt-3 text-sm text-muted">No course or enrolment yet.</p>
-        )}
-
-        <div className="mt-auto pt-4">
-          <span
-            aria-hidden={linked || undefined}
-            className={clsx(
-              "grid h-10 place-items-center rounded-lg border text-[15px] font-semibold transition-[filter]",
-              c.open && linked && "border-red-deep bg-red-deep text-white group-hover:brightness-[0.92]",
-              c.open && !linked && "border-[#dcdad9] bg-[#f4f3f3] text-muted",
-              !c.open && "border-[#c8c5c4] bg-card text-ink group-hover:brightness-[0.92]",
-            )}
-          >
-            {cta}
-          </span>
-        </div>
-      </div>
-    </article>
   );
 }

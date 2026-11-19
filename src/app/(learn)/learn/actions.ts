@@ -128,7 +128,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
     return { ok: false, message: "Something went wrong saving that. Please try again." };
   }
 
-  revalidatePath("/learn");
+  revalidatePath("/dashboard");
   revalidatePath(`/learn/tracks/${state.learner.track}`);
   revalidatePath(`/learn/tracks/${state.learner.track}/day/${day}`);
   return { ok: true };
@@ -193,7 +193,7 @@ export async function saveEvidenceProfile(_: unknown, formData: FormData) {
 }
 
 export async function signInLearner() {
-  await signIn("google", { redirectTo: "/learn" });
+  await signIn("google", { redirectTo: "/dashboard" });
 }
 
 /**
@@ -218,7 +218,7 @@ export async function continueOnThisDevice() {
     ? await sql.row<{ id: string }>`select id from course.learners where email = ${email} order by created_at limit 1`
     : { data: null };
   if (learner?.id) await broadcastTakeover(learner.id);
-  redirect("/learn");
+  redirect("/dashboard");
 }
 
 export async function signOutLearner() {

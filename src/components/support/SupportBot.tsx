@@ -122,7 +122,7 @@ export function SupportBot() {
   const dragged = useRef(false);
   // The page's own button that opened the panel (the homepage's "Chat with us"), if not the launcher.
   const opener = useRef<HTMLElement | null>(null);
-  const learner = pathname.startsWith("/learn");
+  const learner = pathname.startsWith("/learn") || pathname.startsWith("/dashboard");
   const inCourse = pathname.startsWith("/learn/system-design");
   // The homepage has its own "Chat with us" button, which opens this panel.
   const launcherHidden = pathname === "/";
@@ -535,7 +535,7 @@ function personalLine(id: string, me: Me | null): { text: string; action?: Suppo
   switch (id) {
     case "locked":
     case "missed":
-      if (me.lock === "pay") return { text: `${me.name}, Day ${me.day} needs payment to open.`, action: { label: "Open my dashboard", href: "/learn" } };
+      if (me.lock === "pay") return { text: `${me.name}, Day ${me.day} needs payment to open.`, action: { label: "Open my dashboard", href: "/dashboard" } };
       if (me.lock === "previous") return { text: `${me.name}, Day ${prev} isn't submitted yet, so Day ${me.day} is waiting for it.`, action: { label: dayActionLabel(prev, false), href: `/learn/tracks/${me.slug}/day/${prev}` } };
       return { text: `Good news ${me.name}: your next day, Day ${me.day}, is open now.`, action: { label: dayActionLabel(me.day, false), href: `/learn/tracks/${me.slug}/day/${me.day}` } };
     case "profile":

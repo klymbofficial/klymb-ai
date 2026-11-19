@@ -28,7 +28,7 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
       const id = REVIEW_LESSON[q.topic];
       return { id, topic: q.topic, l: lesson(id), soon: isSoon(id) };
     });
-  const close = () => act((p) => ({ ...p, screen: "home", tab: "home" }));
+  const close = () => act((p) => ({ ...p, screen: "course", tab: "course" }));
   const pace = paceNow(s);
   const reached = resPct >= FINAL_MARK;
   // Tries that still count come first; after those, and after the day, it's practice.

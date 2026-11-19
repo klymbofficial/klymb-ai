@@ -16,10 +16,11 @@ const EASE = [0.2, 0.7, 0.3, 1] as const;
  * The learner's GitHub and LinkedIn, in one place: where they declare the
  * accounts (every submitted link is checked against these) and where they
  * open them. Sits on the page ground; it is secondary to the board above.
+ * `compact` stacks the two fields, for a narrow column such as the day page's.
  */
 export function EvidenceProfile({
-  track, githubUsername, linkedinSlug, githubUrl, linkedinUrl,
-}: { track: string; githubUsername: string | null; linkedinSlug: string | null; githubUrl: string | null; linkedinUrl: string | null }) {
+  track, githubUsername, linkedinSlug, githubUrl, linkedinUrl, compact,
+}: { track: string; githubUsername: string | null; linkedinSlug: string | null; githubUrl: string | null; linkedinUrl: string | null; compact?: boolean }) {
   const [state, action, pending] = useActionState(saveEvidenceProfile, null as { error?: string; saved?: boolean } | null);
   const complete = !!githubUsername && !!linkedinSlug;
 
@@ -47,7 +48,7 @@ export function EvidenceProfile({
           : "Add these before your first submission. Paste your full profile links: we read the account name from them."}
       </p>
 
-      <div className="mt-5 grid gap-5 sm:grid-cols-2">
+      <div className={compact ? "mt-5 grid gap-5" : "mt-5 grid gap-5 sm:grid-cols-2"}>
         {fields.map((f, i) => (
           <motion.div
             key={f.id}

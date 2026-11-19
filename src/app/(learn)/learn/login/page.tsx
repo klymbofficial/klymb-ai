@@ -15,7 +15,7 @@ export default async function LearnerLoginPage({ searchParams }: { searchParams:
   const state = await getLearnerState();
   // Another device holds this learner's slot: stay here and explain, never loop back to /learn.
   const blocked = state.state === "other-device" || error === "device" || error === "takeover-limit";
-  if (state.state !== "signed-out" && state.state !== "other-device") redirect("/learn");
+  if (state.state !== "signed-out" && state.state !== "other-device") redirect("/dashboard");
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">

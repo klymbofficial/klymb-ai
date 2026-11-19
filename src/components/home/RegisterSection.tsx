@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, BadgeIndianRupee, BriefcaseBusiness, CalendarDays, Check, FolderGit2, MessagesSquare, ShieldCheck, Target } from "lucide-react";
-import { getTrack, priceFrom } from "@/data/tracks";
+import { getTrack, isOneClickStart, priceFrom } from "@/data/tracks";
 import { trackImages } from "@/data/track-images";
 import teamLaptop from "@/assets/track-page/team-laptop.jpg";
 import type { TrackSlug } from "@/types/program";
@@ -13,6 +13,7 @@ import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { RegistrationForm, type GoogleUser } from "./RegistrationForm";
 import { RegisterSignIn } from "./RegisterSignIn";
+import { StartChallenge } from "./StartChallenge";
 import { ExpertsStrip } from "./ExpertsStrip";
 import { OfferBadge, OfferPrice } from "@/components/ui/OfferPrice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
@@ -37,6 +38,10 @@ const INCLUDED_CHALLENGE = [
  * Signed out, the right-hand side is a single step: sign in with Google. The
  * details form only exists once there is a verified Google account to register
  * as, so there is nothing to type, send or save before that.
+ *
+ * A challenge that is open and built has no form at all: signed in, it starts
+ * on arrival and lands on Day 1 (see StartChallenge); signed out, Google is
+ * the only step. The 30-day career tracks keep the form.
  */
 export function RegisterSection({
   defaultTrack, googleUser, unknownTrack, signInFailed, inApp,
@@ -48,6 +53,16 @@ export function RegisterSection({
   const free = price === 0;
   const isChallenge = track?.kind === "challenge";
   const total = isChallenge ? 60 : 30;
+  // From the link's track, not the picker: a challenge only reaches the form by its own link.
+  const oneClick = !!defaultTrack && isOneClickStart(getTrack(defaultTrack));
+  const first = googleUser?.name.split(" ")[0] || "there";
+  const buddy = oneClick
+    ? (googleUser
+        ? `Hi ${first}, I'm Kamran. Getting your Day 1 ready now.`
+        : `Hi, I'm Kamran, your study buddy for the next ${total} days. Sign in with Google and Day 1 opens straight away.`)
+    : (googleUser
+        ? `Hi ${first}, I'm Kamran. One minute here, then I'll see you on Day 1.`
+        : `Hi, I'm Kamran, your study buddy for the next ${total} days. First, sign in with Google. Then it takes about a minute.`);
 
   return (
     <section id="register" aria-labelledby="register-title" className="grid grid-cols-[minmax(0,1fr)] lg:h-dvh lg:grid-cols-[2fr_3fr]">
@@ -168,17 +183,15 @@ export function RegisterSection({
           {/* Gone once the registration is saved: "this takes a minute" has nothing left to say. */}
           {!done && (
             <div className="mb-6">
-              <StudyBuddy
-                tone="light"
-                size={88}
-                message={googleUser ? `Hi ${googleUser.name.split(" ")[0] || "there"}, I'm Kamran. One minute here, then I'll see you on Day 1.` : `Hi, I'm Kamran, your study buddy for the next ${total} days. First, sign in with Google. Then it takes about a minute.`}
-              />
+              <StudyBuddy tone="light" size={88} message={buddy} />
             </div>
           )}
           {googleUser ? (
-            <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} unknownTrack={unknownTrack} bare titled onTrackChange={setSlug} onDoneChange={setDone} />
+            oneClick && defaultTrack
+              ? <StartChallenge slug={defaultTrack} />
+              : <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} unknownTrack={unknownTrack} bare titled onTrackChange={setSlug} onDoneChange={setDone} />
           ) : (
-            <RegisterSignIn track={defaultTrack} unknownTrack={unknownTrack} failed={signInFailed} inApp={!!inApp} />
+            <RegisterSignIn track={defaultTrack} unknownTrack={unknownTrack} failed={signInFailed} inApp={!!inApp} oneClick={oneClick} />
           )}
         </div>
       </div>

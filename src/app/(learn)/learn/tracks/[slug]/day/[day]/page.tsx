@@ -11,6 +11,7 @@ import { LearnerTopBar } from "@/components/learner/LearnerTopBar";
 import { ContentGuard } from "@/components/learner/ContentGuard";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { BuildSteps } from "@/components/learner/BuildSteps";
+import { DayAccountsCard } from "@/components/learner/DayAccountsCard";
 import { DaySubmission } from "@/components/learner/DaySubmission";
 import { DayStatus } from "@/components/learner/DayStatus";
 import { topicsFor } from "@/lib/coach/topics";
@@ -65,7 +66,11 @@ export default async function LearnDayPage({
   const admin = (await searchParams).preview === "1" ? await getAdmin() : null;
   const preview = admin && getTrack(slug)?.contentLive && getCurriculum(slug) ? slug : null;
 
-  let viewer: { id: string; name: string; email: string; track: string; submissions: Submission[] };
+  // The accounts are the learner's own, so an admin preview has none.
+  let viewer: {
+    id: string; name: string; email: string; track: string; submissions: Submission[];
+    github_username?: string | null; linkedin_slug?: string | null; github_url?: string | null; linkedin_url?: string | null;
+  };
   if (preview && admin) {
     viewer = { id: "preview", name: admin.name ?? "Admin", email: admin.email, track: preview, submissions: [] };
   } else {
@@ -94,7 +99,7 @@ export default async function LearnDayPage({
     const prev = courseDays.find((d) => d.day === dayNumber - 1);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} compact />
         <DayLocked base={base} day={dayNumber} title={entry.title} previousDay={dayNumber - 1} previousTitle={prev?.title ?? ""} />
       </div>
     );
@@ -102,7 +107,7 @@ export default async function LearnDayPage({
   if (lock === "pay") {
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} compact />
         <DayPaywall email={viewer.email} track={track} day={dayNumber} title={entry.title} />
       </div>
     );
@@ -114,7 +119,7 @@ export default async function LearnDayPage({
     console.warn("day_view limit hit:", viewer.email);
     return (
       <div className="min-h-screen bg-card">
-        <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} />
+        <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} compact />
         <div className="mx-auto max-w-md px-6 py-24 text-center">
           <h1 className="display text-3xl">Take a short break</h1>
           <p className="mt-3 text-muted">You&apos;ve opened a lot of course pages in the last hour. Come back in a little while and everything will be here.</p>
@@ -143,7 +148,7 @@ export default async function LearnDayPage({
 
   return (
     <div className="bg-card">
-      <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} />
+      <LearnerTopBar name={viewer.name} image={session?.user?.image} coach={coach} compact />
       {preview && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line/30 bg-ink px-6 py-2.5 text-sm text-white">
           <span className="font-bold">Admin preview · read-only</span>
@@ -294,6 +299,16 @@ export default async function LearnDayPage({
               {preview ? (
                 <p className="rounded-lg bg-surface p-4 text-sm text-muted">Preview: submitting is turned off. Learners submit their link and answers here.</p>
               ) : (
+              <>
+              {/* When a submission would be refused for want of GitHub or LinkedIn, ask for them here: it is checked against them. */}
+              <DayAccountsCard
+                track={viewer.track}
+                githubUsername={viewer.github_username ?? null}
+                linkedinSlug={viewer.linkedin_slug ?? null}
+                githubUrl={viewer.github_url ?? null}
+                linkedinUrl={viewer.linkedin_url ?? null}
+                needsLinkedin={isChallenge || LINKEDIN_POST_DAYS.includes(entry.day)}
+              />
               <DaySubmission
                 day={entry.day}
                 submission={submission}
@@ -301,6 +316,7 @@ export default async function LearnDayPage({
                 nextDay={next?.day}
                 trackSlug={viewer.track}
               />
+              </>
               )}
             </Section>
           </div>

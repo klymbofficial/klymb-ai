@@ -440,6 +440,15 @@ export const trackSlugs: TrackSlug[] = allTracks.map((t) => t.slug);
 export const availableTracks = tracks.filter((t) => t.available);
 export const liveContentTracks = tracks.filter((t) => t.contentLive);
 
+/**
+ * A challenge that is open and built starts the moment someone signs in with
+ * Google: nothing is filled in first, and Day 1 is where they land. Everything
+ * else (the 30-day career tracks, a challenge whose days are not built yet)
+ * still goes through the registration form.
+ */
+export const isOneClickStart = (t: Pick<Track, "kind" | "available" | "contentLive"> | undefined): boolean =>
+  !!t && t.kind === "challenge" && t.available && t.contentLive;
+
 /** Free tracks take no payment and carry no refund promise. */
 export const isFree = (t: Pick<Track, "price">) => t.price === 0;
 export const paidTracks = tracks.filter((t) => !isFree(t));
