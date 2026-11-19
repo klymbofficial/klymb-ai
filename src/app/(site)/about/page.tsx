@@ -1,3 +1,5 @@
+import { tracks } from "@/data/tracks";
+import { listed } from "@/data/course-cards";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/Button";
@@ -39,11 +41,13 @@ export default function AboutPage() {
         <Container className="py-14 sm:py-20">
           <SectionHeader id="offer-title" eyebrow="What Klymb offers today" title="Where things stand today." />
           <ul className="mt-10 grid gap-5 md:grid-cols-3">
-            <li className="card p-7">
-              <h3 className="display text-xl">30-day career tracks</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{trackCount} roles, each with 30 daily problems, four checkpoints and two days of interview prep.</p>
-              <Link href="/tracks" className="mt-4 inline-block text-sm font-bold underline underline-offset-4 hover:text-red-deep">See the tracks</Link>
-            </li>
+            {listed(tracks).length > 0 && (
+              <li className="card p-7">
+                <h3 className="display text-xl">30-day career tracks</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{trackCount} roles, each with 30 daily problems, four checkpoints and two days of interview prep.</p>
+                <Link href="/tracks" className="mt-4 inline-block text-sm font-bold underline underline-offset-4 hover:text-red-deep">See the tracks</Link>
+              </li>
+            )}
             <li className="card p-7">
               <h3 className="display text-xl">System Design</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">A course on system design, explained with real examples and built for interviews. {BUILT_LESSONS.length >= LESSON_COUNT ? `All ${LESSON_COUNT} lessons are live.` : `Early access: ${BUILT_LESSONS.length} of ${LESSON_COUNT} lessons are live, and the rest are added as they are ready.`}</p>

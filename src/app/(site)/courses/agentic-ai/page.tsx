@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { currentEmail } from "@/auth";
 import { CourseFrame } from "@/components/course/course-frame";
 import { CourseHero } from "@/components/course/course-hero";
 import { CourseProgressProvider } from "@/components/course/course-progress";
 import { getCourse } from "@/data/courses/registry";
+import { isListed } from "@/data/course-cards";
 import { readCourseProgress } from "@/lib/course-progress";
 import { frameModules } from "@/lib/course-frame";
 
@@ -29,6 +30,8 @@ export function generateMetadata(): Metadata {
 export default async function CourseOverviewPage() {
   const course = getCourse(SLUG);
   if (!course) notFound();
+  // Not listed on the live site: the course list instead.
+  if (!isListed(course.slug)) redirect("/courses");
   const email = await currentEmail();
   const progress = email ? await readCourseProgress(email, course.slug) : { done: [], quiz: {} };
   const modules = frameModules(course);
