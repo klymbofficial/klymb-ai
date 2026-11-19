@@ -34,7 +34,7 @@ export default async function CompanySignInPage() {
         <ul className="mt-6 space-y-2 text-xs text-muted">
           <li>HR contacts manage their company&apos;s people and teams. Team heads and employees see their own learning.</li>
           <li>
-            Not invited by a company? <Link href="/learn" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.
+            Not invited by a company? <Link href="/dashboard" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.
           </li>
         </ul>
       </div>

@@ -1,38 +1,32 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import type { CSSProperties } from "react";
 import { currentEmail } from "@/auth";
 import { Briefs } from "@/components/hackathon/Briefs";
 import { NotifyButton } from "@/components/hackathon/NotifyButton";
-import { Appear } from "@/components/motion/Appear";
-import { ButtonLink } from "@/components/ui/Button";
-import { Eyebrow } from "@/components/ui/Eyebrow";
+import { FaqAccordion } from "@/components/hackathon/landing/FaqAccordion";
+import { Hero } from "@/components/hackathon/landing/Hero";
+import "@/components/hackathon/landing/hackathon.css";
 import { HACKATHON, hackathonPhase } from "@/data/hackathon";
 import { hasInterest, myTeam, publishedResults } from "@/lib/hackathon";
 
 export const metadata: Metadata = { title: "Hackathons", description: HACKATHON.tagline };
 
-/** Four columns of short cards: how it works, what to submit, the rules, how it's judged. */
-function CardRow({ id, eyebrow, title, items }: { id: string; eyebrow: string; title: string; items: readonly { title: string; body: string }[] }) {
-  return (
-    <section aria-labelledby={id} className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <Eyebrow>{eyebrow}</Eyebrow>
-      <h2 id={id} className="display mt-3 text-[clamp(1.6rem,3.2vw,2.3rem)]">{title}</h2>
-      <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((s, i) => (
-          <li key={s.title} className="card p-5">
-            <span className="text-sm font-bold text-red-strong nums">{String(i + 1).padStart(2, "0")}</span>
-            <h3 className="mt-1.5 font-extrabold">{s.title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{s.body}</p>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
+/** Each timeline card's line drawing, sized as a share of the card's width. */
+const TIMELINE_ART = [
+  { src: "/hackathon/documents.png", w: 162, h: 141, artW: "36%" },
+  { src: "/hackathon/chat.png", w: 112, h: 98, artW: "31.9%" },
+  { src: "/hackathon/calendar.png", w: 124, h: 101, artW: "35.1%" },
+  { src: "/hackathon/trophy.png", w: 137, h: 133, artW: "39.1%" },
+];
+/** Where each of the four rail tabs sits under its card. */
+const RAIL = ["14.77%", "38.26%", "61.74%", "85.23%"];
 
 /**
- * The hackathon's public page. What it leads with follows the event's phase:
- * "coming soon" with a sign-up, registration, the live build, judging, then
- * the winners. The briefs appear at kickoff.
+ * The hackathon's public page. The hero follows the event's phase: coming
+ * soon, registration, the live build, judging, then the winners. The
+ * problem statements appear at kickoff.
  */
 export default async function HackathonsPage() {
   const results = await publishedResults();
@@ -40,52 +34,65 @@ export default async function HackathonsPage() {
   const email = await currentEmail();
   const [team, interested] = email ? await Promise.all([myTeam(email), hasInterest(email)]) : [null, false];
   const h = HACKATHON;
+  const showBriefs = phase === "live" || phase === "judging" || phase === "results";
 
-  const lead = {
-    "coming-soon": ["The next hackathon is coming", "Dates are being set. Get an email the moment registration opens."],
-    registration: ["Registration is open", h.registrationClosesLabel || "Register solo or as a team of up to three."],
-    closed: ["Registration has closed", `The build starts ${h.kickoffLabel}.`],
-    live: ["The build is on", `Submissions close ${h.deadlineLabel}.`],
-    judging: ["Judging is under way", h.resultsLabel || "Winners are announced here soon."],
-    results: ["The winners", "Thank you to every team who built something."],
+  const headline = {
+    "coming-soon": "is coming soon",
+    registration: "registrations are live",
+    closed: "registrations have closed",
+    live: "is live",
+    judging: "is being judged",
+    results: "winners are out",
   }[phase];
 
+  const countdown =
+    (phase === "registration" || phase === "closed") && h.kickoffUtc ? { targetIso: h.kickoffUtc, label: "Time until kickoff" }
+    : phase === "live" && h.deadlineUtc ? { targetIso: h.deadlineUtc, label: "Time until submissions close" }
+    : null;
+
+  const cta =
+    phase === "registration" ? { href: "/learn/hackathon", label: team ? "Go to your team" : "Register" }
+    : team && (phase === "closed" || phase === "live" || phase === "judging") ? { href: "/learn/hackathon", label: phase === "live" ? "Submit your entry" : "Go to your team" }
+    : phase === "results" ? { href: "#winners", label: "See the winners" }
+    : null;
+
+  const message = team ? (
+    <p><strong>You&rsquo;re registered</strong><br />Your team, its code and your entry are on <Link href="/learn/hackathon">your hackathon page</Link>.</p>
+  ) : phase === "registration" ? (
+    <p><strong>Register to take part</strong><br />Solo or a team of up to three. {h.registrationClosesLabel}.</p>
+  ) : phase === "coming-soon" ? (
+    <p><strong>Dates coming soon</strong><br />Get an email the moment registration opens.</p>
+  ) : (
+    <p><strong>Registration has closed</strong><br />{phase === "live" ? `Submissions close ${h.deadlineLabel}.` : "Follow along on this page."}</p>
+  );
+
   return (
-    <>
-      <section aria-labelledby="hack-title" className="mx-auto max-w-7xl px-4 pb-6 sm:px-6">
-        <div className="relative overflow-hidden rounded-slab bg-night p-8 text-paper shadow-float sm:p-12 lg:p-16">
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(60% 80% at 100% 0%,rgba(131,5,11,.6),transparent 70%)" }} />
-          <div className="relative">
-            <Appear><p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-soft">Hackathon</p></Appear>
-            <Appear delay={0.08} y={24}><h1 id="hack-title" className="display mt-4 max-w-3xl text-[clamp(2.4rem,6vw,4.25rem)]">{h.name}</h1></Appear>
-            <Appear delay={0.14}><p className="mt-4 max-w-xl text-lg text-white/80">{h.tagline}</p></Appear>
-            <Appear delay={0.2} className="mt-8">
-              <p className="text-xl font-extrabold">{lead[0]}</p>
-              <p className="mt-1 text-sm text-white/70">{lead[1]}</p>
-              <div className="mt-5">
-                {phase === "coming-soon" && (email ? <NotifyButton already={interested} /> : <ButtonLink href="/learn/login" variant="inverse" soft arrow>Log in to get notified</ButtonLink>)}
-                {phase === "registration" && <ButtonLink href="/learn/hackathon" variant="inverse" soft arrow>{team ? "Go to your team" : "Register"}</ButtonLink>}
-                {(phase === "closed" || phase === "live" || phase === "judging") && team && <ButtonLink href="/learn/hackathon" variant="inverse" soft arrow>{phase === "live" ? "Submit your entry" : "Go to your team"}</ButtonLink>}
-              </div>
-              {(h.kickoffLabel || h.deadlineLabel) && phase !== "results" && (
-                <dl className="mt-8 grid max-w-xl gap-4 border-t border-white/15 pt-5 text-sm sm:grid-cols-2">
-                  {h.kickoffLabel && <div><dt className="text-white/60">Kickoff</dt><dd className="font-bold">{h.kickoffLabel}</dd></div>}
-                  {h.deadlineLabel && <div><dt className="text-white/60">Deadline</dt><dd className="font-bold">{h.deadlineLabel}</dd></div>}
-                </dl>
-              )}
-            </Appear>
-          </div>
+    <div className="hk">
+      <Hero
+        name={h.name}
+        headline={headline}
+        sub="A 48-hour online hackathon to build real solutions with AI, solo or in a team of up to three."
+        prizePool={h.prizePool}
+        countdown={countdown}
+        cta={cta}
+        registered={Boolean(team)}
+        message={message}
+      />
+
+      {phase === "coming-soon" && (
+        <div className="hk-section" style={{ marginTop: 0, textAlign: "center" }}>
+          {email ? <NotifyButton already={interested} /> : <Link className="hk-btn hk-btn--primary" href="/learn/login">Log in to get notified</Link>}
         </div>
-      </section>
+      )}
 
       {phase === "results" && (
-        <section aria-labelledby="winners-title" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-          <h2 id="winners-title" className="display text-[clamp(1.6rem,3.2vw,2.3rem)]">Winners</h2>
-          <ol className="mt-6 grid gap-4 md:grid-cols-3">
+        <section id="winners" aria-labelledby="winners-title" className="hk-section">
+          <h2 id="winners-title" className="hk-h2">Winners</h2>
+          <ol className="hk-cards md:grid-cols-3">
             {results.map((r) => (
-              <li key={r.place} className="card p-6">
+              <li key={r.place} className="hk-card">
                 <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-red-deep">#{r.place} · {r.title}</p>
-                <p className="mt-2 text-xl font-extrabold">{r.team}</p>
+                <p className="mt-2 text-xl font-extrabold text-ink">{r.team}</p>
                 <p className="mt-1 text-sm text-muted">{r.members.join(", ")}</p>
                 <div className="mt-4 flex flex-wrap gap-4 text-sm font-bold">
                   {r.liveUrl && <a href={r.liveUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-4">See it live</a>}
@@ -97,18 +104,75 @@ export default async function HackathonsPage() {
         </section>
       )}
 
-      <CardRow id="how" eyebrow="How it works" title="Register, build for 48 hours, submit." items={h.steps} />
-      <CardRow id="deliver" eyebrow="What to submit" title="Three links, before the deadline." items={[...h.deliverables, { title: "Notes", body: "Anything you built before kickoff, disclosed in your submission notes." }]} />
-      <CardRow id="rules" eyebrow="Rules" title="Fair, simple, one entry each." items={h.rules} />
-      <CardRow id="judging" eyebrow="Judging" title="What wins." items={[...h.criteria, { title: "Prizes", body: h.prizes.length ? h.prizes.map((p) => `${p.place}: ${p.reward}`).join(" · ") : "Prizes are announced soon." }]} />
-
-      <section aria-labelledby="briefs-title" className="mx-auto max-w-7xl px-4 pt-10 pb-16 sm:px-6 sm:pb-24">
-        <Eyebrow>The problems</Eyebrow>
-        <h2 id="briefs-title" className="display mt-3 text-[clamp(1.6rem,3.2vw,2.3rem)]">Pick one of three.</h2>
-        {phase === "live" || phase === "judging" || phase === "results"
-          ? <div className="mt-6"><Briefs briefs={h.briefs} /></div>
-          : <p className="mt-4 max-w-xl text-muted">The three problem statements appear here at kickoff, so everyone starts at the same moment.</p>}
+      <section className="hk-how" id="hk-how" aria-labelledby="hk-how-title">
+        <h2 className="hk-h2" id="hk-how-title">Discover how it works</h2>
+        <ol className="hk-how__grid">
+          {h.steps.map((step, i) => (
+            <li key={step.title} className="hiw">
+              <span className="hiw__tab" aria-hidden="true">{i + 1}</span>
+              <div className="hiw__body">
+                <h3 className="hiw__title">{step.title}</h3>
+                <p className="hiw__text">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
-    </>
+
+      <section className="hk-section hk-timeline" aria-labelledby="hk-timeline-title">
+        <div className="tl">
+          <h2 className="hk-h2 tl__title" id="hk-timeline-title">Timeline</h2>
+          <ol className="tl__cards">
+            {h.timeline.map((t, i) => {
+              const art = TIMELINE_ART[i];
+              return (
+                <li key={t.title} className="tl-card">
+                  <h3 className="tl-card__title">{t.title}</h3>
+                  <p className="tl-card__when">{t.when}</p>
+                  <p className="tl-card__text">{t.body}</p>
+                  {art && <Image className="tl-card__art" style={{ "--art-w": art.artW } as CSSProperties} src={art.src} alt="" width={art.w} height={art.h} unoptimized />}
+                </li>
+              );
+            })}
+          </ol>
+          <div className="tl__rail" aria-hidden="true">
+            <span className="tl__line" />
+            {RAIL.map((x, i) => <span key={x} className="tl-tab" style={{ "--x": x } as CSSProperties}>{i + 1}</span>)}
+          </div>
+        </div>
+      </section>
+
+      {showBriefs && (
+        <section className="hk-section" aria-labelledby="briefs-title">
+          <h2 id="briefs-title" className="hk-h2">The problems</h2>
+          <p className="hk-lede">Pick one of three.</p>
+          <div className="mt-6"><Briefs briefs={h.briefs} /></div>
+        </section>
+      )}
+
+      <section className="hk-section hk-faq" aria-labelledby="hk-faq-title">
+        <div className="hk-faq__intro">
+          <h2 className="hk-h2 hk-faq__title" id="hk-faq-title">Frequently asked<br /><em>questions</em></h2>
+          <p className="hk-faq__sub">{showBriefs ? "Everything about the event." : "Common questions before you register."}</p>
+        </div>
+        <FaqAccordion items={h.faqs} />
+      </section>
+
+      <section className="hk-section hk-rules" aria-labelledby="hk-rules-title">
+        <h2 className="sr-only" id="hk-rules-title">Rules</h2>
+        <div className="rules">
+          <span className="rules__word" aria-hidden="true">RULES</span>
+          {h.rules.map((r, i) => (
+            <article key={r.title} className={`rule rule--${i + 1}`} tabIndex={0}>
+              <Image className="rule__pin" src="/hackathon/pin.png" alt="" width={267} height={288} unoptimized />
+              <div className="rule__note">
+                <h3 className="rule__title"><b>{String(i + 1).padStart(2, "0")}.</b> {r.title}</h3>
+                <p className="rule__text">{r.body}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

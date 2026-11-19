@@ -20,7 +20,7 @@ const gaId = process.env.NEXT_PUBLIC_GA_ID;
 const PRELOAD_FONTS = ["/fonts/archivo-v25-latin.woff2", "/fonts/inter-v20-latin.woff2"];
 
 const description =
-  "A 30-day job-readiness program with five career tracks: QA Engineer, L1/L2 Support, Project Manager, Junior Developer and Reporting Analyst.";
+  "Klymb.ai helps working professionals become job-ready with real, reviewed work and interview preparation.";
 
 export const metadata: Metadata = {
   // Makes every relative URL in metadata, the preview image above all, absolute on the real domain.

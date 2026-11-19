@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CohortPage } from "@/components/cohort/CohortPage";
-import { libraryCourses } from "@/data/course-cards";
+import { isListed, libraryCourses } from "@/data/course-cards";
 
 /**
  * A static route, like /courses/agentic-ai: /courses/[slug] is the catalogue's
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function AiCohortPage() {
+  // Not listed on the live site: the course list instead.
+  if (!isListed("ai-cohort")) redirect("/courses");
   // Level, hours, lessons and rating come from the course's card, the one /courses shows.
   const facts = libraryCourses.find((c) => c.slug === "ai-cohort")?.card ?? null;
   return <CohortPage facts={facts} />;

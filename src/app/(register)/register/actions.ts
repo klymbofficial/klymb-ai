@@ -4,6 +4,7 @@ import { currentEmail, signIn, signOut } from "@/auth";
 import { cohort } from "@/data/config";
 import { todayInIndia } from "@/lib/learn";
 import { getTrack, trackSlugs } from "@/data/tracks";
+import { isListed } from "@/data/course-cards";
 import { after } from "next/server";
 import { sendWelcome } from "@/lib/welcome";
 import { db } from "@/lib/db/client";
@@ -57,6 +58,9 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   if (!email) {
     return { ok: false, kind: "signin", message: "Sign in with Google to register. Your sign-in may have ended." };
   }
+
+  // A track the live site does not list takes no registration, whatever the form sent.
+  if (input.track && !isListed(input.track)) return { ok: false, message: "That track isn't open for sign-up yet." };
 
   // Never trust the client: rebuild the record from clamped, canonical values.
   const data: RegistrationData = {

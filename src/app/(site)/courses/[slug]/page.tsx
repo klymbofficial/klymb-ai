@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AskUs } from "@/components/catalog/AskUs";
 import { ProgramGrid } from "@/components/catalog/ProgramGroups";
 import { StatusBadge } from "@/components/catalog/StatusBadge";
@@ -10,6 +10,7 @@ import { availablePrograms, getIndustry, getProgram, getRole, programs, type Pro
 import { enrolment } from "@/data/config";
 import { BUILT_LESSONS, MODULES } from "@/data/system-design/course-app";
 import { getTrack } from "@/data/tracks";
+import { isListed } from "@/data/course-cards";
 import { LESSON_COUNT } from "@/lib/course-app";
 import { SD_STATS } from "@/lib/sd-offer";
 
@@ -254,6 +255,8 @@ function UnavailableProgram({ p }: { p: Program }) {
 export default async function ProgramPage({ params }: { params: Promise<{ slug: string }> }) {
   const p = getProgram((await params).slug);
   if (!p) notFound();
+  // Not listed on the live site: the course list instead.
+  if (!isListed(p.slug)) redirect("/courses");
   if (p.status === "unavailable") return <UnavailableProgram p={p} />;
   return p.track ? <TrackProgram p={p} /> : <SystemDesignProgram p={p} />;
 }

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { listed } from "@/data/course-cards";
 import Image from "next/image";
 import Link from "next/link";
 import { Appear } from "@/components/motion/Appear";
@@ -14,6 +16,8 @@ export const metadata: Metadata = {
 
 /** The four 60-day challenges, side by side. */
 export default function ChallengesPage() {
+  // On the live site no challenge is listed yet, so the page goes to the course list.
+  if (listed(challenges).length === 0) redirect("/courses");
   return (
     <>
       <PageHeader

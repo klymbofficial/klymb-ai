@@ -59,12 +59,12 @@ test("the final's route is the only way to a score, and it records every try", (
 
 const NOW = new Date("2026-11-10T06:00:00Z").getTime();
 const progress = (over: Partial<SdProgress> = {}): SdProgress => ({ passes: [], finals: [], refundable: true, ...over });
-const app = (p: SdProgress) => { setLessons(lessonContent(true)); return withProgress({ ...defaultState(NOW), onboarded: true, screen: "home" as const }, p); };
+const app = (p: SdProgress) => { setLessons(lessonContent(true)); return withProgress({ ...defaultState(NOW), onboarded: true, screen: "course" as const }, p); };
 
 test("the second lesson stays shut on the day the first is passed, even from a shared link", () => {
   const s = app(progress({ passes: [{ lesson: "0-0", at: "2026-11-10T05:00:00Z" }] }));
   const opened = openLesson(s, "0-1", NOW);
-  assert.equal(opened.screen, "home");
+  assert.equal(opened.screen, "course");
   assert.match(opened.toast ?? "", /Day 2 opens at midnight India time/);
   const linked = deepLink(s, "0-1", NOW);
   assert.notEqual(linked.screen, "player");

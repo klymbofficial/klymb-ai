@@ -2,7 +2,9 @@
 
 import clsx from "clsx";
 import { useState } from "react";
+import { Medal } from "@/components/achievements/Medal";
 import { ShareAchievement } from "@/components/achievements/ShareAchievement";
+import { MEDAL_FAMILIES, SD_BADGES, type MedalIcon } from "@/lib/achievements";
 import { site } from "@/data/config";
 import { useCourseUser } from "../user";
 import { badges, localDate, streak, type CourseState } from "@/lib/course-app";
@@ -27,35 +29,12 @@ function heat(s: CourseState, now = new Date()) {
   });
 }
 
-/** Each badge's family, which picks its colour and medal shape. */
-const BADGE_CAT: Record<string, "learn" | "test" | "habit" | "craft"> = {
-  "First lesson": "learn",
-  "First pass": "test",
-  "7-day streak": "habit",
-  "Started right": "craft",
-  "Note taker": "craft",
-  "Perfect score": "test",
-  Builder: "craft",
-  "Course complete": "learn",
-};
-
-const CAT = {
-  learn: { label: "Learning", base: "#b08a3e", light: "#f3e9d2", deep: "#6e5420", radius: "50%", clip: undefined },
-  test: { label: "Assessment", base: "#4f6a8a", light: "#dfe6ee", deep: "#2e4258", radius: "0px", clip: "polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)" },
-  habit: { label: "Habit", base: "#b3121b", light: "#fbdcdd", deep: "#5a0307", radius: "0px", clip: "polygon(50% 0, 100% 14%, 100% 56%, 50% 100%, 0 56%, 0 14%)" },
-  craft: { label: "Craft", base: "#6f8a6a", light: "#e3ebdf", deep: "#3f5639", radius: "0px", clip: "polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%)" },
-} as const;
+const familyOf = (name: string) => SD_BADGES[name]?.family ?? "learn";
 
 function BadgeTile({ name, icon, on, selected, delay, pick }: {
-  name: string; icon: IconName; on: boolean; selected: boolean; delay: number; pick: () => void;
+  name: string; icon: MedalIcon; on: boolean; selected: boolean; delay: number; pick: () => void;
 }) {
-  const c = CAT[BADGE_CAT[name] ?? "learn"];
-  const ring = on
-    ? `repeating-conic-gradient(from 0deg, rgba(255,255,255,.38) 0 3deg, transparent 3deg 15deg), conic-gradient(from 210deg, ${c.light}, ${c.base}, ${c.deep}, ${c.base}, ${c.light})`
-    : "repeating-conic-gradient(from 0deg, rgba(255,255,255,.5) 0 3deg, transparent 3deg 15deg), #d9d4cc";
-  const core = on
-    ? `radial-gradient(circle at 35% 28%, ${c.base} 0%, ${c.deep} 78%)`
-    : "radial-gradient(circle at 35% 28%, #f4f1ec, #e2ddd5 80%)";
+  const c = MEDAL_FAMILIES[familyOf(name)];
   return (
     <button
       type="button"
@@ -76,16 +55,7 @@ function BadgeTile({ name, icon, on, selected, delay, pick }: {
         outlineOffset: 2,
       }}
     >
-      <span
-        className="size-[62px] flex-none lg:size-[76px]"
-        style={{ filter: on ? `drop-shadow(0 6px 10px ${c.deep}55) drop-shadow(0 1px 1px rgba(0,0,0,.15))` : "none" }}
-      >
-        <span className="block size-full p-[5px]" style={{ borderRadius: c.radius, clipPath: c.clip, background: ring }}>
-          <span className="flex size-full items-center justify-center" style={{ borderRadius: c.radius, clipPath: c.clip, background: core, color: on ? "#fff" : "var(--sd-n-600)" }}>
-            <Icon name={on ? icon : "lock"} size={24} stroke={2} />
-          </span>
-        </span>
-      </span>
+      <Medal family={familyOf(name)} icon={icon} on={on} className="size-[62px] lg:size-[76px]" />
       <span className="flex flex-col items-center gap-[3px]">
         <span className="text-[10px] font-extrabold tracking-[0.12em] uppercase" style={{ color: on ? c.deep : "var(--sd-n-600)" }}>{c.label}</span>
         <span className={clsx("text-center text-[13px] leading-[1.2] font-extrabold", on ? "text-sd-ink" : "text-sd-n-700")}>{name}</span>
@@ -105,6 +75,8 @@ export function Progress({ s }: { s: CourseState }) {
   const earned = b.filter((x) => x.on);
   const shareBadge = earned.find((x) => x.name === selected) ?? earned[earned.length - 1];
   const mods = moduleViews(s);
+  const goalMin = Math.floor(s.todaySec / 60);
+  const met = s.todaySec >= s.goal * 60;
   return (
     <div className="sd-a-screen flex max-w-[1120px] flex-col gap-[22px] px-5 pt-2 pb-7 lg:gap-7 lg:p-0">
       <h2 className="m-0 text-[30px] tracking-[-0.02em] lg:border-b-2 lg:border-sd-divider lg:pb-4 lg:text-[42px] lg:tracking-[-0.03em]">Progress</h2>
@@ -146,6 +118,18 @@ export function Progress({ s }: { s: CourseState }) {
           </div>
         </div>
       </div>
+      <section aria-label="Today’s goal" className="flex flex-col gap-2 border-t-2 border-sd-divider pt-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <h6 className="sd-h6 m-0">Today’s goal</h6>
+          <span className="text-xs font-bold text-sd-accent-700">{met ? "Goal met" : `${s.goal - goalMin} min to go`}</span>
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[40px] leading-none font-extrabold tracking-[-0.03em]">{Math.min(goalMin, s.goal)}</span>
+          <span className="text-[15px] font-bold text-sd-n-700">/ {s.goal} min</span>
+        </div>
+        <Bar value={(s.todaySec / (s.goal * 60)) * 100} className="h-1.5" />
+        <span className="text-xs text-sd-n-700">Pass today’s lesson to keep your streak.</span>
+      </section>
       <div
         className="rounded-[20px] border border-[rgba(32,30,29,.06)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.7),0_18px_40px_-28px_rgba(32,30,29,.35)] lg:p-6"
         style={{ background: "linear-gradient(180deg, #f7f2ea, #efe9df)" }}
@@ -155,7 +139,7 @@ export function Progress({ s }: { s: CourseState }) {
           <span className="text-[15px] font-extrabold">{earned.length}<span className="text-sd-n-600"> / {b.length}</span></span>
         </div>
         <div className="my-2.5 flex gap-1">
-          {b.map((x) => <span key={x.name} className="h-1 flex-1 rounded-full" style={{ background: x.on ? CAT[BADGE_CAT[x.name] ?? "learn"].base : "rgba(32,30,29,.12)" }} />)}
+          {b.map((x) => <span key={x.name} className="h-1 flex-1 rounded-full" style={{ background: x.on ? MEDAL_FAMILIES[familyOf(x.name)].base : "rgba(32,30,29,.12)" }} />)}
         </div>
         <p className="mt-0 mb-4 text-[13px] text-sd-n-700">{earned.length ? "Tap an earned badge to share it." : "Finish a lesson to earn your first."}</p>
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-3.5">
@@ -163,7 +147,7 @@ export function Progress({ s }: { s: CourseState }) {
             <BadgeTile
               key={x.name}
               name={x.name}
-              icon={x.icon as IconName}
+              icon={x.icon}
               on={x.on}
               selected={!!shareBadge && shareBadge.name === x.name}
               delay={300 + i * 60}

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth, verifiedEmailFrom } from "@/auth";
 import { RegisterSection } from "@/components/home/RegisterSection";
 import { trackSlugs } from "@/data/tracks";
+import { isListed } from "@/data/course-cards";
 import { getLearnerState } from "@/lib/learner/data";
 import { inAppBrowser } from "@/lib/sd-offer";
 import type { TrackSlug } from "@/types/program";
@@ -13,6 +14,8 @@ export const metadata: Metadata = { title: "Register" };
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ track?: string; signin?: string }> }) {
   const { track, signin } = await searchParams;
   const defaultTrack = trackSlugs.includes(track as TrackSlug) ? (track as TrackSlug) : undefined;
+  // A track the live site does not list takes no sign-up: back to the course list.
+  if (defaultTrack && !isListed(defaultTrack)) redirect("/courses");
   // A link that names a track we do not have: say so, rather than showing an empty picker with no explanation.
   const unknownTrack = !!track && !defaultTrack;
 
@@ -24,7 +27,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const email = verifiedEmailFrom(session);
   if (email) {
     const { state } = await getLearnerState(defaultTrack);
-    if (state === "other-device") redirect("/learn");
+    if (state === "other-device") redirect("/dashboard");
     if (defaultTrack && state === "enrolled") redirect(`/learn/tracks/${defaultTrack}`);
   }
 

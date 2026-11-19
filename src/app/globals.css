@@ -403,3 +403,9 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 /* Diagram builder: a wrong drop nudges the slot sideways. */
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 @media (prefers-reduced-motion: reduce) { [data-slot] { animation: none !important; } }
+
+/* The learner sidebar (LearnerTopBar) is fixed at the left from 1024px: the page and its footer move over to make room. */
+@media (min-width: 1024px) {
+  .learner-shell:has(.learner-rail[data-rail="wide"]) { padding-left: 248px; }
+  .learner-shell:has(.learner-rail[data-rail="compact"]) { padding-left: 72px; }
+}

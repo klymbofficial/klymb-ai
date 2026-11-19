@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient, type ProfileLinks } from "../src/lib/learner/enrolment";
+import { enrolLearner, ensureLearner, UNIQUE_VIOLATION, type EnrolmentClient, type ProfileLinks } from "../src/lib/learner/enrolment";
 
 /** Records what the code tried to do, so idempotency can be asserted. */
 function stubClient({ existing, insertError, platformUserId, links }: {
@@ -82,4 +82,36 @@ test("someone with no platform account still enrols, unlinked", async () => {
   assert.equal(await ensureLearner(client, input), true);
   assert.equal(inserts.length, 1);
   assert.equal(inserts[0].user_id, null);
+});
+
+// enrolLearner says whether this call made the place, so only the first start is welcomed.
+test("a new place reports created", async () => {
+  const { client } = stubClient({});
+  assert.equal(await enrolLearner(client, input), "created");
+});
+
+test("a place that was already there reports existing, and inserts nothing", async () => {
+  const { client, inserts } = stubClient({ existing: { id: "abc" } });
+  assert.equal(await enrolLearner(client, input), "existing");
+  assert.equal(inserts.length, 0);
+});
+
+test("losing a race to another request reports existing, so only the winner is welcomed", async () => {
+  let looked = 0;
+  const { client } = stubClient({ insertError: { code: UNIQUE_VIOLATION } });
+  client.findLearner = async () => (looked++ ? { id: "theirs" } : null);
+  assert.equal(await enrolLearner(client, input), "existing");
+});
+
+test("a refused second track and a real failure both report failed", async () => {
+  assert.equal(await enrolLearner(stubClient({ insertError: { code: UNIQUE_VIOLATION } }).client, input), "failed");
+  assert.equal(await enrolLearner(stubClient({ insertError: { code: "23514" } }).client, input), "failed");
+});
+
+test("starting with only an email, a name and a track enrols, with no GitHub or LinkedIn yet", async () => {
+  const { client, inserts } = stubClient({});
+  assert.equal(await enrolLearner(client, { email: "a@b.co", name: "Asha", track: "claude", cohortStart: "2026-11-18" }), "created");
+  assert.equal(inserts[0].github_username, undefined);
+  assert.equal(inserts[0].linkedin_slug, undefined);
+  assert.equal(inserts[0].track, "claude");
 });

@@ -6,6 +6,7 @@ import { Discovery } from "@/components/catalog/Discovery";
 import { ProgramGrid, ProgramGroups } from "@/components/catalog/ProgramGroups";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { availableIn, availablePrograms, getIndustry, industries, programsForIndustry } from "@/data/catalog";
+import { listed } from "@/data/course-cards";
 
 export function generateStaticParams() {
   return industries.map((i) => ({ industry: i.slug }));
@@ -22,11 +23,11 @@ export async function generateMetadata({ params }: { params: Promise<{ industry:
 export default async function IndustryPage({ params }: { params: Promise<{ industry: string }> }) {
   const industry = getIndustry((await params).industry);
   if (!industry) notFound();
-  const list = programsForIndustry(industry.slug);
+  const list = listed(programsForIndustry(industry.slug));
   const sectorSpecific = industry.slug !== "any-industry";
   const noneOpen = availableIn(list).length === 0;
   // A sector page with nothing open still shows what a person in that sector can take today.
-  const roleBased = availablePrograms.filter((p) => p.industries.includes("any-industry"));
+  const roleBased = listed(availablePrograms).filter((p) => p.industries.includes("any-industry"));
 
   return (
     <>

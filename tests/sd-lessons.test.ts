@@ -10,7 +10,7 @@ import {
 import { gradeLesson, isBuiltLesson, isFreeLesson, isFreeVideo, lessonContent, lessonReview, redact } from "../src/lib/sd-lessons";
 
 const NOW = new Date("2026-11-01T12:00:00+05:30").getTime();
-const home = (over: Partial<CourseState> = {}): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true, ...over });
+const home = (over: Partial<CourseState> = {}): CourseState => ({ ...defaultState(NOW), screen: "course", onboarded: true, ...over });
 
 test("the outline the browser sees lists exactly the lessons that exist", () => {
   assert.deepEqual([...BUILT_LESSONS].sort(), Object.keys(LESSON_DAYS).sort());
@@ -117,7 +117,7 @@ test("without a seat a lesson that exists shows the offer, not a lesson", () => 
 
   const asked = openLesson(home(), "0-1", NOW);
   assert.equal(asked.paywall, true);
-  assert.equal(asked.screen, "home");
+  assert.equal(asked.screen, "course");
 
   const forced = openLesson(home(), "0-1", NOW, true);
   assert.equal(forced.paywall, true, "a shared link doesn't get past it");
@@ -135,7 +135,7 @@ test("starting the course without a seat opens the offer, not a lesson", () => {
   setLessons(lessonContent(false));
   const s = openLesson(home({ cur: "0-0" }), "0-0", NOW);
   assert.equal(s.paywall, true);
-  assert.equal(s.screen, "home");
+  assert.equal(s.screen, "course");
 });
 
 test("a seat holder skips the welcome: promises first, once", () => {
@@ -150,7 +150,7 @@ test("a seat holder skips the welcome: promises first, once", () => {
   assert.equal(fresh.onboarded, true);
 
   const promised = startEnrolled({ ...defaultState(NOW), commitment: { name: "Asha", date: "2026-11-01" } });
-  assert.equal(promised.screen, "home");
+  assert.equal(promised.screen, "course");
 
   const paid = afterPayment(defaultState(NOW), NOW);
   assert.equal(paid.screen, "commit");

@@ -56,5 +56,5 @@ export async function systemDesignSeat(email: string): Promise<SystemDesignSeat 
 export async function redirectToDashboard() {
   const email = await currentEmail();
   if (!email) return;
-  if ((await getLearnerState()).state === "enrolled" || (await hasCourseAccess(email, SD_COURSE))) redirect("/learn");
+  if ((await getLearnerState()).state === "enrolled" || (await hasCourseAccess(email, SD_COURSE))) redirect("/dashboard");
 }

@@ -10,6 +10,6 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const email = await currentEmail();
   // One place for every course: the dashboard lists System Design beside a track.
-  const link = email ? { label: "Dashboard", href: "/learn" } : null;
+  const link = email ? { label: "Dashboard", href: "/dashboard" } : null;
   return NextResponse.json({ link }, { headers: { "Cache-Control": "private, no-store" } });
 }

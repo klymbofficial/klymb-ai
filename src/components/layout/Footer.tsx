@@ -2,7 +2,8 @@ import Link from "next/link";
 import { contact, socials } from "@/data/config";
 import { brand, footerLinks } from "@/data/program";
 import { entity } from "@/data/legal";
-import { tracks } from "@/data/tracks";
+import { challenges, tracks } from "@/data/tracks";
+import { isListed, listed } from "@/data/course-cards";
 
 function Column({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
@@ -52,10 +53,10 @@ export function Footer() {
               title="Programs"
               links={[
                 { label: "Courses", href: "/courses" },
-                { label: "60-day challenges", href: "/challenges" },
-                ...tracks.map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })),
+                ...(listed(challenges).length ? [{ label: "60-day challenges", href: "/challenges" }] : []),
+                ...listed(tracks).map((t) => ({ label: t.name, href: `/tracks/${t.slug}` })),
                 { label: "System Design", href: "/system-design" },
-                { label: "Agentic AI Systems", href: "/courses/agentic-ai" },
+                ...(isListed("agentic-ai") ? [{ label: "Agentic AI Systems", href: "/courses/agentic-ai" }] : []),
                 { label: "Hackathons", href: "/hackathons" },
               ]}
             />

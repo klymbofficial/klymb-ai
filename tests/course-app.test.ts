@@ -14,7 +14,7 @@ const FULL = lessonContent(true);
 setLessons(FULL);
 
 const NOW = new Date(2026, 9, 21, 9, 0, 0).getTime();
-const home = (): CourseState => ({ ...defaultState(NOW), screen: "home", onboarded: true });
+const home = (): CourseState => ({ ...defaultState(NOW), screen: "course", onboarded: true });
 /** Day 1 with every practice step done. */
 const day0Done = (s: CourseState) => updateLesson(s, "0-0", { watched: true, built: 0, drawn: { score: 2, of: 2 }, post: [0, 0, 0, 0, 0], follow: [true, true, false] }, NOW);
 
@@ -80,7 +80,7 @@ test("closing a started assessment asks first", () => {
   const started: CourseState = { ...home(), screen: "quiz", quiz: { kind: "post", stage: "q", idx: 1, answers: { 0: 0 } } };
   assert.equal(closeQuiz(started).confirmExit, true);
   const unstarted: CourseState = { ...started, quiz: { ...started.quiz, answers: {} } };
-  assert.equal(closeQuiz(unstarted).screen, "home");
+  assert.equal(closeQuiz(unstarted).screen, "course");
 });
 
 test("the video moves the playhead; tick only counts today's minutes", () => {
@@ -174,7 +174,7 @@ test("finishing a lesson whose next day isn't out yet goes home", { skip: !FIRST
   const s0 = updateLesson({ ...home(), screen: "player", cur: LAST_BUILT }, LAST_BUILT, fullProgress(LAST_BUILT), NOW);
   const s = completeNext(s0, false, NOW);
   assert.ok(s.done.includes(LAST_BUILT));
-  assert.equal(s.screen, "home");
+  assert.equal(s.screen, "course");
   assert.match(s.toast ?? "", /coming soon/);
 });
 
@@ -187,7 +187,7 @@ test("every built day can be finished from start to end", () => {
 test("coming-soon lessons don't open", { skip: !FIRST_SOON && "every day is out" }, () => {
   assert.equal(isSoon(FIRST_SOON), true);
   const s = openLesson(home(), FIRST_SOON, NOW);
-  assert.equal(s.screen, "home");
+  assert.equal(s.screen, "course");
   assert.match(s.toast ?? "", /coming soon/);
 });
 
@@ -248,7 +248,7 @@ test("saved progress round-trips, and today's minutes reset on a new day", () =>
   assert.equal(same.lang, "hi");
   assert.equal(flowDone(same, "0-0"), true, "lesson practice is saved");
   assert.equal(same.todaySec, 600);
-  assert.equal(same.screen, "home");
+  assert.equal(same.screen, "course");
   const tomorrow = fromStored(raw, NOW + 86_400_000);
   assert.equal(tomorrow.todaySec, 0);
   assert.equal(tomorrow.today, localDate(new Date(NOW + 86_400_000)));
@@ -257,7 +257,7 @@ test("saved progress round-trips, and today's minutes reset on a new day", () =>
 test("progress saved by an older version, with downloads in it, still loads", () => {
   const raw = { ...JSON.parse(JSON.stringify(toStored(home()))), dl: [{ id: "0-0", size: 38 }], dlProg: { "0-1": 40 }, onboarded: true };
   const s = fromStored(raw, NOW);
-  assert.equal(s.screen, "home");
+  assert.equal(s.screen, "course");
   assert.equal("dl" in s, false, "downloads are no longer part of the state");
   assert.equal("dl" in toStored(s), false);
 });
@@ -341,7 +341,7 @@ test("old sample messages saved in a browser don't come back", () => {
 
 test("the final assessment stays shut until every lesson is finished", () => {
   const early = openFinal({ ...home(), done: ["0-0", "0-1"] }, NOW);
-  assert.equal(early.screen, "home");
+  assert.equal(early.screen, "course");
   assert.equal(early.toast, "The final assessment opens the day after you pass Day 21.");
   const at = new Date(NOW - 2 * 86_400_000).toISOString();
   const passes = ALL_IDS.map((lesson) => ({ lesson, at }));

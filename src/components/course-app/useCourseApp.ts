@@ -14,7 +14,7 @@ import { useActivity } from "./track";
  * lesson ids, so only its settings carry over (see `settingsOnly`). v1 held the
  * design prototype's sample learner, so it isn't read.
  */
-const STORAGE_KEY = "klymb.system-design.v3";
+export const STORAGE_KEY = "klymb.system-design.v3";
 const PREVIOUS_KEY = "klymb.system-design.v2";
 
 const read = (k: string): unknown => { try { return JSON.parse(window.localStorage.getItem(k) ?? "null"); } catch { return null; } };
@@ -27,7 +27,7 @@ export type Act = (fn: (s: CourseState) => CourseState) => void;
  * saves nothing; `&q=` and `&post=1` set the question and a finished
  * post-assessment, as on the design canvas. `?lesson=<id>` opens straight
  * into a lesson (for links from Instagram and the standalone Day pages).
- * `?paid=1` is the return from checkout. Someone new with no seat and no link
+ * `?paid=1` is the return from checkout; `?inbox=1` opens the notifications and `?view=progress` the badges. Someone new with no seat and no link
  * to a lesson goes to the offer rather than an empty course.
  */
 /** Sends a final assessment attempt to be graded. */
@@ -47,9 +47,11 @@ export function useCourseApp({ lessons, enrolled, passes, progress }: { lessons:
   const [ready, setReady] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const preview = useRef(false);
-  /** `?lesson=` read once: the URL is tidied after, and dev mode runs the effect twice. */
+  /** `?lesson=`, `?paid`, `?inbox` and `?view=` read once: the URL is tidied after, and dev mode runs the effect twice. */
   const link = useRef<string | null | undefined>(undefined);
   const paid = useRef(false);
+  const inbox = useRef(false);
+  const view = useRef<string | null>(null);
   const latest = useRef(s);
   useEffect(() => { latest.current = s; }, [s]);
 
@@ -70,15 +72,18 @@ export function useCourseApp({ lessons, enrolled, passes, progress }: { lessons:
       if (link.current === undefined) {
         link.current = params.get("lesson");
         paid.current = params.has("paid");
+        inbox.current = params.has("inbox");
+        view.current = params.get("view");
       }
       if (paid.current && enrolled) next = afterPayment(next);
       else if (link.current) next = deepLink(next, link.current);
       else if (enrolled && !next.onboarded) next = startEnrolled(next);
       else if (!next.onboarded) return window.location.replace("/system-design");
       // From an announcement's phone notification: straight to the inbox.
-      const inbox = params.has("inbox");
-      if (inbox && next.onboarded && !paid.current && !link.current) next = { ...next, screen: "notifs", tab: "home" };
-      if (link.current || paid.current || inbox) window.history.replaceState(null, "", window.location.pathname);
+      if (inbox.current && next.onboarded && !paid.current && !link.current) next = { ...next, screen: "notifs", tab: "course" };
+      // From the dashboard's "View and share" on a badge: straight to Progress, where the badges are.
+      if (view.current === "progress" && next.onboarded && !paid.current && !link.current) next = { ...next, screen: "progress", tab: "progress" };
+      if (params.has("lesson") || params.has("paid") || params.has("inbox") || params.has("view")) window.history.replaceState(null, "", window.location.pathname);
     }
     if (!navigator.onLine) next = { ...next, offline: true };
     // Storage and the URL only exist in the browser, so the first real state arrives after mount.

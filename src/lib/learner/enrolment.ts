@@ -51,6 +51,13 @@ export interface ProfileLinks {
 export const UNIQUE_VIOLATION = "23505";
 
 /**
+ * What enrolling did: a place made just now, a place that was already there,
+ * or nothing because the write failed. Callers that greet a new learner (the
+ * welcome email) need to tell the first from the second.
+ */
+export type EnrolOutcome = "created" | "existing" | "failed";
+
+/**
  * One place per person per track. Idempotent: registering for the same track
  * again never creates a second learner, while a different track adds one, with
  * the GitHub and LinkedIn from their earlier track carried over. The
@@ -58,7 +65,16 @@ export const UNIQUE_VIOLATION = "23505";
  * Returns true when a place on this track exists afterwards, false when not.
  */
 export async function ensureLearner(client: EnrolmentClient, input: EnrolInput): Promise<boolean> {
-  if (await client.findLearner(input.email, input.track)) return true;
+  return (await enrolLearner(client, input)) !== "failed";
+}
+
+/**
+ * The rule behind ensureLearner, saying whether this call made the place. When
+ * two requests race, only the one whose insert went through reports "created",
+ * so only one of them sends a welcome.
+ */
+export async function enrolLearner(client: EnrolmentClient, input: EnrolInput): Promise<EnrolOutcome> {
+  if (await client.findLearner(input.email, input.track)) return "existing";
 
   const carried = await client.findProfileLinks(input.email);
   const github = input.githubUsername
@@ -74,12 +90,12 @@ export async function ensureLearner(client: EnrolmentClient, input: EnrolInput):
     ...(carried?.linkedin_slug ? { linkedin_slug: carried.linkedin_slug, linkedin_url: carried.linkedin_url } : {}),
   });
 
-  if (!error) return true;
+  if (!error) return "created";
   // Someone else inserted this track between our check and our insert, which
   // is success. Before the several-tracks migration has run, a second track
   // also collides here, on the old one-row-per-email rule: that is not success.
-  if (error.code === UNIQUE_VIOLATION) return !!(await client.findLearner(input.email, input.track));
+  if (error.code === UNIQUE_VIOLATION) return (await client.findLearner(input.email, input.track)) ? "existing" : "failed";
 
   console.error("enrolment failed:", error.code);
-  return false;
+  return "failed";
 }

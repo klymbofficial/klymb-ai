@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { industries, roles } from "@/data/catalog";
-import { libraryCourses } from "@/data/course-cards";
+import { listedCourses } from "@/data/course-cards";
 
 export const STATUS = [["all", "All"], ["available", "Open"], ["unavailable", "Not available"]] as const;
 export const SORTS = [["open", "Open first"], ["az", "A to Z"]] as const;
@@ -171,7 +171,7 @@ export function CourseFilter({
         {/* Beside the button: a bar per course, lit when it matches. Hovering an option previews it. */}
         <div className="morph-in flex h-[34px] items-center justify-end gap-2.5 pr-3.5" style={stagger(0)}>
           <span aria-hidden="true" className="flex h-4 items-end gap-[3px]">
-            {libraryCourses.map((c, i) => {
+            {listedCourses.map((c, i) => {
               const hit = shown.has(c.slug);
               return (
                 <span
@@ -187,7 +187,7 @@ export function CourseFilter({
           </span>
           <p className="text-[13px] whitespace-nowrap">
             <span className={clsx("nums font-semibold", previewing ? "text-muted" : "text-ink")}>{shown.size}</span>
-            <span className="text-muted"> of {libraryCourses.length}</span>
+            <span className="text-muted"> of {listedCourses.length}</span>
           </p>
         </div>
 

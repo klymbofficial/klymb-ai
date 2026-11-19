@@ -46,7 +46,7 @@ export default async function CourseModulePage({ params }: RouteParams) {
 
   return (
     <>
-      <LearnerTopBar name={name} image={session?.user?.image} />
+      <LearnerTopBar name={name} image={session?.user?.image} compact />
       <CourseProgressProvider course={course.slug} initial={progress}>
         <CourseFrame courseSlug={course.slug} courseTitle={course.title} modules={frameModules(course)} current={mod.slug}>
           <article className="crs-article">

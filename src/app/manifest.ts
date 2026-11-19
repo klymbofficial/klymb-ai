@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Klymb.ai: Job-ready in 30 days",
     short_name: "Klymb.ai",
     description: "Your 30-day track: one real workplace problem a day, available offline.",
-    start_url: "/learn",
+    start_url: "/dashboard",
     scope: "/",
     display: "standalone",
     background_color: "#f2f2f2",

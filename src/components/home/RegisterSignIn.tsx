@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { startGoogleRegistration } from "@/app/(register)/register/actions";
+import { ChallengeConsent } from "@/components/home/ChallengeConsent";
 import { GoogleMark } from "@/components/ui/GoogleMark";
 import { getTrack } from "@/data/tracks";
 import type { TrackSlug } from "@/types/program";
@@ -13,10 +14,14 @@ import type { TrackSlug } from "@/types/program";
  * who owns it. The chosen track rides through the sign-in in the return path
  * (a track slug, nothing else), and what is typed afterwards never leaves the
  * page: no name, email, phone or repository goes in an address.
+ *
+ * `oneClick` is a challenge that starts on sign-in: it is the only step, so
+ * the page says Day 1 opens straight after it, and carries the privacy line
+ * the registration form's agreement box would have.
  */
 export function RegisterSignIn({
-  track, unknownTrack, failed, inApp,
-}: { track?: TrackSlug; unknownTrack?: boolean; failed?: boolean; inApp: boolean }) {
+  track, unknownTrack, failed, inApp, oneClick,
+}: { track?: TrackSlug; unknownTrack?: boolean; failed?: boolean; inApp: boolean; oneClick?: boolean }) {
   const chosen = track ? getTrack(track) : undefined;
   const [busy, setBusy] = useState(false);
   const [blocked, setBlocked] = useState(false);
@@ -35,7 +40,9 @@ export function RegisterSignIn({
         Start the {chosen ? <span className="text-red-deep">{chosen.name}</span> : null}{chosen?.kind === "challenge" ? (chosen.name.endsWith("Challenge") ? "" : " challenge") : " track"}
       </h2>
       <p className="mt-1 mb-6 text-sm text-muted">
-        Start by signing in with Google. Your registration and your course belong to your Google email, so only you can make or change them.
+        {oneClick
+          ? "Sign in with Google and Day 1 opens straight away. Your challenge belongs to your Google email, so only you can start or change it."
+          : "Start by signing in with Google. Your registration and your course belong to your Google email, so only you can make or change them."}
       </p>
 
       {failed && (
@@ -68,6 +75,7 @@ export function RegisterSignIn({
           {busy ? "Opening Google…" : "Continue with Google"}
         </button>
         <p role="status" className="sr-only">{busy ? "Opening Google…" : ""}</p>
+        {oneClick && <ChallengeConsent className="mt-3 text-xs text-muted" />}
       </form>
 
       {blocked && (
@@ -83,8 +91,17 @@ export function RegisterSignIn({
         <h3 className="text-xs font-extrabold uppercase tracking-[0.16em] text-muted">What happens next</h3>
         <ol className="mt-3 space-y-2.5 text-sm leading-relaxed text-ink/80">
           <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">1</span>Sign in with Google. Nothing is saved yet.</li>
-          <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">2</span>Add a few details: about a minute. Your name and email come from Google.</li>
-          <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">3</span>You register, and your course opens on the same account.</li>
+          {oneClick ? (
+            <>
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">2</span>Day 1 opens straight away, on the same account. Nothing to fill in.</li>
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">3</span>On Day 1 you add your GitHub and LinkedIn, so each day&apos;s work can be checked.</li>
+            </>
+          ) : (
+            <>
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">2</span>Add a few details: about a minute. Your name and email come from Google.</li>
+              <li className="flex gap-3"><span aria-hidden="true" className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-surface text-[11px] font-bold nums">3</span>You register, and your course opens on the same account.</li>
+            </>
+          )}
         </ol>
         <p className="mt-4 text-xs text-muted">If you back out at Google, nothing is registered or reserved.</p>
       </div>

@@ -6,6 +6,7 @@ import { Discovery } from "@/components/catalog/Discovery";
 import { ProgramGroups } from "@/components/catalog/ProgramGroups";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { availableIn, getRole, programsForRole, roles } from "@/data/catalog";
+import { listed } from "@/data/course-cards";
 
 export function generateStaticParams() {
   return roles.map((r) => ({ role: r.slug }));
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ role: str
 export default async function RolePage({ params }: { params: Promise<{ role: string }> }) {
   const role = getRole((await params).role);
   if (!role) notFound();
-  const list = programsForRole(role.slug);
+  const list = listed(programsForRole(role.slug));
   const noneOpen = availableIn(list).length === 0;
 
   return (

@@ -2,6 +2,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { availableIn, industries, programsForIndustry, programsForRole, roles } from "@/data/catalog";
+import { listed } from "@/data/course-cards";
 
 type Active = { kind: "role" | "industry"; slug: string } | null;
 
@@ -36,7 +37,7 @@ export function Discovery({ active = null }: { active?: Active }) {
         <h2 id="by-role" className="display mt-2 text-xl">What job do you do, or want next?</h2>
         <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {roles.map((r) => (
-            <Chip key={r.slug} href={`/courses/roles/${r.slug}`} name={r.name} open={availableIn(programsForRole(r.slug)).length} current={active?.kind === "role" && active.slug === r.slug} />
+            <Chip key={r.slug} href={`/courses/roles/${r.slug}`} name={r.name} open={availableIn(listed(programsForRole(r.slug))).length} current={active?.kind === "role" && active.slug === r.slug} />
           ))}
         </ul>
       </nav>
@@ -45,7 +46,7 @@ export function Discovery({ active = null }: { active?: Active }) {
         <h2 id="by-industry" className="display mt-2 text-xl">Which industry is your team in?</h2>
         <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {industries.map((i) => (
-            <Chip key={i.slug} href={`/courses/industries/${i.slug}`} name={i.name} open={availableIn(programsForIndustry(i.slug)).length} current={active?.kind === "industry" && active.slug === i.slug} />
+            <Chip key={i.slug} href={`/courses/industries/${i.slug}`} name={i.name} open={availableIn(listed(programsForIndustry(i.slug))).length} current={active?.kind === "industry" && active.slug === i.slug} />
           ))}
         </ul>
       </nav>

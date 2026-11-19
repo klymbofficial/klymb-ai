@@ -19,9 +19,9 @@ import { canTake, lockedMessage, paceOf, type SdProgress } from "@/lib/sd-pace";
  */
 
 export type Screen =
-  | "splash" | "onboard" | "commit" | "home" | "course" | "progress" | "refer" | "profile"
+  | "splash" | "onboard" | "commit" | "course" | "progress" | "refer" | "profile"
   | "player" | "quiz" | "results" | "notifs" | "recap";
-export type Tab = "home" | "course" | "progress" | "refer" | "profile";
+export type Tab = "course" | "progress" | "refer" | "profile";
 export type PlayerTab = "lessons" | "qna" | "notes";
 /** "pre" is the retired course baseline; only the final assessment ("post") is taken now. */
 export type QuizKind = "pre" | "post";
@@ -274,7 +274,7 @@ export type SubLang = "hinglish" | "en";
 export type SubSize = "s" | "m" | "l";
 export const SUB_LANGS: [SubLang, string][] = [["hinglish", "Hinglish"], ["en", "English"]];
 /** Tabs keep a lesson playing in the mini player. */
-export const TAB_SCREENS: Screen[] = ["home", "course", "progress", "refer", "profile"];
+export const TAB_SCREENS: Screen[] = ["course", "progress", "refer", "profile"];
 
 export const sec = (d: string) => {
   const [m, s] = d.split(":");
@@ -368,7 +368,7 @@ const toast = (msg: string, now: number, ms = 2600) => ({ toast: msg, toastUntil
 /** A first visit: nothing done, no baseline yet, the course opens on Day 1. */
 export function defaultState(now = Date.now()): CourseState {
   return {
-    screen: "splash", tab: "home", onboarded: false, onb: 0, splashUntil: now + 1800, referralSeen: false, referralSample: false, groupSeen: false, annRead: [],
+    screen: "splash", tab: "course", onboarded: false, onb: 0, splashUntil: now + 1800, referralSeen: false, referralSample: false, groupSeen: false, annRead: [],
     cur: "0-0", t: 0, playing: false, speed: 1, visited: false, miniHide: null, ended: false, upNext: 0,
     notes: {}, draft: "", ptab: "lessons", openMod: 0, done: [],
     quiz: { kind: "pre", stage: "intro", idx: 0, answers: {} }, timeLeft: TIMED_SECONDS, confirmExit: false,
@@ -398,7 +398,7 @@ export type StartScreen = (typeof START_SCREENS)[number];
 /** A preview state for one design frame. `q` picks the question for "q"; `seedPost` adds a finished post-assessment. */
 export function previewState(start: StartScreen, opts: { q?: number; seedPost?: boolean } = {}, now = Date.now()): CourseState {
   const s: CourseState = {
-    ...defaultState(now), screen: "home", onboarded: true, toured: true, done: ["0-0"], cur: "0-1",
+    ...defaultState(now), screen: "course", tab: "course", onboarded: true, toured: true, done: ["0-0"], cur: "0-1",
     lessons: { "0-0": { watched: true, read: true, post: [0, 0, 0, 0, 1], check: 80, checkPicks: [0, 0, 0, 0, 1], tries: 1 } },
     commitment: { name: "Priya Sharma", date: localDate(new Date(now)) },
   };
@@ -528,10 +528,10 @@ export function completeNext(s: CourseState, auto: boolean, now = Date.now()): C
   if (moduleIds(cmi).every((id) => done.includes(id)) && (!nextId || lesson(nextId).mi !== cmi)) {
     return { ...s, ...reset, done, cur: nextId ?? s.cur, t: 0, playing: false, screen: "recap", recapMod: cmi, openMod: nextId ? lesson(nextId).mi : cmi };
   }
-  if (nextId && isSoon(nextId)) return { ...s, ...reset, ...toast(`Done! ${lesson(nextId).title.split(":")[0]} is coming soon.`, now), done, playing: false, screen: "home", tab: "home" };
+  if (nextId && isSoon(nextId)) return { ...s, ...reset, ...toast(`Done! ${lesson(nextId).title.split(":")[0]} is coming soon.`, now), done, playing: false, screen: "course", tab: "course" };
   const pace = paceNow(s, now);
-  if (nextId && pace && !canTake(pace, nextId)) return { ...s, ...reset, ...toast(lockedMessage(pace, nextId), now, 2800), done, playing: false, screen: "home", tab: "home" };
-  if (nextId && isPaywalled(nextId)) return { ...s, ...reset, done, cur: nextId, t: 0, playing: false, screen: "home", tab: "home", paywall: true };
+  if (nextId && pace && !canTake(pace, nextId)) return { ...s, ...reset, ...toast(lockedMessage(pace, nextId), now, 2800), done, playing: false, screen: "course", tab: "course" };
+  if (nextId && isPaywalled(nextId)) return { ...s, ...reset, done, cur: nextId, t: 0, playing: false, screen: "course", tab: "course", paywall: true };
   if (nextId) return { ...s, ...reset, ...t, done, cur: nextId, t: 0, playing: auto, openMod: lesson(nextId).mi };
   return { ...s, ...reset, ...t, done };
 }
@@ -677,7 +677,8 @@ export function fromStored(raw: unknown, now = Date.now()): CourseState {
   for (const k of PERSISTED) if (k in saved && saved[k] !== undefined) (s as unknown as Record<string, unknown>)[k] = saved[k];
   if (!ALL_IDS.includes(s.cur) || isSoon(s.cur)) s.cur = base.cur;
   if (s.today !== localDate(new Date(now))) Object.assign(s, { todaySec: 0, today: localDate(new Date(now)) });
-  s.screen = s.onboarded ? "home" : "splash";
+  s.screen = s.onboarded ? "course" : "splash";
+  s.tab = "course";
   return s;
 }
 
@@ -722,7 +723,7 @@ export function withProgress(s: CourseState, progress: SdProgress | null): Cours
 
 /** A seat holder this device hasn't seen: no welcome to sit through, just the promises, once. */
 export function startEnrolled(s: CourseState): CourseState {
-  return { ...s, onboarded: true, screen: s.commitment ? "home" : "commit", tab: "home" };
+  return { ...s, onboarded: true, screen: s.commitment ? "course" : "commit", tab: "course" };
 }
 
 /** Back from a successful payment. */
@@ -744,6 +745,20 @@ export function withServerPasses(s: CourseState, passes: Record<string, number>)
   const done = [...s.done, ...ids.filter((id) => !s.done.includes(id))];
   const next = ALL_IDS.find((id) => !done.includes(id) && !isSoon(id));
   return { ...s, lessons, done, cur: next && done.includes(s.cur) ? next : s.cur };
+}
+
+/**
+ * The course as the server records it, on top of `base` (a browser's saved state, or a fresh one):
+ * every passed lesson done, with its best score, and the pace record. Unlike `withServerPasses` it
+ * needs no lesson content, so a page outside the course app (the dashboard) can run `badges()` on it
+ * and get the same badges, by the same rules, as the app's Progress screen.
+ */
+export function serverState(passes: Record<string, number>, progress: SdProgress | null, base: CourseState = defaultState()): CourseState {
+  const ids = Object.keys(passes).filter((id) => ALL_IDS.includes(id));
+  const lessons = { ...base.lessons };
+  for (const id of ids) lessons[id] = { ...lessons[id], watched: true, read: true, post: lessons[id]?.post ?? [], check: Math.max(lessons[id]?.check ?? 0, passes[id]), failed: false };
+  const done = [...base.done, ...ids.filter((id) => !base.done.includes(id))];
+  return withProgress({ ...base, lessons, done }, progress);
 }
 
 /** Clamped to the allowed range, in steps of 0.05 so the label never shows float noise. */

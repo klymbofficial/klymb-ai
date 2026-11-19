@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AccountLink } from "@/components/layout/AccountLink";
+import { useLogoClimb } from "@/components/layout/KlymbLogo";
 import { Brand, IconShieldCheck } from "./parts";
-import { reduceMotion } from "./motion";
 
 const LINKS = [
   { href: "#why", label: <>Why <Brand className="kl-brandword--nav" /></> },
@@ -13,9 +13,9 @@ const LINKS = [
 ];
 
 /**
- * The floating pill nav. The wordmark plays its climb on load, every five
- * seconds and on hover: the letters bounce in turn while the full stop hops
- * across them and lands back in place with a little pop.
+ * The floating pill nav. The wordmark plays its climb (useLogoClimb) on load,
+ * every five seconds and on hover: the letters bounce in turn while the full
+ * stop hops across them and lands back in place with a little pop.
  *
  * `site`: the (site) pages use it too. There the section links go back to the
  * homepage (/#why), and Log in shows on desktop as well, since those pages
@@ -38,48 +38,7 @@ export function LandingNav({ site = false }: { site?: boolean }) {
     return () => ro.disconnect();
   }, []);
 
-  useEffect(() => {
-    const link = brand.current;
-    if (!link || reduceMotion()) return;
-    const letters = [...link.querySelectorAll<HTMLElement>("[data-logo-l]")];
-    const dot = link.querySelector<HTMLElement>("[data-logo-dot]");
-    if (!dot) return;
-
-    const play = () => {
-      letters.forEach((l, k) =>
-        l.animate(
-          [{ transform: "translateY(0)" }, { transform: `translateY(${-0.08 * (k + 1)}em)`, offset: 0.45 }, { transform: "translateY(0)" }],
-          { duration: 900, delay: k * 60, easing: "cubic-bezier(.3,.7,.3,1)" },
-        ),
-      );
-      const dx = letters.map((l) => l.offsetLeft + l.offsetWidth / 2 - dot.offsetLeft - dot.offsetWidth / 2);
-      const frames: Keyframe[] = [{ transform: `translate(${dx[0]}px,0)`, opacity: 0 }];
-      letters.forEach((_, k) => {
-        const t = (k + 1) / (letters.length + 1);
-        frames.push({ transform: `translate(${dx[k]}px,${-0.5 - k * 0.12}em)`, opacity: 1, offset: t - 0.08 });
-        frames.push({ transform: `translate(${(dx[k] + (dx[k + 1] ?? 0)) / 2}px,${-0.75 - k * 0.12}em)`, offset: t });
-      });
-      frames.push({ transform: "translate(0,0)", opacity: 1 });
-      dot.animate(frames, { duration: 1300, easing: "ease-in-out" });
-      dot.animate([{ transform: "scale(1)" }, { transform: "scale(1.6)" }, { transform: "scale(1)" }], { duration: 300, delay: 1300, easing: "ease-out", composite: "add" });
-    };
-
-    // On load, then every 5 seconds, and on hover; never twice within one run (1.6s).
-    let last = 0;
-    const replay = () => {
-      if (Date.now() - last < 1600) return;
-      last = Date.now();
-      play();
-    };
-    const first = window.setTimeout(replay, 400);
-    const every = window.setInterval(replay, 5000);
-    link.addEventListener("mouseenter", replay);
-    return () => {
-      window.clearTimeout(first);
-      window.clearInterval(every);
-      link.removeEventListener("mouseenter", replay);
-    };
-  }, []);
+  useLogoClimb(brand);
 
   return (
     <div ref={bar} className={site ? "kl-navbar kl-navbar--site" : "kl-navbar"}>

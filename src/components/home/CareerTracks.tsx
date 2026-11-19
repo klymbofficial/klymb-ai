@@ -1,5 +1,7 @@
 import { sectionCopy } from "@/data/program";
 import { trackCount } from "@/data/public-story";
+import { tracks } from "@/data/tracks";
+import { listed } from "@/data/course-cards";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { TrackGrid } from "@/components/track/TrackGrid";
@@ -11,6 +13,8 @@ const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seve
  * leads to the track's own page, which carries the full 30 days.
  */
 export function CareerTracks() {
+  // Nothing to show on the live site until a track is listed.
+  if (listed(tracks).length === 0) return null;
   const { eyebrow, intro } = sectionCopy.tracks;
   const title = `${COUNT_WORDS[trackCount] ?? trackCount} roles. Pick the one you want next.`;
 

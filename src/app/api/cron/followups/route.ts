@@ -148,7 +148,7 @@ function followupEmail(
         unlock,
         ...(offerLine ? [{ title: "Launch price", body: offerLine }] : []),
       ],
-      cta: { href: `${site.url}/learn`, label: "Start Day 1 free" },
+      cta: { href: `${site.url}/dashboard`, label: "Start Day 1 free" },
       closing: "Questions? Just reply to this email.",
     });
   }
@@ -182,7 +182,7 @@ function followupEmail(
       unlock,
       ...(offerLine ? [{ title: "Launch price", body: offerLine }] : []),
     ],
-    cta: { href: `${site.url}/learn`, label: "Try Day 1 free" },
+    cta: { href: `${site.url}/dashboard`, label: "Try Day 1 free" },
     closing: "Got a question before you decide? Reply and a real person will answer.",
   });
 }

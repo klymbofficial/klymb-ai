@@ -60,6 +60,9 @@ export interface LibraryCourse {
   card: CardDetails | null;
 }
 
+/** A course the signed-in learner already has, as its library card shows it: where it goes next, and how far they are. */
+export interface MyCourse { title: string; href: string; label: string; progress: string }
+
 const SD_LESSONS = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 
 /**
@@ -166,3 +169,23 @@ function fromProgram(p: Program): LibraryCourse {
 
 /** Every card the library can show: the featured ones first, then the rest in catalog order. */
 export const libraryCourses: LibraryCourse[] = [claude, agenticAi, aiCohort, ...programs.map(fromProgram)];
+
+/**
+ * The courses the live site lists, by library slug. The others are still being
+ * written: `next dev` lists every course so they can be built and checked
+ * locally, while a production build (the live site, and Vercel previews) lists
+ * only these. Add a course's slug here once its content is final.
+ *
+ * This only decides what the library and the dashboard's rows offer. A
+ * course's own page and its sign-up link still work for anyone who has them.
+ */
+export const LIVE_COURSES: readonly string[] = ["system-design"];
+
+/** Whether the library lists a course: all of them in development, only the live ones in a production build. */
+export const isListed = (slug: string) => process.env.NODE_ENV === "development" || LIVE_COURSES.includes(slug);
+
+/** The library's cards, as this build lists them. */
+export const listedCourses = libraryCourses.filter((c) => isListed(c.slug));
+
+/** Any list of courses or tracks (each with a slug), kept to the ones this build lists, in their order. */
+export const listed = <T extends { slug: string }>(items: readonly T[]): T[] => items.filter((i) => isListed(i.slug));

@@ -9,7 +9,6 @@ export const brand = {
 // One link per job: the catalogue, and one place that explains the 30 days.
 const allNavLinks = [
   { label: "Courses", href: "/courses" },
-  { label: "Challenges", href: "/challenges" },
   { label: "Organizations", href: "/organizations" },
   { label: "Program", href: "/program" },
   { label: "How It Works", href: "/#how-it-works" },
@@ -224,7 +223,6 @@ export const footerLinks = {
     { label: "Why Klymb", href: "/why-klymb" },
     { label: "About", href: "/about" },
     { label: "Program", href: "/program" },
-    { label: "Career Tracks", href: "/tracks" },
     { label: "Register", href: "/register" },
     { label: "Log in", href: "/learn/login" },
     { label: "Contact", href: "/contact" },
