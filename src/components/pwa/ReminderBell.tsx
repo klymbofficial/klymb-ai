@@ -1,7 +1,8 @@
 "use client";
 
 import clsx from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type State = "hidden" | "ask" | "ios-install" | "busy" | "on" | "blocked" | "error";
 
@@ -23,7 +24,7 @@ export type PopoverBox = { position: "fixed"; left: number; width: number; top?:
 
 /**
  * Where the reminders panel sits, on screen: beside the bell (right edge
- * lined up with it), kept `margin` in from both sides of the viewport, and
+ * lined up with it), kept \`margin\` in from both sides of the viewport, and
  * above or below the bell. Measured on open, so it stays on screen wherever
  * the bell is, including the bottom-left of the sidebar and a 375px phone.
  */
@@ -47,12 +48,18 @@ export function popoverBox(
  * a one-time setting shouldn't take space every day. A red dot invites people
  * who haven't turned reminders on. One tap asks the browser for permission and
  * saves this device; iPhones need Klymb on the home screen first.
+ *
+ * The panel is drawn into the page's body, out of the page flow, so it never
+ * takes space from the sidebar or the top bar, and it is placed before it is
+ * first painted, from where the bell is then. It follows the bell when the
+ * page scrolls or the window resizes.
  */
 export function ReminderBell({ placement = "below" }: { placement?: "above" | "below" } = {}) {
   const [state, setState] = useState<State>("hidden");
   const [open, setOpen] = useState(false);
   const [box, setBox] = useState<PopoverBox | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const key = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   useEffect(() => {
@@ -72,19 +79,35 @@ export function ReminderBell({ placement = "below" }: { placement?: "above" | "b
     return () => { cancelled = true; };
   }, [key]);
 
-  // Close on an outside tap, Escape, or a resize (the panel is placed from where the bell was).
+  // Placed before the panel is first painted, and again whenever the page moves under it.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      if (!wrap.current) return;
+      setBox(popoverBox(wrap.current.getBoundingClientRect(), { width: window.innerWidth, height: window.innerHeight }, placement));
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open, placement]);
+
+  // Close on an outside tap or Escape. The panel is outside the bell's element, so both count as inside.
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const onDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (!wrap.current?.contains(target) && !panel.current?.contains(target)) setOpen(false);
+    };
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    const close = () => setOpen(false);
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    window.addEventListener("resize", close);
     return () => {
       document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", close);
     };
   }, [open]);
 
@@ -114,68 +137,65 @@ export function ReminderBell({ placement = "below" }: { placement?: "above" | "b
     setState("ask");
   }
 
-  // Opening measures the bell and places the panel on screen; closing needs no measuring.
-  function toggle() {
-    if (!open && wrap.current) {
-      const r = wrap.current.getBoundingClientRect();
-      setBox(popoverBox(r, { width: window.innerWidth, height: window.innerHeight }, placement));
-    }
-    setOpen(!open);
-  }
-
   if (state === "hidden") return null;
   const copy = state === "busy" ? null : COPY[state];
   const nudge = state === "ask" || state === "ios-install";
 
   return (
-    <div ref={wrap} className="relative">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        aria-label={state === "on" ? "Reminders on" : "Reminders off: turn on"}
-        className="relative grid size-9 place-items-center rounded-full text-ink transition-[background-color,transform] duration-150 hover:bg-surface active:scale-[0.94]"
-      >
-        <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-          {state === "blocked" && <path d="m3 3 18 18" />}
-        </svg>
-        {nudge && <span aria-hidden="true" className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-strong ring-2 ring-card" />}
-        {state === "on" && <span aria-hidden="true" className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[#16a34a] ring-2 ring-card" />}
-      </button>
-
-      <div
-        role="dialog"
-        aria-label="Daily reminders"
-        style={box ?? undefined}
-        className={clsx(
-          "z-50 max-w-[calc(100vw-2rem)] rounded-card bg-card p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)] ring-1 ring-line/40",
-          placement === "above" ? "origin-bottom-left" : "origin-top-right",
-          "transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
-          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
-        )}
-      >
-        {state === "busy" || !copy ? (
-          <p className="text-sm font-semibold text-muted">One moment…</p>
-        ) : (
-          <>
-            <p className="font-extrabold">{copy.title}</p>
-            <p className="mt-1 text-sm leading-relaxed text-muted">{copy.body}</p>
-            {(state === "ask" || state === "error") && (
-              <button type="button" onClick={enable} className="mt-3 w-full rounded-full bg-red-strong px-4 py-2.5 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
-                Turn on reminders
-              </button>
-            )}
-            {state === "on" && (
-              <button type="button" onClick={disable} className="mt-3 text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink">
-                Turn off
-              </button>
-            )}
-          </>
-        )}
+    <>
+      <div ref={wrap} className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-label={state === "on" ? "Reminders on" : "Reminders off: turn on"}
+          className="relative grid size-9 place-items-center rounded-full text-ink transition-[background-color,transform] duration-150 hover:bg-surface active:scale-[0.94]"
+        >
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            {state === "blocked" && <path d="m3 3 18 18" />}
+          </svg>
+          {nudge && <span aria-hidden="true" className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-strong ring-2 ring-card" />}
+          {state === "on" && <span aria-hidden="true" className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[#16a34a] ring-2 ring-card" />}
+        </button>
       </div>
-    </div>
+
+      {createPortal(
+        <div
+          ref={panel}
+          role="dialog"
+          aria-label="Daily reminders"
+          style={box ?? { position: "fixed", left: 0, top: 0, visibility: "hidden" }}
+          className={clsx(
+            "z-50 max-w-[calc(100vw-2rem)] rounded-card bg-card p-4 shadow-[0_12px_40px_rgba(0,0,0,0.18)] ring-1 ring-line/40",
+            placement === "above" ? "origin-bottom-left" : "origin-top-right",
+            "transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]",
+            open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0",
+          )}
+        >
+          {state === "busy" || !copy ? (
+            <p className="text-sm font-semibold text-muted">One moment…</p>
+          ) : (
+            <>
+              <p className="font-extrabold">{copy.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{copy.body}</p>
+              {(state === "ask" || state === "error") && (
+                <button type="button" onClick={enable} className="mt-3 w-full rounded-full bg-red-strong px-4 py-2.5 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
+                  Turn on reminders
+                </button>
+              )}
+              {state === "on" && (
+                <button type="button" onClick={disable} className="mt-3 text-sm font-semibold text-muted underline underline-offset-4 hover:text-ink">
+                  Turn off
+                </button>
+              )}
+            </>
+          )}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
