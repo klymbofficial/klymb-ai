@@ -1,0 +1,499 @@
+/*
+ * The public hackathon page (/hackathons). A port of the Vibe Code Hackathon
+ * landing page: grid hero with a padlock and circuit scene, "How it works"
+ * cards, an illustrated timeline, an FAQ accordion and pinned rule notes.
+ *
+ * Everything is scoped to .hk. The original's orange is klymb.ai's brand red
+ * #83050B here, and its peach surfaces are the matching warm red tints.
+ * Headings are Archivo, like the rest of the site.
+ */
+
+.hk {
+  --hk-red: #83050b;
+  --hk-red-hover: #690409;
+  --hk-red-press: #5a0307;
+  --hk-red-400: #f0868b;
+  --hk-ink: #201e1d;
+  --hk-ink-2: #3d3a39;
+  --hk-muted: #5a5757;
+  --hk-muted-2: #8f8b8a;
+  --hk-tint-bg: #f4e9e8;     /* timeline + rules container */
+  --hk-tint-fill: #efc6c6;   /* rule note */
+  --hk-tint-line: #f0d6d5;   /* card borders */
+  --hk-tint-soft: #f5e0df;   /* hero grid cells, stronger */
+  --hk-tint-faint: #faf2f1;  /* hero grid cells, faint */
+  --hk-tint-ghost: #e4d4d3;  /* the oversized RULES word */
+  --hk-grid-line: #e7e0df;
+  --hk-surface: #ffffff;
+  --hk-surface-2: #fffcfc;
+  --hk-rail: #c9c3c2;
+  --hk-count-bg: #e2dedd;
+  --hk-r-sm: 9px;
+  --hk-r-md: 12px;
+  --hk-r-lg: 18px;
+  --hk-r-xl: 24px;
+  --hk-shadow-card: 0 1px 2px rgba(32, 30, 29, .04), 0 8px 24px rgba(32, 30, 29, .06);
+  --hk-shadow-paper: 22px 34px 62px -12px rgba(90, 3, 7, .38), 8px 15px 28px -6px rgba(90, 3, 7, .26), 0 2px 4px rgba(90, 3, 7, .14);
+  --hk-shadow-paper-hover: 30px 46px 82px -12px rgba(90, 3, 7, .46), 12px 22px 38px -6px rgba(90, 3, 7, .32), 0 2px 4px rgba(90, 3, 7, .16);
+  --hk-clay-rest: 0 4px 12px rgba(131, 5, 11, .26), inset 0 -4px 12px rgba(0, 0, 0, .18), inset 0 1px 1px rgba(255, 255, 255, .2);
+  --hk-clay-hover: 0 8px 18px rgba(131, 5, 11, .3), inset 0 -4px 12px rgba(0, 0, 0, .16), inset 0 1px 1px rgba(255, 255, 255, .24);
+  --hk-clay-press: 0 2px 6px rgba(131, 5, 11, .2), inset 0 -2px 8px rgba(0, 0, 0, .24), inset 0 3px 8px rgba(0, 0, 0, .14);
+  --hk-font: var(--font-sans);
+  --hk-font-heading: var(--font-heading);
+  --hk-nav-h: 77px;
+  --hk-gutter: clamp(16px, 2.6cqw, 42px);
+
+  container: hk / inline-size;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding-bottom: clamp(48px, 5cqw, 88px);
+  color: var(--hk-ink-2);
+  font-family: var(--hk-font);
+  overflow-x: clip;
+}
+
+.hk :where(h1, h2, h3, p, ol, ul) { margin: 0; }
+.hk :where(ol, ul) { padding: 0; list-style: none; }
+.hk :where(h1, h2, h3, .hk-count__value, .tl-tab) { font-family: var(--hk-font-heading); }
+.hk :where(a, button, [tabindex]):focus-visible { outline: 2px solid var(--hk-red); outline-offset: 4px; border-radius: 6px; }
+
+.hk .hk-h2 { font-size: clamp(1.35rem, 2.6cqw, 2.5rem); font-weight: 800; letter-spacing: -.015em; color: var(--hk-ink); }
+.hk .hk-section { margin-inline: var(--hk-gutter); margin-top: clamp(40px, 5cqw, 82px); }
+
+/* --- buttons --------------------------------------------------------------- */
+.hk .hk-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; min-width: 96px; padding: 0 26px;
+  border: 0; border-radius: 999px;
+  font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, box-shadow .2s ease, transform .18s ease;
+}
+.hk .hk-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hk .hk-btn--primary { background: var(--hk-red); color: #fff; box-shadow: var(--hk-clay-rest); }
+.hk .hk-btn--primary:hover { background: var(--hk-red-hover); box-shadow: var(--hk-clay-hover); transform: translateY(-1px); }
+.hk .hk-btn--primary:active { background: var(--hk-red-press); box-shadow: var(--hk-clay-press); transform: translateY(1px); }
+.hk .hk-btn--ghost { background: transparent; color: var(--hk-ink); }
+.hk .hk-btn--ghost:hover { background: #f3efee; }
+.hk .hk-btn--ghost:active { transform: translateY(1px); }
+
+/* ==========================================================================
+   Hero: one screen under the nav. The headline block takes what it needs,
+   the padlock scene takes the rest.
+   ========================================================================== */
+.hk .hk-hero {
+  --hk-gap-top: 22px;
+  --hk-gap-sub: 23px;
+  --hk-gap-count: 37px;
+  --hk-gap-cta: 26px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--hk-nav-h));
+  padding: clamp(20px, 2.2cqw, 40px) var(--hk-gutter) clamp(16px, 3cqw, 48px);
+  overflow: hidden;
+}
+
+/* The grid never moves; the tinted cells sit in it. It fades out below the padlock. */
+.hk .hk-hero__bg {
+  position: absolute; inset: 0; z-index: -1; overflow: hidden;
+  --cell: clamp(52px, 7.26cqw, 118px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 var(--hk-fade-start, 76%), transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0, #000 var(--hk-fade-start, 76%), transparent 100%);
+}
+.hk .hk-hero__lines {
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(to right, var(--hk-grid-line) 0 1px, transparent 1px var(--cell)),
+    repeating-linear-gradient(to bottom, var(--hk-grid-line) 0 1px, transparent 1px var(--cell));
+}
+.hk .hk-hero__cells {
+  position: absolute; inset: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--cell));
+  grid-auto-rows: var(--cell);
+}
+.hk .hk-cell { grid-column: var(--c); grid-row: var(--r); }
+.hk .hk-cell--soft { background: var(--hk-tint-soft); }
+.hk .hk-cell--faint { background: var(--hk-tint-faint); }
+
+.hk .hk-hero__head { position: relative; flex: none; text-align: center; }
+
+/* Where the original credited its sponsor, this page names the prize pool. */
+.hk .hk-prize {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-bottom: var(--hk-gap-top);
+  padding: 5px 16px 5px 6px;
+  border-radius: 999px;
+  background: var(--hk-ink);
+  box-shadow: 0 0 0 1px rgba(240, 134, 139, .35), 0 6px 18px -8px rgba(131, 5, 11, .6);
+  color: #fff;
+}
+.hk .hk-prize__label {
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--hk-red); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap;
+}
+.hk .hk-prize__value { font-size: 14px; font-weight: 700; white-space: nowrap; }
+
+.hk .hk-hero__title {
+  max-width: 22ch; margin-inline: auto;
+  font-size: clamp(2.15rem, 4.95cqw, 5.15rem);
+  font-weight: 800; line-height: 1.06; letter-spacing: -.025em;
+  color: var(--hk-ink);
+  text-wrap: balance;
+}
+.hk .hk-hero__title em { font-style: normal; color: var(--hk-red); }
+.hk .hk-hero__sub {
+  margin: var(--hk-gap-sub) auto 0;
+  max-width: min(100%, 60ch);
+  font-size: clamp(.95rem, 1.12cqw, 1.125rem);
+  line-height: 1.55;
+  color: var(--hk-ink-2);
+  text-wrap: balance;
+}
+
+/* --- countdown --- */
+.hk .hk-count { display: flex; align-items: flex-start; justify-content: center; margin-top: var(--hk-gap-count); }
+.hk .hk-count__group { display: flex; align-items: flex-start; gap: clamp(4px, .55cqw, 9px); margin-left: clamp(4px, .55cqw, 9px); }
+.hk .hk-count__group:first-child { margin-left: 0; }
+.hk .hk-count__unit { display: flex; flex-direction: column; align-items: center; gap: .4em; }
+.hk .hk-count__value {
+  display: grid; place-items: center;
+  min-width: clamp(44px, 4.15cqw, 68px);
+  padding: clamp(6px, .62cqw, 11px) clamp(8px, .8cqw, 14px);
+  border-radius: 8px;
+  background: var(--hk-count-bg);
+  color: var(--hk-ink);
+  font-size: clamp(1rem, 1.72cqw, 1.8rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.hk .hk-count__label { font-size: clamp(.55rem, .68cqw, .7rem); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--hk-muted); }
+.hk .hk-count__sep { margin-top: clamp(10px, 1.1cqw, 18px); font-size: clamp(.8rem, 1.1cqw, 1.15rem); font-weight: 700; color: var(--hk-muted-2); }
+
+/* --- the call to action, as one pill --- */
+.hk .hk-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: var(--hk-gap-cta);
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--hk-surface);
+  box-shadow: var(--hk-shadow-card);
+}
+.hk .hk-dates { margin-top: 14px; font-size: 13px; color: var(--hk-muted); }
+.hk .hk-dates b { color: var(--hk-ink); font-weight: 700; }
+
+/* --- the scene: circuit lines, sparks, padlock. One 1611 x 393 coordinate space. --- */
+.hk .hk-hero__stage {
+  position: relative;
+  flex: 1 1 auto; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: clamp(18px, 2.4cqw, 40px);
+  margin-inline: calc(-1 * var(--hk-gutter));
+  overflow: hidden;
+}
+.hk .hk-hero__scene { position: relative; width: 100%; aspect-ratio: 1611 / 393; }
+.hk .hk-hero__lock-stage {
+  position: absolute; left: 50%; top: 50%;
+  width: 100%; aspect-ratio: 1611 / 393;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+}
+.hk .hk-circuit { position: absolute; inset: 0; width: 100%; height: 100%; color: #ada7a6; z-index: 1; }
+.hk .hk-sparks { z-index: 2; }
+.hk .hk-spark {
+  fill: var(--hk-red);
+  offset-path: var(--path);
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+  opacity: 0;
+  animation: hk-spark var(--dur, 2.4s) linear var(--delay, 0s) infinite;
+  animation-direction: var(--dir, normal);
+}
+@keyframes hk-spark {
+  0% { offset-distance: 0%; opacity: 0; }
+  7% { opacity: .95; }
+  88% { opacity: .95; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+@supports not (offset-path: path("M0 0")) {
+  .hk .hk-sparks { display: none; }
+}
+
+/* --- the padlock --- */
+.hk .hk-lock-btn {
+  position: absolute; left: 40.01%; top: 16.85%; width: 18.76%;
+  padding: 0; border: 0; background: none;
+  cursor: pointer; pointer-events: auto;
+  z-index: 3;
+  transition: transform .2s ease, filter .2s ease;
+}
+.hk .hk-lock { display: block; width: 100%; height: auto; overflow: visible; transform-origin: 50% 88%; animation: hk-lock-jitter 2.6s ease-in-out infinite; }
+/* One short shake at the end of each cycle. */
+@keyframes hk-lock-jitter {
+  0%, 85%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  87% { transform: translate3d(-2.5px, 0, 0) rotate(-1.2deg); }
+  89.5% { transform: translate3d(2.5px, 0, 0) rotate(1.2deg); }
+  92% { transform: translate3d(-1.8px, 0, 0) rotate(-.8deg); }
+  94.5% { transform: translate3d(1.6px, 0, 0) rotate(.7deg); }
+  97% { transform: translate3d(-.7px, 0, 0) rotate(-.3deg); }
+}
+.hk .hk-lock-btn:hover .hk-lock,
+.hk .hk-lock-btn:focus-visible .hk-lock,
+.hk .hk-lock-btn[data-state="unlocked"] .hk-lock,
+.hk .hk-hero.is-msg-open .hk-lock { animation: none; }
+.hk .hk-lock-btn:hover,
+.hk .hk-lock-btn:focus-visible { transform: translateY(-2px); filter: drop-shadow(0 10px 16px rgba(32, 30, 29, .22)); }
+.hk .hk-lock-btn:focus-visible { outline-offset: 8px; border-radius: 10px; }
+/* Red LEDs while locked, green once registered. */
+.hk .hk-lock__leds circle { fill: #e2353c; transition: fill .3s ease; }
+.hk .hk-lock-btn[data-state="unlocked"] .hk-lock__leds circle { fill: #6fd62a; }
+.hk .hk-lock-btn[data-state="unlocked"] .hk-lock__leds { filter: drop-shadow(0 0 6px rgba(111, 214, 42, .75)); }
+.hk .hk-lock__shackle { transform-box: view-box; transform-origin: 84px 175px; transition: transform .55s cubic-bezier(.2, .85, .25, 1); }
+.hk .hk-lock-btn[data-state="unlocked"] .hk-lock__shackle { transform: rotate(-24deg); }
+
+/* --- what the padlock says --- */
+.hk .hk-lock-msg {
+  --msg-face: #83050b;
+  position: absolute; left: 60.5%; top: 8%;
+  display: flex; align-items: flex-start; gap: 11px;
+  width: min(330px, 28cqw);
+  padding: 14px 16px 15px;
+  border-radius: 15px;
+  background: linear-gradient(180deg, var(--msg-face) 0%, #5a0307 100%);
+  color: #fff;
+  font-size: 13px; line-height: 1.5; text-align: left;
+  box-shadow: 0 18px 34px -12px rgba(90, 3, 7, .55), 0 6px 14px -6px rgba(90, 3, 7, .38), inset 0 -4px 12px rgba(0, 0, 0, .18), inset 0 1px 1px rgba(255, 255, 255, .22);
+  opacity: 0; visibility: hidden;
+  transform: translate3d(-10px, 4px, 0) scale(.94);
+  transform-origin: 0 58%;
+  transition: opacity .18s ease, transform .22s cubic-bezier(.2, .9, .3, 1.05), visibility .22s;
+  pointer-events: none;
+  z-index: 4;
+}
+.hk .hk-lock-msg__badge { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(255, 255, 255, .16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .26); }
+.hk .hk-lock-msg__badge svg { width: 15px; height: 15px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hk .hk-lock-msg__text { min-width: 0; flex: 1; }
+.hk .hk-lock-msg strong { display: inline-block; margin: 2px 0 4px; padding: 2px 9px; border-radius: 999px; background: #fff; color: var(--hk-red); font-weight: 700; white-space: nowrap; }
+.hk .hk-lock-msg a { text-decoration: underline; text-underline-offset: 2px; font-weight: 700; }
+.hk .hk-lock-msg::before,
+.hk .hk-lock-msg::after {
+  content: ""; position: absolute; left: -9px; top: 58%;
+  width: 0; height: 0;
+  border: 9px solid transparent; border-left: 0;
+  border-right-color: rgba(90, 3, 7, .45);
+}
+.hk .hk-lock-msg::after { left: -8px; border-right-color: var(--msg-face); }
+.hk .hk-hero.is-msg-open .hk-lock-msg { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
+
+/* ==========================================================================
+   How it works
+   ========================================================================== */
+.hk .hk-how { margin-inline: var(--hk-gutter); margin-top: clamp(10px, 1.4cqw, 22px); scroll-margin-top: calc(var(--hk-nav-h) + 16px); }
+.hk .hk-how__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.68cqw, 27px); margin-top: clamp(16px, 2.4cqw, 38px); }
+.hk .hiw { position: relative; display: flex; min-height: clamp(180px, 14.6cqw, 236px); border: 1px solid var(--hk-tint-line); border-radius: var(--hk-r-lg); background: var(--hk-surface-2); overflow: hidden; }
+.hk .hiw__tab {
+  position: absolute; top: 0; left: 0;
+  display: grid; place-items: center;
+  width: clamp(48px, 4.35cqw, 71px); height: clamp(42px, 3.85cqw, 63px);
+  padding-right: .18em;
+  border-radius: var(--hk-r-lg) 0 60% 0;
+  background: linear-gradient(140deg, #fbeeee 0%, #f3d6d5 55%, #e8b4b7 100%);
+  box-shadow: 3px 5px 9px -4px rgba(131, 5, 11, .3);
+  color: var(--hk-red);
+  font-family: var(--hk-font-heading);
+  font-size: clamp(1.1rem, 1.55cqw, 1.6rem); font-weight: 700; line-height: 1;
+}
+.hk .hiw__body { display: flex; flex-direction: column; align-items: flex-start; gap: clamp(6px, .55cqw, 10px); width: 100%; padding: clamp(58px, 5cqw, 82px) clamp(16px, 1.7cqw, 28px) clamp(16px, 1.5cqw, 24px); }
+.hk .hiw__title { font-size: clamp(.95rem, 1.479cqw, 1.5rem); font-weight: 800; letter-spacing: -.01em; color: var(--hk-ink); }
+.hk .hiw__text { font-size: clamp(.85rem, 1cqw, 1rem); line-height: 1.5; color: var(--hk-ink-2); }
+
+/* ==========================================================================
+   Winners and problem statements: plain cards in the same palette
+   ========================================================================== */
+.hk .hk-cards { display: grid; gap: clamp(12px, 1.68cqw, 27px); margin-top: clamp(16px, 2.4cqw, 38px); }
+.hk .hk-card { padding: clamp(18px, 1.8cqw, 28px); border: 1px solid var(--hk-tint-line); border-radius: var(--hk-r-lg); background: var(--hk-surface-2); }
+.hk .hk-lede { margin-top: .8em; max-width: 60ch; font-size: clamp(.9rem, 1.1cqw, 1.05rem); color: var(--hk-muted); }
+
+/* ==========================================================================
+   Timeline
+   ========================================================================== */
+.hk .hk-timeline { container: hk-timeline / inline-size; }
+.hk .tl { position: relative; padding: 3.1cqw 3.45cqw 5.2cqw; border-radius: var(--hk-r-xl); background: var(--hk-tint-bg); overflow: hidden; }
+.hk .tl__title { font-size: clamp(1.3rem, 2.6cqw, 2.6rem); }
+.hk .tl__cards { display: flex; align-items: flex-end; gap: .85cqw; margin-top: 1.2cqw; counter-reset: tl; }
+.hk .tl-card { position: relative; flex: 1 1 0; min-width: 0; padding: 2.1cqw; border-radius: var(--hk-r-md); background: var(--hk-surface); overflow: hidden; counter-increment: tl; }
+.hk .tl-card:nth-child(1) { aspect-ratio: 348 / 263; }
+.hk .tl-card:nth-child(2) { aspect-ratio: 348 / 303; }
+.hk .tl-card:nth-child(3) { aspect-ratio: 348 / 333; }
+.hk .tl-card:nth-child(4) { aspect-ratio: 348 / 363; }
+.hk .tl-card__title { font-size: clamp(.95rem, 1.56cqw, 1.5rem); font-weight: 800; letter-spacing: -.01em; color: var(--hk-ink); }
+.hk .tl-card__when { margin-top: .35em; font-size: clamp(.72rem, .9cqw, .9rem); font-weight: 700; color: var(--hk-red); }
+.hk .tl-card__text { position: relative; z-index: 1; margin-top: .5em; max-width: 30ch; font-size: clamp(.78rem, 1.04cqw, 1rem); line-height: 1.5; color: var(--hk-ink-2); }
+.hk .tl-card__art { position: absolute; right: 0; bottom: 0; width: var(--art-w, 36%); height: auto; pointer-events: none; user-select: none; }
+.hk .tl__rail { position: relative; height: 3.25cqw; min-height: 34px; margin: 3.84cqw -3.45cqw 0; }
+.hk .tl__line { position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: var(--hk-rail); }
+.hk .tl-tab {
+  position: absolute; left: var(--x); top: 50%;
+  display: grid; place-items: center;
+  width: 5.72cqw; min-width: 56px; height: 100%;
+  border-radius: var(--hk-r-sm);
+  background: var(--hk-red); box-shadow: var(--hk-clay-rest);
+  color: #fff; font-size: clamp(.9rem, 1.95cqw, 1.9rem); font-weight: 800; line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   FAQ
+   ========================================================================== */
+.hk .hk-faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(24px, 4cqw, 64px); align-items: center; }
+.hk .hk-faq__intro { padding-left: 50px; }
+.hk .hk-faq__title { font-size: clamp(1.4rem, 2.6cqw, 2.6rem); line-height: 1.14; }
+.hk .hk-faq__title em { font-style: normal; color: var(--hk-red); }
+.hk .hk-faq__sub { margin-top: .9em; font-size: clamp(.9rem, 1.12cqw, 1.1rem); color: var(--hk-muted); }
+.hk .hk-faq__list { display: grid; gap: 8px; align-content: start; }
+.hk .hk-faqi { background: #efecea; border: 1px solid transparent; border-radius: var(--hk-r-md); transition: background-color .2s ease, border-color .2s ease; }
+.hk .hk-faqi.is-open { background: #ebe6e4; border-color: #dcd6d4; }
+.hk .hk-faqi__h { font: inherit; }
+.hk .hk-faqi__btn { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 16px 20px; border: 0; background: none; text-align: left; cursor: pointer; }
+.hk .hk-faqi__q { font-family: var(--hk-font-heading); font-size: 18px; line-height: 27px; font-weight: 600; color: var(--hk-ink); }
+.hk .hk-faqi__icon { position: relative; flex: 0 0 20px; width: 20px; height: 20px; border-radius: 50%; background: var(--hk-red); }
+.hk .hk-faqi__icon i { position: absolute; left: 50%; top: 50%; background: #fff; border-radius: 2px; transform: translate(-50%, -50%); transition: transform .22s ease, opacity .22s ease; }
+.hk .hk-faqi__icon i:first-child { width: 10px; height: 2px; }
+.hk .hk-faqi__icon i:last-child { width: 2px; height: 10px; }
+.hk .hk-faqi.is-open .hk-faqi__icon i:last-child { transform: translate(-50%, -50%) rotate(90deg); opacity: 0; }
+.hk .hk-faqi__panel { overflow: hidden; height: 0; transition: height .28s ease; }
+.hk .hk-faqi__panel p { padding: 0 20px 16px; font-size: 16px; line-height: 25px; color: var(--hk-ink-2); }
+
+/* ==========================================================================
+   Rules: four pinned paper notes over a giant RULES
+   ========================================================================== */
+.hk .hk-rules { container: hk-rules / inline-size; }
+.hk .rules { position: relative; aspect-ratio: 1537 / 614; border-radius: var(--hk-r-xl); background: var(--hk-tint-bg); overflow: hidden; font-size: 1cqw; }
+.hk .rules__word {
+  position: absolute; left: -8.914cqw; top: .578cqw;
+  font-family: var(--hk-font-heading);
+  font-size: 36.13cqw; font-weight: 800; letter-spacing: .0189em; line-height: 1;
+  color: var(--hk-tint-ghost);
+  white-space: nowrap; user-select: none;
+}
+.hk .rule {
+  position: absolute;
+  width: 17.05em; aspect-ratio: 262 / 316;
+  padding: 3.9em 1.43em 2.93em;
+  border-radius: 1.05em;
+  background: var(--hk-surface);
+  box-shadow: var(--hk-shadow-paper);
+  transform: translate(-50%, -50%) rotate(var(--rot));
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.hk .rule:hover,
+.hk .rule:focus-within { transform: translate(-50%, -50%) translateY(-2px) rotate(var(--rot-h)); box-shadow: var(--hk-shadow-paper-hover); }
+.hk .rule--1 { --rot: 9.6deg; --rot-h: 12deg; left: 13.28%; top: 37.38%; }
+.hk .rule--2 { --rot: -18.2deg; --rot-h: -15deg; left: 36.97%; top: 59.57%; }
+.hk .rule--3 { --rot: 19.5deg; --rot-h: 22deg; left: 61.78%; top: 37.5%; }
+.hk .rule--4 { --rot: -6.3deg; --rot-h: -9deg; left: 84.13%; top: 62.99%; }
+.hk .rule__note { height: 100%; padding: 1.1em 1.1em 1.2em; border-radius: .8em; background: var(--hk-tint-fill); overflow: hidden; }
+.hk .rule__title { font-size: 1.28em; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; color: #111; }
+.hk .rule__title b { margin-right: .04em; color: var(--hk-red); font-size: 1.5em; font-weight: 800; letter-spacing: -.03em; }
+.hk .rule__text { margin-top: .5em; font-size: .98em; line-height: 1.34; color: #3b3b3b; }
+.hk .rule__pin {
+  position: absolute; top: -.8em; left: 50%;
+  width: 3.1em; height: auto;
+  transform: translateX(-55%);
+  filter: drop-shadow(.1em .16em .1em rgba(120, 34, 18, .42)) drop-shadow(.22em .34em .34em rgba(88, 40, 24, .28));
+  pointer-events: none; user-select: none;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@container hk (max-width: 720px) {
+  .hk .hk-hero { min-height: 0; }
+  .hk .hk-hero__scene { width: 200%; margin-left: -50%; }
+}
+@container hk (max-width: 1023px) {
+  .hk .hk-how__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hk .hk-faq { grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 3cqw, 34px); }
+  .hk .hk-faq__intro { padding-left: 0; }
+}
+@container hk-timeline (max-width: 1023px) {
+  .hk .tl { padding: 26px 22px 30px; }
+  .hk .tl__title { font-size: 1.55rem; }
+  .hk .tl__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+  .hk .tl-card,
+  .hk .tl-card:nth-child(n) { aspect-ratio: auto; padding: 52px 20px 26px; }
+  .hk .tl-card::before {
+    content: counter(tl);
+    position: absolute; top: 16px; left: 20px;
+    display: grid; place-items: center;
+    width: 42px; height: 26px;
+    border-radius: var(--hk-r-sm);
+    background: var(--hk-red); box-shadow: var(--hk-clay-rest);
+    color: #fff; font-family: var(--hk-font-heading); font-size: .95rem; font-weight: 800;
+  }
+  .hk .tl-card__art, .hk .tl__rail { display: none; }
+}
+@container hk-timeline (max-width: 619px) {
+  .hk .tl__cards { grid-template-columns: minmax(0, 1fr); }
+}
+@container hk-rules (max-width: 899px) {
+  .hk .rules { aspect-ratio: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px 26px; padding: 46px 34px 54px; font-size: 16px; }
+  .hk .rules__word { font-size: 22rem; left: -10%; top: 12%; }
+  .hk .rule { position: relative; left: auto; top: auto; width: auto; max-width: 320px; aspect-ratio: auto; justify-self: center; padding: 42px 15px 26px; border-radius: 16px; transform: rotate(var(--rot)); }
+  .hk .rule:hover, .hk .rule:focus-within { transform: translateY(-2px) rotate(var(--rot-h)); }
+  .hk .rule__note { padding: 16px 16px 18px; border-radius: 12px; }
+  .hk .rule__title { font-size: 1.1rem; }
+  .hk .rule__text { font-size: .9rem; }
+  .hk .rule__pin { top: -10px; width: 40px; filter: drop-shadow(1px 2px 2px rgba(120, 34, 18, .42)) drop-shadow(3px 5px 6px rgba(88, 40, 24, .26)); }
+}
+@container hk-rules (max-width: 559px) {
+  .hk .rules { grid-template-columns: minmax(0, 1fr); gap: 30px; padding: 38px 24px 46px; }
+  .hk .rules__word { font-size: 13rem; }
+  .hk .rule--1 { --rot: 5deg; --rot-h: 8deg; }
+  .hk .rule--2 { --rot: -6deg; --rot-h: -3deg; }
+  .hk .rule--3 { --rot: 6deg; --rot-h: 9deg; }
+  .hk .rule--4 { --rot: -4deg; --rot-h: -1deg; }
+}
+
+@media (max-width: 640px) {
+  .hk .hk-how__grid { grid-template-columns: minmax(0, 1fr); }
+  .hk .hiw { min-height: 0; }
+  /* On a phone the circuit is decoration; the padlock gets its own centred stage and its message opens below it. */
+  .hk .hk-hero__stage { flex: none; min-height: 260px; margin-top: 18px; overflow: visible; }
+  .hk .hk-hero__scene { position: absolute; inset: 0 auto auto 50%; width: 200%; height: 100%; margin-left: 0; aspect-ratio: auto; transform: translateX(-50%); pointer-events: none; }
+  .hk .hk-hero__lock-stage { position: relative; left: auto; top: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 260px; aspect-ratio: auto; transform: none; }
+  .hk .hk-lock-btn { position: relative; left: auto; top: auto; width: min(62vw, 220px); }
+  .hk .hk-lock-msg { position: relative; left: auto; top: auto; display: none; width: min(calc(100% - 32px), 340px); margin: 12px auto 0; padding: 10px 12px; font-size: 12px; transform: none; transform-origin: 50% 0; }
+  .hk .hk-lock-msg::before,
+  .hk .hk-lock-msg::after { left: 50%; top: -9px; border: 9px solid transparent; border-top: 0; border-bottom-color: rgba(90, 3, 7, .45); transform: translateX(-50%); }
+  .hk .hk-lock-msg::after { top: -8px; border-bottom-color: var(--msg-face); }
+  .hk .hk-hero.is-msg-open .hk-lock-msg { display: flex; }
+  .hk .hk-cta { display: flex; flex-direction: column; align-items: stretch; width: min(100%, 300px); margin-inline: auto; border-radius: var(--hk-r-lg); padding: 6px; }
+  .hk .hk-btn { width: 100%; }
+}
+@media (max-height: 900px) {
+  .hk .hk-hero { --hk-gap-top: 16px; --hk-gap-sub: 19px; --hk-gap-count: 29px; --hk-gap-cta: 19px; padding-top: 18px; padding-bottom: 24px; }
+  .hk .hk-hero__stage { margin-top: 18px; }
+}
+@media (max-height: 760px) {
+  .hk .hk-hero { --hk-gap-top: 12px; --hk-gap-sub: 16px; --hk-gap-count: 23px; --hk-gap-cta: 14px; padding-top: 12px; padding-bottom: 16px; }
+  .hk .hk-hero__title { font-size: clamp(1.95rem, 4.15cqw, 3.85rem); }
+  .hk .hk-hero__stage { margin-top: 12px; }
+}
+@media (max-width: 400px) {
+  .hk .hk-count__value { min-width: 40px; padding: 5px 6px; }
+  .hk .hk-count__sep { margin-top: 8px; }
+  .hk .hk-prize { flex-direction: column; gap: 4px; padding: 8px 14px; border-radius: var(--hk-r-lg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hk .hk-sparks { display: none; }
+  .hk .hk-lock { animation: none; }
+  .hk .hk-lock-btn:hover, .hk .hk-lock-btn:focus-visible { transform: none; }
+  .hk .rule:hover, .hk .rule:focus-within { transform: translate(-50%, -50%) rotate(var(--rot)); }
+  .hk .hk-lock-msg, .hk .hk-faqi__panel { transition: none; }
+}
