@@ -6,6 +6,7 @@ import { MODULES } from "@/data/system-design/course-app";
 import {
   ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, checkScores, dayOf, fmt, isSoon, lesson, lessonDay, moduleIds, moduleMinutes, openFinal, openLesson, pad, paceNow, pct, type CourseState,
 } from "@/lib/course-app";
+import { SD_BONUS, SD_BONUS_URL } from "@/lib/sd-bonus";
 import { paceMessage, type Pace } from "@/lib/sd-pace";
 import { GroupCard, useExtraUnread } from "../Community";
 import { Icon } from "../icons";
@@ -79,6 +80,32 @@ function AssessmentRow({ kind, s, act }: { kind: "lessons" | "final"; s: CourseS
       {lessons ? <span className="sd-tag sd-tag-neutral rounded-md">{checkAverage(s)} avg</span> : <span className="flex text-sd-n-600"><Icon name="chevR" size={16} /></span>}
     </button>
   );
+}
+
+/**
+ * The bonus PDF, under the checks and the final. Locked until Day 21 is
+ * passed; the route checks the pass on the server too, so this only decides
+ * what the learner sees.
+ */
+function BonusCard({ s, signedIn }: { s: CourseState; signedIn: boolean }) {
+  const open = signedIn && s.done.includes(SD_BONUS.unlockLesson);
+  const body = (
+    <>
+      <span className={clsx("flex size-11 flex-none items-center justify-center rounded-[10px]", open ? "bg-sd-accent text-sd-bg" : "bg-sd-ink/6 text-sd-n-600")}>
+        <Icon name={open ? "gift" : "lock"} size={20} />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-[11px] font-extrabold tracking-[0.12em] text-sd-accent uppercase">Bonus</span>
+        <span className="text-[15px] leading-[1.25] font-extrabold">{SD_BONUS.title}</span>
+        <span className="text-xs text-sd-n-700">{open ? "PDF · " + SD_BONUS.sub : `Unlocks when you pass ${SD_BONUS.unlockLabel}`}</span>
+      </span>
+      {open && <span className="flex text-sd-accent"><Icon name="download" size={20} /></span>}
+    </>
+  );
+  const cls = "flex w-full items-center gap-3 rounded-xl border border-sd-divider p-3.5 text-left";
+  return open
+    ? <a href={SD_BONUS_URL} download className={clsx(cls, "hover:bg-sd-accent-100")}>{body}</a>
+    : <div className={clsx(cls, "border-dashed")} aria-label={`Bonus: ${SD_BONUS.title}. Unlocks when you pass ${SD_BONUS.unlockLabel}.`}>{body}</div>;
 }
 
 /**
@@ -206,6 +233,7 @@ export function Course({ s, act }: { s: CourseState; act: Act }) {
           </div>
           <AssessmentRow kind="lessons" s={s} act={act} />
           <AssessmentRow kind="final" s={s} act={act} />
+          <BonusCard s={s} signedIn={!!user} />
         </div>
 
         <section aria-labelledby="sd-intro" className="order-3 lg:col-start-2 lg:order-none">

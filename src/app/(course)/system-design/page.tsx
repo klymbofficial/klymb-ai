@@ -9,6 +9,8 @@ import { hasCourseAccess } from "@/lib/access";
 import { db } from "@/lib/db/client";
 import { inviterFor } from "@/lib/referrals";
 import { couponOf, couponProblem, findCoupon } from "@/lib/sd-coupons";
+import { findInternCode } from "@/lib/intern-codes";
+import { internCodeOf } from "@/lib/internship";
 import { localRate } from "@/lib/local-price";
 import { MODULES } from "@/data/system-design/course-app";
 import { site } from "@/data/config";
@@ -16,7 +18,7 @@ import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferState, sdPriceNow, t
 
 const description = "System design, explained with real examples. Built for interviews.";
 
-type Params = { utm_campaign?: string; signin?: string; claim?: string; ref?: string; coupon?: string; country?: string };
+type Params = { utm_campaign?: string; signin?: string; claim?: string; ref?: string; coupon?: string; country?: string; by?: string };
 
 /** Who sent this link. The preview and the page both ask, so it's one query. */
 const invitedByOf = cache(async (ref: string | null) => (ref ? inviterFor(ref) : null));
@@ -54,6 +56,9 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
   const ref = refOf(params.ref);
   const invitedBy = await invitedByOf(ref);
   // A code from the link is filled in; it's applied only if it works today.
+  // An intern's link (?by=CODE): kept only if it's a live code, so a typo credits nobody.
+  const byCode = internCodeOf(params.by);
+  const intern = byCode && sql ? ((await findInternCode(sql, byCode)).data?.code ?? null) : null;
   const couponCode = couponOf(params.coupon);
   const found = couponCode && sql ? (await findCoupon(sql, couponCode)).data : null;
   const coupon = couponCode ? { code: couponCode, price: found && !couponProblem(found) ? found.price : null } : null;
@@ -75,6 +80,7 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
         campaign={campaignOf(params.utm_campaign)}
         referral={invitedBy ? { code: ref!, invitedBy } : null}
         coupon={coupon}
+        intern={intern}
         local={local}
         resume={params.claim === "1"}
         signInFailed={params.signin === "failed"}

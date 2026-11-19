@@ -121,7 +121,7 @@ export async function syncWhatsApp(): Promise<SyncResult> {
 
       if (plan.repliedPhones.length) {
         await sql.run`
-          update course.sales_leads set stage = 'warm', stage_changed_at = now(), updated_at = now()
+          update course.sales_leads set stage = 'connected', stage_changed_at = now(), updated_at = now()
            where stage = 'new' and phone = any(${plan.repliedPhones}::text[])
         `;
       }

@@ -14,7 +14,7 @@ export default async function RepBoardPage() {
       <RepTabs current="board" />
       <SalesBoard
         key={leads.length}
-        cards={leads.map((l) => ({ id: l.id, name: l.name, phone: l.phone, email: l.email, org: l.org, stage: l.stage, next_follow_up: l.next_follow_up, owner_email: l.owner_email, paid: l.paid }))}
+        cards={leads.map((l) => ({ id: l.id, name: l.name, phone: l.phone, email: l.email, org: l.org, stage: l.stage, next_follow_up: l.next_follow_up, owner_email: l.owner_email, paid: l.paid, status_note: l.status_note }))}
         today={istToday()}
         ownerName={{ [user.email]: "You" }}
         base="/sales"

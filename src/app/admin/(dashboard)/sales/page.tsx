@@ -4,7 +4,7 @@ import { RangeTabs } from "@/components/admin/RangeTabs";
 import { StatTile } from "@/components/admin/StatTile";
 import { SyncWhatsApp, TargetEditor } from "@/components/admin/sales/SalesForms";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
-import { requireOwner } from "@/lib/admin/auth";
+import { requireSalesAdmin } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getOwners, getSalesReport } from "@/lib/admin/sales";
 import { whatsappSyncStatus } from "@/lib/admin/whatsapp-sync";
@@ -19,7 +19,7 @@ const vs = (cur: number, prev: number, what: string) => {
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "—");
 
 export default async function SalesReportPage({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
-  await requireOwner();
+  await requireSalesAdmin();
   // Website form fills arrive as leads before anything is read.
   await captureWebsiteLeads();
   const key = (await searchParams).range === "ytd" ? "ytd" : "mtd";
@@ -87,7 +87,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile label="Total outreach" value={r.outreach.total} hint={vs(r.outreach.total, r.outreach.prev, unit)} />
         <StatTile label="Conversations" value={r.conversations.total} hint={`${pct(r.conversations.total, r.outreach.total)} of outreach`} />
-        <StatTile label="Potential conversions" value={r.hotNow} hint="Potential, positive or almost won, right now" tone="red" />
+        <StatTile label="Potential conversions" value={r.hotNow} hint="Shown interest or need follow-up, right now" tone="red" />
         <StatTile label="New leads" value={r.newLeads.total} hint={vs(r.newLeads.total, r.newLeads.prev, unit)} />
         <Link href="/admin/sales/leads?due=1&owner=" className="contents">
           <StatTile label="Follow-ups due" value={r.dueToday} hint="Today or overdue, whole team" tone={r.dueToday ? "red" : "muted"} />

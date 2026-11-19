@@ -12,6 +12,7 @@ import { formatINR } from "@/lib/format";
 import { localEstimate, type LocalRate } from "@/lib/local-price";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
+import { keptIntern } from "./RememberIntern";
 import { metaTrack } from "@/lib/meta-pixel";
 import { openInBrowser } from "./OpenInBrowser";
 import { couponCodeProblem, withCoupon } from "@/lib/sd-coupons";
@@ -92,9 +93,8 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const [role, setRole] = useState<SdRole | "">(startRole);
   const [ref, setRef] = useState(referral?.code ?? "");
   const [coupon, setCoupon] = useState(startCoupon?.code ?? "");
-  const [applied, setApplied] = useState<{ code: string; price: number } | null>(startCoupon?.price != null ? { code: startCoupon.code, price: startCoupon.price } : null);
-  const [couponError, setCouponError] = useState(startCoupon && startCoupon.price == null ? "That coupon code isn't active right now." : "");
-  const [checking, setChecking] = useState(false);
+  const [applied] = useState<{ code: string; price: number } | null>(startCoupon?.price != null ? { code: startCoupon.code, price: startCoupon.price } : null);
+  const [couponError] = useState(startCoupon && startCoupon.price == null ? "That coupon code isn't active right now." : "");
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(signInFailed ? "Google sign-in did not complete. Please try again." : "");
@@ -112,21 +112,8 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const price = withCoupon(offer.price, applied);
   const discounted = price < offer.full;
 
-  /** Asks the server what the code gives, so the price on the page changes before they pay. */
-  async function applyCoupon() {
-    const code = coupon.trim().toUpperCase();
-    setCouponError("");
-    if (!code) return;
-    if (couponCodeProblem(code)) return setCouponError(couponCodeProblem(code)!);
-    setChecking(true);
-    const res = await fetch("/api/sd/coupon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) }).catch(() => null);
-    const out = await res?.json().catch(() => null);
-    setChecking(false);
-    if (res?.ok && typeof out?.price === "number") { setApplied({ code, price: out.price }); trackOffer("coupon", { inApp, campaign, coupon: code }); }
-    else setCouponError(out?.error ?? "We couldn't check that code. Check your connection and try again.");
-  }
   const fail = (message: string) => { setBusy(false); setError(message); };
-  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign, coupon: applied?.code ?? startCoupon?.code ?? null });
+  const step = (s: OfferStep) => trackOffer(s, { inApp, campaign, coupon: applied?.code ?? startCoupon?.code ?? null, intern: keptIntern() });
   const [started, setStarted] = useState(false);
   const startForm = () => { if (!started) { setStarted(true); step("form_start"); } };
 
@@ -139,7 +126,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     const res = await fetch("/api/sd/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...details, campaign }),
+      body: JSON.stringify({ ...details, campaign, intern: keptIntern() }),
     }).catch(() => null);
     const order = await res?.json().catch(() => null);
     if (order?.enrolled) return router.push("/learn/system-design");
@@ -282,21 +269,8 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               <span className={label}>Referral code <span className="font-normal text-[#605d5d]">(optional)</span></span>
               <input type="text" value={ref} onChange={(e) => setRef(e.target.value.toUpperCase())} placeholder="From a friend's link" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} aria-invalid={!!badRef} className={clsx(input, badRef ? "border-[#83050b]" : "border-transparent")} />
             </label>
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <label htmlFor="sd-coupon" className={label}>Coupon code <span className="font-normal text-[#605d5d]">(optional)</span></label>
-              <div className="flex gap-2">
-                <input
-                  id="sd-coupon" type="text" value={coupon} placeholder="If you have one" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} aria-invalid={!!badCoupon}
-                  onChange={(e) => { setCoupon(e.target.value.toUpperCase()); setApplied(null); setCouponError(""); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyCoupon(); } }}
-                  className={clsx(input, "min-w-0 flex-1", badCoupon ? "border-[#83050b]" : "border-transparent")}
-                />
-                <button type="button" onClick={() => void applyCoupon()} disabled={checking || !coupon.trim() || !!applied} className="min-h-[50px] flex-none cursor-pointer rounded-[10px] border-2 border-[#83050b] bg-transparent px-4 text-sm font-extrabold text-[#83050b] disabled:cursor-default disabled:opacity-50">
-                  {checking ? "Checking…" : applied ? "Applied" : "Apply"}
-                </button>
-              </div>
-              {applied && <span role="status" className="text-[13px] font-semibold text-[#2f6b2f]">{applied.code} applied. You pay {formatINR(price)}.</span>}
-            </div>
+            {/* No coupon box: a code only comes from its shared link (?coupon=), applied before they arrive. */}
+            {applied && <span role="status" className="text-[13px] font-semibold text-[#2f6b2f]">{applied.code} applied. You pay {formatINR(price)}.</span>}
             <div role="radiogroup" aria-label="I am a" className="flex flex-col gap-1.5">
               <span className={label}>I am a</span>
               <div className="grid grid-cols-2 gap-2">

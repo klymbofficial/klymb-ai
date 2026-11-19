@@ -17,11 +17,11 @@ export const WEBINAR = {
   speaker: "Klymb.ai team",
   whatsappGroup: "https://chat.whatsapp.com/FDCM4Q6KcAK9bHqs5eOM2g?s=cl&p=a&iam=2",
   agenda: [
-    ["What Claude is", "How it differs from ChatGPT and Gemini, and which one to reach for when."],
-    ["Prompts that work", "Giving Claude context, examples and a role, so the first answer is the useful one."],
-    ["Claude Code, live", "Going from an empty folder to a small working app in a few minutes."],
-    ["AI tools for study and work", "Research, notes, slides and spreadsheets, done faster."],
-    ["Live Q&A", "Bring your questions. We answer as many as the hour allows."],
+    ["Getting job-ready in the AI era", "What hiring looks like now that AI does part of the work, and the skills that still get people hired."],
+    ["Klymb.ai's courses", "What each course teaches, who it's for, and how the daily, hands-on format works."],
+    ["Why we started Klymb.ai", "The gap we kept seeing between college, courses and real jobs, and what we're doing about it."],
+    ["Live Q&A", "Bring your questions about careers, AI and our courses. We answer as many as the hour allows."],
+    ["Upcoming workshops and webinars", "What's coming next, and how to get a seat."],
   ],
 } as const;
 

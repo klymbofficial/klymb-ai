@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { AddRep, RemoveRep } from "@/components/admin/sales/TeamForms";
-import { requireOwner } from "@/lib/admin/auth";
+import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getReps } from "@/lib/admin/sales";
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
@@ -13,7 +13,7 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "
  * (tick them, then "Assign to"), and see their work in the Report's By person.
  */
 export default async function SalesTeamPage() {
-  await requireOwner();
+  await requireSalesAdmin();
   const reps = await getReps();
   const active = reps.filter((r) => r.active);
   const past = reps.filter((r) => !r.active);

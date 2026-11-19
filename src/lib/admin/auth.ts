@@ -2,7 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { currentAdminEmail } from "@/auth";
-import { resolveAdmin, type AdminIdentity } from "@/lib/admin/access";
+import { isSalesManager, resolveAdmin, type AdminIdentity } from "@/lib/admin/access";
 import { db } from "@/lib/db/client";
 
 export type AdminSession = AdminIdentity;
@@ -48,12 +48,20 @@ export async function requireOwner(): Promise<AdminSession> {
 }
 
 /**
- * Sales is owners only for now: the CRM holds every lead's number and notes.
- * For server actions and data reads, where redirecting isn't an option.
+ * The whole Sales CRM is for owners and sales managers (SALES_MANAGER_EMAILS):
+ * it holds every lead's number and notes. For server actions and data reads,
+ * where redirecting isn't an option.
  */
 export async function getSalesAdmin(): Promise<AdminSession | null> {
   const admin = await getAdmin();
-  return admin?.owner ? admin : null;
+  return admin && (admin.owner || isSalesManager(admin.email)) ? admin : null;
+}
+
+/** For the admin Sales pages: other admins go back to the overview. */
+export async function requireSalesAdmin(): Promise<AdminSession> {
+  const admin = await requireAdmin();
+  if (!admin.owner && !isSalesManager(admin.email)) redirect("/admin");
+  return admin;
 }
 
 /**

@@ -29,6 +29,25 @@ export function ownerEmails(raw: string | undefined = process.env.ADMIN_OWNER_EM
   return list.length ? list : [DEFAULT_OWNERS];
 }
 
+/**
+ * Sales managers: admins who work the whole Sales CRM (every lead, assign,
+ * import, report) without owner powers. SALES_MANAGER_EMAILS, comma
+ * separated, replaces this default list when set.
+ */
+const DEFAULT_SALES_MANAGERS = "anilbajpai1987@gmail.com,contactsuyashgupta@gmail.com,sksohail.swaraj@gmail.com";
+
+export function salesManagerEmails(raw: string | undefined = process.env.SALES_MANAGER_EMAILS): string[] {
+  return (raw?.trim() ? raw : DEFAULT_SALES_MANAGERS)
+    .split(",")
+    .map(normaliseEmail)
+    .filter((e): e is string => e !== null);
+}
+
+export const isSalesManager = (email: unknown, managers: string[] = salesManagerEmails()) => {
+  const value = normaliseEmail(email);
+  return value !== null && managers.includes(value);
+};
+
 export function isOwnerEmail(email: unknown, owners: string[] = ownerEmails()): boolean {
   const value = normaliseEmail(email);
   return value !== null && owners.includes(value);

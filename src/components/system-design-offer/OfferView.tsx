@@ -10,6 +10,7 @@ import { IntroVideo } from "./IntroVideo";
 import { OfferBackdrop } from "./OfferBackdrop";
 import { OpenInBrowser } from "./OpenInBrowser";
 import { OfferProof } from "./OfferProof";
+import { RememberIntern } from "./RememberIntern";
 import { RememberReferral } from "./RememberReferral";
 
 /**
@@ -18,13 +19,14 @@ import { RememberReferral } from "./RememberReferral";
  * column dissolves into the page, so the form can sit right under the video
  * with the details after it; the top bar is the way back up.
  */
-export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, coupon, local, resume, signInFailed, inApp }: {
+export function OfferView({ offer, email, name, phone, linkedin, role, campaign, referral, coupon, intern, local, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
-  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; local: LocalRate | null; resume: boolean; signInFailed: boolean; inApp: boolean;
+  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; intern: string | null; local: LocalRate | null; resume: boolean; signInFailed: boolean; inApp: boolean;
 }) {
   return (
     <OfferBackdrop>
       <RememberReferral live={referral?.code ?? null} />
+      <RememberIntern live={intern} />
       <main className="relative mx-auto box-border grid min-h-dvh w-full max-w-[1240px] grid-cols-[minmax(0,1fr)] items-center gap-4 px-[18px] pt-0 pb-7 lg:grid-cols-[minmax(0,1.3fr)_minmax(380px,.8fr)] lg:items-start lg:gap-12 lg:px-10 lg:py-16">
         {inApp && !email && <OpenInBrowser campaign={campaign} />}
         <div className="sd-offer-left contents lg:flex lg:flex-col lg:gap-6">
@@ -38,6 +40,7 @@ export function OfferView({ offer, email, name, phone, linkedin, role, campaign,
           <p className="m-0 max-w-[32rem] text-[15px] leading-[1.45] text-pretty text-[#d9cfc2] lg:text-lg">21 days, 15 minutes a day. Go from “what is system design?” to designing a chat app, a ticket booking system and an AI assistant in an interview.</p>
           <p className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold text-[#f3d48a]">
             <span>Finish on schedule and get 100% back.</span>
+            <span>Finish the course and get an interview call.*</span>
             {offer.open && <span className="text-[#d9cfc2]">{formatINR(offer.price)} until {SD_OFFER.endsLabel}.</span>}
           </p>
           <IntroVideo />

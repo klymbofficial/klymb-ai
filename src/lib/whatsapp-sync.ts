@@ -47,7 +47,7 @@ export interface WaPlan {
   touches: PlannedTouch[];
   /** Sends that failed: a touch already written for one is removed. */
   failed: string[];
-  /** Phones that wrote to us, so a new lead moves to warm. */
+  /** Phones that wrote to us, so a new lead moves to connected. */
   repliedPhones: string[];
 }
 

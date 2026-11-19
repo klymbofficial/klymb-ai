@@ -6,7 +6,7 @@ import { input } from "@/components/admin/sales/styles";
 import { SalesTabs, StageBadge } from "@/components/admin/sales/SalesTabs";
 import { AutoSelect, LeadSearch } from "@/components/admin/sales/LeadSearch";
 import { AssignForm, SelectAll } from "@/components/admin/sales/TeamForms";
-import { requireOwner } from "@/lib/admin/auth";
+import { requireSalesAdmin } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
 import { getLeads, getOwners } from "@/lib/admin/sales";
 import { CHANNELS, formatPhone, istToday, labelOf, SOURCES, STAGES } from "@/lib/sales";
@@ -19,7 +19,7 @@ const shortDate = (iso: string) =>
 export default async function SalesLeadsPage({ searchParams }: { searchParams: Promise<Search> }) {
   // Website form fills arrive as leads before anything is read.
   await captureWebsiteLeads();
-  const admin = await requireOwner();
+  const admin = await requireSalesAdmin();
   const sp = await searchParams;
   const due = sp.due === "1";
   // "Due today" is your own list unless an owner is picked.
@@ -101,7 +101,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
                       {l.paid && <span className="ml-2 bg-emerald-700 px-1.5 py-0.5 text-[11px] font-extrabold text-white">PAID</span>}
                       <span className="block text-xs text-muted nums">{contact(l)}</span>
                     </td>
-                    <td className="px-4 py-3"><StageBadge stage={l.stage} label={labelOf(STAGES, l.stage)} /></td>
+                    <td className="px-4 py-3"><StageBadge stage={l.stage} label={labelOf(STAGES, l.stage)} />{l.status_note && <span className="mt-1 block max-w-48 text-xs italic text-muted">{l.status_note}</span>}</td>
                     <td className="px-4 py-3 text-xs">{labelOf(SOURCES, l.source)}{l.source_detail && <span className="block text-muted">{l.source_detail}</span>}</td>
                     <td className="px-4 py-3 text-xs nums">
                       {l.last_touch_at ? <>{shortDate(l.last_touch_at)} · {labelOf(CHANNELS, l.last_channel ?? "")}<span className="block text-muted">{l.touches} touch{l.touches === 1 ? "" : "es"}{l.replied ? ", replied" : ""}</span></> : <span className="text-muted">Not contacted yet</span>}
@@ -125,6 +125,7 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
                     <StageBadge stage={l.stage} label={labelOf(STAGES, l.stage)} />
                   </div>
                   <p className="truncate text-xs text-muted nums">{contact(l)}</p>
+                  {l.status_note && <p className="truncate text-xs italic text-muted">{l.status_note}</p>}
                   <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs nums">
                     <FollowUp date={l.next_follow_up} today={today} />
                     <span className="text-muted">{labelOf(SOURCES, l.source)}</span>
