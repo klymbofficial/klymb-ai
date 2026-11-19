@@ -53,6 +53,13 @@ test("backing out of Google returns to /register with only the track, never anyt
   assert.equal(signInFailedPath("https://evil.example/register?track=x"), "/register?track=x&signin=failed", "only the path is ever used");
 });
 
+test("backing out of Google from the hackathon or the learner login never lands on the admin sign-in", () => {
+  assert.equal(signInFailedPath("http://localhost:3291/hackathons#register"), "/hackathons?signin=failed#register");
+  assert.equal(signInFailedPath("https://www.klymb.ai/dashboard"), "/learn/login?error=1");
+  assert.equal(signInFailedPath("/learn/hackathon"), "/learn/login?error=1");
+  assert.equal(signInFailedPath("/admin"), null);
+});
+
 /**
  * The ownership rule, checked where it lives. Source-level on purpose: the
  * action needs a session and a database, and what matters is order: with no
