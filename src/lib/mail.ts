@@ -353,6 +353,59 @@ export function internshipApplicationEmail(p: { name: string; starts: string; mo
   return { subject, html, text };
 }
 
+/** Sent when the team shortlists an internship application: a call is coming. */
+export function internshipShortlistEmail(p: { name: string; starts: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "You're shortlisted: Growth & Community Intern at Klymb.ai";
+  const line = "Good news: you're shortlisted for the Growth & Community Intern role at Klymb.ai. Someone from our team will call you on WhatsApp in the next few days for a short chat, around 10 minutes.";
+  const text = [
+    `Hi ${p.name},`, "", line, "",
+    "Keep your phone handy, and reply to this email if there's a time that suits you better.", "",
+    `The internship starts on ${p.starts}.`, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: "We'll call you on WhatsApp for a short chat.",
+    eyebrow: "Growth & Community Intern",
+    title: "You're shortlisted.",
+    intro: esc(line),
+    sections: [
+      `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">Keep your phone handy, and reply to this email if there's a time that suits you better. The internship starts on ${esc(p.starts)}.</p>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
+/** Sent when the team accepts an internship application: their link and how to start. */
+export function internshipWelcomeEmail(p: { name: string; email: string; link: string | null; starts: string; months: number; pct: number; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "Welcome aboard: you're a Growth & Community Intern at Klymb.ai";
+  const line = `Welcome to the team! You're joining Klymb.ai as a Growth & Community Intern for ${p.months} months, starting ${p.starts}. You earn ${p.pct}% on every paid enrollment through your personal link, added up and paid after the end of each month.`;
+  const signIn = `${p.siteUrl}/sales`;
+  const text = [
+    `Hi ${p.name},`, "", line, "",
+    ...(p.link ? [`Your personal link: ${p.link}`, "Share it with people who'd benefit from our courses. Anyone who buys within 30 days of opening it counts as yours.", ""] : ["Your personal link will be shared with you shortly.", ""]),
+    `Your dashboard: ${signIn}`, `Sign in with Google using ${p.email}. The Earnings tab shows your link, how many people opened it, your sales and what you've earned.`, "",
+    "This is a commission-based opportunity with no fixed stipend.", "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: p.link ? `Your personal link: ${p.link}` : "Welcome to the Klymb.ai team.",
+    eyebrow: "Growth & Community Intern",
+    title: "Welcome to the team.",
+    intro: esc(line),
+    sections: [
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${p.link ? row("Your link", p.link) : ""}${row("Starts", p.starts)}${row("Length", `${p.months} months`)}${row("Earnings", `${p.pct}% on every paid enrollment`)}</table>`,
+      p.link ? `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">Share your link with people who'd benefit from our courses. Anyone who buys within 30 days of opening it counts as yours.</p>` : "",
+      button(`${site}/sales`, "Open your dashboard"),
+      `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">Sign in with Google using <strong>${esc(p.email)}</strong>. The Earnings tab shows your link, how many people opened it, your sales and what you've earned. This is a commission-based opportunity with no fixed stipend.</p>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
 /** An announcement an owner posted for System Design learners, when they ticked "Also email". */
 export function sdAnnouncementEmail(p: { name: string; title: string; body: string; link: { url: string; label: string } | null; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

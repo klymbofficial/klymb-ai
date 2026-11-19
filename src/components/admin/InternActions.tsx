@@ -20,9 +20,11 @@ export function InternActions({ id, status, note }: { id: string; status: Intern
   const [pending, start] = useTransition();
 
   const move = (to: InternStatus) => start(async () => {
-    if (to === "accepted" && !window.confirm("Accept them? They'll also be added as a sales rep and can sign in at klymb.ai/sales with this email.")) return;
+    if (to === "accepted" && !window.confirm("Accept them? They'll be added as a sales rep, get their personal link, and be emailed a welcome with how to sign in at klymb.ai/sales.")) return;
+    if (to === "shortlisted" && !window.confirm("Shortlist them? They'll be emailed that we'll call them for a short chat.")) return;
     const r = await setInternStatus(id, to, text);
-    setMsg(!r.ok ? r.message : to === "accepted" ? (r.rep ? "Accepted, and added as a sales rep." : "Accepted, but adding them as a rep failed: add them in Sales › Team.") : "Saved.");
+    const mailed = r.ok && r.emailed ? " Email sent." : "";
+    setMsg(!r.ok ? r.message : to === "accepted" ? (r.rep ? `Accepted, added as a sales rep${r.code ? `, link /i/${r.code}` : ""}.${mailed}` : "Accepted, but adding them as a rep failed: add them in Sales › Team.") : `Saved.${mailed}`);
     router.refresh();
   });
 

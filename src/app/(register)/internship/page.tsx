@@ -43,7 +43,7 @@ export default function InternshipPage() {
             <Link href="/" className="display text-lg text-white no-underline">KLYMB<span className="text-red-soft">.AI</span></Link>
             <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">Growth &amp; Community Intern</p>
             <h1 className="display display-soft mt-2 text-[clamp(1.9rem,6vw,3rem)] leading-[1.05]">
-              Build connections. Help others upskill. <span className="text-red-soft">Grow with Klymb.ai.</span>
+              Build connections. Help others upskill. <span className="text-red-soft">Grow with Klymb.ai</span>
             </h1>
             <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/80">
               Connect learners with relevant courses, grow your network, and gain practical experience in outreach and business development. Earn {INTERNSHIP.commissionPct}% on every paid enrollment through your personal link.

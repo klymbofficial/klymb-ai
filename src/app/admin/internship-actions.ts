@@ -5,9 +5,11 @@ import { getSalesAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { db } from "@/lib/db/client";
 import { ensureInternCode } from "@/lib/intern-codes";
-import { INTERNSHIP_LIMITS, isInternStatus } from "@/lib/internship";
+import { site } from "@/data/config";
+import { INTERNSHIP, INTERNSHIP_LIMITS, internLink, isInternStatus } from "@/lib/internship";
+import { internshipShortlistEmail, internshipWelcomeEmail, MAIL_SUPPORT, sendMail } from "@/lib/mail";
 
-type Result = { ok: true; rep?: boolean; code?: string | null } | { ok: false; message: string };
+type Result = { ok: true; rep?: boolean; code?: string | null; emailed?: boolean } | { ok: false; message: string };
 
 /**
  * Moves an application along: shortlisted, accepted or rejected, with the
@@ -21,6 +23,7 @@ export async function setInternStatus(id: string, status: string, note: string):
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
   const callNote = note.trim().slice(0, INTERNSHIP_LIMITS.callNote) || null;
+  const { data: before } = await sql.row<{ status: string }>`select status from course.internship_applications where id = ${id}`;
   const { data: app, error } = await sql.row<{ email: string; name: string }>`
     update course.internship_applications
        set status = ${status}, call_note = coalesce(${callNote}, call_note),
@@ -42,10 +45,21 @@ export async function setInternStatus(id: string, status: string, note: string):
     // Their personal link: klymb.ai/i/<code>.
     code = await ensureInternCode(sql, { email: app.email, name: app.name, by: admin.email });
   }
-  await logAdmin(admin, "internship.status", id, { status, email: app.email, rep, code });
+  // An email only when the status really changes, so a second click sends nothing.
+  let emailed = false;
+  if (before?.status !== status && (status === "shortlisted" || status === "accepted")) {
+    const first = app.name.split(" ")[0] || "there";
+    const mail = status === "shortlisted"
+      ? internshipShortlistEmail({ name: first, starts: INTERNSHIP.startsLabel, siteUrl: site.url, supportEmail: MAIL_SUPPORT })
+      : internshipWelcomeEmail({ name: first, email: app.email, link: code ? internLink(site.url, code) : null, starts: INTERNSHIP.startsLabel, months: INTERNSHIP.months, pct: INTERNSHIP.commissionPct, siteUrl: site.url, supportEmail: MAIL_SUPPORT });
+    const sent = await sendMail({ to: { email: app.email, name: app.name }, ...mail, kind: `internship.${status}`, idempotencyKey: `internship:${id}:${status}` });
+    emailed = sent.ok;
+    if (!sent.ok && !sent.skipped) console.error(`internship ${status} email failed:`, sent.reason);
+  }
+  await logAdmin(admin, "internship.status", id, { status, email: app.email, rep, code, emailed });
   revalidatePath("/admin/internship");
   revalidatePath("/admin/sales/team");
-  return { ok: true, rep, code };
+  return { ok: true, rep, code, emailed };
 }
 
 /** Saves the note from the call without changing the status. */
