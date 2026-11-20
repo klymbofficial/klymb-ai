@@ -54,9 +54,10 @@ async function LearnerTrail({ anon }: { anon: string }) {
   );
 }
 
-export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string; all?: string }> }) {
+export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string; all?: string; q?: string }> }) {
   const admin = await requireAdmin();
-  const { range, learner, day, all } = await searchParams;
+  const { range, learner, day, all, q: rawQ } = await searchParams;
+  const q = (rawQ ?? "").trim().toLowerCase().slice(0, 100);
   const showAll = all === "1";
   if (learner) return <LearnerTrail anon={learner} />;
 
@@ -88,7 +89,9 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
   const dayTabs = openedDays.length ? openedDays : data.lessons;
   const lesson = data.lessons.find((l) => l.id === day) ?? dayTabs[0];
   const SHOWN = 25;
-  const learners = showAll ? data.learners.slice(0, 500) : data.learners.slice(0, SHOWN);
+  // A search looks through every learner in the window, not only the ones shown.
+  const found = q ? data.learners.filter((l) => (l.email ?? "").toLowerCase().includes(q) || l.anon.toLowerCase().includes(q)) : data.learners;
+  const learners = showAll || q ? found.slice(0, 500) : found.slice(0, SHOWN);
   const opened = funnel.find((r) => r.step === "view");
   const openedTotal = (opened?.inApp ?? 0) + (opened?.browser ?? 0);
   const keep = (extra: Record<string, string>) => {
@@ -118,7 +121,14 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
       <div className="mt-6"><PlainWords data={data} days={days} /></div>
 
       <div id="learners" className="mt-8 scroll-mt-6">
-        <Panel title="Who’s taking the course" note={`Most recent first. Click a name to see everything they did, step by step.${data.learners.length > SHOWN && !showAll ? ` Showing the latest ${SHOWN} of ${data.learners.length}.` : ""}`}>
+        <Panel title="Who’s taking the course" note={q ? `${found.length} ${found.length === 1 ? "learner matches" : "learners match"} “${q}”. Click a name to see everything they did, step by step.` : `Most recent first. Click a name to see everything they did, step by step.${data.learners.length > SHOWN && !showAll ? ` Showing the latest ${SHOWN} of ${data.learners.length}.` : ""}`}>
+          <form method="get" action="/admin/system-design#learners" role="search" className="mb-3 flex flex-wrap items-center gap-2">
+            {range && <input type="hidden" name="range" value={range} />}
+            {day && <input type="hidden" name="day" value={day} />}
+            <input name="q" type="search" defaultValue={rawQ ?? ""} placeholder="Search by email" aria-label="Search learners by email" autoComplete="off" spellCheck={false} className="w-full max-w-xs rounded-lg border border-line/50 bg-white px-3 py-1.5 text-sm focus:border-ink focus:outline-none" />
+            <button type="submit" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Search</button>
+            {q && <Link href={`${keep({})}#learners`} className="text-xs font-bold text-muted underline underline-offset-4">Clear</Link>}
+          </form>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-left text-sm">
               <thead className="text-xs uppercase tracking-[0.1em] text-muted"><tr><th className="py-2 pr-3">Learner</th><th className="py-2 pr-3">Right now</th><th className="py-2 pr-3">Finished</th><th className="py-2 pr-3">Time spent</th><th className="py-2 pr-3">On</th><th className="py-2">Last seen</th></tr></thead>
@@ -136,8 +146,9 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
               </tbody>
             </table>
             {!data.learners.length && <p className="py-6 text-center text-sm text-muted">No activity yet in this window.</p>}
+            {!!data.learners.length && q && !found.length && <p className="py-6 text-center text-sm text-muted">No learner matches “{q}” in this window. Try a wider range above.</p>}
           </div>
-          {data.learners.length > SHOWN && (
+          {!q && data.learners.length > SHOWN && (
             <p className="mt-3 text-sm">
               {showAll
                 ? <Link href={`${keep({})}#learners`} className="font-bold underline underline-offset-4">Show only the latest {SHOWN}</Link>
