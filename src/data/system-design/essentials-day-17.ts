@@ -514,5 +514,6 @@ export const essentialsDaySeventeen: Day = {
     src: "/api/video/essentials-day-17.mp4", poster: "/videos/system-design/essentials-day-17-poster.jpg", minutes: 6, lang: "Hinglish",
     // One horizontal cut with the captions burned in: it plays in the wide frame, and with no caption lines there's no subtitle switch.
     wide: { src: "/api/video/essentials-day-17.mp4", poster: "/videos/system-design/essentials-day-17-poster.jpg" },
+    audio: [{ lang: "English", src: "/api/video/essentials-day-17-en.mp4", wide: "/api/video/essentials-day-17-en.mp4" }],
   },
 };

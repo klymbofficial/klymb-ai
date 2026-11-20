@@ -4,7 +4,7 @@ import { TRANSCRIPTS } from "../src/data/system-design/lessons";
 import { lessonContent } from "../src/lib/sd-lessons";
 import { SUBTITLES_EN } from "../src/data/system-design/subtitles-en";
 import {
-  SPEED_MAX, SPEED_MIN, audioTrack, audioTracks, defaultState, fromStored, lineAt, setSpeed, speedLabel, stepSpeed, subtitleLangs,
+  ALL_IDS, SPEED_MAX, SPEED_MIN, audioTrack, audioTracks, defaultState, fromStored, lineAt, setSpeed, speedLabel, stepSpeed, subtitleLangs,
   setLessons, toStored, type CourseState,
 } from "../src/lib/course-app";
 
@@ -57,18 +57,16 @@ test("subtitle languages per lesson, and the line at a moment", () => {
 });
 
 test("an audio language a lesson lacks falls back to the original voice-over", () => {
-  // Day 6 has only the Hinglish voice-over so far.
-  const tracks = audioTracks("0-5");
-  assert.equal(tracks[0].lang, "Hinglish");
-  assert.equal(tracks.length, 1, "one voice-over");
-  assert.equal(audioTrack({ ...base(), audio: "English" }, "0-5").lang, "Hinglish");
+  // No lesson has a Tamil voice-over.
+  assert.equal(audioTrack({ ...base(), audio: "Tamil" as never }, "0-5").lang, "Hinglish");
 });
 
-test("Days 1 to 5 have an English voice-over next to the Hinglish one", () => {
-  for (const id of ["0-0", "0-1", "0-2", "0-3", "0-4"]) {
+test("all 21 days have an English voice-over next to the Hinglish one", () => {
+  assert.equal(ALL_IDS.length, 21);
+  ALL_IDS.forEach((id, d) => {
     assert.deepEqual(audioTracks(id).map((t) => t.lang), ["Hinglish", "English"], id);
-    assert.match(audioTrack({ ...base(), audio: "English" }, id).src, /-en\.mp4$/, id);
-  }
+    assert.equal(audioTrack({ ...base(), audio: "English" }, id).src, `/api/video/essentials-day-${d + 1}-en.mp4`, id);
+  });
 });
 
 test("player settings are saved with progress", () => {
