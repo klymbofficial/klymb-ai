@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import { readFileSync } from "node:fs";
-import { WEBINAR, googleCalendarLink, webinarOpen, webinarProblems, webinarRegistrationOf } from "../src/lib/webinar";
+import { WEBINAR, googleCalendarLink, webinarCountdown, webinarDayWord, webinarOpen, webinarProblems, webinarRegistrationOf } from "../src/lib/webinar";
 
 const good = { name: "  Aarav   Sharma ", email: " Aarav@Example.com ", dial: "91", phone: "98765 43210", role: "student" };
 
@@ -56,4 +56,19 @@ test("the migration keeps one row per email per webinar", () => {
   assert.match(sql, /create table if not exists course\.webinar_registrations \(/);
   assert.match(sql, /unique \(webinar, email\)/);
   assert.match(sql, /email = lower\(email\)/);
+});
+
+test("the countdown counts down to 7 PM IST, then goes live, then ends", () => {
+  const at = (iso: string) => webinarCountdown(new Date(iso).getTime());
+  assert.deepEqual(at("2026-11-20T17:58:55+05:30"), { phase: "before", days: 1, hours: 1, minutes: 1, seconds: 5 });
+  assert.equal(at("2026-11-21T19:00:00+05:30").phase, "live");
+  assert.equal(at("2026-11-21T19:59:59+05:30").phase, "live");
+  assert.deepEqual(at("2026-11-21T20:00:00+05:30"), { phase: "over", days: 0, hours: 0, minutes: 0, seconds: 0 });
+});
+
+test("the day word follows the calendar day in India", () => {
+  const word = (iso: string) => webinarDayWord(new Date(iso).getTime());
+  assert.equal(word("2026-11-20T23:30:00+05:30"), "Tomorrow");
+  assert.equal(word("2026-11-21T00:10:00+05:30"), "Today");
+  assert.equal(word("2026-11-19T12:00:00+05:30"), "");
 });

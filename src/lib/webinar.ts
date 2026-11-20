@@ -42,6 +42,29 @@ export function webinarClock() {
   return { now, open: webinarOpen(now) };
 }
 
+/** Where the clock stands against the webinar: before it, during it, or after it. */
+export type WebinarPhase = "before" | "live" | "over";
+
+/** The countdown to the start, split into days, hours, minutes and seconds, and the phase it is in. */
+export function webinarCountdown(now: number = Date.now()) {
+  const left = Math.max(0, webinarStart() - now);
+  const phase: WebinarPhase = now < webinarStart() ? "before" : now < webinarEnd() ? "live" : "over";
+  return {
+    phase,
+    days: Math.floor(left / 864e5),
+    hours: Math.floor(left / 36e5) % 24,
+    minutes: Math.floor(left / 6e4) % 60,
+    seconds: Math.floor(left / 1e3) % 60,
+  };
+}
+
+/** "Today", "Tomorrow" or nothing, by the calendar day in India, for the line above the countdown. */
+export function webinarDayWord(now: number = Date.now()): "Today" | "Tomorrow" | "" {
+  const ist = (t: number) => new Date(t + 5.5 * 36e5).toISOString().slice(0, 10);
+  const days = Math.round((Date.parse(ist(webinarStart())) - Date.parse(ist(now))) / 864e5);
+  return days === 0 ? "Today" : days === 1 ? "Tomorrow" : "";
+}
+
 /** "20261121T133000Z": a time the way calendar links want it. */
 const calendarTime = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
