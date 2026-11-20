@@ -7,8 +7,12 @@ import { INDIA_DIAL, phoneOf, phoneProblem, type SdRole } from "@/lib/sd-offer";
  * in course.webinar_registrations.
  */
 export const WEBINAR = {
+  // Kept from when this webinar was "AI Tools and Claude", so the sign-ups
+  // made before the topic changed stay with it.
   slug: "ai-tools-claude-2026-11",
-  title: "AI Tools and Claude",
+  title: "System Design, live",
+  /** The second half of the page heading. */
+  tagline: "the skill AI doesn't replace.",
   startsAt: "2026-11-21T19:00:00+05:30",
   endsAt: "2026-11-21T20:00:00+05:30",
   /** As the page and the email say it. */
@@ -17,11 +21,12 @@ export const WEBINAR = {
   speaker: "Klymb.ai team",
   whatsappGroup: "https://chat.whatsapp.com/FDCM4Q6KcAK9bHqs5eOM2g?s=cl&p=a&iam=2",
   agenda: [
-    ["Getting job-ready in the AI era", "What hiring looks like now that AI does part of the work, and the skills that still get people hired."],
-    ["Klymb.ai's courses", "What each course teaches, who it's for, and how the daily, hands-on format works."],
-    ["Why we started Klymb.ai", "The gap we kept seeing between college, courses and real jobs, and what we're doing about it."],
-    ["Live Q&A", "Bring your questions about careers, AI and our courses. We answer as many as the hour allows."],
-    ["Upcoming workshops and webinars", "What's coming next, and how to get a seat."],
+    ["AI and your job", "Which jobs AI is shrinking, which ones it's creating, and why system design matters more now."],
+    ["The building blocks", "Load balancers, caching, databases, queues and the quick maths behind every design, explained simply."],
+    ["Design 1: a URL shortener", "We design it live, step by step, the way a real interview round runs."],
+    ["Design 2: a chat app like WhatsApp", "How messages arrive instantly, how the ticks work, and what happens when a phone goes offline."],
+    ["Why we started Klymb.ai", "The gap we kept seeing between college, courses and real jobs, and what we built for it."],
+    ["Live Q&A", "Bring your questions about system design, interviews and careers."],
   ],
 } as const;
 

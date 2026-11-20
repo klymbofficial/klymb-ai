@@ -9,7 +9,7 @@ import { site } from "@/data/config";
 import { WEBINAR, webinarClock } from "@/lib/webinar";
 
 const title = `Free live webinar: ${WEBINAR.title}`;
-const description = `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. Getting job-ready in the AI era, Klymb.ai's courses, why we started Klymb.ai, live Q&A and what's coming next. Free.`;
+const description = `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. Learn the building blocks of system design, then design a URL shortener and a WhatsApp-style chat app live. Free.`;
 
 export const metadata: Metadata = {
   title, description,
@@ -43,7 +43,7 @@ export default function WebinarPage() {
             <Link href="/" className="display text-lg text-white no-underline">KLYMB<span className="text-red-soft">.AI</span></Link>
             <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">Free live webinar · 1 hour</p>
             <h1 className="display display-soft mt-2 text-[clamp(1.9rem,6vw,3rem)] leading-[1.05]">
-              {WEBINAR.title}: <span className="text-red-soft">getting job-ready in the AI era.</span>
+              {WEBINAR.title}: <span className="text-red-soft">{WEBINAR.tagline}</span>
             </h1>
             <ul className="mt-5 flex flex-wrap gap-2" aria-label="When and where">
               {FACTS.map(({ Icon, text }) => (
