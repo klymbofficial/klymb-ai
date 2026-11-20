@@ -1,5 +1,5 @@
 /**
- * The words on /workshop, the long public page for the free System Design
+ * The words on /webinar, the long public page for the free System Design
  * webinar. The date, time and sign-up come from src/lib/webinar.ts; the
  * headlines, figures and answers below belong to this page only.
  *

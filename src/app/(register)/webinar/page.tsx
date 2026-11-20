@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, Clock, Video } from "lucide-react";
-import presenting from "@/assets/track-page/presenting.jpg";
+import { ArrowRight, Check, Plus, X } from "lucide-react";
 import { CookieBanner } from "@/components/legal/CookieBanner";
-import { WebinarForm } from "@/components/webinar/WebinarForm";
+import { Clipping } from "@/components/workshop/Clipping";
+import { StickyBar, TopStrip, WorkshopProvider } from "@/components/workshop/WorkshopClock";
+import { WorkshopRegister } from "@/components/workshop/WorkshopRegister";
 import { site } from "@/data/config";
+import {
+  AUDIENCES, FAQ, HIRING_HEADLINES, HIRING_STATS, LAYOFF_HEADLINES, LAYOFF_STATS, NOT_FOR, SKILL_STATEMENT, type Stat,
+} from "@/data/workshop";
 import { WEBINAR, webinarClock } from "@/lib/webinar";
 
-const title = `Free live webinar: ${WEBINAR.title}`;
-const description = `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. Learn the building blocks of system design, then design a URL shortener and a WhatsApp-style chat app live. Free.`;
+const title = "AI can write the code. Can you design the system? A free live webinar";
+const description = `${WEBINAR.title}: ${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. See the one skill AI can't do for you done live, in one hour. Free, online.`;
 
 export const metadata: Metadata = {
   title, description,
@@ -18,73 +21,182 @@ export const metadata: Metadata = {
   twitter: { title, description },
 };
 
-/** Read at request time, so "registration closed" follows the real clock. */
+/** Read at request time, so the countdown and "registration closed" follow the real clock. */
 export const dynamic = "force-dynamic";
 
 const FACTS = [
-  { Icon: CalendarDays, text: WEBINAR.dateLabel },
-  { Icon: Clock, text: WEBINAR.timeLabel },
-  { Icon: Video, text: "Live on Google Meet" },
+  ["Date", "Sat, 21 Nov 2026"],
+  ["Time", "7:00–8:00 PM IST"],
+  ["Where", "Online, live"],
+  ["Fee", "Free"],
 ] as const;
 
+const NAV = [["#news", "The news"], ["#for-you", "Is it for you?"], ["#faq", "FAQ"]] as const;
+
+const eyebrow = "text-[13px] font-semibold uppercase tracking-[0.14em]";
+const h2 = "display text-[clamp(2rem,4.4vw,3.75rem)] leading-none tracking-[-0.04em]";
+const section = "scroll-mt-24 border-t-2 border-line/30 py-[clamp(3rem,8vh,6rem)]";
+
 /**
- * The free webinar, laid out like /join: a maroon panel with what it covers,
- * and the sign-up beside it (under it on a phone).
+ * The long, public page for the free System Design webinar (the design from
+ * Claude Design, "Klymb Workshop v2"). The sign-up is the same one as on
+ * the plain sign-up page at /workshop: same endpoint, same list of registrations.
  */
 export default function WebinarPage() {
-  const { open } = webinarClock();
+  const { now } = webinarClock();
   return (
-    <>
-      <div className="grid min-h-dvh grid-cols-[minmax(0,1fr)] lg:grid-cols-[1fr_1fr]">
-        <section className="relative isolate overflow-hidden bg-red-muted px-5 pb-14 pt-6 text-white sm:px-10 lg:flex lg:flex-col lg:justify-center lg:px-14 lg:py-12">
-          <Image src={presenting} alt="" aria-hidden="true" fill priority placeholder="blur" sizes="(min-width: 1024px) 50vw, 100vw" className="pointer-events-none -z-20 object-cover" />
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/85 via-red-muted/92 to-red-muted-deep/97" />
-          <div className="mx-auto w-full max-w-xl">
-            <Link href="/" className="display text-lg text-white no-underline">KLYMB<span className="text-red-soft">.AI</span></Link>
-            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">Free live webinar · 1 hour</p>
-            <h1 className="display display-soft mt-2 text-[clamp(1.9rem,6vw,3rem)] leading-[1.05]">
-              {WEBINAR.title}: <span className="text-red-soft">{WEBINAR.tagline}</span>
-            </h1>
-            <ul className="mt-5 flex flex-wrap gap-2" aria-label="When and where">
-              {FACTS.map(({ Icon, text }) => (
-                <li key={text} className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/15">
-                  <Icon size={14} aria-hidden="true" className="text-red-soft" />{text}
+    <WorkshopProvider serverNow={now}>
+      <div className="overflow-x-clip bg-paper pb-28 text-ink">
+        <TopStrip />
+
+        <div className="sticky top-0 z-30 px-3 pt-3 sm:px-8">
+          <nav aria-label="Page" className="mx-auto flex max-w-[1280px] items-center gap-2 rounded-2xl border border-line/30 bg-paper/80 py-2 pl-5 pr-2 shadow-card backdrop-blur-md sm:rounded-full">
+            <Link href="/" className="display flex-none text-[22px] text-ink no-underline">Klymb<span className="text-red-strong">.</span></Link>
+            <div className="hidden flex-1 justify-end gap-0.5 md:flex">
+              {NAV.map(([href, label]) => (
+                <a key={href} href={href} className="rounded-full px-3.5 py-2 text-[15px] text-ink no-underline transition-colors hover:bg-red-tint hover:text-red-strong">{label}</a>
+              ))}
+            </div>
+            <span className="flex-1 md:hidden" />
+            <a href="#register" className="inline-flex flex-none items-center gap-2 rounded-full bg-red-strong px-[18px] py-2.5 text-[15px] font-bold text-white no-underline transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.98]">
+              Register free <ArrowRight size={16} aria-hidden="true" />
+            </a>
+          </nav>
+        </div>
+
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
+          {/* Hero and the ticket. */}
+          <section className="grid items-start gap-x-[clamp(2rem,5vw,5rem)] gap-y-12 py-[clamp(2rem,6vh,4.5rem)] lg:grid-cols-2">
+            <div className="flex flex-col items-start gap-7">
+              <span className="rounded-full bg-red-tint px-3.5 py-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-red-strong">Free · Live · 60 minutes</span>
+              <h1 className="text-[clamp(2.5rem,6vw,5.25rem)] font-extrabold leading-[0.98] tracking-[-0.045em]">
+                AI can write the code.
+                <span className="block italic text-red-strong">Can you design the system?</span>
+              </h1>
+              <p className="max-w-[560px] text-[clamp(1.0625rem,1.5vw,1.25rem)] leading-normal text-ink/80">The one skill AI can&apos;t do for you. See it done live, in one hour.</p>
+              <dl className="grid w-full grid-cols-2 border-y-2 border-line/30 sm:grid-cols-4">
+                {FACTS.map(([k, v]) => (
+                  <div key={k} className="grid gap-1 py-4 pr-4">
+                    <dt className="text-xs uppercase tracking-[0.12em] text-ink/65">{k}</dt>
+                    <dd className={`display display-soft text-lg ${k === "Fee" ? "text-red-strong" : ""}`}>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <WorkshopRegister />
+          </section>
+
+          {/* 01: the layoffs. */}
+          <section id="news" className={`${section} grid gap-10`}>
+            <div className="grid max-w-[820px] gap-3.5">
+              <span className={`${eyebrow} text-red-strong`}>01 · You&apos;ve seen the headlines</span>
+              <h2 className={h2}>Every week, another company cuts jobs and names AI.</h2>
+            </div>
+            <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {LAYOFF_HEADLINES.map((h, i) => <Clipping key={h.href} item={h} index={i} />)}
+            </div>
+            <StatRow stats={LAYOFF_STATS} />
+          </section>
+
+          {/* 02: the other half. */}
+          <section className="grid gap-10 rounded-card bg-ink p-[clamp(2rem,5vw,4rem)] text-paper">
+            <div className="grid max-w-[820px] gap-3.5">
+              <span className={`${eyebrow} text-red-soft`}>02 · Now read the other half of the paper</span>
+              <h2 className={h2}>The jobs aren&apos;t disappearing. They&apos;re moving to a different skill.</h2>
+            </div>
+            <div className="grid items-start gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {HIRING_HEADLINES.map((h, i) => <Clipping key={h.href} item={h} index={i + 1} />)}
+            </div>
+            <StatRow stats={HIRING_STATS} onDark />
+            <p className="display display-soft max-w-[900px] text-[clamp(1.25rem,2.2vw,1.875rem)] leading-tight tracking-[-0.02em]">{SKILL_STATEMENT}</p>
+          </section>
+
+          {/* 03: who it's for. */}
+          <section id="for-you" className={`${section} grid gap-9`}>
+            <div className="grid max-w-[820px] gap-3.5">
+              <span className={`${eyebrow} text-red-strong`}>03 · Is this webinar for you?</span>
+              <h2 className={h2}>If you nod at any of these, save a seat.</h2>
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {AUDIENCES.map(([who, why]) => (
+                <li key={who} className="grid grid-cols-[auto_1fr] items-start gap-4 rounded-card border border-line/30 p-6">
+                  <span className="grid size-[30px] place-items-center rounded-full bg-red-strong text-white"><Check size={15} strokeWidth={3} aria-hidden="true" /></span>
+                  <span className="grid gap-1.5">
+                    <strong className="display display-soft text-xl leading-tight">{who}</strong>
+                    <span className="text-[15px] leading-normal text-ink/80">{why}</span>
+                  </span>
                 </li>
               ))}
             </ul>
-            <a href="#register" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3.5 text-base font-bold text-red-strong no-underline transition-transform duration-150 active:scale-[0.98] lg:hidden">
-              Save my seat <span aria-hidden="true">↓</span>
-            </a>
+            <div className="grid grid-cols-[auto_1fr] items-start gap-4 border-y-2 border-line/30 py-5">
+              <span className="grid size-[30px] place-items-center rounded-full border-2 border-ink"><X size={14} strokeWidth={3} aria-hidden="true" /></span>
+              <span className="grid gap-1">
+                <strong className="display display-soft text-xl leading-tight">Probably not for you if</strong>
+                <span className="text-[15px] leading-normal text-ink/80">{NOT_FOR}</span>
+              </span>
+            </div>
+          </section>
 
-            <h2 className="mt-9 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">What we&apos;ll cover</h2>
-            <ol className="mt-3 flex flex-col">
-              {WEBINAR.agenda.map(([head, body], i) => (
-                <li key={head} className="flex gap-4 border-t border-white/15 py-3.5 last:border-b">
-                  <span aria-hidden="true" className="display w-6 flex-none text-sm leading-6 text-red-soft">{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <p className="text-[15px] font-bold leading-6">{head}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-white/70">{body}</p>
-                  </div>
-                </li>
+          {/* 04: questions. */}
+          <section id="faq" className={`${section} grid items-start gap-x-[clamp(2rem,5vw,5rem)] gap-y-9 lg:grid-cols-2`}>
+            <div className="grid gap-3.5">
+              <span className={`${eyebrow} text-red-strong`}>04 · Questions</span>
+              <h2 className={h2}>Before you register</h2>
+            </div>
+            <div className="border-t-2 border-ink">
+              {FAQ.map(([q, a]) => (
+                <details key={q} className="group border-b border-line/30">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-[19px] font-bold marker:hidden [&::-webkit-details-marker]:hidden" style={{ fontFamily: "var(--font-heading)" }}>
+                    {q}
+                    <Plus size={26} aria-hidden="true" className="flex-none text-red-strong transition-transform duration-200 group-open:rotate-45" />
+                  </summary>
+                  <p className="pb-5 text-base leading-relaxed text-ink/85">{a}</p>
+                </details>
               ))}
-            </ol>
-            <p className="mt-5 text-sm text-white/70">Hosted by the {WEBINAR.speaker}. For students and working professionals.</p>
-          </div>
-        </section>
+            </div>
+          </section>
 
-        <section id="register" className="relative -mt-8 scroll-mt-4 rounded-t-3xl bg-card px-5 pb-10 pt-7 sm:px-10 lg:sticky lg:top-0 lg:mt-0 lg:flex lg:max-h-dvh lg:min-h-dvh lg:items-center lg:self-start lg:overflow-y-auto lg:rounded-none lg:px-16 lg:py-10">
-          <div className="mx-auto w-full max-w-lg">
-            <WebinarForm open={open} />
-            <p className="mt-6 text-xs leading-relaxed text-muted">
-              We only use your details to message you about this webinar and Klymb.ai&apos;s courses ·{" "}
-              <Link href="/privacy" className="underline underline-offset-2">Privacy</Link>
+          {/* The close. */}
+          <section className="grid justify-items-start gap-7 rounded-card bg-red-strong p-[clamp(2.25rem,6vw,5rem)] text-white">
+            <h2 className="display text-[clamp(2.5rem,7vw,6.5rem)] leading-[0.95] tracking-[-0.05em]">
+              AI writes the code.
+              <span className="block">You design the system.</span>
+            </h2>
+            <p className="text-[clamp(1.0625rem,1.6vw,1.25rem)]">Sat, 21 Nov 2026 · 7:00 to 8:00 PM IST · Online · Free</p>
+            <a href="#register" className="flex min-w-[260px] items-center justify-between gap-4 rounded-xl bg-white px-[22px] py-[18px] text-lg font-bold text-ink no-underline transition-colors duration-150 hover:bg-ink hover:text-white">
+              Save my free seat <ArrowRight size={20} aria-hidden="true" />
+            </a>
+          </section>
+
+          <footer className="grid gap-2.5 pt-8 text-[13px] text-ink/70">
+            <p>Headlines link to their original sources. Figures are as reported by each publication; projections are not guarantees.</p>
+            <p className="flex flex-wrap justify-between gap-3">
+              <span>klymb.ai · System Design in 21 days, 15 minutes a day</span>
+              <span>© 2026 Klymb.ai · <Link href="/privacy" className="underline underline-offset-2">Privacy</Link> · <Link href="/terms" className="underline underline-offset-2">Terms</Link></span>
             </p>
-          </div>
-        </section>
+          </footer>
+        </div>
+
+        <StickyBar />
       </div>
       <CookieBanner />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd()).replace(/</g, "\\u003c") }} />
-    </>
+    </WorkshopProvider>
+  );
+}
+
+/** A row of big figures, each with what it counts and where it came from. */
+function StatRow({ stats, onDark }: { stats: Stat[]; onDark?: boolean }) {
+  return (
+    <ul className={`grid sm:grid-cols-3 ${onDark ? "border-t-2 border-paper/25" : "border-y-2 border-ink"}`}>
+      {stats.map((s) => (
+        <li key={s.value} className={`grid content-start gap-1.5 pr-5 ${onDark ? "pt-5" : "py-6"}`}>
+          <strong className={`display text-[clamp(2.75rem,4.6vw,4rem)] leading-none tracking-[-0.04em] ${s.faded ? "opacity-55" : s.accent ? "text-red-soft" : ""}`}>{s.value}</strong>
+          <span className={onDark ? "text-[15px]" : "font-semibold"}>{s.label}</span>
+          {s.source && <span className="text-[13px] opacity-65">{s.source}</span>}
+        </li>
+      ))}
+    </ul>
   );
 }
 
