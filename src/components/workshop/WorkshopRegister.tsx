@@ -21,7 +21,7 @@ const ROLES: { key: SdRole; label: string }[] = [
 
 /**
  * The sign-up, drawn as an admit-one ticket. It posts to the same endpoint as
- * /webinar, so a seat saved here is the same seat in the same list.
+ * /workshop, so a seat saved here is the same seat in the same list.
  */
 export function WorkshopRegister() {
   const { open, setRegistered } = useWorkshop();
