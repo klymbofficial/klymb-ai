@@ -204,7 +204,7 @@ export async function getPayments(): Promise<PaymentRow[]> {
     sql.rows<Omit<PaymentRow, "refund_request" | "friends" | "referral_earned_at" | "pace">>`
       select id, created_at, email, track, cohort_start, amount, status, razorpay_payment_id, referrer_email as referred_by
         from course.payments
-       where status in ('paid', 'refunded')
+       where status in ('paid', 'refunded') and hidden_at is null
        order by created_at desc
        limit 1000
     `,
@@ -301,6 +301,7 @@ export async function getOverviewCounts(): Promise<OverviewCounts | null> {
              count(*) filter (where status = 'refunded')::int                    as refunded,
              coalesce(sum(amount) filter (where status = 'refunded'), 0)::int    as refunded_amount
         from course.payments
+       where hidden_at is null
     `,
   ]);
 
