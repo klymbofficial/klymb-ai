@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { SD_REFERRAL, canRefer, type ReferralStanding, type ReferralView } from "@/lib/sd-offer";
+import { SD_REFERRAL, type ReferralStanding, type ReferralView } from "@/lib/sd-offer";
 import { Icon } from "./icons";
 import { track } from "./track";
 import type { Act } from "./useCourseApp";
@@ -18,7 +18,7 @@ export const useReferral = () => useContext(Ctx).view;
 /** What `?start=refer` shows, for checking the screen from a seat that has no offer. */
 export const SAMPLE_REFERRAL: ReferralStanding = {
   why: null,
-  view: { code: "ABCD2345", link: "https://www.klymb.ai/system-design?ref=ABCD2345", count: 1, state: "open", left: "7 days left", ends: "12 Nov, 9:30 pm", amount: "₹499", sample: true },
+  view: { code: "ABCD2345", link: "https://www.klymb.ai/system-design?ref=ABCD2345", count: 1, state: "open", amount: "₹499", sample: true },
 };
 
 const invite = "I'm learning System Design on Klymb.ai, in 15 minutes a day. Join with my link:";
@@ -81,19 +81,17 @@ export function ShareLink({ r }: { r: ReferralView }) {
 /** One line for where they stand. The count is all they see: never who bought. */
 export function headline(r: ReferralView) {
   switch (r.state) {
-    case "open": return `${r.count} of ${SD_REFERRAL.friends} friends · ${r.left.replaceAll(" ", "\u00a0")} · ${r.amount} back`;
+    case "open": return `${r.count} of ${SD_REFERRAL.friends} friends · ${r.amount} back`;
     case "earned": return `You’ve earned your ${r.amount} back.`;
     case "refunded": return `${r.amount} refunded. The course is yours.`;
-    case "closed": return `Your ${SD_REFERRAL.days} days ended with ${r.count} of ${SD_REFERRAL.friends} friends.`;
   }
 }
 
 function detail(r: ReferralView) {
   switch (r.state) {
-    case "open": return `Get ${SD_REFERRAL.friends} friends to buy with your link by ${r.ends} and we refund 100% of what you paid. You keep the course.`;
+    case "open": return `Get ${SD_REFERRAL.friends} friends to buy with your link and we refund 100% of what you paid. You keep the course.`;
     case "earned": return "It reaches your original payment method within 14 working days. You keep the course.";
     case "refunded": return null;
-    case "closed": return "You can still get your fee back by finishing the course.";
   }
 }
 
@@ -104,7 +102,7 @@ function joined(r: ReferralView) {
 }
 
 function Joined({ r }: { r: ReferralView }) {
-  const side = r.state === "open" ? r.left : r.count >= SD_REFERRAL.friends ? "Goal reached" : r.state === "closed" ? "Window closed" : null;
+  const side = r.count >= SD_REFERRAL.friends ? "Goal reached" : null;
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-3 text-[13px] leading-[1.3]">
@@ -128,7 +126,7 @@ export function ReferralCard({ r }: { r: ReferralView }) {
       <Joined r={r} />
       {body && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">{body} <Link href="/refund-policy" className="underline underline-offset-2">T&amp;C apply.</Link></p>}
       {(r.state === "earned" || r.state === "refunded") && <p className="m-0 text-sm leading-[1.4] text-pretty text-sd-n-800">Your link still works, so keep sharing it with friends.</p>}
-      {canRefer(r.state) && <ShareLink r={r} />}
+      <ShareLink r={r} />
     </section>
   );
 }
@@ -161,7 +159,7 @@ export function ReferralSteps({ steps }: { steps: string[] }) {
   );
 }
 
-export const buyerSteps = (r: ReferralView) => ["Share your link with friends.", `${SD_REFERRAL.friends} of them buy by ${r.ends}.`, `We refund your ${r.amount}. You keep the course.`];
+export const buyerSteps = (r: ReferralView) => ["Share your link with friends.", `${SD_REFERRAL.friends} of them buy the course.`, `We refund your ${r.amount}. You keep the course.`];
 
 /** Shown once, on the first tab screen after buying, so nobody who joins misses the offer. */
 export function ReferralSheet({ r, act }: { r: ReferralView; act: Act }) {

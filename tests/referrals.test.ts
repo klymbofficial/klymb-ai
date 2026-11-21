@@ -3,15 +3,14 @@ import { test } from "node:test";
 import { readFileSync } from "node:fs";
 import { TAB_SCREENS, defaultState, fromStored, previewState, toStored } from "../src/lib/course-app";
 import {
-  REFERRAL_ALPHABET, canRefer, REFERRAL_CODE_LENGTH, REFERRAL_KEPT_DAYS, SD_REFERRAL, keepRef, keptRef, refOf, referralCodeProblem, referralDeadline, referralLeft, referralLink, referralPost, referralProblem, referralState,
+  REFERRAL_ALPHABET, REFERRAL_CODE_LENGTH, REFERRAL_KEPT_DAYS, SD_REFERRAL, keepRef, keptRef, refOf, referralCodeProblem, referralLink, referralPost, referralProblem, referralState,
 } from "../src/lib/sd-offer";
 
 const DAY = 864e5;
-const LAUNCH = new Date(SD_REFERRAL.startsAt).getTime();
+const LAUNCH = new Date("2026-11-03T00:00:00+05:30").getTime();
 
-test("the offer is 3 friends in 10 days", () => {
-  assert.equal(SD_REFERRAL.friends, 3);
-  assert.equal(SD_REFERRAL.days, 10);
+test("the offer is 3 friends, with no deadline", () => {
+  assert.deepEqual(SD_REFERRAL, { friends: 3 });
 });
 
 test("a code is tidied up, and anything else is refused", () => {
@@ -47,36 +46,13 @@ test("a bad code, your own code and your own phone are all refused before paying
   assert.equal(referralProblem({ email: "other@gmail.com", phone: "4155550123" }, abroad), null, "a bare 10 digits is Indian, so not the US number");
 });
 
-test("the window runs 10 days from purchase, to the minute", () => {
-  const bought = new Date(LAUNCH + 2 * DAY + 9 * 36e5);
-  assert.equal(referralDeadline(bought), bought.getTime() + 10 * DAY);
-  assert.equal(referralDeadline(bought.toISOString()), bought.getTime() + 10 * DAY, "as the database returns it");
-});
-
-test("a buyer from before launch gets 10 days from launch", () => {
-  assert.equal(referralDeadline(new Date(LAUNCH - 3 * DAY)), LAUNCH + 10 * DAY);
-});
-
 test("where someone stands", () => {
-  const deadline = LAUNCH + 10 * DAY;
-  const before = deadline - 1;
-  assert.equal(referralState({ count: 0, deadline, refunded: false }, before), "open");
-  assert.equal(referralState({ count: 2, deadline, refunded: false }, before), "open");
-  assert.equal(referralState({ count: 3, deadline, refunded: false }, before), "earned");
-  assert.equal(referralState({ count: 2, deadline, refunded: false }, deadline), "closed", "the deadline itself is too late");
-  assert.equal(referralState({ count: 3, deadline, refunded: false }, deadline + DAY), "earned", "friends who bought in time still count after it");
-  assert.equal(referralState({ count: 3, deadline, refunded: true }, before), "refunded");
-  assert.equal(referralState({ count: 1, deadline, refunded: true }, deadline + DAY), "refunded", "a friend leaving later changes nothing");
-});
-
-test("time left reads in days, then hours on the last day", () => {
-  assert.equal(referralLeft(10 * DAY), "10 days left");
-  assert.equal(referralLeft(6.2 * DAY), "7 days left");
-  assert.equal(referralLeft(DAY), "1 day left");
-  assert.equal(referralLeft(DAY - 1), "24 hours left");
-  assert.equal(referralLeft(90 * 6e4), "2 hours left");
-  assert.equal(referralLeft(30 * 6e4), "1 hour left");
-  assert.equal(referralLeft(0), "time's up");
+  assert.equal(referralState({ count: 0, refunded: false }), "open");
+  assert.equal(referralState({ count: 2, refunded: false }), "open");
+  assert.equal(referralState({ count: 3, refunded: false }), "earned", "a third friend counts however late they bought");
+  assert.equal(referralState({ count: 5, refunded: false }), "earned");
+  assert.equal(referralState({ count: 3, refunded: true }), "refunded");
+  assert.equal(referralState({ count: 1, refunded: true }), "refunded", "a friend leaving later changes nothing");
 });
 
 test("the link is the offer page with the code on it", () => {
@@ -85,7 +61,6 @@ test("the link is the offer page with the code on it", () => {
 
 test("a lesson post carries the link, in the lesson's language", () => {
   const link = "https://www.klymb.ai/system-design?ref=ABCD2345";
-  assert.deepEqual((["open", "earned", "refunded", "closed"] as const).map(canRefer), [true, true, true, false], "earning or being paid the refund doesn't end referring");
   assert.equal(referralPost("Day 1 done.", link, "en"), `Day 1 done.\n\nWant to learn this with me? Join here: ${link}`);
   assert.match(referralPost("Day 1 ho gaya.", link, "hi"), /^Day 1 ho gaya\.\n\nMere saath seekhna hai\? Yahan join karo: https/);
 });

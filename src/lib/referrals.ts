@@ -5,7 +5,7 @@ import { db, type Db } from "@/lib/db/client";
 import { formatINR } from "@/lib/format";
 import { MAIL_SUPPORT, sdReferralEarnedEmail, sendMail } from "@/lib/mail";
 import {
-  REFERRAL_ALPHABET, REFERRAL_CODE_LENGTH, SD_COURSE, SD_REFERRAL, referralDeadline, referralLeft, referralLink, referralState, type ReferralStanding,
+  REFERRAL_ALPHABET, REFERRAL_CODE_LENGTH, SD_COURSE, SD_REFERRAL, referralLink, referralState, type ReferralStanding,
 } from "@/lib/sd-offer";
 
 /** Postgres: a unique constraint refused the row. */
@@ -40,23 +40,19 @@ function paidSeat(sql: Db, email: string) {
 }
 
 /**
- * Friends who count: each holds an active seat, bought through this person
- * before their window closed. One seat per email, so a friend counts once.
+ * Friends who count: each holds an active seat, bought through this person,
+ * whenever they bought. One seat per email, so a friend counts once.
  */
-async function friendCount(sql: Db, email: string, deadline: number) {
+async function friendCount(sql: Db, email: string) {
   const { data, error } = await sql.row<{ n: number }>`
     select count(*)::int as n
       from course.enrollments f
       join course.payments p on p.id = f.payment_id
      where p.referrer_email = ${email}
        and f.course = ${SD_COURSE} and f.status = 'active' and f.source = 'payment'
-       and f.created_at < ${new Date(deadline).toISOString()}
   `;
   return { count: data?.n ?? 0, error };
 }
-
-const shortDate = (ms: number) =>
-  new Date(ms).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
 /** Someone with a seat: their offer, or why they have none. Never throws: the course opens without it. */
 export async function referralStanding(email: string): Promise<ReferralStanding> {
@@ -72,19 +68,15 @@ export async function referralStanding(email: string): Promise<ReferralStanding>
   const code = seat.referral_code ?? (await codeFor(sql, email));
   if (!code) return { view: null, why: "retry" };
 
-  const deadline = referralDeadline(seat.created_at);
-  const { count, error: countError } = await friendCount(sql, email, deadline);
+  const { count, error: countError } = await friendCount(sql, email);
   if (countError) return { view: null, why: "retry" };
-  const now = Date.now();
   return {
     why: null,
     view: {
       code,
       link: referralLink(site.url, code),
       count,
-      state: referralState({ count, deadline, refunded: seat.payment_status === "refunded" }, now),
-      left: referralLeft(deadline - now),
-      ends: shortDate(deadline),
+      state: referralState({ count, refunded: seat.payment_status === "refunded" }),
       amount: formatINR(seat.amount / 100),
     },
   };
@@ -127,7 +119,7 @@ export async function creditReferrer(sql: Db, orderId: string) {
   const { data: seat, error: seatError } = await paidSeat(sql, email);
   if (seatError || !seat) return { error: seatError };
 
-  const { count, error: countError } = await friendCount(sql, email, referralDeadline(seat.created_at));
+  const { count, error: countError } = await friendCount(sql, email);
   if (countError || count < SD_REFERRAL.friends) return { error: countError };
 
   const { data: claimed, error: claimError } = await sql.run`

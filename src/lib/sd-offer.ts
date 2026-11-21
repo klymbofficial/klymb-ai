@@ -175,11 +175,11 @@ export function campaignOf(value: unknown) {
 }
 
 /**
- * The referral offer: three friends buy within 10 days of your purchase and
- * your whole fee comes back, with the course still yours. Buyers from before
- * `startsAt` get their 10 days from then, so nobody starts with a closed window.
+ * The referral offer: three friends buy through your link and your whole fee
+ * comes back, with the course still yours. There is no deadline: a friend who
+ * buys any time after you counts.
  */
-export const SD_REFERRAL = { friends: 3, days: 10, startsAt: "2026-11-03T00:00:00+05:30" } as const;
+export const SD_REFERRAL = { friends: 3 } as const;
 
 /** No I, O, 0 or 1: a code gets read aloud and retyped from a phone. */
 export const REFERRAL_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -203,35 +203,13 @@ export function referralProblem(referrer: { email: string; phone: string | null 
   return null;
 }
 
-/** When someone's window to refer friends closes, in ms. */
-export function referralDeadline(purchasedAt: string | Date) {
-  const from = Math.max(new Date(purchasedAt).getTime(), new Date(SD_REFERRAL.startsAt).getTime());
-  return from + SD_REFERRAL.days * 864e5;
-}
+export type ReferralState = "open" | "earned" | "refunded";
 
-/** Time left, in the words the card uses: days until the last day, then hours. */
-export function referralLeft(ms: number) {
-  if (ms <= 0) return "time's up";
-  if (ms >= 864e5) { const days = Math.ceil(ms / 864e5); return `${days} ${days === 1 ? "day" : "days"} left`; }
-  const hours = Math.ceil(ms / 36e5);
-  return `${hours} ${hours === 1 ? "hour" : "hours"} left`;
-}
-
-export type ReferralState = "open" | "earned" | "refunded" | "closed";
-
-/** Where someone stands. Three friends beat the clock, and a paid refund beats everything. */
-export function referralState({ count, deadline, refunded }: { count: number; deadline: number; refunded: boolean }, now = Date.now()): ReferralState {
+/** Where someone stands: a paid refund beats everything, then three friends. */
+export function referralState({ count, refunded }: { count: number; refunded: boolean }): ReferralState {
   if (refunded) return "refunded";
-  if (count >= SD_REFERRAL.friends) return "earned";
-  return now < deadline ? "open" : "closed";
+  return count >= SD_REFERRAL.friends ? "earned" : "open";
 }
-
-/**
- * Whether they should be offered their link. Earning the refund, or being paid
- * it, doesn't stop them referring: the refund comes once, the link keeps working.
- * Only a window that closed short of three friends ends it.
- */
-export const canRefer = (state: ReferralState) => state !== "closed";
 
 /** A buyer's referral offer, as the course and the receipt show it. */
 export interface ReferralView {
@@ -239,10 +217,6 @@ export interface ReferralView {
   link: string;
   count: number;
   state: ReferralState;
-  /** "7 days left". */
-  left: string;
-  /** "12 Nov, 9:30 pm". */
-  ends: string;
   /** What comes back: "₹499". */
   amount: string;
   /** Made-up data for `?start=refer`, so its link can't be sent to anyone. */

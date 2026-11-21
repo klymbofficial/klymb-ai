@@ -217,11 +217,11 @@ export function thankYouEmail(p: { name: string; trackName: string; amount: stri
 }
 
 /** The receipt and welcome for System Design. Early access, so it says what is out and what is coming. */
-export function sdReceiptEmail(p: { name: string; amount: string; paymentId: string; siteUrl: string; supportEmail: string; referral?: { link: string; ends: string } | null }) {
+export function sdReceiptEmail(p: { name: string; amount: string; paymentId: string; siteUrl: string; supportEmail: string; referral?: { link: string } | null }) {
   const site = esc(p.siteUrl);
   const subject = "You're in: System Design";
   const friends = `Get ${SD_REFERRAL.friends} friends to buy`;
-  const referralLine = p.referral ? `${friends} with your link by ${p.referral.ends} and we refund 100% of your fee. You keep the course.` : null;
+  const referralLine = p.referral ? `${friends} with your link and we refund 100% of your fee. You keep the course.` : null;
   const text = [
     `Hi ${p.name},`, "",
     "Your System Design seat is confirmed. Your payment went through and every lesson that is out is open to you now.", "",

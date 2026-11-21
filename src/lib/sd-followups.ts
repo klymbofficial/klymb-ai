@@ -105,7 +105,7 @@ function sdFollowupEmail(
 ) {
   const common = { siteUrl: site.url, supportEmail: MAIL_SUPPORT, eyebrow: "System Design", title: `Hello ${p.name},` };
   const days = p.lessonsTotal;
-  const friends = `${SD_REFERRAL.friends} friends join with your link within ${SD_REFERRAL.days} days`;
+  const friends = `${SD_REFERRAL.friends} friends join with your link`;
   const earlyAccess = p.lessonsOut >= p.lessonsTotal
     ? `All ${days} lessons are open.`
     : `${p.lessonsOut} lessons are live today, and the rest arrive as they're ready, included in what you pay.`;

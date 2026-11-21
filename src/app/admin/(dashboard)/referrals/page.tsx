@@ -42,7 +42,7 @@ export default async function AdminReferralsPage() {
       <div className="mb-8 grid gap-3 sm:grid-cols-3">
         <StatTile label="Trees" value={trees.length} hint="People who started a chain" />
         <StatTile label="Bought through a referral" value={referred} hint="At any depth" />
-        <StatTile label="Earned a refund" value={earned(trees)} hint={`${SD_REFERRAL.friends} friends within ${SD_REFERRAL.days} days`} tone="red" />
+        <StatTile label="Earned a refund" value={earned(trees)} hint={`${SD_REFERRAL.friends} friends bought, no deadline`} tone="red" />
       </div>
       {trees.length === 0 ? (
         <EmptyState title="No referrals yet" body="When someone buys with a friend's link or code, they appear here under that friend." />

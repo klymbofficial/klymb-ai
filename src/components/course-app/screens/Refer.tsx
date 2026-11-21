@@ -9,7 +9,7 @@ import { GoogleButton } from "../user";
 
 const STEPS = [
   "Buy the course. You get your own link and code.",
-  `${SD_REFERRAL.friends} friends buy with your link within ${SD_REFERRAL.days} days of your purchase.`,
+  `${SD_REFERRAL.friends} friends buy with your link.`,
   "We refund 100% of what you paid. You keep the course.",
 ];
 

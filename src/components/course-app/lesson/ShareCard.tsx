@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Day, DayCopy, Lang } from "@/data/system-design/types";
 import { useLinkedInPost } from "@/components/share/LinkedInPost";
 import { fetchImage, useShareImage, type LinkedInShare } from "@/lib/linkedin-share";
-import { canRefer, referralPost, taggedPost } from "@/lib/sd-offer";
+import { referralPost, taggedPost } from "@/lib/sd-offer";
 import { Icon } from "../icons";
 import { useReferral } from "../Referral";
 import { track } from "../track";
@@ -36,7 +36,7 @@ export function ShareCard({ lang, id, day, c, shared, onShared, showText = false
   const ui = UI[lang];
   const referral = useReferral();
   const tagged = taggedPost(c.linkedin, lang);
-  const hasLink = !!referral && canRefer(referral.state) && !referral.sample;
+  const hasLink = !!referral && !referral.sample;
   const post = hasLink ? referralPost(tagged, referral.link, lang) : tagged;
   const [posted, setPosted] = useState("");
   const [copied, setCopied] = useState(false);

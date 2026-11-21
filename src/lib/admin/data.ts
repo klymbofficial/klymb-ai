@@ -1,7 +1,7 @@
 import "server-only";
 import { getAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
-import { SD_COURSE, referralDeadline } from "@/lib/sd-offer";
+import { SD_COURSE } from "@/lib/sd-offer";
 import { paceOf, type Pace } from "@/lib/sd-pace";
 import type { TrackSlug } from "@/types/program";
 
@@ -239,8 +239,7 @@ export async function getPayments(): Promise<PaymentRow[]> {
   };
 
   const seatByPayment = new Map((seats ?? []).map((seat) => [seat.payment_id, seat]));
-  const friendsOf = (seat: { email: string; created_at: string }) =>
-    (seats ?? []).filter((f) => f.referrer_email === seat.email && new Date(f.created_at).getTime() < referralDeadline(seat.created_at)).length;
+  const friendsOf = (seat: { email: string }) => (seats ?? []).filter((f) => f.referrer_email === seat.email).length;
 
   // Newest first, so the first accepted request per payment wins.
   const requests = new Map<string, { by: string; at: string }>();

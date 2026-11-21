@@ -41,7 +41,7 @@ function SystemDesignRefund({ n }: { n: string }) {
 function SystemDesignReferral({ n }: { n: string }) {
   const { referral } = sdRefund;
   return (
-    <Section n={n} title="System Design: refer 3 friends" plain="3 friends buy within 10 days of your purchase: your fee comes back in full and you keep the course.">
+    <Section n={n} title="System Design: refer 3 friends" plain="3 friends buy with your link, with no deadline: your fee comes back in full and you keep the course.">
       <p>{referral.headline}</p>
       <p>All of the following must be true:</p>
       <ul>

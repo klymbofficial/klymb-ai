@@ -10,7 +10,7 @@ const card = "rounded-2xl border border-[rgba(246,239,228,.16)] bg-[rgba(246,239
 /** Every way the fee comes back. The words follow the refund policy, which is what binds. */
 const WAYS_BACK = [
   { tag: "Finish it", title: "Finish on schedule, get 100% back", body: `One lesson a day for 21 days, no missed days, and ${FINAL_MARK}% or higher on the final assessment.` },
-  { tag: "Or share it", title: `${SD_REFERRAL.friends} friends buy, get 100% back`, body: `${SD_REFERRAL.friends} friends buy with your link within ${SD_REFERRAL.days} days of your purchase. You keep the course.` },
+  { tag: "Or share it", title: `${SD_REFERRAL.friends} friends buy, get 100% back`, body: `${SD_REFERRAL.friends} friends buy with your link, whenever they buy. You keep the course.` },
 ] as const;
 
 /** Who the interview call is for. The ad and this page say the same thing. */

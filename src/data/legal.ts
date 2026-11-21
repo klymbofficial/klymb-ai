@@ -125,10 +125,10 @@ export const sdRefund = {
   /** confirm: does this need a stated window? */
   duplicate: "If you are charged twice for the course by mistake, write to us and we refund the extra payment.",
   referral: {
-    headline: `Get ${SD_REFERRAL.friends} friends to buy System Design within ${SD_REFERRAL.days} days of your purchase and we refund 100% of your fee. You keep the course.`,
+    headline: `Get ${SD_REFERRAL.friends} friends to buy System Design with your link and we refund 100% of your fee. You keep the course.`,
     conditions: [
       `${SD_REFERRAL.friends} different people each buy the course with their own Google account, using your link or referral code`,
-      `Each of them pays within ${SD_REFERRAL.days} days of your purchase. If you bought before this offer began, your ${SD_REFERRAL.days} days start on the day it began`,
+      "Each of them buys after you do. There is no deadline: a friend counts whenever they buy",
       "Each of them still has their seat when your refund is paid",
     ],
     payout: "We refund 100% of what you paid, whatever price your friends paid, to your original payment method within 14 working days of your third friend's purchase, once we have verified it. You do not need to claim it.",
