@@ -118,7 +118,7 @@ export function LibraryCard({ course: c, mine }: { course: LibraryCourse; mine?:
           onClick={() => toggleSaved(c.slug)}
           aria-pressed={saved}
           aria-label={`Save ${c.name}`}
-          className="absolute top-3 right-3 z-10 grid size-9 place-items-center rounded-xl bg-white/95 text-ink shadow-[0_1px_2px_rgba(32,30,29,0.08)] hover:bg-white"
+          className="absolute top-3 right-3 z-10 grid size-9 cursor-pointer place-items-center rounded-xl bg-white/95 text-ink shadow-[0_1px_2px_rgba(32,30,29,0.08)] hover:bg-white"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z" /></svg>
         </button>
@@ -169,7 +169,7 @@ export function LibraryCard({ course: c, mine }: { course: LibraryCourse; mine?:
             aria-hidden={linked || undefined}
             className={clsx(
               "grid h-10 place-items-center rounded-lg border text-[15px] font-semibold transition-[filter]",
-              c.open && linked && "border-red-deep bg-red-deep text-white group-hover:brightness-[0.92]",
+              c.open && linked && "cursor-pointer border-red-deep bg-red-deep text-white group-hover:brightness-[0.92]",
               c.open && !linked && "border-[#dcdad9] bg-[#f4f3f3] text-muted",
               !c.open && "border-[#c8c5c4] bg-card text-ink group-hover:brightness-[0.92]",
             )}
