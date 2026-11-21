@@ -20,6 +20,8 @@ export const WEBINAR = {
   timeLabel: "7:00 to 8:00 PM IST",
   speaker: "Klymb.ai team",
   whatsappGroup: "https://chat.whatsapp.com/FDCM4Q6KcAK9bHqs5eOM2g?s=cl&p=a&iam=2",
+  /** The Google Meet room, emailed on the day from /admin/webinars. */
+  meetUrl: "https://meet.google.com/frw-hmoe-vvg",
   agenda: [
     ["AI and your job", "Which jobs AI is shrinking, which ones it's creating, and why system design matters more now."],
     ["The building blocks", "Load balancers, caching, databases, queues and the quick maths behind every design, explained simply."],

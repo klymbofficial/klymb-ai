@@ -37,7 +37,9 @@ export type AuditAction =
   | "chat.status"
   | "internship.status"
   | "internship.payout"
-  | "internship.code";
+  | "internship.code"
+  | "webinar.meet_link"
+  | "webinar.meet_link_test";
 
 /**
  * Records an admin action. Never throws and never blocks the action itself:

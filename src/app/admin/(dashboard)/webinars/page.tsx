@@ -4,10 +4,13 @@ import { EmptyState } from "@/components/admin/EmptyState";
 import { ExportCsv } from "@/components/admin/ExportCsv";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
+import { WebinarMeetSend } from "@/components/admin/WebinarMeetSend";
 import { getWebinarRegistrations } from "@/lib/admin/webinars";
 import { WEBINAR } from "@/lib/webinar";
 
 export const dynamic = "force-dynamic";
+// Sending the Meet link to everyone runs inside one request.
+export const maxDuration = 300;
 
 const iso = (v: string | Date | null) => (v ? new Date(v).toISOString() : "");
 const when = (v: string | Date) => new Date(v).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
@@ -38,6 +41,7 @@ export default async function AdminWebinarsPage() {
         <EmptyState title="Nothing here yet" body="Registrations from /webinar land here instantly, newest first." />
       ) : (
         <div className="flex flex-col gap-6">
+          <WebinarMeetSend meetUrl={WEBINAR.meetUrl} total={list.length} />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatTile label="Registered" value={list.length} />
             <StatTile label="Students" value={students} />

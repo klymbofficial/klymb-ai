@@ -329,6 +329,35 @@ export function webinarConfirmationEmail(p: { name: string; title: string; date:
   return { subject, html, text };
 }
 
+/** The Google Meet link, sent on the day to everyone registered for the live webinar (from /admin/webinars). */
+export function webinarLiveEmail(p: { name: string; title: string; date: string; time: string; meetUrl: string; agenda: readonly (readonly [string, string])[]; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = `Today at 7 PM: ${p.title}. Your Google Meet link`;
+  const line = `Your free Klymb.ai webinar is today, ${p.date}, ${p.time}. Join from the link below. Please join 5 minutes early, around 6:55 PM.`;
+  const tips = ["A laptop is best, so you can see the diagrams clearly.", "Keep a notebook ready, and bring your questions.", "No experience needed."];
+  const text = [
+    `Hi ${p.name},`, "", line, "",
+    `Join here: ${p.meetUrl}`, "",
+    "What we'll do together:", ...p.agenda.map(([t]) => `- ${t}`), "",
+    ...tips, "",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "See you at 7!", "Team Klymb.ai",
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: `Starts at 7:00 PM IST. Join here: ${p.meetUrl}`,
+    eyebrow: "Free live webinar",
+    title: "Starts at 7 PM tonight.",
+    intro: esc(line),
+    sections: [
+      button(esc(p.meetUrl), "Join on Google Meet"),
+      `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">Or open <a href="${esc(p.meetUrl)}" style="color:${C.ink};font-weight:600">${esc(p.meetUrl)}</a></p>`,
+      `<p style="margin:0 0 6px;font-size:14px;font-weight:700;color:${C.ink}">What we'll do together</p><p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:${C.ink}">${p.agenda.map(([t], i) => `${i + 1}. ${esc(t)}`).join("<br>")}</p>`,
+      `<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${C.muted}">${tips.map(esc).join("<br>")}</p>`,
+    ],
+  });
+  return { subject, html, text };
+}
+
 /** Sent when someone applies for the sales internship on /internship. */
 export function internshipApplicationEmail(p: { name: string; starts: string; months: number; pct: number; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
