@@ -2,8 +2,8 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { auth, companyEmailFrom } from "@/auth";
-import { allowCompany, resolveMember, type CompanyMember, type CompanyRole } from "@/lib/company/access";
-import { memberLookup, workspaceLookup } from "@/lib/company/lookup";
+import { allowCompany, isAdmin, resolveMember, resolveMemberships, type CompanyMember, type CompanyRole } from "@/lib/company/access";
+import { membershipsLookup, workspaceLookup } from "@/lib/company/lookup";
 import { db } from "@/lib/db/client";
 
 /**
@@ -29,14 +29,14 @@ import { db } from "@/lib/db/client";
  *
  * `cache` memoises it for one request only, as with getAdmin.
  *
- * getMember is the person's workspace when none is named (/org, the sign-in
- * page). Pages under /org/[slug] use getWorkspaceMember, which resolves the
- * workspace from the requested link.
+ * getMemberships is every workspace the person belongs to, for where none
+ * is named (/org, the sign-in page). Pages under /org/[slug] use
+ * getWorkspaceMember, which resolves the workspace from the requested link.
  */
-export const getMember = cache(async (): Promise<CompanyMember | null> => {
+export const getMemberships = cache(async (): Promise<CompanyMember[]> => {
   const sql = db();
-  if (!sql) return null;
-  return resolveMember(companyEmailFrom(await auth()), memberLookup(sql));
+  if (!sql) return [];
+  return resolveMemberships(companyEmailFrom(await auth()), membershipsLookup(sql));
 });
 
 /** The signed-in person's membership of the workspace this slug names, or null. */
@@ -45,13 +45,6 @@ export const getWorkspaceMember = cache(async (slug: string): Promise<CompanyMem
   if (!sql) return null;
   return resolveMember(companyEmailFrom(await auth()), workspaceLookup(sql, slug));
 });
-
-/** Any company member. Everyone else gets a 404. */
-export async function requireMember(): Promise<CompanyMember> {
-  const member = await getMember();
-  if (!member) notFound();
-  return member;
-}
 
 /**
  * Use at the top of every /org/[slug] page, layout, action and route. The
@@ -64,11 +57,11 @@ export async function requireCompany(slug: string, roles?: readonly CompanyRole[
 }
 
 /**
- * For server actions on HR pages: the signed-in HR person of this company,
- * or null. Actions answer null with an error message rather than a 404.
+ * For server actions on admin pages: the signed-in admin of this company, or
+ * null. Actions answer null with an error message rather than a 404.
  */
-export async function hrFor(slug: unknown): Promise<CompanyMember | null> {
+export async function adminFor(slug: unknown): Promise<CompanyMember | null> {
   if (typeof slug !== "string") return null;
   const member = await getWorkspaceMember(slug);
-  return allowCompany(member, slug, ["hr"]) ? member : null;
+  return allowCompany(member, slug) && isAdmin(member) ? member : null;
 }

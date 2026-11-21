@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { addPerson, removePerson, resendInvite, uploadPeople, type PeopleResult } from "@/app/org/[slug]/people/actions";
+import { Fragment, useRef, useState } from "react";
+import { addPerson, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult } from "@/app/org/[slug]/(workspace)/people/actions";
+import { GRANTABLE_ROLES, ROLE_LABEL, type GrantableRole } from "@/lib/company/access";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
 import type { CompanyPeople, PersonRow } from "@/lib/company/people-data";
 
@@ -9,7 +10,16 @@ const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink
 const label = "flex flex-col gap-1 text-xs font-bold";
 const submit = "bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50";
 
-const ROLE_LABEL: Record<PersonRow["role"], string> = { hr: "HR", head: "Team head", employee: "Employee" };
+/** What each responsibility opens, beside its checkbox. */
+const ROLE_HINT: Record<GrantableRole, string> = {
+  admin: "Runs this workspace: people, teams and assigning",
+  company_head: "Sees learning across the whole company",
+  recruiter: "Hiring batches (coming soon)",
+  reviewer: "Reviews hiring work (coming soon)",
+  employee: "Their own learning",
+};
+
+const rolesOf = (p: PersonRow) => (p.roles.length ? p.roles.map((r) => ROLE_LABEL[r]).join(", ") : "—");
 const TEMPLATE = `${CSV_COLUMNS.join(",")}\nasha@example.com,Asha Rao,Sales\nsam@example.com,Sam Lee,\n`;
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -71,7 +81,7 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
         e.preventDefault();
         setBusy(true);
         setResult(null);
-        const r = await addPerson(slug, { email, name, team: role === "hr" ? "" : team, role });
+        const r = await addPerson(slug, { email, name, team, role });
         setBusy(false);
         setResult(r);
         if (r.ok) { setEmail(""); setName(""); }
@@ -88,20 +98,21 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
       </label>
       <div className="flex flex-wrap gap-3">
         <label className={label}>
-          Role
+          Joins as
           <select value={role} onChange={(e) => setRole(e.target.value)} className={input}>
-            <option value="employee">Employee</option>
-            <option value="hr">HR</option>
+            <option value="employee">{ROLE_LABEL.employee}</option>
+            <option value="admin">{ROLE_LABEL.admin}</option>
           </select>
         </label>
         <label className={label}>
           Team
-          <select value={role === "hr" ? "" : team} onChange={(e) => setTeam(e.target.value)} disabled={role === "hr"} className={`${input} min-w-40`}>
+          <select value={team} onChange={(e) => setTeam(e.target.value)} className={`${input} min-w-40`}>
             <option value="">No team</option>
             {teams.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </label>
       </div>
+      <p className="text-xs text-muted">Give more responsibilities, like recruiter or company head, from the list below once they&apos;re added.</p>
       <div>
         <button type="submit" disabled={busy || free === 0} className={submit}>{busy ? "Adding…" : "Add person"}</button>
       </div>
@@ -133,6 +144,7 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
       <p className="text-xs text-muted">
         Columns: <code className="font-mono">{CSV_COLUMNS.join(", ")}</code>, with a header row. Only email is needed. Teams must already exist.
         Everyone joins as an employee. Up to {MAX_CSV_ROWS} people per file; if any row has a problem, nobody is added.
+        Someone already in another company, or with their own Klymb account, can be added too.
       </p>
       <a
         href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`}
@@ -154,6 +166,7 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
   // Which row is working, and on what, so only that row's button says so.
   const [busy, setBusy] = useState<{ email: string; what: "remove" | "resend" } | null>(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
 
   async function act(p: PersonRow, what: "remove" | "resend") {
     setBusy({ email: p.email, what });
@@ -179,16 +192,28 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
         <div className="overflow-x-auto border border-line/25 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-line/25 text-xs uppercase tracking-wider text-muted">
-              <tr><th className="px-3 py-2">Person</th><th className="px-3 py-2">Role</th><th className="px-3 py-2">Team</th><th className="px-3 py-2">Added</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr>
+              <tr><th className="px-3 py-2">Person</th><th className="px-3 py-2">Does</th><th className="px-3 py-2">Team</th><th className="px-3 py-2">Added</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
               {people.map((p) => (
-                <tr key={p.email} className="border-b border-line/15 last:border-0">
+                <Fragment key={p.email}>
+                <tr className="border-b border-line/15 last:border-0">
                   <td className="px-3 py-2">
                     <div className="font-semibold">{p.name ?? p.email}</div>
                     {p.name && <div className="text-xs text-muted">{p.email}</div>}
                   </td>
-                  <td className="px-3 py-2">{ROLE_LABEL[p.role]}</td>
+                  <td className="px-3 py-2">
+                    {rolesOf(p)}
+                    <button
+                      type="button"
+                      onClick={() => { setResult(null); setEditing(editing === p.email ? null : p.email); }}
+                      aria-expanded={editing === p.email}
+                      aria-controls={`roles-${p.email}`}
+                      className="ml-2 text-xs font-bold underline underline-offset-2"
+                    >
+                      {editing === p.email ? "Close" : "Change"}<span className="sr-only"> what {p.name ?? p.email} does</span>
+                    </button>
+                  </td>
                   <td className="px-3 py-2">{p.team_name ?? <span className="text-muted">—</span>}</td>
                   <td className="px-3 py-2 nums text-muted">{day(p.added_at)}</td>
                   <td className="px-3 py-2 text-right">
@@ -206,12 +231,60 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
                     )}
                   </td>
                 </tr>
+                {editing === p.email && (
+                  <tr id={`roles-${p.email}`} className="border-b border-line/15 bg-surface">
+                    <td colSpan={5} className="px-3 py-3">
+                      <RolesEditor
+                        slug={slug}
+                        person={p}
+                        onDone={(r) => { setResult(r); if (r.ok) setEditing(null); }}
+                      />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
       )}
     </section>
+  );
+}
+
+/** Ticks for what someone does. A team's lead is set on the Teams page, so it is shown, not edited, here. */
+function RolesEditor({ slug, person, onDone }: { slug: string; person: PersonRow; onDone: (r: PeopleResult) => void }) {
+  const [roles, setRoles] = useState<GrantableRole[]>(GRANTABLE_ROLES.filter((r) => person.roles.includes(r)));
+  const [busy, setBusy] = useState(false);
+  const leads = person.roles.includes("team_lead");
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        const r = await updateRoles(slug, person.email, roles);
+        setBusy(false);
+        onDone(r);
+      }}
+    >
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-xs font-bold">What {person.name ?? person.email} does</legend>
+        {GRANTABLE_ROLES.map((r) => (
+          <label key={r} className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={roles.includes(r)}
+              onChange={(e) => setRoles((now) => (e.target.checked ? GRANTABLE_ROLES.filter((x) => x === r || now.includes(x)) : now.filter((x) => x !== r)))}
+              className="mt-1"
+            />
+            <span><strong className="font-semibold">{ROLE_LABEL[r]}</strong> <span className="text-xs text-muted">· {ROLE_HINT[r]}</span></span>
+          </label>
+        ))}
+        {leads && <p className="text-xs text-muted">Also leads {person.team_name ?? "a team"}. Change a team&apos;s lead on the Teams page.</p>}
+      </fieldset>
+      <button type="submit" disabled={busy} className={`${submit} mt-3`}>{busy ? "Saving…" : "Save"}</button>
+    </form>
   );
 }
 

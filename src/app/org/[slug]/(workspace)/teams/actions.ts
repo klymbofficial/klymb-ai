@@ -2,15 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { logCompany } from "@/lib/company/audit";
-import { hrFor } from "@/lib/company/auth";
-import { headBlocked, teamName } from "@/lib/company/people";
-import { insertTeam, loadPerson, movePersonRow, setTeamHead } from "@/lib/company/people-data";
+import { adminFor } from "@/lib/company/auth";
+import { leadBlocked, teamName } from "@/lib/company/people";
+import { insertTeam, loadPerson, movePersonRow, setTeamLead } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 
 export type TeamsResult = { ok: true; message: string } | { ok: false; message: string };
 
-const NOT_ALLOWED: TeamsResult = { ok: false, message: "Only your company's HR can do this. Try signing in again." };
+const NOT_ALLOWED: TeamsResult = { ok: false, message: "Only your company's admin can do this. Try signing in again." };
 const UNAVAILABLE: TeamsResult = { ok: false, message: "That didn't work just now. Please try again in a minute." };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -21,7 +21,7 @@ function refresh(slug: string) {
 
 /** 1.10: a new team, unique by name ignoring capitals (CSV uploads match it that way). */
 export async function createTeam(slug: string, rawName: string): Promise<TeamsResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const name = teamName(rawName);
   if (!name.ok) return name;
@@ -35,9 +35,9 @@ export async function createTeam(slug: string, rawName: string): Promise<TeamsRe
   return { ok: true, message: `${name.value} was created.` };
 }
 
-/** 1.10: one head per team. The old head stays on the team as an employee. */
-export async function chooseHead(slug: string, teamId: string, rawEmail: string): Promise<TeamsResult> {
-  const hr = await hrFor(slug);
+/** 1.10: one lead per team. The old lead stays on the team and keeps everything else they do. */
+export async function chooseLead(slug: string, teamId: string, rawEmail: string): Promise<TeamsResult> {
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const email = normaliseEmail(rawEmail);
   if (!UUID.test(teamId) || !email) return { ok: false, message: "Choose a team and a person." };
@@ -45,20 +45,20 @@ export async function chooseHead(slug: string, teamId: string, rawEmail: string)
   if (!sql) return UNAVAILABLE;
   const target = await loadPerson(sql, hr.companyId, email);
   if (target === undefined) return UNAVAILABLE;
-  const blocked = headBlocked(target);
+  const blocked = leadBlocked(target);
   if (blocked) return { ok: false, message: blocked };
 
-  const changed = await setTeamHead(sql, hr.companyId, teamId, email);
+  const changed = await setTeamLead(sql, hr.companyId, teamId, email, hr.email);
   if (changed === null) return UNAVAILABLE;
   if (!changed) return { ok: false, message: "That team or person no longer exists. Reload and try again." };
   await logCompany(hr, "company.team_head", { team_id: teamId, email });
   refresh(slug);
-  return { ok: true, message: `${email} is now the team's head.` };
+  return { ok: true, message: `${email} now leads the team.` };
 }
 
-/** 1.10: move someone to a team, or to no team (""). A head who moves becomes an employee. */
+/** 1.10: move someone to a team, or to no team (""). A lead who moves stops leading their old team. */
 export async function movePerson(slug: string, rawEmail: string, rawTeamId: string): Promise<TeamsResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const email = normaliseEmail(rawEmail);
   const teamId = rawTeamId === "" ? null : rawTeamId;
@@ -72,8 +72,8 @@ export async function movePerson(slug: string, rawEmail: string, rawTeamId: stri
   const moved = await movePersonRow(sql, hr.companyId, email, teamId);
   if (moved === null) return UNAVAILABLE;
   if (!moved) return { ok: false, message: "That team no longer exists. Reload and try again." };
-  await logCompany(hr, "company.person_move", { email, team_id: teamId, was_head: target.role === "head" });
+  const stoppedLeading = target.leadTeamId !== null && target.leadTeamId !== teamId;
+  await logCompany(hr, "company.person_move", { email, team_id: teamId, stopped_leading: stoppedLeading });
   refresh(slug);
-  const wasHead = target.role === "head" && target.teamId !== teamId;
-  return { ok: true, message: `${email} was moved${wasHead ? " and is no longer a head" : ""}.` };
+  return { ok: true, message: `${email} was moved${stoppedLeading ? " and no longer leads their old team" : ""}.` };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { CompanyCourseBar, type CourseCompany } from "@/components/company/CompanyCourseBar";
 import "./course-app.css";
 import clsx from "clsx";
 import Image from "next/image";
@@ -67,7 +68,7 @@ const INBOX = true;
 const NO_PASSES: Record<string, number> = {};
 const NO_ANNOUNCEMENTS: Announcement[] = [];
 
-function Sidebar({ s, act }: { s: CourseState; act: Act }) {
+function Sidebar({ s, act, company }: { s: CourseState; act: Act; company: CourseCompany | null }) {
   const unread = s.notifs.filter((n) => n.unread).length + useExtraUnread(s);
   const st = streak(s);
   return (
@@ -81,6 +82,7 @@ function Sidebar({ s, act }: { s: CourseState; act: Act }) {
         <div className="text-[11px] font-semibold tracking-[0.1em] text-sd-accent-700 uppercase">Course</div>
         <div className="text-[17px] font-extrabold">System Design Essentials</div>
       </div>
+      {company && <CompanyCourseBar company={company} variant="sidebar" />}
       <nav aria-label="Course" className="flex flex-col border-t-2 border-sd-divider">
         {TABS.map(([k, label, icon]) => {
           const on = s.tab === k;
@@ -137,7 +139,7 @@ function TabBar({ s, act }: { s: CourseState; act: Act }) {
  * `lessons` is what this viewer may open, read on the server: paid lessons
  * reach the browser only this way.
  */
-export function CourseApp({ user = null, lessons, enrolled, referral, passes = NO_PASSES, progress = null, group = null, announcements = NO_ANNOUNCEMENTS }: { user?: CourseUser | null; lessons: Record<string, LessonContent>; enrolled: boolean; referral: ReferralStanding; passes?: Record<string, number>; progress?: SdProgress | null; group?: string | null; announcements?: Announcement[] }) {
+export function CourseApp({ user = null, lessons, enrolled, referral, passes = NO_PASSES, progress = null, group = null, announcements = NO_ANNOUNCEMENTS, company = null }: { user?: CourseUser | null; lessons: Record<string, LessonContent>; enrolled: boolean; referral: ReferralStanding; passes?: Record<string, number>; progress?: SdProgress | null; group?: string | null; announcements?: Announcement[]; /** The company that assigned this course, when access comes from one. */ company?: CourseCompany | null }) {
   const { s, act, ready } = useCourseApp({ lessons, enrolled, passes, progress });
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -169,12 +171,13 @@ export function CourseApp({ user = null, lessons, enrolled, referral, passes = N
     <GroupProvider value={group}>
     <AnnouncementsProvider value={announcements}>
     <div className="sd-app relative flex h-dvh flex-col overflow-hidden lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
-      <Sidebar s={s} act={act} />
+      <Sidebar s={s} act={act} company={company} />
       <div
         ref={scroller}
         onScroll={(e) => e.currentTarget.style.setProperty("--sy", String(Math.round(e.currentTarget.scrollTop)))}
         className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain pt-[max(8px,env(safe-area-inset-top))] lg:h-dvh lg:px-10 lg:pt-7 lg:pb-10"
       >
+        {company && showTabs && <CompanyCourseBar company={company} variant="strip" />}
         {s.offline && (
           <div className="sd-a-in mb-2 flex flex-none items-center gap-2.5 bg-sd-ink px-5 py-2.5 text-[13px] text-sd-bg lg:mb-5 lg:px-4" style={{ animationDuration: ".3s" }} role="status">
             <span className="flex text-sd-accent-400"><Icon name="wifiOff" size={16} /></span>

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:test": "AUTH_URL=http://localhost:${PORT:-3292} next dev -p ${PORT:-3292}",
     "build": "next build",
     "vercel-build": "sh scripts/vercel-build.sh",
     "start": "next start",

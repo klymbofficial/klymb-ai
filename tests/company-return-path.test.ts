@@ -69,14 +69,18 @@ test("only a string of sensible length counts", () => {
   assert.equal(safeOrgNext(`/org/acme/${"a".repeat(600)}`), null);
 });
 
-test("the sign-in link carries a safe path, encoded, and drops an unsafe one", () => {
-  assert.equal(signInHref("/org/acme/learning?team=eng"), "/org/sign-in?next=%2Forg%2Facme%2Flearning%3Fteam%3Deng");
+test("the sign-in link is the workspace's own, carries a safe path encoded, and drops an unsafe one", () => {
+  assert.equal(signInHref("/org/acme/learning?team=eng"), "/org/acme/sign-in?next=%2Forg%2Facme%2Flearning%3Fteam%3Deng");
+  assert.equal(signInHref("/org/acme"), "/org/acme/sign-in?next=%2Forg%2Facme");
+  assert.equal(signInHref("/org/acme?x=1"), "/org/acme/sign-in?next=%2Forg%2Facme%3Fx%3D1");
+  assert.equal(safeOrgNext("/org/acme/sign-in"), null, "a workspace's sign-in page is never a place to return to");
+  assert.equal(safeOrgNext("/org/acme/sign-in?next=/org/acme"), null);
   assert.equal(signInHref("https://evil.example"), "/org/sign-in");
   assert.equal(signInHref(null), "/org/sign-in");
 });
 
 test("the layout, page and action all check the path before using it", () => {
-  const layout = readFileSync("src/app/org/[slug]/layout.tsx", "utf8");
+  const layout = readFileSync("src/app/org/[slug]/(workspace)/layout.tsx", "utf8");
   assert.match(layout, /redirect\(signInHref\(/);
   const page = readFileSync("src/app/org/sign-in/page.tsx", "utf8");
   assert.match(page, /safeOrgNext\(\(await searchParams\)\.next\)/);

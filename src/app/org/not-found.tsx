@@ -17,10 +17,10 @@ export default function OrgNotFound() {
         <h1 className="display mt-6 text-2xl">This page isn&apos;t available to you</h1>
         <p className="mt-3 text-sm text-muted">
           It may not exist, or it may belong to another company. If you expected to see it, check you signed in with the
-          work email your company invited, then ask your HR contact.
+          work email your company invited, then ask your company&apos;s admin.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <ButtonLink href="/org">Go to my company</ButtonLink>
+          <ButtonLink href="/org">Go to my workspace</ButtonLink>
           <ButtonLink href="/org/sign-in" variant="secondary">Sign in again</ButtonLink>
         </div>
         <p className="mt-6 text-xs text-muted">

@@ -20,7 +20,7 @@ export type AuditAction =
   | "company.create"
   | "company.update"
   | "company.hr_add"
-  // By a company's own HR (src/lib/company/audit.ts), not by a Klymb admin.
+  // By a company's own admin (src/lib/company/audit.ts), not by a Klymb admin.
   | "company.person_add"
   | "company.people_import"
   | "company.person_remove"
@@ -28,6 +28,10 @@ export type AuditAction =
   | "company.team_create"
   | "company.team_head"
   | "company.person_move"
+  | "company.roles_set"
+  | "company.brand_draft"
+  | "company.brand_logo"
+  | "company.brand_publish"
   | "company.course_assign"
   | "company.course_unassign"
   | "company.course_assign_all"

@@ -590,15 +590,21 @@ export function noteEmail(p: { subject: string; preview: string; eyebrow: string
  * logo and name in the header, their color where it is readable, and their
  * name in the sender ("Acme via Klymb.ai"). The sending address stays Klymb's.
  */
-export function companyInviteEmail(p: { email: string; name: string | null; role: "hr" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
+export function companyInviteEmail(p: { email: string; name: string | null; role: "admin" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
   const company = p.company.name;
   const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
-  const brand: MailBrand = { name: company, logoUrl: p.company.logoUrl, color: accent };
-  const signIn = `${p.siteUrl}/org/sign-in`;
+  // Emails need an absolute address; a logo served by Klymb arrives as a path.
+  const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
+  const brand: MailBrand = { name: company, logoUrl, color: accent };
+  const signIn = p.company.slug ? `${p.siteUrl}/org/${p.company.slug}/sign-in` : `${p.siteUrl}/org/sign-in`;
+  // Questions about the workspace go to the company's own contact when it has published one.
+  const help = p.company.supportEmail
+    ? `Questions? Write to ${p.company.supportEmail}${p.company.supportText ? ` (${p.company.supportText})` : ""}. For trouble with Klymb itself, write to ${p.supportEmail}.`
+    : `Questions? Reply to this email or write to ${p.supportEmail}.`;
 
   const subject = p.resend ? `Reminder: you've been added to ${company} on Klymb.ai` : `You've been added to ${company} on Klymb.ai`;
-  const intro = p.role === "hr" ? `You've been added as an HR contact for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
+  const intro = p.role === "admin" ? `You've been added as an admin for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
   const steps = [
     { title: "Open the sign-in page", body: `Go to ${signIn}.` },
     { title: "Use this email", body: `Enter ${p.email}. We'll email you a 6-digit code: no password needed.` },
@@ -609,12 +615,12 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
     "Getting started",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
     `Sign in: ${signIn}`, "",
-    `Questions? Reply to this email or write to ${p.supportEmail}.`, "",
+    help, "",
     `Sent for ${company} by Klymb.ai`,
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail, brand,
-    preview: p.role === "hr" ? `You're the HR contact for ${company}.` : `${company} has given you a place on Klymb.ai.`,
+    preview: p.role === "admin" ? `You're an admin for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`,
     eyebrow: p.resend ? "A reminder" : "You're invited",
     title: p.name ? `Welcome, ${esc(p.name)}.` : "Welcome aboard.",
     intro: esc(intro),
@@ -622,6 +628,9 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
       `${sectionTitle("Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
       </table>${button(esc(signIn), "Sign in", accent)}`,
+      ...(p.company.supportEmail
+        ? [`<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">Questions about your workspace? Write to <a href="mailto:${esc(p.company.supportEmail)}" style="color:${C.ink};font-weight:600">${esc(p.company.supportEmail)}</a>${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.</div>`]
+        : []),
     ],
   });
   return { subject, html, text, fromName: inviteSenderName(company) };

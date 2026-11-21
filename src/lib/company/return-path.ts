@@ -23,6 +23,8 @@ export function safeOrgNext(raw: unknown): string | null {
   if (!match) return null;
   const path = match[1];
   if (path === SIGN_IN || path.startsWith(`${SIGN_IN}/`)) return null;
+  // A workspace's own sign-in page is never somewhere to return to.
+  if (path.split("/")[3] === "sign-in") return null;
   // A segment that is or decodes to "." or ".." would let the browser climb out of /org.
   for (const segment of path.split("/")) {
     let decoded: string;
@@ -39,8 +41,22 @@ export function safeOrgNext(raw: unknown): string | null {
   return raw;
 }
 
-/** The sign-in page, carrying where to return to when there is somewhere safe. */
+/** The workspace a safe path is in. */
+function slugOf(path: string): string {
+  return path.split(/[/?]/)[2];
+}
+
+/**
+ * Where to sign in: the workspace's own branded sign-in page, carrying the
+ * page to return to, when there is somewhere safe to return to; otherwise the
+ * neutral one.
+ */
 export function signInHref(next: unknown): string {
   const safe = safeOrgNext(next);
-  return safe ? `${SIGN_IN}?next=${encodeURIComponent(safe)}` : SIGN_IN;
+  return safe ? `/org/${slugOf(safe)}/sign-in?next=${encodeURIComponent(safe)}` : SIGN_IN;
+}
+
+/** A workspace's own sign-in page, with no particular page to return to. */
+export function workspaceSignInHref(slug: string): string {
+  return `/org/${slug}/sign-in`;
 }

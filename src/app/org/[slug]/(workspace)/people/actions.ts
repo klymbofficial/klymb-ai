@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { logCompany } from "@/lib/company/audit";
-import { hrFor } from "@/lib/company/auth";
+import { adminFor } from "@/lib/company/auth";
 import { RESEND_LIMITS, type CompanyBrand } from "@/lib/company/brand";
 import { loadCompanyBrand, sendCompanyInvite } from "@/lib/company/invite";
-import { MAX_CSV_BYTES, planAdd, readPeopleCsv, removeBlocked, tidyName, type AddRole, type PlannedPerson, type RowError } from "@/lib/company/people";
-import { activeHrCount, insertPeople, loadAddContext, loadPerson, removePersonRow } from "@/lib/company/people-data";
+import { grantedRoles, MAX_CSV_BYTES, planAdd, readPeopleCsv, removeBlocked, rolesBlocked, tidyName, type AddRole, type PlannedPerson, type RowError } from "@/lib/company/people";
+import { activeAdminCount, insertPeople, loadAddContext, loadPerson, removePersonRow, setMemberRoles } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -16,12 +16,12 @@ export type PeopleResult =
   | { ok: true; message: string }
   | { ok: false; message: string; errors?: RowError[] };
 
-const NOT_ALLOWED: PeopleResult = { ok: false, message: "Only your company's HR can do this. Try signing in again." };
+const NOT_ALLOWED: PeopleResult = { ok: false, message: "Only your company's admin can do this. Try signing in again." };
 const UNAVAILABLE: PeopleResult = { ok: false, message: "That didn't work just now. Please try again in a minute." };
 
 /** Plans, then adds everyone in one statement, then emails them after the response. */
 async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], via: "form" | "csv"): Promise<PeopleResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const sql = db();
   if (!sql) return UNAVAILABLE;
@@ -38,7 +38,7 @@ async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], v
     };
   }
 
-  const added = await insertPeople(sql, hr.companyId, plan.add);
+  const added = await insertPeople(sql, hr.companyId, plan.add, hr.email);
   if (added === null) return UNAVAILABLE;
   if (added !== plan.add.length) {
     // The guard inside the insert said no: something changed since planning.
@@ -49,7 +49,7 @@ async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], v
   // One entry for a form add, with the address; for a CSV only the counts, never the list.
   await (via === "form"
     ? logCompany(hr, "company.person_add", { email: plan.add[0].email, role: plan.add[0].role, returning: !!plan.add[0].returning })
-    : logCompany(hr, "company.people_import", { added: added, returning: plan.add.filter((p) => p.returning).length, hr_added: plan.add.filter((p) => p.role === "hr").length }));
+    : logCompany(hr, "company.people_import", { added: added, returning: plan.add.filter((p) => p.returning).length, admins_added: plan.add.filter((p) => p.role === "admin").length }));
   revalidatePath(`/org/${slug}/people`);
   revalidatePath(`/org/${slug}/teams`);
   const back = plan.add.filter((p) => p.returning).length;
@@ -75,15 +75,15 @@ async function brandOf(companyId: string, companyName: string): Promise<CompanyB
   return (sql && (await loadCompanyBrand(sql, companyId))) || { name: companyName, logoUrl: null, brandColor: null };
 }
 
-/** 1.8: one person, as an employee or another HR person. */
+/** 1.8: one person, as an employee or another admin. More responsibilities are given afterwards. */
 export async function addPerson(slug: string, form: { email: string; name: string; team: string; role: string }): Promise<PeopleResult> {
-  const role: AddRole = form.role === "hr" ? "hr" : "employee";
+  const role: AddRole = form.role === "admin" ? "admin" : "employee";
   return addPlanned(slug, [{ line: 1, email: form.email.trim(), name: tidyName(form.name), team: form.team.trim() || null, role }], "form");
 }
 
 /** 1.8: a CSV of email, name, team. All or nothing, with every problem listed by line. */
 export async function uploadPeople(slug: string, formData: FormData): Promise<PeopleResult> {
-  if (!(await hrFor(slug))) return NOT_ALLOWED;
+  if (!(await adminFor(slug))) return NOT_ALLOWED;
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Choose a CSV file to upload." };
   if (file.size > MAX_CSV_BYTES) return { ok: false, message: `That file is too big (${Math.ceil(file.size / 1024)} KB). Keep it under ${MAX_CSV_BYTES / 1024} KB, or about 500 people.` };
@@ -99,23 +99,23 @@ export async function uploadPeople(slug: string, formData: FormData): Promise<Pe
  * seat frees up, and their row and data stay.
  */
 export async function removePerson(slug: string, rawEmail: string): Promise<PeopleResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const email = normaliseEmail(rawEmail);
   if (!email) return { ok: false, message: "That person isn't in your company." };
   const sql = db();
   if (!sql) return UNAVAILABLE;
 
-  const [target, hrCount] = await Promise.all([loadPerson(sql, hr.companyId, email), activeHrCount(sql, hr.companyId)]);
-  if (target === undefined || hrCount === null) return UNAVAILABLE;
-  const blocked = removeBlocked({ actorEmail: hr.email, target, activeHr: hrCount });
+  const [target, adminCount] = await Promise.all([loadPerson(sql, hr.companyId, email), activeAdminCount(sql, hr.companyId)]);
+  if (target === undefined || adminCount === null) return UNAVAILABLE;
+  const blocked = removeBlocked({ actorEmail: hr.email, target, activeAdmins: adminCount });
   if (blocked) return { ok: false, message: blocked };
 
   const removed = await removePersonRow(sql, hr.companyId, email, hr.email);
   if (removed === null) return UNAVAILABLE;
   if (!removed) return { ok: false, message: "That couldn't be done: something changed meanwhile. Reload and try again." };
 
-  await logCompany(hr, "company.person_remove", { email, was_role: target?.role });
+  await logCompany(hr, "company.person_remove", { email, had_roles: target?.roles });
   revalidatePath(`/org/${slug}/people`);
   revalidatePath(`/org/${slug}/teams`);
   return { ok: true, message: `${email} was removed. Their access has ended and their seat is free.` };
@@ -127,7 +127,7 @@ export async function removePerson(slug: string, rawEmail: string): Promise<Peop
  * button can't be used to flood an inbox.
  */
 export async function resendInvite(slug: string, rawEmail: string): Promise<PeopleResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const email = normaliseEmail(rawEmail);
   if (!email) return { ok: false, message: "That person isn't in your company." };
@@ -144,11 +144,44 @@ export async function resendInvite(slug: string, rawEmail: string): Promise<Peop
   if (!perHr.allowed) return { ok: false, message: "You've resent a lot of invites in the last hour. Please try again later." };
 
   const sent = await sendCompanyInvite({
-    email, name: target.name, role: target.role === "hr" ? "hr" : "employee", resend: true,
+    email, name: target.name, role: target.roles.includes("admin") ? "admin" : "employee", resend: true,
     company: await brandOf(hr.companyId, hr.companyName),
   });
   await logCompany(hr, "company.invite_resend", { email, delivered: sent });
   return sent
     ? { ok: true, message: `The invite was sent to ${email} again.` }
     : { ok: false, message: `The invite to ${email} couldn't be sent just now. Tell them to sign in at klymb.ai/org/sign-in with this email.` };
+}
+
+/**
+ * Sets what someone does in the company: any of admin, company head,
+ * recruiter, reviewer and employee (a team's lead is chosen on the Teams
+ * page). Everyone keeps at least one; the last admin, and the admin making
+ * the change, stay admins.
+ */
+export async function updateRoles(slug: string, rawEmail: string, rawRoles: unknown): Promise<PeopleResult> {
+  const hr = await adminFor(slug);
+  if (!hr) return NOT_ALLOWED;
+  const email = normaliseEmail(rawEmail);
+  const roles = grantedRoles(rawRoles);
+  if (!email || !roles) return { ok: false, message: "Choose a person and what they do." };
+  const sql = db();
+  if (!sql) return UNAVAILABLE;
+
+  const [target, adminCount] = await Promise.all([loadPerson(sql, hr.companyId, email), activeAdminCount(sql, hr.companyId)]);
+  if (target === undefined || adminCount === null) return UNAVAILABLE;
+  const blocked = rolesBlocked({ actorEmail: hr.email, target, next: roles, activeAdmins: adminCount });
+  if (blocked) return { ok: false, message: blocked };
+
+  const saved = await setMemberRoles(sql, hr.companyId, email, roles, hr.email);
+  if (saved === null) return UNAVAILABLE;
+  if (!saved) return { ok: false, message: "That couldn't be done: something changed meanwhile. Reload and try again." };
+  const before = target!.roles.filter((r) => r !== "team_lead");
+  await logCompany(hr, "company.roles_set", {
+    email,
+    added: roles.filter((r) => !before.includes(r)),
+    ended: before.filter((r) => !(roles as readonly string[]).includes(r)),
+  });
+  revalidatePath(`/org/${slug}/people`);
+  return { ok: true, message: `Saved what ${email} does in your company.` };
 }

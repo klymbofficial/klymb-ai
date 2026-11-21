@@ -4,7 +4,12 @@ import { SD_COURSE } from "@/lib/sd-offer";
 
 /**
  * Company course assignments (migration 0030). Every query is scoped to a
- * company id taken from the signed-in HR person (hrFor), never from a form.
+ * company id taken from the signed-in admin (adminFor), never from a form.
+ *
+ * One company at a time per person and course: the table is keyed by
+ * (email, course), from before a person could be in several companies. A
+ * live assignment from another company blocks this one (`elsewhere`); a
+ * cancelled one is taken over. Reworking the key belongs with T04.
  *
  * The seat rule: an assignment needs an active member, and a company can't
  * hold more active members than seat_count (People and Klymb admin enforce
@@ -23,23 +28,26 @@ export interface AssignState {
   assigned: boolean;
   /** Paid for it themselves: no assignment needed. */
   ownAccess: boolean;
+  /** Another company has assigned it and not taken it back. */
+  elsewhere: boolean;
   /** Non-revoked assignments held by active members. */
   used: number;
   seats: number;
 }
 
 export async function loadAssignState(sql: Db, companyId: string, email: string): Promise<AssignState | null> {
-  const { data, error } = await sql.row<{ member: boolean; assigned: boolean; own_access: boolean; used: number; seats: number }>`
+  const { data, error } = await sql.row<{ member: boolean; assigned: boolean; own_access: boolean; elsewhere: boolean; used: number; seats: number }>`
     select exists (select 1 from course.company_members m where m.company_id = ${companyId}::uuid and m.email = ${email} and m.removed_at is null) as member,
            exists (select 1 from course.company_course_assignments a where a.company_id = ${companyId}::uuid and a.email = ${email} and a.course = ${ASSIGNABLE_COURSE} and a.revoked_at is null) as assigned,
            exists (select 1 from course.enrollments e where e.email = ${email} and e.course = ${ASSIGNABLE_COURSE} and e.status = 'active') as own_access,
+           exists (select 1 from course.company_course_assignments a where a.company_id <> ${companyId}::uuid and a.email = ${email} and a.course = ${ASSIGNABLE_COURSE} and a.revoked_at is null) as elsewhere,
            (select count(*)::int from course.company_course_assignments a
               join course.company_members m on m.company_id = a.company_id and m.email = a.email
              where a.company_id = ${companyId}::uuid and a.course = ${ASSIGNABLE_COURSE} and a.revoked_at is null and m.removed_at is null) as used,
            (select seat_count from course.companies where id = ${companyId}::uuid) as seats
   `;
   if (error || !data || data.seats === null) return null;
-  return { member: data.member, assigned: data.assigned, ownAccess: data.own_access, used: data.used, seats: data.seats };
+  return { member: data.member, assigned: data.assigned, ownAccess: data.own_access, elsewhere: data.elsewhere, used: data.used, seats: data.seats };
 }
 
 /**
@@ -64,8 +72,9 @@ export async function assignOne(sql: Db, companyId: string, email: string, by: s
       from target t, co, used
      where used.n < co.seat_count
     on conflict (email, course) do update
-       set revoked_at = null, revoked_by = null, assigned_by = excluded.assigned_by, assigned_at = now()
-     where a.company_id = excluded.company_id and a.revoked_at is not null
+       set company_id = excluded.company_id, revoked_at = null, revoked_by = null,
+           assigned_by = excluded.assigned_by, assigned_at = now()
+     where a.revoked_at is not null
   `;
   if (error) {
     console.error("course assign failed:", error.code, error.message);
@@ -91,7 +100,7 @@ export async function unassignOne(sql: Db, companyId: string, email: string, by:
 
 /**
  * Assigns everyone who has no assignment and no course of their own, all or
- * nobody. `expected` is the number the HR person confirmed: if the real
+ * nobody. `expected` is the number the admin confirmed: if the real
  * number is different now, nothing is assigned. It also assigns nobody if it would
  * pass the seat count. Returns rows written, or null on a database error.
  */
@@ -117,8 +126,9 @@ export async function assignEveryoneWithout(sql: Db, companyId: string, expected
      where (select count(*) from cand) = ${expected}::int
        and used.n + (select count(*) from cand) <= co.seat_count
     on conflict (email, course) do update
-       set revoked_at = null, revoked_by = null, assigned_by = excluded.assigned_by, assigned_at = now()
-     where a.company_id = excluded.company_id and a.revoked_at is not null
+       set company_id = excluded.company_id, revoked_at = null, revoked_by = null,
+           assigned_by = excluded.assigned_by, assigned_at = now()
+     where a.revoked_at is not null
   `;
   if (error) {
     console.error("course assign-all failed:", error.code, error.message);

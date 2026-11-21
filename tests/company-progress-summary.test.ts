@@ -10,7 +10,6 @@ const TOTAL = 10;
 function person(over: Partial<MemberProgress> & { email: string }): MemberProgress {
   return {
     name: null,
-    role: "employee",
     teamName: null,
     hasAccess: true,
     assigned: true,

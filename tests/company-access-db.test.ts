@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { after, before, describe, test } from "node:test";
 import { Client } from "pg";
 import { allowCompany, resolveMember } from "../src/lib/company/access";
-import { memberLookup, workspaceLookup } from "../src/lib/company/lookup";
+import { membershipsLookup, workspaceLookup } from "../src/lib/company/lookup";
 import { connectionOptions } from "../src/lib/db/connection";
 import type { Db, DbError } from "../src/lib/db/client";
 
@@ -31,18 +31,21 @@ describe("company access against a real database", { skip }, () => {
   const ids = { acme: "", globex: "", acmeEng: "", acmeSales: "", globexEng: "" };
 
   /** The app's Db.row, over this test's connection, so memberLookup runs unchanged. */
-  const sql: Pick<Db, "row"> = {
-    async row<T>(strings: TemplateStringsArray, ...values: unknown[]) {
+  const sql: Pick<Db, "rows"> = {
+    async rows<T>(strings: TemplateStringsArray, ...values: unknown[]) {
       let text = strings[0];
       for (let i = 0; i < values.length; i += 1) text += `$${i + 1}${strings[i + 1]}`;
       try {
         const result = await client.query(text, values);
-        return { data: (result.rows[0] as T) ?? null, error: null };
+        return { data: result.rows as T[], error: null };
       } catch (e) {
         return { data: null, error: e as DbError };
       }
     },
   };
+
+  /** The person's one membership, through the app's memberships query. */
+  const memberLookup = (q: Pick<Db, "rows">) => async (e: string) => (await membershipsLookup(q)(e))?.[0] ?? null;
 
   const one = async (text: string, values: unknown[]) => (await client.query(text, values)).rows[0];
 
@@ -96,7 +99,7 @@ describe("company access against a real database", { skip }, () => {
     assert.ok(member);
     assert.equal(member.companyId, ids.acme);
     assert.equal(member.companySlug, `acme-${run}`);
-    assert.equal(member.role, "head");
+    assert.deepEqual(member.roles, ["team_lead"]);
     assert.equal(member.teamId, ids.acmeEng);
   });
 
@@ -105,14 +108,14 @@ describe("company access against a real database", { skip }, () => {
     assert.equal(allowCompany(member, `acme-${run}`), true);
     assert.equal(allowCompany(member, `globex-${run}`), false);
     const rival = await resolveMember(email("rival"), memberLookup(sql));
-    assert.equal(allowCompany(rival, `acme-${run}`, ["hr"]), false);
+    assert.equal(allowCompany(rival, `acme-${run}`, ["admin"]), false);
   });
 
   test("the workspace lookup finds a member only in the workspace the link names", async () => {
     const head = await resolveMember(email("head"), workspaceLookup(sql, `acme-${run}`));
     assert.ok(head);
     assert.equal(head.companyId, ids.acme);
-    assert.equal(head.role, "head");
+    assert.deepEqual(head.roles, ["team_lead"]);
     // Company A's people are nobody on company B's link, and the reverse.
     assert.equal(await resolveMember(email("hr"), workspaceLookup(sql, `globex-${run}`)), null);
     assert.equal(await resolveMember(email("rival"), workspaceLookup(sql, `acme-${run}`)), null);
@@ -137,8 +140,11 @@ describe("company access against a real database", { skip }, () => {
     await refused(addMember, [email("sneaky"), ids.acme, ids.globexEng, "employee"], "23503");
   });
 
-  test("the database refuses a second company for the same person", async () => {
-    await refused(addMember, [email("dev"), ids.globex, ids.globexEng, "employee"], "23505");
+  test("the same person may join a second company (0047), but not the same one twice", async () => {
+    await client.query("savepoint second");
+    await client.query(addMember, [email("dev"), ids.globex, ids.globexEng, "employee"]);
+    await client.query("rollback to savepoint second");
+    await refused(addMember, [email("dev"), ids.acme, ids.acmeEng, "employee"], "23505");
   });
 
   test("the database refuses a head with no team, an unknown role and a mixed-case email", async () => {

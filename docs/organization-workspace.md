@@ -24,6 +24,22 @@ on this branch, not against plans.
 - **Learning page:** who has the course, lessons passed and final-assessment
   scores, per email, from `lesson_checks` and `final_attempts`.
 
+- **Branding (T02):** a company admin sets display name, logo (uploaded PNG,
+  JPEG or WebP up to 512 KB), accent (must carry white text at 4.5:1),
+  welcome text and support contact at `/org/<slug>/branding`, saves a draft,
+  previews it and publishes it (`course.company_branding`, migration 0048).
+  Only the published version shows: the workspace band and pages, the branded
+  sign-in page at `/org/<slug>/sign-in` (where invites and deep links lead),
+  invite emails, and an "Assigned by" mark on a System Design course the
+  company assigned. Personal Klymb pages keep Klymb's look. Logos are served
+  from `/api/company-brand/<company>/<file>`: published ones to anyone, drafts
+  only to that company's admins.
+- **Deploying branding:** logos are stored in R2 under `company-brand/` in the
+  lesson bucket. Production and previews need `R2_WRITE_ACCESS_KEY_ID` and
+  `R2_WRITE_SECRET_ACCESS_KEY` in Vercel (the app's usual R2 keys only read);
+  without them, uploads say they aren't available. On a laptop, uploads go to
+  `.data/` unless `BRAND_STORAGE=r2` is set.
+
 ## Not available (and shown as such in the UI)
 
 Assigning anything other than System Design, assigning assessments, company

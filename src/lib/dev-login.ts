@@ -20,26 +20,57 @@ export interface DevUser {
   label: string;
   /** What the account has, shown on the picker. */
   blurb: string;
-  /** For a company person: the fake company they belong to. */
-  company?: DevCompany;
+  /** For a company person: each fake company they belong to, and what they do there. */
+  memberships?: readonly DevMembership[];
+  /** Also has a System Design seat of their own, as a Klymb learner. */
+  ownCourse?: boolean;
+}
+
+export interface DevMembership {
+  company: DevCompany;
+  roles: readonly ("admin" | "company_head" | "recruiter" | "reviewer" | "employee")[];
 }
 
 export interface DevCompany {
   slug: string;
   name: string;
+  /** Published branding to start with, so the two companies look different from the first sign-in. */
+  brand?: { displayName: string; accent: string; welcome: string; supportEmail: string; supportText: string };
 }
 
 /** Two fake companies, so a member of one can be checked against the other's pages. */
 export const DEV_COMPANY: DevCompany = { slug: "dev-company", name: "Dev Company" };
-export const DEV_COMPANY_TWO: DevCompany = { slug: "dev-company-two", name: "Dev Company Two" };
+export const DEV_COMPANY_TWO: DevCompany = {
+  slug: "dev-company-two",
+  name: "Dev Company Two",
+  brand: {
+    displayName: "Dev Two Learning Hub",
+    accent: "#0f5e57",
+    welcome: "Welcome to the Dev Two Learning Hub. Your team's courses and progress live here.",
+    supportEmail: "learning@dev-two.klymb.test",
+    supportText: "Learning team, weekdays 10 to 6 IST",
+  },
+};
 
 /** Every address is on the reserved .test domain, so none can be a real mailbox. */
 export const DEV_USERS: readonly DevUser[] = [
   { email: "dev-learner-paid@klymb.test", name: "Dev Learner (paid)", role: "learner-paid", label: "Learner, paid", blurb: "Has a System Design seat. Opens /learn." },
   { email: "dev-learner-free@klymb.test", name: "Dev Learner (free)", role: "learner-free", label: "Learner, not paid", blurb: "Signed in, no seat. Sees the locked state." },
   { email: "dev-admin@klymb.test", name: "Dev Admin", role: "admin", label: "Admin", blurb: "On the admin list. Opens /admin." },
-  { email: "dev-company@klymb.test", name: "Dev HR", role: "company", company: DEV_COMPANY, label: "Company HR", blurb: `HR at ${DEV_COMPANY.name}. Opens /org.` },
-  { email: "dev-company-two@klymb.test", name: "Dev HR Two", role: "company", company: DEV_COMPANY_TWO, label: "Company HR, second company", blurb: `HR at ${DEV_COMPANY_TWO.name}. ${DEV_COMPANY.name}'s pages are a 404 for them.` },
+  { email: "dev-company@klymb.test", name: "Dev HR", role: "company", memberships: [{ company: DEV_COMPANY, roles: ["admin"] }], label: "Company admin", blurb: `Admin at ${DEV_COMPANY.name}. Opens /org.` },
+  { email: "dev-company-two@klymb.test", name: "Dev HR Two", role: "company", memberships: [{ company: DEV_COMPANY_TWO, roles: ["admin"] }], label: "Company admin, second company", blurb: `Admin at ${DEV_COMPANY_TWO.name}. ${DEV_COMPANY.name}'s pages are a 404 for them.` },
+  {
+    email: "dev-company-both@klymb.test", name: "Dev Both", role: "company", ownCourse: true,
+    memberships: [{ company: DEV_COMPANY, roles: ["employee", "recruiter"] }, { company: DEV_COMPANY_TWO, roles: ["company_head"] }],
+    label: "In both companies",
+    blurb: `Employee and recruiter at ${DEV_COMPANY.name}, company head at ${DEV_COMPANY_TWO.name}, and has System Design of their own. Opens the workspace list.`,
+  },
+  {
+    email: "dev-employee@klymb.test", name: "Dev Employee", role: "company",
+    memberships: [{ company: DEV_COMPANY, roles: ["employee"] }],
+    label: "Employee",
+    blurb: `Employee at ${DEV_COMPANY.name}. Nothing assigned yet: HR assigns System Design, then they can open it.`,
+  },
 ];
 
 type Env = Record<string, string | undefined>;
@@ -65,7 +96,7 @@ export function devLandingPath(user: DevUser): string {
     case "admin":
       return "/admin";
     case "company":
-      return `/org/${(user.company ?? DEV_COMPANY).slug}`;
+      return user.memberships?.length === 1 ? `/org/${user.memberships[0].company.slug}` : "/org";
     default:
       return "/learn";
   }

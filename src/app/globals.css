@@ -403,3 +403,19 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
 /* Diagram builder: a wrong drop nudges the slot sideways. */
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 @media (prefers-reduced-motion: reduce) { [data-slot] { animation: none !important; } }
+
+/*
+ * A company's published accent inside its own pages (src/components/company/brand-style.ts).
+ * The theme above is `inline`, so utilities hold Klymb's red as a value rather than a
+ * variable; these put the accent back in for the classes company pages use. The accent
+ * always carries white text at WCAG AA (checked before it is saved).
+ */
+[data-brand] .bg-red-strong { background-color: var(--brand-accent); }
+[data-brand] .border-red-strong { border-color: var(--brand-accent); }
+[data-brand] .text-red,
+[data-brand] .text-red-deep { color: var(--brand-accent); }
+@media (hover: hover) {
+  [data-brand] .hover\:bg-red-press:hover { background-color: var(--brand-press); }
+  [data-brand] .hover\:border-red-press:hover { border-color: var(--brand-press); }
+  [data-brand] .hover\:text-red-deep:hover { color: var(--brand-accent); }
+}

@@ -32,7 +32,7 @@ function SeparateTile({ label, value, note }: { label: string; value: number; no
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-export function LearningSummary({ rows, totalLessons, teamsHref }: { rows: MemberProgress[]; totalLessons: number; teamsHref: string }) {
+export function LearningSummary({ rows, totalLessons, teamsHref }: { rows: MemberProgress[]; totalLessons: number; teamsHref?: string }) {
   const { total: c, byTeam } = summariseProgress(rows, totalLessons);
 
   return (
@@ -48,9 +48,9 @@ export function LearningSummary({ rows, totalLessons, teamsHref }: { rows: Membe
       <section aria-labelledby="access-title">
         <h3 id="access-title" className="text-sm font-extrabold uppercase tracking-[0.14em] text-muted">Course access</h3>
         <div className="mt-3 grid gap-4 sm:grid-cols-3">
-          <Stat label="Assigned by your company" value={c.assigned} note="HR assigned System Design and hasn't taken it back" />
-          <SeparateTile label="Own paid access" value={c.ownAccess} note="Bought it themselves. Counted apart from Assigned; someone with both is in both." />
-          <Stat label="No course access" value={c.noAccess} note="Can't open the course yet" />
+          <Stat label="Assigned by your company" value={c.assigned} note="Your company assigned System Design and hasn't taken it back" />
+          <SeparateTile label="Their own access" value={c.ownAccess} note="On their own Klymb account. Its progress stays theirs; counted apart from Assigned, and someone with both is in both." />
+          <Stat label="Not assigned" value={c.noAccess} note="Your company hasn't assigned the course" />
         </div>
       </section>
 
@@ -92,14 +92,14 @@ export function LearningSummary({ rows, totalLessons, teamsHref }: { rows: Membe
 }
 
 /** The same counts per team. A table once it fits (desktop width), a card per team on phones and tablets; only one is shown at a time. */
-function TeamRollupSection({ teams, teamsHref }: { teams: TeamProgressSummary[]; teamsHref: string }) {
+function TeamRollupSection({ teams, teamsHref }: { teams: TeamProgressSummary[]; teamsHref?: string }) {
   if (teams.length < 2) {
     return (
       <section aria-labelledby="team-title">
         <h3 id="team-title" className="text-sm font-extrabold uppercase tracking-[0.14em] text-muted">By team</h3>
         <p className="mt-3 text-sm text-muted">
           There is one group so far, so a roll-up would repeat the numbers above. Once people are on teams, each team appears here.{" "}
-          <Link href={teamsHref} className="font-semibold text-ink underline underline-offset-2">Go to Teams</Link>
+          {teamsHref && <Link href={teamsHref} className="font-semibold text-ink underline underline-offset-2">Go to Teams</Link>}
         </p>
       </section>
     );
@@ -121,7 +121,7 @@ function TeamRollupSection({ teams, teamsHref }: { teams: TeamProgressSummary[];
             </tr>
             <tr className="border-b border-line/25">
               <th scope="col" className={`${thNum} border-l border-line/15`}>Assigned</th>
-              <th scope="col" className={thNum}>Own paid</th>
+              <th scope="col" className={thNum}>Own access</th>
               <th scope="col" className={thNum}>None</th>
               <th scope="col" className={`${thNum} border-l border-line/15`}>No activity</th>
               <th scope="col" className={thNum}>None passed</th>
@@ -152,7 +152,7 @@ function TeamRollupSection({ teams, teamsHref }: { teams: TeamProgressSummary[];
         {teams.map((t) => (
           <li key={t.team ?? "__none"} className="card p-4">
             <h4 className="font-semibold">{t.label} <span className="font-normal text-muted">· {plural(t.counts.people, "person", "people")}</span></h4>
-            <CardGroup title="Course access" items={[["Assigned", t.counts.assigned], ["Own paid access", t.counts.ownAccess], ["No access", t.counts.noAccess]]} />
+            <CardGroup title="Course access" items={[["Assigned", t.counts.assigned], ["Their own access", t.counts.ownAccess], ["Not assigned", t.counts.noAccess]]} />
             <CardGroup title="People with access: lessons" items={[["No recorded activity", t.counts.accessNoActivity], ["Activity, none passed", t.counts.activityNoLessons], ["In progress", t.counts.inProgress], ["All lessons passed", t.counts.allLessonsPassed]]} />
             <CardGroup title="Final assessment" items={[["Attempted", t.counts.finalAttempted]]} />
           </li>

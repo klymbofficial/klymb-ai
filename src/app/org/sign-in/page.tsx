@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CompanySignInForm } from "@/components/company/CompanySignInForm";
 import { Wordmark } from "@/components/layout/Wordmark";
-import { getMember } from "@/lib/company/auth";
+import { getMemberships } from "@/lib/company/auth";
 import { safeOrgNext } from "@/lib/company/return-path";
 
 export const metadata: Metadata = { title: "Company sign-in", robots: { index: false, follow: false } };
@@ -18,9 +18,10 @@ export const metadata: Metadata = { title: "Company sign-in", robots: { index: f
  */
 export default async function CompanySignInPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
   const next = safeOrgNext((await searchParams).next);
-  // Already signed in as a member: straight on, to the page asked for or their company.
-  const member = await getMember();
-  if (member) redirect(next ?? `/org/${member.companySlug}`);
+  // Already signed in as a member: straight on, to the page asked for, their
+  // one workspace, or the list of their workspaces.
+  const memberships = await getMemberships();
+  if (memberships.length) redirect(next ?? (memberships.length === 1 ? `/org/${memberships[0].companySlug}` : "/org"));
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
@@ -37,7 +38,7 @@ export default async function CompanySignInPage({ searchParams }: { searchParams
           <CompanySignInForm next={next} />
         </div>
         <ul className="mt-6 space-y-2 text-xs text-muted">
-          <li>HR contacts manage their company&apos;s people and teams. Team heads and employees see their own learning.</li>
+          <li>Company admins manage their company&apos;s people and teams. Team leads see their team; everyone sees their own learning.</li>
           <li>
             Not invited by a company? <Link href="/learn" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.
           </li>

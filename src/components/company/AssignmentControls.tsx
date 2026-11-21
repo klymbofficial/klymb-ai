@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignAllWithout, assignCourse, unassignCourse, type AssignResult } from "@/app/org/[slug]/learning/actions";
+import { assignAllWithout, assignCourse, unassignCourse, type AssignResult } from "@/app/org/[slug]/(workspace)/learning/actions";
 import { ProgressTable } from "@/components/company/ProgressTable";
 import { unassignedCount } from "@/lib/company/assign-rules";
 import type { MemberProgress } from "@/lib/company/progress-data";
@@ -10,10 +10,10 @@ const btn =
   "border-2 border-ink px-3 py-1.5 text-xs font-bold transition-colors hover:bg-ink hover:text-paper disabled:cursor-not-allowed disabled:opacity-60";
 
 /**
- * HR's Learning table: the progress table with an Assign / Remove button on
+ * The admin's Learning table: the progress table with an Assign / Remove button on
  * each row, the "assign to everyone without it" bar above it, and the last
  * result. All the rules live on the server (learning/actions.ts); this only
- * shows the numbers HR is about to act on, and asks before a bulk change.
+ * shows the numbers the admin is about to act on, and asks before a bulk change.
  */
 export function AssignmentControls({ slug, rows, total, seats }: { slug: string; rows: MemberProgress[]; total: number; seats: number }) {
   const [result, setResult] = useState<AssignResult | null>(null);

@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { assignEveryoneWithout, assignOne, loadAssignState, unassignOne } from "@/lib/company/assignments";
 import { logCompany } from "@/lib/company/audit";
-import { hrFor } from "@/lib/company/auth";
+import { adminFor } from "@/lib/company/auth";
 import { db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 
 export type AssignResult = { ok: true; message: string } | { ok: false; message: string };
 
-const NOT_ALLOWED: AssignResult = { ok: false, message: "Only your company's HR can do this. Try signing in again." };
+const NOT_ALLOWED: AssignResult = { ok: false, message: "Only your company's admin can do this. Try signing in again." };
 const UNAVAILABLE: AssignResult = { ok: false, message: "That didn't work just now. Please try again in a minute." };
 const NOT_MEMBER: AssignResult = { ok: false, message: "That person isn't in your company." };
 const FULL = (seats: number): AssignResult => ({
@@ -22,9 +22,9 @@ function refresh(slug: string) {
   revalidatePath(`/org/${slug}`);
 }
 
-/** Assigns System Design to one active member of the HR person's own company. */
+/** Assigns System Design to one active member of the admin's own company. */
 export async function assignCourse(slug: string, rawEmail: string): Promise<AssignResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const email = normaliseEmail(rawEmail);
   if (!email) return NOT_MEMBER;
@@ -36,6 +36,7 @@ export async function assignCourse(slug: string, rawEmail: string): Promise<Assi
   if (!state.member) return NOT_MEMBER;
   if (state.ownAccess) return { ok: false, message: `${email} already has the course of their own. Nothing to assign.` };
   if (state.assigned) return { ok: false, message: `${email} already has the course assigned.` };
+  if (state.elsewhere) return { ok: false, message: `${email} already has System Design through another workspace, so it can't be assigned here as well.` };
   if (state.used >= state.seats) return FULL(state.seats);
 
   const written = await assignOne(sql, hr.companyId, email, hr.email);
@@ -48,7 +49,7 @@ export async function assignCourse(slug: string, rawEmail: string): Promise<Assi
 
 /** Takes the course back from one person. Their lesson record is kept. */
 export async function unassignCourse(slug: string, rawEmail: string): Promise<AssignResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const email = normaliseEmail(rawEmail);
   if (!email) return NOT_MEMBER;
@@ -65,12 +66,12 @@ export async function unassignCourse(slug: string, rawEmail: string): Promise<As
 
 /**
  * Assigns everyone who has no assignment and no course of their own. `expected`
- * is the number the HR person was shown and confirmed; if it isn't the real
+ * is the number the admin was shown and confirmed; if it isn't the real
  * number any more, or it would pass the seat count, nobody is assigned.
  * The audit entry records the count, never the list.
  */
 export async function assignAllWithout(slug: string, expected: number): Promise<AssignResult> {
-  const hr = await hrFor(slug);
+  const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   if (!Number.isInteger(expected) || expected < 1) return { ok: false, message: "There is nobody to assign." };
   const sql = db();
