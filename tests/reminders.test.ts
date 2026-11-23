@@ -1,11 +1,11 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { buildReminder, slotForIstHour, streakEnding, type ReminderInput } from "../src/lib/reminders";
+import { buildReminder, slotAtHour, streakEnding, type ReminderInput } from "../src/lib/reminders";
 
 const base: ReminderInput = { slot: "morning", name: "Divya", day: 4, title: "API testing", minutes: 105, kind: "build", streak: 3, doneToday: false, behind: false, seed: 1 };
 
-test("slots map to IST hours, nothing before 8am", () => {
-  assert.deepEqual([7, 9, 14, 20].map(slotForIstHour), [null, "morning", "midday", "night"]);
+test("each slot is one hour of the learner's own day, so an hourly run sends it once", () => {
+  assert.deepEqual([7, 9, 10, 14, 15, 20, 21].map(slotAtHour), [null, "morning", null, "midday", null, "night", null]);
 });
 
 test("once today is done, only the morning message ever goes", () => {

@@ -2,6 +2,7 @@ import "server-only";
 import { db, type Db } from "@/lib/db/client";
 import { SD_COURSE } from "@/lib/sd-offer";
 import type { SdProgress } from "@/lib/sd-pace";
+import { IST, timeZoneOf } from "@/lib/timezone";
 
 /** Postgres: no such table. */
 const UNDEFINED_TABLE = "42P01";
@@ -13,7 +14,7 @@ const UNDEFINED_TABLE = "42P01";
  */
 export async function sdProgress(email: string, sql: Db | null = db()): Promise<SdProgress | null> {
   if (!sql) return null;
-  const [passes, finals, seat] = await Promise.all([
+  const [passes, finals, seat, zone] = await Promise.all([
     sql.rows<{ lesson: string; passed_at: string }>`
       select lesson, passed_at from course.lesson_checks
        where email = ${email} and course = ${SD_COURSE} and passed_at is not null
@@ -29,6 +30,8 @@ export async function sdProgress(email: string, sql: Db | null = db()): Promise<
         left join course.payments p on p.id = e.payment_id
        where e.email = ${email} and e.course = ${SD_COURSE} and e.status = 'active'
     `,
+    // On its own, so a database without 0048 still reads progress, on India time.
+    sql.row<{ timezone: string }>`select timezone from course.enrollments where email = ${email} and course = ${SD_COURSE}`,
   ]);
   // Code can go live before its migration. Only the final needs this table, so lesson checks mustn't stop without it.
   const noFinals = finals.error?.code === UNDEFINED_TABLE;
@@ -41,5 +44,26 @@ export async function sdProgress(email: string, sql: Db | null = db()): Promise<
     passes: (passes.data ?? []).map((p) => ({ lesson: p.lesson, at: new Date(p.passed_at).toISOString() })),
     finals: (finals.data ?? []).map((f) => ({ attempt: f.attempt, score: f.score, at: new Date(f.taken_at).toISOString() })),
     refundable: !!seat.data?.refundable,
+    timeZone: timeZoneOf(zone.data?.timezone) ?? IST,
   };
+}
+
+/**
+ * Puts a seat on the learner's own time zone, from the device they open the
+ * course on, until their first lesson check passes. From then on it's fixed,
+ * so moving a clock can't stretch a day. Quiet on failure: a seat it can't
+ * update stays on its zone (India time by default).
+ */
+export async function settleSdTimeZone(email: string, timeZone: string | null, sql: Db | null = db()) {
+  const zone = timeZoneOf(timeZone);
+  if (!sql || !zone) return;
+  const { error } = await sql.run`
+    update course.enrollments set timezone = ${zone}, updated_at = now()
+     where email = ${email} and course = ${SD_COURSE} and timezone <> ${zone}
+       and not exists (
+         select 1 from course.lesson_checks c
+          where c.email = ${email} and c.course = ${SD_COURSE} and c.passed_at is not null
+       )
+  `;
+  if (error && error.code !== "42703") console.error("time zone update failed:", error.code, error.message);
 }

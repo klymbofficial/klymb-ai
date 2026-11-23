@@ -18,12 +18,16 @@ export type OrderResult =
   | { ok: true; id: string; amount: number; currency: string }
   | { ok: false; status: 401 | 500; message: string };
 
-/** POST /v1/orders. Amount is in paise. */
+/**
+ * POST /v1/orders. Amount is in the currency's smallest unit (paise, cents,
+ * yen). Any currency but INR needs International Payments switched on in
+ * the Razorpay dashboard.
+ */
 export async function createOrder(
   keys: { keyId: string; keySecret: string },
-  { amount, receipt, notes }: { amount: number; receipt: string; notes?: Record<string, string> },
+  { amount, currency = "INR", receipt, notes }: { amount: number; currency?: string; receipt: string; notes?: Record<string, string> },
 ): Promise<OrderResult> {
-  if (!Number.isInteger(amount) || amount < 100) return { ok: false, status: 500, message: "Amount below 100 paise" };
+  if (!Number.isInteger(amount) || amount < 100) return { ok: false, status: 500, message: `Amount below 100 in ${currency}'s smallest unit` };
 
   const res = await fetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
@@ -31,7 +35,7 @@ export async function createOrder(
       "Content-Type": "application/json",
       Authorization: `Basic ${Buffer.from(`${keys.keyId}:${keys.keySecret}`).toString("base64")}`,
     },
-    body: JSON.stringify({ amount, currency: "INR", receipt, notes }),
+    body: JSON.stringify({ amount, currency, receipt, notes }),
     cache: "no-store",
   }).catch(() => null);
 

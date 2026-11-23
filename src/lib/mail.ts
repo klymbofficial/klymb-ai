@@ -253,10 +253,10 @@ export function sdReceiptEmail(p: { name: string; amount: string; paymentId: str
 }
 
 /** Sent once per lesson to learners waiting on it: the two-day rule is only fair if they hear it's out. */
-export function sdLessonOutEmail(p: { name: string; day: number; title: string; refundable: boolean; siteUrl: string; supportEmail: string }) {
+export function sdLessonOutEmail(p: { name: string; day: number; title: string; refundable: boolean; midnight: string; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
   const subject = `Day ${p.day} is out`;
-  const line = `Day ${p.day} of System Design is out: ${p.title}. Pass its check today or tomorrow to keep your streak${p.refundable ? " and your refund" : ""}. The day ends at midnight India time.`;
+  const line = `Day ${p.day} of System Design is out: ${p.title}. Pass its check today or tomorrow to keep your streak${p.refundable ? " and your refund" : ""}. The day ends at ${p.midnight}.`;
   const text = [`Hi ${p.name},`, "", line, "", `${p.siteUrl}/learn/system-design`, "", `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai"].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
@@ -670,6 +670,8 @@ export function sdReminderEmail(p: {
   target: { kind: "lesson"; title: string; minutes: number; position: number } | { kind: "assessment" };
   /** They can still earn the refund for finishing on schedule, so it's worth saying. */
   refund: boolean;
+  /** "midnight India time", or "midnight your time" for a learner elsewhere. */
+  midnight: string;
   url: string;
   unsubscribeUrl: string;
   siteUrl: string;
@@ -682,14 +684,14 @@ export function sdReminderEmail(p: {
   // "Hello Suyash," when we know the name, else "Hello there,".
   const hello = `Hello ${p.name || "there"},`;
   const intro = lesson
-    ? `Today's lesson is ready: about ${lesson.minutes} minutes. Pass its check before midnight India time to keep your streak${p.refund ? " and your 100% refund" : ""}.`
+    ? `Today's lesson is ready: about ${lesson.minutes} minutes. Pass its check before ${p.midnight} to keep your streak${p.refund ? " and your 100% refund" : ""}.`
     : p.refund
-      ? "You've passed every lesson. Score 70% or higher on the final assessment before midnight India time to earn your 100% refund."
+      ? `You've passed every lesson. Score 70% or higher on the final assessment before ${p.midnight} to earn your 100% refund.`
       : "You've passed every lesson. The final assessment is the last step to finishing the course.";
   const points = lesson
     ? [
         { title: `Lesson ${lesson.position}: ${lesson.title}`, body: `A short video, then a quick check. About ${lesson.minutes} minutes.` },
-        { title: "Pass the check", body: "That is what marks the day done. The next day opens at midnight India time." },
+        { title: "Pass the check", body: `That is what marks the day done. The next day opens at ${p.midnight}.` },
       ]
     : [
         { title: "Six questions", body: "One of each type you have practised, across the whole course." },

@@ -116,6 +116,10 @@ export function emailFromToken(token: unknown, secret: string | undefined): stri
 export const SD_PUSH_SLOTS = ["morning", "evening", "night"] as const;
 export type SdPushSlot = (typeof SD_PUSH_SLOTS)[number];
 
+/** The hour of a learner's own day each push goes at: 8 AM, 5 PM and 9 PM. */
+const SLOT_HOURS: Record<number, SdPushSlot> = { 8: "morning", 17: "evening", 21: "night" };
+export const slotAtHour = (hour: number): SdPushSlot | null => SLOT_HOURS[hour] ?? null;
+
 /** A lesson's own hook: the question at 8 AM, then what the learner would do at 5 PM. */
 const PUSH_HOOKS: Record<string, { morning: string; topic: string; evening: string; eveningBody: string }> = {
   "0-0": { morning: "Last pair, do buyers. Kaise? 🤔", topic: "system design hota kya hai", evening: "Dono ko “Order confirmed”. Galti kahan hui?", eveningBody: "Stock check karna kaafi hai?" },

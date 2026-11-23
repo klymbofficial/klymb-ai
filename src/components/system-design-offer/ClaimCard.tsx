@@ -8,8 +8,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { courseSignIn } from "@/app/(course)/learn/system-design/actions";
 import { offerSignIn, offerSwitchAccount } from "@/app/(course)/system-design/actions";
 import { FINAL_MARK } from "@/lib/sd-pace";
-import { formatINR } from "@/lib/format";
-import { localEstimate, type LocalRate } from "@/lib/local-price";
+import { formatMoney, priceIn, type Market } from "@/lib/pricing";
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { trackOffer, type OfferStep } from "@/lib/sd-offer-track";
 import { keptIntern } from "./RememberIntern";
@@ -78,9 +77,9 @@ function Countdown({ endsAt, serverNow, onEnd }: { endsAt: number; serverNow: nu
  * first, for the email, and comes back here with the form as they left it.
  * Signed in, it saves their answers and opens Razorpay.
  */
-export function ClaimCard({ offer, email, name: startName, phone: startPhone, linkedin: startLinkedin, role: startRole, campaign, referral, coupon: startCoupon, local, resume, signInFailed, inApp }: {
+export function ClaimCard({ offer, email, name: startName, phone: startPhone, linkedin: startLinkedin, role: startRole, campaign, referral, coupon: startCoupon, market, resume, signInFailed, inApp }: {
   offer: SdOfferState; email: string | null; name: string; phone: string; linkedin: string; role: SdRole | ""; campaign: string | null;
-  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; local: LocalRate | null; resume: boolean; signInFailed: boolean; inApp: boolean;
+  referral: { code: string; invitedBy: string } | null; coupon: { code: string; price: number | null } | null; market: Market; resume: boolean; signInFailed: boolean; inApp: boolean;
 }) {
   const router = useRouter();
   const signIn = useRef<HTMLFormElement>(null);
@@ -108,9 +107,14 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
   const badLinkedin = tried ? linkedInProblem(linkedin) : null;
   const badRef = tried ? referralCodeProblem(ref) : null;
   const badCoupon = (tried ? couponCodeProblem(coupon) : null) || couponError || null;
-  // The price shown is the one the server will charge: the coupon's, never above today's.
-  const price = withCoupon(offer.price, applied);
-  const discounted = price < offer.full;
+  // The price shown is the one the server will charge: the coupon's, never above today's, in their own currency.
+  const price = priceIn(market, withCoupon(offer.price, applied));
+  const full = priceIn(market, offer.full);
+  const before = priceIn(market, offer.price);
+  const discounted = price < full;
+  // The offer only matters where it changes the price: the US pays $20 either way.
+  const offerShown = offer.open && before < full;
+  const money = (amount: number) => formatMoney(amount, market.currency);
 
   const fail = (message: string) => { setBusy(false); setError(message); };
   const step = (s: OfferStep) => trackOffer(s, { inApp, campaign, coupon: applied?.code ?? startCoupon?.code ?? null, intern: keptIntern() });
@@ -126,7 +130,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
     const res = await fetch("/api/sd/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...details, campaign, intern: keptIntern() }),
+      body: JSON.stringify({ ...details, campaign, intern: keptIntern(), country: market.country }),
     }).catch(() => null);
     const order = await res?.json().catch(() => null);
     if (order?.enrolled) return router.push("/learn/system-design");
@@ -212,16 +216,15 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
           <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#e7c97a_1.2px,transparent_1.6px)] [background-size:16px_16px] opacity-[.18]" />
           <div className="relative flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-extrabold tracking-[.12em] text-[#f3d48a] uppercase">{applied && price < offer.price ? "With your coupon · full course" : offer.discounted && !offer.open ? "Your locked price · full course" : "Full course"}</span>
+              <span className="text-[11px] font-extrabold tracking-[.12em] text-[#f3d48a] uppercase">{applied && price < before ? "With your coupon · full course" : discounted && !offer.open ? "Your locked price · full course" : "Full course"}</span>
               <div className="flex items-baseline gap-3">
-                <span className="text-[52px] leading-[.9] font-extrabold tracking-[-.05em] lg:text-[64px]">{formatINR(price)}</span>
-                {discounted && <span className="text-xl font-bold text-[rgba(251,246,238,.7)] line-through decoration-[#f0868b] decoration-2">{formatINR(offer.full)}</span>}
+                <span className="text-[52px] leading-[.9] font-extrabold tracking-[-.05em] lg:text-[64px]">{money(price)}</span>
+                {discounted && <span className="text-xl font-bold text-[rgba(251,246,238,.7)] line-through decoration-[#f0868b] decoration-2">{money(full)}</span>}
               </div>
-              {local && <span className="text-[13px] font-semibold text-[#f3d48a]">{localEstimate(price, local)}. Charged in INR; your bank converts it.</span>}
             </div>
-            {discounted && <span className="sd-offer-pop rounded-[10px] bg-[#e7c97a] px-3 py-2 text-[15px] leading-none font-extrabold text-[#2a1d05] shadow-[0_6px_18px_rgba(0,0,0,.25)]">{offPercent(price, offer.full)}% off</span>}
+            {discounted && <span className="sd-offer-pop rounded-[10px] bg-[#e7c97a] px-3 py-2 text-[15px] leading-none font-extrabold text-[#2a1d05] shadow-[0_6px_18px_rgba(0,0,0,.25)]">{offPercent(price, full)}% off</span>}
           </div>
-          {offer.open && (
+          {offerShown && (
             <div className="relative mt-4 flex flex-wrap items-center gap-2.5">
               <span className="text-xs font-bold text-[#f3d48a]">Offer ends {SD_OFFER.endsLabel}, in</span>
               <Countdown endsAt={offer.endsAt} serverNow={offer.now} onEnd={router.refresh} />
@@ -270,7 +273,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               <input type="text" value={ref} onChange={(e) => setRef(e.target.value.toUpperCase())} placeholder="From a friend's link" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={20} aria-invalid={!!badRef} className={clsx(input, badRef ? "border-[#83050b]" : "border-transparent")} />
             </label>
             {/* No coupon box: a code only comes from its shared link (?coupon=), applied before they arrive. */}
-            {applied && <span role="status" className="text-[13px] font-semibold text-[#2f6b2f]">{applied.code} applied. You pay {formatINR(price)}.</span>}
+            {applied && price < before && <span role="status" className="text-[13px] font-semibold text-[#2f6b2f]">{applied.code} applied. You pay {money(price)}.</span>}
             <div role="radiogroup" aria-label="I am a" className="flex flex-col gap-1.5">
               <span className={label}>I am a</span>
               <div className="grid grid-cols-2 gap-2">
@@ -312,7 +315,7 @@ export function ClaimCard({ offer, email, name: startName, phone: startPhone, li
               </div>
             )}
             <button type="submit" disabled={busy} className="relative flex h-[58px] cursor-pointer items-center justify-between overflow-hidden rounded-xl border-0 bg-[#83050b] px-5 text-[17px] font-extrabold text-[#fbf6ee] shadow-[0_10px_24px_-8px_rgba(131,5,11,.7)] hover:bg-[#690409] disabled:cursor-wait disabled:opacity-80">
-              {busy ? (email ? "Reserving your seat…" : "Taking you to Google…") : `Claim my ${formatINR(price)} seat`}<ArrowRight size={20} aria-hidden="true" />
+              {busy ? (email ? "Reserving your seat…" : "Taking you to Google…") : `Claim my ${money(price)} seat`}<ArrowRight size={20} aria-hidden="true" />
             </button>
           </form>
           <form ref={signIn} action={offerSignIn} hidden>

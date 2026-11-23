@@ -39,6 +39,11 @@ export async function POST(req: Request) {
       console.error("webhook referral credit failed:", action.orderId, credit.error.code);
       return NextResponse.json({ error: "Retry" }, { status: 500 });
     }
+    // A foreign-currency payment's worth in rupees, as Razorpay converted it. Replaces our estimate from the order; never blocks.
+    if (action.inr) {
+      const worth = await sql.run`update course.payments set amount_inr = ${action.inr} where razorpay_order_id = ${action.orderId}`;
+      if (worth.error) console.error("webhook INR value failed:", action.orderId, worth.error.code);
+    }
     after(() => sendReceiptOnce(action.orderId));
   } else if (action.kind === "failed") {
     // A failed attempt only marks an order nobody has paid yet; the learner can retry.

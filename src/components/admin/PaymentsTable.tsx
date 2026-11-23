@@ -5,6 +5,7 @@ import { refund } from "@/app/admin/payment-actions";
 import { daysUntilCohortEnds, REFUND_EMAIL } from "@/lib/admin/access";
 import type { PaymentRow } from "@/lib/admin/data";
 import { formatINR } from "@/lib/format";
+import { formatMinor } from "@/lib/pricing";
 import { SD_COURSE, SD_REFERRAL } from "@/lib/sd-offer";
 
 const dateTime = (iso: string) =>
@@ -49,7 +50,10 @@ export function PaymentsTable({ rows, canRefund }: { rows: PaymentRow[]; canRefu
                 {p.referred_by && <span className="block text-xs text-muted">Referred by {p.referred_by}</span>}
               </td>
               <td className="px-4 py-3">{p.track}</td>
-              <td className="px-4 py-3 font-bold">{formatINR(p.amount / 100)}</td>
+              <td className="px-4 py-3 font-bold">
+                {formatINR(p.amount / 100)}
+                {p.currency !== "INR" && <span className="block text-xs font-normal text-muted">Paid {formatMinor(p.charged, p.currency)}</span>}
+              </td>
               <td className="px-4 py-3 font-mono text-xs">{p.razorpay_payment_id}</td>
               <td className="px-4 py-3"><RefundCell payment={p} canRefund={canRefund} /></td>
             </tr>
@@ -129,7 +133,7 @@ function RefundCell({ payment, canRefund }: { payment: PaymentRow; canRefund: bo
             </span>
           )}
           <label htmlFor={`refund-${payment.id}`} className="text-xs font-bold text-red-deep">
-            Type {payment.email} to refund {formatINR(payment.amount / 100)}
+            Type {payment.email} to refund {formatMinor(payment.charged, payment.currency)}
           </label>
           <input
             id={`refund-${payment.id}`} value={typed} onChange={(e) => setTyped(e.target.value)}

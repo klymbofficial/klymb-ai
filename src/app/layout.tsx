@@ -5,6 +5,7 @@ import { MetaPixel } from "@/components/legal/MetaPixel";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SupportBot } from "@/components/support/SupportBot";
+import { TimeZoneCookie } from "@/components/TimeZoneCookie";
 import { preload } from "react-dom";
 import { site } from "@/data/config";
 import "./fonts.css";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         {children}
         <ServiceWorkerRegister />
+        <TimeZoneCookie />
         {/* Kamran's help, on the public site and the learner app (hidden in admin). */}
         <SupportBot />
         {/* Cookieless, first-party (/_vercel/*): live visitors and real-user page speed in the Vercel dashboard. */}

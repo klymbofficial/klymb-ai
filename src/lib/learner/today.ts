@@ -18,14 +18,16 @@ export type TodayAction =
   | { kind: "paced"; day: number };
 
 export function todayAction({
-  days, submissions, price, paid, today,
+  days, submissions, price, paid, today, timeZone,
 }: {
   days: { day: number }[];
   submissions: { day: number; submitted_at: string }[];
   price: number;
   paid: boolean;
-  /** Today's date in IST, YYYY-MM-DD. */
+  /** Today's date in the learner's time zone, YYYY-MM-DD. */
   today: string;
+  /** The learner's time zone, India time when not given. */
+  timeZone?: string;
 }): TodayAction {
   const done = new Set(submissions.map((s) => s.day));
   const next = days.find((d) => !done.has(d.day));
@@ -33,6 +35,6 @@ export function todayAction({
 
   const lock = dayLockFor({ day: next.day, price, paid, submittedDays: done });
   if (lock === "pay") return { kind: "pay", day: next.day };
-  if (newDaysOn(today, next.day, submissions) >= MAX_NEW_DAYS_PER_DAY) return { kind: "paced", day: next.day };
+  if (newDaysOn(today, next.day, submissions, timeZone) >= MAX_NEW_DAYS_PER_DAY) return { kind: "paced", day: next.day };
   return { kind: "open", day: next.day, started: done.size > 0 };
 }

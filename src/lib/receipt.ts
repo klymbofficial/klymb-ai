@@ -1,7 +1,7 @@
 import "server-only";
 import { site } from "@/data/config";
 import { getTrack } from "@/data/tracks";
-import { formatINR } from "@/lib/format";
+import { formatMinor } from "@/lib/pricing";
 import { db } from "@/lib/db/client";
 import { MAIL_SUPPORT, mailReady, sdReceiptEmail, sendMail, thankYouEmail } from "@/lib/mail";
 import { referralFor } from "@/lib/referrals";
@@ -19,12 +19,12 @@ export async function sendReceiptOnce(orderId: string) {
   if (!sql || !mailReady()) return;
 
   const { data: pay } = await sql.row<{
-    id: string; email: string; track: string; amount: number;
+    id: string; email: string; track: string; amount: number; currency: string;
     razorpay_payment_id: string | null; cohort_start: string;
   }>`
     update course.payments set receipt_sent_at = ${new Date().toISOString()}
      where razorpay_order_id = ${orderId} and status = 'paid' and receipt_sent_at is null
-    returning id, email, track, amount, razorpay_payment_id, cohort_start
+    returning id, email, track, amount, currency, razorpay_payment_id, cohort_start
   `;
   if (!pay) return;
 
@@ -38,7 +38,7 @@ export async function sendReceiptOnce(orderId: string) {
 
   const details = {
     name: reg?.name?.split(" ")[0] || "there",
-    amount: formatINR(pay.amount / 100),
+    amount: formatMinor(pay.amount, pay.currency),
     paymentId: pay.razorpay_payment_id ?? orderId,
     siteUrl: site.url,
     supportEmail: MAIL_SUPPORT,

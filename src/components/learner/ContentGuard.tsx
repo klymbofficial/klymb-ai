@@ -13,7 +13,7 @@ import { useEffect, useRef } from "react";
  */
 export function ContentGuard({ email, children }: { email: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const stamp = `${email} · ${new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium" }).format(new Date())}`;
+  const stamp = `${email} · ${new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date())}`;
 
   useEffect(() => {
     const el = ref.current;

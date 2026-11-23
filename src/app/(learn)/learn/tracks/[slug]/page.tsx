@@ -22,7 +22,9 @@ import { getTrack, publicPath } from "@/data/tracks";
 import { formatDate } from "@/lib/format";
 import { topicsFor } from "@/lib/coach/topics";
 import { requireLearner } from "@/lib/learner/data";
-import { cohortDayDate, todayInIndia } from "@/lib/learn";
+import { cohortDayDate, todayIn } from "@/lib/learn";
+import { learnerTimeZone } from "@/lib/learner/zone";
+import { db } from "@/lib/db/client";
 import { getCurriculum } from "@/data/curricula";
 
 export const metadata: Metadata = { title: "My track", robots: { index: false, follow: false } };
@@ -84,7 +86,8 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
 
   // What to do today, from the learner's own submissions. Once every day is
   // submitted there is no next day: the page says the track is complete.
-  const action = todayAction({ days, submissions, price: track.price, paid, today: todayInIndia() });
+  const zone = await learnerTimeZone(db(), learner.id);
+  const action = todayAction({ days, submissions, price: track.price, paid, today: todayIn(zone), timeZone: zone });
   const todayDay = action.kind === "complete" ? null : days.find((d) => d.day === action.day) ?? null;
   const todayEntry = todayDay ? curriculum.days.find((d) => d.day === todayDay.day) ?? null : null;
   const focusDay = todayDay?.day ?? days[days.length - 1].day;

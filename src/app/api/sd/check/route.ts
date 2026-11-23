@@ -6,7 +6,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { gradeLesson, isBuiltLesson, isFreeLesson, lessonReview } from "@/lib/sd-lessons";
 import { SD_COURSE } from "@/lib/sd-offer";
 import { canTake, lockedMessage, paceOf } from "@/lib/sd-pace";
-import { sdProgress } from "@/lib/sd-progress";
+import { sdProgress, settleSdTimeZone } from "@/lib/sd-progress";
+import { viewerTimeZone } from "@/lib/viewer-tz";
 
 const picksOf = (v: unknown) => (Array.isArray(v) && v.length <= 20 && v.every((p) => p === null || Number.isInteger(p)) ? (v as (number | null)[]) : null);
 
@@ -33,6 +34,8 @@ export async function POST(req: Request) {
 
   const sql = db();
   if (email && sql) {
+    // A first pass fixes their time zone, so it's set from this device before it can happen.
+    await settleSdTimeZone(email, await viewerTimeZone(), sql);
     const before = await sdProgress(email, sql);
     if (!before) return NextResponse.json({ error: "Could not check your progress. Please try again." }, { status: 500 });
     const pace = paceOf(before);

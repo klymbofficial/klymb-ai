@@ -8,7 +8,8 @@ import { announcementsFor } from "@/lib/sd-announcements";
 import { SD_WHATSAPP_GROUP, hasPaidSeat } from "@/lib/sd-community";
 import { lessonContent } from "@/lib/sd-lessons";
 import { SD_COURSE, type ReferralStanding } from "@/lib/sd-offer";
-import { sdProgress } from "@/lib/sd-progress";
+import { sdProgress, settleSdTimeZone } from "@/lib/sd-progress";
+import { viewerTimeZone } from "@/lib/viewer-tz";
 
 export const metadata: Metadata = {
   title: "System Design course",
@@ -26,6 +27,8 @@ export default async function SystemDesignCoursePage() {
   const email = verifiedEmailFrom(session);
   const enrolled = !!email && (await hasCourseAccess(email, SD_COURSE));
   const referral: ReferralStanding = !email ? { view: null, why: "signin" } : enrolled ? await referralStanding(email) : { view: null, why: "buy" };
+  // Until their first pass, the seat follows the zone of the device they open the course on.
+  if (email && enrolled) await settleSdTimeZone(email, await viewerTimeZone());
   const [passes, progress, paid] = email && enrolled ? await Promise.all([lessonPasses(email, SD_COURSE), sdProgress(email), hasPaidSeat(email)]) : [{}, null, false];
   const announcements = email && enrolled ? await announcementsFor(paid) : [];
   return (

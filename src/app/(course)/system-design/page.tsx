@@ -11,7 +11,7 @@ import { inviterFor } from "@/lib/referrals";
 import { couponOf, couponProblem, findCoupon } from "@/lib/sd-coupons";
 import { findInternCode } from "@/lib/intern-codes";
 import { internCodeOf } from "@/lib/internship";
-import { localRate } from "@/lib/local-price";
+import { marketOf, visitorCountry } from "@/lib/local-price";
 import { MODULES } from "@/data/system-design/course-app";
 import { site } from "@/data/config";
 import { SD_COURSE, campaignOf, inAppBrowser, refOf, sdOfferState, sdPriceNow, type SdRole } from "@/lib/sd-offer";
@@ -63,10 +63,9 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
   const found = couponCode && sql ? (await findCoupon(sql, couponCode)).data : null;
   const coupon = couponCode ? { code: couponCode, price: found && !couponProblem(found) ? found.price : null } : null;
 
-  // Outside India, a rough local figure next to the INR price. `?country=` is for trying it locally.
+  // Prices in the visitor's own currency, as the order will charge them. `?country=` is for trying it on a local machine.
   const h = await headers();
-  const country = process.env.NODE_ENV === "development" && params.country ? params.country : h.get("x-vercel-ip-country");
-  const local = await localRate(country);
+  const market = await marketOf(await visitorCountry(params.country));
 
   return (
     <>
@@ -81,7 +80,7 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
         referral={invitedBy ? { code: ref!, invitedBy } : null}
         coupon={coupon}
         intern={intern}
-        local={local}
+        market={market}
         resume={params.claim === "1"}
         signInFailed={params.signin === "failed"}
         inApp={inAppBrowser(h.get("user-agent") ?? "")}

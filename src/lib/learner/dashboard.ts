@@ -10,7 +10,9 @@ import { ALL_IDS, LESSON_COUNT, badges, serverState } from "@/lib/course-app";
 import { db } from "@/lib/db/client";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { SD_COURSE } from "@/lib/sd-offer";
-import { istDay, paceOf, type SdProgress } from "@/lib/sd-pace";
+import { paceOf, type SdProgress } from "@/lib/sd-pace";
+import { IST, dayIn, minutesIn } from "@/lib/timezone";
+import { viewerTimeZone } from "@/lib/viewer-tz";
 import { bestQuizScores } from "@/lib/challenge-quiz";
 import { hasInterest } from "@/lib/hackathon";
 import { WEBINAR } from "@/lib/webinar";
@@ -268,8 +270,8 @@ async function webinarSignedUp(email: string) {
   return !!data;
 }
 
-/** Finished steps per day, in India time: lessons passed, days submitted, modules marked done, quizzes taken. */
-async function activityByDay(places: { learner: Learner; submissions: Submission[] }[], progress: SdProgress | null, reading: Record<string, { done_at: string | null }[]>) {
+/** Finished steps per day, in `timeZone`: lessons passed, days submitted, modules marked done, quizzes taken. */
+async function activityByDay(places: { learner: Learner; submissions: Submission[] }[], progress: SdProgress | null, reading: Record<string, { done_at: string | null }[]>, timeZone: string) {
   const sql = db();
   const ids = places.map((p) => p.learner.id);
   const quizzes = sql && ids.length
@@ -282,7 +284,7 @@ async function activityByDay(places: { learner: Learner; submissions: Submission
     ...quizzes.map((q) => q.taken_at),
   ].filter((t): t is string => !!t);
   const out: Record<string, number> = {};
-  for (const t of times) { const d = istDay(t); out[d] = (out[d] ?? 0) + 1; }
+  for (const t of times) { const d = dayIn(t, timeZone); out[d] = (out[d] ?? 0) + 1; }
   return out;
 }
 
@@ -294,14 +296,17 @@ async function activityByDay(places: { learner: Learner; submissions: Submission
  */
 export async function loadDashboard(email: string, places: { learner: Learner; submissions: Submission[] }[]): Promise<Dashboard> {
   const enrolled = await hasCourseAccess(email, SD_COURSE);
-  const [progress, scores, reading, quiz, webinarRegistered, hackathonInterest] = await Promise.all([
+  const [progress, scores, reading, quiz, webinarRegistered, hackathonInterest, viewerZone] = await Promise.all([
     enrolled ? sdProgress(email) : Promise.resolve(null),
     enrolled ? lessonPasses(email, SD_COURSE) : Promise.resolve({} as Record<string, number>),
     readingRows(email),
     weeklyQuiz(places),
     webinarSignedUp(email),
     hasInterest(email),
+    viewerTimeZone(),
   ]);
+  // Their day: this device's zone, else their System Design seat's, else India time.
+  const zone = viewerZone ?? progress?.timeZone ?? IST;
 
   const courses: DashCourse[] = [];
   const list: CourseBadge[] = [];
@@ -330,14 +335,12 @@ export async function loadDashboard(email: string, places: { learner: Learner; s
     badges: list,
     titles: Object.fromEntries(courses.map((c) => [c.key, c.title])),
     sd: enrolled ? { passes: scores, progress } : null,
-    activity: await activityByDay(places, progress, reading),
+    activity: await activityByDay(places, progress, reading, zone),
     quiz,
     webinarRegistered,
     hackathonInterest,
-    today: istDay(Date.now()),
-    minute: istNowMinute(),
+    today: dayIn(Date.now(), zone),
+    minute: minutesIn(Date.now(), zone),
   };
 }
 
-/** The minute of the day it is in India. */
-const istNowMinute = (now = new Date()) => (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % 1440;

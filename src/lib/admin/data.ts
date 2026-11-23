@@ -3,6 +3,7 @@ import { getAdmin } from "@/lib/admin/auth";
 import { db } from "@/lib/db/client";
 import { SD_COURSE } from "@/lib/sd-offer";
 import { paceOf, type Pace } from "@/lib/sd-pace";
+import { timeZoneOf } from "@/lib/timezone";
 import type { TrackSlug } from "@/types/program";
 
 export interface Registration {
@@ -181,7 +182,11 @@ export interface PaymentRow {
   email: string;
   track: TrackSlug | typeof SD_COURSE;
   cohort_start: string;
+  /** Its worth in INR paise: what totals add up. Equal to `charged` for an INR payment. */
   amount: number;
+  /** What the buyer was charged, in `currency`'s smallest unit: what a refund gives back. */
+  charged: number;
+  currency: string;
   status: "paid" | "refunded";
   razorpay_payment_id: string | null;
   /** The latest refund an admin asked Razorpay for, from the audit log. */
@@ -200,9 +205,10 @@ export async function getPayments(): Promise<PaymentRow[]> {
   if (!(await getAdmin())) return [];
   const sql = db();
   if (!sql) return [];
-  const [{ data }, { data: log }, { data: seats }, { data: passes }, { data: finals }] = await Promise.all([
+  const [{ data }, { data: log }, { data: seats }, { data: passes }, { data: finals }, { data: zones }] = await Promise.all([
     sql.rows<Omit<PaymentRow, "refund_request" | "friends" | "referral_earned_at" | "pace">>`
-      select id, created_at, email, track, cohort_start, amount, status, razorpay_payment_id, referrer_email as referred_by
+      select id, created_at, email, track, cohort_start, coalesce(amount_inr, case when currency = 'INR' then amount else 0 end) as amount, amount as charged, currency,
+             status, razorpay_payment_id, referrer_email as referred_by
         from course.payments
        where status in ('paid', 'refunded') and hidden_at is null
        order by created_at desc
@@ -227,13 +233,17 @@ export async function getPayments(): Promise<PaymentRow[]> {
     sql.rows<{ email: string; attempt: number; score: number; at: string }>`
       select email, attempt, score, taken_at as at from course.final_attempts where course = ${SD_COURSE}
     `,
+    // Each seat's time zone, on its own so a database without 0048 still lists payments, on India time.
+    sql.rows<{ email: string; timezone: string }>`select email, timezone from course.enrollments where course = ${SD_COURSE}`,
   ]);
+  const zoneOf = new Map((zones ?? []).map((z) => [z.email, z.timezone]));
 
   const paceFor = (email: string) => {
     const pace = paceOf({
       passes: (passes ?? []).filter((p) => p.email === email),
       finals: (finals ?? []).filter((f) => f.email === email),
       refundable: true,
+      timeZone: timeZoneOf(zoneOf.get(email)) ?? undefined,
     });
     return { refund: pace.refund, missed_on: pace.missedOn, day: pace.day };
   };
@@ -296,9 +306,9 @@ export async function getOverviewCounts(): Promise<OverviewCounts | null> {
     `,
     sql.row<{ paid: number; paid_amount: number; refunded: number; refunded_amount: number }>`
       select count(*) filter (where status = 'paid')::int                        as paid,
-             coalesce(sum(amount) filter (where status = 'paid'), 0)::int        as paid_amount,
+             coalesce(sum(coalesce(amount_inr, case when currency = 'INR' then amount else 0 end)) filter (where status = 'paid'), 0)::int        as paid_amount,
              count(*) filter (where status = 'refunded')::int                    as refunded,
-             coalesce(sum(amount) filter (where status = 'refunded'), 0)::int    as refunded_amount
+             coalesce(sum(coalesce(amount_inr, case when currency = 'INR' then amount else 0 end)) filter (where status = 'refunded'), 0)::int    as refunded_amount
         from course.payments
        where hidden_at is null
     `,

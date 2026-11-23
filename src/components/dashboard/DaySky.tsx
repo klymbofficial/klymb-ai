@@ -13,7 +13,7 @@ import "./day-sky.css";
  * ridges of hills. The name on it is in klymb.ai's red.
  */
 
-/* ─── Sky palette across the IST day ─────────────────────────
+/* ─── Sky palette across the viewer's day ────────────────────────
    Each stop is a minute-of-day; colours are interpolated linearly
    between neighbours so the sky drifts rather than jumps. */
 
@@ -96,14 +96,14 @@ function smoothstep(t: number) {
 }
 
 /* ─── Moon phase ─────────────────────────────────────────────
-   Phase for today's IST date, taken at IST noon, so it holds for the
+   Phase for the viewer's date, taken at noon IST, so it holds for the
    whole day and the server and the browser draw the same moon.
    0 = new, 0.5 = full; waxing is lit on the right. */
 
 const SYNODIC_DAYS = 29.530588853;
 const KNOWN_NEW_MOON_MS = Date.UTC(2000, 0, 6, 18, 14); // 2000-01-06 18:14 UTC
 
-/** `today` is the IST date, "2026-11-18". */
+/** `today` is the viewer's date, "2026-11-18". */
 function moonPhase(today: string): number {
   const [y, mo, d] = today.split("-").map(Number);
   const istNoonMs = Date.UTC(y, mo - 1, d, 6, 30); // 12:00 IST
@@ -442,11 +442,10 @@ function randomShootingStar(id: number): ShootingStar {
   };
 }
 
-/** Minutes past midnight in India, now. */
-function istMinuteNow(): number {
-  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
-  const n = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
-  return n("hour") * 60 + n("minute");
+/** Minutes past midnight on this device's clock, now. */
+function minuteNow(): number {
+  const now = new Date();
+  return now.getHours() * 60 + now.getMinutes();
 }
 
 /* Fixed star field (percent positions) so SSR and client match. */
@@ -483,8 +482,8 @@ export function SkyGreeting() {
 
 /**
  * The section the greeting and the stages sit in, with the sky behind them.
- * `minute` (minutes past midnight in India) and `today` (the IST date) come
- * from the server, so the first paint matches; from then on it follows the
+ * `minute` (minutes past midnight) and `today` (the date) come from the
+ * server in the viewer's time zone, so the first paint matches; from then on it follows the
  * clock. What sits on it reads --hero-ink, --hero-ink-soft and --hero-accent
  * (the name), or useSky().dark. The element marked data-sky-text is measured
  * so that, on phones, the sun and moon pass below it.
@@ -509,7 +508,7 @@ export function DaySky({ minute: initialMinute, today, children }: { minute: num
 
   // Follow the clock: now, then every minute.
   useEffect(() => {
-    const tick = () => setMinute(istMinuteNow());
+    const tick = () => setMinute(minuteNow());
     tick();
     const id = window.setInterval(tick, 60_000);
     return () => window.clearInterval(id);

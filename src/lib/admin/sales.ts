@@ -265,7 +265,7 @@ export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null
     sql.row<{ cur: number; prev: number; revenue: number }>`
       select count(distinct lower(email)) filter (where created_at >= ${s} and created_at < ${e})::int as cur,
              count(distinct lower(email)) filter (where created_at >= ${ps} and created_at < ${pe})::int as prev,
-             coalesce(sum(amount) filter (where created_at >= ${s} and created_at < ${e}), 0)::int as revenue
+             coalesce(sum(coalesce(amount_inr, case when currency = 'INR' then amount else 0 end)) filter (where created_at >= ${s} and created_at < ${e}), 0)::int as revenue
         from course.payments where status in ('paid', 'refunded') and created_at >= ${PAID_COUNTED_FROM}`,
     sql.row<{ cur: number; prev: number }>`
       select count(*) filter (where signed_at >= ${s} and signed_at < ${e})::int as cur,
