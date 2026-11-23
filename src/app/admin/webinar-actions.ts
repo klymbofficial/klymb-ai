@@ -5,7 +5,7 @@ import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { db } from "@/lib/db/client";
 import { MAIL_SUPPORT, mailReady, sendMail, webinarLiveEmail } from "@/lib/mail";
-import { WEBINAR } from "@/lib/webinar";
+import { WEBINAR, webinarOpen } from "@/lib/webinar";
 
 export type MeetSendResult = { ok: true; sent: number; skipped: number; failed: number; already: number } | { ok: false; message: string };
 
@@ -23,6 +23,7 @@ export async function sendMeetLinkTest(): Promise<MeetSendResult> {
   const admin = await getAdmin();
   if (!admin?.owner) return { ok: false, message: "Only owners can send this." };
   if (!mailReady()) return { ok: false, message: "Email isn't set up on this server." };
+  if (!webinarOpen()) return { ok: false, message: "This webinar is over, so its Meet link isn't sent any more." };
   const out = await sendMail({ to: { email: admin.email }, ...mailFor(admin.name), kind: "webinar.meet_link", idempotencyKey: `webinar-meet-test:${WEBINAR.slug}:${admin.email}:${Date.now()}` });
   await logAdmin(admin, "webinar.meet_link_test", WEBINAR.slug, { ok: out.ok });
   return out.ok ? { ok: true, sent: 1, skipped: 0, failed: 0, already: 0 } : { ok: false, message: `The test didn't go: ${out.reason}` };
@@ -37,6 +38,7 @@ export async function sendMeetLinkToAll(): Promise<MeetSendResult> {
   const admin = await getAdmin();
   if (!admin?.owner) return { ok: false, message: "Only owners can send this." };
   if (!mailReady()) return { ok: false, message: "Email isn't set up on this server." };
+  if (!webinarOpen()) return { ok: false, message: "This webinar is over, so its Meet link isn't sent any more." };
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
 

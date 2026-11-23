@@ -6,7 +6,7 @@ import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { WebinarMeetSend } from "@/components/admin/WebinarMeetSend";
 import { getWebinarRegistrations } from "@/lib/admin/webinars";
-import { WEBINAR } from "@/lib/webinar";
+import { WEBINAR, webinarOpen } from "@/lib/webinar";
 
 export const dynamic = "force-dynamic";
 // Sending the Meet link to everyone runs inside one request.
@@ -41,7 +41,8 @@ export default async function AdminWebinarsPage() {
         <EmptyState title="Nothing here yet" body="Registrations from /webinar land here instantly, newest first." />
       ) : (
         <div className="flex flex-col gap-6">
-          <WebinarMeetSend meetUrl={WEBINAR.meetUrl} total={list.length} />
+          {/* Only until the webinar ends: after that the Meet room is dead. */}
+          {webinarOpen() && <WebinarMeetSend meetUrl={WEBINAR.meetUrl} total={list.length} />}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatTile label="Registered" value={list.length} />
             <StatTile label="Students" value={students} />
