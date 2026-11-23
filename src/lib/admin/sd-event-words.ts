@@ -6,7 +6,7 @@
 type Props = Record<string, unknown>;
 export interface TrailEvent { event: string; lesson: string | null; step: string | null; props: Props | null; created_at: string }
 export type Tone = "learn" | "win" | "miss" | "nav" | "setting";
-export interface TrailLine { at: string; until?: string; lesson: string | null; text: string; detail?: string; tone: Tone }
+export interface TrailLine { at: string; until?: string; lesson: string | null; text: string; detail?: string; tone: Tone; /** The same action back to back, as one line. */ times?: number }
 
 const SCREENS: Record<string, string> = {
   splash: "Opened the course app",
@@ -90,6 +90,8 @@ function describe(e: TrailEvent): Omit<TrailLine, "at" | "lesson"> {
  * The trail as readable lines. Heartbeat pings (sent every few seconds while
  * the lesson is open) are folded into one "spent time" line per stretch, and
  * the "Opened the lesson" screen line is dropped next to "Started the lesson".
+ * The same action repeated back to back (a held key, a double tap) is one
+ * line with a count.
  */
 export function trailLines(events: TrailEvent[]): TrailLine[] {
   const out: TrailLine[] = [];
@@ -114,7 +116,14 @@ export function trailLines(events: TrailEvent[]): TrailLine[] {
     }
     flush();
     if (e.event === "screen" && e.props?.screen === "player") continue;
-    out.push({ at: e.created_at, lesson: e.lesson, ...describe(e) });
+    const line = { at: e.created_at, lesson: e.lesson, ...describe(e) };
+    const prev = out.at(-1);
+    if (prev && prev.lesson === line.lesson && prev.text === line.text && prev.detail === line.detail) {
+      prev.times = (prev.times ?? 1) + 1;
+      prev.until = line.at;
+      continue;
+    }
+    out.push(line);
   }
   flush();
   return out;

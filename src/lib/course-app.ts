@@ -737,6 +737,15 @@ export function afterPayment(s: CourseState, now = Date.now()): CourseState {
  * cleared browser picks up from: passed lessons done, and the next one open.
  * `post` stays empty: the picks weren't kept, only that they passed.
  */
+/**
+ * The lesson-screen tour is for someone new. "Seen it" lives in this browser
+ * only, so a learner who has passed a lesson (which the server knows) counts
+ * as toured on any device. Replaying it from Profile still works.
+ */
+export function tourDone(s: CourseState): CourseState {
+  return s.toured || !(s.done.length || Object.values(s.lessons).some((l) => l.post)) ? s : { ...s, toured: true };
+}
+
 export function withServerPasses(s: CourseState, passes: Record<string, number>): CourseState {
   const ids = Object.keys(passes).filter((id) => dayOf(id) && !s.lessons[id]?.post);
   if (!ids.length) return s;
