@@ -198,6 +198,8 @@ export interface PaymentRow {
   referral_earned_at: string | null;
   /** System Design: where the finishing refund stands, from the same rules the learner sees. Null with no seat. */
   pace: { refund: Pace["refund"]; missed_on: string | null; day: number } | null;
+  /** System Design: when the learner claimed the finishing refund from their results, if they have. */
+  refund_claimed_at: string | null;
 }
 
 /** Completed payments only: unpaid orders are abandoned checkouts, not money. */
@@ -205,8 +207,8 @@ export async function getPayments(): Promise<PaymentRow[]> {
   if (!(await getAdmin())) return [];
   const sql = db();
   if (!sql) return [];
-  const [{ data }, { data: log }, { data: seats }, { data: passes }, { data: finals }, { data: zones }] = await Promise.all([
-    sql.rows<Omit<PaymentRow, "refund_request" | "friends" | "referral_earned_at" | "pace">>`
+  const [{ data }, { data: log }, { data: seats }, { data: passes }, { data: finals }, { data: zones }, { data: claims }] = await Promise.all([
+    sql.rows<Omit<PaymentRow, "refund_request" | "friends" | "referral_earned_at" | "pace" | "refund_claimed_at">>`
       select id, created_at, email, track, cohort_start, coalesce(amount_inr, case when currency = 'INR' then amount else 0 end) as amount, amount as charged, currency,
              status, razorpay_payment_id, referrer_email as referred_by
         from course.payments
@@ -235,6 +237,8 @@ export async function getPayments(): Promise<PaymentRow[]> {
     `,
     // Each seat's time zone, on its own so a database without 0048 still lists payments, on India time.
     sql.rows<{ email: string; timezone: string }>`select email, timezone from course.enrollments where course = ${SD_COURSE}`,
+    // On its own, so the page still loads on a database without 0049.
+    sql.rows<{ id: string; refund_claimed_at: string }>`select id, refund_claimed_at from course.payments where refund_claimed_at is not null`,
   ]);
   const zoneOf = new Map((zones ?? []).map((z) => [z.email, z.timezone]));
 
@@ -258,6 +262,7 @@ export async function getPayments(): Promise<PaymentRow[]> {
     if (id && e.details.ok && !requests.has(id)) requests.set(id, { by: e.admin_email, at: e.at });
   }
 
+  const claimedAt = new Map((claims ?? []).map((c) => [c.id, new Date(c.refund_claimed_at).toISOString()]));
   return (data ?? []).map((p) => {
     const seat = seatByPayment.get(p.id);
     return {
@@ -266,6 +271,7 @@ export async function getPayments(): Promise<PaymentRow[]> {
       friends: seat ? friendsOf(seat) : null,
       referral_earned_at: seat?.referral_earned_at ?? null,
       pace: seat ? paceFor(seat.email) : null,
+      refund_claimed_at: claimedAt.get(p.id) ?? null,
     };
   });
 }

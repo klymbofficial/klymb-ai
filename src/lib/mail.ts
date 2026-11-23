@@ -286,6 +286,23 @@ export function sdReferralEarnedEmail(p: { name: string; amount: string; siteUrl
   return { subject, html, text };
 }
 
+/** Sent once, when a learner who finished on schedule claims their completion refund. */
+export function sdRefundClaimedEmail(p: { name: string; amount: string; siteUrl: string; supportEmail: string }) {
+  const site = esc(p.siteUrl);
+  const subject = "Your System Design refund is on its way";
+  const line = `You finished System Design on schedule and claimed your ${p.amount} back. Once we've checked your completion, it reaches your original payment method within 14 working days. The course stays yours.`;
+  const text = [`Hi ${p.name},`, "", line, "", `The conditions: ${p.siteUrl}/refund-policy`, "", `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "Team Klymb.ai"].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail,
+    preview: `Your ${p.amount} is on its way back.`,
+    eyebrow: "Refund claimed",
+    title: `Well done, ${esc(p.name)}.`,
+    intro: esc(line),
+    sections: [button(`${site}/learn/system-design`, "Back to the course")],
+  });
+  return { subject, html, text };
+}
+
 /** Sent once to every paid System Design learner when the learners' WhatsApp group opened. */
 export function sdWhatsAppGroupEmail(p: { name: string; groupUrl: string; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);

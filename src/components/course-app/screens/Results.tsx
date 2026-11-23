@@ -2,9 +2,12 @@
 
 import clsx from "clsx";
 import { QUESTIONS, REVIEW_LESSON } from "@/data/system-design/course-app";
+import { useState } from "react";
+import { SUPPORT_EMAIL } from "@/data/support-faq";
 import { isSoon, lesson, lessonDay, openLesson, paceNow, pct, startQuiz, type CourseState } from "@/lib/course-app";
 import { FINAL_MARK } from "@/lib/sd-pace";
 import { Icon } from "../icons";
+import { track } from "../track";
 import { BackButton, stagger, useCountUp } from "../ui";
 import type { Act } from "../useCourseApp";
 
@@ -13,6 +16,75 @@ function Mark({ ok }: { ok: boolean }) {
     <span className={clsx("flex size-[26px] items-center justify-center rounded-lg border-[1.5px] lg:size-7", ok ? "border-sd-ink bg-sd-ink text-sd-bg" : "border-sd-divider text-sd-n-600")}>
       {ok ? <Icon name="check" size={14} stroke={3} /> : <Icon name="x" size={14} stroke={2.5} />}
     </span>
+  );
+}
+
+const claimedOn = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+/**
+ * The completion refund, for someone who finished on schedule. Claiming takes
+ * one tap past a short, honest ask: if the course was worth it, they can let
+ * us keep the fee. The refund is a promise, so the claim stays one tap away.
+ */
+function RefundClaim({ s, act }: { s: CourseState; act: Act }) {
+  const [step, setStep] = useState<"offer" | "ask" | "kept">("offer");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const claimedAt = s.progress?.refundClaimedAt;
+
+  async function claim() {
+    setBusy(true); setError(null);
+    try {
+      const res = await fetch("/api/sd/refund-claim", { method: "POST" });
+      const out = (await res.json().catch(() => null)) as { claimedAt?: string; error?: string } | null;
+      if (!res.ok || !out?.claimedAt) { setError(out?.error ?? "We couldn’t record your claim. Please try again."); return; }
+      track("refund", null, null, { choice: "claim" });
+      act((p) => ({ ...p, progress: p.progress ? { ...p.progress, refundClaimedAt: out.claimedAt } : p.progress }));
+    } catch {
+      setError("We couldn’t reach the server. Please try again.");
+    } finally { setBusy(false); }
+  }
+
+  const box = "sd-a-in flex flex-col gap-3 rounded-xl border-2 p-4";
+  if (claimedAt) {
+    return (
+      <div role="status" className={clsx(box, "border-sd-divider")}>
+        <span className="sd-kicker text-sd-accent-700">Refund claimed</span>
+        <span className="text-lg leading-[1.2] font-extrabold">Claimed on {claimedOn(claimedAt)}.</span>
+        <span className="text-sm leading-[1.4] text-sd-n-800">Once we’ve checked your completion, it reaches your original payment method within 14 working days. We’ve emailed you a confirmation. The course stays yours.</span>
+      </div>
+    );
+  }
+  if (step === "kept") {
+    return (
+      <div role="status" className={clsx(box, "border-sd-accent bg-sd-accent-100")}>
+        <span className="text-lg leading-[1.2] font-extrabold">Thank you. That means a lot to us.</span>
+        <span className="text-sm leading-[1.4] text-sd-n-800">It helps us make the next lessons. Changed your mind? Write to {SUPPORT_EMAIL} from the email you paid with, within 60 days of today.</span>
+        <button type="button" onClick={() => setStep("ask")} className="sd-btn sd-btn-ghost h-10 self-start px-3 text-sm">I’d like my refund after all</button>
+      </div>
+    );
+  }
+  if (step === "ask") {
+    return (
+      <div className={clsx(box, "border-sd-accent")}>
+        <span className="sd-kicker text-sd-accent-700">Before you claim</span>
+        <span className="text-lg leading-[1.2] font-extrabold">Did the course give you real value?</span>
+        <span className="text-sm leading-[1.4] text-sd-n-800">You earned this refund and it’s yours to take. If System Design helped you, you could let us keep the fee instead: it pays for the lessons still to come and keeps Klymb going for the next learner.</span>
+        <div className="flex flex-col gap-2">
+          <button type="button" disabled={busy} onClick={() => { track("refund", null, null, { choice: "keep" }); setStep("kept"); }} className="sd-btn sd-btn-primary h-12">Keep supporting Klymb</button>
+          <button type="button" disabled={busy} onClick={claim} className="sd-btn sd-btn-secondary h-12">{busy ? "Claiming…" : "Claim my 100% refund"}</button>
+        </div>
+        {error && <p role="alert" className="m-0 text-sm font-bold text-sd-accent-700">{error}</p>}
+      </div>
+    );
+  }
+  return (
+    <div className={clsx(box, "border-sd-accent bg-sd-accent-100")}>
+      <span className="sd-kicker text-sd-accent-700">You finished on schedule</span>
+      <span className="text-lg leading-[1.2] font-extrabold">Your 100% refund is ready.</span>
+      <span className="text-sm leading-[1.4] text-sd-n-800">Claim it here, any time in the next 60 days. The course stays yours either way.</span>
+      <button type="button" onClick={() => { track("refund", null, null, { choice: "open" }); setStep("ask"); }} className="sd-btn sd-btn-primary h-12 self-start px-5">Claim my refund<Icon name="arrowR" size={16} /></button>
+    </div>
   );
 }
 
@@ -37,7 +109,7 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
   const cta = again ? () => act((p) => startQuiz(p, "post")) : close;
   const ctaLabel = !again ? "Back to home" : left ? `Try again · ${left} ${left === 1 ? "try" : "tries"} left` : "Retake for practice";
   const verdict = pace?.refund === "earned" && pace.refundable
-    ? `You reached ${FINAL_MARK}%. Your 100% refund is ready to claim.`
+    ? `You reached ${FINAL_MARK}%. ${s.progress?.refundClaimedAt ? "Your refund is claimed." : "Your 100% refund is ready to claim."}`
     : reached ? `You reached the ${FINAL_MARK}% mark.` : `${FINAL_MARK}% is the mark.`;
 
   const recList = recs.length > 0 && (
@@ -66,6 +138,7 @@ export function Results({ s, act }: { s: CourseState; act: Act }) {
             <div className="mt-1.5 text-[104px] leading-[0.9] font-extrabold tracking-[-0.05em] lg:mt-0 lg:text-[160px] lg:leading-[0.85]" aria-label={`${resPct}%`}>{shown}%</div>
             <div className="mt-2.5 text-[16px] lg:mt-0 lg:text-[17px]">{res.reduce((x, y) => x + y, 0)} of {QUESTIONS.length} correct. {verdict}</div>
           </div>
+          {pace?.refund === "earned" && pace.refundable && <div className="mx-5 mt-5 lg:mx-0 lg:mt-1"><RefundClaim s={s} act={act} /></div>}
           <div className="hidden lg:block">{recList}</div>
         </div>
         <div className="lg:hidden">{recList}</div>
