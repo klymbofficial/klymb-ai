@@ -5,6 +5,8 @@ import { MetaLine, SkillChips } from "@/components/company/CatalogParts";
 import { LoadError, RoleOnly } from "@/components/company/OrgPanels";
 import { KIND_LABEL, PURPOSE_LABEL } from "@/data/business-catalog";
 import { isAdmin } from "@/lib/company/access";
+import { companyStandings, loadVersions } from "@/lib/company/assessment-data";
+import { minutesLabel, seesAssessments, standingLabel } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
 import { seesCatalog } from "@/lib/company/catalog";
 import { companyCatalog } from "@/lib/company/catalog-data";
@@ -51,6 +53,18 @@ export default async function CatalogItemPage({ params }: { params: Promise<{ sl
       : [];
   const canAssign = item.kind === "course" && item.assignable && isAdmin(member);
 
+  // An assessment shows its newest published version's areas, tools and practice task; the listing until there is one.
+  // Never the real task or the scoring guide: a team lead may read this page.
+  const versions = item.kind === "assessment" && sql ? await loadVersions(sql, item.slug) : null;
+  const latest = versions?.[0];
+  const standing = item.kind === "assessment" && sql && seesAssessments(member) ? (await companyStandings(sql, member.companyId, [item.slug]))?.get(item.slug) : undefined;
+  const test =
+    item.kind === "assessment"
+      ? latest
+        ? { areas: latest.rubric.map((c) => c.title), tools: { allowed: latest.toolsAllowed, notAllowed: latest.toolsNotAllowed }, sample: { title: latest.sampleTitle, brief: latest.sampleBrief } }
+        : { areas: [...item.rubric], tools: item.tools, sample: item.sampleTask }
+      : null;
+
   return (
     <>
       <Link href={base} className="text-sm font-bold underline underline-offset-4 hover:text-red-deep">← Catalog</Link>
@@ -59,7 +73,7 @@ export default async function CatalogItemPage({ params }: { params: Promise<{ sl
         <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-muted">{KIND_LABEL[item.kind]}</p>
         <h1 className="display text-3xl">{item.title}</h1>
         {item.summary && <p className="max-w-2xl text-sm">{item.summary}</p>}
-        <MetaLine entry={entry} />
+        {item.kind === "assessment" && latest ? <p className="text-xs text-muted">{item.audience} · {item.level} · {minutesLabel(latest.minutes)}</p> : <MetaLine entry={entry} />}
         <SkillChips skills={entry.skills} hrefFor={(s) => `${base}?purpose=all&skill=${encodeURIComponent(s)}`} />
         {canAssign && (
           <Link
@@ -70,7 +84,15 @@ export default async function CatalogItemPage({ params }: { params: Promise<{ sl
           </Link>
         )}
         {item.kind === "course" && item.assignable && !isAdmin(member) && <p className="text-xs text-muted">Your company admin assigns courses.</p>}
-        {item.kind === "assessment" && <p className="text-sm font-semibold">Can&apos;t be assigned or taken yet.</p>}
+        {item.kind === "assessment" &&
+          (standing ? (
+            <p className="text-sm font-semibold">
+              {standingLabel(standing)} ·{" "}
+              <Link href={`/org/${member.companySlug}/assessments/${item.slug}`} className={link}>Open the test</Link>
+            </p>
+          ) : (
+            <p className="text-sm font-semibold">Recruiters and reviewers open the full test.</p>
+          ))}
       </header>
 
       <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
@@ -99,16 +121,16 @@ export default async function CatalogItemPage({ params }: { params: Promise<{ sl
             </section>
           )}
 
-          {item.kind === "assessment" && (
+          {test && (
             <>
               <section className={section} aria-labelledby="rubric">
                 <h2 id="rubric" className={h2}>Rubric summary</h2>
-                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">{item.rubric.map((r) => <li key={r}>{r}</li>)}</ul>
+                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm">{test.areas.map((r) => <li key={r}>{r}</li>)}</ul>
               </section>
               <section className={section} aria-labelledby="practice">
                 <h2 id="practice" className={h2}>Practice task</h2>
-                <h3 className="mt-3 text-base font-bold">{item.sampleTask.title}</h3>
-                <p className="mt-1.5 text-sm">{item.sampleTask.brief}</p>
+                <h3 className="mt-3 text-base font-bold">{test.sample.title}</h3>
+                <p className="mt-1.5 whitespace-pre-line text-sm">{test.sample.brief}</p>
                 <p className="mt-2 text-xs text-muted">Practice only. The real task differs.</p>
               </section>
             </>
@@ -151,12 +173,12 @@ export default async function CatalogItemPage({ params }: { params: Promise<{ sl
             </dl>
           </section>
 
-          {item.kind === "assessment" && (
+          {test && (
             <section className={section} aria-labelledby="tools">
               <h2 id="tools" className={h2}>Tools</h2>
               <dl className="mt-3 space-y-3 text-sm">
-                {item.tools.allowed.length > 0 && <Fact label="Allowed">{item.tools.allowed.join("; ")}</Fact>}
-                {item.tools.notAllowed.length > 0 && <Fact label="Not allowed">{item.tools.notAllowed.join("; ")}</Fact>}
+                {test.tools.allowed.length > 0 && <Fact label="Allowed">{test.tools.allowed.join("; ")}</Fact>}
+                {test.tools.notAllowed.length > 0 && <Fact label="Not allowed">{test.tools.notAllowed.join("; ")}</Fact>}
               </dl>
             </section>
           )}

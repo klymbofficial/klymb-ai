@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { saveCatalogItem, saveCatalogProgram, setCatalogGrant, type CatalogResult } from "@/app/admin/catalog-actions";
 import { CATALOG_PURPOSES, KIND_LABEL, PURPOSE_LABEL, type CatalogKind, type CatalogPurpose } from "@/data/business-catalog";
@@ -19,8 +20,8 @@ export interface AdminCatalogItem {
   skills: string[];
   purposes: CatalogPurpose[];
   steps: string[];
-  /** Written for the pilot and not yet reviewed. */
-  draftWording: boolean;
+  /** For an assessment: how many versions have been published. */
+  versions: number;
 }
 
 type Message = { ok: boolean; text: string } | null;
@@ -102,9 +103,10 @@ function ItemCard({ item, onEditProgram }: { item: AdminCatalogItem; onEditProgr
           <button type="button" onClick={onEditProgram} className="font-bold text-ink underline underline-offset-2">Edit program</button>
         </p>
       )}
-      {item.draftWording && (
-        <p className="border-l-4 border-red-strong bg-paper px-3 py-2 text-xs">
-          Draft wording. Review the rubric, tools and practice task in src/data/business-catalog.ts before publishing.
+      {item.kind === "assessment" && (
+        <p className="text-sm">
+          <Link href={`/admin/catalog/assessments/${item.slug}`} className="font-bold underline underline-offset-2">Write and publish the test</Link>
+          <span className="text-muted"> · {item.versions ? `${item.versions} ${item.versions === 1 ? "version" : "versions"} published` : "no version published yet"}</span>
         </p>
       )}
       <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-end">

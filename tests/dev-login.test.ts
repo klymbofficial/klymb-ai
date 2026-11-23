@@ -115,3 +115,10 @@ test("a dev team lead leads the employee's team at Dev Company, and holds no adm
   assert.equal(employee?.memberships?.[0].team, DEV_TEAM, "on the team the lead leads");
   assert.equal(devLandingPath(lead), `/org/${DEV_COMPANY.slug}`);
 });
+
+test("the reviewer fixture reviews tests at the dev company, and does nothing else there", () => {
+  const reviewer = DEV_USERS.find((u) => u.email === "dev-reviewer@klymb.test");
+  assert.ok(reviewer?.memberships);
+  assert.deepEqual(reviewer.memberships, [{ company: DEV_COMPANY, roles: ["reviewer"] }]);
+  assert.equal(devLandingPath(reviewer), `/org/${DEV_COMPANY.slug}`);
+});

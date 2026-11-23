@@ -2,6 +2,7 @@ import { CatalogAdmin, type AdminCatalogItem } from "@/components/admin/CatalogA
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { requireAdmin } from "@/lib/admin/auth";
+import { versionCounts } from "@/lib/company/assessment-data";
 import { loadAdminCatalog } from "@/lib/company/catalog-data";
 import { db } from "@/lib/db/client";
 
@@ -9,6 +10,7 @@ export default async function AdminCatalogPage() {
   await requireAdmin();
   const sql = db();
   const data = sql ? await loadAdminCatalog(sql) : null;
+  const counts = sql && data ? await versionCounts(sql) : new Map<string, number>();
 
   const items: AdminCatalogItem[] = data
     ? [...data.all.values()].map((e) => ({
@@ -20,7 +22,7 @@ export default async function AdminCatalogPage() {
         skills: e.skills,
         purposes: e.purposes,
         steps: e.item.kind === "program" ? e.item.steps : [],
-        draftWording: e.item.kind === "assessment",
+        versions: counts.get(e.item.slug) ?? 0,
       }))
     : [];
 

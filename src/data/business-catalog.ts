@@ -10,10 +10,12 @@
  * here is copied per company.
  *
  * DRAFT WORDING (written 2026-11-21 for the pilot, to be reviewed by Klymb
- * before publishing): both assessments. They are listings only until T05
- * builds the runner, so their rubric summary, permitted tools and sample task
- * describe a test that does not exist yet. No answer key or scoring rule is
- * kept here, or anywhere a company page reads.
+ * before publishing): both assessments. What is here is only where a Klymb
+ * admin's first draft starts (src/lib/company/assessment-rules.ts,
+ * startingDraft). The test itself, with the real task and the reviewers'
+ * scoring guide, is written and published as numbered versions at
+ * /admin/catalog/assessments (migration 0051). No answer key or scoring rule
+ * is kept here.
  */
 import { MODULES } from "@/data/system-design/course-app";
 
@@ -66,7 +68,11 @@ export interface CatalogAssessment extends Common {
   followUp?: string;
   /** The course candidates can prepare with, for a hiring test. */
   prep?: string;
-  /** Until T05 builds the runner, nobody can take it. */
+  /** Where the first draft starts: the role it tests, minutes allowed, and what people hand in. */
+  role: string;
+  minutes: number;
+  submission: "written" | "written_file";
+  /** Until T07 builds the runner, nobody can take it. */
   runnable: false;
 }
 
@@ -128,6 +134,9 @@ const systemDesignBaseline: CatalogAssessment = {
     brief: "Sketch a service that turns long links into short ones and redirects visitors, at about a million new links a day. Say what you would store, how a redirect stays fast, and what you would change at ten times the traffic.",
   },
   followUp: "system-design",
+  role: "Software engineer",
+  minutes: 30,
+  submission: "written",
   runnable: false,
 };
 
@@ -161,6 +170,9 @@ const backendDesignPractical: CatalogAssessment = {
     brief: "Design the backend for booking seats at events, where thousands of people try to book the same show when sales open. Describe the API, how you store seats and bookings, and how you stop two people booking the same seat.",
   },
   prep: "system-design",
+  role: "Backend engineer",
+  minutes: 60,
+  submission: "written_file",
   runnable: false,
 };
 

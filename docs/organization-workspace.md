@@ -78,16 +78,35 @@ on this branch, not against plans.
   are overdue or due within a week. Old 0030 rows moved over as required
   assignments, and a trigger keeps 0030's table in step for older code.
   The learner's /learn card says which company assigned it and its terms.
+- **Practical assessments (T05):** a Klymb admin writes each test at
+  `/admin/catalog/assessments/[slug]`: role, time allowed, what people hand
+  in, tools, the real task, candidate instructions, a rubric (each area with
+  a skill, points and a reviewer-only scoring guide), a practice task and
+  what candidates see afterwards. The first draft starts from the catalog
+  listing in `src/data/business-catalog.ts`; the real task and scoring
+  guides are left for a person to write. Saving keeps a draft; publishing
+  copies the saved draft into the next numbered version
+  (`course.assessment_versions`, migration 0051), which a trigger stops
+  anyone changing or deleting, and one draft revision makes at most one
+  version. A company reviewer approves or declines (with a note Klymb sees)
+  the newest version at `/org/[slug]/assessments`, and can see exactly what
+  candidates will see, without the scoring guide. Recruiters use the newest
+  approved version; a newer one waits for its own approval. Admins, company
+  heads, recruiters and reviewers open Assessments; team leads and employees
+  don't, since it shows the real task.
 - **CSV import:** checked first (who will be added, who is already here,
   seats after, problems by line), then added. People already in the company
   are left as they are, so uploading the same file again adds nobody.
 - **Dev sign-in:** Dev Lead leads the Engineering team at Dev Company, with
-  Dev Employee on it. Run `npm run dev:test` so sign-in returns to the
+  Dev Employee on it. Dev Reviewer approves tests at Dev Company; Dev Both
+  is a recruiter there. Run `npm run dev:test` so sign-in returns to the
   right port, or use port 3000, which `.env.local`'s AUTH_URL names.
 
 ## Not available (and shown as such in the UI)
 
-Assigning anything other than System Design, assigning assessments, candidate batches (T06), reminder emails for due dates, company
+Assigning anything other than System Design, assigning assessments, taking a
+test (T07), candidate batches (T06), emails telling reviewers a new version is
+waiting, reminder emails for due dates, company
 reports and exports, certificates, single sign-on, and any notification email
 beyond the invite and its resend. Assigned employees get no reminder, release or
 push emails: those crons read `course.enrollments`, and company access doesn't
@@ -150,7 +169,10 @@ table, so:
 Actions: `company.person_add`, `company.people_import`, `company.person_remove`,
 `company.invite_resend`, `company.team_create`, `company.team_head`,
 `company.person_move`, `company.course_assign`, `company.course_unassign`,
-`company.course_assign_all`. Not logged: names, CSV contents, sign-in material.
+`company.course_assign_all`, `company.assignment_create`,
+`company.assessment_review` (the decision, never the note). Klymb admins'
+`catalog.assessment_save` and `catalog.assessment_publish` record the draft
+revision and version number. Not logged: names, CSV contents, sign-in material.
 A bulk assignment records a count, never the list of emails.
 Cleaner long term: a `company_id`/`actor_kind` column or a company audit table,
 which needs a migration.
@@ -172,7 +194,7 @@ that Vercel's Production `DATABASE_URL` points at that branch.
 `0047_hidden_payments.sql`, and this branch has
 `0047_company_member_roles.sql`. The runner keys on file names, so both
 apply, but `tests/course-schema.test.ts` requires unique numbers. Renumber
-this branch's 0047-0049 after main's last migration when merging. 0047-0049
+this branch's 0047-0051 after main's last migration when merging. 0047-0051
 are already recorded by name on the young-shadow dev database, so they would
 run again there under new names: check they are idempotent first.
 

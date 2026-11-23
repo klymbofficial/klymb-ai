@@ -84,6 +84,12 @@ export const DEV_USERS: readonly DevUser[] = [
     label: "Team lead",
     blurb: `Leads ${DEV_COMPANY.name}'s ${DEV_TEAM} team. Assigns learning to people on it, and nobody else.`,
   },
+  {
+    email: "dev-reviewer@klymb.test", name: "Dev Reviewer", role: "company",
+    memberships: [{ company: DEV_COMPANY, roles: ["reviewer"] }],
+    label: "Reviewer",
+    blurb: `Reviewer at ${DEV_COMPANY.name}. Approves or declines each version of a test before recruiters can pick it.`,
+  },
 ];
 
 type Env = Record<string, string | undefined>;
