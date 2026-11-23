@@ -40,6 +40,31 @@ on this branch, not against plans.
   without them, uploads say they aren't available. On a laptop, uploads go to
   `.data/` unless `BRAND_STORAGE=r2` is set.
 
+- **Catalog (T03, first slice):** admins, company heads, team leads,
+  recruiters and reviewers open `/org/<slug>/catalog`; employees don't.
+  It lists the courses, assessments and programs Klymb has published *and*
+  granted to that company, finds them by purpose (upskilling or hiring; a
+  recruiter lands on hiring, a team lead on upskilling), skill, kind and
+  words, and shows each one at `/org/<slug>/catalog/<item>`: purpose,
+  audience, level, length, outcomes, author, and a look inside (a course's
+  lessons; a test's rubric summary, permitted tools and a practice task,
+  never scoring rules or answers; a program's steps). Anything a company
+  can't see, drafts included, is a 404.
+  - Item details for Klymb's courses and assessments are in code
+    (`src/data/business-catalog.ts`); publication state, skill tags,
+    purposes, programs and grants are in the database (migration 0049) and
+    set by a Klymb admin at `/admin/catalog`. Everything starts as a draft.
+    One course serves every company granted it; nothing is copied.
+  - The two assessments are **preview only**: their wording is a draft for
+    Klymb to review, and nobody can take or be assigned them until T05.
+    Assigning stays System Design only until T04.
+  - Granting a program shows its published steps. A program can be
+    published only when all its steps are, and a step can't be unpublished
+    while a published program uses it.
+  - Dev sign-in gives every Klymb item to the two dev companies but never
+    publishes anything (previews share production's database): publish at
+    `/admin/catalog` as Dev Admin.
+
 ## Not available (and shown as such in the UI)
 
 Assigning anything other than System Design, assigning assessments, company
@@ -122,6 +147,14 @@ It adds one redundant unique constraint to `company_members` and one table; it i
 idempotent. On 2026-11-10 a read-only check found it in `course.schema_migrations`
 on Neon's `production` branch with a checksum matching this file. Not verified:
 that Vercel's Production `DATABASE_URL` points at that branch.
+
+**Numbering clash to fix when merging main:** main now has
+`0047_hidden_payments.sql`, and this branch has
+`0047_company_member_roles.sql`. The runner keys on file names, so both
+apply, but `tests/course-schema.test.ts` requires unique numbers. Renumber
+this branch's 0047-0049 after main's last migration when merging. 0047-0049
+are already recorded by name on the young-shadow dev database, so they would
+run again there under new names: check they are idempotent first.
 
 ## Verification status
 

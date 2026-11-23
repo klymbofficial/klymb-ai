@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db/client";
+import { CODE_ITEMS } from "@/data/business-catalog";
 import { devLoginEnabled, type DevUser } from "@/lib/dev-login";
 
 /**
@@ -69,6 +70,22 @@ export async function ensureDevUser(user: DevUser): Promise<void> {
           select ${companyId}, ${user.email}, r, 'dev sign-in' from unnest(${[...roles]}::text[]) as r
           on conflict (company_id, email, role) do nothing
         `;
+        // Every Klymb catalog item is given to the dev companies, so their Catalog has
+        // something in it once a dev admin publishes at /admin/catalog. Never
+        // published here: a preview shares production's database, and publishing
+        // is global. An item nobody has saved yet gets its draft row first.
+        for (const item of CODE_ITEMS) {
+          await sql.rows`
+            with saved as (
+              insert into course.catalog_items (slug, kind, skills, purposes, updated_by)
+              values (${item.slug}, ${item.kind}, ${[...item.suggestedSkills]}::text[], ${[...item.suggestedPurposes]}::text[], 'dev sign-in')
+              on conflict (slug) do nothing
+            )
+            insert into course.company_catalog_grants (company_id, item_slug, granted_by)
+            values (${companyId}, ${item.slug}, 'dev sign-in')
+            on conflict (company_id, item_slug) do nothing
+          `;
+        }
       }
       return;
     }

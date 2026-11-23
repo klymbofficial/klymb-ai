@@ -4,13 +4,15 @@ import { OrgNav, type OrgNavItem } from "@/components/company/OrgNav";
 import { BrandMark } from "@/components/company/BrandMark";
 import { isAdmin, ROLE_LABEL, viewOf, type CompanyMember } from "@/lib/company/access";
 import type { ResolvedBrand } from "@/lib/company/branding";
+import { seesCatalog } from "@/lib/company/catalog";
 
 const LEARNING_LABEL = { company: "Learning", team: "Team learning", self: "My learning" } as const;
 
 /**
  * What a member can open. Responsibilities add up: an admin runs People,
- * Teams and Branding; the learning tab shows the widest view they have (the
- * company, their team, or themselves).
+ * Teams and Branding; anyone who chooses courses or tests opens the
+ * Catalog; the learning tab shows the widest view they have (the company,
+ * their team, or themselves).
  */
 export function navFor(member: CompanyMember): OrgNavItem[] {
   const base = `/org/${member.companySlug}`;
@@ -23,6 +25,7 @@ export function navFor(member: CompanyMember): OrgNavItem[] {
         ]
       : []),
     { href: `${base}/learning`, label: LEARNING_LABEL[viewOf(member)] },
+    ...(seesCatalog(member) ? [{ href: `${base}/catalog`, label: "Catalog" }] : []),
     ...(isAdmin(member) ? [{ href: `${base}/branding`, label: "Branding" }] : []),
   ];
 }
