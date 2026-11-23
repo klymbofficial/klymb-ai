@@ -35,6 +35,7 @@ export type AuditAction =
   | "company.course_assign"
   | "company.course_unassign"
   | "company.course_assign_all"
+  | "company.assignment_create"
   | "catalog.item_save"
   | "catalog.program_save"
   | "catalog.grant"

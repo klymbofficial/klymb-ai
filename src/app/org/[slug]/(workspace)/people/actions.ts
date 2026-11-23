@@ -6,6 +6,7 @@ import { logCompany } from "@/lib/company/audit";
 import { adminFor } from "@/lib/company/auth";
 import { RESEND_LIMITS, type CompanyBrand } from "@/lib/company/brand";
 import { loadCompanyBrand, sendCompanyInvite } from "@/lib/company/invite";
+import { sameRecipients } from "@/lib/company/assign-rules";
 import { grantedRoles, MAX_CSV_BYTES, planAdd, readPeopleCsv, removeBlocked, rolesBlocked, tidyName, type AddRole, type PlannedPerson, type RowError } from "@/lib/company/people";
 import { activeAdminCount, insertPeople, loadAddContext, loadPerson, removePersonRow, setMemberRoles } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
@@ -16,11 +17,25 @@ export type PeopleResult =
   | { ok: true; message: string }
   | { ok: false; message: string; errors?: RowError[] };
 
-const NOT_ALLOWED: PeopleResult = { ok: false, message: "Only your company's admin can do this. Try signing in again." };
-const UNAVAILABLE: PeopleResult = { ok: false, message: "That didn't work just now. Please try again in a minute." };
+/** What an uploaded file would do, before anyone is added. */
+export interface UploadPreview {
+  add: { line: number; email: string; name: string | null; team: string | null; returning: boolean }[];
+  /** Already in the company: left as they are. */
+  skipped: { line: number; email: string }[];
+  seats: number;
+  activeMembers: number;
+}
+export type UploadPreviewResult = { ok: true; preview: UploadPreview } | { ok: false; message: string; errors?: RowError[] };
 
-/** Plans, then adds everyone in one statement, then emails them after the response. */
-async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], via: "form" | "csv"): Promise<PeopleResult> {
+const NOT_ALLOWED: { ok: false; message: string } = { ok: false, message: "Only your company's admin can do this. Try signing in again." };
+const UNAVAILABLE: { ok: false; message: string } = { ok: false, message: "That didn't work just now. Please try again in a minute." };
+
+/**
+ * Plans, then adds everyone in one statement, then emails them after the
+ * response. A CSV leaves people already here as they are, and is added only
+ * if it would add exactly the people its preview showed (`expected`).
+ */
+async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], via: "form" | "csv", expected?: string[]): Promise<PeopleResult> {
   const hr = await adminFor(slug);
   if (!hr) return NOT_ALLOWED;
   const sql = db();
@@ -29,13 +44,20 @@ async function addPlanned(slug: string, people: Parameters<typeof planAdd>[0], v
   const emails = people.map((p) => normaliseEmail(p.email)).filter((e): e is string => e !== null);
   const ctx = await loadAddContext(sql, hr.companyId, emails);
   if (!ctx) return UNAVAILABLE;
-  const plan = planAdd(people, ctx);
+  const plan = planAdd(people, ctx, { skipExisting: via === "csv" });
   if (!plan.ok) {
     return {
       ok: false,
       message: people.length === 1 ? plan.errors[0].message : `Nobody was added. Fix ${plan.errors.length === 1 ? "this problem" : `these ${plan.errors.length} problems`} and upload the file again.`,
       errors: people.length === 1 ? undefined : plan.errors,
     };
+  }
+
+  if (via === "csv") {
+    if (!plan.add.length) return { ok: false, message: "Everyone in this file is already in your company. Nobody to add." };
+    if (!expected || !sameRecipients(plan.add.map((p) => p.email), expected)) {
+      return { ok: false, message: "Nobody was added: the file or your people changed since you checked it. Check the file again." };
+    }
   }
 
   const added = await insertPeople(sql, hr.companyId, plan.add, hr.email);
@@ -81,17 +103,48 @@ export async function addPerson(slug: string, form: { email: string; name: strin
   return addPlanned(slug, [{ line: 1, email: form.email.trim(), name: tidyName(form.name), team: form.team.trim() || null, role }], "form");
 }
 
-/** 1.8: a CSV of email, name, team. All or nothing, with every problem listed by line. */
-export async function uploadPeople(slug: string, formData: FormData): Promise<PeopleResult> {
-  if (!(await adminFor(slug))) return NOT_ALLOWED;
+/** The uploaded CSV, read and checked, or why it can't be used. */
+async function readUpload(formData: FormData): Promise<{ ok: true; people: ReturnType<typeof readPeopleCsv>["people"] } | { ok: false; message: string; errors?: RowError[] }> {
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Choose a CSV file to upload." };
   if (file.size > MAX_CSV_BYTES) return { ok: false, message: `That file is too big (${Math.ceil(file.size / 1024)} KB). Keep it under ${MAX_CSV_BYTES / 1024} KB, or about 500 people.` };
   if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") return { ok: false, message: "That isn't a CSV file. Save the sheet as CSV (comma separated) and try again." };
-
   const { people, errors } = readPeopleCsv(await file.text());
-  if (errors.length) return { ok: false, message: "Nobody was added. Fix the file and upload it again.", errors };
-  return addPlanned(slug, people, "csv");
+  if (errors.length) return { ok: false, message: "Fix the file and check it again.", errors };
+  return { ok: true, people };
+}
+
+/** Step one of a CSV: who it would add, who is already here, and every problem by line. Nothing is written. */
+export async function previewUpload(slug: string, formData: FormData): Promise<UploadPreviewResult> {
+  const hr = await adminFor(slug);
+  if (!hr) return NOT_ALLOWED;
+  const read = await readUpload(formData);
+  if (!read.ok) return read;
+  const sql = db();
+  if (!sql) return UNAVAILABLE;
+  const emails = read.people.map((p) => normaliseEmail(p.email)).filter((e): e is string => e !== null);
+  const ctx = await loadAddContext(sql, hr.companyId, emails);
+  if (!ctx) return UNAVAILABLE;
+  const plan = planAdd(read.people, ctx, { skipExisting: true });
+  if (!plan.ok) return { ok: false, message: `Fix ${plan.errors.length === 1 ? "this problem" : `these ${plan.errors.length} problems`}, then check the file again.`, errors: plan.errors };
+  const team = new Map(read.people.map((p) => [p.line, p.team]));
+  return {
+    ok: true,
+    preview: {
+      add: plan.add.map((p) => ({ line: p.line, email: p.email, name: p.name, team: team.get(p.line) ?? null, returning: p.returning })),
+      skipped: plan.skipped,
+      seats: ctx.seatCount,
+      activeMembers: ctx.activeMembers,
+    },
+  };
+}
+
+/** Step two: adds exactly the people the preview showed, all or nobody. Uploading the same file again adds nobody twice. */
+export async function uploadPeople(slug: string, formData: FormData, expected: string[]): Promise<PeopleResult> {
+  if (!(await adminFor(slug))) return NOT_ALLOWED;
+  const read = await readUpload(formData);
+  if (!read.ok) return read;
+  return addPlanned(slug, read.people, "csv", Array.isArray(expected) ? expected : []);
 }
 
 /**

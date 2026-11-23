@@ -297,3 +297,14 @@ test("both pages are admin-only: other roles get a role panel and nothing is loa
   assert.match(layout, /getWorkspaceMember\(slug\)/);
   assert.match(layout, /allowCompany\(member, slug\)/);
 });
+
+test("uploading the same file again leaves people already here as they are, and adds only the new ones", () => {
+  const existing = new Map([["here@x.com", { removed: false }], ["back@x.com", { removed: true }]]);
+  const plan = planAdd([person(2, "here@x.com"), person(3, "back@x.com"), person(4, "new@x.com")], ctx({ existing }), { skipExisting: true });
+  assert.equal(plan.ok, true);
+  assert.deepEqual(plan.skipped, [{ line: 2, email: "here@x.com" }]);
+  assert.deepEqual(plan.add.map((p) => [p.email, p.returning]), [["back@x.com", true], ["new@x.com", false]]);
+  const again = planAdd([person(2, "here@x.com")], ctx({ existing }), { skipExisting: true });
+  assert.deepEqual([again.ok, again.add.length, again.skipped.length], [true, 0, 1]);
+  assert.equal(planAdd([person(2, "here@x.com")], ctx({ existing })).ok, false, "a single add still says they're already here");
+});

@@ -57,14 +57,25 @@ export async function hasCourseAccess(email: string, course: string) {
  * simply means nobody has been assigned.
  */
 export async function hasCompanyAssignment(sql: NonNullable<ReturnType<typeof db>>, email: string, course: string) {
-  const { data, error } = await sql.rows<{ email: string }>`
-    select a.email
-      from course.company_course_assignments a
-      join course.company_members m on m.company_id = a.company_id and m.email = a.email
-     where a.email = ${email} and a.course = ${course}
-       and a.revoked_at is null and m.removed_at is null
+  const live = await sql.rows<{ email: string }>`
+    select r.email
+      from course.company_assignment_recipients r
+      join course.company_members m on m.company_id = r.company_id and m.email = r.email
+     where r.email = ${email} and r.course = ${course}
+       and r.revoked_at is null and m.removed_at is null
      limit 1
   `;
+  // Before 0050 (a preview against an unmigrated database): 0030's table.
+  const { data, error } = live.error?.code === UNDEFINED_TABLE
+    ? await sql.rows<{ email: string }>`
+        select a.email
+          from course.company_course_assignments a
+          join course.company_members m on m.company_id = a.company_id and m.email = a.email
+         where a.email = ${email} and a.course = ${course}
+           and a.revoked_at is null and m.removed_at is null
+         limit 1
+      `
+    : live;
   if (error) {
     if (error.code !== UNDEFINED_TABLE) console.error("company assignment read failed:", error.code, error.message);
     return false;

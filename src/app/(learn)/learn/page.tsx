@@ -20,6 +20,8 @@ import { myTeam, publishedResults, type MyTeam } from "@/lib/hackathon";
 import { scoreProfile, type ProfileScore } from "@/lib/profile-score";
 import { dayActionLabel, nextDayFor } from "@/lib/day-lock";
 import { getLearnerState, getLearnerTracks } from "@/lib/learner/data";
+import { dayLabel } from "@/components/company/ProgressTable";
+import { dueState } from "@/lib/company/assign-rules";
 import { systemDesignSeat, type SystemDesignSeat } from "@/lib/learner/courses";
 import type { Learner, Submission } from "@/lib/learner/data";
 
@@ -78,6 +80,14 @@ function TrackCard({ learner, submissions }: { learner: Learner; submissions: Su
   );
 }
 
+/** "Required, due 15 Dec", "Required, overdue since 15 Dec" or "Recommended". */
+function assignedTerms(a: NonNullable<SystemDesignSeat["assigned"]>, done: boolean) {
+  if (a.requirement === "recommended") return "Recommended by your company. One short lesson a day.";
+  if (!a.dueOn) return "Required by your company. One short lesson a day.";
+  const day = dayLabel(a.dueOn);
+  return dueState(a.dueOn, done) === "overdue" ? `Required, overdue since ${day}.` : `Required, due ${day}.`;
+}
+
 /** In the System Design course's own night-sky look, so it reads as its own product. */
 function SystemDesignCard({ seat }: { seat: SystemDesignSeat }) {
   const action = seat.finished ? "Open the course" : seat.passed === 0 ? "Start the course" : "Continue the course";
@@ -85,10 +95,10 @@ function SystemDesignCard({ seat }: { seat: SystemDesignSeat }) {
     <article className="relative flex flex-col overflow-hidden rounded-card bg-[#1a1716] text-[#f6efe4] shadow-card">
       <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 80% at 0% 0%,rgba(201,162,74,.2),transparent 70%),radial-gradient(60% 80% at 100% 100%,rgba(131,5,11,.5),transparent 70%)" }} />
       <div className="relative flex flex-1 flex-col gap-4 p-6">
-        <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">Course</p>
+        <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">{seat.assigned ? `Assigned by ${seat.assigned.company}` : "Course"}</p>
         <div>
           <h2 className="display text-2xl text-[#fbf6ee]">System Design</h2>
-          <p className="mt-1 text-sm text-[#d9cfc2]">{seat.finished ? "Course complete. Every lesson and the final passed." : "One short lesson a day, built for interviews."}</p>
+          <p className="mt-1 text-sm text-[#d9cfc2]">{seat.finished ? "Course complete. Every lesson and the final passed." : seat.assigned ? assignedTerms(seat.assigned, seat.passed >= seat.total) : "One short lesson a day, built for interviews."}</p>
         </div>
         {/* Progress sits with the button at the foot, level with the track card's beside it. */}
         <div className="mt-auto flex flex-col gap-4">

@@ -13,6 +13,8 @@ export interface SystemDesignSeat {
   total: number;
   /** They met the finishing bar: every lesson and the final. */
   finished: boolean;
+  /** When a company gave it (not a purchase): who, and whether it's required and by when. */
+  assigned?: { company: string; requirement: "required" | "recommended"; dueOn: string | null };
 }
 
 /** Postgres: no such table. */
@@ -42,8 +44,25 @@ export async function systemDesignSeat(email: string): Promise<SystemDesignSeat 
     return null;
   }
   if (!seat.data) {
-    if (!(await hasCompanyAssignment(sql, email, SD_COURSE))) return null;
-    return { passed: Math.min(passes.data?.passed ?? 0, LESSON_COUNT), total: LESSON_COUNT, finished: false };
+    const passed = Math.min(passes.data?.passed ?? 0, LESSON_COUNT);
+    // The company's published name, and the assignment's terms; the soonest due first.
+    const given = await sql.row<{ company: string; requirement: "required" | "recommended"; due_on: string | null }>`
+      select coalesce(nullif(b.published->>'displayName', ''), c.name) as company, n.requirement, n.due_on::text as due_on
+        from course.company_assignment_recipients r
+        join course.company_members m on m.company_id = r.company_id and m.email = r.email
+        join course.company_assignments n on n.id = r.assignment_id
+        join course.companies c on c.id = r.company_id
+        left join course.company_branding b on b.company_id = c.id
+       where r.email = ${email} and r.course = ${SD_COURSE} and r.revoked_at is null and m.removed_at is null
+       order by n.due_on nulls last
+       limit 1
+    `;
+    if (given.data) {
+      return { passed, total: LESSON_COUNT, finished: false, assigned: { company: given.data.company, requirement: given.data.requirement, dueOn: given.data.due_on } };
+    }
+    // Before 0050, or on any error reading it: the plain access check, with no details.
+    if (!given.error || !(await hasCompanyAssignment(sql, email, SD_COURSE))) return null;
+    return { passed, total: LESSON_COUNT, finished: false };
   }
   return { passed: Math.min(passes.data?.passed ?? 0, LESSON_COUNT), total: LESSON_COUNT, finished: seat.data.finished };
 }

@@ -141,9 +141,15 @@ export const teamKey = (name: string) => name.trim().replace(/\s+/g, " ").toLowe
  * All or nothing: `ok` only when every person can be added and they fit in
  * the free seats. Otherwise every problem is listed, by line.
  */
-export function planAdd(people: (CsvPerson & { role?: AddRole })[], ctx: AddContext): { ok: boolean; add: PlannedPerson[]; errors: RowError[] } {
+export function planAdd(
+  people: (CsvPerson & { role?: AddRole })[],
+  ctx: AddContext,
+  options: { skipExisting?: boolean } = {},
+): { ok: boolean; add: PlannedPerson[]; errors: RowError[]; skipped: { line: number; email: string }[] } {
   const errors: RowError[] = [];
   const add: PlannedPerson[] = [];
+  // A file uploaded again: people already here are left as they are, not refused.
+  const skipped: { line: number; email: string }[] = [];
   const firstLine = new Map<string, number>();
 
   for (const p of people) {
@@ -154,7 +160,11 @@ export function planAdd(people: (CsvPerson & { role?: AddRole })[], ctx: AddCont
     firstLine.set(email, p.line);
 
     const existing = ctx.existing.get(email);
-    if (existing && !existing.removed) { errors.push({ line: p.line, message: `${email} is already in your company.` }); continue; }
+    if (existing && !existing.removed) {
+      if (options.skipExisting) skipped.push({ line: p.line, email });
+      else errors.push({ line: p.line, message: `${email} is already in your company.` });
+      continue;
+    }
 
     let teamId: string | null = null;
     if (p.team) {
@@ -174,7 +184,7 @@ export function planAdd(people: (CsvPerson & { role?: AddRole })[], ctx: AddCont
         : `${asked} only ${free} of ${ctx.seatCount} seats ${free === 1 ? "is" : "are"} free. Ask Klymb for more seats or upload fewer people.`,
     });
   }
-  return { ok: errors.length === 0, add: errors.length ? [] : add, errors };
+  return { ok: errors.length === 0, add: errors.length ? [] : add, errors, skipped };
 }
 
 // ── Removing ────────────────────────────────────────────────

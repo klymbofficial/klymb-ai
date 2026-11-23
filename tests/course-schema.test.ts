@@ -34,6 +34,8 @@ const SD_TABLES = ["sd_events", "sd_feedback"];
 const COMPANY_TABLES = ["companies", "teams", "company_members", "company_signin_codes", "company_member_roles"];
 /** Added by 0049: the business catalog's publication state, tags and programs, and per-company grants. */
 const CATALOG_TABLES = ["catalog_items", "company_catalog_grants"];
+/** Added by 0050: assignments and the people each one reached. */
+const ASSIGNMENT_TABLES = ["company_assignments", "company_assignment_recipients"];
 
 test("migrations are ordered and uniquely numbered", () => {
   const numbers = files.map((f) => f.slice(0, 4));
@@ -43,7 +45,7 @@ test("migrations are ordered and uniquely numbered", () => {
 
 test("every table is created in the course schema", () => {
   assert.match(init, /create schema if not exists course/);
-  for (const table of [...TABLES, ...SD_TABLES, ...COMPANY_TABLES, ...CATALOG_TABLES]) {
+  for (const table of [...TABLES, ...SD_TABLES, ...COMPANY_TABLES, ...CATALOG_TABLES, ...ASSIGNMENT_TABLES]) {
     assert.match(all, new RegExp(`create table if not exists course\\.${table} \\(`), `${table} is missing`);
   }
 });

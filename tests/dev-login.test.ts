@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import type { Session } from "next-auth";
 import { adminEmailFrom, companyEmailFrom, verifiedEmailFrom } from "../src/auth";
-import { DEV_COMPANY, DEV_COMPANY_TWO, DEV_USERS, devLandingPath, devLoginEnabled, devUserByEmail } from "../src/lib/dev-login";
+import { DEV_COMPANY, DEV_COMPANY_TWO, DEV_TEAM, DEV_USERS, devLandingPath, devLoginEnabled, devUserByEmail } from "../src/lib/dev-login";
 
 const session = (user: Record<string, unknown> | null): Session =>
   ({ user, expires: "2099-01-01" }) as unknown as Session;
@@ -102,7 +102,16 @@ test("there is a plain test employee at Dev Company, who is not an admin of anyt
   const employee = DEV_USERS.find((u) => u.email === "dev-employee@klymb.test");
   assert.ok(employee, "dev-employee@klymb.test exists");
   assert.equal(employee.role, "company");
-  assert.deepEqual(employee.memberships, [{ company: DEV_COMPANY, roles: ["employee"] }]);
+  assert.deepEqual(employee.memberships, [{ company: DEV_COMPANY, roles: ["employee"], team: DEV_TEAM }]);
   assert.notEqual(employee.ownCourse, true, "no course of their own: HR assigns one in the workspace");
   assert.equal(devLandingPath(employee), `/org/${DEV_COMPANY.slug}`);
+});
+
+test("a dev team lead leads the employee's team at Dev Company, and holds no admin role", () => {
+  const lead = DEV_USERS.find((u) => u.email === "dev-lead@klymb.test");
+  assert.ok(lead?.memberships);
+  assert.deepEqual(lead.memberships, [{ company: DEV_COMPANY, roles: ["employee"], team: DEV_TEAM, leads: true }]);
+  const employee = DEV_USERS.find((u) => u.email === "dev-employee@klymb.test");
+  assert.equal(employee?.memberships?.[0].team, DEV_TEAM, "on the team the lead leads");
+  assert.equal(devLandingPath(lead), `/org/${DEV_COMPANY.slug}`);
 });

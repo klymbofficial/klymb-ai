@@ -13,6 +13,8 @@ function person(over: Partial<MemberProgress> & { email: string }): MemberProgre
     teamName: null,
     hasAccess: true,
     assigned: true,
+    requirement: "required",
+    dueOn: null,
     ownAccess: false,
     lessonsPassed: 0,
     finalBest: null,

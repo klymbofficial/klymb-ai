@@ -116,13 +116,24 @@ export async function logoVisibility(sql: Db, companyId: string, key: string): P
 
 /** The company whose assignment opens this course for this email, and its published look. Null when access isn't from a company. */
 export async function assigningCompanyBrand(sql: Db, email: string, course: string): Promise<ResolvedBrand | null> {
-  const { data, error } = await sql.row<{ company_id: string }>`
-    select a.company_id
-      from course.company_course_assignments a
-      join course.company_members m on m.company_id = a.company_id and m.email = a.email
-     where a.email = ${email} and a.course = ${course} and a.revoked_at is null and m.removed_at is null
+  const live = await sql.row<{ company_id: string }>`
+    select r.company_id
+      from course.company_assignment_recipients r
+      join course.company_members m on m.company_id = r.company_id and m.email = r.email
+     where r.email = ${email} and r.course = ${course} and r.revoked_at is null and m.removed_at is null
+     order by r.added_at desc
      limit 1
   `;
+  // Before 0050 (a preview against an unmigrated database): 0030's table.
+  const { data, error } = live.error?.code === UNDEFINED_TABLE
+    ? await sql.row<{ company_id: string }>`
+        select a.company_id
+          from course.company_course_assignments a
+          join course.company_members m on m.company_id = a.company_id and m.email = a.email
+         where a.email = ${email} and a.course = ${course} and a.revoked_at is null and m.removed_at is null
+         limit 1
+      `
+    : live;
   if (error || !data) return null;
   return publishedBrand(sql, data.company_id);
 }

@@ -40,7 +40,7 @@ export async function ensureDevUser(user: DevUser): Promise<void> {
           on conflict (email, course) do update set status = 'active'
         `;
       }
-      for (const { company, roles } of user.memberships ?? []) {
+      for (const { company, roles, team, leads } of user.memberships ?? []) {
         const { data } = await sql.rows<{ id: string }>`
           insert into course.companies (slug, name, seat_count)
           values (${company.slug}, ${company.name}, 10)
@@ -58,13 +58,34 @@ export async function ensureDevUser(user: DevUser): Promise<void> {
             on conflict (company_id) do nothing
           `;
         }
+        // A dev team, made the first time anyone on it signs in.
+        let teamId: string | null = null;
+        if (team) {
+          const t = await sql.row<{ id: string }>`
+            insert into course.teams (company_id, name) values (${companyId}, ${team})
+            on conflict (company_id, name) do update set name = excluded.name
+            returning id
+          `;
+          teamId = t.data?.id ?? null;
+        }
         // The old role column, for a database before 0047; its trigger keeps it right after.
         const legacy = roles.includes("admin") ? "hr" : "employee";
         await sql.rows`
-          insert into course.company_members (email, company_id, role, name)
-          values (${user.email}, ${companyId}, ${legacy}, ${user.name})
-          on conflict (company_id, email) do update set removed_at = null
+          insert into course.company_members (email, company_id, role, name, team_id)
+          values (${user.email}, ${companyId}, ${legacy}, ${user.name}, ${teamId}::uuid)
+          on conflict (company_id, email) do update
+             set removed_at = null, team_id = coalesce(course.company_members.team_id, excluded.team_id)
         `;
+        if (leads && teamId) {
+          // One lead per team: if someone else already leads it, this does nothing.
+          await sql.rows`
+            insert into course.company_member_roles (company_id, email, role, team_id, granted_by)
+            select ${companyId}, ${user.email}, 'team_lead', ${teamId}::uuid, 'dev sign-in'
+             where not exists (select 1 from course.company_member_roles
+                                where company_id = ${companyId} and role = 'team_lead' and team_id = ${teamId}::uuid)
+            on conflict (company_id, email, role) do nothing
+          `;
+        }
         await sql.rows`
           insert into course.company_member_roles (company_id, email, role, granted_by)
           select ${companyId}, ${user.email}, r, 'dev sign-in' from unnest(${[...roles]}::text[]) as r

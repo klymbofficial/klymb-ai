@@ -35,6 +35,7 @@ const LABELS: Record<string, string> = {
   "company.course_assign": "Company admin assigned a course",
   "company.course_unassign": "Company admin removed a course assignment",
   "company.course_assign_all": "Company admin assigned a course to everyone without it",
+  "company.assignment_create": "Company admin or team lead assigned a course",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;

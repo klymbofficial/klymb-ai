@@ -2,7 +2,8 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { auth, companyEmailFrom } from "@/auth";
-import { allowCompany, isAdmin, resolveMember, resolveMemberships, type CompanyMember, type CompanyRole } from "@/lib/company/access";
+import { allowCompany, hasRole, isAdmin, resolveMember, resolveMemberships, type CompanyMember, type CompanyRole } from "@/lib/company/access";
+import type { AssignScope } from "@/lib/company/assign-rules";
 import { membershipsLookup, workspaceLookup } from "@/lib/company/lookup";
 import { db } from "@/lib/db/client";
 
@@ -64,4 +65,18 @@ export async function adminFor(slug: unknown): Promise<CompanyMember | null> {
   if (typeof slug !== "string") return null;
   const member = await getWorkspaceMember(slug);
   return allowCompany(member, slug) && isAdmin(member) ? member : null;
+}
+
+/**
+ * Who may assign learning in this workspace, and to whom: an admin to anyone
+ * in the company, a team lead to people on their own team. Null for anyone
+ * else. The scope comes from the membership, never from a form.
+ */
+export async function assignerFor(slug: unknown): Promise<{ member: CompanyMember; scope: AssignScope } | null> {
+  if (typeof slug !== "string") return null;
+  const member = await getWorkspaceMember(slug);
+  if (!allowCompany(member, slug)) return null;
+  if (isAdmin(member)) return { member, scope: { kind: "company" } };
+  if (hasRole(member, ["team_lead"]) && member.leadTeamId) return { member, scope: { kind: "team", teamId: member.leadTeamId } };
+  return null;
 }

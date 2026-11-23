@@ -29,6 +29,10 @@ export interface DevUser {
 export interface DevMembership {
   company: DevCompany;
   roles: readonly ("admin" | "company_head" | "recruiter" | "reviewer" | "employee")[];
+  /** A team in that company, made if missing; the person joins it unless they're already on one. */
+  team?: string;
+  /** Also leads that team. */
+  leads?: boolean;
 }
 
 export interface DevCompany {
@@ -37,6 +41,9 @@ export interface DevCompany {
   /** Published branding to start with, so the two companies look different from the first sign-in. */
   brand?: { displayName: string; accent: string; welcome: string; supportEmail: string; supportText: string };
 }
+
+/** Dev Company's one team, led by Dev Lead, with Dev Employee on it. */
+export const DEV_TEAM = "Engineering";
 
 /** Two fake companies, so a member of one can be checked against the other's pages. */
 export const DEV_COMPANY: DevCompany = { slug: "dev-company", name: "Dev Company" };
@@ -67,9 +74,15 @@ export const DEV_USERS: readonly DevUser[] = [
   },
   {
     email: "dev-employee@klymb.test", name: "Dev Employee", role: "company",
-    memberships: [{ company: DEV_COMPANY, roles: ["employee"] }],
+    memberships: [{ company: DEV_COMPANY, roles: ["employee"], team: DEV_TEAM }],
     label: "Employee",
-    blurb: `Employee at ${DEV_COMPANY.name}. Nothing assigned yet: HR assigns System Design, then they can open it.`,
+    blurb: `Employee on ${DEV_COMPANY.name}'s ${DEV_TEAM} team. Nothing assigned to start with: an admin or their lead assigns System Design.`,
+  },
+  {
+    email: "dev-lead@klymb.test", name: "Dev Lead", role: "company",
+    memberships: [{ company: DEV_COMPANY, roles: ["employee"], team: DEV_TEAM, leads: true }],
+    label: "Team lead",
+    blurb: `Leads ${DEV_COMPANY.name}'s ${DEV_TEAM} team. Assigns learning to people on it, and nobody else.`,
   },
 ];
 

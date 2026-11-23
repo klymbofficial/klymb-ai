@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useRef, useState } from "react";
-import { addPerson, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult } from "@/app/org/[slug]/(workspace)/people/actions";
+import { addPerson, previewUpload, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult, type UploadPreview } from "@/app/org/[slug]/(workspace)/people/actions";
 import { GRANTABLE_ROLES, ROLE_LABEL, type GrantableRole } from "@/lib/company/access";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
 import type { CompanyPeople, PersonRow } from "@/lib/company/people-data";
@@ -124,27 +124,75 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
 
 function UploadCsv({ slug, free }: { slug: string; free: number }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<null | "check" | "add">(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
+  const [preview, setPreview] = useState<UploadPreview | null>(null);
+  const [file, setFile] = useState<FormData | null>(null);
+
+  const reset = () => { setPreview(null); setFile(null); if (fileRef.current) fileRef.current.value = ""; };
+
+  async function check(form: HTMLFormElement) {
+    const data = new FormData(form);
+    setBusy("check");
+    setResult(null);
+    const r = await previewUpload(slug, data);
+    setBusy(null);
+    if (!r.ok) return setResult(r);
+    setFile(data);
+    setPreview(r.preview);
+  }
+
+  async function add() {
+    if (!file || !preview) return;
+    setBusy("add");
+    const r = await uploadPeople(slug, file, preview.add.map((p) => p.email));
+    setBusy(null);
+    setResult(r);
+    if (r.ok) reset();
+  }
+
+  if (preview) {
+    const n = preview.add.length;
+    return (
+      <section aria-labelledby="csv-check" className="card flex flex-col gap-4 p-5">
+        <h2 id="csv-check" className="text-base font-black">Check the file</h2>
+        <p className="text-sm">
+          {n ? <><strong>{n}</strong> to add</> : "Nobody new to add"}
+          {preview.skipped.length > 0 && <> · <strong>{preview.skipped.length}</strong> already here, left as they are</>}
+          {" · "}{preview.activeMembers + n} of {preview.seats} seats after
+        </p>
+        {n > 0 && (
+          <ul className="max-h-64 overflow-y-auto border border-line/40 bg-white text-sm">
+            {preview.add.map((p) => (
+              <li key={p.email} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-3 border-b border-line/15 px-3 py-1.5 last:border-0">
+                <span className="font-mono text-xs text-muted">Line {p.line}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{p.name ?? p.email}</span>
+                  <span className="block truncate text-xs text-muted">{[p.name ? p.email : null, p.team, p.returning ? "returning" : null].filter(Boolean).join(" · ")}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-xs text-muted">Each person gets an email with how to sign in.</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {n > 0 && <button type="button" onClick={add} disabled={busy !== null} className={submit}>{busy === "add" ? "Adding…" : `Add ${n} ${n === 1 ? "person" : "people"}`}</button>}
+          <button type="button" onClick={() => { reset(); setResult(null); }} disabled={busy !== null} className="px-3 py-2 text-xs font-bold underline underline-offset-4">Choose another file</button>
+        </div>
+        <Note result={result} />
+      </section>
+    );
+  }
 
   return (
     <form
       className="card flex flex-col gap-3 p-5"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setResult(null);
-        const r = await uploadPeople(slug, new FormData(e.currentTarget));
-        setBusy(false);
-        setResult(r);
-        if (r.ok && fileRef.current) fileRef.current.value = "";
-      }}
+      onSubmit={(e) => { e.preventDefault(); void check(e.currentTarget); }}
     >
       <h2 className="text-base font-black">Upload a CSV</h2>
       <p className="text-xs text-muted">
-        Columns: <code className="font-mono">{CSV_COLUMNS.join(", ")}</code>, with a header row. Only email is needed. Teams must already exist.
-        Everyone joins as an employee. Up to {MAX_CSV_ROWS} people per file; if any row has a problem, nobody is added.
-        Someone already in another company, or with their own Klymb account, can be added too.
+        Columns: <code className="font-mono">{CSV_COLUMNS.join(", ")}</code>, with a header row. Only email is needed; teams must already exist.
+        Up to {MAX_CSV_ROWS} people. You check the list before anyone is added, and people already here are left as they are.
       </p>
       <a
         href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`}
@@ -155,7 +203,7 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
       </a>
       <input ref={fileRef} type="file" name="file" accept=".csv,text/csv" required className="text-sm file:mr-3 file:border file:border-line/60 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-bold" />
       <div>
-        <button type="submit" disabled={busy || free === 0} className={submit}>{busy ? "Checking…" : "Upload"}</button>
+        <button type="submit" disabled={busy !== null || free === 0} className={submit}>{busy === "check" ? "Checking…" : "Check file"}</button>
       </div>
       <Note result={result} />
     </form>

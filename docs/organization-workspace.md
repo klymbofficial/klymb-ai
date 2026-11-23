@@ -65,9 +65,29 @@ on this branch, not against plans.
     publishes anything (previews share production's database): publish at
     `/admin/catalog` as Dev Admin.
 
+- **Assignments (T04):** an admin assigns System Design to some people, a
+  team or everyone; a team lead to people on their own team (`assignerFor`).
+  Each assignment is required (optionally with a due date) or recommended.
+  The Learning page shows who it would reach, who is left out and why, the
+  owner, the date and the seats before anything is written, then writes it
+  once (`course.company_assignments` and `company_assignment_recipients`,
+  migration 0050). The people are fixed at that moment: someone joining the
+  team later isn't added. The database allows one live assignment per person
+  and course, so a retried submit or two people assigning at once give
+  nobody the course twice. Needs attention lists required assignments that
+  are overdue or due within a week. Old 0030 rows moved over as required
+  assignments, and a trigger keeps 0030's table in step for older code.
+  The learner's /learn card says which company assigned it and its terms.
+- **CSV import:** checked first (who will be added, who is already here,
+  seats after, problems by line), then added. People already in the company
+  are left as they are, so uploading the same file again adds nobody.
+- **Dev sign-in:** Dev Lead leads the Engineering team at Dev Company, with
+  Dev Employee on it. Run `npm run dev:test` so sign-in returns to the
+  right port, or use port 3000, which `.env.local`'s AUTH_URL names.
+
 ## Not available (and shown as such in the UI)
 
-Assigning anything other than System Design, assigning assessments, company
+Assigning anything other than System Design, assigning assessments, candidate batches (T06), reminder emails for due dates, company
 reports and exports, certificates, single sign-on, and any notification email
 beyond the invite and its resend. Assigned employees get no reminder, release or
 push emails: those crons read `course.enrollments`, and company access doesn't
