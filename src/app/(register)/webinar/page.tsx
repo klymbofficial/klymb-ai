@@ -9,10 +9,11 @@ import { site } from "@/data/config";
 import {
   AUDIENCES, FAQ, HIRING_HEADLINES, HIRING_STATS, LAYOFF_HEADLINES, LAYOFF_STATS, NOT_FOR, SKILL_STATEMENT, type Stat,
 } from "@/data/workshop";
-import { WEBINAR, webinarClock } from "@/lib/webinar";
+import { WEBINAR, webinarClock, webinarFee } from "@/lib/webinar";
 
-const title = "AI can write the code. Can you design the system? A free live webinar";
-const description = `${WEBINAR.title}: ${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. See the one skill AI can't do for you done live, in one hour. Free, online.`;
+const kind = WEBINAR.price ? `A ${WEBINAR.price.label} live webinar` : "A free live webinar";
+const title = `AI can write the code. Can you design the system? ${kind}`;
+const description = `${WEBINAR.title}: ${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. See the one skill AI can't do for you done live, in one hour. ${WEBINAR.price ? `${WEBINAR.price.label} a seat` : "Free"}, online.`;
 
 export const metadata: Metadata = {
   title, description,
@@ -25,10 +26,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const FACTS = [
-  ["Date", "Sat, 21 Nov 2026"],
-  ["Time", "7:00–8:00 PM IST"],
+  ["Date", WEBINAR.shortDate],
+  ["Time", WEBINAR.startLabel],
   ["Where", "Online, live"],
-  ["Fee", "Free"],
+  ["Fee", webinarFee()],
 ] as const;
 
 const NAV = [["#news", "The news"], ["#for-you", "Is it for you?"], ["#faq", "FAQ"]] as const;
@@ -38,7 +39,7 @@ const h2 = "display text-[clamp(2rem,4.4vw,3.75rem)] leading-none tracking-[-0.0
 const section = "scroll-mt-24 border-t-2 border-line/30 py-[clamp(3rem,8vh,6rem)]";
 
 /**
- * The long, public page for the free System Design webinar (the design from
+ * The long, public page for the System Design webinar (the design from
  * Claude Design, "Klymb Workshop v2"). The sign-up is the same one as on
  * the plain sign-up page at /workshop: same endpoint, same list of registrations.
  */
@@ -59,7 +60,7 @@ export default function WebinarPage() {
             </div>
             <span className="flex-1 md:hidden" />
             <a href="#register" className="inline-flex flex-none items-center gap-2 rounded-full bg-red-strong px-[18px] py-2.5 text-[15px] font-bold text-white no-underline transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.98]">
-              Register free <ArrowRight size={16} aria-hidden="true" />
+              {WEBINAR.price ? "Save a seat" : "Register free"} <ArrowRight size={16} aria-hidden="true" />
             </a>
           </nav>
         </div>
@@ -68,12 +69,13 @@ export default function WebinarPage() {
           {/* Hero and the ticket. */}
           <section className="grid items-start gap-x-[clamp(2rem,5vw,5rem)] gap-y-12 py-[clamp(2rem,6vh,4.5rem)] lg:grid-cols-2">
             <div className="flex flex-col items-start gap-7">
-              <span className="rounded-full bg-red-tint px-3.5 py-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-red-strong">Free · Live · 60 minutes</span>
+              <span className="rounded-full bg-red-tint px-3.5 py-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-red-strong">{webinarFee()} · Live · 60 minutes</span>
               <h1 className="text-[clamp(2.5rem,6vw,5.25rem)] font-extrabold leading-[0.98] tracking-[-0.045em]">
                 AI can write the code.
                 <span className="block italic text-red-strong">Can you design the system?</span>
               </h1>
               <p className="max-w-[560px] text-[clamp(1.0625rem,1.5vw,1.25rem)] leading-normal text-ink/80">The one skill AI can&apos;t do for you. See it done live, in one hour.</p>
+              <p className="-mt-3 text-[15px] text-ink/70">{WEBINAR.dateLabel} · {WEBINAR.timeLabel} ({WEBINAR.otherZones})</p>
               <dl className="grid w-full grid-cols-2 border-y-2 border-line/30 sm:grid-cols-4">
                 {FACTS.map(([k, v]) => (
                   <div key={k} className="grid gap-1 py-4 pr-4">
@@ -162,9 +164,9 @@ export default function WebinarPage() {
               AI writes the code.
               <span className="block">You design the system.</span>
             </h2>
-            <p className="text-[clamp(1.0625rem,1.6vw,1.25rem)]">Sat, 21 Nov 2026 · 7:00 to 8:00 PM IST · Online · Free</p>
+            <p className="text-[clamp(1.0625rem,1.6vw,1.25rem)]">{WEBINAR.dateLabel} · {WEBINAR.timeLabel} · Online · {webinarFee()}</p>
             <a href="#register" className="flex min-w-[260px] items-center justify-between gap-4 rounded-xl bg-white px-[22px] py-[18px] text-lg font-bold text-ink no-underline transition-colors duration-150 hover:bg-ink hover:text-white">
-              Save my free seat <ArrowRight size={20} aria-hidden="true" />
+              {WEBINAR.price ? `Save my seat for ${WEBINAR.price.label}` : "Save my free seat"} <ArrowRight size={20} aria-hidden="true" />
             </a>
           </section>
 
@@ -205,7 +207,7 @@ function eventJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: `${WEBINAR.title}: a free live webinar`,
+    name: `${WEBINAR.title}: ${kind.charAt(0).toLowerCase()}${kind.slice(1)}`,
     description,
     startDate: WEBINAR.startsAt,
     endDate: WEBINAR.endsAt,
@@ -213,6 +215,6 @@ function eventJsonLd() {
     eventStatus: "https://schema.org/EventScheduled",
     location: { "@type": "VirtualLocation", url: `${site.url}/webinar` },
     organizer: { "@type": "Organization", name: "Klymb.ai", url: site.url },
-    offers: { "@type": "Offer", price: 0, priceCurrency: "INR", url: `${site.url}/webinar`, availability: "https://schema.org/InStock" },
+    offers: { "@type": "Offer", price: WEBINAR.price ? WEBINAR.price.amount / 100 : 0, priceCurrency: WEBINAR.price?.currency ?? "INR", url: `${site.url}/webinar`, availability: "https://schema.org/InStock" },
   };
 }

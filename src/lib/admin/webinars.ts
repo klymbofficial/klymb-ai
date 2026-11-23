@@ -12,6 +12,8 @@ export interface WebinarRegistration {
   org: string | null;
   question: string | null;
   confirmation_sent_at: string | null;
+  /** Set once a paid webinar's seat is paid for; null for a free webinar and for an unfinished checkout. */
+  paid_at: string | null;
 }
 
 /** Everyone registered for one webinar, newest first. Null when the table isn't there yet (migration 0042 not run). */
@@ -21,7 +23,7 @@ export async function getWebinarRegistrations(webinar: string): Promise<WebinarR
   const sql = db();
   if (!sql) return [];
   const { data, error } = await sql.rows<WebinarRegistration>`
-    select id, created_at, name, email, phone, role, org, question, confirmation_sent_at
+    select id, created_at, name, email, phone, role, org, question, confirmation_sent_at, paid_at
       from course.webinar_registrations
      where webinar = ${webinar}
      order by created_at desc

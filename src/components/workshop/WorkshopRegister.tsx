@@ -5,7 +5,8 @@ import { ArrowRight, CalendarPlus, Check, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { DIAL_CODES, INDIA_DIAL, phoneProblem, type SdRole } from "@/lib/sd-offer";
-import { WEBINAR, WEBINAR_LIMITS, googleCalendarLink, webinarProblems } from "@/lib/webinar";
+import { WEBINAR, WEBINAR_LIMITS, googleCalendarLink, webinarFee, webinarProblems } from "@/lib/webinar";
+import { payForSeat } from "@/lib/webinar-checkout";
 import { useCountdownParts, useWorkshop } from "./WorkshopClock";
 
 // 16px text: anything smaller makes iPhones zoom the page when a field is tapped.
@@ -21,14 +22,15 @@ const ROLES: { key: SdRole; label: string }[] = [
 
 /**
  * The sign-up, drawn as an admit-one ticket. It posts to the same endpoint as
- * /workshop, so a seat saved here is the same seat in the same list.
+ * /workshop, so a seat saved here is the same seat in the same list. For a
+ * paid webinar the endpoint hands back an order, and Razorpay opens here.
  */
 export function WorkshopRegister() {
   const { open, setRegistered } = useWorkshop();
   const { phase, parts } = useCountdownParts();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [dial, setDial] = useState(INDIA_DIAL);
+  const [dial, setDial] = useState<string>(WEBINAR.defaultDial);
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<SdRole | "">("");
   const [website, setWebsite] = useState("");
@@ -52,6 +54,14 @@ export function WorkshopRegister() {
       body: JSON.stringify({ name, email, dial, phone, role, website }),
     }).catch(() => null);
     const out = await res?.json().catch(() => null);
+    if (res?.ok && out?.ok && out.pay) {
+      const seat = await payForSeat(out.pay);
+      setBusy(false);
+      if (!seat.ok) return setError(seat.error);
+      setDone({ group: seat.group, emailed: seat.emailed });
+      setRegistered(true);
+      return;
+    }
     setBusy(false);
     if (res?.ok && out?.ok) {
       setDone({ group: out.group ?? WEBINAR.whatsappGroup, emailed: out.emailed === true });
@@ -65,12 +75,12 @@ export function WorkshopRegister() {
     <div id="register" className="relative scroll-mt-28 overflow-hidden rounded-card border border-line/30 bg-card shadow-float">
       <div className="flex flex-wrap items-end justify-between gap-4 bg-ink px-6 py-5 text-paper">
         <div className="grid gap-1.5">
-          <span className="text-xs uppercase tracking-[0.16em] text-paper/70">Admit one · Free</span>
+          <span className="text-xs uppercase tracking-[0.16em] text-paper/70">Admit one · {webinarFee()}</span>
           <strong className="display display-soft text-2xl leading-[1.1]">{WEBINAR.title}</strong>
         </div>
         <span className="display text-right text-[15px] tracking-[0.04em]">
-          21.11.26
-          <span className="block text-red-soft">19:00 IST</span>
+          {WEBINAR.ticketDate}
+          <span className="block text-red-soft">{WEBINAR.startLabel}</span>
         </span>
       </div>
       {/* The tear-off line, with the notches either side. */}
@@ -166,11 +176,11 @@ export function WorkshopRegister() {
           {error && <p role="alert" className="rounded-xl bg-error-tint px-4 py-3 text-sm font-medium text-error">{error}</p>}
 
           <button type="submit" disabled={busy} className="flex w-full items-center justify-between rounded-xl bg-red-strong px-5 py-[18px] text-lg font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.99] disabled:opacity-60">
-            {busy ? "Saving your seat…" : "Save my free seat"}
+            {busy ? (WEBINAR.price ? "Opening payment…" : "Saving your seat…") : WEBINAR.price ? `Pay ${WEBINAR.price.label} & save my seat` : "Save my free seat"}
             {!busy && <ArrowRight size={20} aria-hidden="true" />}
           </button>
           <p className="text-[13px] leading-relaxed text-muted">
-            No payment, no card. The joining link comes to your email and WhatsApp before we start. We only use your details for this webinar and Klymb.ai&apos;s courses ·{" "}
+            {WEBINAR.price ? `${WEBINAR.price.label} (${WEBINAR.price.currency}), paid securely with Razorpay. Your seat is saved once it's paid.` : "No payment, no card."} The joining link comes to your email and WhatsApp before we start. We only use your details for this webinar and Klymb.ai&apos;s courses ·{" "}
             <Link href="/privacy" className="underline underline-offset-2">Privacy</Link>
           </p>
         </form>

@@ -6,10 +6,10 @@ import presenting from "@/assets/track-page/presenting.jpg";
 import { CookieBanner } from "@/components/legal/CookieBanner";
 import { WebinarForm } from "@/components/webinar/WebinarForm";
 import { site } from "@/data/config";
-import { WEBINAR, webinarClock } from "@/lib/webinar";
+import { WEBINAR, webinarClock, webinarFee } from "@/lib/webinar";
 
-const title = `Free live webinar: ${WEBINAR.title}`;
-const description = `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. Learn the building blocks of system design, then design a URL shortener and a WhatsApp-style chat app live. Free.`;
+const title = `${WEBINAR.price ? `${WEBINAR.price.label} live webinar` : "Free live webinar"}: ${WEBINAR.title}`;
+const description = `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}. Learn the building blocks of system design, then design a URL shortener and a WhatsApp-style chat app live. ${webinarFee()}.`;
 
 export const metadata: Metadata = {
   title, description,
@@ -28,7 +28,7 @@ const FACTS = [
 ] as const;
 
 /**
- * The free webinar, laid out like /join: a maroon panel with what it covers,
+ * The webinar, laid out like /join: a maroon panel with what it covers,
  * and the sign-up beside it (under it on a phone).
  */
 export default function WorkshopPage() {
@@ -41,7 +41,7 @@ export default function WorkshopPage() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-red-muted/85 via-red-muted/92 to-red-muted-deep/97" />
           <div className="mx-auto w-full max-w-xl">
             <Link href="/" className="display text-lg text-white no-underline">KLYMB<span className="text-red-soft">.AI</span></Link>
-            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">Free live webinar · 1 hour</p>
+            <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.16em] text-white/60 lg:mt-12">{WEBINAR.price ? `Live webinar · ${webinarFee()}` : "Free live webinar"} · 1 hour</p>
             <h1 className="display display-soft mt-2 text-[clamp(1.9rem,6vw,3rem)] leading-[1.05]">
               {WEBINAR.title}: <span className="text-red-soft">{WEBINAR.tagline}</span>
             </h1>
@@ -93,7 +93,7 @@ function eventJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: `${WEBINAR.title}: a free live webinar`,
+    name: `${WEBINAR.title}: ${WEBINAR.price ? `a ${WEBINAR.price.label}` : "a free"} live webinar`,
     description,
     startDate: WEBINAR.startsAt,
     endDate: WEBINAR.endsAt,
@@ -101,6 +101,6 @@ function eventJsonLd() {
     eventStatus: "https://schema.org/EventScheduled",
     location: { "@type": "VirtualLocation", url: `${site.url}/workshop` },
     organizer: { "@type": "Organization", name: "Klymb.ai", url: site.url },
-    offers: { "@type": "Offer", price: 0, priceCurrency: "INR", url: `${site.url}/workshop`, availability: "https://schema.org/InStock" },
+    offers: { "@type": "Offer", price: WEBINAR.price ? WEBINAR.price.amount / 100 : 0, priceCurrency: WEBINAR.price?.currency ?? "INR", url: `${site.url}/workshop`, availability: "https://schema.org/InStock" },
   };
 }

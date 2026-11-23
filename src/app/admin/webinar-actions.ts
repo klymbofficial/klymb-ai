@@ -14,6 +14,7 @@ const firstName = (name: string | null | undefined) => name?.trim().split(/\s+/)
 function mailFor(name: string | null | undefined) {
   return webinarLiveEmail({
     name: firstName(name), title: WEBINAR.title, date: WEBINAR.dateLabel, time: WEBINAR.timeLabel,
+    start: WEBINAR.startLabel, early: WEBINAR.earlyLabel, paid: !!WEBINAR.price,
     meetUrl: WEBINAR.meetUrl, agenda: WEBINAR.agenda, siteUrl: site.url, supportEmail: MAIL_SUPPORT,
   });
 }
@@ -30,7 +31,8 @@ export async function sendMeetLinkTest(): Promise<MeetSendResult> {
 }
 
 /**
- * Emails the Meet link to everyone registered for this webinar. Who has been
+ * Emails the Meet link to everyone registered for this webinar (for a paid
+ * one, everyone who paid). Who has been
  * sent it is kept in the admin audit log, written after every batch, so
  * pressing the button again (or after a timeout) only reaches the rest.
  */
@@ -43,7 +45,9 @@ export async function sendMeetLinkToAll(): Promise<MeetSendResult> {
   if (!sql) return { ok: false, message: "Unavailable right now." };
 
   const { data: people, error } = await sql.rows<{ email: string; name: string }>`
-    select email, name from course.webinar_registrations where webinar = ${WEBINAR.slug} order by created_at
+    select email, name from course.webinar_registrations
+     where webinar = ${WEBINAR.slug} and (amount is null or paid_at is not null)
+     order by created_at
   `;
   if (error || !people) return { ok: false, message: "Couldn't read the registrations." };
 
