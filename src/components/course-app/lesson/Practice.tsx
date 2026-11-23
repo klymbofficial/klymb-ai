@@ -35,6 +35,7 @@ export const UI = {
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes",
     complete: "Mark complete", redo: "Do this lesson again",
     nextLesson: "Next lesson", practise: "Practise extra exercises", practiseSub: "Not mandatory, but highly recommended", practised: "Extra practice done. Do it again any time.", extra: "Extra practice",
+    recommended: "Recommended", practiseCard: "Lock it in with extra practice", practiseWhat: "The same ideas, the way an interview asks them:", practiseGo: "Start practice", practiseResume: "Continue practice",
   },
   hi: {
     steps: { watch: "Watch", reveal: "Samjho", prove: "Prove it", estimate: "Estimate", build: "Build it", draw: "Draw it", design: "Design it", follow: "Follow-ups", done: "Done" } as Record<StepKey, string>,
@@ -53,6 +54,7 @@ export const UI = {
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo",
     complete: "Mark complete", redo: "Yeh lesson phir se karo",
     nextLesson: "Agla lesson", practise: "Extra exercises practise karo", practiseSub: "Zaroori nahi, par bahut recommended", practised: "Extra practice ho gayi. Kabhi bhi phir se karo.", extra: "Extra practice",
+    recommended: "Recommended", practiseCard: "Extra practice se pakka karo", practiseWhat: "Wahi ideas, jaise interview mein poochhe jaate hain:", practiseGo: "Practice shuru karo", practiseResume: "Practice continue karo",
   },
 };
 export type Ui = (typeof UI)["en"];
@@ -184,14 +186,40 @@ function Unlocked({ s, act, id, day, c, ui, practice, practised, hasNext, onPrac
 }) {
   const user = useCourseUser();
   const p = s.lessons[id] ?? {};
+  const parts = lessonSteps(s, id, day).filter((x) => PRACTICE_KEYS.includes(x.key));
+  const left = parts.find((x) => !x.done)?.key ?? null;
+  const started = parts.some((x) => x.done);
   return (
     <div className="flex flex-col gap-6">
       <ShareCard lang={s.lang} id={id} day={day} c={c} shared={!!p.shared} onShared={() => act((q) => markShared(q, id))} />
       <div className="flex flex-col gap-2">
+        {left && !practised && (
+          <button
+            type="button"
+            onClick={() => onPractise(left)}
+            className="sd-a-in group flex cursor-pointer flex-col gap-2.5 rounded-xl border-2 border-sd-accent bg-sd-accent-100 p-4 text-left transition-colors hover:border-sd-accent-700"
+            style={{ animationDuration: ".4s" }}
+          >
+            <span className="flex items-center justify-between gap-2">
+              <span className="sd-kicker text-sd-accent-700">{ui.extra}</span>
+              <span className="rounded-md bg-sd-accent px-2 py-0.5 text-[11px] font-extrabold tracking-[0.06em] text-sd-bg uppercase">{ui.recommended}</span>
+            </span>
+            <span className="text-lg leading-[1.2] font-extrabold tracking-[-0.01em]">{ui.practiseCard}</span>
+            <span className="text-sm leading-[1.4] text-sd-n-800">{ui.practiseWhat}</span>
+            <span className="flex flex-wrap gap-1.5">
+              {parts.map((x) => (
+                <span key={x.key} className={clsx("flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold", x.done ? "border-sd-divider text-sd-n-700" : "border-sd-accent text-sd-accent-700")}>
+                  {x.done && <Icon name="check" size={12} stroke={3} />}{ui.steps[x.key]}
+                </span>
+              ))}
+            </span>
+            <span className="flex items-center gap-1.5 text-sm font-extrabold text-sd-accent-700">{started ? ui.practiseResume : ui.practiseGo}<Icon name="arrowR" size={16} /></span>
+          </button>
+        )}
         <button type="button" onClick={() => act((q) => completeNext(q, false))} className="sd-btn sd-btn-primary h-14 justify-between gap-2 px-[18px] text-base">
           <span className="flex items-center gap-2"><Icon name="check" size={16} />{hasNext ? ui.nextLesson : ui.complete}</span><Icon name="arrowR" size={18} />
         </button>
-        {practice && (
+        {practice && practised && (
           <button type="button" onClick={() => onPractise(practice)} className="sd-btn sd-btn-secondary min-h-14 flex-col items-start justify-center gap-0 px-[18px] py-2 text-left">
             <span className="text-base font-extrabold">{ui.practise}</span>
             <span className="text-xs font-semibold text-sd-n-700">{practised ? ui.practised : ui.practiseSub}</span>
