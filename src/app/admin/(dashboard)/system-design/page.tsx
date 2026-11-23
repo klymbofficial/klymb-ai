@@ -27,16 +27,33 @@ const FUNNEL_WORDS: Record<string, string> = {
 
 const TONE: Record<Tone, string> = { learn: "bg-sky-500", win: "bg-emerald-500", miss: "bg-red-500", nav: "bg-line", setting: "bg-amber-500" };
 
-/** One learner's whole trail through the course, oldest first. */
-async function LearnerTrail({ anon }: { anon: string }) {
-  const events = await getSdLearner(anon);
+const PAGE_LINK = "rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper";
+
+/** Older and newer pages of a trail, when there are any. */
+function TrailPages({ anon, page, older }: { anon: string; page: number; older: boolean }) {
+  if (!older && !page) return null;
+  const href = (p: number) => `/admin/system-design?learner=${encodeURIComponent(anon)}${p ? `&page=${p}` : ""}`;
+  return (
+    <nav aria-label="Trail pages" className="my-3 flex items-center justify-between gap-3 text-sm">
+      {older ? <Link href={href(page + 1)} className={PAGE_LINK}>← Older activity</Link> : <span className="text-muted">The very start</span>}
+      <span className="text-muted">Page {page + 1}{page ? "" : " · the latest"}</span>
+      {page ? <Link href={href(page - 1)} className={PAGE_LINK}>Newer activity →</Link> : <span className="text-muted">Up to now</span>}
+    </nav>
+  );
+}
+
+/** One learner's trail through the course, a page at a time, newest page first and oldest first within it. */
+async function LearnerTrail({ anon, page }: { anon: string; page: number }) {
+  const { events, older } = await getSdLearner(anon, page);
   const who = events.find((e) => e.email)?.email ?? `Anonymous ${anon.slice(0, 8)}`;
   return (
     <>
-      <PageTitle eyebrow="System Design · one learner" title={who} intro="Everything they did, oldest first. Green = a win, red = a miss, blue = learning, grey = moving around. Times are IST." actions={<Link href="/admin/system-design" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Back to all learners</Link>} />
+      <PageTitle eyebrow="System Design · one learner" title={who} intro="Everything they did, oldest first, with their latest activity on this first page. Green = a win, red = a miss, blue = learning, grey = moving around. Times are IST." actions={<Link href="/admin/system-design" className={PAGE_LINK}>Back to all learners</Link>} />
       {!events.length ? (
-        <EmptyState title="Nothing recorded" body="This learner has no activity in the course." />
+        <EmptyState title="Nothing recorded" body={page ? "Nothing on this page. Go back to the latest activity." : "This learner has no activity in the course."} />
       ) : (
+        <>
+        <TrailPages anon={anon} page={page} older={older} />
         <ol className="card divide-y divide-line/25 overflow-hidden">
           {trailLines(events).map((l, i) => (
             <li key={i} className="grid grid-cols-[150px_70px_1fr] items-baseline gap-3 px-5 py-2.5 text-sm max-sm:grid-cols-[1fr_auto]">
@@ -44,22 +61,24 @@ async function LearnerTrail({ anon }: { anon: string }) {
               <span className="font-bold">{dayName(l.lesson === "overview" ? null : l.lesson)}</span>
               <span className="flex items-baseline gap-2 max-sm:col-span-2">
                 <span aria-hidden className={`size-2 shrink-0 translate-y-[-1px] rounded-full ${TONE[l.tone]}`} />
-                <span><span className={l.tone === "nav" ? "text-muted" : "font-semibold"}>{l.text}</span>{l.detail && <span className="text-muted"> · {l.detail}</span>}</span>
+                <span><span className={l.tone === "nav" ? "text-muted" : "font-semibold"}>{l.text}</span>{l.detail && <span className="text-muted"> · {l.detail}</span>}{l.times && <span className="font-bold"> ×{l.times}</span>}</span>
               </span>
             </li>
           ))}
         </ol>
+        <TrailPages anon={anon} page={page} older={older} />
+        </>
       )}
     </>
   );
 }
 
-export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string; all?: string; q?: string }> }) {
+export default async function AdminSystemDesignPage({ searchParams }: { searchParams: Promise<{ range?: string; learner?: string; day?: string; all?: string; q?: string; page?: string }> }) {
   const admin = await requireAdmin();
-  const { range, learner, day, all, q: rawQ } = await searchParams;
+  const { range, learner, day, all, q: rawQ, page } = await searchParams;
   const q = (rawQ ?? "").trim().toLowerCase().slice(0, 100);
   const showAll = all === "1";
-  if (learner) return <LearnerTrail anon={learner} />;
+  if (learner) return <LearnerTrail anon={learner} page={Math.min(Math.max(Number.parseInt(page ?? "0", 10) || 0, 0), 500)} />;
 
   const days = rangeDays(range);
   const [data, funnel, announce] = await Promise.all([getSdAnalytics(days), getOfferFunnel(days), admin.owner ? announcementStatus() : null]);

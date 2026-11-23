@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QUESTIONS } from "@/data/system-design/course-app";
 import {
-  START_SCREENS, afterPayment, dayOf, deepLink, defaultState, finalFailed, finishFinal, fromStored, isAnswered, nextQuestion, settingsOnly, pickOption, previewState, setLessons, startEnrolled, tick, togglePlay, toStored, withProgress, withServerPasses,
+  START_SCREENS, afterPayment, dayOf, deepLink, defaultState, finalFailed, finishFinal, fromStored, isAnswered, nextQuestion, settingsOnly, pickOption, tourDone, previewState, setLessons, startEnrolled, tick, togglePlay, toStored, withProgress, withServerPasses,
   type CourseState, type LessonContent, type StartScreen,
 } from "@/lib/course-app";
 import type { SdProgress } from "@/lib/sd-pace";
@@ -68,7 +68,7 @@ export function useCourseApp({ lessons, enrolled, passes, progress }: { lessons:
       next = previewState(start as StartScreen, { q: Number(params.get("q") ?? 0), seedPost: params.get("post") === "1" });
     } else {
       const raw = read(STORAGE_KEY);
-      next = withProgress(withServerPasses(fromStored(raw ?? settingsOnly(read(PREVIOUS_KEY))), passes), progress);
+      next = tourDone(withProgress(withServerPasses(fromStored(raw ?? settingsOnly(read(PREVIOUS_KEY))), passes), progress));
       if (link.current === undefined) {
         link.current = params.get("lesson");
         paid.current = params.has("paid");
@@ -130,7 +130,8 @@ export function useCourseApp({ lessons, enrolled, passes, progress }: { lessons:
           e.preventDefault();
         }
       } else if (st.screen === "player" && e.key === " " && !st.qcOpen) {
-        setS(togglePlay);
+        // A held space bar repeats: toggle once, or the video flickers between play and pause.
+        if (!e.repeat) setS(togglePlay);
         e.preventDefault();
       }
     };

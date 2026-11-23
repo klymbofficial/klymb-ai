@@ -243,6 +243,25 @@ export function practiceStart(s: CourseState, id: string): StepKey | null {
   return lessonSteps(s, id, d).find((x) => PRACTICE_KEYS.includes(x.key))?.key ?? null;
 }
 
+/** On a passed lesson, the first extra-practice part still to do. Null before passing, with no practice, or once it's all done. */
+export function practiceLeft(s: CourseState, id: string): StepKey | null {
+  const d = dayOf(id);
+  if (!d || !s.lessons[id]?.post) return null;
+  return lessonSteps(s, id, d).find((x) => PRACTICE_KEYS.includes(x.key) && !x.done)?.key ?? null;
+}
+
+/** The latest passed lesson whose extra practice is still waiting, for the nudge on Home. */
+export function practiceWaiting(s: CourseState): string | null {
+  return [...ALL_IDS].reverse().find((id) => !isSoon(id) && !!practiceLeft(s, id)) ?? null;
+}
+
+/** Opens a passed lesson straight on its first unfinished extra-practice part. */
+export function openPractice(s: CourseState, id: string, now = Date.now()): CourseState {
+  const n = openLesson(s, id, now);
+  const k = practiceLeft(n, id);
+  return n.screen === "player" && n.cur === id && k ? { ...n, stage: k, estIdx: 0, fuIdx: 0, playing: false } : n;
+}
+
 /** The next required step: the first one not done, leaving the optional practice out. */
 export function nextStep(s: CourseState, id: string, day: Day): StepKey {
   return lessonSteps(s, id, day).find((x) => !x.done && !PRACTICE_KEYS.includes(x.key))?.key ?? "done";
@@ -737,6 +756,15 @@ export function afterPayment(s: CourseState, now = Date.now()): CourseState {
  * cleared browser picks up from: passed lessons done, and the next one open.
  * `post` stays empty: the picks weren't kept, only that they passed.
  */
+/**
+ * The lesson-screen tour is for someone new. "Seen it" lives in this browser
+ * only, so a learner who has passed a lesson (which the server knows) counts
+ * as toured on any device. Replaying it from Profile still works.
+ */
+export function tourDone(s: CourseState): CourseState {
+  return s.toured || !(s.done.length || Object.values(s.lessons).some((l) => l.post)) ? s : { ...s, toured: true };
+}
+
 export function withServerPasses(s: CourseState, passes: Record<string, number>): CourseState {
   const ids = Object.keys(passes).filter((id) => dayOf(id) && !s.lessons[id]?.post);
   if (!ids.length) return s;

@@ -4,7 +4,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { MODULES } from "@/data/system-design/course-app";
 import {
-  ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, checkScores, dayOf, fmt, isSoon, lesson, lessonDay, moduleIds, moduleMinutes, openFinal, openLesson, pad, paceNow, pct, type CourseState,
+  ALL_IDS, LESSON_COUNT, PASS_MARK, checkAverage, checkScores, dayOf, fmt, isSoon, lesson, lessonDay, moduleIds, moduleMinutes, openFinal, openLesson, openPractice, pad, paceNow, pct, practiceWaiting, type CourseState,
 } from "@/lib/course-app";
 import { SD_BONUS, SD_BONUS_URL } from "@/lib/sd-bonus";
 import { paceMessage, type Pace } from "@/lib/sd-pace";
@@ -16,6 +16,26 @@ import { ReminderPrompt } from "../SdReminders";
 import { Bar, Duration, LessonMark, lessonView, parallax, stagger } from "../ui";
 import { GoogleButton, useCourseUser } from "../user";
 import type { Act } from "../useCourseApp";
+
+/** On Home: the latest passed day whose extra practice is still waiting, one tap from it. */
+function PracticeStrip({ s, act }: { s: CourseState; act: Act }) {
+  const id = practiceWaiting(s);
+  if (!id) return null;
+  const day = lessonDay(id);
+  const text = s.lang === "hi" ? `${day} ki extra practice baaki hai` : `Extra practice waiting on ${day}`;
+  const sub = s.lang === "hi" ? "Zaroori nahi, par bahut recommended" : "Not mandatory, but highly recommended";
+  return (
+    <button
+      type="button"
+      onClick={() => act((p) => openPractice(p, id))}
+      className="sd-a-in flex min-h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg border-2 border-sd-accent bg-sd-accent-100 px-3 py-2 text-left text-[13px] leading-[1.25] hover:border-sd-accent-700"
+    >
+      <span className="flex text-sd-accent"><Icon name="target" size={18} /></span>
+      <span className="flex min-w-0 flex-1 flex-col"><span className="font-extrabold">{text}</span><span className="text-xs font-semibold text-sd-n-700">{sub}</span></span>
+      <span className="flex text-sd-accent-700"><Icon name="chevR" size={16} /></span>
+    </button>
+  );
+}
 
 /** Per-module progress, shared with the Progress screen. */
 export function moduleViews(s: CourseState) {
@@ -171,6 +191,7 @@ export function Course({ s, act }: { s: CourseState; act: Act }) {
         <div className="w-full sm:w-[280px]"><GoogleButton lesson={s.cur} where="course" label="Save progress with Google" className="h-11 border-2 border-sd-ink" /></div>
       )}
       <GroupCard s={s} act={act} />
+      <PracticeStrip s={s} act={act} />
       {referral?.state === "open" && <ReferralStrip r={referral} act={act} />}
       {user && dayOf(s.cur) && <ReminderPrompt />}
 

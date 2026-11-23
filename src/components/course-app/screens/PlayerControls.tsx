@@ -50,19 +50,32 @@ function useFullscreen() {
 }
 
 /**
- * Player shortcuts while a lesson video is on screen. Space is handled with
- * the app's other keys; ←/→ belong to the focused scrubber.
+ * Player shortcuts while a lesson video is on screen: K plays or pauses, J/L
+ * and ←/→ jump 10 seconds (a focused scrubber keeps its own arrows), C, M, F,
+ * < > and 0 for subtitles, mute, full screen and speed. Space is handled with
+ * the app's other keys.
  */
+/** Keys that switch something on and off: a held one fires once. */
+const TOGGLE_KEYS = ["k", "K", "c", "C", "m", "M", "f", "F", ">", ".", "<", ",", "0"];
+/** Controls that use the arrow keys themselves. */
+const ARROW_OWNERS = '[role="slider"], [role="tab"], [role="radio"], [role="option"], [role="menuitem"], [role="menuitemradio"], [role="listbox"], [role="radiogroup"], [role="menu"]';
+
 export function usePlayerKeys(act: Act, active: boolean) {
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName ?? "";
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      const tag = el?.tagName ?? "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable || e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key;
+      const arrow = k === "ArrowLeft" || k === "ArrowRight";
+      // Arrows seek only while the video is on screen, and leave arrow-driven controls (sliders, tabs, options) alone.
+      if (arrow && (!document.getElementById("lesson-watch") || el?.closest(ARROW_OWNERS))) return;
+      // A held key repeats many times a second: seeking may repeat, but toggles fire once, or the video flickers between play and pause.
+      if (e.repeat && !arrow && !"jJlL".includes(k)) { if (TOGGLE_KEYS.includes(k)) e.preventDefault(); return; }
       if (k === "k" || k === "K") act(togglePlay);
-      else if (k === "j" || k === "J") act(back10);
-      else if (k === "l" || k === "L") act(fwd10);
+      else if (k === "j" || k === "J" || k === "ArrowLeft") act(back10);
+      else if (k === "l" || k === "L" || k === "ArrowRight") act(fwd10);
       else if (k === ">" || k === ".") act((p) => stepSpeed(p, 1));
       else if (k === "<" || k === ",") act((p) => stepSpeed(p, -1));
       else if (k === "0") act((p) => setSpeed(p, 1));

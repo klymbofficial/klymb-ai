@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "./icons";
-import { fmt, isLocked, isPaywalled, isSoon, lesson, sec, type CourseState } from "@/lib/course-app";
+import { fmt, isLocked, isPaywalled, isSoon, lesson, practiceLeft, sec, type CourseState } from "@/lib/course-app";
 
 /** Animation delay for the i-th item of a staggered list. */
 export const stagger = (i: number, step: number, base: number): CSSProperties => ({ animationDelay: `${base + i * step}ms` });
@@ -118,6 +118,8 @@ export function lessonView(s: CourseState, id: string) {
     /** The lesson check's score, and whether that score is a miss waiting for a retake. */
     score: p?.check,
     failed: !!p?.failed,
+    /** Passed, with extra practice still to do. */
+    practice: !!practiceLeft(s, id),
     dim: soon || locked || s.offline,
     dur: soon ? "Soon" : cur && !done && s.t > 0 ? `${fmt(sec(l.dur) - s.t)} left` : l.dur,
   };
@@ -136,6 +138,7 @@ export function Duration({ v, time = true }: { v: ReturnType<typeof lessonView>;
   return (
     <span className="flex items-center gap-1 text-xs text-sd-n-700">
       {(time || v.soon) && v.dur}
+      {v.practice && <span className="rounded-md border border-sd-accent px-1.5 py-px font-bold text-sd-accent-700" title="Extra practice still to do">Practice</span>}
       {v.score !== undefined && (
         <span className={clsx("rounded-md px-1.5 py-px font-bold", v.failed ? "bg-sd-accent-100 text-sd-accent-700" : "bg-sd-n-300 text-sd-ink")} title={v.failed ? "Not passed yet" : "Lesson assessment score"}>{v.score}%</span>
       )}

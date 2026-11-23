@@ -38,19 +38,28 @@ export async function getSdAnalytics(days: number): Promise<SdAnalytics> {
   return { ok: true, ...summarise(events, feedback ?? [], LESSON_DAYS) };
 }
 
-/** Everything one learner did, oldest first. */
-export async function getSdLearner(anon: string): Promise<SdEventRow[]> {
-  if (!(await getAdmin()) || !/^[a-zA-Z0-9-]{8,64}$/.test(anon)) return [];
+/** Events per page of one learner's trail. */
+export const TRAIL_PAGE = 1000;
+
+/**
+ * One page of everything a learner did, oldest first within the page. Page 0
+ * is the most recent activity, page 1 the stretch before it, and so on, so an
+ * active learner's latest days always show. `older`: there is a page before this one.
+ */
+export async function getSdLearner(anon: string, page = 0): Promise<{ events: SdEventRow[]; older: boolean }> {
+  const none = { events: [], older: false };
+  if (!(await getAdmin()) || !/^[a-zA-Z0-9-]{8,64}$/.test(anon)) return none;
   const sql = db();
-  if (!sql) return [];
+  if (!sql) return none;
   const { data } = await sql.rows<SdEventRow>`
     select created_at, anon_id, email, event, lesson, step, props, lang, device
       from course.sd_events
      where anon_id = ${anon}
-     order by created_at
-     limit 1000
+     order by created_at desc
+     limit ${TRAIL_PAGE + 1} offset ${page * TRAIL_PAGE}
   `;
-  return data ?? [];
+  const rows = data ?? [];
+  return { events: rows.slice(0, TRAIL_PAGE).reverse(), older: rows.length > TRAIL_PAGE };
 }
 
 const FUNNEL = ["view", "form_start", "claim", "blocked", "open_browser", "google", "order_failed", "rzp_open", "rzp_closed", "rzp_failed", "paid"] as const;
