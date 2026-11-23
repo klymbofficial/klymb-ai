@@ -33,7 +33,7 @@ export const UI = {
     savePrompt: (day: number) => `Day ${day} done! Sign in so it’s saved to your name, on any phone or laptop, and your streak keeps counting.`,
     readDone: "Got it", toNext: (label: string) => `Next: ${label}`,
     cheatsheet: "Cheatsheet", interview: "Say it in 2 minutes",
-    complete: "Mark complete", redo: "Do this lesson again",
+    complete: "Mark complete", redo: "Do this lesson again", rewatch: "Watch the video again",
     nextLesson: "Next lesson", practise: "Practise extra exercises", practiseSub: "Not mandatory, but highly recommended", practised: "Extra practice done. Do it again any time.", extra: "Extra practice",
     recommended: "Recommended", practiseCard: "Lock it in with extra practice", practiseWhat: "The same ideas, the way an interview asks them:", practiseGo: "Start practice", practiseResume: "Continue practice",
   },
@@ -52,7 +52,7 @@ export const UI = {
     savePrompt: (day: number) => `Day ${day} ho gaya! Sign in karo taaki yeh tumhare naam pe save ho, kisi bhi phone ya laptop pe, aur streak chalti rahe.`,
     readDone: "Samajh gaya", toNext: (label: string) => `Agla: ${label}`,
     cheatsheet: "Cheatsheet", interview: "2 minute mein aise bolo",
-    complete: "Mark complete", redo: "Yeh lesson phir se karo",
+    complete: "Mark complete", redo: "Yeh lesson phir se karo", rewatch: "Video phir se dekho",
     nextLesson: "Agla lesson", practise: "Extra exercises practise karo", practiseSub: "Zaroori nahi, par bahut recommended", practised: "Extra practice ho gayi. Kabhi bhi phir se karo.", extra: "Extra practice",
     recommended: "Recommended", practiseCard: "Extra practice se pakka karo", practiseWhat: "Wahi ideas, jaise interview mein poochhe jaate hain:", practiseGo: "Practice shuru karo", practiseResume: "Practice continue karo",
   },
@@ -225,6 +225,10 @@ function Unlocked({ s, act, id, day, c, ui, practice, practised, hasNext, onPrac
             <span className="text-xs font-semibold text-sd-n-700">{practised ? ui.practised : ui.practiseSub}</span>
           </button>
         )}
+        {/* Back to the video, progress kept: the day stays passed and "Mark complete" waits under the video. */}
+        <button type="button" onClick={() => act((q) => ({ ...q, t: 0, playing: false, ended: false, stage: "watch" }))} className="sd-btn sd-btn-ghost h-12 gap-2">
+          <Icon name="play" size={16} />{ui.rewatch}
+        </button>
       </div>
       <div className="sd-a-pop flex items-end justify-between rounded-xl bg-sd-accent p-4 text-sd-bg">
         <div className="flex flex-col"><span className="sd-kicker">Day {day.day} complete</span><span className="text-[22px] font-extrabold tracking-[-0.02em]">{ui.scored(score(p.review?.[s.lang] ?? c.post, p.post ?? []), c.post.length)}</span></div>
