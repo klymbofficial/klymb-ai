@@ -304,10 +304,10 @@ export function sdWhatsAppGroupEmail(p: { name: string; groupUrl: string; siteUr
 }
 
 /** Sent once to each person who registers for the live webinar on /webinar. */
-export function webinarConfirmationEmail(p: { name: string; title: string; date: string; time: string; groupUrl: string; calendarUrl: string; siteUrl: string; supportEmail: string }) {
+export function webinarConfirmationEmail(p: { name: string; title: string; date: string; time: string; paid?: string | null; groupUrl: string; calendarUrl: string; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
   const subject = `You're registered: ${p.title}, ${p.date}`;
-  const line = `Your seat for the free live webinar on ${p.title} is confirmed. Join the WhatsApp group now: the Google Meet link is shared there, and by email, on the day.`;
+  const line = `${p.paid ? `Thanks for your ${p.paid} payment. Your seat for the live webinar` : "Your seat for the free live webinar"} on ${p.title} is confirmed. Join the WhatsApp group now: the Google Meet link is shared there, and by email, on the day.`;
   const text = [
     `Hi ${p.name},`, "", line, "",
     `When: ${p.date}, ${p.time}`, "Where: Google Meet (link on the day)", "",
@@ -317,7 +317,7 @@ export function webinarConfirmationEmail(p: { name: string; title: string; date:
   const html = layout({
     site, supportEmail: p.supportEmail,
     preview: `${p.date}, ${p.time}. Join the WhatsApp group for the link.`,
-    eyebrow: "Free live webinar",
+    eyebrow: p.paid ? "Live webinar" : "Free live webinar",
     title: "You're registered.",
     intro: esc(line),
     sections: [
@@ -330,23 +330,23 @@ export function webinarConfirmationEmail(p: { name: string; title: string; date:
 }
 
 /** The Google Meet link, sent on the day to everyone registered for the live webinar (from /admin/webinars). */
-export function webinarLiveEmail(p: { name: string; title: string; date: string; time: string; meetUrl: string; agenda: readonly (readonly [string, string])[]; siteUrl: string; supportEmail: string }) {
+export function webinarLiveEmail(p: { name: string; title: string; date: string; time: string; start: string; early: string; paid?: boolean; meetUrl: string; agenda: readonly (readonly [string, string])[]; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
-  const subject = `Today at 7 PM: ${p.title}. Your Google Meet link`;
-  const line = `Your free Klymb.ai webinar is today, ${p.date}, ${p.time}. Join from the link below. Please join 5 minutes early, around 6:55 PM.`;
+  const subject = `Today at ${p.start}: ${p.title}. Your Google Meet link`;
+  const line = `Your ${p.paid ? "" : "free "}Klymb.ai webinar is today, ${p.date}, ${p.time}. Join from the link below. Please join 5 minutes early, around ${p.early}.`;
   const tips = ["A laptop is best, so you can see the diagrams clearly.", "Keep a notebook ready, and bring your questions.", "No experience needed."];
   const text = [
     `Hi ${p.name},`, "", line, "",
     `Join here: ${p.meetUrl}`, "",
     "What we'll do together:", ...p.agenda.map(([t]) => `- ${t}`), "",
     ...tips, "",
-    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", "See you at 7!", "Team Klymb.ai",
+    `Questions? Reply to this email or write to ${p.supportEmail}.`, "", `See you at ${p.start}!`, "Team Klymb.ai",
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
-    preview: `Starts at 7:00 PM IST. Join here: ${p.meetUrl}`,
-    eyebrow: "Free live webinar",
-    title: "Starts at 7 PM tonight.",
+    preview: `Starts at ${p.start}. Join here: ${p.meetUrl}`,
+    eyebrow: p.paid ? "Live webinar" : "Free live webinar",
+    title: `Starts at ${p.start} today.`,
     intro: esc(line),
     sections: [
       button(esc(p.meetUrl), "Join on Google Meet"),

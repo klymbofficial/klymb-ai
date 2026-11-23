@@ -2,22 +2,37 @@ import { normaliseEmail } from "@/lib/email";
 import { INDIA_DIAL, phoneOf, phoneProblem, type SdRole } from "@/lib/sd-offer";
 
 /**
- * The free live webinar on /webinar. One at a time: the next one replaces
+ * The live webinar on /webinar, free or paid. One at a time: the next one replaces
  * these details, and its new `slug` keeps its sign-ups apart from this one's
  * in course.webinar_registrations.
  */
 export const WEBINAR = {
-  // Kept from when this webinar was "AI Tools and Claude", so the sign-ups
-  // made before the topic changed stay with it.
-  slug: "ai-tools-claude-2026-11",
+  slug: "system-design-us-2026-12-05",
   title: "System Design, live",
   /** The second half of the page heading. */
   tagline: "the skill AI doesn't replace.",
-  startsAt: "2026-11-21T19:00:00+05:30",
-  endsAt: "2026-11-21T20:00:00+05:30",
+  startsAt: "2026-12-05T09:00:00-06:00",
+  endsAt: "2026-12-05T10:00:00-06:00",
+  /** The time zone the labels are in, for "Today" and "Tomorrow". */
+  timeZone: "America/Chicago",
   /** As the page and the email say it. */
-  dateLabel: "Saturday, 21 November 2026",
-  timeLabel: "7:00 to 8:00 PM IST",
+  dateLabel: "Saturday, 5 December 2026",
+  timeLabel: "9:00 to 10:00 AM CST",
+  /** The same start on the other US coasts. */
+  otherZones: "10:00 AM ET · 7:00 AM PT",
+  /** Short forms, for the strip, the sticky bar and the ticket. */
+  shortDate: "Sat 5 Dec",
+  startLabel: "9:00 AM CST",
+  /** "Join 5 minutes early, around …" in the email on the day. */
+  earlyLabel: "8:55 AM CST",
+  ticketDate: "Dec 5, 2026",
+  /**
+   * The seat price, charged by Razorpay before the seat is confirmed, in the
+   * currency's smallest unit. Null makes the webinar free again.
+   */
+  price: { amount: 100, currency: "USD", label: "$1" } as WebinarPrice | null,
+  /** The country code the WhatsApp field starts on. */
+  defaultDial: "1",
   speaker: "Klymb.ai team",
   whatsappGroup: "https://chat.whatsapp.com/FDCM4Q6KcAK9bHqs5eOM2g?s=cl&p=a&iam=2",
   /** The Google Meet room, emailed on the day from /admin/webinars. */
@@ -31,6 +46,11 @@ export const WEBINAR = {
     ["Live Q&A", "Bring your questions about system design, interviews and careers."],
   ],
 } as const;
+
+export interface WebinarPrice { amount: number; currency: string; label: string }
+
+/** "Free" or "$1", as the page and the ticket say it. */
+export const webinarFee = () => WEBINAR.price?.label ?? "Free";
 
 export const webinarStart = () => new Date(WEBINAR.startsAt).getTime();
 export const webinarEnd = () => new Date(WEBINAR.endsAt).getTime();
@@ -60,10 +80,10 @@ export function webinarCountdown(now: number = Date.now()) {
   };
 }
 
-/** "Today", "Tomorrow" or nothing, by the calendar day in India, for the line above the countdown. */
+/** "Today", "Tomorrow" or nothing, by the calendar day where the webinar's time is given, for the line above the countdown. */
 export function webinarDayWord(now: number = Date.now()): "Today" | "Tomorrow" | "" {
-  const ist = (t: number) => new Date(t + 5.5 * 36e5).toISOString().slice(0, 10);
-  const days = Math.round((Date.parse(ist(webinarStart())) - Date.parse(ist(now))) / 864e5);
+  const day = (t: number) => Date.parse(new Intl.DateTimeFormat("en-CA", { timeZone: WEBINAR.timeZone }).format(t));
+  const days = Math.round((day(webinarStart()) - day(now)) / 864e5);
   return days === 0 ? "Today" : days === 1 ? "Tomorrow" : "";
 }
 
@@ -76,7 +96,7 @@ export function googleCalendarLink() {
     action: "TEMPLATE",
     text: `Klymb.ai live webinar: ${WEBINAR.title}`,
     dates: `${calendarTime(WEBINAR.startsAt)}/${calendarTime(WEBINAR.endsAt)}`,
-    details: `Free 1-hour live webinar. The Google Meet link is shared on WhatsApp and by email on the day. WhatsApp group: ${WEBINAR.whatsappGroup}`,
+    details: `${WEBINAR.price ? "A" : "A free"} 1-hour live webinar. The Google Meet link is shared on WhatsApp and by email on the day. WhatsApp group: ${WEBINAR.whatsappGroup}`,
   });
   return `https://calendar.google.com/calendar/render?${p}`;
 }

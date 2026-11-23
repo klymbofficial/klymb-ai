@@ -4,6 +4,7 @@ import { recordPaid, recordRefund } from "@/lib/payments";
 import { webhookAction, webhookSignatureValid } from "@/lib/razorpay-webhook";
 import { sendReceiptOnce } from "@/lib/receipt";
 import { creditReferrer } from "@/lib/referrals";
+import { confirmWebinarSeat, sendWebinarConfirmation } from "@/lib/webinar-seat";
 
 /**
  * Razorpay's server-to-server confirmation.
@@ -45,6 +46,14 @@ export async function POST(req: Request) {
       if (worth.error) console.error("webhook INR value failed:", action.orderId, worth.error.code);
     }
     after(() => sendReceiptOnce(action.orderId));
+    // A webinar ticket is not in course.payments, so the lines above leave it alone; this confirms its seat.
+    const ticket = await confirmWebinarSeat(sql, action.orderId, action.paymentId);
+    if (ticket.error) {
+      console.error("webhook webinar seat failed:", action.orderId, ticket.error.code);
+      return NextResponse.json({ error: "Retry" }, { status: 500 });
+    }
+    const seat = ticket.seat;
+    if (seat) after(() => sendWebinarConfirmation(sql, seat).then(() => undefined));
   } else if (action.kind === "failed") {
     // A failed attempt only marks an order nobody has paid yet; the learner can retry.
     await sql.run`

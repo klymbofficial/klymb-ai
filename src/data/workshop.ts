@@ -106,7 +106,7 @@ export const NOT_FOR =
   "you already take system design interviews for your company. You'd be bored, and we'd rather you send this to someone who isn't.";
 
 export const FAQ: [q: string, a: string][] = [
-  ["Is it really free?", "Yes. Register with your name, email and WhatsApp number. No payment, no card."],
+  ["Why does it cost $1?", "So the seats go to people who'll actually turn up. Register with your name, email and WhatsApp number, then pay $1 by card with Razorpay. Your seat is saved once it's paid."],
   ["I've never done system design. Will I keep up?", "Yes. We start from the basics in plain words. If you've written any code, you'll follow along."],
   ["Do I need to know a particular language?", "No. System design is about how parts fit together, not syntax."],
   ["What do I need on the day?", "A laptop or phone, a steady connection and a notebook. Join five minutes early."],

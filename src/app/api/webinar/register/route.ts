@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
-import { site } from "@/data/config";
 import { db } from "@/lib/db/client";
-import { MAIL_SUPPORT, sendMail, webinarConfirmationEmail } from "@/lib/mail";
+import { createOrder, razorpayKeys } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { WEBINAR, googleCalendarLink, webinarOpen, webinarRegistrationOf } from "@/lib/webinar";
+import { WEBINAR, webinarOpen, webinarRegistrationOf } from "@/lib/webinar";
+import { sendWebinarConfirmation } from "@/lib/webinar-seat";
+
+const busy = "We couldn't save that right now. Please try again in a minute.";
 
 /**
- * A sign-up for the live webinar. Saved first; the confirmation email with
- * the WhatsApp group link goes once per person, and a failed email never
- * fails the sign-up: the page shows the group link too.
+ * A sign-up for the live webinar. Saved first, so even someone who doesn't
+ * finish paying is on the list as a lead.
+ *
+ * A free webinar confirms the seat here and sends the confirmation email.
+ * A paid one hands back a Razorpay order instead: the seat is confirmed, and
+ * the email sent, by /api/webinar/verify or Razorpay's webhook once it's paid.
+ * The amount comes from the server, so it can't be edited on the way.
  */
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
-  // A field only bots fill in. They get the same answer as everyone else.
+  // A field only bots fill in. They get the same answer as everyone else, and never an order.
   if (body && typeof body.website === "string" && body.website) return NextResponse.json({ ok: true, group: WEBINAR.whatsappGroup, emailed: true });
   if (!webinarOpen()) return NextResponse.json({ error: "This webinar has ended, so registration is closed." }, { status: 410 });
 
@@ -23,37 +29,58 @@ export async function POST(req: Request) {
   if (!limit.allowed) return NextResponse.json({ error: "Too many tries from this network. Please try again in a while." }, { status: 429 });
 
   const sql = db();
-  if (!sql) return NextResponse.json({ error: "We couldn't save that right now. Please try again in a minute." }, { status: 500 });
+  if (!sql) return NextResponse.json({ error: busy }, { status: 500 });
+
+  const price = WEBINAR.price;
+  // Stops before saving if a paid webinar can't take payment: a sign-up with no way to pay would hang.
+  const keys = price ? razorpayKeys() : null;
+  if (price && !keys) return NextResponse.json({ error: "Payments are not available right now. Please try again later." }, { status: 500 });
 
   const r = parsed.row;
-  const { data: saved, error } = await sql.row<{ id: number; emailed: boolean }>`
-    insert into course.webinar_registrations (webinar, email, name, phone, role, org, question)
-    values (${WEBINAR.slug}, ${r.email}, ${r.name}, ${r.phone}, ${r.role}, ${r.org}, ${r.question})
+  const { data: saved, error } = await sql.row<{ id: string; emailed: boolean; paid: boolean }>`
+    insert into course.webinar_registrations (webinar, email, name, phone, role, org, question, amount, currency)
+    values (${WEBINAR.slug}, ${r.email}, ${r.name}, ${r.phone}, ${r.role}, ${r.org}, ${r.question}, ${price?.amount ?? null}, ${price?.currency ?? null})
     on conflict (webinar, email) do update
       set name = excluded.name, phone = excluded.phone, role = excluded.role,
           org = coalesce(excluded.org, course.webinar_registrations.org),
           question = coalesce(excluded.question, course.webinar_registrations.question),
           updated_at = now()
-    returning id, confirmation_sent_at is not null as emailed
+    returning id, confirmation_sent_at is not null as emailed, paid_at is not null as paid
   `;
   if (error || !saved) {
     console.error("webinar registration save failed:", error?.message);
-    return NextResponse.json({ error: "We couldn't save that right now. Please try again in a minute." }, { status: 500 });
+    return NextResponse.json({ error: busy }, { status: 500 });
   }
 
-  let emailed = saved.emailed;
-  if (!emailed) {
-    const mail = webinarConfirmationEmail({
-      name: r.name.split(" ")[0] || "there",
-      title: WEBINAR.title, date: WEBINAR.dateLabel, time: WEBINAR.timeLabel,
-      groupUrl: WEBINAR.whatsappGroup, calendarUrl: googleCalendarLink(),
-      siteUrl: site.url, supportEmail: MAIL_SUPPORT,
-    });
-    const sent = await sendMail({ to: { email: r.email, name: r.name }, ...mail, kind: "webinar.confirmation", idempotencyKey: `webinar:${WEBINAR.slug}:${r.email}` });
-    emailed = sent.ok;
-    if (sent.ok) await sql.run`update course.webinar_registrations set confirmation_sent_at = now() where id = ${saved.id}`;
-    else if (!sent.skipped) console.error("webinar confirmation email failed:", sent.reason);
+  // Free, or already paid for: the seat is theirs.
+  if (!price || saved.paid) {
+    const emailed = await sendWebinarConfirmation(sql, { id: saved.id, email: r.email, name: r.name, emailed: saved.emailed });
+    return NextResponse.json({ ok: true, group: WEBINAR.whatsappGroup, emailed });
   }
 
-  return NextResponse.json({ ok: true, group: WEBINAR.whatsappGroup, emailed });
+  const order = await createOrder(keys!, {
+    amount: price.amount,
+    currency: price.currency,
+    receipt: `klymb-webinar-${Date.now().toString(36)}`,
+    notes: { kind: "webinar", webinar: WEBINAR.slug, email: r.email },
+  });
+  if (!order.ok) {
+    console.error("razorpay webinar order failed:", order.message);
+    return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: order.status });
+  }
+
+  // The latest order is the one their checkout pays. Never touches a seat that's already paid.
+  const { error: orderError } = await sql.run`
+    update course.webinar_registrations set razorpay_order_id = ${order.id}, updated_at = now()
+     where id = ${saved.id} and paid_at is null
+  `;
+  if (orderError) {
+    console.error("webinar order save failed:", orderError.message);
+    return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    pay: { order_id: order.id, amount: order.amount, currency: order.currency, key_id: keys!.keyId, prefill: { name: r.name, email: r.email, contact: r.phone } },
+  });
 }

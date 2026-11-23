@@ -5,6 +5,7 @@ import { CalendarPlus, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { DIAL_CODES, INDIA_DIAL, phoneProblem, type SdRole } from "@/lib/sd-offer";
 import { WEBINAR, WEBINAR_LIMITS, googleCalendarLink, webinarProblems } from "@/lib/webinar";
+import { payForSeat } from "@/lib/webinar-checkout";
 
 // 16px text: anything smaller makes iPhones zoom the page when a field is tapped. Same fields as /join.
 const input =
@@ -21,7 +22,7 @@ const ROLES: { key: SdRole; label: string }[] = [
 export function WebinarForm({ open }: { open: boolean }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [dial, setDial] = useState(INDIA_DIAL);
+  const [dial, setDial] = useState<string>(WEBINAR.defaultDial);
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<SdRole | "">("");
   const [org, setOrg] = useState("");
@@ -74,6 +75,11 @@ export function WebinarForm({ open }: { open: boolean }) {
       body: JSON.stringify({ name, email, dial, phone, role, org, question, website }),
     }).catch(() => null);
     const out = await res?.json().catch(() => null);
+    if (res?.ok && out?.ok && out.pay) {
+      const seat = await payForSeat(out.pay);
+      setBusy(false);
+      return seat.ok ? setDone({ group: seat.group, emailed: seat.emailed }) : setError(seat.error);
+    }
     setBusy(false);
     if (res?.ok && out?.ok) return setDone({ group: out.group ?? WEBINAR.whatsappGroup, emailed: out.emailed === true });
     setError(out?.error ?? "Something went wrong. Check your connection and try again.");
@@ -83,7 +89,7 @@ export function WebinarForm({ open }: { open: boolean }) {
     <form noValidate onSubmit={submit} className="flex flex-col gap-5">
       <div>
         <h2 className="display text-2xl sm:text-3xl">Save your seat</h2>
-        <p className="mt-1 text-sm text-muted">Free. Takes 30 seconds. {WEBINAR.dateLabel}, {WEBINAR.timeLabel}.</p>
+        <p className="mt-1 text-sm text-muted">{WEBINAR.price ? `${WEBINAR.price.label}, paid with Razorpay.` : "Free."} Takes 30 seconds. {WEBINAR.dateLabel}, {WEBINAR.timeLabel}.</p>
       </div>
 
       {/* Hidden from people; bots fill it in. */}
@@ -156,7 +162,7 @@ export function WebinarForm({ open }: { open: boolean }) {
         disabled={busy}
         className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-strong px-5 py-4 text-base font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.98] disabled:opacity-60"
       >
-        {busy ? "Saving your seat…" : "Register for free"}
+        {busy ? (WEBINAR.price ? "Opening payment…" : "Saving your seat…") : WEBINAR.price ? `Pay ${WEBINAR.price.label} & register` : "Register for free"}
         {!busy && <span aria-hidden="true">→</span>}
       </button>
     </form>

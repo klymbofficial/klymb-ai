@@ -264,7 +264,8 @@ async function webinarSignedUp(email: string) {
   const sql = db();
   if (!sql) return false;
   const { data, error } = await sql.row<{ id: string }>`
-    select id from course.webinar_registrations where webinar = ${WEBINAR.slug} and email = ${email}
+    select id from course.webinar_registrations
+     where webinar = ${WEBINAR.slug} and email = ${email} and (amount is null or paid_at is not null)
   `;
   if (error && error.code !== UNDEFINED_TABLE) console.error("webinar registration read failed:", error.code);
   return !!data;
