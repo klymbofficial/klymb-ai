@@ -79,7 +79,8 @@ export async function publishAssessment(slug: string, revision: number): Promise
   if (out.status === "changed") return { ok: false, message: "The draft or its versions changed while you were publishing. Nothing was published. Reload and check." };
   await logAdmin(admin, "catalog.assessment_publish", slug, { version: out.version, revision });
   refresh(slug);
-  revalidatePath("/org", "layout");
+  // Every workspace: the layout at /org/[slug] holds them all.
+  revalidatePath("/org/[slug]", "layout");
   return {
     ok: true,
     version: out.version,

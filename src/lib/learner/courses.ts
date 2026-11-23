@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { currentEmail } from "@/auth";
-import { hasCompanyAssignment, hasCourseAccess } from "@/lib/access";
+import { candidatePrep, hasCompanyAssignment, hasCourseAccess } from "@/lib/access";
 import { LESSON_COUNT } from "@/lib/course-app";
 import { db } from "@/lib/db/client";
 import { getLearnerState } from "@/lib/learner/data";
@@ -15,6 +15,8 @@ export interface SystemDesignSeat {
   finished: boolean;
   /** When a company gave it (not a purchase): who, and whether it's required and by when. */
   assigned?: { company: string; requirement: "required" | "recommended"; dueOn: string | null };
+  /** When a company opened it to prepare for its hiring test: who, and until when. */
+  prep?: { company: string; until: string };
 }
 
 /** Postgres: no such table. */
@@ -61,8 +63,9 @@ export async function systemDesignSeat(email: string): Promise<SystemDesignSeat 
       return { passed, total: LESSON_COUNT, finished: false, assigned: { company: given.data.company, requirement: given.data.requirement, dueOn: given.data.due_on } };
     }
     // Before 0050, or on any error reading it: the plain access check, with no details.
-    if (!given.error || !(await hasCompanyAssignment(sql, email, SD_COURSE))) return null;
-    return { passed, total: LESSON_COUNT, finished: false };
+    if (given.error && (await hasCompanyAssignment(sql, email, SD_COURSE))) return { passed, total: LESSON_COUNT, finished: false };
+    const prep = await candidatePrep(sql, email, SD_COURSE);
+    return prep ? { passed, total: LESSON_COUNT, finished: false, prep } : null;
   }
   return { passed: Math.min(passes.data?.passed ?? 0, LESSON_COUNT), total: LESSON_COUNT, finished: seat.data.finished };
 }

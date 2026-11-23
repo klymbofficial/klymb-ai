@@ -210,7 +210,8 @@ test("the workspace frame and home use the published brand", () => {
   const layout = read("src/app/org/[slug]/(workspace)/layout.tsx");
   assert.match(layout, /getPublishedBrand\(member\)/);
   assert.match(layout, /\{\.\.\.brandProps\(brand\.accent\)\}/);
-  assert.match(layout, /<OrgHeader member=\{member\} brand=\{brand\} \/>/);
+  assert.match(layout, /<OrgSidebar[\s\S]*brand=\{\{ name: brand\.name, logoUrl: brand\.logoUrl, logoAlt: brand\.logoAlt \}\}/);
+  assert.match(layout, /supportHref=\{`mailto:\$\{brand\.supportEmail \?\? contact\.email\}`\}/);
   assert.match(read("src/app/org/[slug]/(workspace)/page.tsx"), /brand\.welcome/);
 });
 

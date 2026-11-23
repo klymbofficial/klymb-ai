@@ -291,16 +291,17 @@ function BrandPreview({ brand, isLive }: { brand: ReturnType<typeof resolveBrand
           {isLive ? "Live now" : "Draft, not live yet"}
         </span>
       </div>
-      <div className="overflow-hidden border border-line/40" aria-label="Workspace band">
-        <div className={brand.accent ? "bg-[var(--brand-accent)] p-4 text-white" : "bg-night p-4 text-paper"}>
+      {/* The workspace as people see it: the sidebar, with the open page in the accent, beside the page. */}
+      <div className="flex overflow-hidden rounded-lg border border-line/40" aria-label="Workspace">
+        <div className="flex w-40 shrink-0 flex-col gap-1 bg-night p-3 text-paper">
           <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} />
-          <p className="mt-2 text-xs font-semibold">on Klymb.ai</p>
-          <div className="mt-3 flex gap-1 text-sm font-bold">
-            <span className="bg-paper px-3 py-1.5 text-ink">Overview</span>
-            <span className="px-3 py-1.5">My learning</span>
-          </div>
+          <p className="mb-2 text-[0.7rem] text-[#b9b5b3]">on Klymb.ai</p>
+          <span className="rounded-md bg-red-strong px-2.5 py-1.5 text-sm font-bold text-white">Overview</span>
+          <span className="px-2.5 py-1.5 text-sm text-[#e6e3e2]">My learning</span>
         </div>
-        {brand.welcome && <p className="border-l-4 border-red-strong bg-card px-4 py-3 text-sm">{brand.welcome}</p>}
+        <div className="min-w-0 flex-1 bg-paper p-4">
+          {brand.welcome ? <p className="rounded-md border-l-4 border-red-strong bg-card px-3 py-2 text-sm">{brand.welcome}</p> : <p className="text-sm text-muted">Your workspace</p>}
+        </div>
       </div>
       <div className="card p-5" aria-label="Sign-in page">
         <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} size="lg" />

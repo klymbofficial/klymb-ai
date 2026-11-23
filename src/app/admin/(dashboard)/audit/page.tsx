@@ -39,6 +39,15 @@ const LABELS: Record<string, string> = {
   "company.course_assign_all": "Company admin assigned a course to everyone without it",
   "company.assignment_create": "Company admin or team lead assigned a course",
   "company.assessment_review": "Company reviewer approved or declined an assessment version",
+  "company.batch_create": "Recruiter made a hiring batch draft",
+  "company.batch_send": "Recruiter sent a hiring batch's invitations",
+  "company.batch_cancel": "Recruiter cancelled a hiring batch",
+  "company.batch_retry": "Recruiter retried failed invitations",
+  "company.batch_remind": "Recruiter sent candidates a reminder",
+  "company.candidate_cancel": "Recruiter cancelled one candidate's invitation",
+  "company.candidate_new_link": "Recruiter sent a candidate a new link",
+  "company.candidate_email": "Recruiter corrected a candidate's email",
+  "company.candidate_extend": "Recruiter changed one candidate's time",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;

@@ -95,10 +95,10 @@ function SystemDesignCard({ seat }: { seat: SystemDesignSeat }) {
     <article className="relative flex flex-col overflow-hidden rounded-card bg-[#1a1716] text-[#f6efe4] shadow-card">
       <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(70% 80% at 0% 0%,rgba(201,162,74,.2),transparent 70%),radial-gradient(60% 80% at 100% 100%,rgba(131,5,11,.5),transparent 70%)" }} />
       <div className="relative flex flex-1 flex-col gap-4 p-6">
-        <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">{seat.assigned ? `Assigned by ${seat.assigned.company}` : "Course"}</p>
+        <p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#e7c97a]">{seat.assigned ? `Assigned by ${seat.assigned.company}` : seat.prep ? `Opened by ${seat.prep.company}` : "Course"}</p>
         <div>
           <h2 className="display text-2xl text-[#fbf6ee]">System Design</h2>
-          <p className="mt-1 text-sm text-[#d9cfc2]">{seat.finished ? "Course complete. Every lesson and the final passed." : seat.assigned ? assignedTerms(seat.assigned, seat.passed >= seat.total) : "One short lesson a day, built for interviews."}</p>
+          <p className="mt-1 text-sm text-[#d9cfc2]">{seat.finished ? "Course complete. Every lesson and the final passed." : seat.assigned ? assignedTerms(seat.assigned, seat.passed >= seat.total) : seat.prep ? `To prepare for your assessment. Open until ${dayLabel(seat.prep.until.slice(0, 10))}.` : "One short lesson a day, built for interviews."}</p>
         </div>
         {/* Progress sits with the button at the foot, level with the track card's beside it. */}
         <div className="mt-auto flex flex-col gap-4">

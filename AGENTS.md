@@ -8,4 +8,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Never assume anything on your own, while making a decision always ask first if it involves any architectural changes or database changes or adding any new functionalities.
 
+after each step give a summary what changes you have done in easy to understand language, what i need to verify on browser
+
+if their is an migration required dont wait for my review perform it on young shadow db which is a developement db
+
+
+
 <!-- END:nextjs-agent-rules -->

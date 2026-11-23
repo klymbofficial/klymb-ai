@@ -37,7 +37,10 @@ export async function reviewAssessment(slug: string, item: string, versionId: st
   if (saved === null) return UNAVAILABLE;
   if (!saved) return { ok: false, message: "Klymb has published a newer version since you opened this. Reload to review that one." };
   await logCompany(member, "company.assessment_review", { item, version_id: versionId, decision: review.value.decision });
-  revalidatePath(`/org/${member.companySlug}/assessments`, "layout");
+  // Literal pages: there's no layout under assessments/ for a "layout" revalidation to hit.
+  revalidatePath(`/org/${member.companySlug}/assessments`);
+  revalidatePath(`/org/${member.companySlug}/assessments/${item}`);
+  revalidatePath(`/org/${member.companySlug}/catalog/${item}`);
   return {
     ok: true,
     message: review.value.decision === "approved" ? "Approved. Recruiters can pick this version for a hiring batch." : "Declined. Klymb sees your note. Recruiters can't pick this version.",

@@ -38,6 +38,15 @@ export type CompanyAuditAction = Extract<
   | "company.course_assign_all"
   | "company.assignment_create"
   | "company.assessment_review"
+  | "company.batch_create"
+  | "company.batch_send"
+  | "company.batch_cancel"
+  | "company.batch_retry"
+  | "company.batch_remind"
+  | "company.candidate_cancel"
+  | "company.candidate_new_link"
+  | "company.candidate_email"
+  | "company.candidate_extend"
 >;
 
 export async function logCompany(hr: CompanyMember, action: CompanyAuditAction, details: Record<string, unknown> = {}) {

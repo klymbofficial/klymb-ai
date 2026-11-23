@@ -94,6 +94,39 @@ on this branch, not against plans.
   approved version; a newer one waits for its own approval. Admins, company
   heads, recruiters and reviewers open Assessments; team leads and employees
   don't, since it shows the real task.
+- **Hiring batches (T06):** a recruiter makes a batch at
+  `/org/[slug]/hiring/new`: one test version the company approved (the
+  newest such), the role, the reviewer, an optional prep course, when it
+  opens and closes (written in a time zone they pick), and the candidates,
+  pasted one per line or from a CSV, each with optional extra minutes. It
+  saves as a draft and shows the first person's invitation exactly as it
+  will arrive, and everyone's last start; nothing goes out until "Send".
+  **Timing rule:** everyone who starts in time gets their full time, so the
+  last start is the closing time minus their time allowed, unless a
+  recruiter gave that one person a later one. The form, the invitation and
+  the candidate's page show the last start apart from the time allowed.
+  **Links:** each person's private link is `/assessment/<id>.<n>.<sig>`, an
+  HMAC of their row and link number keyed by AUTH_SECRET; nothing secret is
+  stored. Retrying a delivery sends the same link and adds nobody; "New
+  link" bumps the number and the old one says it was replaced; a cancelled
+  person or batch can't start. Changing AUTH_SECRET turns every link off.
+  **Tracking:** each person shows Delivered, Failed (with the mail
+  service's reason) or Not delivered, and every email is logged
+  (`course.batch_mail_log`). Fix a failure with Retry, or Fix email (a new
+  link to the corrected address). Recruiters can also remind, change one
+  person's time (extra minutes and a later last start, emailed to them),
+  send a new link, or cancel a person or the whole batch (no email). A send
+  claims its rows first, so a double click or two recruiters send once.
+  **Automatic reminder:** `/api/cron/batch-reminders`, daily at 09:00 India
+  time (vercel.json), to people whose invitation was delivered and whose
+  last start is within a day; once each. **Prep course:** System Design
+  opens for an active candidate of a sent batch until it closes (or their
+  later last start), on a Google-verified session with the invited email
+  (`candidatePrep` in src/lib/access.ts), and their /learn card says which
+  company opened it. Recruiters run batches; admins and company heads see
+  them without the buttons. Outside production, links point at AUTH_URL so
+  a test email opens the local server. Email needs MAIL_FROM and a provider
+  key; set MAIL_REDIRECT_TO so every invite lands in one test inbox.
 - **CSV import:** checked first (who will be added, who is already here,
   seats after, problems by line), then added. People already in the company
   are left as they are, so uploading the same file again adds nobody.
@@ -105,8 +138,9 @@ on this branch, not against plans.
 ## Not available (and shown as such in the UI)
 
 Assigning anything other than System Design, assigning assessments, taking a
-test (T07), candidate batches (T06), emails telling reviewers a new version is
-waiting, reminder emails for due dates, company
+test (T07: the candidate's page shows the details but has no Start yet),
+adding people to a batch after it is made, emailing candidates when they are
+cancelled, emails telling reviewers a new version is waiting, reminder emails for due dates, company
 reports and exports, certificates, single sign-on, and any notification email
 beyond the invite and its resend. Assigned employees get no reminder, release or
 push emails: those crons read `course.enrollments`, and company access doesn't
@@ -170,7 +204,12 @@ Actions: `company.person_add`, `company.people_import`, `company.person_remove`,
 `company.invite_resend`, `company.team_create`, `company.team_head`,
 `company.person_move`, `company.course_assign`, `company.course_unassign`,
 `company.course_assign_all`, `company.assignment_create`,
-`company.assessment_review` (the decision, never the note). Klymb admins'
+`company.assessment_review` (the decision, never the note), and the
+recruiter's `company.batch_create`, `company.batch_send`,
+`company.batch_retry`, `company.batch_remind`, `company.batch_cancel`,
+`company.candidate_cancel`, `company.candidate_new_link`,
+`company.candidate_email` and `company.candidate_extend` (ids and counts,
+never names or addresses). Klymb admins'
 `catalog.assessment_save` and `catalog.assessment_publish` record the draft
 revision and version number. Not logged: names, CSV contents, sign-in material.
 A bulk assignment records a count, never the list of emails.
@@ -194,7 +233,7 @@ that Vercel's Production `DATABASE_URL` points at that branch.
 `0047_hidden_payments.sql`, and this branch has
 `0047_company_member_roles.sql`. The runner keys on file names, so both
 apply, but `tests/course-schema.test.ts` requires unique numbers. Renumber
-this branch's 0047-0051 after main's last migration when merging. 0047-0051
+this branch's 0047-0052 after main's last migration when merging. 0047-0052
 are already recorded by name on the young-shadow dev database, so they would
 run again there under new names: check they are idempotent first.
 

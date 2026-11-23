@@ -2,17 +2,20 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { BrandSupport } from "@/components/company/BrandSupport";
 import { brandProps } from "@/components/company/brand-style";
-import { OrgHeader } from "@/components/company/OrgHeader";
-import { allowCompany } from "@/lib/company/access";
+import { OrgSidebar } from "@/components/company/OrgSidebar";
+import { contact } from "@/data/config";
+import { allowCompany, ROLE_LABEL } from "@/lib/company/access";
 import { getMemberships, getWorkspaceMember } from "@/lib/company/auth";
 import { getPublishedBrand } from "@/lib/company/branding-data";
+import { navGroupsFor } from "@/lib/company/nav";
 import { ORG_PATH_HEADER, signInHref } from "@/lib/company/return-path";
 
 /**
- * The frame around every company page: the company's published brand (logo,
- * name, accent, support contact), the viewer's responsibilities, and the tabs
- * they can open. The workspace comes from the URL and the role from the
- * viewer's membership of it.
+ * The frame around every company page: a sidebar with the company's published
+ * brand (logo, name, accent, support contact), the sections the viewer's
+ * roles open, and their account; the page itself on a light ground beside it.
+ * The workspace comes from the URL and the role from the viewer's membership
+ * of it.
  *
  * Not a member of any workspace (signed out, or signed in some other way) goes
  * to this workspace's branded sign-in page, which brings them back to the page
@@ -30,12 +33,20 @@ export default async function OrgLayout({ children, params }: { children: React.
   const brand = await getPublishedBrand(member);
 
   return (
-    <div className="min-h-screen bg-surface" {...brandProps(brand.accent)}>
-      <OrgHeader member={member} brand={brand} />
+    <div className="min-h-screen bg-paper lg:flex" {...brandProps(brand.accent)}>
+      <OrgSidebar
+        groups={navGroupsFor(member)}
+        brand={{ name: brand.name, logoUrl: brand.logoUrl, logoAlt: brand.logoAlt }}
+        email={member.email}
+        roles={member.roles.map((r) => ROLE_LABEL[r])}
+        supportHref={`mailto:${brand.supportEmail ?? contact.email}`}
+      />
       {/* pb-28: the site-wide help button floats bottom-right (64px + its margin). This leaves room to scroll the last row clear of it. */}
-      <main className="mx-auto max-w-5xl px-4 pt-8 pb-28 sm:px-6 sm:pt-10">
-        {children}
-        <BrandSupport brand={brand} className="mt-12 border-t border-line/25 pt-5" />
+      <main className="min-w-0 flex-1 px-4 pt-6 pb-28 sm:px-6 lg:px-8 lg:pt-8">
+        <div className="mx-auto max-w-6xl">
+          {children}
+          <BrandSupport brand={brand} className="mt-12 border-t border-line/25 pt-5" />
+        </div>
       </main>
     </div>
   );
