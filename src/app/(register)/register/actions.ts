@@ -2,7 +2,9 @@
 
 import { currentEmail, signIn, signOut } from "@/auth";
 import { cohort } from "@/data/config";
-import { todayInIndia } from "@/lib/learn";
+import { todayIn } from "@/lib/learn";
+import { viewerTimeZone } from "@/lib/viewer-tz";
+import { saveLearnerTimeZone } from "@/lib/learner/zone";
 import { getTrack, trackSlugs } from "@/data/tracks";
 import { isListed } from "@/data/course-cards";
 import { after } from "next/server";
@@ -144,16 +146,19 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
   // Only tracks whose course is built enrol straight into Day 1. The others
   // hold a reserved place until their content opens.
   let enrolled = false;
+  // Their own calendar: Day 1 is today where they are, and their days end at their midnight.
+  const zone = await viewerTimeZone();
   if (getTrack(data.track)?.contentLive) {
     enrolled = await ensureLearner(enrolmentClient(sql), {
       email: data.email,
       name: data.name,
       track: data.track,
       // Rolling enrolment: Day 1 is the day they join, not a shared date.
-      cohortStart: todayInIndia(),
+      cohortStart: todayIn(zone),
       githubUsername: repo.owner,
       githubUrl: repo.url,
     });
+    if (enrolled) await saveLearnerTimeZone(sql, data.email, data.track, zone);
   }
 
   // A first registration gets the welcome email, after the response so the form never waits on it.

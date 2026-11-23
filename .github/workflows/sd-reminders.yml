@@ -1,12 +1,13 @@
-# Backup for the System Design reminder emails. The main trigger is the Vercel cron in vercel.json
-# (14:30 UTC, which Vercel's free plan fires within that hour, so 19:30 to 20:30 IST).
-# GitHub has started this schedule 6 to 8 hours late, after midnight IST, when the endpoint skips;
-# it only helps on days it runs on time. The endpoint never mails anyone twice in a day, so running
-# after Vercel, or a manual re-run, is safe. CRON_SECRET is a repository secret.
+# The System Design reminder emails, every hour: each learner is mailed once in their own evening
+# (18:00 to midnight on their clock), so learners outside India need a run in their evening. The
+# Vercel cron in vercel.json (14:30 UTC, about 20:00 IST) stays as a backup for learners on India time.
+# GitHub can start a schedule hours late; with a six-hour window and a run every hour, a reminder
+# still lands. The endpoint never mails anyone twice in a day, so overlapping runs or a manual
+# re-run are safe. CRON_SECRET is a repository secret.
 name: System Design reminders
 on:
   schedule:
-    - cron: "30 14 * * *"
+    - cron: "10 * * * *"
   workflow_dispatch: {}
 jobs:
   remind:

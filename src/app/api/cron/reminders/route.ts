@@ -4,11 +4,13 @@ import { getCurriculum } from "@/data/curricula";
 import { cohortDayDate } from "@/lib/learn";
 import { pushReady, sendPush } from "@/lib/push";
 import { db } from "@/lib/db/client";
-import { buildReminder, slotForIstHour, streakEnding } from "@/lib/reminders";
+import { buildReminder, slotAtHour, streakEnding } from "@/lib/reminders";
+import { IST, dayIn, hourIn, timeZoneOf } from "@/lib/timezone";
 
 /**
- * Run at 09:00, 13:00, 17:00 and 21:00 IST (GitHub Actions,
- * .github/workflows/reminders.yml). For every learner with a device
+ * Run every hour (GitHub Actions, .github/workflows/reminders.yml). Each
+ * learner is reminded at 09:00, 14:00 and 20:00 on their own clock (India
+ * time unless their time zone is kept). For every learner with a device
  * subscribed: "Day N is open" in the morning, then, only while today's day is
  * unsubmitted, a streak-aware nudge that grows more urgent toward the night
  * (copy in lib/reminders). Requires CRON_SECRET as a bearer token.
@@ -31,18 +33,22 @@ export async function GET(req: Request) {
   const { data: learners } = await sql.rows<{ id: string; name: string | null; track: string; cohort_start: string }>`
     select id, name, track, cohort_start from course.learners where id = any(${ids}::uuid[])
   `;
+  // Their time zones, read on their own so a database without 0048 still reminds everyone on India time.
+  const { data: zones } = await sql.rows<{ id: string; timezone: string }>`select id, timezone from course.learners where id = any(${ids}::uuid[])`;
+  const zoneOf = new Map((zones ?? []).map((z) => [z.id, timeZoneOf(z.timezone) ?? IST]));
   const { data: done } = await sql.rows<{ learner_id: string; day: number }>`
     select learner_id, day from course.day_submissions where learner_id = any(${ids}::uuid[])
   `;
 
-  // Now in India: the date, and which of the three slots this run is.
-  const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
-  const today = ist.toISOString().slice(0, 10);
-  const slot = slotForIstHour(ist.getUTCHours());
-  if (!slot) return NextResponse.json({ sent: 0, skipped: "outside 08:00–23:59 IST" });
+  const now = Date.now();
   let sent = 0, removed = 0, skippedDone = 0;
 
   for (const l of learners ?? []) {
+    // Now where they are: the date, and which of the three slots this hour is, if any.
+    const zone = zoneOf.get(l.id) ?? IST;
+    const slot = slotAtHour(hourIn(now, zone));
+    if (!slot) continue;
+    const today = dayIn(now, zone);
     const course = getCurriculum(l.track);
     if (!course) continue;
     const day = course.days.find((d) => cohortDayDate(l.cohort_start, d.day) === today);
@@ -75,5 +81,5 @@ export async function GET(req: Request) {
       }
     }
   }
-  return NextResponse.json({ sent, removed, skippedDone, slot, today });
+  return NextResponse.json({ sent, removed, skippedDone });
 }

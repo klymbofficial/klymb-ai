@@ -2,7 +2,7 @@ import "server-only";
 import { randomInt } from "node:crypto";
 import { site } from "@/data/config";
 import { db, type Db } from "@/lib/db/client";
-import { formatINR } from "@/lib/format";
+import { formatMinor } from "@/lib/pricing";
 import { MAIL_SUPPORT, sdReferralEarnedEmail, sendMail } from "@/lib/mail";
 import {
   REFERRAL_ALPHABET, REFERRAL_CODE_LENGTH, SD_COURSE, SD_REFERRAL, referralLink, referralState, type ReferralStanding,
@@ -30,8 +30,8 @@ async function codeFor(sql: Db, email: string) {
 
 /** A seat that can earn a refund: active, and paid for. A granted seat has no fee to give back. */
 function paidSeat(sql: Db, email: string) {
-  return sql.row<{ referral_code: string | null; created_at: string; amount: number; payment_status: string; name: string | null }>`
-    select e.referral_code, e.created_at, p.amount, p.status as payment_status, l.name
+  return sql.row<{ referral_code: string | null; created_at: string; amount: number; currency: string; payment_status: string; name: string | null }>`
+    select e.referral_code, e.created_at, p.amount, p.currency, p.status as payment_status, l.name
       from course.enrollments e
       join course.payments p on p.id = e.payment_id
       left join course.sd_preregistrations l on l.email = e.email
@@ -77,7 +77,7 @@ export async function referralStanding(email: string): Promise<ReferralStanding>
       link: referralLink(site.url, code),
       count,
       state: referralState({ count, refunded: seat.payment_status === "refunded" }),
-      amount: formatINR(seat.amount / 100),
+      amount: formatMinor(seat.amount, seat.currency),
     },
   };
 }
@@ -130,7 +130,7 @@ export async function creditReferrer(sql: Db, orderId: string) {
 
   const mail = sdReferralEarnedEmail({
     name: seat.name?.split(" ")[0] || "there",
-    amount: formatINR(seat.amount / 100),
+    amount: formatMinor(seat.amount, seat.currency),
     siteUrl: site.url,
     supportEmail: MAIL_SUPPORT,
   });

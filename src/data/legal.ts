@@ -108,7 +108,7 @@ export const sdRefund = {
   /** confirm: is every one of these required? */
   conditions: [
     `All ${LESSON_TOTAL} lessons finished, from Day 1 to Day ${LESSON_TOTAL}, one a day. You can start Day 1 any day you like`,
-    "The lesson check passed on the day each lesson is due, with no missed days, signed in with the Google account you paid with. Days run from midnight to midnight India time, and the next day opens at midnight",
+    "The lesson check passed on the day each lesson is due, with no missed days, signed in with the Google account you paid with. Days run from midnight to midnight in your time zone, set from your device when you open the course and fixed once you pass your first lesson check (learners who passed one before local time zones were introduced stay on India time), and the next day opens at midnight",
     `At least ${FINAL_MARK}% on the final assessment, which opens the day after you pass Day ${LESSON_TOTAL} and must be taken that same day. You get ${FINAL_TRIES} tries and your best score counts. Tries after that are for practice`,
   ],
   /** confirm: is this right for early access? */

@@ -15,7 +15,8 @@ export function webhookSignatureValid(rawBody: string, signature: string | null,
 }
 
 export type WebhookAction =
-  | { kind: "paid"; orderId: string; paymentId: string }
+  /** `inr`: Razorpay's own INR paise for a payment in another currency, when it sent one. */
+  | { kind: "paid"; orderId: string; paymentId: string; inr?: number }
   | { kind: "failed"; orderId: string; paymentId: string }
   | { kind: "refunded"; paymentId: string }
   | { kind: "ignore" };
@@ -23,7 +24,7 @@ export type WebhookAction =
 interface Payload {
   event?: string;
   payload?: {
-    payment?: { entity?: { id?: string; order_id?: string } };
+    payment?: { entity?: { id?: string; order_id?: string; currency?: string; base_amount?: number; base_currency?: string } };
     refund?: { entity?: { payment_id?: string } };
   };
 }
@@ -34,7 +35,10 @@ export function webhookAction(body: Payload): WebhookAction {
   switch (body.event) {
     case "payment.captured":
     case "order.paid":
-      return payment?.id && payment.order_id ? { kind: "paid", orderId: payment.order_id, paymentId: payment.id } : { kind: "ignore" };
+      if (!payment?.id || !payment.order_id) return { kind: "ignore" };
+      return payment.currency && payment.currency !== "INR" && payment.base_currency === "INR" && Number.isInteger(payment.base_amount)
+        ? { kind: "paid", orderId: payment.order_id, paymentId: payment.id, inr: payment.base_amount }
+        : { kind: "paid", orderId: payment.order_id, paymentId: payment.id };
     case "payment.failed":
       return payment?.id && payment.order_id ? { kind: "failed", orderId: payment.order_id, paymentId: payment.id } : { kind: "ignore" };
     case "refund.processed": {

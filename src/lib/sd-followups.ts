@@ -1,9 +1,10 @@
 import "server-only";
 import { site } from "@/data/config";
 import { type Db } from "@/lib/db/client";
-import { formatINR } from "@/lib/format";
+import { inrRates, storedMarket } from "@/lib/local-price";
 import { FOLLOWUP_DONE, dueFollowup } from "@/lib/followups";
 import { MAIL_SUPPORT, noteEmail, sendMail } from "@/lib/mail";
+import { formatMoney, priceIn } from "@/lib/pricing";
 import { SD_COURSE, SD_OFFER, SD_REFERRAL, offerPath, sdPriceFor } from "@/lib/sd-offer";
 import { sdLessonCounts } from "@/lib/sd-reminders";
 
@@ -24,14 +25,14 @@ const BATCH = 60;
  */
 export async function followUpSdClaims(sql: Db, now: Date = new Date(), only: string | null = null) {
   const { data: rows, error } = await sql.rows<{
-    email: string; name: string; locked_price: number; followup_stage: number; started_at: string;
+    email: string; name: string; locked_price: number; country: string | null; followup_stage: number; started_at: string;
   }>`
-    select p.email, p.name, p.locked_price, p.followup_stage, min(pay.created_at) as started_at
+    select p.email, p.name, p.locked_price, p.country, p.followup_stage, min(pay.created_at) as started_at
       from course.sd_preregistrations p
       join course.payments pay on pay.email = p.email and pay.track = ${SD_COURSE}
      where p.followup_stage < ${FOLLOWUP_DONE}
        and (${only}::text is null or p.email = ${only})
-     group by p.email, p.name, p.locked_price, p.followup_stage
+     group by p.email, p.name, p.locked_price, p.country, p.followup_stage
      order by started_at
      limit ${BATCH}
   `;
@@ -42,6 +43,7 @@ export async function followUpSdClaims(sql: Db, now: Date = new Date(), only: st
   }
 
   const lessons = sdLessonCounts();
+  const rates = rows?.length ? await inrRates() : null;
   let sent = 0, closed = 0;
   for (const r of rows ?? []) {
     const { data: seat } = await sql.row<{ id: string }>`
@@ -63,11 +65,15 @@ export async function followUpSdClaims(sql: Db, now: Date = new Date(), only: st
     `;
     if (!claimed) continue;
 
+    // In the currency they claimed from: the price the order will charge them.
+    const market = storedMarket(r.country, rates);
+    const amount = priceIn(market, sdPriceFor(r.locked_price, now));
     const mail = sdFollowupEmail(step, {
       name: r.name.split(" ")[0] || "there",
-      price: formatINR(sdPriceFor(r.locked_price, now)),
-      priceRupees: sdPriceFor(r.locked_price, now),
-      full: formatINR(SD_OFFER.full),
+      price: formatMoney(amount, market.currency),
+      amount,
+      currency: market.currency,
+      full: formatMoney(priceIn(market, SD_OFFER.full), market.currency),
       lessonsOut: lessons.out,
       lessonsTotal: lessons.total,
       url: `${site.url}${offerPath(`sd-followup-${step}`, true)}`,
@@ -101,7 +107,7 @@ export async function followUpSdClaims(sql: Db, now: Date = new Date(), only: st
  */
 function sdFollowupEmail(
   step: 1 | 2 | 3,
-  p: { name: string; price: string; priceRupees: number; full: string; lessonsOut: number; lessonsTotal: number; url: string },
+  p: { name: string; price: string; amount: number; currency: string; full: string; lessonsOut: number; lessonsTotal: number; url: string },
 ) {
   const common = { siteUrl: site.url, supportEmail: MAIL_SUPPORT, eyebrow: "System Design", title: `Hello ${p.name},` };
   const days = p.lessonsTotal;
@@ -124,7 +130,7 @@ function sdFollowupEmail(
         { title: "It can cost you nothing", body: `Finish on schedule, one lesson a day with no missed days and 70% or higher on the final assessment, and get 100% of your fee back. Or get it back when ${friends}.` },
       ],
       cta: { href: p.url, label: "Finish my claim" },
-      closing: "If the payment failed on your bank's side, trying again or paying by UPI usually works. Questions? Just reply to this email.",
+      closing: `If the payment failed on your bank's side, trying again or ${p.currency === "INR" ? "paying by UPI" : "using another card"} usually works. Questions? Just reply to this email.`,
     });
   }
 
@@ -146,7 +152,8 @@ function sdFollowupEmail(
     });
   }
 
-  const perDay = Math.ceil(p.priceRupees / days);
+  // A whole unit above the daily cost, so "under" is always true.
+  const perDay = formatMoney(Math.floor(p.amount / days) + 1, p.currency);
   return noteEmail({
     ...common,
     subject: `Last note: your ${p.price} System Design seat`,
@@ -154,7 +161,7 @@ function sdFollowupEmail(
     intro: "This is the last email we'll send about it, so here's the simple maths.",
     heading: "Why it's a low-risk yes",
     points: [
-      { title: `Under ₹${perDay} a day`, body: `${p.price} for ${days} days of lessons, practice and interview prep. Less than a cup of chai a day.` },
+      { title: `Under ${perDay} a day`, body: `${p.price} for ${days} days of lessons, practice and interview prep. Less than a cup of ${p.currency === "INR" ? "chai" : "coffee"} a day.` },
       { title: "Two ways to get it all back", body: `Finish on schedule with no missed days, or have ${friends}. Either way, you keep the course.` },
       { title: "Start any day you like", body: "No live class to miss. One short lesson a day, whenever suits you that day." },
       { title: "Your seat is still held", body: `At ${p.price} instead of ${p.full}, whenever you're ready.` },

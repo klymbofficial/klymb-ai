@@ -26,7 +26,7 @@ async function board(email: string | null): Promise<InternBoard | null> {
        order by c.created_at
     `,
     sql.rows<CreditedSale>`
-      select p.intern_code, p.amount, p.status, p.created_at, p.email
+      select p.intern_code, coalesce(p.amount_inr, case when p.currency = 'INR' then p.amount else 0 end) as amount, p.status, p.created_at, p.email
         from course.payments p
         join course.intern_codes c on c.code = p.intern_code
        where p.intern_code is not null and (${email}::text is null or c.email = ${email})

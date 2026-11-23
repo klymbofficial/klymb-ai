@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { isCronRequest } from "@/lib/cron-auth";
 import { db } from "@/lib/db/client";
-import { todayInIndia } from "@/lib/learn";
 import { pushReady, sendPush, type PushTarget } from "@/lib/push";
 import { SD_COURSE } from "@/lib/sd-offer";
 import { canTake, paceOf } from "@/lib/sd-pace";
-import { SD_FINAL_ASSESSMENT, SD_PUSH_SLOTS, pickSdReminder, pushStanding, sdReminderPush, type SdPushSlot } from "@/lib/sd-reminders";
+import { SD_FINAL_ASSESSMENT, SD_PUSH_SLOTS, pickSdReminder, pushStanding, sdReminderPush, slotAtHour, type SdPushSlot } from "@/lib/sd-reminders";
+import { IST, dayIn, hourIn, timeZoneOf } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -14,8 +14,10 @@ export const maxDuration = 300;
 const CONCURRENCY = 25;
 
 /**
- * 08:00, 17:00 and 21:00 IST, called by cron-job.org with ?slot=. GitHub Actions
- * ran hours late, too late for a reminder.
+ * 08:00, 17:00 and 21:00 in each learner's own time zone. Called every hour by
+ * cron-job.org with no ?slot=, each learner gets the slot their clock is in.
+ * The older schedule, at those hours IST with ?slot=, still works for learners
+ * on India time. GitHub Actions ran hours late, too late for a reminder.
  * Notifies the devices of each System Design learner who passed no lesson check
  * today and has a lesson open to take. A pass stops the rest of that day's. A
  * re-run is harmless: the notification replaces itself on the device.
@@ -23,14 +25,14 @@ const CONCURRENCY = 25;
  */
 export async function GET(req: Request) {
   if (!isCronRequest(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const slot = new URL(req.url).searchParams.get("slot") as SdPushSlot | null;
-  if (!slot || !SD_PUSH_SLOTS.includes(slot)) return NextResponse.json({ error: "Unknown slot" }, { status: 400 });
+  const asked = new URL(req.url).searchParams.get("slot") as SdPushSlot | null;
+  if (asked && !SD_PUSH_SLOTS.includes(asked)) return NextResponse.json({ error: "Unknown slot" }, { status: 400 });
   const sql = db();
   if (!sql || !pushReady()) return NextResponse.json({ error: "Not configured" }, { status: 500 });
-  const today = todayInIndia();
+  const now = Date.now();
 
-  const { data: learners, error } = await sql.rows<{ email: string; name: string | null; enrolled_on: string; refundable: boolean }>`
-    select e.email, lead.name, to_char(e.created_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as enrolled_on,
+  const { data: learners, error } = await sql.rows<{ email: string; name: string | null; enrolled_at: string; refundable: boolean }>`
+    select e.email, lead.name, e.created_at as enrolled_at,
            (e.source = 'payment' and pay.status = 'paid') as refundable
       from course.enrollments e
       left join course.payments pay on pay.id = e.payment_id
@@ -39,13 +41,13 @@ export async function GET(req: Request) {
        and exists (select 1 from course.sd_push_subscriptions d where d.email = e.email)
   `;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!learners?.length) return NextResponse.json({ slot, checked: 0, sent: 0 });
+  if (!learners?.length) return NextResponse.json({ slot: asked, checked: 0, sent: 0 });
   const emails = learners.map((l) => l.email);
 
-  const [{ data: devices, error: e1 }, { data: checks, error: e2 }, { data: finals, error: e3 }, { data: activity }] = await Promise.all([
+  const [{ data: devices, error: e1 }, { data: checks, error: e2 }, { data: finals, error: e3 }, { data: activity }, { data: zones }] = await Promise.all([
     sql.rows<PushTarget & { email: string }>`select endpoint, email, p256dh, auth from course.sd_push_subscriptions where email = any(${emails}::text[])`,
-    sql.rows<{ email: string; lesson: string; passed_on: string }>`
-      select email, lesson, to_char(passed_at at time zone 'Asia/Kolkata', 'YYYY-MM-DD') as passed_on
+    sql.rows<{ email: string; lesson: string; passed_at: string }>`
+      select email, lesson, passed_at
         from course.lesson_checks where course = ${SD_COURSE} and passed_at is not null and email = any(${emails}::text[])
     `,
     sql.rows<{ email: string; attempt: number; score: number; at: string }>`
@@ -56,6 +58,10 @@ export async function GET(req: Request) {
       select distinct email, lesson from course.sd_events
        where email = any(${emails}::text[]) and lesson is not null and event in ('video_play', 'step_done')
          and created_at > now() - interval '14 days'
+    `,
+    // Their time zones. Read on their own, so a database without 0048 still sends, on India time.
+    sql.rows<{ email: string; timezone: string }>`
+      select email, timezone from course.enrollments where course = ${SD_COURSE} and email = any(${emails}::text[])
     `,
   ]);
   const startedOn = new Set((activity ?? []).map((a) => `${a.email}|${a.lesson}`));
@@ -70,15 +76,22 @@ export async function GET(req: Request) {
   const devicesOf = byEmail(devices);
   const checksOf = byEmail(checks);
   const finalsOf = byEmail(finals);
+  const zoneOf = new Map((zones ?? []).map((z) => [z.email, timeZoneOf(z.timezone) ?? IST]));
 
   let due = 0;
   const outgoing: { device: PushTarget; message: ReturnType<typeof sdReminderPush> }[] = [];
   for (const l of learners) {
-    const passed = new Map((checksOf.get(l.email) ?? []).map((c) => [c.lesson, c.passed_on]));
-    const pace = paceOf({ passes: [...passed].map(([lesson, at]) => ({ lesson, at })), finals: finalsOf.get(l.email) ?? [], refundable: l.refundable });
+    const timeZone = zoneOf.get(l.email) ?? IST;
+    // Their slot by their own clock; a call with ?slot= (hours IST) is only for learners on India time.
+    const slot = asked ? (timeZone === IST ? asked : null) : slotAtHour(hourIn(now, timeZone));
+    if (!slot) continue;
+    const today = dayIn(now, timeZone);
+    const checksHere = checksOf.get(l.email) ?? [];
+    const passed = new Map(checksHere.map((c) => [c.lesson, dayIn(c.passed_at, timeZone)]));
+    const pace = paceOf({ passes: checksHere.map((c) => ({ lesson: c.lesson, at: new Date(c.passed_at).toISOString() })), finals: finalsOf.get(l.email) ?? [], refundable: l.refundable, timeZone }, now);
     if (pace.state === "finished") passed.set(SD_FINAL_ASSESSMENT, today);
     // Who's due and what for, as the email decides it, without its back-off: these go daily.
-    const pick = pickSdReminder({ enrolledOn: l.enrolled_on, passes: passed, remindedOn: null, streak: 0 }, today);
+    const pick = pickSdReminder({ enrolledOn: dayIn(l.enrolled_at, timeZone), passes: passed, remindedOn: null, streak: 0 }, today);
     if (!pick || (pick.target.kind === "lesson" ? !canTake(pace, pick.target.lesson.id) : !pace.finalOpen)) continue;
     due++;
     const lesson = pick.target.kind === "lesson" ? pick.target.lesson : null;
@@ -97,5 +110,5 @@ export async function GET(req: Request) {
     }
   };
   for (let i = 0; i < outgoing.length; i += CONCURRENCY) await Promise.all(outgoing.slice(i, i + CONCURRENCY).map(send));
-  return NextResponse.json({ slot, checked: learners.length, due, sent, removed, today });
+  return NextResponse.json({ slot: asked ?? "hourly", checked: learners.length, due, sent, removed });
 }

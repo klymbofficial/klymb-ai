@@ -101,7 +101,7 @@ export function makeInternCode(name: string, random: () => number = Math.random)
 /** The share link for a code. */
 export const internLink = (siteUrl: string, code: string) => `${siteUrl}/i/${code}`;
 
-/** Commission in paise on an order of `amountPaise`: 20% of what the buyer paid, rounded to the nearest rupee (₹499 → ₹100). */
+/** Commission in paise on an order worth `amountPaise` in INR (a foreign-currency order counts at its INR value): 20%, rounded to the nearest rupee (₹499 → ₹100). */
 export const commissionOf = (amountPaise: number) => Math.round((amountPaise * INTERNSHIP.commissionPct) / 100 / 100) * 100;
 
 /** "2026-12": the India-time month an order falls in. */

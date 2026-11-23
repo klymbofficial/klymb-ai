@@ -1,6 +1,8 @@
 "use client";
 
 import { MODULES } from "@/data/system-design/course-app";
+import { midnightOf } from "@/lib/sd-pace";
+import { IST } from "@/lib/timezone";
 import { dayOf, isPaywalled, moduleIds, moduleMinutes, openFinal, openLesson, paceNow, pad, type CourseState } from "@/lib/course-app";
 import { Icon } from "../icons";
 import { BackButton, Stats, parallax, stagger } from "../ui";
@@ -18,11 +20,11 @@ function takeaways(s: CourseState, mi: number) {
 }
 
 /** Kamran's line on a finished module: well done, and what comes next. */
-function kamranSays(rm: number, first: string | null, finalLocked: boolean) {
+function kamranSays(rm: number, first: string | null, finalLocked: boolean, midnight: string) {
   const hi = first ? `Well done, ${first}!` : "Well done!";
   const nextDay = dayOf(`${rm + 1}-0`);
   const next = MODULES[rm + 1];
-  if (!next && finalLocked) return `${hi} That’s the whole course. Your final assessment opens at midnight India time.`;
+  if (!next && finalLocked) return `${hi} That’s the whole course. Your final assessment opens at ${midnight}.`;
   if (!next) return `${hi} That’s the whole course. Take the post-assessment and see how far you’ve come.`;
   if (isPaywalled(`${rm + 1}-0`)) return `${hi} You finished ${MODULES[rm].title}. ${next.title} is in the full course.`;
   if (!nextDay) return `${hi} You finished ${MODULES[rm].title}. ${next.title} is coming soon, I’ll keep it ready.`;
@@ -49,7 +51,7 @@ export function Recap({ s, act }: { s: CourseState; act: Act }) {
         <span className="sd-near text-[40px] leading-[0.95] font-extrabold tracking-[-0.04em] lg:text-[64px]">{mod.title}</span>
       </div>
       <div className="sd-a-in flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ animationDelay: "250ms" }}>
-        <StudyBuddy tone="light" size={88} message={kamranSays(rm, firstName(user), finalLocked)} />
+        <StudyBuddy tone="light" size={88} message={kamranSays(rm, firstName(user), finalLocked, midnightOf({ timeZone: s.progress?.timeZone ?? IST }))} />
         {!user && <div className="sm:w-[280px]"><GoogleButton lesson={`${rm + 1}-0`} where="recap" label="Save progress with Google" className="h-11 border-2 border-sd-ink" /></div>}
       </div>
       <Stats className="border-t-2 border-t-sd-divider" cellClass="py-2.5" valueClass="text-[26px]" items={[[`${n}/${n}`, "lessons"], [`${moduleMinutes(rm)} min`, "watched"], [notes, "notes"]]} />

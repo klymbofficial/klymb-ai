@@ -10,13 +10,9 @@
 
 export type Slot = "morning" | "midday" | "night";
 
-/** 09:00, 14:00, 20:00 IST. Anything off-schedule maps to the nearest earlier slot. */
-export function slotForIstHour(hour: number): Slot | null {
-  if (hour < 8) return null;
-  if (hour < 12) return "morning";
-  if (hour < 18) return "midday";
-  return "night";
-}
+/** The hours of a learner's own day the reminders go at: 09:00, 14:00 and 20:00. */
+const SLOT_HOURS: Record<number, Slot> = { 9: "morning", 14: "midday", 20: "night" };
+export const slotAtHour = (hour: number): Slot | null => SLOT_HOURS[hour] ?? null;
 
 export interface ReminderInput {
   slot: Slot;

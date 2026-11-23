@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { currentEmail } from "@/auth";
 import { db } from "@/lib/db/client";
 import { todayInIndia } from "@/lib/learn";
+import { marketOf, visitorCountry } from "@/lib/local-price";
+import { inrPaiseOf, minorUnits, priceIn } from "@/lib/pricing";
 import { createOrder, razorpayKeys } from "@/lib/razorpay";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { couponOf, couponProblem, findCoupon, withCoupon } from "@/lib/sd-coupons";
@@ -21,12 +23,14 @@ import { LIMITS, clamp } from "@/lib/validation";
  * price even if they finish paying after it ends. A referral code is checked
  * here, so a bad one is refused while they can still fix it, not after paying.
  * So is a coupon code, which sets the price; the two can go together.
+ * The INR price is then charged in the buyer's own currency (lib/pricing):
+ * INR in India, $20 in the US, today's conversion everywhere else.
  */
 export async function POST(req: Request) {
   const email = await currentEmail();
   if (!email) return NextResponse.json({ error: "Please sign in with Google again." }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown; coupon?: unknown; intern?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { name?: unknown; dial?: unknown; phone?: unknown; linkedin?: unknown; role?: unknown; campaign?: unknown; ref?: unknown; coupon?: unknown; intern?: unknown; country?: unknown } | null;
   const name = clamp(body?.name, LIMITS.name);
   const dial = String(body?.dial ?? "91");
   const phone = String(body?.phone ?? "");
@@ -98,10 +102,13 @@ export async function POST(req: Request) {
   const internHit = internTyped ? await findInternCode(sql, internTyped).catch(() => null) : null;
   const internCode = internHit?.data && internHit.data.email !== email ? internHit.data.code : null;
 
+  // Where they pay from. `country` from the form only counts on a local machine, for trying other currencies.
+  const market = await marketOf(await visitorCountry(body?.country));
   const order = await createOrder(keys, {
-    amount: withCoupon(sdPriceFor(lead?.locked_price, now), couponPrice) * 100,
+    amount: minorUnits(priceIn(market, withCoupon(sdPriceFor(lead?.locked_price, now), couponPrice)), market.currency),
+    currency: market.currency,
     receipt: `klymb-sd-${Date.now().toString(36)}`,
-    notes: { email, course: SD_COURSE, ...(couponCode ? { coupon: couponCode } : {}), ...(internCode ? { intern: internCode } : {}) },
+    notes: { email, course: SD_COURSE, ...(market.country ? { country: market.country } : {}), ...(couponCode ? { coupon: couponCode } : {}), ...(internCode ? { intern: internCode } : {}) },
   });
   if (!order.ok) {
     console.error("razorpay create order failed:", order.message);
@@ -120,6 +127,17 @@ export async function POST(req: Request) {
   if (error) {
     console.error("payments insert failed:", error.code, error.message);
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 500 });
+  }
+  // Its worth in rupees, and where they claimed from: their own statements, so a database without 0048 still takes the payment.
+  const rate = order.currency === "INR" ? null : market.rate;
+  const worth = await sql.run`
+    update course.payments set amount_inr = ${inrPaiseOf(order.amount, order.currency, rate)}, fx_rate = ${rate}
+     where razorpay_order_id = ${order.id}
+  `;
+  if (worth.error) console.error("payment INR value failed:", worth.error.code, worth.error.message);
+  if (market.country) {
+    const from = await sql.run`update course.sd_preregistrations set country = ${market.country} where email = ${email}`;
+    if (from.error) console.error("claim country failed:", from.error.code, from.error.message);
   }
   if (internCode) {
     const credit = await sql.run`update course.payments set intern_code = ${internCode} where razorpay_order_id = ${order.id}`;

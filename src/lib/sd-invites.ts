@@ -1,8 +1,9 @@
 import "server-only";
 import { site } from "@/data/config";
 import { type Db } from "@/lib/db/client";
-import { formatINR } from "@/lib/format";
+import { inrRates, storedMarket } from "@/lib/local-price";
 import { MAIL_SUPPORT, sdInviteEmail, sendMail } from "@/lib/mail";
+import { formatMoney, priceIn } from "@/lib/pricing";
 import { SD_COURSE, SD_OFFER, offerPath, sdPriceFor } from "@/lib/sd-offer";
 import { sdLessonCounts } from "@/lib/sd-reminders";
 
@@ -23,8 +24,8 @@ const BATCH = 60;
 export async function inviteSdPreregistrations(sql: Db, env: Record<string, string | undefined> = process.env) {
   if (env.SD_INVITE_PREREGISTERED !== "true") return { sent: 0, skipped: "off" };
 
-  const { data: rows, error } = await sql.rows<{ email: string; name: string; locked_price: number }>`
-    select p.email, p.name, p.locked_price
+  const { data: rows, error } = await sql.rows<{ email: string; name: string; locked_price: number; country: string | null }>`
+    select p.email, p.name, p.locked_price, p.country
       from course.sd_preregistrations p
      where p.consent and p.invited_at is null
        and not exists (
@@ -43,6 +44,7 @@ export async function inviteSdPreregistrations(sql: Db, env: Record<string, stri
   }
 
   const lessons = sdLessonCounts();
+  const rates = rows?.length ? await inrRates() : null;
   let sent = 0;
   for (const r of rows ?? []) {
     const { data: claimed } = await sql.row<{ email: string }>`
@@ -52,10 +54,12 @@ export async function inviteSdPreregistrations(sql: Db, env: Record<string, stri
     `;
     if (!claimed) continue;
 
+    // In the currency they claimed from: the price the order will charge them.
+    const market = storedMarket(r.country, rates);
     const mail = sdInviteEmail({
       name: r.name.split(" ")[0] || "there",
-      price: formatINR(sdPriceFor(r.locked_price)),
-      full: formatINR(SD_OFFER.full),
+      price: formatMoney(priceIn(market, sdPriceFor(r.locked_price)), market.currency),
+      full: formatMoney(priceIn(market, SD_OFFER.full), market.currency),
       lessonsOut: lessons.out,
       lessonsTotal: lessons.total,
       url: `${site.url}${offerPath("prereg-invite")}`,

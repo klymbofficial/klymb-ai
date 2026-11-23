@@ -1,5 +1,6 @@
 import { allTracks as tracks, getTrack } from "@/data/tracks";
 import type { DailyChallenge, Track } from "@/types/program";
+import { IST, dayIn } from "@/lib/timezone";
 
 export function resolveTrack(slug?: string): Track {
   return (slug && getTrack(slug)) || tracks[0];
@@ -28,10 +29,13 @@ export function thirtyDays(track: Track): DayEntry[] {
  * calendar day, so the 30 days run start → start + 29. Dates are handled in
  * UTC and only ever formatted, never compared against "now".
  */
-/** Today's date in India, YYYY-MM-DD: a rolling learner's Day 1. */
+/** Today's date in India, YYYY-MM-DD. */
 export function todayInIndia(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+  return dayIn(Date.now(), IST);
 }
+
+/** Today's date in `timeZone`, YYYY-MM-DD: a rolling learner's Day 1, and the day they're on. */
+export const todayIn = (timeZone: string | null | undefined) => dayIn(Date.now(), timeZone ?? IST);
 
 export function cohortDayDate(cohortStart: string, day: number): string {
   const date = new Date(`${cohortStart}T00:00:00Z`);

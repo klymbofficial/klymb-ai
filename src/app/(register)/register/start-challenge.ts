@@ -5,7 +5,9 @@ import { auth, verifiedEmailFrom } from "@/auth";
 import { getTrack, isOneClickStart } from "@/data/tracks";
 import { isListed } from "@/data/course-cards";
 import { db } from "@/lib/db/client";
-import { todayInIndia } from "@/lib/learn";
+import { todayIn } from "@/lib/learn";
+import { viewerTimeZone } from "@/lib/viewer-tz";
+import { saveLearnerTimeZone } from "@/lib/learner/zone";
 import { enrolLearner } from "@/lib/learner/enrolment";
 import { enrolmentClient } from "@/lib/learner/enrolment-db";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -65,13 +67,16 @@ export async function startChallenge(track: string): Promise<StartResult> {
   if (!sql) return { ok: false, kind: "unavailable", message: "Starting is not available right now." };
 
   const name = clamp(session?.user?.name, LIMITS.name) || clamp(email.split("@")[0], LIMITS.name);
+  // Their own calendar: Day 1 is today where they are, and their days end at their midnight.
+  const zone = await viewerTimeZone();
   const outcome = await enrolLearner(enrolmentClient(sql), {
     email,
     name,
     track: found.slug,
     // Rolling enrolment: Day 1 is the day they start, not a shared date.
-    cohortStart: todayInIndia(),
+    cohortStart: todayIn(zone),
   });
+  if (outcome === "created") await saveLearnerTimeZone(sql, email, found.slug, zone);
   if (outcome === "failed") {
     return { ok: false, kind: "unavailable", message: "Something went wrong starting your challenge." };
   }

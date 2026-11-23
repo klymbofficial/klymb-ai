@@ -11,7 +11,8 @@ import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
 import { getTrack } from "@/data/tracks";
 import { getCurriculumDay } from "@/data/curricula";
-import { todayInIndia } from "@/lib/learn";
+import { todayIn } from "@/lib/learn";
+import { learnerTimeZone } from "@/lib/learner/zone";
 import { checkFreshPush } from "@/lib/learner/github";
 import { checkAnswers, checkPace, checkReusedLink, checkWorkLink } from "@/lib/learner/integrity";
 import { db } from "@/lib/db/client";
@@ -70,7 +71,8 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const limit = await checkRateLimit("day_submit", { limit: 60, windowMinutes: 60, identity: state.learner.id });
   if (!limit.allowed) return { ok: false, message: "You have saved a lot in the last hour. Wait a few minutes and try again." };
 
-  // Evidence has to be real, today's, and the learner's own.
+  // Evidence has to be real, today's (on their own calendar), and the learner's own.
+  const zone = await learnerTimeZone(db(), state.learner.id);
   const questions = getCurriculumDay(state.learner.track, day)?.quiz ?? [];
   const integrityError =
     checkWorkLink(url) ??
@@ -78,7 +80,7 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
     checkReusedLink(url!, day, state.submissions) ??
     checkAnswers(questions, quizAnswers) ??
     checkLinkedinPostUrl(linkedinPost, state.learner.linkedin_slug) ??
-    checkPace(todayInIndia(), day, state.submissions);
+    checkPace(todayIn(zone), day, state.submissions, zone);
   if (integrityError) return { ok: false, message: integrityError };
   if (!(await linkIsPublic(url!))) {
     return { ok: false, message: "We couldn't open that link. Check the file is pushed and the repository is public, then try again." };

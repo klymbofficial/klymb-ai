@@ -6,9 +6,10 @@
  *   account: a file, folder, commit or pull request, not a bare profile or
  *   repository root, and never a link already used for another day.
  * - Every question on the day is answered in the learner's own words.
- * - At most MAX_NEW_DAYS_PER_DAY new days a calendar day (IST), so catching
+ * - At most MAX_NEW_DAYS_PER_DAY new days a calendar day (their own), so catching
  *   up works but racing through 30 days in an evening does not.
  */
+import { IST, dayIn } from "@/lib/timezone";
 
 export const MAX_NEW_DAYS_PER_DAY = 3;
 export const MIN_ANSWER_CHARS = 25;
@@ -49,15 +50,14 @@ export function checkAnswers(questions: string[], answers: string[] | null): str
   return null;
 }
 
-/** How many days (other than this one) were first submitted on the given IST date. submitted_at is set once, on the first save. */
-export function newDaysOn(date: string, day: number, submissions: { day: number; submitted_at: string }[]) {
-  const ist = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date(iso));
-  return submissions.filter((s) => s.day !== day && ist(s.submitted_at) === date).length;
+/** How many days (other than this one) were first submitted on the given date in `timeZone` (India time by default). submitted_at is set once, on the first save. */
+export function newDaysOn(date: string, day: number, submissions: { day: number; submitted_at: string }[], timeZone: string = IST) {
+  return submissions.filter((s) => s.day !== day && dayIn(s.submitted_at, timeZone) === date).length;
 }
 
-export function checkPace(date: string, day: number, submissions: { day: number; submitted_at: string }[]): string | null {
+export function checkPace(date: string, day: number, submissions: { day: number; submitted_at: string }[], timeZone: string = IST): string | null {
   if (submissions.some((s) => s.day === day)) return null; // re-saving an existing day is always fine
-  return newDaysOn(date, day, submissions) >= MAX_NEW_DAYS_PER_DAY
+  return newDaysOn(date, day, submissions, timeZone) >= MAX_NEW_DAYS_PER_DAY
     ? `You've completed ${MAX_NEW_DAYS_PER_DAY} new days today, which is the daily limit. Come back tomorrow for Day ${day}: the work sticks better with sleep in between.`
     : null;
 }
