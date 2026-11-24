@@ -89,7 +89,7 @@ export function LibraryCard({ course: c, mine }: { course: LibraryCourse; mine?:
   const linked = href !== null;
   const cta = mine ? mine.label : !c.open ? "How to ask about this" : linked ? "Enroll" : "Coming soon";
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-card border border-[#e2e0df] bg-card shadow-card transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-float">
+    <article className={clsx("group relative flex h-full flex-col overflow-hidden rounded-card border border-[#e2e0df] bg-card shadow-card transition-[box-shadow,transform] duration-200 hover:-translate-y-1 hover:shadow-float", linked && "cursor-pointer")}>
       <div
         className="relative aspect-[19/10] overflow-hidden"
         style={{
@@ -169,6 +169,7 @@ export function LibraryCard({ course: c, mine }: { course: LibraryCourse; mine?:
             aria-hidden={linked || undefined}
             className={clsx(
               "grid h-10 place-items-center rounded-lg border text-[15px] font-semibold transition-[filter]",
+              linked && "cursor-pointer",
               c.open && linked && "border-red-deep bg-red-deep text-white group-hover:brightness-[0.92]",
               c.open && !linked && "border-[#dcdad9] bg-[#f4f3f3] text-muted",
               !c.open && "border-[#c8c5c4] bg-card text-ink group-hover:brightness-[0.92]",
