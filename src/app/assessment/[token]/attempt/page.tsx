@@ -3,8 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CandidateNotice, CandidateShell } from "@/components/company/CandidateShell";
 import { Countdown } from "@/components/company/Countdown";
-import { AnswerEditor } from "@/components/company/AnswerEditor";
-import { AttemptFiles } from "@/components/company/AttemptFiles";
+import { AttemptWork } from "@/components/company/AttemptWork";
 import { attemptByLink, attemptTask, listAttemptFiles, loadDraft } from "@/lib/company/attempt-data";
 import { attemptState } from "@/lib/company/attempt-rules";
 import { readCandidateLink } from "@/lib/company/batch-link";
@@ -23,8 +22,8 @@ export const metadata: Metadata = { title: "Your test", robots: { index: false, 
  * link's own page, which says why. The task comes from the version pinned
  * to the attempt, and the countdown from the deadline the server set at
  * Start: reloading, reconnecting or opening it on another device shows the
- * same time left. The answer saves as they write (AnswerEditor); submitting
- * it arrives in H08.
+ * same time left. The answer saves as they write, files attach as they're
+ * chosen, and Submit freezes both (AttemptWork).
  */
 export default async function AttemptPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -65,33 +64,21 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
         <div className="mt-4 whitespace-pre-line text-sm leading-relaxed">{task?.taskBrief ?? "The task can't be shown right now. Reload the page; your time keeps running."}</div>
       </section>
 
-      {draft === null ? (
-        <section role="alert" className="card p-6 text-sm">Your saved answer can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section>
+      {draft === null || (task?.submission === "written_file" && files === null) ? (
+        <section role="alert" className="card p-6 text-sm">Your saved work can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section>
       ) : (
-        <AnswerEditor
+        <AttemptWork
           token={token}
           attemptId={attempt.id}
+          withFiles={task?.submission === "written_file"}
           initialAnswer={draft?.answer ?? ""}
           initialRevision={draft?.revision ?? 0}
           initialSavedAt={draft?.savedAt ? new Date(draft.savedAt).toISOString() : null}
+          initialFiles={(files ?? []).map((f) => ({ id: f.id, name: f.name, bytes: f.bytes }))}
           deadline={new Date(attempt.deadlineAt).toISOString()}
           serverNow={now.toISOString()}
           timeZone={tz}
         />
-      )}
-
-      {task?.submission === "written_file" && (
-        files === null ? (
-          <section role="alert" className="card p-6 text-sm">Your attached files can&apos;t be listed right now. Reload the page in a moment.</section>
-        ) : (
-          <AttemptFiles
-            token={token}
-            attemptId={attempt.id}
-            initial={files.map((f) => ({ id: f.id, name: f.name, bytes: f.bytes }))}
-            deadline={new Date(attempt.deadlineAt).toISOString()}
-            serverNow={now.toISOString()}
-          />
-        )
       )}
 
       <p className="text-xs text-muted">

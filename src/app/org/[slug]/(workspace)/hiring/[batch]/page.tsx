@@ -133,7 +133,9 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
       link: where && link !== "cancelled" && link !== "batch_cancelled" ? { label: ATTEMPT_LABEL[where], tone: ATTEMPT_TONE[where] } : LINK[link],
       startBy: link === "cancelled" || link === "batch_cancelled"
         ? "—"
-        : attempt
+        : attempt?.submittedAt
+          ? `Submitted ${formatInZone(attempt.submittedAt, tz)}${attempt.submitKind === "deadline" ? " · at the time limit" : ""}`
+          : attempt
           ? `Started ${formatInZone(attempt.startedAt, tz)} · ends ${formatInZone(attempt.deadlineAt, tz)}`
           : formatInZone(lastOf(c), tz),
       // Once started, the time fixed at Start; a later change of extra minutes doesn't move a running clock.

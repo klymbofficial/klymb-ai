@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ATTEMPT_FILE_ACCEPT, ATTEMPT_FILE_LIMITS, sizeText, tooBigText } from "@/lib/company/attempt-files";
 
 export interface ShownFile {
@@ -16,12 +16,14 @@ export interface ShownFile {
  * file's own bytes. Files can be removed until the test is submitted or the
  * time is up.
  */
-export function AttemptFiles({ token, attemptId, initial, deadline, serverNow }: {
+export function AttemptFiles({ token, attemptId, initial, deadline, serverNow, onChange }: {
   token: string;
   attemptId: string;
   initial: ShownFile[];
   deadline: string;
   serverNow: string;
+  /** Tells the Submit panel how many files are attached and whether one is uploading or being removed. */
+  onChange?: (s: { count: number; busy: boolean }) => void;
 }) {
   const [files, setFiles] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export function AttemptFiles({ token, attemptId, initial, deadline, serverNow }:
   const api = `/api/assessment/${token}/files`;
   const over = () => Date.now() + skew > new Date(deadline).getTime();
   const full = files.length >= ATTEMPT_FILE_LIMITS.count;
+  useEffect(() => { onChange?.({ count: files.length, busy: !!busy }); }, [onChange, files.length, busy]);
 
   async function add(file: File) {
     if (over()) return setMsg({ ok: false, text: "Time is up, so files can't be added." });

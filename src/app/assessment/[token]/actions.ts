@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { saveDraft, startAttempt, type SaveOutcome } from "@/lib/company/attempt-data";
+import { saveDraft, startAttempt, submitAttempt, type SaveOutcome, type SubmitOutcome } from "@/lib/company/attempt-data";
 import { MAX_ANSWER_CHARS } from "@/lib/company/attempt-rules";
 import { readCandidateLink } from "@/lib/company/batch-link";
 import { db } from "@/lib/db/client";
@@ -47,4 +47,26 @@ export async function saveAnswer(token: unknown, attemptId: unknown, baseRevisio
   if (!sql) return { status: "error" };
   const out = await saveDraft(sql, { candidateId: ref.id, generation: ref.generation, attemptId, baseRevision, answer });
   return out ?? { status: "error" };
+}
+
+export type SubmitResult = Exclude<SubmitOutcome, { status: "submitted" | "already" }> | { status: "error" };
+
+/**
+ * The candidate's Submit. The page saves the answer first and passes the
+ * revision it shows; the database copies that answer and the attached files
+ * into a frozen submission, once (a second press, or another tab, gets the
+ * same receipt). On success, or if it was already submitted, it opens the
+ * link's page, which shows the receipt.
+ */
+export async function submitTest(token: unknown, attemptId: unknown, revision: unknown): Promise<SubmitResult> {
+  const ref = readCandidateLink(token);
+  if (!ref || typeof token !== "string") return { status: "refused" };
+  if (typeof attemptId !== "string" || !UUID.test(attemptId)) return { status: "refused" };
+  if (typeof revision !== "number" || !Number.isInteger(revision) || revision < 0) return { status: "error" };
+  const sql = db();
+  if (!sql) return { status: "error" };
+  const out = await submitAttempt(sql, { candidateId: ref.id, generation: ref.generation, attemptId, revision });
+  if (!out) return { status: "error" };
+  if (out.status === "stale" || out.status === "closed" || out.status === "refused") return out;
+  redirect(`/assessment/${token}`);
 }

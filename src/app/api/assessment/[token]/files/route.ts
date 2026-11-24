@@ -25,6 +25,7 @@ const reply = (status: number, body: Record<string, unknown>) =>
 const MESSAGES = {
   refused: "This link no longer opens the test. Reload the page.",
   closed: "Time is up, so files can't be added or removed.",
+  submitted: "This test is submitted, so its files can't change. Reload to see your receipt.",
   full: `You've attached ${ATTEMPT_FILE_LIMITS.count} files, the most allowed. Remove one to add another.`,
   duplicate: "That file is already attached.",
   unavailable: "Files can't be saved right now. Try again in a minute; your written answer is unaffected.",

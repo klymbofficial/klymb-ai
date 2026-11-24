@@ -3,8 +3,10 @@ import Link from "next/link";
 import { CandidateNotice, CandidateShell } from "@/components/company/CandidateShell";
 import { LocalTime } from "@/components/company/LocalTime";
 import { StartTest } from "@/components/company/StartTest";
-import { attemptByLink, recordLinkOpened } from "@/lib/company/attempt-data";
-import { attemptState } from "@/lib/company/attempt-rules";
+import { RefreshAt } from "@/components/company/RefreshAt";
+import { attemptByLink, loadSubmission, recordLinkOpened, type Submission } from "@/lib/company/attempt-data";
+import { attemptState, SAVE_GRACE_SECONDS } from "@/lib/company/attempt-rules";
+import { sizeText } from "@/lib/company/attempt-files";
 import { readCandidateLink } from "@/lib/company/batch-link";
 import { candidateByLink, type CandidateView } from "@/lib/company/batch-data";
 import { allowedMinutes, deadlineText, durationText, lastStart, linkState } from "@/lib/company/batch-rules";
@@ -28,7 +30,8 @@ const label = "text-xs font-extrabold uppercase tracking-[0.14em] text-muted";
  * A candidate's private link. Before they start: their test, when they can
  * start, how long they have, the instructions and rules, in the company's
  * look, and a Start button. Once started: a way back into the running test.
- * Or why the link no longer works. The test's task is shown only after
+ * Once submitted (by them, or at the time limit): their receipt. Or why the
+ * link no longer works. The test's task is shown only after
  * Start.
  */
 export default async function CandidatePage({ params }: { params: Promise<{ token: string }> }) {
@@ -68,6 +71,26 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
     return <CandidateShell brand={brand}><CandidateNotice title="This page can't load right now">Try again in a minute. If it keeps happening, write to {write}.</CandidateNotice></CandidateShell>;
   }
 
+  if (attempt?.submittedAt) {
+    const sub = await loadSubmission(sql!, attempt.id);
+    return (
+      <CandidateShell brand={brand}>
+        <Receipt
+          company={company}
+          role={b.role}
+          title={b.title}
+          receipt={attempt.receipt}
+          submittedAt={attempt.submittedAt}
+          kind={attempt.submitKind ?? "candidate"}
+          zone={b.timeZone}
+          submission={sub ?? null}
+          withFiles={v.submission === "written_file"}
+        />
+        <p className="text-xs text-muted">This link is for {c.email} only. Questions? Write to {write} and quote your receipt code.</p>
+      </CandidateShell>
+    );
+  }
+
   if (attempt) {
     const where = attemptState(attempt, now);
     return (
@@ -82,15 +105,11 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
                 Continue the test
               </Link>
             </>
-          ) : where === "time_up" ? (
-            <>
-              <h1 className="display mt-2 text-3xl">Your time is up</h1>
-              <p className="mt-2 text-sm">Your time ended at {deadlineText(attempt.deadlineAt, b.timeZone)}. {company} will be in touch.</p>
-            </>
           ) : (
             <>
-              <h1 className="display mt-2 text-3xl">Your test is submitted</h1>
-              <p className="mt-2 text-sm">Receipt {attempt.receipt}. {company} will be in touch.</p>
+              <h1 className="display mt-2 text-3xl">Your time is up</h1>
+              <p className="mt-2 text-sm">Your time ended at {deadlineText(attempt.deadlineAt, b.timeZone)}. What you saved is being submitted for you; this page shows your receipt in under a minute.</p>
+              <RefreshAt at={new Date(new Date(attempt.deadlineAt).getTime() + (SAVE_GRACE_SECONDS + 3) * 1000).toISOString()} serverNow={now.toISOString()} />
             </>
           )}
         </section>
@@ -150,5 +169,56 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
 
       <p className="text-xs text-muted">This link is for {c.email} only. Questions about the assessment? Write to {write}.</p>
     </CandidateShell>
+  );
+}
+
+const words = (text: string) => (text.trim() ? text.trim().split(/\s+/).length : 0);
+
+/** The candidate's receipt: a code to quote, when and how it was submitted, and what was received. Never the answer itself. */
+function Receipt({ company, role, title, receipt, submittedAt, kind, zone, submission, withFiles }: {
+  company: string;
+  role: string;
+  title: string;
+  receipt: string;
+  submittedAt: string;
+  kind: "candidate" | "deadline";
+  zone: string;
+  submission: Submission | null;
+  withFiles: boolean;
+}) {
+  const n = submission ? words(submission.answer) : 0;
+  return (
+    <section className="card p-6" aria-labelledby="receipt-title">
+      <p className={label}>{role} · {company}</p>
+      <h1 id="receipt-title" className="display mt-2 text-3xl">{kind === "deadline" ? "Your time ran out, and your work was submitted" : "Your test is submitted"}</h1>
+      <p className="mt-2 text-sm">{company} has your answer for <strong>{title}</strong>. They&apos;ll be in touch.</p>
+
+      <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <dt className={label}>Receipt</dt>
+          <dd className="mt-1 font-mono text-2xl font-bold tracking-widest">{receipt}</dd>
+        </div>
+        <div>
+          <dt className={label}>Submitted</dt>
+          <dd className="mt-1 text-sm">
+            {deadlineText(submittedAt, zone)}<LocalTime iso={submittedAt} zone={zone} />
+            <span className="block text-muted">{kind === "deadline" ? "Automatically at the time limit, with what you had saved" : "By you"}</span>
+          </dd>
+        </div>
+      </dl>
+
+      <div className="mt-6 border-t border-line/30 pt-4">
+        <h2 className={label}>Received</h2>
+        {submission ? (
+          <ul className="mt-2 space-y-1 text-sm">
+            <li>{n ? `Written answer · ${n.toLocaleString("en")} ${n === 1 ? "word" : "words"}` : "No written answer was saved"}</li>
+            {submission.files.map((f, i) => <li key={i} className="break-all">{f.name} <span className="text-muted">· {sizeText(f.bytes)}</span></li>)}
+            {withFiles && submission.files.length === 0 && <li className="text-muted">No files attached</li>}
+          </ul>
+        ) : (
+          <p className="mt-2 text-sm text-muted">The details can&apos;t be shown right now; your submission is safe.</p>
+        )}
+      </div>
+    </section>
   );
 }

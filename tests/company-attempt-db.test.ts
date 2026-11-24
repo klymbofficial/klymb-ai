@@ -9,9 +9,9 @@ import type { AssessmentContent } from "../src/lib/company/assessment-rules";
 import type { BatchInput } from "../src/lib/company/batch-rules";
 
 /**
- * H06 against a real database. Opt-in, like company-batch-db: runs only when
+ * H06–H08 against a real database. Opt-in, like company-batch-db: runs only when
  * TEST_DATABASE_URL points at a throwaway database with migrations through
- * 0053, and refuses the app's own database:
+ * 0057, and refuses the app's own database:
  *
  *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test --test-concurrency=1 tests/company-attempt-db.test.ts
  *
@@ -240,7 +240,7 @@ describe("candidate attempts against a real database", { skip }, () => {
     assert.ok(started && started.status === "started");
     const attemptId = started.attempt.id;
     await one.query(`update course.candidate_attempts set submitted_at = now(), submit_kind = 'candidate' where id = $1`, [attemptId]);
-    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 0, answer: "after" }), { status: "closed" }, "submitted");
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 0, answer: "after" }), { status: "submitted" });
 
     const other = await invited();
     const run2 = await att.startAttempt(sqlA, other.id, 1);
@@ -298,6 +298,146 @@ describe("candidate attempts against a real database", { skip }, () => {
       [companyId, over.attemptId, sha(8)],
     ), /attempt_files_bytes/, "the database refuses more than 4 MB");
     void batchId;
+  });
+
+  /** A started attempt with a saved answer (revision 1). */
+  async function startedWith(answer: string) {
+    const { batchId, id } = await invited();
+    const started = await att.startAttempt(sqlA, id, 1);
+    assert.ok(started && started.status === "started");
+    const attemptId = started.attempt.id;
+    assert.equal((await att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 0, answer }))?.status, "saved");
+    return { batchId, id, attemptId };
+  }
+  const sha = (n: number) => n.toString(16).padStart(64, "0");
+  const fileFor = (id: string, attemptId: string, n: number) => ({
+    candidateId: id, generation: 1, attemptId, name: `f${n}.pdf`, kind: "pdf" as const, bytes: 1000 + n, sha256: sha(n),
+    storageKey: `attempt-files/${companyId}/${attemptId}/${sha(n)}.pdf`,
+  });
+  const submissionOf = async (attemptId: string) =>
+    (await one.query(`select answer, draft_revision, file_ids, kind from course.attempt_submissions where attempt_id = $1`, [attemptId])).rows;
+
+  test("Submit freezes the saved answer and files once; a second press or tab gets the same receipt", async () => {
+    const { id, attemptId } = await startedWith("my final answer");
+    assert.equal((await att.addAttemptFile(sqlA, fileFor(id, attemptId, 1)))?.status, "added");
+    assert.equal((await att.addAttemptFile(sqlA, fileFor(id, attemptId, 2)))?.status, "added");
+
+    const who = { candidateId: id, generation: 1, attemptId, revision: 1 };
+    const [x, y] = await Promise.all([att.submitAttempt(sqlA, who), att.submitAttempt(sqlB, who)]);
+    assert.ok(x && y && "receipt" in x && "receipt" in y);
+    assert.deepEqual([x.status, y.status].sort(), ["already", "submitted"]);
+    assert.equal(x.receipt, y.receipt, "one receipt");
+    assert.equal(x.kind, "candidate");
+    assert.deepEqual(await att.submitAttempt(sqlA, who), { ...x, status: "already" }, "a later press: the same receipt");
+
+    const rows = await submissionOf(attemptId);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].answer, "my final answer");
+    assert.equal(rows[0].draft_revision, 1);
+    assert.equal(rows[0].file_ids.length, 2);
+    assert.equal(rows[0].kind, "candidate");
+    const stages = (await one.query(`select stage from course.attempt_files where attempt_id = $1`, [attemptId])).rows.map((r) => r.stage);
+    assert.deepEqual(stages, ["submitted", "submitted"]);
+    assert.deepEqual((await events(id)).filter((k) => k.includes("submit")), ["submitted"], "recorded once");
+    const sub = await att.loadSubmission(sqlA, attemptId);
+    assert.equal(sub?.answer, "my final answer");
+    assert.deepEqual(sub?.files.map((f) => f.name), ["f1.pdf", "f2.pdf"]);
+
+    // Nothing changes after: not through the app, and not by hand either.
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 1, answer: "edited" }), { status: "submitted" });
+    assert.deepEqual(await att.addAttemptFile(sqlA, fileFor(id, attemptId, 3)), { status: "submitted" });
+    assert.deepEqual(await att.fileSlot(sqlA, { candidateId: id, generation: 1, attemptId }), { status: "submitted" });
+    const fileId = rows[0].file_ids[0];
+    assert.equal(await att.removeAttemptFile(sqlA, { candidateId: id, generation: 1, attemptId, fileId }), false);
+    await assert.rejects(one.query(`update course.attempt_submissions set answer = 'x' where attempt_id = $1`, [attemptId]), /cannot be changed/);
+    await assert.rejects(one.query(`delete from course.attempt_submissions where attempt_id = $1`, [attemptId]), /only with its attempt/);
+    await assert.rejects(one.query(`update course.attempt_drafts set answer = 'x' where attempt_id = $1`, [attemptId]), /submitted/);
+    await assert.rejects(one.query(`delete from course.attempt_files where attempt_id = $1`, [attemptId]), /submitted/);
+    await assert.rejects(one.query(`update course.candidate_attempts set submitted_at = now() where id = $1`, [attemptId]), /cannot be changed/);
+    assert.equal((await att.loadSubmission(sqlA, attemptId))?.answer, "my final answer");
+  });
+
+  test("Submit is refused for a page showing an older answer, a replaced or cancelled link, and after the grace", async () => {
+    const stale = await startedWith("first");
+    assert.equal((await att.saveDraft(sqlB, { candidateId: stale.id, generation: 1, attemptId: stale.attemptId, baseRevision: 1, answer: "second, from another tab" }))?.status, "saved");
+    assert.deepEqual(await att.submitAttempt(sqlA, { candidateId: stale.id, generation: 1, attemptId: stale.attemptId, revision: 1 }), { status: "stale" });
+    assert.equal((await submissionOf(stale.attemptId)).length, 0, "nothing submitted");
+    assert.equal((await att.submitAttempt(sqlA, { candidateId: stale.id, generation: 1, attemptId: stale.attemptId, revision: 2 }))?.status, "submitted");
+
+    const moved = await startedWith("x");
+    await data.claimChange(sqlA, companyId, moved.batchId, moved.id, { kind: "new_link" });
+    assert.deepEqual(await att.submitAttempt(sqlA, { candidateId: moved.id, generation: 1, attemptId: moved.attemptId, revision: 1 }), { status: "refused" });
+    assert.deepEqual(await att.submitAttempt(sqlA, { candidateId: randomUUID(), generation: 2, attemptId: moved.attemptId, revision: 1 }), { status: "refused" }, "someone else's attempt");
+    await data.cancelCandidate(sqlA, companyId, moved.batchId, moved.id, "rec");
+    assert.deepEqual(await att.submitAttempt(sqlA, { candidateId: moved.id, generation: 2, attemptId: moved.attemptId, revision: 1 }), { status: "refused" });
+
+    const late = await pastAttempt(61, 60);
+    assert.deepEqual(await att.submitAttempt(sqlA, { candidateId: late.id, generation: 1, attemptId: late.attemptId, revision: 0 }), { status: "closed" });
+    const justNow = await pastAttempt(60, 60);
+    const inGrace = await att.submitAttempt(sqlA, { candidateId: justNow.id, generation: 1, attemptId: justNow.attemptId, revision: 0 });
+    assert.equal(inGrace?.status, "submitted", "pressed as the time ran out: inside the grace");
+    assert.ok(inGrace && "submittedAt" in inGrace && Math.abs(ms(inGrace.submittedAt) - Date.now()) < 60000, "by the candidate: when they pressed");
+    assert.equal((await submissionOf(justNow.attemptId))[0].answer, "", "nothing was saved: an empty answer");
+  });
+
+  test("at the time limit the saved work is submitted automatically, when someone next looks, once", async () => {
+    const over = await pastAttempt(61, 60);
+    // Saved before the time ran out (the app can't save into the past, so put in by hand).
+    await one.query(`insert into course.attempt_drafts (attempt_id, revision, answer) values ($1, 3, 'saved before time')`, [over.attemptId]);
+    const graced = await pastAttempt(60, 60);
+
+    const [a, b] = await Promise.all([att.finaliseDue(sqlA, { candidateId: over.id }), att.finaliseDue(sqlB, { companyId, batchId: over.batchId })]);
+    assert.equal((a ?? 0) + (b ?? 0), 1, "submitted once between two lookers");
+    const rows = await submissionOf(over.attemptId);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].answer, "saved before time");
+    assert.equal(rows[0].draft_revision, 3);
+    assert.equal(rows[0].kind, "deadline");
+    const ev = (await one.query(`select kind, actor_kind from course.hiring_events where attempt_id = $1 and kind like '%submitted'`, [over.attemptId])).rows;
+    assert.deepEqual(ev, [{ kind: "auto_submitted", actor_kind: "system" }]);
+    const seen = (await att.attemptsForBatch(sqlA, companyId, over.batchId))![0];
+    assert.equal(seen.submitKind, "deadline");
+    assert.equal(ms(seen.submittedAt), ms(seen.deadlineAt), "submitted at the time limit, not when it was finalised");
+    assert.equal(ms((await att.loadSubmission(sqlA, over.attemptId))?.submittedAt), ms(seen.deadlineAt));
+
+    assert.equal(await att.finaliseDue(sqlA, { candidateId: graced.id }), 0, "inside the save grace: not yet");
+    assert.equal((await submissionOf(graced.attemptId)).length, 0);
+
+    // Read through the candidate's link, a timed-out attempt arrives submitted.
+    const viaLink = await pastAttempt(90, 60);
+    const read = await att.attemptByLink(sqlA, viaLink.id, 1);
+    assert.equal(read?.submitKind, "deadline");
+
+    // A cancelled invitation's attempt stays as it was.
+    const gone = await pastAttempt(90, 60);
+    await data.cancelCandidate(sqlA, companyId, gone.batchId, gone.id, "rec");
+    assert.equal(await att.finaliseDue(sqlA, { candidateId: gone.id }), 0);
+    assert.equal((await submissionOf(gone.attemptId)).length, 0);
+
+    // A started test still running is never touched.
+    const running = await startedWith("working");
+    assert.equal(await att.finaliseDue(sqlA, { companyId, batchId: running.batchId }), 0);
+    assert.equal((await submissionOf(running.attemptId)).length, 0);
+  });
+
+  test("a save racing Submit either makes it into the submission or is refused, never lost in between", async () => {
+    for (let i = 0; i < 8; i += 1) {
+      const { id, attemptId } = await startedWith("before");
+      const [saved, submitted] = await Promise.all([
+        att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 1, answer: "racing" }),
+        // Straight to the function with no revision, so the race isn't settled by "stale".
+        two.query(`select status from course.submit_attempt($1, 'candidate', $2, 1, null, 30)`, [attemptId, id]),
+      ]);
+      assert.equal(submitted.rows[0].status, "submitted");
+      const [row] = await submissionOf(attemptId);
+      const draft = (await one.query(`select revision, answer from course.attempt_drafts where attempt_id = $1`, [attemptId])).rows[0];
+      assert.equal(row.draft_revision, draft.revision, "the draft didn't move after the submission");
+      if (saved?.status === "saved") assert.equal(row.answer, "racing", "a save that reported saved is in the submission");
+      else {
+        assert.equal(saved?.status, "submitted", `otherwise it's told the test is submitted (got ${JSON.stringify(saved)})`);
+        assert.equal(row.answer, "before");
+      }
+    }
   });
 
   test("the first open of each link is noted once; another company sees no attempts", async () => {

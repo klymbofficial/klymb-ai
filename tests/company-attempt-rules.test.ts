@@ -114,7 +114,32 @@ describe("saving the answer (H07a)", () => {
     assert.match(editor, /AUTOSAVE_MS/);
     assert.match(editor, /onBlur=\{\(\) => void save\(\)\}/);
     assert.match(editor, /visibilitychange/);
-    assert.match(editor, /out\.status === "conflict"\) \{ setLocked\("conflict"\)/);
+    assert.match(editor, /out\.status === "conflict"\) \{ lock\("conflict"\)/);
+    assert.match(editor, /out\.status === "submitted"\) \{ lock\("submitted"\)/, "submitted in another tab: the box stops");
     assert.match(editor, /role="status" aria-live="polite"/);
+  });
+});
+
+describe("submitting (H08)", () => {
+  test("Submit asks first, saves what's typed, waits for uploads, and sends the revision the page shows", () => {
+    const work = read("src/components/company/AttemptWork.tsx");
+    assert.match(work, /Submit now\? You can&apos;t change/);
+    assert.match(work, /control\.current\?\.flush\(\)[\s\S]*submitTest\(token, attemptId, saved\.revision\)/);
+    assert.match(work, /disabled=\{pending \|\| files\.busy\}/);
+  });
+
+  test("the receipt shows the code, the time, how it was submitted and what was received, never the answer itself", () => {
+    const page = read("src/app/assessment/[token]/page.tsx");
+    assert.match(page, /function Receipt/);
+    assert.match(page, /Automatically at the time limit/);
+    assert.doesNotMatch(page, /\{submission\.answer\}/);
+    const action = read("src/app/assessment/[token]/actions.ts");
+    assert.match(action, /submitAttempt\(sql, \{ candidateId: ref\.id, generation: ref\.generation, attemptId, revision \}\)/);
+  });
+
+  test("timed-out attempts are submitted when someone next looks, before attempts are read", () => {
+    const data = read("src/lib/company/attempt-data.ts");
+    assert.match(data, /export async function attemptByLink[\s\S]{0,200}await finaliseDue\(sql, \{ candidateId \}\)/);
+    assert.match(data, /export async function attemptsForBatch[\s\S]{0,200}await finaliseDue\(sql, \{ companyId, batchId \}\)/);
   });
 });

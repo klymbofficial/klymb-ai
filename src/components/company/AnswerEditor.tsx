@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { saveAnswer } from "@/app/assessment/[token]/actions";
 import { AUTOSAVE_MS, MAX_ANSWER_CHARS, type SaveState } from "@/lib/company/attempt-rules";
 
 const RETRY_MS = [3000, 6000, 12000, 20000, 30000];
+
+type Lock = "time" | "conflict" | "link" | "submitted";
+
+/** What Submit asks of the answer box: save what's typed and say which saved revision it shows. */
+export interface AnswerControl {
+  flush(): Promise<{ ok: true; revision: number; empty: boolean } | { ok: false; why: Lock | "network" }>;
+}
 
 /**
  * The candidate's answer box. It saves on its own: within AUTOSAVE_MS of
@@ -16,7 +23,7 @@ const RETRY_MS = [3000, 6000, 12000, 20000, 30000];
  * with growing gaps; the status line always says where the answer stands.
  */
 export function AnswerEditor({
-  token, attemptId, initialAnswer, initialRevision, initialSavedAt, deadline, serverNow, timeZone,
+  token, attemptId, initialAnswer, initialRevision, initialSavedAt, deadline, serverNow, timeZone, controlRef,
 }: {
   token: string;
   attemptId: string;
@@ -27,11 +34,16 @@ export function AnswerEditor({
   serverNow: string;
   /** The batch's zone: times are shown in it, the same on the server and in the browser. */
   timeZone: string;
+  /** Filled in for the Submit panel. */
+  controlRef?: Ref<AnswerControl>;
 }) {
   const [text, setText] = useState(initialAnswer);
   const [state, setState] = useState<SaveState>(initialSavedAt ? "saved" : "idle");
   const [savedAt, setSavedAt] = useState<string | null>(initialSavedAt);
-  const [locked, setLocked] = useState<null | "time" | "conflict" | "link">(null);
+  const [locked, setLockedState] = useState<Lock | null>(null);
+  const lockedRef = useRef<Lock | null>(null);
+  // The first reason wins: a conflict found at the deadline stays a conflict.
+  const lock = useCallback((why: Lock) => { lockedRef.current = lockedRef.current ?? why; setLockedState((l) => l ?? why); }, []);
 
   const textRef = useRef(initialAnswer);
   const savedText = useRef(initialAnswer);
@@ -67,16 +79,30 @@ export function AnswerEditor({
       if (textRef.current !== snapshot || again.current) { again.current = false; void saveRef.current(); }
       return;
     }
-    if (out && out.status === "conflict") { setLocked("conflict"); setState("conflict"); return; }
-    if (out && out.status === "closed") { setLocked("time"); setState("closed"); return; }
-    if (out && out.status === "refused") { setLocked("link"); setState("closed"); return; }
+    if (out && out.status === "conflict") { lock("conflict"); setState("conflict"); return; }
+    if (out && out.status === "closed") { lock("time"); setState("closed"); return; }
+    if (out && out.status === "submitted") { lock("submitted"); setState("closed"); return; }
+    if (out && out.status === "refused") { lock("link"); setState("closed"); return; }
     // Network trouble or a server error: keep the text and try again, waiting longer each time.
     const wait = RETRY_MS[Math.min(failures.current, RETRY_MS.length - 1)];
     failures.current += 1;
     setState("retrying");
     timer.current = window.setTimeout(() => void saveRef.current(), wait);
-  }, [token, attemptId]);
+  }, [token, attemptId, lock]);
   useEffect(() => { saveRef.current = save; }, [save]);
+
+  // For Submit: wait for a save in flight, save what's left, and report the revision now on the server.
+  useImperativeHandle(controlRef, () => ({
+    async flush() {
+      for (let tries = 0; tries < 4; tries += 1) {
+        while (inFlight.current) await new Promise((r) => window.setTimeout(r, 150));
+        if (lockedRef.current) return { ok: false, why: lockedRef.current };
+        if (textRef.current === savedText.current) return { ok: true, revision: revision.current, empty: !savedText.current.trim() };
+        await save();
+      }
+      return { ok: false, why: lockedRef.current ?? "network" };
+    },
+  }), [save]);
 
   const schedule = useCallback(() => {
     if (!timer.current && !inFlight.current) timer.current = window.setTimeout(() => void save(), AUTOSAVE_MS);
@@ -87,11 +113,11 @@ export function AnswerEditor({
     const ms = new Date(deadline).getTime() - (Date.now() + skew);
     const id = window.setTimeout(async () => {
       await save();
-      setLocked((l) => l ?? "time");
+      lock("time");
       setState((s) => (s === "conflict" ? s : "closed"));
     }, Math.max(0, ms));
     return () => window.clearTimeout(id);
-  }, [deadline, skew, save]);
+  }, [deadline, skew, save, lock]);
 
   // Leaving the tab saves; closing it with unsaved text asks first.
   useEffect(() => {
@@ -106,6 +132,7 @@ export function AnswerEditor({
   const status =
     locked === "conflict" ? "This test was saved in another tab or device. Reload this page to carry on with the latest answer; what you typed here since then isn't saved."
       : locked === "link" ? "This link no longer opens the test. Your last saved answer is kept."
+        : locked === "submitted" ? "This test has been submitted, so the answer can't change. Reload to see your receipt."
         : locked === "time" ? `Time is up. ${at ? `Your answer as saved at ${at} is what counts.` : "Nothing was saved."}`
           : state === "saving" ? "Saving…"
             : state === "retrying" ? "Not saved yet — trying again. Keep this page open."

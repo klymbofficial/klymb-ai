@@ -18,6 +18,9 @@ const fail = (what: string, error: { code?: string; message: string }) => {
   return null;
 };
 
+/** The database refused a write because the attempt was submitted a moment ago (0056's attempt_work_open). */
+const submittedMeanwhile = (error: { code?: string; message: string }) => error.code === "P0001" && error.message === "this attempt is submitted";
+
 export interface Attempt {
   id: string;
   candidateId: string;
@@ -113,8 +116,13 @@ export async function startAttempt(sql: Db, candidateId: string, generation: num
   return { status: "resumed", attempt: toAttempt(raced.data) };
 }
 
-/** This person's attempt, read through their current link. Undefined when there is none, or the link isn't current. */
+/**
+ * This person's attempt, read through their current link. Undefined when
+ * there is none, or the link isn't current. An attempt whose time and grace
+ * are over is submitted first (finaliseDue), so it reads as submitted.
+ */
 export async function attemptByLink(sql: Db, candidateId: string, generation: number): Promise<Attempt | undefined | null> {
+  await finaliseDue(sql, { candidateId });
   const { data, error } = await sql.row<AttemptRow>`
     select a.id, a.candidate_id, a.attempt_no, a.version_id, a.allowed_minutes, a.started_at, a.deadline_at, a.receipt, a.submitted_at, a.submit_kind
       from course.candidate_attempts a
@@ -172,8 +180,10 @@ export type SaveOutcome =
   | { status: "saved"; revision: number; savedAt: string }
   /** A newer save came from somewhere else (another tab or device): this one didn't land. */
   | { status: "conflict"; revision: number | null }
-  /** The time and its grace are over, or the attempt was submitted. */
+  /** The time and its grace are over. */
   | { status: "closed" }
+  /** The test was submitted (here or in another tab), so the answer is final. */
+  | { status: "submitted" }
   /** Not this link's attempt, a replaced link, or a cancelled invitation. */
   | { status: "refused" };
 
@@ -188,7 +198,7 @@ export async function saveDraft(
   sql: Db,
   s: { candidateId: string; generation: number; attemptId: string; baseRevision: number; answer: string },
 ): Promise<SaveOutcome | null> {
-  const { data, error } = await sql.row<{ live: boolean; open: boolean; revision: number | null; saved_at: string | null; current: number | null }>`
+  const { data, error } = await sql.row<{ live: boolean; open: boolean; submitted: boolean; revision: number | null; saved_at: string | null; current: number | null }>`
     with live as (
       select a.id, a.deadline_at, a.submitted_at
         from course.candidate_attempts a
@@ -212,12 +222,14 @@ export async function saveDraft(
     )
     select exists (select 1 from live) as live,
            exists (select 1 from open) as open,
+           exists (select 1 from live where submitted_at is not null) as submitted,
            coalesce((select revision from first), (select revision from next)) as revision,
            coalesce((select saved_at from first), (select saved_at from next)) as saved_at,
            (select revision from course.attempt_drafts where attempt_id = ${s.attemptId}::uuid) as current
   `;
-  if (error) return fail("draft save", error);
+  if (error) return submittedMeanwhile(error) ? { status: "submitted" } : fail("draft save", error);
   if (!data?.live) return { status: "refused" };
+  if (data.submitted) return { status: "submitted" };
   if (!data.open) return { status: "closed" };
   if (data.revision && data.saved_at) return { status: "saved", revision: data.revision, savedAt: data.saved_at };
   return { status: "conflict", revision: data.current };
@@ -250,10 +262,10 @@ export async function listAttemptFiles(sql: Db, attemptId: string): Promise<Atte
  * still invited, open (deadline plus grace), and how many files it has.
  */
 export async function fileSlot(sql: Db, s: { candidateId: string; generation: number; attemptId: string }): Promise<
-  { status: "open"; companyId: string; count: number } | { status: "closed" } | { status: "refused" } | null
+  { status: "open"; companyId: string; count: number } | { status: "closed" } | { status: "submitted" } | { status: "refused" } | null
 > {
-  const { data, error } = await sql.row<{ company_id: string; open: boolean; count: number }>`
-    select a.company_id,
+  const { data, error } = await sql.row<{ company_id: string; open: boolean; submitted: boolean; count: number }>`
+    select a.company_id, a.submitted_at is not null as submitted,
            (a.submitted_at is null and now() <= a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})) as open,
            (select count(*)::int from course.attempt_files f where f.attempt_id = a.id) as count
       from course.candidate_attempts a
@@ -264,6 +276,7 @@ export async function fileSlot(sql: Db, s: { candidateId: string; generation: nu
   `;
   if (error) return fail("file slot", error);
   if (!data) return { status: "refused" };
+  if (data.submitted) return { status: "submitted" };
   if (!data.open) return { status: "closed" };
   return { status: "open", companyId: data.company_id, count: data.count };
 }
@@ -273,6 +286,7 @@ export type AddFileOutcome =
   | { status: "duplicate" }
   | { status: "full" }
   | { status: "closed" }
+  | { status: "submitted" }
   | { status: "refused" };
 
 /**
@@ -287,7 +301,7 @@ export async function addAttemptFile(
   sql: Db,
   f: { candidateId: string; generation: number; attemptId: string; name: string; kind: AttemptFileKind; bytes: number; sha256: string; storageKey: string },
 ): Promise<AddFileOutcome | null> {
-  const { data, error } = await sql.row<{ live: boolean; open: boolean; count: number; dup: boolean } & Partial<FileRow>>`
+  const { data, error } = await sql.row<{ live: boolean; open: boolean; submitted: boolean; count: number; dup: boolean } & Partial<FileRow>>`
     with live as (
       select a.id, a.company_id, a.deadline_at, a.submitted_at
         from course.candidate_attempts a
@@ -313,13 +327,15 @@ export async function addAttemptFile(
     )
     select exists (select 1 from live) as live,
            exists (select 1 from open) as open,
+           exists (select 1 from live where submitted_at is not null) as submitted,
            (select count(*)::int from course.attempt_files x where x.attempt_id = ${f.attemptId}::uuid) as count,
            exists (select 1 from course.attempt_files x where x.attempt_id = ${f.attemptId}::uuid and x.sha256 = ${f.sha256}) as dup,
            made.id, made.name, made.kind, made.bytes, made.stage, made.added_at
       from (select 1) one left join made on true
   `;
-  if (error) return fail("file add", error);
+  if (error) return submittedMeanwhile(error) ? { status: "submitted" } : fail("file add", error);
   if (!data?.live) return { status: "refused" };
+  if (data.submitted) return { status: "submitted" };
   if (!data.open) return { status: "closed" };
   if (data.id) return { status: "added", file: toFile(data as FileRow) };
   if (data.dup) return { status: "duplicate" };
@@ -337,12 +353,17 @@ export async function removeAttemptFile(sql: Db, f: { candidateId: string; gener
        and b.id = c.batch_id and b.company_id = c.company_id and b.status = 'sent'
        and a.submitted_at is null and now() <= a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
   `;
-  if (error) return fail("file remove", error);
+  if (error) return submittedMeanwhile(error) ? false : fail("file remove", error);
   return (data ?? 0) > 0;
 }
 
-/** A batch's attempts, for the recruiter's table. The company comes from the signed-in recruiter. */
+/**
+ * A batch's attempts, for the recruiter's table. The company comes from the
+ * signed-in recruiter. Attempts whose time and grace are over are submitted
+ * first (finaliseDue).
+ */
 export async function attemptsForBatch(sql: Db, companyId: string, batchId: string): Promise<Attempt[] | null> {
+  await finaliseDue(sql, { companyId, batchId });
   const { data, error } = await sql.rows<AttemptRow>`
     select id, candidate_id, attempt_no, version_id, allowed_minutes, started_at, deadline_at, receipt, submitted_at, submit_kind
       from course.candidate_attempts
@@ -350,4 +371,86 @@ export async function attemptsForBatch(sql: Db, companyId: string, batchId: stri
   `;
   if (error) return error.code === UNDEFINED_TABLE ? [] : fail("batch read", error);
   return (data ?? []).map(toAttempt);
+}
+
+export type SubmitOutcome =
+  /** This call submitted it, or it was submitted before (a repeated press): either way, here is the receipt. */
+  | { status: "submitted" | "already"; receipt: string; submittedAt: string; kind: "candidate" | "deadline" }
+  /** The answer saved on the server is newer than the one this page shows (saved from another tab). */
+  | { status: "stale" }
+  /** The time and its grace are over. */
+  | { status: "closed" }
+  /** Not this link's attempt, a replaced link, or a cancelled invitation. */
+  | { status: "refused" };
+
+const UNDEFINED_FUNCTION = "42883";
+
+/**
+ * The candidate's Submit (course.submit_attempt, 0056). The database checks
+ * the link, the person and the time, copies the saved answer and the files
+ * into a frozen submission, and records it once: pressing Submit again, or
+ * in a second tab, returns the same receipt. `revision` is the saved answer
+ * the page shows; a newer one saved elsewhere makes it "stale", so what is
+ * submitted is what the candidate last saw.
+ */
+export async function submitAttempt(
+  sql: Db,
+  s: { candidateId: string; generation: number; attemptId: string; revision: number },
+): Promise<SubmitOutcome | null> {
+  const { data, error } = await sql.row<{ status: string; receipt: string | null; submitted_at: string | null; submit_kind: "candidate" | "deadline" | null }>`
+    select status, receipt, submitted_at, submit_kind
+      from course.submit_attempt(${s.attemptId}::uuid, 'candidate', ${s.candidateId}::uuid, ${s.generation}::int, ${s.revision}::int, ${SAVE_GRACE_SECONDS}::int)
+  `;
+  if (error) return fail("submit", error);
+  if (!data) return null;
+  if ((data.status === "submitted" || data.status === "already") && data.receipt && data.submitted_at && data.submit_kind) {
+    return { status: data.status, receipt: data.receipt, submittedAt: data.submitted_at, kind: data.submit_kind };
+  }
+  if (data.status === "stale" || data.status === "closed" || data.status === "refused") return { status: data.status };
+  return null;
+}
+
+/**
+ * Submits, at the time limit, whatever was saved for attempts whose time and
+ * save grace are over (D2: A). There is no cron: this runs when anyone next
+ * looks, the candidate opening their link or a recruiter opening the batch,
+ * just before the attempts are read. Only people still invited, in a sent
+ * batch. Returns how many it submitted; a failure here never stops the page.
+ */
+export async function finaliseDue(sql: Db, scope: { companyId: string; batchId: string } | { candidateId: string }): Promise<number | null> {
+  const byBatch = "batchId" in scope;
+  const { data, error } = await sql.scalar<number>`
+    select count(*) filter (where s.status = 'submitted')::int
+      from (
+        select a.id from course.candidate_attempts a
+         where a.submitted_at is null and now() > a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
+           and case when ${byBatch}::boolean
+                    then a.batch_id = ${byBatch ? scope.batchId : null}::uuid and a.company_id = ${byBatch ? scope.companyId : null}::uuid
+                    else a.candidate_id = ${byBatch ? null : scope.candidateId}::uuid end
+         order by a.id
+      ) due
+      cross join lateral course.submit_attempt(due.id, 'deadline', null, null, null, ${SAVE_GRACE_SECONDS}::int) s
+  `;
+  if (error) return error.code === UNDEFINED_FUNCTION || error.code === UNDEFINED_TABLE ? 0 : fail("finalise", error);
+  return data ?? 0;
+}
+
+export interface Submission {
+  answer: string;
+  kind: "candidate" | "deadline";
+  submittedAt: string;
+  files: { name: string; kind: AttemptFileKind; bytes: number }[];
+}
+
+/** What an attempt's submission holds: the frozen answer and the files it lists. Undefined when it isn't submitted. */
+export async function loadSubmission(sql: Db, attemptId: string): Promise<Submission | undefined | null> {
+  const { data, error } = await sql.row<{ answer: string; kind: Submission["kind"]; submitted_at: string; files: Submission["files"] }>`
+    select s.answer, s.kind, s.submitted_at,
+           coalesce((select jsonb_agg(jsonb_build_object('name', f.name, 'kind', f.kind, 'bytes', f.bytes) order by f.slot)
+                       from course.attempt_files f where f.attempt_id = s.attempt_id and f.id = any (s.file_ids)), '[]'::jsonb) as files
+      from course.attempt_submissions s
+     where s.attempt_id = ${attemptId}::uuid
+  `;
+  if (error) return error.code === UNDEFINED_TABLE ? undefined : fail("submission read", error);
+  return data ? { answer: data.answer, kind: data.kind, submittedAt: data.submitted_at, files: data.files } : undefined;
 }
