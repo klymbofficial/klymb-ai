@@ -162,7 +162,8 @@ function fromProgram(p: Program): LibraryCourse {
     industries: p.industries,
     open,
     free: !!track && isFree(track),
-    href: `/courses/${p.slug}`,
+    // System Design is the course app itself: no summary page in between.
+    href: p.slug === "system-design" ? "/learn/system-design" : `/courses/${p.slug}`,
     card: open && x.card ? { ...TRACK_SHAPE, ...x.card } : null,
   };
 }
