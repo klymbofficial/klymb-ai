@@ -49,7 +49,7 @@ export default function CookiePolicyPage() {
         />
         <p>
           <strong>Meta Pixel (only if you tap OK):</strong> tells Meta that this browser opened our pages, viewed the System
-          Design course page, started a payment or bought the course, with the amount. Meta uses it to show our Instagram
+          Design course page, started a payment, bought the course or paid for a webinar seat, with the amount. Meta uses it to show our Instagram
           and Facebook ads to people who visited, and to measure whether the ads led to a purchase. We never send your
           name, email, phone number or answers. Meta keeps this under its own privacy policy.
         </p>
