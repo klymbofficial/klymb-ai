@@ -1,5 +1,6 @@
 import { loadCheckout, type RazorpaySuccess } from "@/lib/razorpay-checkout";
 import { WEBINAR } from "@/lib/webinar";
+import { adsWebinarPurchase } from "@/lib/google-ads";
 
 /** What /api/webinar/register hands back for a paid webinar. */
 export interface WebinarOrder {
@@ -34,6 +35,7 @@ export async function payForSeat(order: WebinarOrder): Promise<SeatResult> {
       handler: async (r: RazorpaySuccess) => {
         const res = await fetch("/api/webinar/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) }).catch(() => null);
         const out = await res?.json().catch(() => null);
+        if (res?.ok && out?.ok) adsWebinarPurchase({ paymentId: r.razorpay_payment_id, amount: order.amount, currency: order.currency });
         resolve(res?.ok && out?.ok
           ? { ok: true, group: out.group ?? WEBINAR.whatsappGroup, emailed: out.emailed === true }
           : { ok: false, error: out?.error ?? `We couldn't confirm the payment. Email us with payment ID ${r.razorpay_payment_id}.` });
