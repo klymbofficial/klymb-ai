@@ -180,7 +180,7 @@ export const libraryCourses: LibraryCourse[] = [claude, agenticAi, aiCohort, ...
  * This only decides what the library and the dashboard's rows offer. A
  * course's own page and its sign-up link still work for anyone who has them.
  */
-export const LIVE_COURSES: readonly string[] = ["system-design"];
+export const LIVE_COURSES: readonly string[] = ["system-design", "agentic-ai"];
 
 /** Whether the library lists a course: all of them in development, only the live ones in a production build. */
 export const isListed = (slug: string) => process.env.NODE_ENV === "development" || LIVE_COURSES.includes(slug);

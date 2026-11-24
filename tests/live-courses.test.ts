@@ -10,6 +10,7 @@ test("outside development the library lists only the live courses", () => {
   assert.notEqual(process.env.NODE_ENV, "development");
   assert.deepEqual(listedCourses.map((c) => c.slug), libraryCourses.filter((c) => LIVE_COURSES.includes(c.slug)).map((c) => c.slug));
   assert.ok(listedCourses.some((c) => c.slug === "system-design"), "System Design is live");
+  assert.ok(listedCourses.some((c) => c.slug === "agentic-ai"), "Agentic AI Systems is live");
   assert.equal(isListed("claude"), false);
   assert.equal(isListed("dsa-arrays"), false);
 });
