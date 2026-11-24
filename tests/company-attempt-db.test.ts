@@ -9,9 +9,9 @@ import type { AssessmentContent } from "../src/lib/company/assessment-rules";
 import type { BatchInput } from "../src/lib/company/batch-rules";
 
 /**
- * H06–H08 against a real database. Opt-in, like company-batch-db: runs only when
+ * H06–H09 against a real database. Opt-in, like company-batch-db: runs only when
  * TEST_DATABASE_URL points at a throwaway database with migrations through
- * 0057, and refuses the app's own database:
+ * 0058, and refuses the app's own database:
  *
  *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test --test-concurrency=1 tests/company-attempt-db.test.ts
  *
@@ -60,6 +60,7 @@ describe("candidate attempts against a real database", { skip }, () => {
   let sqlB: Db;
   let data: typeof import("../src/lib/company/batch-data");
   let att: typeof import("../src/lib/company/attempt-data");
+  let rev: typeof import("../src/lib/company/review-data");
   /** An attempt that started `minutesAgo` minutes ago with `allowed` minutes, put straight in (the app can't start one in the past). */
   async function pastAttempt(minutesAgo: number, allowed: number) {
     const { batchId, id } = await invited();
@@ -100,6 +101,7 @@ describe("candidate attempts against a real database", { skip }, () => {
     const assessments = await import("../src/lib/company/assessment-data");
     data = await import("../src/lib/company/batch-data");
     att = await import("../src/lib/company/attempt-data");
+    rev = await import("../src/lib/company/review-data");
     await one.connect();
     await two.connect();
     sqlA = adapter(one);
@@ -438,6 +440,85 @@ describe("candidate attempts against a real database", { skip }, () => {
         assert.equal(row.answer, "before");
       }
     }
+  });
+
+  /** A submitted attempt (answer saved, one file), ready to review. */
+  async function submitted(answer = "my answer") {
+    const x = await startedWith(answer);
+    assert.equal((await att.addAttemptFile(sqlA, fileFor(x.id, x.attemptId, 40)))?.status, "added");
+    const out = await att.submitAttempt(sqlA, { candidateId: x.id, generation: 1, attemptId: x.attemptId, revision: 1 });
+    assert.equal(out?.status, "submitted");
+    return x;
+  }
+  const review = (attemptId: string, over: Partial<Parameters<typeof rev.recordReview>[1]> = {}, sql = sqlA) =>
+    rev.recordReview(sql, { companyId, attemptId, reviewer, baseRevision: 0, scores: [{ points: 3, note: "Clear." }], summary: "Solid.", ...over });
+
+  test("a reviewer scores a submission against its pinned rubric; the database computes the total and logs it", async () => {
+    const x = await submitted();
+    assert.deepEqual(await review(x.attemptId), { status: "recorded", revision: 1, total: 3, max: 4 });
+    const row = (await one.query(`select reviewer_email, scores, total, max, summary, version_id from course.attempt_reviews where attempt_id = $1`, [x.attemptId])).rows[0];
+    assert.equal(row.reviewer_email, reviewer);
+    assert.deepEqual(row.scores, [{ title: "API", points: 3, max: 4, note: "Clear." }], "the criterion's title copied from the pinned rubric");
+    assert.equal(row.version_id, versionId);
+    const ev = (await one.query(`select actor_kind, actor_email, detail from course.hiring_events where attempt_id = $1 and kind = 'review_completed'`, [x.attemptId])).rows;
+    assert.deepEqual(ev, [{ actor_kind: "reviewer", actor_email: reviewer, detail: { revision: 1, total: 3, max: 4 } }]);
+
+    const view = await rev.loadReviewView(sqlA, companyId, x.batchId, x.id);
+    assert.equal(view?.submission?.answer, "my answer");
+    assert.deepEqual(view?.submission?.files.map((f) => f.name), ["f40.pdf"]);
+    assert.equal(view?.rubric[0].guide, "Clear endpoints.", "reviewers see the guide");
+    assert.equal(view?.reviews[0].total, 3);
+    assert.equal(await rev.loadReviewView(sqlA, randomUUID(), x.batchId, x.id), undefined, "another company sees nothing");
+    assert.equal(await rev.loadReviewView(sqlA, companyId, randomUUID(), x.id), undefined, "nor through another batch");
+  });
+
+  test("only this company's reviewers, only submitted work, only scores the rubric allows", async () => {
+    const running = await startedWith("not yet");
+    assert.deepEqual(await review(running.attemptId), { status: "not_submitted" });
+    const x = await submitted();
+    assert.deepEqual(await review(x.attemptId, { reviewer: "rec@test.invalid" }), { status: "refused" }, "not a member");
+    assert.deepEqual(await review(x.attemptId, { companyId: randomUUID() }), { status: "refused" }, "another company");
+    for (const scores of [[{ points: 5, note: "" }], [{ points: 2.5, note: "" }], [{ points: -1, note: "" }], [], [{ points: 1, note: "" }, { points: 1, note: "" }], [{ points: 1, note: "x".repeat(1001) }]]) {
+      assert.deepEqual(await review(x.attemptId, { scores }), { status: "invalid" }, JSON.stringify(scores).slice(0, 60));
+    }
+    assert.deepEqual(await review(x.attemptId, { summary: "x".repeat(2001) }), { status: "invalid" });
+    // Losing the role ends it at once.
+    await one.query(`delete from course.company_member_roles where company_id = $1 and email = $2 and role = 'reviewer'`, [companyId, reviewer]);
+    try {
+      assert.deepEqual(await review(x.attemptId), { status: "refused" });
+    } finally {
+      await one.query(`insert into course.company_member_roles (company_id, email, role) values ($1, $2, 'reviewer')`, [companyId, reviewer]);
+    }
+    assert.equal((await one.query(`select count(*)::int n from course.attempt_reviews where attempt_id = $1`, [x.attemptId])).rows[0].n, 0, "nothing recorded");
+  });
+
+  test("two reviewers saving at once: one lands, the other is told; revisions keep the history and can't be edited", async () => {
+    const x = await submitted();
+    const [p, q] = await Promise.all([review(x.attemptId, {}, sqlA), review(x.attemptId, { scores: [{ points: 1, note: "" }] }, sqlB)]);
+    assert.deepEqual([p?.status, q?.status].sort(), ["conflict", "recorded"]);
+    assert.deepEqual(await review(x.attemptId), { status: "conflict", revision: 1 }, "an old page");
+    assert.equal((await review(x.attemptId, { baseRevision: 1, scores: [{ points: 4, note: "On reflection." }] }))?.status, "recorded");
+    const view = await rev.loadReviewView(sqlA, companyId, x.batchId, x.id);
+    assert.deepEqual(view?.reviews.map((r) => r.revision), [2, 1], "newest first");
+    const latest = (await rev.reviewsForBatch(sqlA, companyId, x.batchId))!;
+    assert.deepEqual(latest.map((r) => [r.revision, r.total]), [[2, 4]]);
+    assert.deepEqual(await rev.reviewsForBatch(sqlA, randomUUID(), x.batchId), []);
+    await assert.rejects(one.query(`update course.attempt_reviews set total = 0 where attempt_id = $1`, [x.attemptId]), /new revision/);
+    await assert.rejects(one.query(`delete from course.attempt_reviews where attempt_id = $1`, [x.attemptId]), /only with its attempt/);
+  });
+
+  test("a submission's files download only through its own company, batch and candidate, and drafts never", async () => {
+    const x = await submitted();
+    const fileId = (await submissionOf(x.attemptId))[0].file_ids[0];
+    const found = await rev.submittedFile(sqlA, { companyId, batchId: x.batchId, candidateId: x.id, fileId });
+    assert.equal(found?.name, "f40.pdf");
+    assert.equal(await rev.submittedFile(sqlA, { companyId: randomUUID(), batchId: x.batchId, candidateId: x.id, fileId }), undefined);
+    assert.equal(await rev.submittedFile(sqlA, { companyId, batchId: randomUUID(), candidateId: x.id, fileId }), undefined);
+    assert.equal(await rev.submittedFile(sqlA, { companyId, batchId: x.batchId, candidateId: randomUUID(), fileId }), undefined);
+    const draft = await startedWith("draft");
+    const added = await att.addAttemptFile(sqlA, fileFor(draft.id, draft.attemptId, 41));
+    assert.ok(added && added.status === "added");
+    assert.equal(await rev.submittedFile(sqlA, { companyId, batchId: draft.batchId, candidateId: draft.id, fileId: added.file.id }), undefined, "not submitted: not downloadable");
   });
 
   test("the first open of each link is noted once; another company sees no attempts", async () => {

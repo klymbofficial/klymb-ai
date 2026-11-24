@@ -8,11 +8,13 @@ import { Badge, OrgPageHead, PANEL, type Tone } from "@/components/company/Hirin
 import { LoadError, RoleOnly } from "@/components/company/OrgPanels";
 import { requireCompany } from "@/lib/company/auth";
 import { attemptsForBatch } from "@/lib/company/attempt-data";
+import { reviewsForBatch } from "@/lib/company/review-data";
+import { scoreText } from "@/lib/company/review-rules";
 import { ATTEMPT_LABEL, attemptState, type AttemptState } from "@/lib/company/attempt-rules";
 import { loadBatch, type Candidate } from "@/lib/company/batch-data";
 import {
   DELIVERY_LABEL, MAIL_KIND_LABEL, MAIL_OUTCOME_LABEL, SENT_MEANS, PREP_COURSES, allowedMinutes, canRetry, canSchedule, deadlineText, durationText, formatInZone, lastStart, linkState,
-  passedNote, reminderSummary, seesHiring, startPassed, toZonedInput, type Delivery, type LinkState,
+  canScore, passedNote, reminderSummary, seesHiring, startPassed, toZonedInput, type Delivery, type LinkState,
 } from "@/lib/company/batch-rules";
 import { BATCH_STATE_LABEL, batchStateKey, candidateTags } from "@/lib/company/batch-view";
 import { buildCandidateMail } from "@/lib/company/batch-send";
@@ -58,7 +60,7 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
   const { slug, batch: batchId } = await params;
   const member = await requireCompany(slug);
   const base = `/org/${member.companySlug}/hiring`;
-  if (!seesHiring(member)) return <RoleOnly role="recruiters and admins" home={`/org/${member.companySlug}`} />;
+  if (!seesHiring(member)) return <RoleOnly role="recruiters, reviewers and admins" home={`/org/${member.companySlug}`} />;
   if (!UUID.test(batchId)) notFound();
 
   const crumbs = [{ href: base, label: "Hiring batches" }];
@@ -70,6 +72,9 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
   const { batch, candidates, mail } = found;
   const attempts = await attemptsForBatch(sql, member.companyId, batch.id);
   const attemptOf = new Map((attempts ?? []).map((a) => [a.candidateId, a]));
+  const reviews = await reviewsForBatch(sql, member.companyId, batch.id);
+  const reviewOf = new Map((reviews ?? []).map((r) => [r.attemptId, r]));
+  const scorer = canScore(member);
   const recruiter = canSchedule(member);
   const now = new Date();
   const tz = batch.timeZone;
@@ -121,6 +126,7 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
     const history = mail.filter((m) => m.candidateId === c.id);
     const reminders = reminderSummary(history);
     const attempt = attemptOf.get(c.id);
+    const scored = attempt ? reviewOf.get(attempt.id) : undefined;
     const where = attempt ? attemptState(attempt, now) : null;
     const isPassed = passed(c) && !attempt;
     const bad = c.status === "active" && (c.delivery === "failed" || c.delivery === "skipped");
@@ -149,8 +155,14 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
       autoFailed: reminders.autoFailed && c.status === "active"
         ? `Automatic reminder ${reminders.autoFailed.outcome === "skipped" ? "not sent" : "failed"}${reminders.autoFailed.error ? `: ${reminders.autoFailed.error}` : ""}.${live && c.delivery === "sent" && !isPassed ? " Use Remind." : ""}`
         : null,
-      tags: candidateTags({ active: c.status === "active" && batch.status !== "cancelled", delivery: c.delivery, link, started: !!attempt }),
-      actions: live && c.status === "active"
+      tags: candidateTags({ active: c.status === "active" && batch.status !== "cancelled", delivery: c.delivery, link, started: !!attempt, submitted: !!attempt?.submittedAt, reviewed: !!scored }),
+      review: attempt?.submittedAt
+        ? scored
+          ? { label: `Scored ${scoreText(scored.total, scored.max)}`, tone: "green", href: `${base}/${batch.id}/candidates/${c.id}`, action: scorer ? "Open or revise" : "Open" }
+          : { label: "To review", tone: "amber", href: `${base}/${batch.id}/candidates/${c.id}`, action: scorer ? "Review" : "Open" }
+        : null,
+      // Once submitted there is nothing left to do about the invitation; what's next is the review.
+      actions: live && c.status === "active" && !attempt?.submittedAt
         ? {
             // Once started their link is in use: no invitation to resend or readdress.
             retry: canRetry({ delivery: c.delivery, claimedAt: c.claimedAt }, now) && !isPassed && !attempt,

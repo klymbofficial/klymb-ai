@@ -15,7 +15,7 @@ describe("who runs hiring", () => {
     assert.equal(canSchedule(member(["recruiter"])), true);
     assert.equal(canSchedule(member(["admin"])), false);
     assert.equal(seesHiring(member(["company_head"])), true);
-    assert.equal(seesHiring(member(["reviewer"])), false);
+    assert.equal(seesHiring(member(["reviewer"])), true, "reviewers open batches to score (H09)");
     assert.equal(seesHiring(member(["employee"])), false);
   });
 });

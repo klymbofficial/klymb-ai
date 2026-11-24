@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CandidateActions } from "@/components/company/BatchControls";
 import { Badge, FilterRail, PANEL, SearchBox, type Tone } from "@/components/company/HiringParts";
@@ -21,6 +22,8 @@ export interface CandidateRow {
   /** The latest automatic reminder didn't go out. */
   autoFailed: string | null;
   tags: CandidateFilter[];
+  /** Where their review stands and the link to it, once they have submitted. */
+  review: { label: string; tone: Tone; href: string; action: string } | null;
   /** What a recruiter can do for this person now; null when nothing can be done or the viewer only looks. */
   actions: { retry: boolean; fixEmail: boolean; remind: boolean; newLink: boolean; passed: boolean; extraMinutes: number; lastStartInput: string } | null;
 }
@@ -53,13 +56,14 @@ export function CandidateTable({ rows, slug, batchId, timeZone }: { rows: Candid
           <p className="p-6 text-center text-sm text-muted">Nobody matches. Try another filter or search.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[46rem] border-collapse text-sm">
+            <table className="w-full min-w-[54rem] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line/20 text-left text-[0.7rem] uppercase tracking-[0.1em] text-muted">
                   <th scope="col" className="px-4 py-2.5 font-extrabold">Candidate</th>
                   <th scope="col" className="px-4 py-2.5 font-extrabold">Invitation</th>
                   <th scope="col" className="px-4 py-2.5 font-extrabold">Link</th>
                   <th scope="col" className="px-4 py-2.5 font-extrabold">Start by</th>
+                  <th scope="col" className="px-4 py-2.5 font-extrabold">Review</th>
                   <th scope="col" className="px-4 py-2.5 font-extrabold">Actions</th>
                 </tr>
               </thead>
@@ -80,6 +84,16 @@ export function CandidateTable({ rows, slug, batchId, timeZone }: { rows: Candid
                     <td className="px-4 py-3">
                       <p className="whitespace-nowrap">{c.startBy}</p>
                       <p className="mt-0.5 text-xs text-muted">{c.allowed}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      {c.review ? (
+                        <>
+                          <Badge tone={c.review.tone}>{c.review.label}</Badge>
+                          <Link href={c.review.href} className="mt-1 block text-xs font-bold underline underline-offset-4">{c.review.action}</Link>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted">—</span>
+                      )}
                     </td>
                     <td className="min-w-[15rem] px-4 py-3">
                       {c.actions ? (

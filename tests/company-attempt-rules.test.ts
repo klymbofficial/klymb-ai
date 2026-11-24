@@ -143,3 +143,49 @@ describe("submitting (H08)", () => {
     assert.match(data, /export async function attemptsForBatch[\s\S]{0,200}await finaliseDue\(sql, \{ companyId, batchId \}\)/);
   });
 });
+
+describe("reviewing (H09)", async () => {
+  const { readReviewForm, reviewState, scoreText, totals } = await import("../src/lib/company/review-rules");
+  const rubric = [
+    { title: "API", skill: "APIs", points: 4, guide: "g" },
+    { title: "Data", skill: "SQL", points: 6, guide: "g" },
+  ];
+  const form = (v: Record<string, string>) => ({ get: (k: string) => v[k] ?? null });
+
+  test("every criterion scored with whole points from 0 to its maximum", () => {
+    const ok = readReviewForm(form({ "points-0": "4", "points-1": "0", "note-0": " fine ", summary: " good " }), rubric);
+    assert.deepEqual(ok, { ok: true, scores: [{ points: 4, note: "fine" }, { points: 0, note: "" }], summary: "good", total: 4, max: 10 });
+    const missing = readReviewForm(form({ "points-0": "4" }), rubric);
+    assert.ok(!missing.ok && missing.errors[1] === "Score Data.");
+    const over = readReviewForm(form({ "points-0": "5", "points-1": "2.5" }), rubric);
+    assert.ok(!over.ok && /0 to 4/.test(over.errors[0]) && /0 to 6/.test(over.errors[1]));
+    const long = readReviewForm(form({ "points-0": "1", "points-1": "1", summary: "x".repeat(2001) }), rubric);
+    assert.ok(!long.ok && long.errors.summary);
+  });
+
+  test("totals, labels and where a review stands", () => {
+    assert.deepEqual(totals([{ points: 3 }, { points: 2 }], rubric), { total: 5, max: 10 });
+    assert.equal(scoreText(7, 10), "7 / 10");
+    assert.equal(reviewState({ submitted: false, reviewed: false }), "none");
+    assert.equal(reviewState({ submitted: true, reviewed: false }), "to_review");
+    assert.equal(reviewState({ submitted: true, reviewed: true }), "scored");
+  });
+
+  test("submitted people can be filtered, and those not yet scored are To review", () => {
+    const base = { active: true, delivery: "sent" as const, link: "open" as const, started: true };
+    assert.deepEqual(candidateTags({ ...base, submitted: true }), ["all", "started", "submitted", "to_review", "sent"]);
+    assert.deepEqual(candidateTags({ ...base, submitted: true, reviewed: true }), ["all", "started", "submitted", "sent"]);
+  });
+
+  test("the review page never reaches the candidate, and the download is forced and uncached", () => {
+    const route = read("src/app/org/[slug]/(workspace)/hiring/[batch]/candidates/[candidate]/files/[file]/route.ts");
+    assert.match(route, /seesHiring\(member\)/);
+    assert.match(route, /"content-disposition": `attachment;/);
+    assert.match(route, /"cache-control": "private, no-store"/);
+    const action = read("src/app/org/[slug]/(workspace)/hiring/[batch]/candidates/[candidate]/actions.ts");
+    assert.match(action, /canScore\(member\)/);
+    assert.match(action, /reviewer: member\.email/, "the reviewer comes from the login");
+    const receipt = read("src/app/assessment/[token]/page.tsx");
+    assert.doesNotMatch(receipt, /attempt_reviews|loadReviewView|guide/, "nothing of the review on the candidate's page (sharing is H10)");
+  });
+});
