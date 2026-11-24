@@ -42,7 +42,8 @@ export default async function CatalogPage({
   if (!seesCatalog(member)) return <RoleOnly role="people who choose courses and tests" home={`/org/${member.companySlug}`} />;
 
   const sql = db();
-  const entries = sql ? await companyCatalog(sql, member.companyId) : null;
+  // Klymb's catalog: a company's own tests live on Assessments only.
+  const entries = sql ? (await companyCatalog(sql, member.companyId))?.filter((e) => !e.own) ?? null : null;
   const filters = readFilters(await searchParams, defaultPurpose(member));
 
   const title = <OrgPageTitle title="Catalog" />;

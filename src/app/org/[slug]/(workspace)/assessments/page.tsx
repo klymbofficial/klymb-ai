@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { OrgPageHead } from "@/components/company/HiringParts";
+import Link from "next/link";
+import { BTN_PRIMARY, OrgPageHead } from "@/components/company/HiringParts";
+import { OrgIcon } from "@/components/company/OrgIcons";
 import { EmptyPanel, LoadError, RoleOnly } from "@/components/company/OrgPanels";
 import { TestList, type TestRow } from "@/components/company/TestList";
 import { companyStandings } from "@/lib/company/assessment-data";
-import { canReview, seesAssessments } from "@/lib/company/assessment-rules";
+import { canReview, canWriteTests, seesAssessments } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
 import { canSchedule, durationText, seesHiring } from "@/lib/company/batch-rules";
 import { companyCatalog } from "@/lib/company/catalog-data";
@@ -27,7 +29,13 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
   const base = `/org/${member.companySlug}/assessments`;
   if (!seesAssessments(member)) return <RoleOnly role="recruiters, reviewers and admins" home={`/org/${member.companySlug}`} />;
 
-  const head = <OrgPageHead title="Assessments" />;
+  const writer = canWriteTests(member);
+  const head = (
+    <OrgPageHead
+      title="Assessments"
+      actions={writer ? <Link href={`${base}/new`} className={BTN_PRIMARY}><OrgIcon name="plus" size={16} />Create test</Link> : undefined}
+    />
+  );
   const sql = db();
   const catalog = sql ? await companyCatalog(sql, member.companyId) : null;
   const tests = (catalog ?? []).flatMap((e) => (e.item.kind === "assessment" ? [{ ...e, item: e.item }] : []));
@@ -40,7 +48,9 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
     return (
       <>
         {head}
-        <EmptyPanel title="No tests yet">Klymb adds them as your plan includes them. To ask what&apos;s available, write to team@klymb.ai.</EmptyPanel>
+        <EmptyPanel title="No tests yet">
+          {writer ? "Create your own test, or ask Klymb to add theirs: team@klymb.ai." : "Klymb adds them as your plan includes them, and your recruiters can write their own. To ask what's available, write to team@klymb.ai."}
+        </EmptyPanel>
       </>
     );
   }
@@ -73,6 +83,8 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
       reportHref: seesPeople && s.latest ? `${href}?tab=candidates` : null,
       previewHref: s.latest ? `${href}?tab=preview` : null,
       inviteHref: recruiter && s.inUse ? `/org/${member.companySlug}/hiring/new?test=${encodeURIComponent(t.item.slug)}` : null,
+      own: !!t.own,
+      editHref: t.own && writer ? `${href}/edit` : null,
     };
   });
 

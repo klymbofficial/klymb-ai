@@ -48,6 +48,9 @@ const LABELS: Record<string, string> = {
   "company.candidate_new_link": "Recruiter sent a candidate a new link",
   "company.candidate_email": "Recruiter corrected a candidate's email",
   "company.candidate_extend": "Recruiter changed one candidate's time",
+  "company.test_create": "Company created its own test",
+  "company.test_save": "Company saved its own test's draft",
+  "company.test_publish": "Company published its own test",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;

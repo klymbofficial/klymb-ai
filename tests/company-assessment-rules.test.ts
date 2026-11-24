@@ -5,6 +5,9 @@ import type { CompanyMember } from "../src/lib/company/access";
 import {
   candidateTask,
   canReview,
+  canWriteTests,
+  readTestName,
+  TEST_NAME_MAX,
   minutesLabel,
   parseLines,
   publishGaps,
@@ -163,4 +166,18 @@ test("time reads in hours and minutes", () => {
   assert.equal(minutesLabel(60), "1 hour");
   assert.equal(minutesLabel(90), "1 hour 30 minutes");
   assert.equal(minutesLabel(121), "2 hours 1 minute");
+});
+
+test("company tests: admins, heads and recruiters write them; a reviewer, team lead or employee doesn't (U04a)", () => {
+  for (const r of ["admin", "company_head", "recruiter"] as const) assert.equal(canWriteTests(member([r])), true, r);
+  for (const r of ["reviewer", "team_lead", "employee"] as const) assert.equal(canWriteTests(member([r])), false, r);
+  assert.equal(canWriteTests(null), false);
+});
+
+test("a company test's name is one required line, within the limit", () => {
+  assert.deepEqual(readTestName("  Backend \n take-home "), { ok: true, value: "Backend take-home" });
+  assert.equal(readTestName("   ").ok, false);
+  assert.equal(readTestName(undefined).ok, false);
+  assert.equal(readTestName("x".repeat(TEST_NAME_MAX)).ok, true);
+  assert.equal(readTestName("x".repeat(TEST_NAME_MAX + 1)).ok, false);
 });

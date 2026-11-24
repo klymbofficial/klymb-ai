@@ -1,6 +1,7 @@
 import "server-only";
 import { codeItem, type CatalogPurpose } from "@/data/business-catalog";
 import type { Db } from "@/lib/db/client";
+import { ownTests } from "@/lib/company/company-test-data";
 import { readCatalog, visibleCatalog, type CatalogEntry, type CatalogRow, type CatalogStatus, type ProgramInput } from "@/lib/company/catalog";
 
 /**
@@ -37,11 +38,11 @@ export async function grantedSlugs(sql: Db, companyId: string): Promise<Set<stri
   return new Set((data ?? []).map((r) => r.item_slug));
 }
 
-/** What one company may see. Null on a database error. */
+/** What one company may see: Klymb's items granted to it, then the tests it wrote itself (marked `own`). Null on a database error. */
 export async function companyCatalog(sql: Db, companyId: string): Promise<CatalogEntry[] | null> {
-  const [all, granted] = await Promise.all([loadCatalog(sql), grantedSlugs(sql, companyId)]);
-  if (!all || !granted) return null;
-  return visibleCatalog(all, granted);
+  const [all, granted, own] = await Promise.all([loadCatalog(sql), grantedSlugs(sql, companyId), ownTests(sql, companyId)]);
+  if (!all || !granted || !own) return null;
+  return [...visibleCatalog(all, granted), ...own];
 }
 
 export interface AdminCatalog {

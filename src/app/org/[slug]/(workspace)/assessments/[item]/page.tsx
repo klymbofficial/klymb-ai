@@ -12,7 +12,7 @@ import { TestCandidates } from "@/components/company/TestCandidates";
 import { loadTestRounds, type PersonFilter } from "@/lib/company/round-data";
 import { companyReviews, loadVersions } from "@/lib/company/assessment-data";
 import {
-  RESULTS_LABEL, SUBMISSION_LABEL, candidateTask, canReview, seesAssessments, standingOf, totalPoints, type Version,
+  RESULTS_LABEL, SUBMISSION_LABEL, candidateTask, canReview, canWriteTests, seesAssessments, standingOf, totalPoints, type Version,
 } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
 import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, canSchedule, durationText, lastStart, seesHiring } from "@/lib/company/batch-rules";
@@ -110,16 +110,26 @@ export default async function AssessmentPage({
   const versions = await loadVersions(sql, itemSlug);
   const reviews = versions ? await companyReviews(sql, member.companyId, versions.map((v) => v.id)) : null;
   const crumbs = [{ href: base, label: "Assessments" }, { label: entry.item.title }];
+  // The company's own test (U04a): its writers edit it here, and publishing is its approval.
+  const own = !!entry.own;
+  const editHref = own && canWriteTests(member) ? `${base}/${itemSlug}/edit` : null;
+  const author = own ? member.companyName : "Klymb";
   if (!versions || !reviews) return <><OrgPageHead crumbs={crumbs} title={entry.item.title} /><LoadError what="This test" /></>;
 
   if (!versions.length) {
     return (
       <>
         <OrgPageHead crumbs={crumbs} title={entry.item.title} />
-        <EmptyPanel title="Not published yet">
-          Klymb is still writing this test. You can see what it covers in the{" "}
-          <Link href={`${company}/catalog/${itemSlug}`} className="font-bold underline underline-offset-2">catalog</Link>.
-        </EmptyPanel>
+        {own ? (
+          <EmptyPanel title="Not published yet" action={editHref ? <Link href={editHref} className={BTN_PRIMARY}>Write the test</Link> : undefined}>
+            Your company is still writing this test. Once it&apos;s published, recruiters can invite people to it.
+          </EmptyPanel>
+        ) : (
+          <EmptyPanel title="Not published yet">
+            Klymb is still writing this test. You can see what it covers in the{" "}
+            <Link href={`${company}/catalog/${itemSlug}`} className="font-bold underline underline-offset-2">catalog</Link>.
+          </EmptyPanel>
+        )}
       </>
     );
   }
@@ -148,6 +158,7 @@ export default async function AssessmentPage({
   const actions = (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       <Link href={hrefFor("preview")} className={BLUE_LINK}><OrgIcon name="eye" size={16} />Preview</Link>
+      {editHref && <Link href={editHref} className={BLUE_LINK}><OrgIcon name="test" size={16} />Edit test</Link>}
       {recruiter && standing.inUse && (
         <Link href={`${company}/hiring/new?test=${encodeURIComponent(itemSlug)}`} className={BTN_PRIMARY}><OrgIcon name="invite" size={16} />Invite candidates</Link>
       )}
@@ -231,7 +242,9 @@ export default async function AssessmentPage({
 
           <section aria-labelledby="approval">
             <h2 id="approval" className="mb-3 text-lg font-bold">Approval</h2>
-            {isLatest && canReview(member) ? (
+            {own ? (
+              <p className="text-sm">Your company&apos;s own test: publishing a version approves it{review ? ` (version ${shown.version} by ${review.decidedBy} on ${day(review.decidedAt)})` : ""}.</p>
+            ) : isLatest && canReview(member) ? (
               <ReviewPanel slug={member.companySlug} item={itemSlug} versionId={shown.id} version={shown.version} review={review} inUse={standing.inUse?.version ?? null} />
             ) : (
               <p className="text-sm">
@@ -329,7 +342,7 @@ export default async function AssessmentPage({
                 <Row label="Role">{shown.role}</Row>
                 <Row label="Test type">Invite only: each candidate starts from their own link. There is no public link.</Row>
                 <Row label="Assessment ID"><code className="rounded bg-paper px-1.5 py-0.5">{itemSlug}</code></Row>
-                <Row label="Published">Version {shown.version}, by Klymb on {day(shown.publishedAt)}</Row>
+                <Row label="Published">Version {shown.version}, by {own ? shown.publishedBy : author} on {day(shown.publishedAt)}</Row>
                 <Row label="Versions">
                   <ol className="flex flex-col gap-1.5">
                     {versions.map((v) => {
@@ -344,7 +357,7 @@ export default async function AssessmentPage({
                       );
                     })}
                   </ol>
-                  <p className="mt-2 text-xs text-muted">A published version never changes. Klymb&apos;s edits come as a new version, and batches keep the version they started on.</p>
+                  <p className="mt-2 text-xs text-muted">A published version never changes. {author}&apos;s edits come as a new version, and rounds keep the version they started on.</p>
                 </Row>
               </dl>
             </>

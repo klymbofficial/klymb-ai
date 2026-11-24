@@ -28,6 +28,10 @@ export interface TestRow {
   previewHref: string | null;
   /** Shown only to recruiters, on a test with an approved version. */
   inviteHref: string | null;
+  /** The company wrote this test itself (U04a). */
+  own: boolean;
+  /** Shown to the people who write the company's own tests. */
+  editHref: string | null;
 }
 
 const LINK = "inline-flex items-center gap-1.5 text-sm font-semibold text-[#1f4fd1] underline-offset-4 hover:underline";
@@ -113,6 +117,7 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
                   <Link href={t.href} className="underline-offset-4 hover:underline">{t.title}</Link>
                 </h2>
                 <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+                  {t.own && <Fact icon="test">Your company&apos;s test</Fact>}
                   <Fact icon="mail">Invite only</Fact>
                   <Fact icon="clock">{t.duration}</Fact>
                   <Fact icon="calendar">{t.versionLine}</Fact>
@@ -124,6 +129,7 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
                     {t.reportHref && <Link href={t.reportHref} className={LINK}><OrgIcon name="report" size={16} />View candidate report</Link>}
                     {t.previewHref && <Link href={t.previewHref} className={LINK}><OrgIcon name="eye" size={16} />Preview test</Link>}
                     {t.inviteHref && <Link href={t.inviteHref} className={LINK}><OrgIcon name="invite" size={16} />Invite candidates</Link>}
+                    {t.editHref && <Link href={t.editHref} className={LINK}><OrgIcon name="test" size={16} />Edit test</Link>}
                   </div>
                 </div>
               </li>

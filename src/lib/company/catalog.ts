@@ -53,6 +53,8 @@ export interface CatalogEntry {
   status: CatalogStatus;
   skills: string[];
   purposes: CatalogPurpose[];
+  /** A test this company wrote itself (U04a): only ever in its own list, never in Klymb's catalog. */
+  own?: true;
 }
 
 type Result<T> = { ok: true; value: T } | { ok: false; message: string };

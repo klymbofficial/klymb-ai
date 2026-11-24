@@ -230,6 +230,8 @@ export async function setReview(
       from course.assessment_versions v
      where v.id = ${r.versionId}::uuid and v.slug = ${r.slug}
        and v.version = (select max(version) from course.assessment_versions where slug = ${r.slug})
+       -- A company's own test is approved by publishing it, never here.
+       and not exists (select 1 from course.catalog_items i where i.slug = v.slug and i.owner_company_id is not null)
     on conflict (company_id, version_id) do update
        set decision = excluded.decision, note = excluded.note, decided_by = excluded.decided_by, decided_at = now()
   `;

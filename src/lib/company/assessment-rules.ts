@@ -19,6 +19,9 @@ import { hasRole, type CompanyMember, type CompanyRole } from "@/lib/company/acc
  */
 export const ASSESSMENT_ROLES = ["admin", "company_head", "recruiter", "reviewer"] as const satisfies readonly CompanyRole[];
 export const seesAssessments = (member: CompanyMember | null): boolean => hasRole(member, ASSESSMENT_ROLES);
+/** Who writes and publishes the company's own tests (U04a): the people who hire and whoever runs the workspace. */
+export const TEST_WRITERS = ["admin", "company_head", "recruiter"] as const satisfies readonly CompanyRole[];
+export const canWriteTests = (member: CompanyMember | null): boolean => hasRole(member, TEST_WRITERS);
 /** Only a reviewer approves or declines a version for their company. */
 export const canReview = (member: CompanyMember | null): boolean => hasRole(member, ["reviewer"]);
 
@@ -64,6 +67,17 @@ export const LIMITS = {
   guide: 1000,
   note: 1000,
 } as const;
+
+/** A company test's name (catalog_items.title allows 1 to 120). */
+export const TEST_NAME_MAX = 120;
+
+/** The name of a company's own test: one line, required. */
+export function readTestName(raw: unknown): Result<string> {
+  const name = line(raw);
+  if (!name) return { ok: false, message: "Give the test a name." };
+  if (name.length > TEST_NAME_MAX) return { ok: false, message: `Keep the name under ${TEST_NAME_MAX} characters.` };
+  return { ok: true, value: name };
+}
 
 /** One rubric area. `guide` is the scoring rule: reviewers see it, candidates never do. */
 export interface Criterion {

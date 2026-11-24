@@ -32,7 +32,8 @@ export default async function CatalogItemPage({ params }: { params: Promise<{ sl
   if (!seesCatalog(member)) return <RoleOnly role="people who choose courses and tests" home={`/org/${member.companySlug}`} />;
 
   const sql = db();
-  const entries = sql ? await companyCatalog(sql, member.companyId) : null;
+  // Klymb's catalog: a company's own tests live on Assessments only.
+  const entries = sql ? (await companyCatalog(sql, member.companyId))?.filter((e) => !e.own) ?? null : null;
   if (!entries) return <LoadError what="This item" />;
   const entry = entries.find((e) => e.item.slug === itemSlug);
   if (!entry) notFound();

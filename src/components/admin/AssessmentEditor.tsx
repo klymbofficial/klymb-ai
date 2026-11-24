@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { publishAssessment, saveAssessmentDraft } from "@/app/admin/assessment-actions";
+import { publishAssessment, saveAssessmentDraft, type DraftResult, type PublishResult } from "@/app/admin/assessment-actions";
 import {
   LIMITS,
   RESULTS,
@@ -24,6 +24,8 @@ const small = "border border-line/60 px-2 py-1 text-xs font-bold hover:border-in
 
 interface Row { title: string; skill: string; points: string; guide: string }
 interface Form {
+  /** A company test's name; Klymb's tests take theirs from code, and leave it empty. */
+  title: string;
   role: string;
   minutes: string;
   submission: string;
@@ -38,7 +40,8 @@ interface Form {
   rubric: Row[];
 }
 
-const formOf = (c: AssessmentContent): Form => ({
+const formOf = (c: AssessmentContent, title = ""): Form => ({
+  title,
   role: c.role,
   minutes: c.minutes === null ? "" : String(c.minutes),
   submission: c.submission,
@@ -62,9 +65,16 @@ const rawOf = (f: Form) => ({ ...f, rubric: f.rubric.map((r) => ({ ...r, points:
  * while there are unsaved edits, Publish once it is saved and ready.
  */
 export function AssessmentEditor({
-  slug, initial, revision: startRevision, skills, latest, nextVersion,
+  slug, initial, revision: startRevision, skills, latest, nextVersion, title, save: saveAction, publish: publishAction, newNote,
 }: {
   slug: string;
+  /** Set for a company's own test: its name is edited here too. */
+  title?: { value: string; max: number };
+  /** Where a save and a publish go; Klymb's admin actions unless given (a company's own test). */
+  save?: (form: Record<string, unknown>, expected: number) => Promise<DraftResult>;
+  publish?: (revision: number) => Promise<PublishResult>;
+  /** What the status line says before the first save. */
+  newNote?: string;
   initial: AssessmentContent;
   /** 0 when nothing is saved yet. */
   revision: number;
@@ -74,8 +84,8 @@ export function AssessmentEditor({
   latest: { version: number; content: AssessmentContent } | null;
   nextVersion: number;
 }) {
-  const [form, setForm] = useState<Form>(() => formOf(initial));
-  const [saved, setSaved] = useState<string>(() => JSON.stringify(formOf(initial)));
+  const [form, setForm] = useState<Form>(() => formOf(initial, title?.value));
+  const [saved, setSaved] = useState<string>(() => JSON.stringify(formOf(initial, title?.value)));
   const [revision, setRevision] = useState(startRevision);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -101,7 +111,7 @@ export function AssessmentEditor({
   async function save() {
     setBusy(true);
     setMsg(null);
-    const out = await saveAssessmentDraft(slug, rawOf(form), revision);
+    const out = await (saveAction ?? ((f, r) => saveAssessmentDraft(slug, f, r)))(rawOf(form), revision);
     setBusy(false);
     // The status line already says it saved, and what's left; only a refusal needs its own message.
     setMsg(out.ok ? null : { ok: false, text: out.message });
@@ -115,7 +125,7 @@ export function AssessmentEditor({
     if (!window.confirm(`Publish as version ${nextVersion}? A published version can't be changed.`)) return;
     setBusy(true);
     setMsg(null);
-    const out = await publishAssessment(slug, revision);
+    const out = await (publishAction ?? ((r) => publishAssessment(slug, r)))(revision);
     setBusy(false);
     setMsg({ ok: out.ok, text: out.message });
     if (out.ok) setPublished(out.version);
@@ -133,6 +143,12 @@ export function AssessmentEditor({
     >
       <section className="flex flex-col gap-4" aria-labelledby="ae-basics">
         <h2 id="ae-basics" className={h2}>Who and how long</h2>
+        {title && (
+          <label className={label}>
+            Test name
+            <input value={form.title} onChange={(e) => set("title", e.target.value)} maxLength={title.max} required className={input} />
+          </label>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className={label}>
             Role it tests
@@ -209,10 +225,15 @@ export function AssessmentEditor({
                 </label>
                 <label className={label}>
                   Skill
-                  <select value={r.skill} onChange={(e) => setRow(i, { skill: e.target.value })} className={input}>
-                    <option value="">Choose…</option>
-                    {skillChoices(r.skill).map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  {title ? (
+                    // A company's own test names its skills freely; there's no catalog list behind it.
+                    <input value={r.skill} onChange={(e) => setRow(i, { skill: e.target.value })} maxLength={LIMITS.skill} placeholder="e.g. API design" className={input} />
+                  ) : (
+                    <select value={r.skill} onChange={(e) => setRow(i, { skill: e.target.value })} className={input}>
+                      <option value="">Choose…</option>
+                      {skillChoices(r.skill).map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  )}
                 </label>
                 <label className={label}>
                   Points
@@ -231,7 +252,7 @@ export function AssessmentEditor({
             Add an area
           </button>
         )}
-        {!skills.length && <p className="text-xs text-muted">This item has no skills in the catalog yet. Add them on the Business catalog page to choose one here.</p>}
+        {!skills.length && !title && <p className="text-xs text-muted">This item has no skills in the catalog yet. Add them on the Business catalog page to choose one here.</p>}
       </section>
 
       <section className="flex flex-col gap-4" aria-labelledby="ae-practice">
@@ -252,7 +273,7 @@ export function AssessmentEditor({
           {published !== null
             ? `Version ${published} is published.`
             : dirty
-              ? revision === 0 ? "Not saved yet. This draft starts from the catalog listing." : "Unsaved changes."
+              ? revision === 0 ? (newNote ?? "Not saved yet. This draft starts from the catalog listing.") : "Unsaved changes."
               : !parsed.ok
                 ? parsed.message
                 : gaps.length
