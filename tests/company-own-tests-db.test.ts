@@ -128,4 +128,34 @@ describe("company-written tests against a real database", { skip }, () => {
     await assert.rejects(client.query(`update course.catalog_items set kind = 'course' where slug = $1`, [slug]), /catalog_items_owned_assessment/);
     await assert.rejects(client.query(`update course.catalog_items set title = null where slug = $1`, [slug]), /catalog_items_own_words/);
   });
+
+  test("a draft with several questions saves and reads back, and publishing it is refused by the database (U04b-1)", async () => {
+    const slug = await created(mine);
+    const questions = [
+      { section: "Part A", title: "Load", brief: "Load the data.", submission: "written" as const, rubric: [{ title: "Checks", skill: "Data", points: 3, guide: "g" }] },
+      { section: "Part B", title: "Publish", brief: "Publish it.", submission: "written_file" as const, rubric: [{ title: "Clarity", skill: "Writing", points: 2, guide: "g" }] },
+    ];
+    const multi: AssessmentContent = { ...content, taskTitle: "", taskBrief: "", rubric: [], submission: "written_file", questions };
+    assert.deepEqual(await own.saveOwnDraft(sql, { companyId: mine, slug, title: "Two parts", content: multi, expected: 1, by: "rec@test.invalid" }), { status: "saved", revision: 2 });
+    const back = await assessments.loadDraft(sql, slug);
+    assert.deepEqual(back?.questions, questions);
+    assert.deepEqual(await own.publishOwnDraft(sql, { companyId: mine, slug, revision: 2, by: "rec@test.invalid" }), { status: "changed" });
+    assert.equal((await assessments.loadVersions(sql, slug))?.length, 0, "nothing published");
+    // Back to one task: the questions column empties, and it publishes.
+    assert.deepEqual(await own.saveOwnDraft(sql, { companyId: mine, slug, title: "Two parts", content, expected: 2, by: "rec@test.invalid" }), { status: "saved", revision: 3 });
+    assert.equal((await assessments.loadDraft(sql, slug))?.questions, null);
+    assert.equal((await own.publishOwnDraft(sql, { companyId: mine, slug, revision: 3, by: "rec@test.invalid" }))?.status, "published");
+    await assert.rejects(client.query(`update course.assessment_drafts set questions = '[]'::jsonb where slug = $1`, [slug]), /assessment_drafts_questions/);
+  });
+
+  test("Klymb's own drafts take questions too, and their publish is refused the same way", async () => {
+    const slug = `klymb-q-${run}`;
+    const code = { kind: "assessment", slug, title: "Klymb Q", suggestedSkills: [], suggestedPurposes: ["hiring"] } as unknown as import("../src/data/business-catalog").CatalogAssessment;
+    const multi: AssessmentContent = { ...content, taskTitle: "", taskBrief: "", rubric: [], questions: [
+      { section: "A", title: "One", brief: "b", submission: "written", rubric: [{ title: "X", skill: "s", points: 1, guide: "g" }] },
+    ] };
+    assert.deepEqual(await assessments.saveDraft(sql, code, multi, 0, "k@test.invalid"), { status: "saved", revision: 1 });
+    assert.equal((await assessments.loadDraft(sql, slug))?.questions?.[0].section, "A");
+    assert.deepEqual(await assessments.publishDraft(sql, slug, "Klymb Q", 1, "k@test.invalid"), { status: "changed" });
+  });
 });

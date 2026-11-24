@@ -12,6 +12,9 @@ import {
   parseLines,
   publishGaps,
   readContent,
+  questionsOf,
+  hasQuestions,
+  contentOf,
   readReview,
   readRubric,
   sameContent,
@@ -180,4 +183,67 @@ test("a company test's name is one required line, within the limit", () => {
   assert.equal(readTestName(undefined).ok, false);
   assert.equal(readTestName("x".repeat(TEST_NAME_MAX)).ok, true);
   assert.equal(readTestName("x".repeat(TEST_NAME_MAX + 1)).ok, false);
+});
+
+// ── Several questions (U04b-1) ──
+
+const q = (over: Record<string, unknown> = {}) => ({
+  section: "", title: "Design a parcel tracking API", brief: "Couriers post scans.", submission: "written",
+  rubric: [{ title: "Clear API", skill: "API design", points: 4, guide: "Resources named." }], ...over,
+});
+const withQuestions = (questions: unknown[]) => ({ ...raw(), questions });
+
+test("one question without a section is kept as the one-task test", () => {
+  const r = readContent(withQuestions([q({ submission: "written_file" })]));
+  assert.ok(r.ok);
+  assert.equal(hasQuestions(r.value), false);
+  assert.equal(r.value.questions, undefined);
+  assert.equal(r.value.taskTitle, "Design a parcel tracking API");
+  assert.equal(r.value.submission, "written_file");
+  assert.deepEqual(r.value.rubric.map((c) => c.title), ["Clear API"]);
+});
+
+test("two questions, or one with a section, are held as questions with the one-task fields empty", () => {
+  const two = readContent(withQuestions([q({ section: "Part A" }), q({ title: "Scale it", submission: "written_file" })]));
+  assert.ok(two.ok);
+  assert.equal(two.value.questions?.length, 2);
+  assert.deepEqual([two.value.taskTitle, two.value.taskBrief, two.value.rubric], ["", "", []]);
+  assert.equal(two.value.submission, "written_file", "files if any question takes them");
+  assert.deepEqual(publishGaps(two.value), []);
+  const sectioned = readContent(withQuestions([q({ section: "Part A" })]));
+  assert.ok(sectioned.ok && hasQuestions(sectioned.value));
+  assert.deepEqual(questionsOf(ready).map((x) => x.title), [ready.taskTitle], "a one-task test reads as one question");
+});
+
+test("questions are checked: limits, hand-in, per-question rubric, and what's missing to publish", () => {
+  const msg = (qs: unknown[]) => { const r = readContent(withQuestions(qs)); return r.ok ? "ok" : r.message; };
+  assert.match(msg([]), /at least one question/);
+  assert.match(msg(Array.from({ length: 21 }, () => q())), /at most 20 questions/);
+  assert.match(msg([q(), q({ submission: "video" })]), /Question 2: choose what people hand in/);
+  assert.match(msg([q(), q({ rubric: [{ title: "A", skill: "s", points: 11, guide: "" }] })]), /Question 2, area 1: points/);
+  assert.match(msg([q(), q({ rubric: [{ title: "A", skill: "", points: 2, guide: "" }, { title: "a", skill: "", points: 2, guide: "" }] })]), /Question 2: two rubric areas/);
+  const many = Array.from({ length: 11 }, (_, i) => q({ section: `S${i}` }));
+  assert.match(msg(many), /at most 10 sections/);
+  const tenAreas = Array.from({ length: 10 }, (_, i) => ({ title: `A${i}`, skill: "s", points: 1, guide: "g" }));
+  assert.match(msg(Array.from({ length: 5 }, () => q({ rubric: tenAreas }))), /at most 40 rubric areas/);
+  const gappy = readContent(withQuestions([q(), q({ title: "", rubric: [] }), q({ title: "C", rubric: [{ title: "X", skill: "", points: 2, guide: "" }] })]));
+  assert.ok(gappy.ok);
+  assert.deepEqual(publishGaps(gappy.value), [
+    "a title and text for question 2",
+    "at least one rubric area for question 2",
+    "a name, skill and scoring guide for 1 area of question 3",
+  ]);
+  const same = readContent(withQuestions([q(), q({ title: ready.sampleTitle })]));
+  assert.ok(same.ok);
+  assert.deepEqual(publishGaps(same.value), ["a practice task that differs from every question"]);
+});
+
+test("a change to any question counts as a change to the test", () => {
+  const a = readContent(withQuestions([q({ section: "A" }), q({ title: "B" })]));
+  const b = readContent(withQuestions([q({ section: "A" }), q({ title: "B", brief: "Changed." })]));
+  assert.ok(a.ok && b.ok);
+  assert.equal(sameContent(a.value, a.value), true);
+  assert.equal(sameContent(a.value, b.value), false);
+  assert.equal(sameContent(ready, { ...ready, questions: null }), true, "missing and null are the same");
+  assert.equal(contentOf(ready).questions, null);
 });

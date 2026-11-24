@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import type { CatalogAssessment } from "@/data/business-catalog";
 import { readRubric, type AssessmentContent, type Submission } from "@/lib/company/assessment-rules";
+import { questionsJson } from "@/lib/company/assessment-data";
 import { durationText } from "@/lib/company/batch-rules";
 import type { CatalogEntry } from "@/lib/company/catalog";
 import type { Db } from "@/lib/db/client";
@@ -132,7 +133,7 @@ export async function saveOwnDraft(
            tools_allowed = ${c.toolsAllowed}::text[], tools_not_allowed = ${c.toolsNotAllowed}::text[],
            instructions = ${c.instructions}, task_title = ${c.taskTitle}, task_brief = ${c.taskBrief},
            sample_title = ${c.sampleTitle}, sample_brief = ${c.sampleBrief}, rubric = ${JSON.stringify(c.rubric)}::jsonb,
-           results = ${c.results}, updated_by = ${d.by}, updated_at = now()
+           results = ${c.results}, questions = ${questionsJson(c)}::jsonb, updated_by = ${d.by}, updated_at = now()
       from item
      where x.slug = item.slug and x.revision = ${d.expected}::int
     returning x.revision
@@ -162,6 +163,8 @@ export async function publishOwnDraft(
         from course.assessment_drafts d
         join course.catalog_items i on i.slug = d.slug and i.owner_company_id = ${p.companyId}::uuid
        where d.slug = ${p.slug} and d.revision = ${p.revision}::int
+         -- A test with several questions isn't published until candidates can answer them (U04b-2).
+         and d.questions is null
       returning id, version
     ),
     ok as (

@@ -5,7 +5,7 @@ import { codeItem, type CatalogAssessment } from "@/data/business-catalog";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { loadDraft, loadVersions, publishDraft, saveDraft } from "@/lib/company/assessment-data";
-import { publishGaps, readContent, sameContent } from "@/lib/company/assessment-rules";
+import { hasQuestions, publishGaps, readContent, sameContent } from "@/lib/company/assessment-rules";
 import { db } from "@/lib/db/client";
 
 export type DraftResult = { ok: true; message: string; revision: number } | { ok: false; message: string };
@@ -69,6 +69,7 @@ export async function publishAssessment(slug: string, revision: number): Promise
   if (draft === null || versions === null) return UNAVAILABLE;
   if (!draft) return { ok: false, message: "Save the draft first." };
   if (draft.revision !== revision) return CHANGED;
+  if (hasQuestions(draft)) return { ok: false, message: "Tests with several questions or sections can be saved, not yet published: the candidate's page for them comes next. Keep one question without a section to publish now." };
   const gaps = publishGaps(draft);
   if (gaps.length) return { ok: false, message: `Not ready to publish. Add ${gaps.join(", ")}.` };
   const latest = versions[0];

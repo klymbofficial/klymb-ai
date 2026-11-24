@@ -8,7 +8,9 @@ import {
   RESULTS_LABEL,
   SUBMISSIONS,
   SUBMISSION_LABEL,
+  hasQuestions,
   publishGaps,
+  questionsOf,
   readContent,
   sameContent,
   totalPoints,
@@ -23,40 +25,45 @@ const secondary = "border-2 border-ink px-4 py-1.5 text-xs font-bold uppercase t
 const small = "border border-line/60 px-2 py-1 text-xs font-bold hover:border-ink disabled:opacity-30";
 
 interface Row { title: string; skill: string; points: string; guide: string }
+/** One question as typed (U04b). A test with one question and no section is the one-task test. */
+interface QRow { section: string; title: string; brief: string; submission: string; rubric: Row[] }
 interface Form {
   /** A company test's name; Klymb's tests take theirs from code, and leave it empty. */
   title: string;
   role: string;
   minutes: string;
-  submission: string;
   results: string;
   toolsAllowed: string;
   toolsNotAllowed: string;
   instructions: string;
-  taskTitle: string;
-  taskBrief: string;
   sampleTitle: string;
   sampleBrief: string;
-  rubric: Row[];
+  questions: QRow[];
 }
 
 const formOf = (c: AssessmentContent, title = ""): Form => ({
   title,
   role: c.role,
   minutes: c.minutes === null ? "" : String(c.minutes),
-  submission: c.submission,
   results: c.results,
   toolsAllowed: c.toolsAllowed.join("\n"),
   toolsNotAllowed: c.toolsNotAllowed.join("\n"),
   instructions: c.instructions,
-  taskTitle: c.taskTitle,
-  taskBrief: c.taskBrief,
   sampleTitle: c.sampleTitle,
   sampleBrief: c.sampleBrief,
-  rubric: c.rubric.map((r) => ({ title: r.title, skill: r.skill, points: String(r.points), guide: r.guide })),
+  questions: questionsOf(c).map((q) => ({
+    section: q.section, title: q.title, brief: q.brief, submission: q.submission,
+    rubric: q.rubric.map((r) => ({ title: r.title, skill: r.skill, points: String(r.points), guide: r.guide })),
+  })),
 });
 
-const rawOf = (f: Form) => ({ ...f, rubric: f.rubric.map((r) => ({ ...r, points: Number(r.points) })) });
+const rawOf = (f: Form) => ({
+  ...f,
+  questions: f.questions.map((q) => ({ ...q, rubric: q.rubric.map((r) => ({ ...r, points: Number(r.points) })) })),
+});
+
+const blankQuestion = (section: string): QRow => ({ section, title: "", brief: "", submission: "written", rubric: [{ title: "", skill: "", points: "4", guide: "" }] });
+const pointsOf = (rows: Row[]) => totalPoints(rows.map((r) => ({ ...r, points: Number(r.points) || 0 })));
 
 /**
  * A Klymb admin's editor for one assessment's draft. Saving keeps a draft
@@ -95,18 +102,24 @@ export function AssessmentEditor({
   const parsed = useMemo(() => readContent(rawOf(form)), [form]);
   const gaps = parsed.ok ? publishGaps(parsed.value) : [];
   const unchanged = parsed.ok && latest !== null && sameContent(parsed.value, latest.content);
-  const canPublish = !dirty && parsed.ok && !gaps.length && !unchanged && published === null;
+  // Several questions or sections save, but aren't published until candidates can answer them (U04b-2).
+  const several = parsed.ok && hasQuestions(parsed.value);
+  const canPublish = !dirty && parsed.ok && !several && !gaps.length && !unchanged && published === null;
 
   const set = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     setPublished(null);
   };
-  const setRow = (i: number, patch: Partial<Row>) => set("rubric", form.rubric.map((r, k) => (k === i ? { ...r, ...patch } : r)));
-  const move = (i: number, by: -1 | 1) => {
-    const next = [...form.rubric];
+  const swap = <T,>(list: T[], i: number, by: -1 | 1) => {
+    const next = [...list];
     [next[i], next[i + by]] = [next[i + by], next[i]];
-    set("rubric", next);
+    return next;
   };
+  const setQ = (qi: number, patch: Partial<QRow>) => set("questions", form.questions.map((q, k) => (k === qi ? { ...q, ...patch } : q)));
+  const setRow = (qi: number, i: number, patch: Partial<Row>) =>
+    setQ(qi, { rubric: form.questions[qi].rubric.map((r, k) => (k === i ? { ...r, ...patch } : r)) });
+  const areas = form.questions.reduce((n, q) => n + q.rubric.length, 0);
+  const one = form.questions.length === 1;
 
   async function save() {
     setBusy(true);
@@ -159,12 +172,6 @@ export function AssessmentEditor({
             <input type="number" min={LIMITS.minutesMin} max={LIMITS.minutesMax} value={form.minutes} onChange={(e) => set("minutes", e.target.value)} className={input} />
           </label>
           <label className={label}>
-            What people hand in
-            <select value={form.submission} onChange={(e) => set("submission", e.target.value)} className={input}>
-              {SUBMISSIONS.map((s) => <option key={s} value={s}>{SUBMISSION_LABEL[s]}</option>)}
-            </select>
-          </label>
-          <label className={label}>
             What candidates see afterwards
             <select value={form.results} onChange={(e) => set("results", e.target.value)} className={input}>
               {RESULTS.map((r) => <option key={r} value={r}>{RESULTS_LABEL[r]}</option>)}
@@ -173,19 +180,10 @@ export function AssessmentEditor({
         </div>
       </section>
 
-      <section className="flex flex-col gap-4" aria-labelledby="ae-task">
-        <h2 id="ae-task" className={h2}>The real task</h2>
-        <p className="-mt-2 text-xs text-muted">Candidates see it only once they start. Company recruiters and reviewers can read it.</p>
+      <section className="flex flex-col gap-4" aria-labelledby="ae-instructions">
+        <h2 id="ae-instructions" className={h2}>Instructions for candidates</h2>
         <label className={label}>
-          Title
-          <input value={form.taskTitle} onChange={(e) => set("taskTitle", e.target.value)} maxLength={LIMITS.title} className={input} />
-        </label>
-        <label className={label}>
-          Brief
-          <textarea value={form.taskBrief} onChange={(e) => set("taskBrief", e.target.value)} maxLength={LIMITS.brief} rows={8} className={input} />
-        </label>
-        <label className={label}>
-          Instructions for candidates
+          <span className="sr-only">Instructions for candidates</span>
           <textarea value={form.instructions} onChange={(e) => set("instructions", e.target.value)} maxLength={LIMITS.instructions} rows={4} className={input} />
         </label>
       </section>
@@ -204,52 +202,100 @@ export function AssessmentEditor({
         </div>
       </section>
 
-      <section className="flex flex-col gap-4" aria-labelledby="ae-rubric">
-        <h2 id="ae-rubric" className={h2}>Rubric · {totalPoints(form.rubric.map((r) => ({ ...r, points: Number(r.points) || 0 })))} points</h2>
-        <p className="-mt-2 text-xs text-muted">Candidates see each area&apos;s name and points. Only reviewers see the scoring guide.</p>
-        <ol className="flex flex-col gap-4">
-          {form.rubric.map((r, i) => (
-            <li key={i} className="card flex flex-col gap-3 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Area {i + 1}</span>
-                <span className="flex gap-1">
-                  <button type="button" className={small} disabled={i === 0} onClick={() => move(i, -1)} aria-label={`Move area ${i + 1} up`}>↑</button>
-                  <button type="button" className={small} disabled={i === form.rubric.length - 1} onClick={() => move(i, 1)} aria-label={`Move area ${i + 1} down`}>↓</button>
-                  <button type="button" className={small} onClick={() => set("rubric", form.rubric.filter((_, k) => k !== i))}>Remove</button>
-                </span>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_6rem]">
+      <section className="flex flex-col gap-4" aria-labelledby="ae-questions">
+        <h2 id="ae-questions" className={h2}>
+          {one ? "The real task" : `Questions · ${form.questions.length}`} · {form.questions.reduce((n, q) => n + pointsOf(q.rubric), 0)} points
+        </h2>
+        <p className="-mt-2 text-xs text-muted">
+          Candidates see the questions only once they start, with each rubric area&apos;s name and points. Only reviewers see the scoring guides.
+          {!one && " Sections are headings: one clock runs for the whole test."}
+        </p>
+        <ol className="flex flex-col gap-6">
+          {form.questions.map((q, qi) => (
+            <li key={qi} className="flex flex-col gap-4 border-2 border-line/40 p-4">
+              {!one && (
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Question {qi + 1}</span>
+                  <span className="flex gap-1">
+                    <button type="button" className={small} disabled={qi === 0} onClick={() => set("questions", swap(form.questions, qi, -1))} aria-label={`Move question ${qi + 1} up`}>↑</button>
+                    <button type="button" className={small} disabled={qi === form.questions.length - 1} onClick={() => set("questions", swap(form.questions, qi, 1))} aria-label={`Move question ${qi + 1} down`}>↓</button>
+                    <button type="button" className={small} onClick={() => set("questions", form.questions.filter((_, k) => k !== qi))}>Remove question</button>
+                  </span>
+                </div>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2">
                 <label className={label}>
-                  Name
-                  <input value={r.title} onChange={(e) => setRow(i, { title: e.target.value })} maxLength={LIMITS.criterionTitle} className={input} />
+                  Section (optional)
+                  <input value={q.section} onChange={(e) => setQ(qi, { section: e.target.value })} maxLength={LIMITS.section} placeholder="e.g. Part A: design" className={input} />
                 </label>
                 <label className={label}>
-                  Skill
-                  {title ? (
-                    // A company's own test names its skills freely; there's no catalog list behind it.
-                    <input value={r.skill} onChange={(e) => setRow(i, { skill: e.target.value })} maxLength={LIMITS.skill} placeholder="e.g. API design" className={input} />
-                  ) : (
-                    <select value={r.skill} onChange={(e) => setRow(i, { skill: e.target.value })} className={input}>
-                      <option value="">Choose…</option>
-                      {skillChoices(r.skill).map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  )}
-                </label>
-                <label className={label}>
-                  Points
-                  <input type="number" min={1} max={LIMITS.pointsMax} value={r.points} onChange={(e) => setRow(i, { points: e.target.value })} className={input} />
+                  What people hand in
+                  <select value={q.submission} onChange={(e) => setQ(qi, { submission: e.target.value })} className={input}>
+                    {SUBMISSIONS.map((x) => <option key={x} value={x}>{SUBMISSION_LABEL[x]}</option>)}
+                  </select>
                 </label>
               </div>
               <label className={label}>
-                Scoring guide: what earns full points, and what loses them
-                <textarea value={r.guide} onChange={(e) => setRow(i, { guide: e.target.value })} maxLength={LIMITS.guide} rows={3} className={input} />
+                Title
+                <input value={q.title} onChange={(e) => setQ(qi, { title: e.target.value })} maxLength={LIMITS.title} className={input} />
               </label>
+              <label className={label}>
+                {one ? "Brief" : "Question"}
+                <textarea value={q.brief} onChange={(e) => setQ(qi, { brief: e.target.value })} maxLength={LIMITS.brief} rows={one ? 8 : 5} className={input} />
+              </label>
+
+              <h3 className="text-sm font-bold">Rubric{one ? "" : ` for question ${qi + 1}`} · {pointsOf(q.rubric)} points</h3>
+              <ol className="flex flex-col gap-4">
+                {q.rubric.map((r, i) => (
+                  <li key={i} className="card flex flex-col gap-3 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Area {i + 1}</span>
+                      <span className="flex gap-1">
+                        <button type="button" className={small} disabled={i === 0} onClick={() => setQ(qi, { rubric: swap(q.rubric, i, -1) })} aria-label={`Move area ${i + 1} up`}>↑</button>
+                        <button type="button" className={small} disabled={i === q.rubric.length - 1} onClick={() => setQ(qi, { rubric: swap(q.rubric, i, 1) })} aria-label={`Move area ${i + 1} down`}>↓</button>
+                        <button type="button" className={small} onClick={() => setQ(qi, { rubric: q.rubric.filter((_, k) => k !== i) })}>Remove</button>
+                      </span>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_6rem]">
+                      <label className={label}>
+                        Name
+                        <input value={r.title} onChange={(e) => setRow(qi, i, { title: e.target.value })} maxLength={LIMITS.criterionTitle} className={input} />
+                      </label>
+                      <label className={label}>
+                        Skill
+                        {title ? (
+                          // A company's own test names its skills freely; there's no catalog list behind it.
+                          <input value={r.skill} onChange={(e) => setRow(qi, i, { skill: e.target.value })} maxLength={LIMITS.skill} placeholder="e.g. API design" className={input} />
+                        ) : (
+                          <select value={r.skill} onChange={(e) => setRow(qi, i, { skill: e.target.value })} className={input}>
+                            <option value="">Choose…</option>
+                            {skillChoices(r.skill).map((x) => <option key={x} value={x}>{x}</option>)}
+                          </select>
+                        )}
+                      </label>
+                      <label className={label}>
+                        Points
+                        <input type="number" min={1} max={LIMITS.pointsMax} value={r.points} onChange={(e) => setRow(qi, i, { points: e.target.value })} className={input} />
+                      </label>
+                    </div>
+                    <label className={label}>
+                      Scoring guide: what earns full points, and what loses them
+                      <textarea value={r.guide} onChange={(e) => setRow(qi, i, { guide: e.target.value })} maxLength={LIMITS.guide} rows={3} className={input} />
+                    </label>
+                  </li>
+                ))}
+              </ol>
+              {q.rubric.length < LIMITS.criteria && areas < LIMITS.areasPerTest && (
+                <button type="button" className={`${secondary} self-start`} onClick={() => setQ(qi, { rubric: [...q.rubric, { title: "", skill: "", points: "4", guide: "" }] })}>
+                  Add an area
+                </button>
+              )}
             </li>
           ))}
         </ol>
-        {form.rubric.length < LIMITS.criteria && (
-          <button type="button" className={`${secondary} self-start`} onClick={() => set("rubric", [...form.rubric, { title: "", skill: "", points: "4", guide: "" }])}>
-            Add an area
+        {form.questions.length < LIMITS.questions && areas < LIMITS.areasPerTest && (
+          <button type="button" className={`${secondary} self-start`} onClick={() => set("questions", [...form.questions, blankQuestion(form.questions[form.questions.length - 1]?.section ?? "")])}>
+            Add a question
           </button>
         )}
         {!skills.length && !title && <p className="text-xs text-muted">This item has no skills in the catalog yet. Add them on the Business catalog page to choose one here.</p>}
@@ -257,7 +303,7 @@ export function AssessmentEditor({
 
       <section className="flex flex-col gap-4" aria-labelledby="ae-practice">
         <h2 id="ae-practice" className={h2}>Practice task</h2>
-        <p className="-mt-2 text-xs text-muted">Shown before the test, so people can prepare. Make it different from the real task.</p>
+        <p className="-mt-2 text-xs text-muted">Shown before the test, so people can prepare. Make it different from the real questions.</p>
         <label className={label}>
           Title
           <input value={form.sampleTitle} onChange={(e) => set("sampleTitle", e.target.value)} maxLength={LIMITS.title} className={input} />
@@ -276,7 +322,9 @@ export function AssessmentEditor({
               ? revision === 0 ? (newNote ?? "Not saved yet. This draft starts from the catalog listing.") : "Unsaved changes."
               : !parsed.ok
                 ? parsed.message
-                : gaps.length
+                : several
+                  ? "Saved. Tests with several questions or sections can't be published yet: the candidate's page for them comes next."
+                  : gaps.length
                   ? `To publish, add ${gaps.join(", ")}.`
                   : unchanged
                     ? `Saved. Same as version ${latest!.version}, so there's nothing to publish.`

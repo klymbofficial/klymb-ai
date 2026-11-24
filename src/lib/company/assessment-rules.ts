@@ -66,6 +66,10 @@ export const LIMITS = {
   pointsMax: 10,
   guide: 1000,
   note: 1000,
+  questions: 20,
+  sections: 10,
+  section: 80,
+  areasPerTest: 40,
 } as const;
 
 /** A company test's name (catalog_items.title allows 1 to 120). */
@@ -87,6 +91,18 @@ export interface Criterion {
   guide: string;
 }
 
+/**
+ * One question of a test with several (U04b): its section heading (empty:
+ * none), what's asked, what the candidate hands in, and its own rubric.
+ */
+export interface Question {
+  section: string;
+  title: string;
+  brief: string;
+  submission: Submission;
+  rubric: Criterion[];
+}
+
 /** Everything a version freezes, and a draft holds. */
 export interface AssessmentContent {
   role: string;
@@ -101,6 +117,12 @@ export interface AssessmentContent {
   sampleBrief: string;
   rubric: Criterion[];
   results: ResultVisibility;
+  /**
+   * Null or missing: the one-task test, held in taskTitle, taskBrief,
+   * submission and rubric. Set (U04b): the questions, and those four are
+   * empty ('' and []), with submission saying whether any question takes files.
+   */
+  questions?: Question[] | null;
 }
 
 export interface Draft extends AssessmentContent {
@@ -170,8 +192,6 @@ export function readContent(raw: Record<string, unknown>): Result<AssessmentCont
     }
   }
 
-  const submission = SUBMISSIONS.find((s) => s === raw.submission);
-  if (!submission) return { ok: false, message: "Choose what people hand in." };
   const results = RESULTS.find((r) => r === raw.results);
   if (!results) return { ok: false, message: "Choose what candidates see afterwards." };
 
@@ -194,27 +214,95 @@ export function readContent(raw: Record<string, unknown>): Result<AssessmentCont
   if (taskBrief.length > LIMITS.brief) return { ok: false, message: `Keep the task under ${LIMITS.brief} characters.` };
   if (sampleBrief.length > LIMITS.sampleBrief) return { ok: false, message: `Keep the practice task under ${LIMITS.sampleBrief} characters.` };
 
-  if (!Array.isArray(raw.rubric)) return { ok: false, message: "The rubric didn't arrive. Reload and try again." };
-  if (raw.rubric.length > LIMITS.criteria) return { ok: false, message: `A rubric has at most ${LIMITS.criteria} areas.` };
-  const rubric: Criterion[] = [];
-  for (const [i, c] of (raw.rubric as unknown[]).entries()) {
-    const r = (c ?? {}) as Record<string, unknown>;
-    const n = i + 1;
-    const criterion = { title: line(r.title), skill: line(r.skill), points: Number(r.points), guide: text(r.guide) };
-    if (criterion.title.length > LIMITS.criterionTitle) return { ok: false, message: `Rubric area ${n}: keep the name under ${LIMITS.criterionTitle} characters.` };
-    if (criterion.skill.length > LIMITS.skill) return { ok: false, message: `Rubric area ${n}: keep the skill under ${LIMITS.skill} characters.` };
-    if (!Number.isInteger(criterion.points) || criterion.points < 1 || criterion.points > LIMITS.pointsMax) {
-      return { ok: false, message: `Rubric area ${n}: points are a whole number from 1 to ${LIMITS.pointsMax}.` };
+  const base = { role, minutes, toolsAllowed, toolsNotAllowed, instructions, sampleTitle, sampleBrief, results };
+
+  // The editor sends questions (U04b); one question without a section is kept as the one-task test.
+  if (raw.questions !== undefined) {
+    if (!Array.isArray(raw.questions) || !raw.questions.length) return { ok: false, message: "A test needs at least one question." };
+    if (raw.questions.length > LIMITS.questions) return { ok: false, message: `A test has at most ${LIMITS.questions} questions.` };
+    const questions: Question[] = [];
+    for (const [i, q] of (raw.questions as unknown[]).entries()) {
+      const r = (q ?? {}) as Record<string, unknown>;
+      const n = i + 1;
+      const section = line(r.section);
+      const title = line(r.title);
+      const brief = text(r.brief);
+      const sub = SUBMISSIONS.find((x) => x === r.submission);
+      if (section.length > LIMITS.section) return { ok: false, message: `Question ${n}: keep the section name under ${LIMITS.section} characters.` };
+      if (title.length > LIMITS.title) return { ok: false, message: `Question ${n}: keep the title under ${LIMITS.title} characters.` };
+      if (brief.length > LIMITS.brief) return { ok: false, message: `Question ${n}: keep it under ${LIMITS.brief} characters.` };
+      if (!sub) return { ok: false, message: `Question ${n}: choose what people hand in.` };
+      const rubric = readCriteria(r.rubric, `Question ${n}, area`);
+      if (!rubric.ok) return rubric;
+      questions.push({ section, title, brief, submission: sub, rubric: rubric.value });
     }
-    if (criterion.guide.length > LIMITS.guide) return { ok: false, message: `Rubric area ${n}: keep the scoring guide under ${LIMITS.guide} characters.` };
+    if (new Set(questions.map((q) => q.section.toLowerCase()).filter(Boolean)).size > LIMITS.sections) {
+      return { ok: false, message: `A test has at most ${LIMITS.sections} sections.` };
+    }
+    if (questions.reduce((n, q) => n + q.rubric.length, 0) > LIMITS.areasPerTest) {
+      return { ok: false, message: `A test has at most ${LIMITS.areasPerTest} rubric areas across its questions.` };
+    }
+    return { ok: true, value: fromQuestions(base, questions) };
+  }
+
+  const submission = SUBMISSIONS.find((s) => s === raw.submission);
+  if (!submission) return { ok: false, message: "Choose what people hand in." };
+  const rubric = readCriteria(raw.rubric, "Rubric area");
+  if (!rubric.ok) return rubric;
+  return { ok: true, value: { ...base, submission, taskTitle, taskBrief, rubric: rubric.value } };
+}
+
+/** A rubric as typed: at most 10 areas, each within its limits, no two with one name. */
+function readCriteria(raw: unknown, what: string): Result<Criterion[]> {
+  if (!Array.isArray(raw)) return { ok: false, message: "The rubric didn't arrive. Reload and try again." };
+  if (raw.length > LIMITS.criteria) return { ok: false, message: `A rubric has at most ${LIMITS.criteria} areas.` };
+  const rubric: Criterion[] = [];
+  for (const [i, c] of (raw as unknown[]).entries()) {
+    const r = (c ?? {}) as Record<string, unknown>;
+    const n = `${what} ${i + 1}`;
+    const criterion = { title: line(r.title), skill: line(r.skill), points: Number(r.points), guide: text(r.guide) };
+    if (criterion.title.length > LIMITS.criterionTitle) return { ok: false, message: `${n}: keep the name under ${LIMITS.criterionTitle} characters.` };
+    if (criterion.skill.length > LIMITS.skill) return { ok: false, message: `${n}: keep the skill under ${LIMITS.skill} characters.` };
+    if (!Number.isInteger(criterion.points) || criterion.points < 1 || criterion.points > LIMITS.pointsMax) {
+      return { ok: false, message: `${n}: points are a whole number from 1 to ${LIMITS.pointsMax}.` };
+    }
+    if (criterion.guide.length > LIMITS.guide) return { ok: false, message: `${n}: keep the scoring guide under ${LIMITS.guide} characters.` };
     rubric.push(criterion);
   }
   const names = rubric.map((c) => c.title.toLowerCase()).filter(Boolean);
-  if (new Set(names).size !== names.length) return { ok: false, message: "Two rubric areas have the same name." };
+  if (new Set(names).size !== names.length) return { ok: false, message: what.startsWith("Question") ? `${what.replace(/, area$/, "")}: two rubric areas have the same name.` : "Two rubric areas have the same name." };
+  return { ok: true, value: rubric };
+}
 
+/** The questions a test asks: its own list, or the one-task test as a single question without a section. */
+export function questionsOf(c: AssessmentContent): Question[] {
+  if (c.questions?.length) return c.questions;
+  return [{ section: "", title: c.taskTitle, brief: c.taskBrief, submission: c.submission, rubric: c.rubric }];
+}
+
+/** True when the test has several questions or sections, which publishing doesn't take yet (U04b-2). */
+export const hasQuestions = (c: AssessmentContent) => !!c.questions?.length;
+
+/**
+ * Content from questions: one question without a section stays the
+ * one-task test, so nothing changes for it; anything else is held as
+ * questions, with the one-task fields empty.
+ */
+export function fromQuestions(
+  base: Omit<AssessmentContent, "submission" | "taskTitle" | "taskBrief" | "rubric" | "questions">,
+  questions: Question[],
+): AssessmentContent {
+  const [only] = questions;
+  if (questions.length === 1 && !only.section) {
+    return { ...base, submission: only.submission, taskTitle: only.title, taskBrief: only.brief, rubric: only.rubric };
+  }
   return {
-    ok: true,
-    value: { role, minutes, submission, toolsAllowed, toolsNotAllowed, instructions, taskTitle, taskBrief, sampleTitle, sampleBrief, rubric, results },
+    ...base,
+    submission: questions.some((q) => q.submission === "written_file") ? "written_file" : "written",
+    taskTitle: "",
+    taskBrief: "",
+    rubric: [],
+    questions,
   };
 }
 
@@ -224,12 +312,25 @@ export function publishGaps(c: AssessmentContent): string[] {
   if (!c.role) gaps.push("the role");
   if (c.minutes === null) gaps.push("the time allowed");
   if (!c.instructions) gaps.push("instructions for candidates");
-  if (!c.taskTitle || !c.taskBrief) gaps.push("the real task");
+  if (!hasQuestions(c)) {
+    if (!c.taskTitle || !c.taskBrief) gaps.push("the real task");
+    if (!c.sampleTitle || !c.sampleBrief) gaps.push("the practice task");
+    if (c.sampleTitle && c.taskTitle && c.sampleTitle.toLowerCase() === c.taskTitle.toLowerCase()) gaps.push("a practice task that differs from the real one");
+    if (!c.rubric.length) gaps.push("at least one rubric area");
+    const missing = c.rubric.filter((r) => !r.title || !r.skill || !r.guide).length;
+    if (missing) gaps.push(`a name, skill and scoring guide for ${missing === 1 ? "1 rubric area" : `${missing} rubric areas`}`);
+    return gaps;
+  }
+  const qs = c.questions!;
   if (!c.sampleTitle || !c.sampleBrief) gaps.push("the practice task");
-  if (c.sampleTitle && c.taskTitle && c.sampleTitle.toLowerCase() === c.taskTitle.toLowerCase()) gaps.push("a practice task that differs from the real one");
-  if (!c.rubric.length) gaps.push("at least one rubric area");
-  const missing = c.rubric.filter((r) => !r.title || !r.skill || !r.guide).length;
-  if (missing) gaps.push(`a name, skill and scoring guide for ${missing === 1 ? "1 rubric area" : `${missing} rubric areas`}`);
+  if (c.sampleTitle && qs.some((q) => q.title.toLowerCase() === c.sampleTitle.toLowerCase())) gaps.push("a practice task that differs from every question");
+  qs.forEach((q, i) => {
+    const n = i + 1;
+    if (!q.title || !q.brief) gaps.push(`a title and text for question ${n}`);
+    if (!q.rubric.length) gaps.push(`at least one rubric area for question ${n}`);
+    const missing = q.rubric.filter((r) => !r.title || !r.skill || !r.guide).length;
+    if (missing) gaps.push(`a name, skill and scoring guide for ${missing === 1 ? "1 area" : `${missing} areas`} of question ${n}`);
+  });
   return gaps;
 }
 
@@ -242,6 +343,12 @@ export function contentOf(c: AssessmentContent): AssessmentContent {
     sampleTitle: c.sampleTitle, sampleBrief: c.sampleBrief,
     rubric: c.rubric.map(({ title, skill, points, guide }) => ({ title, skill, points, guide })),
     results: c.results,
+    questions: c.questions?.length
+      ? c.questions.map((q) => ({
+        section: q.section, title: q.title, brief: q.brief, submission: q.submission,
+        rubric: q.rubric.map(({ title, skill, points, guide }) => ({ title, skill, points, guide })),
+      }))
+      : null,
   };
 }
 
@@ -252,6 +359,19 @@ export const totalPoints = (rubric: readonly Criterion[]) => rubric.reduce((n, c
 
 /** The skills a version tests, from its rubric, in rubric order. */
 export const skillsOf = (rubric: readonly Criterion[]) => [...new Set(rubric.map((c) => c.skill).filter(Boolean))];
+
+/** Questions as stored (jsonb); null when there are none or they can't be read. */
+export function readQuestions(raw: unknown): Question[] | null {
+  if (!Array.isArray(raw) || !raw.length) return null;
+  const out: Question[] = [];
+  for (const q of raw) {
+    const r = (q ?? {}) as Record<string, unknown>;
+    const submission = SUBMISSIONS.find((x) => x === r.submission);
+    if (typeof r.section !== "string" || typeof r.title !== "string" || typeof r.brief !== "string" || !submission) return null;
+    out.push({ section: r.section, title: r.title, brief: r.brief, submission, rubric: readRubric(r.rubric) });
+  }
+  return out;
+}
 
 /** A rubric as stored (jsonb). Anything malformed is left out rather than shown half-read. */
 export function readRubric(raw: unknown): Criterion[] {

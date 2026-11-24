@@ -2,6 +2,7 @@ import "server-only";
 import type { CatalogAssessment } from "@/data/business-catalog";
 import type { Db } from "@/lib/db/client";
 import {
+  readQuestions,
   readRubric,
   standingOf,
   type AssessmentContent,
@@ -44,6 +45,8 @@ interface ContentRow {
   sample_brief: string;
   rubric: unknown;
   results: ResultVisibility;
+  /** Drafts only, until U04b-2 adds it to versions. */
+  questions?: unknown;
 }
 
 const contentFrom = (r: ContentRow): AssessmentContent => ({
@@ -59,15 +62,19 @@ const contentFrom = (r: ContentRow): AssessmentContent => ({
   sampleBrief: r.sample_brief,
   rubric: readRubric(r.rubric),
   results: r.results,
+  questions: readQuestions(r.questions),
 });
 
 const iso = (d: string | Date) => new Date(d).toISOString();
+
+/** The questions column as sent: null for a one-task test. */
+export const questionsJson = (c: AssessmentContent) => (c.questions?.length ? JSON.stringify(c.questions) : null);
 
 /** The saved draft, undefined when nobody has saved one, null on a database error. */
 export async function loadDraft(sql: Db, slug: string): Promise<Draft | undefined | null> {
   const { data, error } = await sql.rows<ContentRow & { revision: number; updated_by: string; updated_at: string }>`
     select revision, role, minutes, submission, tools_allowed, tools_not_allowed, instructions, task_title, task_brief,
-           sample_title, sample_brief, rubric, results, updated_by, updated_at
+           sample_title, sample_brief, rubric, results, questions, updated_by, updated_at
       from course.assessment_drafts where slug = ${slug}
   `;
   if (error) return error.code === UNDEFINED_TABLE ? undefined : fail("draft read", error);
@@ -96,10 +103,10 @@ export async function saveDraft(
     )
     insert into course.assessment_drafts as d
       (slug, revision, role, minutes, submission, tools_allowed, tools_not_allowed, instructions, task_title, task_brief,
-       sample_title, sample_brief, rubric, results, updated_by)
+       sample_title, sample_brief, rubric, results, questions, updated_by)
     select ${code.slug}, 1, ${c.role}, ${c.minutes}::int, ${c.submission}, ${c.toolsAllowed}::text[], ${c.toolsNotAllowed}::text[],
            ${c.instructions}, ${c.taskTitle}, ${c.taskBrief}, ${c.sampleTitle}, ${c.sampleBrief}, ${JSON.stringify(c.rubric)}::jsonb,
-           ${c.results}, ${by}
+           ${c.results}, ${questionsJson(c)}::jsonb, ${by}
      where ${expected}::int = 0
         or exists (select 1 from course.assessment_drafts where slug = ${code.slug})
     on conflict (slug) do update
@@ -107,7 +114,7 @@ export async function saveDraft(
            tools_allowed = excluded.tools_allowed, tools_not_allowed = excluded.tools_not_allowed,
            instructions = excluded.instructions, task_title = excluded.task_title, task_brief = excluded.task_brief,
            sample_title = excluded.sample_title, sample_brief = excluded.sample_brief, rubric = excluded.rubric,
-           results = excluded.results, updated_by = excluded.updated_by, updated_at = now()
+           results = excluded.results, questions = excluded.questions, updated_by = excluded.updated_by, updated_at = now()
      where d.revision = ${expected}::int
     returning d.revision
   `;
@@ -138,6 +145,8 @@ export async function publishDraft(
            d.sample_title, d.sample_brief, d.rubric, d.results, ${by}
       from course.assessment_drafts d
      where d.slug = ${slug} and d.revision = ${revision}::int
+       -- A test with several questions isn't published until candidates can answer them (U04b-2).
+       and d.questions is null
     returning version
   `;
   if (error) return error.code === UNIQUE ? { status: "changed" } : fail("publish", error);
