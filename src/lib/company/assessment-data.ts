@@ -139,14 +139,12 @@ export async function publishDraft(
   const { data, error } = await sql.rows<{ version: number }>`
     insert into course.assessment_versions
       (slug, version, draft_revision, title, role, minutes, submission, tools_allowed, tools_not_allowed, instructions, task_title, task_brief,
-       sample_title, sample_brief, rubric, results, published_by)
+       sample_title, sample_brief, rubric, results, questions, published_by)
     select d.slug, coalesce((select max(v.version) from course.assessment_versions v where v.slug = d.slug), 0) + 1, d.revision, ${title},
            d.role, d.minutes, d.submission, d.tools_allowed, d.tools_not_allowed, d.instructions, d.task_title, d.task_brief,
-           d.sample_title, d.sample_brief, d.rubric, d.results, ${by}
+           d.sample_title, d.sample_brief, d.rubric, d.results, d.questions, ${by}
       from course.assessment_drafts d
      where d.slug = ${slug} and d.revision = ${revision}::int
-       -- A test with several questions isn't published until candidates can answer them (U04b-2).
-       and d.questions is null
     returning version
   `;
   if (error) return error.code === UNIQUE ? { status: "changed" } : fail("publish", error);
@@ -158,7 +156,7 @@ export async function publishDraft(
 export async function loadVersions(sql: Db, slug: string): Promise<Version[] | null> {
   const { data, error } = await sql.rows<ContentRow & { id: string; slug: string; version: number; title: string; minutes: number; published_by: string; published_at: string }>`
     select id, slug, version, title, role, minutes, submission, tools_allowed, tools_not_allowed, instructions, task_title, task_brief,
-           sample_title, sample_brief, rubric, results, published_by, published_at
+           sample_title, sample_brief, rubric, results, questions, published_by, published_at
       from course.assessment_versions where slug = ${slug}
      order by version desc
   `;

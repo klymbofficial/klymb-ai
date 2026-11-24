@@ -5,6 +5,8 @@ import { LocalTime } from "@/components/company/LocalTime";
 import { StartTest } from "@/components/company/StartTest";
 import { RefreshAt } from "@/components/company/RefreshAt";
 import { attemptByLink, loadSubmission, recordLinkOpened, type Submission } from "@/lib/company/attempt-data";
+import { startBlocked } from "@/lib/company/test-settings";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { sharedResultFor } from "@/lib/company/decision-data";
 import type { SharedResult } from "@/lib/company/review-rules";
 import { attemptState, SAVE_GRACE_SECONDS } from "@/lib/company/attempt-rules";
@@ -87,6 +89,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
           zone={b.timeZone}
           submission={sub ?? null}
           withFiles={v.submission === "written_file"}
+          questions={v.questions}
         />
         {result && <ResultCard company={company} result={result} zone={b.timeZone} />}
         <p className="text-xs text-muted">This link is for {c.email} only. Questions? Write to {write} and quote your receipt code.</p>
@@ -117,6 +120,19 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
           )}
         </section>
         <p className="text-xs text-muted">This link is for {c.email} only. Questions? Write to {write}.</p>
+      </CandidateShell>
+    );
+  }
+
+  // The company's settings for this test (U06a): access off or past its end date means nobody starts.
+  const settings = await loadTestSettings(sql!, b.companyId, b.item);
+  const blocked = settings ? startBlocked(settings, now) : null;
+  if (blocked) {
+    return (
+      <CandidateShell brand={brand}>
+        <CandidateNotice title={blocked === "ended" ? "This assessment has ended" : "This assessment is closed"}>
+          {company} {blocked === "ended" ? "has ended" : "has closed"} {b.title}, so it can&apos;t be started from this link. Questions? Write to {write}.
+        </CandidateNotice>
       </CandidateShell>
     );
   }
@@ -165,7 +181,11 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
           <p className="mt-3 whitespace-pre-line leading-relaxed">{v.instructions}</p>
           {v.toolsAllowed.length > 0 && <p className="mt-3"><strong>You may use:</strong> {v.toolsAllowed.join(", ")}.</p>}
           {v.toolsNotAllowed.length > 0 && <p className="mt-2"><strong>Don&apos;t use:</strong> {v.toolsNotAllowed.join(", ")}.</p>}
-          <p className="mt-2">You&apos;ll write your answer{v.submission === "written_file" ? " and can attach files" : ""}. The task appears when you start.</p>
+          {v.questions > 0 ? (
+            <p className="mt-2">The test has {v.questions} questions, shown when you start. Each answer saves as you go, and you can move between them until you submit.</p>
+          ) : (
+            <p className="mt-2">You&apos;ll write your answer{v.submission === "written_file" ? " and can attach files" : ""}. The task appears when you start.</p>
+          )}
           <p className="mt-2 text-muted">{RESULTS_LINE[v.results]}</p>
         </section>
       )}
@@ -178,7 +198,9 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
 const words = (text: string) => (text.trim() ? text.trim().split(/\s+/).length : 0);
 
 /** The candidate's receipt: a code to quote, when and how it was submitted, and what was received. Never the answer itself. */
-function Receipt({ company, role, title, receipt, submittedAt, kind, zone, submission, withFiles }: {
+function Receipt({ company, role, title, receipt, submittedAt, kind, zone, submission, withFiles, questions }: {
+  /** How many questions the test had (L2); 0 for a one-task test. */
+  questions: number;
   company: string;
   role: string;
   title: string;
@@ -212,7 +234,14 @@ function Receipt({ company, role, title, receipt, submittedAt, kind, zone, submi
 
       <div className="mt-6 border-t border-line/30 pt-4">
         <h2 className={label}>Received</h2>
-        {submission ? (
+        {submission && questions > 0 ? (
+          <ul className="mt-2 space-y-1 text-sm">
+            <li>
+              Answers to {(submission.answers ?? []).filter((a) => a.answer.trim() || a.picked.length || a.files.length).length} of {questions} questions
+            </li>
+            {(submission.answers ?? []).flatMap((a) => a.files).map((f, i) => <li key={i} className="break-all">{f.name} <span className="text-muted">· {sizeText(f.bytes)}</span></li>)}
+          </ul>
+        ) : submission ? (
           <ul className="mt-2 space-y-1 text-sm">
             <li>{n ? `Written answer · ${n.toLocaleString("en")} ${n === 1 ? "word" : "words"}` : "No written answer was saved"}</li>
             {submission.files.map((f, i) => <li key={i} className="break-all">{f.name} <span className="text-muted">· {sizeText(f.bytes)}</span></li>)}

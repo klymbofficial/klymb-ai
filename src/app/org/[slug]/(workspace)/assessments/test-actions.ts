@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import type { DraftResult, PublishResult } from "@/app/admin/assessment-actions";
 import { allowCompany } from "@/lib/company/access";
 import { loadDraft, loadVersions } from "@/lib/company/assessment-data";
-import { LIMITS, canWriteTests, hasQuestions, publishGaps, readContent, readTestName, sameContent } from "@/lib/company/assessment-rules";
+import { LIMITS, canWriteTests, publishGaps, readContent, readTestName, sameContent } from "@/lib/company/assessment-rules";
 import { logCompany } from "@/lib/company/audit";
 import { getWorkspaceMember } from "@/lib/company/auth";
 import { createTest, ownTest, publishOwnDraft, saveOwnDraft } from "@/lib/company/company-test-data";
@@ -100,7 +100,6 @@ export async function publishOwnTest(company: string, item: string, revision: nu
   if (draft === null || versions === null) return UNAVAILABLE;
   if (!draft) return { ok: false, message: "Save the draft first." };
   if (draft.revision !== revision) return CHANGED;
-  if (hasQuestions(draft)) return { ok: false, message: "Tests with several questions or sections can be saved, not yet published: the candidate's page for them comes next. Keep one question without a section to publish now." };
   const gaps = publishGaps(draft);
   if (gaps.length) return { ok: false, message: `Not ready to publish. Add ${gaps.join(", ")}.` };
   const latest = versions[0];

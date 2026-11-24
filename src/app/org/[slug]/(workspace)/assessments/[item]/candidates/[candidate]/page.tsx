@@ -56,7 +56,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   if (view === undefined) notFound();
   if (!view) return <><OrgPageHead crumbs={[{ href: `${home}/assessments`, label: "Assessments" }]} title="Review" /><LoadError what="This submission" /></>;
 
-  const { candidate: c, batch: b, attempt: a, submission: s, rubric, reviews } = view;
+  const { candidate: c, batch: b, attempt: a, submission: s, rubric, reviews, questions } = view;
   const tz = b.timeZone;
   const latest = reviews[0] ?? null;
   const scorer = canScore(member);
@@ -106,6 +106,49 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 <Fact name="Started">{formatInZone(a.startedAt, tz)}<span className="block text-xs text-muted">{durationText(a.allowedMinutes)} allowed</span></Fact>
                 <Fact name="Receipt"><span className="font-mono">{a.receipt}</span></Fact>
               </dl>
+              {questions ? (
+                <ol className="space-y-5">
+                  {questions.map((q, i) => {
+                    const ans = s.answers?.find((x) => x.questionNo === i + 1);
+                    return (
+                      <li key={i} className="border-t border-line/20 pt-4 first:border-t-0 first:pt-0">
+                        {q.section && q.section !== questions[i - 1]?.section && <p className="mb-1 text-xs font-bold text-muted">{q.section}</p>}
+                        <h3 className="text-sm font-bold">{i + 1}. {q.title}</h3>
+                        {q.mcq ? (
+                          ans?.picked.length ? (
+                            <ul className="mt-2 space-y-1 text-sm">
+                              {ans.picked.map((p) => {
+                                const o = q.mcq!.options[p];
+                                return <li key={p}>{String.fromCharCode(65 + p)}. {o?.text ?? "(option removed)"} <span className={o?.correct ? "font-bold text-[#14532d]" : "font-bold text-error"}>{o?.correct ? "· correct" : "· wrong"}</span></li>;
+                              })}
+                              {q.mcq.options.some((o, k) => o.correct && !ans.picked.includes(k)) && (
+                                <li className="text-xs text-muted">Missed: {q.mcq.options.flatMap((o, k) => (o.correct && !ans.picked.includes(k) ? [String.fromCharCode(65 + k)] : [])).join(", ")}</li>
+                              )}
+                            </ul>
+                          ) : (
+                            <p className="mt-2 text-sm text-muted">No option chosen.</p>
+                          )
+                        ) : ans?.answer.trim() ? (
+                          <div className="mt-2 max-h-[50vh] overflow-y-auto whitespace-pre-wrap break-words rounded-md border border-line/30 bg-paper p-4 text-sm leading-relaxed">{ans.answer}</div>
+                        ) : (
+                          <p className="mt-2 text-sm text-muted">No written answer was saved.</p>
+                        )}
+                        {ans && ans.files.length > 0 && (
+                          <ul className="mt-2 divide-y divide-line/20 rounded-md border border-line/30">
+                            {ans.files.map((f) => (
+                              <li key={f.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                                <span className="min-w-0 truncate" title={f.name}>{f.name} <span className="text-muted">· {f.kind.toUpperCase()} · {sizeText(f.bytes)}</span></span>
+                                <a href={`${testHref}/candidates/${c.id}/files/${f.id}`} className="shrink-0 text-xs font-bold underline underline-offset-4">Download</a>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+              <>
               <div>
                 <h3 className={label}>Written answer</h3>
                 {s.answer.trim() ? (
@@ -129,6 +172,8 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                   <p className="mt-2 text-sm text-muted">No files attached.</p>
                 )}
               </div>
+              </>
+              )}
             </div>
           )}
         </section>
@@ -139,7 +184,12 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
             <p className="text-xs text-muted">Assigned reviewer: {b.reviewerName ?? b.reviewerEmail}</p>
           </div>
           <div className="p-5">
-            {s && scorer ? (
+            {questions ? (
+              <p className="text-sm text-muted">
+                This test has {questions.length} questions. Scoring each question, with multiple choice marked automatically, comes in the next step;
+                the answers are on the left.
+              </p>
+            ) : s && scorer ? (
               <ReviewForm
                 key={latest?.revision ?? 0}
                 slug={member.companySlug}

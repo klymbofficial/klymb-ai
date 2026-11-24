@@ -8,8 +8,11 @@ import {
   cancelBatch, cancelCandidate, claimChange, claimReminders, claimRetry, createBatch, hiringOptions, loadBatch, startSending, type Batch, type Candidate,
 } from "@/lib/company/batch-data";
 import { canRetry, canSchedule, passedNote, readBatchForm, readExtension, startPassed, type BatchField, type ListProblem } from "@/lib/company/batch-rules";
-import { deliver, type SendReport } from "@/lib/company/batch-send";
+import { candidateLink } from "@/lib/company/batch-link";
+import { deliver, linkBase, type SendReport } from "@/lib/company/batch-send";
 import { db, type Db } from "@/lib/db/client";
+import { roundBlocked } from "@/lib/company/test-settings";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { normaliseEmail } from "@/lib/email";
 
 export type ActionResult = { ok: true; message: string } | { ok: false; message: string };
@@ -20,10 +23,10 @@ export type CreateResult =
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isId = (v: unknown): v is string => typeof v === "string" && UUID.test(v);
 const UNAVAILABLE = { ok: false as const, message: "That didn't work just now. Try again in a minute." };
-const NOT_ALLOWED = { ok: false as const, message: "Only a recruiter in your company can do this. Try signing in again." };
+const NOT_ALLOWED = { ok: false as const, message: "Only an admin or a recruiter in your company can do this. Try signing in again." };
 const GONE = { ok: false as const, message: "That batch is no longer here. Reload the page." };
 
-/** The signed-in recruiter of this workspace, or null. The company comes from the login, never the form. */
+/** The signed-in admin or recruiter of this workspace, or null. The company comes from the login, never the form. */
 async function recruiterFor(slug: unknown): Promise<CompanyMember | null> {
   if (typeof slug !== "string") return null;
   const member = await getWorkspaceMember(slug);
@@ -41,6 +44,18 @@ async function context(slug: unknown, batchId: unknown): Promise<{ member: Compa
   if (found === null) return UNAVAILABLE;
   if (!found) return GONE;
   return { member, sql, batch: found.batch, candidates: found.candidates };
+}
+
+/**
+ * The test's settings (U06a) allow sending this round's emails: access on,
+ * not ended, and the round closes by the end date. Null when fine; otherwise
+ * the answer to give. Nothing is sent or claimed when it refuses.
+ */
+async function settingsStop(sql: Db, companyId: string, item: string, closesAt: Date | string): Promise<{ ok: false; message: string } | null> {
+  const settings = await loadTestSettings(sql, companyId, item);
+  if (!settings) return UNAVAILABLE;
+  const why = roundBlocked(settings, closesAt);
+  return why ? { ok: false, message: why } : null;
 }
 
 /** Every workspace page: the test's Candidates tab and rounds, the review pages, the Assessments list counts (U10). */
@@ -78,6 +93,8 @@ export async function createHiringBatch(slug: string, form: Record<string, strin
   const read = readBatchForm(form, { now: new Date(), tests: options.tests, reviewers: options.reviewers.map((r) => r.email), prepCourses: options.prepCourses });
   if (!read.ok) return { ok: false, message: "Check the highlighted fields.", errors: read.errors, problems: read.problems };
   if (!isId(form.requestKey)) return UNAVAILABLE;
+  const stop = await settingsStop(sql, member.companyId, read.value.item, read.value.closesAt);
+  if (stop) return stop;
 
   const made = await createBatch(sql, { ...read.value, companyId: member.companyId, requestKey: form.requestKey, by: member.email });
   if (!made) return UNAVAILABLE;
@@ -94,6 +111,8 @@ export async function sendHiringBatch(slug: string, batchId: string): Promise<Ac
   const c = await context(slug, batchId);
   if ("ok" in c) return c;
   if (c.batch.status !== "draft") return { ok: false, message: "This batch has already been sent or cancelled." };
+  const stop = await settingsStop(c.sql, c.member.companyId, c.batch.item, c.batch.closesAt);
+  if (stop) return stop;
   const passed = passedFor(c.batch, new Date());
   const waiting = c.candidates.filter((p) => p.status === "active" && p.delivery === "pending");
   const late = waiting.filter(passed).length;
@@ -118,6 +137,8 @@ export async function retryDelivery(slug: string, batchId: string, candidateId: 
   const c = await context(slug, batchId);
   if ("ok" in c) return c;
   if (candidateId !== null && !isId(candidateId)) return GONE;
+  const stopRetry = await settingsStop(c.sql, c.member.companyId, c.batch.item, c.batch.closesAt);
+  if (stopRetry) return stopRetry;
   const now = new Date();
   const late = c.candidates.filter(
     (p) => p.status === "active" && (candidateId === null || p.id === candidateId) && canRetry({ delivery: p.delivery, claimedAt: p.claimedAt }, now) && passedFor(c.batch, now)(p),
@@ -136,6 +157,8 @@ export async function remindCandidates(slug: string, batchId: string, candidateI
   const c = await context(slug, batchId);
   if ("ok" in c) return c;
   if (candidateId !== null && !isId(candidateId)) return GONE;
+  const stop = await settingsStop(c.sql, c.member.companyId, c.batch.item, c.batch.closesAt);
+  if (stop) return stop;
   const targets = await claimReminders(c.sql, c.member.companyId, c.batch.id, candidateId ? [candidateId] : null);
   if (!targets) return UNAVAILABLE;
   if (!targets.length) {
@@ -161,6 +184,9 @@ export async function changeCandidate(slug: string, batchId: string, candidateId
   const c = await context(slug, batchId);
   if ("ok" in c) return c;
   if (!isId(candidateId) || !change || typeof change !== "object") return GONE;
+  // Every change emails a link; one that can't start the test is no use.
+  const stop = await settingsStop(c.sql, c.member.companyId, c.batch.item, c.batch.closesAt);
+  if (stop) return stop;
 
   let claim: Parameters<typeof claimChange>[4];
   if (change.kind === "new_link") claim = { kind: "new_link" };
@@ -215,4 +241,32 @@ export async function cancelHiringBatch(slug: string, batchId: string): Promise<
   await logCompany(c.member, "company.batch_cancel", { batch_id: c.batch.id, was: c.batch.status });
   refresh();
   return { ok: true, message: c.batch.status === "draft" ? "Draft discarded." : "Batch cancelled. No link in it can start the test." };
+}
+
+export type CopyLinkResult = { ok: true; url: string; message: string } | { ok: false; message: string };
+
+/**
+ * One invited person's own private link (I02), to send them outside email
+ * (a chat message, say). Only while their invitation is live: the round is
+ * sent, they're still invited and haven't submitted. It's the same link the
+ * email carries, so it works for them alone and resumes their attempt. The
+ * copy is recorded in the audit log; the link itself never is.
+ */
+export async function copyCandidateLink(slug: string, batchId: string, candidateId: string): Promise<CopyLinkResult> {
+  const c = await context(slug, batchId);
+  if ("ok" in c) return { ok: false, message: c.message };
+  if (!isId(candidateId)) return GONE;
+  if (c.batch.status !== "sent") return { ok: false, message: "This round isn't sent yet, so there's no link to copy. Send it first." };
+  const person = c.candidates.find((x) => x.id === candidateId);
+  if (!person || person.status !== "active") return { ok: false, message: "This person's invitation was cancelled, so their link doesn't start the test." };
+  const submitted = await c.sql.scalar<boolean>`
+    select exists (select 1 from course.candidate_attempts a
+                    where a.candidate_id = ${candidateId}::uuid and a.batch_id = ${c.batch.id}::uuid and a.submitted_at is not null)
+  `;
+  if (submitted.error) return UNAVAILABLE;
+  if (submitted.data) return { ok: false, message: "They've already submitted, so there's nothing left to open." };
+  const url = candidateLink(linkBase(), person.id, person.generation);
+  if (!url) return UNAVAILABLE;
+  await logCompany(c.member, "company.candidate_link_copy", { batch_id: c.batch.id, candidate_id: person.id, link_generation: person.generation });
+  return { ok: true, url, message: `Copied ${person.name}'s link. It opens the test as them, so send it only to them.` };
 }

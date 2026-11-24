@@ -3,6 +3,7 @@ import { BatchButtons, SendDraft } from "@/components/company/BatchControls";
 import { Badge, PANEL, type Tone } from "@/components/company/HiringParts";
 import type { CompanyMember } from "@/lib/company/access";
 import { buildCandidateMail } from "@/lib/company/batch-send";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
 import {
   MAIL_KIND_LABEL, MAIL_OUTCOME_LABEL, PREP_COURSES, PURPOSE_LABEL, SENT_MEANS, canSchedule, deadlineText, durationText, formatInZone, lastStart, passedNote,
 } from "@/lib/company/batch-rules";
@@ -24,7 +25,8 @@ const summary = "cursor-pointer text-sm font-semibold text-[#1f4fd1]";
 export async function InvitationRounds({ sql, member, rounds, focus }: { sql: Db; member: CompanyMember; rounds: Round[]; focus: string | null }) {
   if (!rounds.length) return null;
   const recruiter = canSchedule(member);
-  const brand = await loadCompanyBrand(sql, member.companyId);
+  const [brand, settings] = await Promise.all([loadCompanyBrand(sql, member.companyId), loadTestSettings(sql, member.companyId, rounds[0].batch.item)]);
+  const template = settings?.invite ?? null;
   const draftCount = recruiter ? rounds.filter((r) => r.batch.status === "draft").length : 0;
   const needs = recruiter ? rounds.reduce((n, r) => n + (r.batch.status === "sent" ? r.retryable : 0), 0) : 0;
   return (
@@ -44,7 +46,7 @@ export async function InvitationRounds({ sql, member, rounds, focus }: { sql: Db
           const draft = b.status === "draft";
           const live = b.status === "sent" && recruiter;
           const first = r.candidates.find((c) => c.status === "active");
-          const preview = first && brand ? buildCandidateMail("invite", b, brand, first) : null;
+          const preview = first && brand ? buildCandidateMail("invite", b, brand, first, new Date(), template) : null;
           const expanded = draft || focus === b.id;
           const nameOf = new Map(r.candidates.map((c) => [c.id, c.name]));
           return (

@@ -129,26 +129,31 @@ describe("company-written tests against a real database", { skip }, () => {
     await assert.rejects(client.query(`update course.catalog_items set title = null where slug = $1`, [slug]), /catalog_items_own_words/);
   });
 
-  test("a draft with several questions saves and reads back, and publishing it is refused by the database (U04b-1)", async () => {
+  test("a draft with several questions, multiple choice included, publishes with its questions frozen (L2)", async () => {
     const slug = await created(mine);
     const questions = [
       { section: "Part A", title: "Load", brief: "Load the data.", submission: "written" as const, rubric: [{ title: "Checks", skill: "Data", points: 3, guide: "g" }] },
-      { section: "Part B", title: "Publish", brief: "Publish it.", submission: "written_file" as const, rubric: [{ title: "Clarity", skill: "Writing", points: 2, guide: "g" }] },
+      { section: "Part B", title: "Pick", brief: "Which is a join?", submission: "written" as const, rubric: [],
+        mcq: { options: [{ text: "LEFT", correct: true }, { text: "SUM", correct: false }], points: 2, partial: false }, source: "00000000-0000-4000-8000-000000000001" },
     ];
-    const multi: AssessmentContent = { ...content, taskTitle: "", taskBrief: "", rubric: [], submission: "written_file", questions };
+    const multi: AssessmentContent = { ...content, taskTitle: "", taskBrief: "", rubric: [], submission: "written", questions };
     assert.deepEqual(await own.saveOwnDraft(sql, { companyId: mine, slug, title: "Two parts", content: multi, expected: 1, by: "rec@test.invalid" }), { status: "saved", revision: 2 });
-    const back = await assessments.loadDraft(sql, slug);
-    assert.deepEqual(back?.questions, questions);
-    assert.deepEqual(await own.publishOwnDraft(sql, { companyId: mine, slug, revision: 2, by: "rec@test.invalid" }), { status: "changed" });
-    assert.equal((await assessments.loadVersions(sql, slug))?.length, 0, "nothing published");
-    // Back to one task: the questions column empties, and it publishes.
-    assert.deepEqual(await own.saveOwnDraft(sql, { companyId: mine, slug, title: "Two parts", content, expected: 2, by: "rec@test.invalid" }), { status: "saved", revision: 3 });
-    assert.equal((await assessments.loadDraft(sql, slug))?.questions, null);
-    assert.equal((await own.publishOwnDraft(sql, { companyId: mine, slug, revision: 3, by: "rec@test.invalid" }))?.status, "published");
+    assert.deepEqual((await assessments.loadDraft(sql, slug))?.questions, questions);
+    assert.equal((await own.publishOwnDraft(sql, { companyId: mine, slug, revision: 2, by: "rec@test.invalid" }))?.status, "published");
+    const [v] = (await assessments.loadVersions(sql, slug)) ?? [];
+    assert.deepEqual(v?.questions, questions, "frozen with the version, right options included (never sent to candidates)");
+    assert.equal(v?.taskTitle, "");
+    assert.deepEqual(v?.rubric, []);
+    // A one-task version still needs its task and rubric.
     await assert.rejects(client.query(`update course.assessment_drafts set questions = '[]'::jsonb where slug = $1`, [slug]), /assessment_drafts_questions/);
+    await assert.rejects(
+      client.query(`insert into course.assessment_versions (slug, version, draft_revision, title, role, minutes, submission, tools_allowed, tools_not_allowed, instructions, task_title, task_brief, sample_title, sample_brief, rubric, results, published_by)
+                    values ($1, 9, 9, 't', 'r', 30, 'written', '{}', '{}', 'i', '', 'b', 's', 'sb', '[]', 'none', 'x')`, [slug]),
+      /assessment_versions_task_title|assessment_versions_rubric/,
+    );
   });
 
-  test("Klymb's own drafts take questions too, and their publish is refused the same way", async () => {
+  test("Klymb's own drafts take questions too, and publish them", async () => {
     const slug = `klymb-q-${run}`;
     const code = { kind: "assessment", slug, title: "Klymb Q", suggestedSkills: [], suggestedPurposes: ["hiring"] } as unknown as import("../src/data/business-catalog").CatalogAssessment;
     const multi: AssessmentContent = { ...content, taskTitle: "", taskBrief: "", rubric: [], questions: [
@@ -156,6 +161,7 @@ describe("company-written tests against a real database", { skip }, () => {
     ] };
     assert.deepEqual(await assessments.saveDraft(sql, code, multi, 0, "k@test.invalid"), { status: "saved", revision: 1 });
     assert.equal((await assessments.loadDraft(sql, slug))?.questions?.[0].section, "A");
-    assert.deepEqual(await assessments.publishDraft(sql, slug, "Klymb Q", 1, "k@test.invalid"), { status: "changed" });
+    assert.deepEqual(await assessments.publishDraft(sql, slug, "Klymb Q", 1, "k@test.invalid"), { status: "published", version: 1 });
+    assert.equal((await assessments.loadVersions(sql, slug))?.[0].questions?.[0].title, "One");
   });
 });

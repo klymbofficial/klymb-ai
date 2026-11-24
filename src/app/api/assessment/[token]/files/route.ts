@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { addAttemptFile, fileSlot, removeAttemptFile } from "@/lib/company/attempt-data";
+import { addAttemptFile, attemptTask, fileSlot, removeAttemptFile } from "@/lib/company/attempt-data";
 import { ATTEMPT_FILE_LIMITS, attemptFileKey, safeFileName, sizeText, sniffAttemptFile, tooBigText } from "@/lib/company/attempt-files";
 import { putAttemptFile } from "@/lib/company/attempt-storage";
 import { readCandidateLink } from "@/lib/company/batch-link";
@@ -47,6 +47,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
   const attemptId = form.get("attemptId");
   const file = form.get("file");
   if (typeof attemptId !== "string" || !UUID.test(attemptId) || !(file instanceof File)) return reply(400, { status: "bad", message: "Choose a file to attach." });
+  // A test with questions (L2) names the question the file belongs to.
+  const rawQ = form.get("question");
+  const questionNo = rawQ === null || rawQ === "" ? null : Number(rawQ);
+  if (questionNo !== null && (!Number.isInteger(questionNo) || questionNo < 1 || questionNo > 20)) return reply(400, { status: "bad", message: "Choose a file to attach." });
   if (file.size === 0) return reply(400, { status: "bad", message: "That file is empty." });
   if (file.size > ATTEMPT_FILE_LIMITS.bytes) return reply(413, { status: "too_big", message: tooBigText(file.size) });
 
@@ -57,7 +61,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ token: 
 
   const sql = db();
   if (!sql) return reply(503, { status: "unavailable", message: MESSAGES.unavailable });
-  const who = { candidateId: ref.id, generation: ref.generation, attemptId };
+  const who = { candidateId: ref.id, generation: ref.generation, attemptId, questionNo };
+  // Files go only where the test takes them: the one-task test that asks for files, or a question that does.
+  const task = await attemptTask(sql, attemptId);
+  if (!task) return reply(503, { status: "unavailable", message: MESSAGES.unavailable });
+  const takesFiles = task.questions
+    ? questionNo !== null && task.questions.some((q) => q.no === questionNo && q.kind === "written_file")
+    : questionNo === null && task.submission === "written_file";
+  if (!takesFiles) return reply(400, { status: "bad", message: "This question doesn't take files." });
   const slot = await fileSlot(sql, who);
   if (!slot) return reply(503, { status: "unavailable", message: MESSAGES.unavailable });
   if (slot.status !== "open") return reply(409, { status: slot.status, message: MESSAGES[slot.status] });

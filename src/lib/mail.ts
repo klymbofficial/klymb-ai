@@ -658,6 +658,12 @@ export function candidateInviteEmail(p: {
   prep: { course: string; url: string; until: string } | null;
   siteUrl: string;
   supportEmail: string;
+  /**
+   * The company's own words for the invitation (U06a), variables already
+   * filled in: replaces the subject and the opening line. The times, the
+   * link button, the prep course and the help lines are always added.
+   */
+  template?: { subject: string; body: string } | null;
 }) {
   const site = esc(p.siteUrl);
   const company = p.company.name;
@@ -673,6 +679,11 @@ export function candidateInviteEmail(p: {
     new_link: { subject: `Your new link for ${company}'s ${p.role} assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link. The earlier one no longer works.` },
     extension: { subject: `New time for ${company}'s ${p.role} assessment`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
   }[p.kind];
+  const own = p.kind === "invite" && p.template ? p.template : null;
+  if (own) {
+    copy.subject = own.subject;
+    copy.intro = own.body;
+  }
 
   const when = [
     ...(p.opened ? [] : [{ title: "Opens", body: p.opens }]),
@@ -702,7 +713,7 @@ export function candidateInviteEmail(p: {
     preview: copy.intro,
     eyebrow: copy.eyebrow,
     title: `Hi ${esc(p.name)}.`,
-    intro: esc(copy.intro),
+    intro: own ? esc(copy.intro).replace(/\n/g, "<br>") : esc(copy.intro),
     sections: [
       `${sectionTitle("When", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${when.map((w, i) => step(i + 1, esc(w.title), esc(w.body), accent)).join("")}

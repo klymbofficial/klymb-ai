@@ -32,6 +32,10 @@ export interface TestRow {
   own: boolean;
   /** Shown to the people who write the company's own tests. */
   editHref: string | null;
+  /** This company's tags for the test (U06a). */
+  tags: string[];
+  /** Access is off or the test has ended, in this company's settings (U06a). */
+  blocked: "closed" | "ended" | null;
 }
 
 const LINK = "inline-flex items-center gap-1.5 text-sm font-semibold text-[#1f4fd1] underline-offset-4 hover:underline";
@@ -95,7 +99,7 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
 
       <section aria-label="Tests" className="flex min-w-0 flex-1 flex-col gap-4 lg:pl-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="flex sm:max-w-sm sm:flex-1"><SearchBox label="Search tests" placeholder="Search by test name or role" value={query} onChange={setQuery} /></div>
+          <div className="flex sm:max-w-sm sm:flex-1"><SearchBox label="Search tests" placeholder="Search by test name, role or tag" value={query} onChange={setQuery} /></div>
           <label className="flex items-center sm:w-auto">
             <span className="sr-only">Sort tests</span>
             <select value={sort} onChange={(e) => setSort(e.target.value as TestSort)} className="h-10 w-full rounded-md border border-line/50 bg-white px-3 text-sm">
@@ -121,7 +125,13 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
                   <Fact icon="mail">Invite only</Fact>
                   <Fact icon="clock">{t.duration}</Fact>
                   <Fact icon="calendar">{t.versionLine}</Fact>
+                  {t.blocked && <span className="font-semibold text-error">{t.blocked === "closed" ? "Access off" : "Ended"}</span>}
                 </p>
+                {t.tags.length > 0 && (
+                  <p className="flex flex-wrap gap-1.5">
+                    {t.tags.map((g) => <button key={g} type="button" onClick={() => setQuery(g)} className="rounded border border-line/40 px-2 py-0.5 text-xs hover:border-ink">{g}</button>)}
+                  </p>
+                )}
                 {t.note && <p className="text-sm font-semibold">{t.note}</p>}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <p className="text-sm sm:max-w-sm">{takeUpText(t.invited, t.taken)}</p>

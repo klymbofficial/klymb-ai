@@ -49,7 +49,7 @@ export interface PersonRow {
   score: string | null;
   decision: { label: string; tone: Tone; shared: boolean } | null;
   open: { href: string; label: string } | null;
-  actions: { retry: boolean; fixEmail: boolean; remind: boolean; newLink: boolean; passed: boolean; extraMinutes: number; lastStartInput: string; timeZone: string } | null;
+  actions: { retry: boolean; fixEmail: boolean; remind: boolean; newLink: boolean; copyLink: boolean; passed: boolean; extraMinutes: number; lastStartInput: string; timeZone: string } | null;
   tags: PersonFilter[];
 }
 
@@ -176,6 +176,8 @@ export async function loadTestRounds(sql: Db, member: CompanyMember, item: strin
               fixEmail: bad && !isPassed && !attempt,
               remind: c.delivery === "sent" && now <= lastOf(c) && !attempt,
               newLink: !isPassed,
+              // Their own link still starts or resumes the test (I02).
+              copyLink: !isPassed || !!attempt,
               passed: isPassed,
               extraMinutes: c.extraMinutes,
               lastStartInput: c.lastStartAt ? toZonedInput(c.lastStartAt, tz) : "",

@@ -12,6 +12,8 @@ import { companyCatalog } from "@/lib/company/catalog-data";
 import { publishedDates, testCounts } from "@/lib/company/test-hub-data";
 import { testStatus } from "@/lib/company/test-hub-view";
 import { db } from "@/lib/db/client";
+import { startBlocked } from "@/lib/company/test-settings";
+import { companyTestSettings } from "@/lib/company/test-settings-data";
 
 export const metadata: Metadata = { title: "Assessments", robots: { index: false, follow: false } };
 
@@ -40,10 +42,10 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
   const catalog = sql ? await companyCatalog(sql, member.companyId) : null;
   const tests = (catalog ?? []).flatMap((e) => (e.item.kind === "assessment" ? [{ ...e, item: e.item }] : []));
   const slugs = tests.map((t) => t.item.slug);
-  const [standings, counts, dates] = sql && catalog
-    ? await Promise.all([companyStandings(sql, member.companyId, slugs), testCounts(sql, member.companyId), publishedDates(sql, slugs)])
-    : [null, null, null];
-  if (!catalog || !standings || !counts || !dates) return <>{head}<LoadError what="Assessments" /></>;
+  const [standings, counts, dates, settings] = sql && catalog
+    ? await Promise.all([companyStandings(sql, member.companyId, slugs), testCounts(sql, member.companyId), publishedDates(sql, slugs), companyTestSettings(sql, member.companyId)])
+    : [null, null, null, null];
+  if (!catalog || !standings || !counts || !dates || !settings) return <>{head}<LoadError what="Assessments" /></>;
   if (!tests.length) {
     return (
       <>
@@ -66,6 +68,8 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
     const published = shown ? dates.get(shown.id) ?? null : null;
     const href = `${base}/${t.item.slug}`;
     const waiting = s.latest && !s.latestReview;
+    const own = settings.get(t.item.slug);
+    const blocked = own ? startBlocked(own) : null;
     return {
       slug: t.item.slug,
       href,
@@ -82,8 +86,10 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
       taken: c.taken,
       reportHref: seesPeople && s.latest ? `${href}?tab=candidates` : null,
       previewHref: s.latest ? `${href}?tab=preview` : null,
-      inviteHref: recruiter && s.inUse ? `/org/${member.companySlug}/hiring/new?test=${encodeURIComponent(t.item.slug)}` : null,
+      inviteHref: recruiter && s.inUse && !blocked ? `/org/${member.companySlug}/hiring/new?test=${encodeURIComponent(t.item.slug)}` : null,
       own: !!t.own,
+      tags: own?.tags ?? [],
+      blocked,
       editHref: t.own && writer ? `${href}/edit` : null,
     };
   });

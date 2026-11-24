@@ -427,6 +427,10 @@ export async function claimAutoReminders(sql: Db): Promise<(MailTarget & { batch
        and (select count(*) from course.batch_mail_log l
              where l.candidate_id = c.id and l.kind = 'auto_reminder' and l.link_generation = c.link_generation) < ${AUTO_REMIND_ATTEMPTS}
        and not exists (select 1 from course.candidate_attempts a where a.candidate_id = c.id)
+       -- The company's settings for this test (U06a): reminders off, access off or ended.
+       and not exists (select 1 from course.company_test_settings s
+                        where s.company_id = b.company_id and s.item_slug = b.item
+                          and (not s.auto_remind or not s.access_open or s.ends_on <= now()))
        and b.opens_at <= now()
        and coalesce(c.last_start_at, b.closes_at - make_interval(mins => v.minutes + c.extra_minutes))
            between now() and now() + ${`${AUTO_REMIND_HOURS} hours`}::interval
@@ -504,7 +508,11 @@ export async function batchForMail(sql: Db, batchId: string): Promise<Batch | nu
 export interface CandidateView {
   candidate: { id: string; name: string; email: string; status: Candidate["status"]; extraMinutes: number; lastStartAt: string | null; generation: number };
   batch: Batch;
-  version: { toolsAllowed: string[]; toolsNotAllowed: string[]; submission: string; instructions: string; results: "none" | "overall" | "by_area" };
+  version: {
+    toolsAllowed: string[]; toolsNotAllowed: string[]; submission: string; instructions: string; results: "none" | "overall" | "by_area";
+    /** How many questions the test has (L2); 0 for a one-task test. */
+    questions: number;
+  };
 }
 
 /**
@@ -515,13 +523,14 @@ export interface CandidateView {
 export async function candidateByLink(sql: Db, id: string): Promise<CandidateView | undefined | null> {
   const { data, error } = await sql.row<BatchRow & {
     c_id: string; c_name: string; c_email: string; c_status: Candidate["status"]; c_extra: number; c_last_start: string | null; c_generation: number;
-    tools_allowed: string[]; tools_not_allowed: string[]; submission: string; instructions: string; results: "none" | "overall" | "by_area";
+    tools_allowed: string[]; tools_not_allowed: string[]; submission: string; instructions: string; results: "none" | "overall" | "by_area"; q_count: number;
   }>`
     select c.id as c_id, c.name as c_name, c.email as c_email, c.status as c_status, c.extra_minutes as c_extra, c.last_start_at as c_last_start,
            c.link_generation as c_generation,
            b.id, b.company_id, b.item, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, null::text as reviewer_name,
            b.opens_at, b.closes_at, b.time_zone, b.status, b.created_by, b.created_at, b.sent_by, b.sent_at, b.cancelled_by, b.cancelled_at,
-           v.tools_allowed, v.tools_not_allowed, v.submission, v.instructions, v.results
+           v.tools_allowed, v.tools_not_allowed, v.submission, v.instructions, v.results,
+           coalesce(jsonb_array_length(v.questions), 0)::int as q_count
       from course.batch_candidates c
       join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
       join course.assessment_versions v on v.id = b.version_id
@@ -532,7 +541,7 @@ export async function candidateByLink(sql: Db, id: string): Promise<CandidateVie
   return {
     candidate: { id: data.c_id, name: data.c_name, email: data.c_email, status: data.c_status, extraMinutes: data.c_extra, lastStartAt: data.c_last_start, generation: data.c_generation },
     batch: toBatch(data),
-    version: { toolsAllowed: data.tools_allowed, toolsNotAllowed: data.tools_not_allowed, submission: data.submission, instructions: data.instructions, results: data.results },
+    version: { toolsAllowed: data.tools_allowed, toolsNotAllowed: data.tools_not_allowed, submission: data.submission, instructions: data.instructions, results: data.results, questions: data.q_count },
   };
 }
 

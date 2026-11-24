@@ -247,3 +247,67 @@ test("a change to any question counts as a change to the test", () => {
   assert.equal(sameContent(ready, { ...ready, questions: null }), true, "missing and null are the same");
   assert.equal(contentOf(ready).questions, null);
 });
+
+// ── L2: multiple choice in tests ───────────────────────────────────────────
+
+const mcqQ = (over: Record<string, unknown> = {}) => ({
+  section: "", title: "Joins", brief: "Which keep every left row?", kind: "mcq", points: 3, partial: true,
+  options: [{ text: "LEFT JOIN", correct: true }, { text: "INNER JOIN", correct: false }, { text: "LEFT OUTER JOIN", correct: true }],
+  source: "0b7d2c1e-1111-4222-8333-444455556666", ...over,
+});
+const writtenQ = { section: "", title: "Explain", brief: "Explain it.", submission: "written", rubric: [{ title: "Clarity", skill: "SQL", points: 4, guide: "g" }] };
+
+test("L2: a multiple-choice question reads with its options, points and source, and stays a question even when alone", () => {
+  const one = readContent({ ...raw(), questions: [mcqQ()] });
+  assert.ok(one.ok);
+  assert.equal(one.value.questions?.length, 1, "one multiple-choice question is still a list, never the one-task test");
+  const q = one.value.questions![0];
+  assert.deepEqual(q.mcq, { options: mcqQ().options, points: 3, partial: true });
+  assert.equal(q.source, mcqQ().source);
+  assert.deepEqual(q.rubric, []);
+  // Partial marks only with several right options.
+  const single = readContent({ ...raw(), questions: [mcqQ({ options: [{ text: "A", correct: true }, { text: "B", correct: false }] })] });
+  assert.ok(single.ok && single.value.questions![0].mcq!.partial === false);
+  const bad = readContent({ ...raw(), questions: [mcqQ({ points: 0 })] });
+  assert.ok(!bad.ok && /points/.test(bad.message));
+  const tooMany = readContent({ ...raw(), questions: [mcqQ({ options: Array.from({ length: 9 }, (_, i) => ({ text: `o${i}`, correct: i === 0 })) })] });
+  assert.ok(!tooMany.ok && /at most 8 options/.test(tooMany.message));
+  const odd = readContent({ ...raw(), questions: [mcqQ({ source: "not-a-uuid" })] });
+  assert.ok(odd.ok && odd.value.questions![0].source === undefined, "a source that isn't a library id is dropped");
+});
+
+test("L2: publishing needs filled, different options with at least one right and one wrong", () => {
+  const gaps = (q: Record<string, unknown>) => {
+    const r = readContent({ ...raw(), questions: [writtenQ, q] });
+    assert.ok(r.ok);
+    return publishGaps(r.value);
+  };
+  assert.deepEqual(gaps(mcqQ()), []);
+  assert.ok(gaps(mcqQ({ options: [{ text: "A", correct: true }, { text: "", correct: false }] })).some((g) => /filled-in options for question 2/.test(g)));
+  assert.ok(gaps(mcqQ({ options: [{ text: "A", correct: false }, { text: "B", correct: false }] })).some((g) => /a correct option for question 2/.test(g)));
+  assert.ok(gaps(mcqQ({ options: [{ text: "A", correct: true }, { text: "B", correct: true }] })).some((g) => /wrong option for question 2/.test(g)));
+  assert.ok(gaps(mcqQ({ options: [{ text: "A", correct: true }, { text: "a", correct: false }] })).some((g) => /different options/.test(g)));
+});
+
+test("L2: the candidate's view lists the options in order and never says which are right", () => {
+  const r = readContent({ ...raw(), questions: [writtenQ, mcqQ()] });
+  assert.ok(r.ok);
+  const v: Version = { ...r.value, id: "v", slug: "s", version: 1, title: "SQL", minutes: 30, publishedBy: "x", publishedAt: "2026-11-24T00:00:00Z" };
+  const t = candidateTask(v);
+  assert.equal(t.questions?.length, 2);
+  assert.deepEqual(t.questions?.[1], {
+    no: 2, section: "", title: "Joins", brief: "Which keep every left row?", kind: "mcq",
+    options: ["LEFT JOIN", "INNER JOIN", "LEFT OUTER JOIN"], multi: true, points: 3, areas: [],
+  });
+  assert.deepEqual(t.questions?.[0].areas, [{ title: "Clarity", points: 4 }]);
+  assert.ok(!JSON.stringify(t).includes("correct") && !JSON.stringify(t).includes('"g"'));
+  assert.equal(candidateTask({ ...v, questions: null }).questions, null);
+});
+
+test("L2: contentOf keeps options and source, so an unchanged draft matches its version", () => {
+  const r = readContent({ ...raw(), questions: [writtenQ, mcqQ()] });
+  assert.ok(r.ok);
+  const back = readContent({ ...raw(), questions: contentOf(r.value).questions!.map((q) => (q.mcq ? { ...q, kind: "mcq", ...q.mcq } : q)) });
+  assert.ok(back.ok && sameContent(r.value, back.value));
+  assert.ok(!sameContent(r.value, { ...r.value, questions: [r.value.questions![0], { ...r.value.questions![1], mcq: { ...r.value.questions![1].mcq!, points: 9 } }] }));
+});

@@ -177,6 +177,58 @@ const backendDesignPractical: CatalogAssessment = {
 };
 
 /** Every Klymb-written item, in the order the catalog lists them. */
-export const CODE_ITEMS: readonly CodeItem[] = [systemDesign, systemDesignBaseline, backendDesignPractical];
+const sqlFundamentals: CatalogAssessment = {
+  kind: "assessment",
+  slug: "sql-fundamentals",
+  title: "SQL fundamentals",
+  summary: "A short multiple-choice check of everyday SQL: filtering, joins, grouping and NULLs.",
+  purpose: "Screen many candidates quickly on the SQL every data and backend role uses, scored automatically.",
+  audience: "Candidates for data analyst, data engineer and backend roles",
+  level: "Beginner",
+  duration: "20 minutes",
+  format: "Multiple-choice questions",
+  outcomes: ["A score per candidate, marked automatically and confirmed by a reviewer", "Who to take to a practical round"],
+  author: "Klymb",
+  suggestedSkills: ["SQL", "Data analysis"],
+  suggestedPurposes: ["hiring", "workforce"],
+  rubric: ["Filtering and sorting", "Joins", "Grouping and aggregates", "NULL handling"],
+  tools: { allowed: ["Paper for working"], notAllowed: ["A database or SQL editor", "AI assistants", "Help from another person"] },
+  sampleTask: {
+    title: "Which rows does WHERE price > 10 keep?",
+    brief: "A products table has prices 5, 10, 15 and NULL. Which rows does SELECT * FROM products WHERE price > 10 return, and why is the NULL row left out?",
+  },
+  role: "Data analyst",
+  minutes: 20,
+  submission: "written",
+  runnable: false,
+};
+
+const sqlPractical: CatalogAssessment = {
+  kind: "assessment",
+  slug: "sql-practical",
+  title: "SQL practical",
+  summary: "Multiple-choice warm-up, then two queries written and explained against a small sales schema.",
+  purpose: "Compare shortlisted candidates on writing and explaining real queries, not just recognising them.",
+  audience: "Shortlisted candidates for data roles",
+  level: "Intermediate",
+  duration: "45 minutes",
+  format: "Multiple-choice section, then written queries",
+  outcomes: ["A score per section", "Queries to discuss in the next interview"],
+  author: "Klymb",
+  suggestedSkills: ["SQL", "Data analysis", "Query design"],
+  suggestedPurposes: ["hiring"],
+  rubric: ["Correct results", "Readable queries", "Explains the approach"],
+  tools: { allowed: ["Public SQL documentation"], notAllowed: ["AI assistants", "Help from another person"] },
+  sampleTask: {
+    title: "Top customer per city",
+    brief: "Given customers(id, city) and orders(id, customer_id, amount), write a query that returns, for each city, the customer with the highest total order amount.",
+  },
+  role: "Data analyst",
+  minutes: 45,
+  submission: "written",
+  runnable: false,
+};
+
+export const CODE_ITEMS: readonly CodeItem[] = [systemDesign, systemDesignBaseline, backendDesignPractical, sqlFundamentals, sqlPractical];
 
 export const codeItem = (slug: string): CodeItem | undefined => CODE_ITEMS.find((i) => i.slug === slug);

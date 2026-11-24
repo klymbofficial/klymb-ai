@@ -79,7 +79,7 @@ describe("Assessments hub: pages", () => {
   });
 
   test("invite is for recruiters on an approved version, and preselects the test", () => {
-    assert.match(list, /inviteHref: recruiter && s\.inUse \?/);
+    assert.match(list, /inviteHref: recruiter && s\.inUse && !blocked \?/, "and not while access is off or ended (U06a)");
     assert.match(page, /recruiter && standing\.inUse &&/);
     assert.match(read("src/components/company/BatchForm.tsx"), /tests\.find\(\(t\) => t\.item === initial\.test\)/);
   });

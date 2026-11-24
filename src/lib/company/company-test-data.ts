@@ -156,15 +156,13 @@ export async function publishOwnDraft(
     with v as (
       insert into course.assessment_versions
         (slug, version, draft_revision, title, role, minutes, submission, tools_allowed, tools_not_allowed, instructions, task_title, task_brief,
-         sample_title, sample_brief, rubric, results, published_by)
+         sample_title, sample_brief, rubric, results, questions, published_by)
       select d.slug, coalesce((select max(v.version) from course.assessment_versions v where v.slug = d.slug), 0) + 1, d.revision, i.title,
              d.role, d.minutes, d.submission, d.tools_allowed, d.tools_not_allowed, d.instructions, d.task_title, d.task_brief,
-             d.sample_title, d.sample_brief, d.rubric, d.results, ${p.by}
+             d.sample_title, d.sample_brief, d.rubric, d.results, d.questions, ${p.by}
         from course.assessment_drafts d
         join course.catalog_items i on i.slug = d.slug and i.owner_company_id = ${p.companyId}::uuid
        where d.slug = ${p.slug} and d.revision = ${p.revision}::int
-         -- A test with several questions isn't published until candidates can answer them (U04b-2).
-         and d.questions is null
       returning id, version
     ),
     ok as (

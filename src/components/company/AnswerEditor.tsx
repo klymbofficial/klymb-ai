@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
-import { saveAnswer } from "@/app/assessment/[token]/actions";
+import { saveAnswer, saveQuestion } from "@/app/assessment/[token]/actions";
 import { AUTOSAVE_MS, MAX_ANSWER_CHARS, type SaveState } from "@/lib/company/attempt-rules";
 
 const RETRY_MS = [3000, 6000, 12000, 20000, 30000];
@@ -23,8 +23,12 @@ export interface AnswerControl {
  * with growing gaps; the status line always says where the answer stands.
  */
 export function AnswerEditor({
-  token, attemptId, initialAnswer, initialRevision, initialSavedAt, deadline, serverNow, timeZone, controlRef,
+  token, attemptId, initialAnswer, initialRevision, initialSavedAt, deadline, serverNow, timeZone, controlRef, questionNo, onAnswered,
 }: {
+  /** One question of a test with several (L2): saves under that question. Unset for the one-task test. */
+  questionNo?: number;
+  /** Tells the question list whether a non-empty answer is saved. */
+  onAnswered?: (answered: boolean) => void;
   token: string;
   attemptId: string;
   initialAnswer: string;
@@ -65,7 +69,9 @@ export function AnswerEditor({
     setState("saving");
     let out: Awaited<ReturnType<typeof saveAnswer>> | null = null;
     try {
-      out = await saveAnswer(token, attemptId, revision.current, snapshot);
+      out = questionNo
+        ? await saveQuestion(token, attemptId, questionNo, revision.current, snapshot, [])
+        : await saveAnswer(token, attemptId, revision.current, snapshot);
     } catch {
       out = null;
     }
@@ -74,6 +80,7 @@ export function AnswerEditor({
       failures.current = 0;
       revision.current = out.revision;
       savedText.current = snapshot;
+      onAnswered?.(!!snapshot.trim());
       setSavedAt(out.savedAt);
       setState(textRef.current === snapshot ? "saved" : "dirty");
       if (textRef.current !== snapshot || again.current) { again.current = false; void saveRef.current(); }
@@ -88,7 +95,7 @@ export function AnswerEditor({
     failures.current += 1;
     setState("retrying");
     timer.current = window.setTimeout(() => void saveRef.current(), wait);
-  }, [token, attemptId, lock]);
+  }, [token, attemptId, lock, questionNo, onAnswered]);
   useEffect(() => { saveRef.current = save; }, [save]);
 
   // For Submit: wait for a save in flight, save what's left, and report the revision now on the server.
@@ -141,13 +148,13 @@ export function AnswerEditor({
   const warn = locked === "conflict" || state === "retrying";
 
   return (
-    <section aria-labelledby="answer-label" className="card p-6">
+    <section aria-labelledby={`answer-label${questionNo ?? ""}`} className="card p-6">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <label id="answer-label" htmlFor="answer" className="display text-lg">Your answer</label>
+        <label id={`answer-label${questionNo ?? ""}`} htmlFor={`answer${questionNo ?? ""}`} className="display text-lg">Your answer</label>
         <p role="status" aria-live="polite" className={`text-sm ${warn ? "font-semibold text-error" : "text-muted"}`}>{status}</p>
       </div>
       <textarea
-        id="answer"
+        id={`answer${questionNo ?? ""}`}
         value={text}
         readOnly={!!locked}
         maxLength={MAX_ANSWER_CHARS}

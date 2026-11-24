@@ -678,4 +678,120 @@ describe("candidate attempts against a real database", { skip }, () => {
     assert.equal((await one.query(`select count(*)::int n from course.hiring_decisions where attempt_id = $1`, [started.attempt.id])).rows[0].n, 0);
     assert.equal((await mine.myInvitations(sqlA, companyId, email))![0].submittedAt !== null, true);
   });
+  test("L2: a test with questions saves each answer on its own, files per question, and Submit freezes them all", async () => {
+    // A new version with a written-with-files question and a pick-all question, approved, so new rounds use it.
+    const assessments = await import("../src/lib/company/assessment-data");
+    const qs = [
+      { section: "Part A", title: "Explain", brief: "Explain joins.", submission: "written_file" as const, rubric: [{ title: "Clarity", skill: "SQL", points: 4, guide: "g" }] },
+      { section: "Part B", title: "Pick", brief: "Which are joins?", submission: "written" as const, rubric: [],
+        mcq: { options: [{ text: "LEFT", correct: true }, { text: "SUM", correct: false }, { text: "INNER", correct: true }], points: 2, partial: true } },
+    ];
+    const multi: AssessmentContent = { ...content, taskTitle: "", taskBrief: "", rubric: [], questions: qs };
+    const draft = await assessments.loadDraft(sqlA, slug);
+    assert.equal((await assessments.saveDraft(sqlA, code, multi, draft!.revision, "a@test.invalid"))?.status, "saved");
+    assert.equal((await assessments.publishDraft(sqlA, slug, "Attempt practical", draft!.revision + 1, "a@test.invalid"))?.status, "published");
+    versionId = (await assessments.loadVersions(sqlA, slug))![0].id;
+    await one.query(`insert into course.company_assessment_reviews (company_id, version_id, decision, decided_by) values ($1, $2, 'approved', $3)`, [companyId, versionId, reviewer]);
+
+    const { id } = await invited();
+    const started = await att.startAttempt(sqlA, id, 1);
+    assert.ok(started && started.status !== "refused");
+    const attemptId = started.attempt.id;
+    const task = await att.attemptTask(sqlA, attemptId);
+    assert.equal(task?.questions?.length, 2);
+    assert.deepEqual(task?.questions?.[1].options, ["LEFT", "SUM", "INNER"]);
+    assert.equal(task?.questions?.[1].multi, true);
+    assert.ok(!JSON.stringify(task).includes("correct"), "the candidate's task never says which options are right");
+    assert.ok(!JSON.stringify(task).includes("\"g\""), "nor a scoring guide");
+
+    const who = { candidateId: id, generation: 1, attemptId };
+    const one1 = await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 1, baseRevision: 0, answer: "A join matches rows.", picked: [] });
+    const two1 = await att.saveQuestionAnswer(sqlB, { ...who, questionNo: 2, baseRevision: 0, answer: "", picked: [0, 2] });
+    assert.equal(one1?.status, "saved");
+    assert.equal(two1?.status, "saved", "two questions never clash");
+    assert.equal((await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 2, baseRevision: 0, answer: "", picked: [1] }))?.status, "conflict", "an older tab on the same question");
+    assert.equal((await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 1, baseRevision: 1, answer: "A join matches rows on keys.", picked: [] }))?.status, "saved");
+    assert.equal((await att.saveQuestionAnswer(sqlA, { ...who, candidateId: randomUUID(), questionNo: 1, baseRevision: 2, answer: "x", picked: [] }))?.status, "refused");
+
+    // Three files per question, recorded under it.
+    const file = (n: number, q: number | null) => att.addAttemptFile(sqlA, { ...who, questionNo: q, name: `f${n}.txt`, kind: "txt", bytes: 10, sha256: String(n).padStart(64, "0"), storageKey: `k/${run}/${n}` });
+    for (const n of [1, 2, 3]) assert.equal((await file(n, 1))?.status, "added");
+    assert.equal((await file(4, 1))?.status, "full");
+    assert.deepEqual(await att.fileSlot(sqlA, { ...who, questionNo: 1 }), { status: "open", companyId, count: 3 });
+    assert.deepEqual(await att.fileSlot(sqlA, { ...who, questionNo: 2 }), { status: "open", companyId, count: 0 }, "each question has its own three");
+
+    const answers = await att.loadAnswers(sqlA, attemptId);
+    assert.deepEqual(answers?.get(2)?.picked, [0, 2]);
+    assert.equal(answers?.get(1)?.revision, 2);
+
+    const out = await att.submitAttempt(sqlA, { ...who, revision: null });
+    assert.equal(out?.status, "submitted");
+    const sub = await att.loadSubmission(sqlA, attemptId);
+    assert.equal(sub?.answers?.length, 2);
+    assert.equal(sub?.answers?.[0].answer, "A join matches rows on keys.");
+    assert.deepEqual(sub?.answers?.[1].picked, [0, 2]);
+    assert.deepEqual(sub?.answers?.[0].files.map((f) => f.name), ["f1.txt", "f2.txt", "f3.txt"]);
+    assert.deepEqual(sub?.files, [], "files sit under their question");
+    // Frozen: no answer changes after Submit.
+    assert.equal((await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 1, baseRevision: 2, answer: "late", picked: [] }))?.status, "submitted");
+    await assert.rejects(one.query(`update course.attempt_answers set answer = 'x' where attempt_id = $1`, [attemptId]), /submitted/);
+    await assert.rejects(one.query(`update course.attempt_submissions set answers = null where attempt_id = $1`, [attemptId]), /cannot be changed/);
+
+    // The reviewer's view has the questions, right options included, and each answer.
+    const batchId = (await one.query(`select batch_id from course.candidate_attempts where id = $1`, [attemptId])).rows[0].batch_id as string;
+    const view = await rev.loadReviewView(sqlA, companyId, batchId, id);
+    assert.equal(view?.questions?.length, 2);
+    assert.equal(view?.questions?.[1].mcq?.options[0].correct, true);
+    assert.deepEqual(view?.submission?.answers?.[1].picked, [0, 2]);
+    assert.equal(view?.submission?.answers?.[0].files.length, 3);
+  });
+
+  test("L2: the deadline submits saved answers too", async () => {
+    const { id, attemptId } = await pastAttempt(90, 60);
+    await one.query(`insert into course.attempt_answers (attempt_id, question_no, revision, answer, picked) values ($1, 2, 1, '', '{1}')`, [attemptId]);
+    assert.ok(((await att.finaliseDue(sqlA, { candidateId: id })) ?? 0) >= 1);
+    const sub = await att.loadSubmission(sqlA, attemptId);
+    assert.equal(sub?.kind, "deadline");
+    assert.deepEqual(sub?.answers, [{ questionNo: 2, answer: "", picked: [1], files: [] }]);
+  });
+  test("U06a: settings save per company and revision; access off or ended stops new starts, never a running one", async () => {
+    const ts = await import("../src/lib/company/test-settings-data");
+    const fresh = await ts.loadTestSettings(sqlA, companyId, slug);
+    assert.equal(fresh?.revision, 0, "no row: the defaults");
+    assert.equal(fresh?.accessOpen, true);
+    const base = { companyId, item: slug, by: "rec@test.invalid" };
+    assert.deepEqual(await ts.saveTestSettings(sqlA, { ...base, group: "basic", expected: 0, accessOpen: true, endsOn: null, tags: ["Campus"] }), { status: "saved", revision: 1 });
+    assert.deepEqual(await ts.saveTestSettings(sqlA, { ...base, group: "basic", expected: 0, accessOpen: true, endsOn: null, tags: [] }), { status: "changed" }, "a second first save");
+    assert.deepEqual(await ts.saveTestSettings(sqlA, { ...base, group: "email", expected: 1, autoRemind: false, invite: { subject: "S", body: "B" } }), { status: "saved", revision: 2 });
+    const now2 = await ts.loadTestSettings(sqlA, companyId, slug);
+    assert.deepEqual([now2?.tags, now2?.autoRemind, now2?.invite], [["Campus"], false, { subject: "S", body: "B" }], "each group keeps the other's");
+    await assert.rejects(one.query(`update course.company_test_settings set invite_body = null where company_id = $1 and item_slug = $2`, [companyId, slug]), /company_test_settings_template/);
+
+    // Someone mid-test, then access goes off.
+    const running = await invited();
+    const started = await att.startAttempt(sqlA, running.id, 1);
+    assert.equal(started?.status, "started");
+    assert.equal((await ts.saveTestSettings(sqlA, { ...base, group: "basic", expected: 2, accessOpen: false, endsOn: null, tags: ["Campus"] }))?.status, "saved");
+    const waiting = await invited();
+    assert.deepEqual(await att.startAttempt(sqlA, waiting.id, 1), { status: "refused" }, "access off: no new start");
+    assert.equal((await att.startAttempt(sqlA, running.id, 1))?.status, "resumed", "a running attempt carries on");
+
+    // Back on, but ended.
+    assert.equal((await ts.saveTestSettings(sqlA, { ...base, group: "basic", expected: 3, accessOpen: true, endsOn: null, tags: [] }))?.status, "saved");
+    await one.query(`update course.company_test_settings set ends_on = now() - interval '1 minute' where company_id = $1 and item_slug = $2`, [companyId, slug]);
+    assert.deepEqual(await att.startAttempt(sqlA, waiting.id, 1), { status: "refused" }, "past the end date");
+    await one.query(`update course.company_test_settings set ends_on = null where company_id = $1 and item_slug = $2`, [companyId, slug]);
+    assert.equal((await att.startAttempt(sqlA, waiting.id, 1))?.status, "started", "open again");
+  });
+
+  test("U06a: the automatic reminder skips a test whose reminders are off", async () => {
+    // Last start about two hours away: due for the automatic reminder.
+    const closes = new Date(Date.now() + (await one.query(`select minutes from course.assessment_versions where id = $1`, [versionId])).rows[0].minutes * 60000 + 15 * 60000 + 2 * hour);
+    const due = await invited({ closesAt: closes });
+    const ids = async () => ((await data.claimAutoReminders(sqlA)) ?? []).map((t) => t.id);
+    await one.query(`update course.company_test_settings set auto_remind = false where company_id = $1 and item_slug = $2`, [companyId, slug]);
+    assert.ok(!(await ids()).includes(due.id), "reminders off");
+    await one.query(`update course.company_test_settings set auto_remind = true where company_id = $1 and item_slug = $2`, [companyId, slug]);
+    assert.ok((await ids()).includes(due.id), "reminders on");
+  });
 });

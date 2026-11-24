@@ -16,7 +16,9 @@ export interface ShownFile {
  * file's own bytes. Files can be removed until the test is submitted or the
  * time is up.
  */
-export function AttemptFiles({ token, attemptId, initial, deadline, serverNow, onChange }: {
+export function AttemptFiles({ token, attemptId, initial, deadline, serverNow, onChange, questionNo }: {
+  /** One question of a test with several (L2): its own 3 files. */
+  questionNo?: number;
   token: string;
   attemptId: string;
   initial: ShownFile[];
@@ -44,6 +46,7 @@ export function AttemptFiles({ token, attemptId, initial, deadline, serverNow, o
     const form = new FormData();
     form.set("attemptId", attemptId);
     form.set("file", file);
+    if (questionNo) form.set("question", String(questionNo));
     try {
       const res = await fetch(api, { method: "POST", body: form });
       const out = (await res.json().catch(() => null)) as { status?: string; message?: string; file?: ShownFile } | null;

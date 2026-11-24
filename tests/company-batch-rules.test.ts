@@ -13,7 +13,10 @@ const member = (roles: CompanyMember["roles"]) => ({ email: "x@acme.test", compa
 describe("who runs hiring", () => {
   test("recruiters schedule; admins and company heads only look", () => {
     assert.equal(canSchedule(member(["recruiter"])), true);
-    assert.equal(canSchedule(member(["admin"])), false);
+    assert.equal(canSchedule(member(["admin"])), true, "admins invite too (I01)");
+    assert.equal(canSchedule(member(["reviewer"])), false);
+    assert.equal(canSchedule(member(["company_head"])), false);
+    assert.equal(canSchedule(member(["team_lead", "employee"])), false);
     assert.equal(seesHiring(member(["company_head"])), true);
     assert.equal(seesHiring(member(["reviewer"])), true, "reviewers open batches to score (H09)");
     assert.equal(seesHiring(member(["employee"])), false);

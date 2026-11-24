@@ -38,8 +38,8 @@ export function takeUpText(invited: number, taken: number): string {
   return `${who} and ${taken} ${taken === 1 ? "has" : "have"} taken the test.`;
 }
 
-/** Tests matching a status, a creation-date window and a search (title or role, any case), in the chosen order. */
-export function pickTests<T extends { status: TestStatus; title: string; role: string; publishedAt: string | null; invited: number }>(
+/** Tests matching a status, a creation-date window and a search (title, role or a tag, any case), in the chosen order. */
+export function pickTests<T extends { status: TestStatus; title: string; role: string; publishedAt: string | null; invited: number; tags?: string[] }>(
   all: readonly T[],
   status: TestStatus,
   query: string,
@@ -52,7 +52,7 @@ export function pickTests<T extends { status: TestStatus; title: string; role: s
   const shown = all.filter(
     (t) =>
       t.status === status &&
-      (!q || t.title.toLowerCase().includes(q) || t.role.toLowerCase().includes(q)) &&
+      (!q || t.title.toLowerCase().includes(q) || t.role.toLowerCase().includes(q) || (t.tags ?? []).some((g) => g.toLowerCase().includes(q))) &&
       (since === null || (t.publishedAt !== null && new Date(t.publishedAt).getTime() >= since)),
   );
   const at = (t: T) => (t.publishedAt ? new Date(t.publishedAt).getTime() : 0);

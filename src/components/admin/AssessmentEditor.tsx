@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { LibraryPicker } from "@/components/library/LibraryPicker";
 import { publishAssessment, saveAssessmentDraft, type DraftResult, type PublishResult } from "@/app/admin/assessment-actions";
 import {
   LIMITS,
@@ -8,7 +9,7 @@ import {
   RESULTS_LABEL,
   SUBMISSIONS,
   SUBMISSION_LABEL,
-  hasQuestions,
+  MCQ_LIMITS,
   publishGaps,
   questionsOf,
   readContent,
@@ -16,6 +17,7 @@ import {
   totalPoints,
   type AssessmentContent,
 } from "@/lib/company/assessment-rules";
+import type { LibraryQuestion } from "@/lib/company/library-rules";
 
 const input = "w-full border border-line/60 bg-white px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none";
 const label = "flex flex-col gap-1 text-xs font-bold";
@@ -26,7 +28,13 @@ const small = "border border-line/60 px-2 py-1 text-xs font-bold hover:border-in
 
 interface Row { title: string; skill: string; points: string; guide: string }
 /** One question as typed (U04b). A test with one question and no section is the one-task test. */
-interface QRow { section: string; title: string; brief: string; submission: string; rubric: Row[] }
+/** `kind` is a written hand-in ('written' or 'written_file') or 'mcq' (L2), whose options and points replace the rubric. */
+interface QRow {
+  section: string; title: string; brief: string; kind: string; rubric: Row[];
+  options: { text: string; correct: boolean }[]; points: string; partial: boolean;
+  /** The library question it was copied from. */
+  source?: string;
+}
 interface Form {
   /** A company test's name; Klymb's tests take theirs from code, and leave it empty. */
   title: string;
@@ -52,17 +60,43 @@ const formOf = (c: AssessmentContent, title = ""): Form => ({
   sampleTitle: c.sampleTitle,
   sampleBrief: c.sampleBrief,
   questions: questionsOf(c).map((q) => ({
-    section: q.section, title: q.title, brief: q.brief, submission: q.submission,
+    section: q.section, title: q.title, brief: q.brief, kind: q.mcq ? "mcq" : q.submission,
     rubric: q.rubric.map((r) => ({ title: r.title, skill: r.skill, points: String(r.points), guide: r.guide })),
+    options: q.mcq ? q.mcq.options.map((o) => ({ ...o })) : [],
+    points: q.mcq ? String(q.mcq.points) : "2",
+    partial: q.mcq?.partial ?? false,
+    ...(q.source ? { source: q.source } : {}),
   })),
 });
 
 const rawOf = (f: Form) => ({
   ...f,
-  questions: f.questions.map((q) => ({ ...q, rubric: q.rubric.map((r) => ({ ...r, points: Number(r.points) })) })),
+  questions: f.questions.map((q) =>
+    q.kind === "mcq"
+      ? { section: q.section, title: q.title, brief: q.brief, kind: "mcq", options: q.options, points: Number(q.points), partial: q.partial, source: q.source }
+      : { section: q.section, title: q.title, brief: q.brief, submission: q.kind, rubric: q.rubric.map((r) => ({ ...r, points: Number(r.points) })), source: q.source },
+  ),
 });
 
-const blankQuestion = (section: string): QRow => ({ section, title: "", brief: "", submission: "written", rubric: [{ title: "", skill: "", points: "4", guide: "" }] });
+const blankQuestion = (section: string): QRow => ({
+  section, title: "", brief: "", kind: "written", rubric: [{ title: "", skill: "", points: "4", guide: "" }], options: [], points: "2", partial: false,
+});
+const blankOptions = () => [{ text: "", correct: true }, { text: "", correct: false }, { text: "", correct: false }, { text: "", correct: false }];
+
+/** A library question as a test question: a copy that remembers where it came from. */
+const fromLibrary = (x: LibraryQuestion, section: string): QRow => ({
+  section,
+  title: x.title,
+  brief: x.statement,
+  kind: x.type,
+  rubric: (x.rubric ?? []).map((r) => ({ title: r.title, skill: r.skill, points: String(r.points), guide: r.guide })),
+  options: (x.options ?? []).map((o) => ({ ...o })),
+  points: String(x.points),
+  partial: x.partial,
+  source: x.id,
+});
+const isBlank = (q: QRow) => !q.title && !q.brief && q.rubric.every((r) => !r.title && !r.guide);
+const qPoints = (q: QRow) => (q.kind === "mcq" ? Number(q.points) || 0 : pointsOf(q.rubric));
 const pointsOf = (rows: Row[]) => totalPoints(rows.map((r) => ({ ...r, points: Number(r.points) || 0 })));
 
 /**
@@ -72,8 +106,10 @@ const pointsOf = (rows: Row[]) => totalPoints(rows.map((r) => ({ ...r, points: N
  * while there are unsaved edits, Publish once it is saved and ready.
  */
 export function AssessmentEditor({
-  slug, initial, revision: startRevision, skills, latest, nextVersion, title, save: saveAction, publish: publishAction, newNote,
+  slug, initial, revision: startRevision, skills, latest, nextVersion, title, save: saveAction, publish: publishAction, newNote, library,
 }: {
+  /** The library to pick questions from (L2): Klymb's, and the company's own for a company test. */
+  library?: { klymb: LibraryQuestion[]; mine: LibraryQuestion[] | null };
   slug: string;
   /** Set for a company's own test: its name is edited here too. */
   title?: { value: string; max: number };
@@ -97,14 +133,13 @@ export function AssessmentEditor({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [published, setPublished] = useState<number | null>(null);
+  const [picking, setPicking] = useState(false);
 
   const dirty = JSON.stringify(form) !== saved || revision === 0;
   const parsed = useMemo(() => readContent(rawOf(form)), [form]);
   const gaps = parsed.ok ? publishGaps(parsed.value) : [];
   const unchanged = parsed.ok && latest !== null && sameContent(parsed.value, latest.content);
-  // Several questions or sections save, but aren't published until candidates can answer them (U04b-2).
-  const several = parsed.ok && hasQuestions(parsed.value);
-  const canPublish = !dirty && parsed.ok && !several && !gaps.length && !unchanged && published === null;
+  const canPublish = !dirty && parsed.ok && !gaps.length && !unchanged && published === null;
 
   const set = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -119,7 +154,17 @@ export function AssessmentEditor({
   const setRow = (qi: number, i: number, patch: Partial<Row>) =>
     setQ(qi, { rubric: form.questions[qi].rubric.map((r, k) => (k === i ? { ...r, ...patch } : r)) });
   const areas = form.questions.reduce((n, q) => n + q.rubric.length, 0);
-  const one = form.questions.length === 1;
+  // One written question without a section is the one-task test; anything else is a list of questions.
+  const single = form.questions.length === 1;
+  const one = single && form.questions[0].kind !== "mcq";
+  const setOpt = (qi: number, i: number, patch: Partial<QRow["options"][number]>) =>
+    setQ(qi, { options: form.questions[qi].options.map((o, k) => (k === i ? { ...o, ...patch } : o)) });
+  const addFromLibrary = (picked: LibraryQuestion[]) => {
+    const section = form.questions[form.questions.length - 1]?.section ?? "";
+    const keep = form.questions.length === 1 && isBlank(form.questions[0]) ? [] : form.questions;
+    set("questions", [...keep, ...picked.map((x) => fromLibrary(x, section))].slice(0, LIMITS.questions));
+    setPicking(false);
+  };
 
   async function save() {
     setBusy(true);
@@ -204,7 +249,7 @@ export function AssessmentEditor({
 
       <section className="flex flex-col gap-4" aria-labelledby="ae-questions">
         <h2 id="ae-questions" className={h2}>
-          {one ? "The real task" : `Questions · ${form.questions.length}`} · {form.questions.reduce((n, q) => n + pointsOf(q.rubric), 0)} points
+          {one ? "The real task" : `Questions · ${form.questions.length}`} · {form.questions.reduce((n, q) => n + qPoints(q), 0)} points
         </h2>
         <p className="-mt-2 text-xs text-muted">
           Candidates see the questions only once they start, with each rubric area&apos;s name and points. Only reviewers see the scoring guides.
@@ -213,9 +258,9 @@ export function AssessmentEditor({
         <ol className="flex flex-col gap-6">
           {form.questions.map((q, qi) => (
             <li key={qi} className="flex flex-col gap-4 border-2 border-line/40 p-4">
-              {!one && (
+              {!single && (
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Question {qi + 1}</span>
+                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Question {qi + 1}{q.source ? " · from the library" : ""}</span>
                   <span className="flex gap-1">
                     <button type="button" className={small} disabled={qi === 0} onClick={() => set("questions", swap(form.questions, qi, -1))} aria-label={`Move question ${qi + 1} up`}>↑</button>
                     <button type="button" className={small} disabled={qi === form.questions.length - 1} onClick={() => set("questions", swap(form.questions, qi, 1))} aria-label={`Move question ${qi + 1} down`}>↓</button>
@@ -229,9 +274,14 @@ export function AssessmentEditor({
                   <input value={q.section} onChange={(e) => setQ(qi, { section: e.target.value })} maxLength={LIMITS.section} placeholder="e.g. Part A: design" className={input} />
                 </label>
                 <label className={label}>
-                  What people hand in
-                  <select value={q.submission} onChange={(e) => setQ(qi, { submission: e.target.value })} className={input}>
+                  Question type
+                  <select
+                    value={q.kind}
+                    onChange={(e) => setQ(qi, { kind: e.target.value, ...(e.target.value === "mcq" && !q.options.length ? { options: blankOptions() } : {}) })}
+                    className={input}
+                  >
                     {SUBMISSIONS.map((x) => <option key={x} value={x}>{SUBMISSION_LABEL[x]}</option>)}
+                    <option value="mcq">Multiple choice</option>
                   </select>
                 </label>
               </div>
@@ -244,6 +294,37 @@ export function AssessmentEditor({
                 <textarea value={q.brief} onChange={(e) => setQ(qi, { brief: e.target.value })} maxLength={LIMITS.brief} rows={one ? 8 : 5} className={input} />
               </label>
 
+              {q.kind === "mcq" ? (
+                <fieldset className="flex flex-col gap-3">
+                  <legend className="mb-2 text-sm font-bold">Options · tick every correct one</legend>
+                  {q.options.map((o, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <label className="flex shrink-0 items-center gap-1 text-xs font-bold">
+                        <input type="checkbox" checked={o.correct} onChange={(e) => setOpt(qi, i, { correct: e.target.checked })} aria-label={`Question ${qi + 1}, option ${i + 1} is correct`} />
+                        Correct
+                      </label>
+                      <input value={o.text} onChange={(e) => setOpt(qi, i, { text: e.target.value })} maxLength={MCQ_LIMITS.option} aria-label={`Question ${qi + 1}, option ${i + 1}`} placeholder={`Option ${i + 1}`} className={input} />
+                      <button type="button" className={small} disabled={q.options.length <= MCQ_LIMITS.optionsMin} onClick={() => setQ(qi, { options: q.options.filter((_, k) => k !== i) })}>Remove</button>
+                    </div>
+                  ))}
+                  <div className="flex flex-wrap items-end gap-4">
+                    {q.options.length < MCQ_LIMITS.optionsMax && (
+                      <button type="button" className={secondary} onClick={() => setQ(qi, { options: [...q.options, { text: "", correct: false }] })}>Add an option</button>
+                    )}
+                    <label className={`${label} w-28`}>
+                      Points
+                      <input type="number" min={1} max={MCQ_LIMITS.points} value={q.points} onChange={(e) => setQ(qi, { points: e.target.value })} className={input} />
+                    </label>
+                    {q.options.filter((o) => o.correct).length > 1 && (
+                      <label className="flex items-center gap-2 text-xs font-bold">
+                        <input type="checkbox" checked={q.partial} onChange={(e) => setQ(qi, { partial: e.target.checked })} />
+                        Partial marks (never below zero)
+                      </label>
+                    )}
+                  </div>
+                </fieldset>
+              ) : (
+              <>
               <h3 className="text-sm font-bold">Rubric{one ? "" : ` for question ${qi + 1}`} · {pointsOf(q.rubric)} points</h3>
               <ol className="flex flex-col gap-4">
                 {q.rubric.map((r, i) => (
@@ -290,13 +371,29 @@ export function AssessmentEditor({
                   Add an area
                 </button>
               )}
+              </>
+              )}
             </li>
           ))}
         </ol>
-        {form.questions.length < LIMITS.questions && areas < LIMITS.areasPerTest && (
-          <button type="button" className={`${secondary} self-start`} onClick={() => set("questions", [...form.questions, blankQuestion(form.questions[form.questions.length - 1]?.section ?? "")])}>
-            Add a question
-          </button>
+        <div className="flex flex-wrap gap-2">
+          {form.questions.length < LIMITS.questions && areas < LIMITS.areasPerTest && (
+            <button type="button" className={secondary} onClick={() => set("questions", [...form.questions, blankQuestion(form.questions[form.questions.length - 1]?.section ?? "")])}>
+              Add a question
+            </button>
+          )}
+          {library && form.questions.length < LIMITS.questions && (
+            <button type="button" className={secondary} onClick={() => setPicking(true)}>Add from library</button>
+          )}
+        </div>
+        {picking && library && (
+          <LibraryPicker
+            klymb={library.klymb}
+            mine={library.mine}
+            room={LIMITS.questions - (form.questions.length === 1 && isBlank(form.questions[0]) ? 0 : form.questions.length)}
+            onAdd={addFromLibrary}
+            onClose={() => setPicking(false)}
+          />
         )}
         {!skills.length && !title && <p className="text-xs text-muted">This item has no skills in the catalog yet. Add them on the Business catalog page to choose one here.</p>}
       </section>
@@ -322,9 +419,7 @@ export function AssessmentEditor({
               ? revision === 0 ? (newNote ?? "Not saved yet. This draft starts from the catalog listing.") : "Unsaved changes."
               : !parsed.ok
                 ? parsed.message
-                : several
-                  ? "Saved. Tests with several questions or sections can't be published yet: the candidate's page for them comes next."
-                  : gaps.length
+                : gaps.length
                   ? `To publish, add ${gaps.join(", ")}.`
                   : unchanged
                     ? `Saved. Same as version ${latest!.version}, so there's nothing to publish.`

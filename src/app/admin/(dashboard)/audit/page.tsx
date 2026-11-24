@@ -50,6 +50,8 @@ const LABELS: Record<string, string> = {
   "company.candidate_new_link": "Recruiter sent a candidate a new link",
   "company.candidate_email": "Recruiter corrected a candidate's email",
   "company.candidate_extend": "Recruiter changed one candidate's time",
+  "company.candidate_link_copy": "Admin or recruiter copied one candidate's test link",
+  "company.test_settings_save": "Company changed a test's settings",
   "company.test_create": "Company created its own test",
   "company.test_save": "Company saved its own test's draft",
   "company.test_publish": "Company published its own test",

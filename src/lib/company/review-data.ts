@@ -1,5 +1,6 @@
 import "server-only";
 import type { AttemptFileKind } from "@/lib/company/attempt-files";
+import { readQuestions, type Question } from "@/lib/company/assessment-rules";
 import { finaliseDue } from "@/lib/company/attempt-data";
 import type { RubricItem, ScoreInput } from "@/lib/company/review-rules";
 import type { Db } from "@/lib/db/client";
@@ -35,7 +36,15 @@ export interface ReviewView {
     id: string; startedAt: string; deadlineAt: string; allowedMinutes: number; receipt: string;
     submittedAt: string | null; submitKind: "candidate" | "deadline" | null;
   } | null;
-  submission: { answer: string; files: { id: string; name: string; kind: AttemptFileKind; bytes: number }[] } | null;
+  submission: {
+    answer: string;
+    /** One-task tests: the attempt's files. A test with questions: files sit under their question instead. */
+    files: { id: string; name: string; kind: AttemptFileKind; bytes: number }[];
+    /** A test with questions (L2): each answered question's frozen answer, picks and files. Null for a one-task test. */
+    answers: { questionNo: number; answer: string; picked: number[]; files: { id: string; name: string; kind: AttemptFileKind; bytes: number }[] }[] | null;
+  } | null;
+  /** The pinned version's questions (L2), right options and guides included: reviewers only. Null for a one-task test. */
+  questions: Question[] | null;
   /** The rubric pinned to the attempt (the batch's version before anyone starts). Guides included: reviewers only. */
   rubric: RubricItem[];
   /** What the pinned version lets the candidate see once a recruiter shares (none | overall | by_area). */
@@ -63,11 +72,12 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
     attempt_id: string | null; started_at: string | null; deadline_at: string | null; allowed_minutes: number | null; receipt: string | null;
     submitted_at: string | null; submit_kind: "candidate" | "deadline" | null;
     answer: string | null; file_ids: string[] | null; submitted: boolean; rubric: RubricItem[]; results: ReviewView["results"];
+    answers: unknown; questions: unknown;
   }>`
     select c.id, c.name, c.email, c.status,
            b.id as batch_id, b.item, b.purpose, b.role, b.time_zone, b.status as batch_status, b.reviewer_email, rm.name as reviewer_name, bv.title, bv.version,
            a.id as attempt_id, a.started_at, a.deadline_at, a.allowed_minutes, a.receipt, a.submitted_at, a.submit_kind,
-           s.answer, s.file_ids, s.attempt_id is not null as submitted, pv.rubric, pv.results
+           s.answer, s.file_ids, s.attempt_id is not null as submitted, pv.rubric, pv.results, s.answers, pv.questions
       from course.batch_candidates c
       join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
       join course.assessment_versions bv on bv.id = b.version_id
@@ -81,13 +91,13 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
   const h = head.data;
   if (!h) return undefined;
 
-  let files: NonNullable<ReviewView["submission"]>["files"] = [];
+  let files: (NonNullable<ReviewView["submission"]>["files"][number] & { question_no: number | null })[] = [];
   let reviews: ReviewRecord[] = [];
   if (h.attempt_id && h.submitted) {
     const [f, r] = await Promise.all([
-      sql.rows<{ id: string; name: string; kind: AttemptFileKind; bytes: number }>`
-        select id, name, kind, bytes from course.attempt_files
-         where attempt_id = ${h.attempt_id}::uuid and id = any (${h.file_ids ?? []}::uuid[]) order by slot
+      sql.rows<{ id: string; name: string; kind: AttemptFileKind; bytes: number; question_no: number | null }>`
+        select id, name, kind, bytes, question_no from course.attempt_files
+         where attempt_id = ${h.attempt_id}::uuid and id = any (${h.file_ids ?? []}::uuid[]) order by coalesce(question_no, 0), slot
       `,
       sql.rows<ReviewRow>`
         select r.revision, r.reviewer_email, m.name as reviewer_name, r.scores, r.total, r.max, r.summary, r.completed_at
@@ -109,7 +119,25 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
     attempt: h.attempt_id
       ? { id: h.attempt_id, startedAt: h.started_at!, deadlineAt: h.deadline_at!, allowedMinutes: h.allowed_minutes!, receipt: h.receipt!, submittedAt: h.submitted_at, submitKind: h.submit_kind }
       : null,
-    submission: h.submitted ? { answer: h.answer ?? "", files } : null,
+    submission: h.submitted
+      ? {
+          answer: h.answer ?? "",
+          files: files.filter((f) => f.question_no === null).map(({ id, name, kind, bytes }) => ({ id, name, kind, bytes })),
+          answers: Array.isArray(h.answers)
+            ? (h.answers as Record<string, unknown>[]).flatMap((x) => {
+                const n = Number(x.question_no);
+                if (!Number.isInteger(n)) return [];
+                return [{
+                  questionNo: n,
+                  answer: typeof x.answer === "string" ? x.answer : "",
+                  picked: Array.isArray(x.picked) ? (x.picked as unknown[]).map(Number).filter(Number.isInteger) : [],
+                  files: files.filter((f) => f.question_no === n).map(({ id, name, kind, bytes }) => ({ id, name, kind, bytes })),
+                }];
+              })
+            : null,
+        }
+      : null,
+    questions: readQuestions(h.questions),
     rubric: h.rubric,
     results: h.results,
     reviews,

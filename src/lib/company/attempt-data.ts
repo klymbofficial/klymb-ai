@@ -1,5 +1,6 @@
 import "server-only";
 import { ATTEMPT_FILE_LIMITS, type AttemptFileKind } from "@/lib/company/attempt-files";
+import { candidateQuestions, readQuestions, type CandidateQuestion } from "@/lib/company/assessment-rules";
 import { SAVE_GRACE_SECONDS } from "@/lib/company/attempt-rules";
 import type { Db } from "@/lib/db/client";
 
@@ -56,7 +57,7 @@ export type StartOutcome = { status: "started" | "resumed"; attempt: Attempt } |
 export async function startAttempt(sql: Db, candidateId: string, generation: number): Promise<StartOutcome | null> {
   const { data, error } = await sql.row<AttemptRow & { made: boolean }>`
     with me as (
-      select c.id, c.batch_id, c.company_id, c.link_generation, c.extra_minutes, c.last_start_at, b.version_id, b.closes_at, v.minutes
+      select c.id, c.batch_id, c.company_id, c.link_generation, c.extra_minutes, c.last_start_at, b.version_id, b.closes_at, v.minutes, b.item
         from course.batch_candidates c
         join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
         join course.assessment_versions v on v.id = b.version_id
@@ -71,6 +72,10 @@ export async function startAttempt(sql: Db, candidateId: string, generation: num
         from me
        where not exists (select 1 from existing)
          and coalesce(me.last_start_at, me.closes_at - make_interval(mins => me.minutes + me.extra_minutes)) > now()
+         -- The company's settings for this test (U06a): access off, or past its end date, stops new starts.
+         and not exists (select 1 from course.company_test_settings s
+                          where s.company_id = me.company_id and s.item_slug = me.item
+                            and (not s.access_open or s.ends_on <= now()))
       on conflict (candidate_id, attempt_no) do nothing
       returning *
     ), logged as (
@@ -133,15 +138,89 @@ export async function attemptByLink(sql: Db, candidateId: string, generation: nu
   return data ? toAttempt(data) : undefined;
 }
 
-/** What the candidate works on once started: the task from the attempt's pinned version. Never the rubric. */
-export async function attemptTask(sql: Db, attemptId: string): Promise<{ taskTitle: string; taskBrief: string; submission: "written" | "written_file" } | null> {
-  const { data, error } = await sql.row<{ task_title: string; task_brief: string; submission: "written" | "written_file" }>`
-    select v.task_title, v.task_brief, v.submission
+/**
+ * What the candidate works on once started: the task from the attempt's
+ * pinned version, or its questions (L2) as a candidate sees them. Never the
+ * rubric's guides, never which options are right.
+ */
+export async function attemptTask(sql: Db, attemptId: string): Promise<{
+  taskTitle: string; taskBrief: string; submission: "written" | "written_file"; questions: CandidateQuestion[] | null;
+} | null> {
+  const { data, error } = await sql.row<{ task_title: string; task_brief: string; submission: "written" | "written_file"; questions: unknown }>`
+    select v.task_title, v.task_brief, v.submission, v.questions
       from course.candidate_attempts a join course.assessment_versions v on v.id = a.version_id
      where a.id = ${attemptId}::uuid
   `;
   if (error) return fail("task read", error);
-  return data ? { taskTitle: data.task_title, taskBrief: data.task_brief, submission: data.submission } : null;
+  if (!data) return null;
+  const qs = readQuestions(data.questions);
+  return { taskTitle: data.task_title, taskBrief: data.task_brief, submission: data.submission, questions: qs ? candidateQuestions(qs) : null };
+}
+
+export interface QuestionAnswer {
+  revision: number;
+  answer: string;
+  /** Multiple choice: the options picked, by index from 0. */
+  picked: number[];
+  savedAt: string;
+}
+
+/** The attempt's saved answers by question number (L2). Empty before the first save. */
+export async function loadAnswers(sql: Db, attemptId: string): Promise<Map<number, QuestionAnswer> | null> {
+  const { data, error } = await sql.rows<{ question_no: number; revision: number; answer: string; picked: number[]; saved_at: string }>`
+    select question_no, revision, answer, picked, saved_at from course.attempt_answers where attempt_id = ${attemptId}::uuid
+  `;
+  if (error) return error.code === UNDEFINED_TABLE ? new Map() : fail("answers read", error);
+  return new Map((data ?? []).map((r) => [r.question_no, { revision: r.revision, answer: r.answer, picked: (r.picked ?? []).map(Number), savedAt: r.saved_at }]));
+}
+
+/**
+ * Saves one question's answer (L2): text, or the options picked. The same
+ * checks as saveDraft — this person's attempt, current link, still invited,
+ * open — and the same revision rule, per question, so two tabs on different
+ * questions never clash and an older tab on the same question can't
+ * overwrite newer work.
+ */
+export async function saveQuestionAnswer(
+  sql: Db,
+  s: { candidateId: string; generation: number; attemptId: string; questionNo: number; baseRevision: number; answer: string; picked: number[] },
+): Promise<SaveOutcome | null> {
+  const { data, error } = await sql.row<{ live: boolean; open: boolean; submitted: boolean; revision: number | null; saved_at: string | null; current: number | null }>`
+    with live as (
+      select a.id, a.deadline_at, a.submitted_at
+        from course.candidate_attempts a
+        join course.batch_candidates c on c.id = a.candidate_id and c.batch_id = a.batch_id
+        join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
+       where a.id = ${s.attemptId}::uuid and a.candidate_id = ${s.candidateId}::uuid
+         and c.link_generation = ${s.generation} and c.status = 'active' and b.status = 'sent'
+    ), open as (
+      select id from live
+       where submitted_at is null and now() <= deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
+    ), first as (
+      insert into course.attempt_answers (attempt_id, question_no, revision, answer, picked)
+      select id, ${s.questionNo}::smallint, 1, ${s.answer}, ${s.picked}::smallint[] from open where ${s.baseRevision}::int = 0
+      on conflict (attempt_id, question_no) do nothing
+      returning revision, saved_at
+    ), next as (
+      update course.attempt_answers d set revision = d.revision + 1, answer = ${s.answer}, picked = ${s.picked}::smallint[], saved_at = now()
+        from open
+       where d.attempt_id = open.id and d.question_no = ${s.questionNo}::smallint
+         and ${s.baseRevision}::int > 0 and d.revision = ${s.baseRevision}::int
+      returning d.revision, d.saved_at
+    )
+    select exists (select 1 from live) as live,
+           exists (select 1 from open) as open,
+           exists (select 1 from live where submitted_at is not null) as submitted,
+           coalesce((select revision from first), (select revision from next)) as revision,
+           coalesce((select saved_at from first), (select saved_at from next)) as saved_at,
+           (select revision from course.attempt_answers where attempt_id = ${s.attemptId}::uuid and question_no = ${s.questionNo}::smallint) as current
+  `;
+  if (error) return submittedMeanwhile(error) ? { status: "submitted" } : fail("answer save", error);
+  if (!data?.live) return { status: "refused" };
+  if (data.submitted) return { status: "submitted" };
+  if (!data.open) return { status: "closed" };
+  if (data.revision && data.saved_at) return { status: "saved", revision: data.revision, savedAt: data.saved_at };
+  return { status: "conflict", revision: data.current };
 }
 
 /**
@@ -242,15 +321,17 @@ export interface AttemptFile {
   bytes: number;
   stage: "draft" | "submitted";
   addedAt: string;
+  /** The question it belongs to (L2); null for a one-task test. */
+  questionNo: number | null;
 }
 
-type FileRow = { id: string; name: string; kind: AttemptFileKind; bytes: number; stage: AttemptFile["stage"]; added_at: string };
-const toFile = (r: FileRow): AttemptFile => ({ id: r.id, name: r.name, kind: r.kind, bytes: r.bytes, stage: r.stage, addedAt: r.added_at });
+type FileRow = { id: string; name: string; kind: AttemptFileKind; bytes: number; stage: AttemptFile["stage"]; added_at: string; question_no?: number | null };
+const toFile = (r: FileRow): AttemptFile => ({ id: r.id, name: r.name, kind: r.kind, bytes: r.bytes, stage: r.stage, addedAt: r.added_at, questionNo: r.question_no ?? null });
 
 /** An attempt's files, oldest first. */
 export async function listAttemptFiles(sql: Db, attemptId: string): Promise<AttemptFile[] | null> {
   const { data, error } = await sql.rows<FileRow>`
-    select id, name, kind, bytes, stage, added_at from course.attempt_files where attempt_id = ${attemptId}::uuid order by added_at, id
+    select id, name, kind, bytes, stage, added_at, question_no from course.attempt_files where attempt_id = ${attemptId}::uuid order by added_at, id
   `;
   if (error) return error.code === UNDEFINED_TABLE ? [] : fail("files read", error);
   return (data ?? []).map(toFile);
@@ -261,13 +342,13 @@ export async function listAttemptFiles(sql: Db, attemptId: string): Promise<Atte
  * before the bytes are stored: their attempt through their current link,
  * still invited, open (deadline plus grace), and how many files it has.
  */
-export async function fileSlot(sql: Db, s: { candidateId: string; generation: number; attemptId: string }): Promise<
+export async function fileSlot(sql: Db, s: { candidateId: string; generation: number; attemptId: string; questionNo?: number | null }): Promise<
   { status: "open"; companyId: string; count: number } | { status: "closed" } | { status: "submitted" } | { status: "refused" } | null
 > {
   const { data, error } = await sql.row<{ company_id: string; open: boolean; submitted: boolean; count: number }>`
     select a.company_id, a.submitted_at is not null as submitted,
            (a.submitted_at is null and now() <= a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})) as open,
-           (select count(*)::int from course.attempt_files f where f.attempt_id = a.id) as count
+           (select count(*)::int from course.attempt_files f where f.attempt_id = a.id and coalesce(f.question_no, 0) = ${s.questionNo ?? 0}::int) as count
       from course.candidate_attempts a
       join course.batch_candidates c on c.id = a.candidate_id and c.batch_id = a.batch_id
       join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
@@ -299,8 +380,9 @@ export type AddFileOutcome =
  */
 export async function addAttemptFile(
   sql: Db,
-  f: { candidateId: string; generation: number; attemptId: string; name: string; kind: AttemptFileKind; bytes: number; sha256: string; storageKey: string },
+  f: { candidateId: string; generation: number; attemptId: string; name: string; kind: AttemptFileKind; bytes: number; sha256: string; storageKey: string; questionNo?: number | null },
 ): Promise<AddFileOutcome | null> {
+  const q = f.questionNo ?? 0;
   const { data, error } = await sql.row<{ live: boolean; open: boolean; submitted: boolean; count: number; dup: boolean } & Partial<FileRow>>`
     with live as (
       select a.id, a.company_id, a.deadline_at, a.submitted_at
@@ -315,22 +397,22 @@ export async function addAttemptFile(
       -- The lowest free slot; none when all are taken. Slots are unique per attempt, so a race can't make a fourth file.
       select open.id, open.company_id,
              (select min(n) from generate_series(1, ${ATTEMPT_FILE_LIMITS.count}::int) n
-               where n not in (select x.slot from course.attempt_files x where x.attempt_id = open.id)) as n
+               where n not in (select x.slot from course.attempt_files x where x.attempt_id = open.id and coalesce(x.question_no, 0) = ${q}::int)) as n
         from open
     ), made as (
-      insert into course.attempt_files (company_id, attempt_id, slot, name, kind, bytes, sha256, storage_key)
-      select slot.company_id, slot.id, slot.n, ${f.name}, ${f.kind}, ${f.bytes}, ${f.sha256}, ${f.storageKey}
+      insert into course.attempt_files (company_id, attempt_id, slot, name, kind, bytes, sha256, storage_key, question_no)
+      select slot.company_id, slot.id, slot.n, ${f.name}, ${f.kind}, ${f.bytes}, ${f.sha256}, ${f.storageKey}, nullif(${q}::int, 0)::smallint
         from slot
        where slot.n is not null
       on conflict do nothing
-      returning id, name, kind, bytes, stage, added_at
+      returning id, name, kind, bytes, stage, added_at, question_no
     )
     select exists (select 1 from live) as live,
            exists (select 1 from open) as open,
            exists (select 1 from live where submitted_at is not null) as submitted,
            (select count(*)::int from course.attempt_files x where x.attempt_id = ${f.attemptId}::uuid) as count,
            exists (select 1 from course.attempt_files x where x.attempt_id = ${f.attemptId}::uuid and x.sha256 = ${f.sha256}) as dup,
-           made.id, made.name, made.kind, made.bytes, made.stage, made.added_at
+           made.id, made.name, made.kind, made.bytes, made.stage, made.added_at, made.question_no
       from (select 1) one left join made on true
   `;
   if (error) return submittedMeanwhile(error) ? { status: "submitted" } : fail("file add", error);
@@ -395,7 +477,8 @@ const UNDEFINED_FUNCTION = "42883";
  */
 export async function submitAttempt(
   sql: Db,
-  s: { candidateId: string; generation: number; attemptId: string; revision: number },
+  /** `revision` is null for a test with questions: each question saved on its own, and what is saved is submitted. */
+  s: { candidateId: string; generation: number; attemptId: string; revision: number | null },
 ): Promise<SubmitOutcome | null> {
   const { data, error } = await sql.row<{ status: string; receipt: string | null; submitted_at: string | null; submit_kind: "candidate" | "deadline" | null }>`
     select status, receipt, submitted_at, submit_kind
@@ -435,8 +518,17 @@ export async function finaliseDue(sql: Db, scope: { companyId: string; batchId: 
   return data ?? 0;
 }
 
+export interface SubmittedAnswer {
+  questionNo: number;
+  answer: string;
+  picked: number[];
+  files: { name: string; kind: AttemptFileKind; bytes: number }[];
+}
+
 export interface Submission {
   answer: string;
+  /** A test with questions (L2): each answered question's frozen answer, picks and files. Null for a one-task test. */
+  answers: SubmittedAnswer[] | null;
   kind: "candidate" | "deadline";
   submittedAt: string;
   files: { name: string; kind: AttemptFileKind; bytes: number }[];
@@ -444,13 +536,27 @@ export interface Submission {
 
 /** What an attempt's submission holds: the frozen answer and the files it lists. Undefined when it isn't submitted. */
 export async function loadSubmission(sql: Db, attemptId: string): Promise<Submission | undefined | null> {
-  const { data, error } = await sql.row<{ answer: string; kind: Submission["kind"]; submitted_at: string; files: Submission["files"] }>`
-    select s.answer, s.kind, s.submitted_at,
-           coalesce((select jsonb_agg(jsonb_build_object('name', f.name, 'kind', f.kind, 'bytes', f.bytes) order by f.slot)
+  const { data, error } = await sql.row<{ answer: string; kind: Submission["kind"]; submitted_at: string; files: (Submission["files"][number] & { q: number | null })[]; answers: unknown }>`
+    select s.answer, s.kind, s.submitted_at, s.answers,
+           coalesce((select jsonb_agg(jsonb_build_object('name', f.name, 'kind', f.kind, 'bytes', f.bytes, 'q', f.question_no) order by coalesce(f.question_no, 0), f.slot)
                        from course.attempt_files f where f.attempt_id = s.attempt_id and f.id = any (s.file_ids)), '[]'::jsonb) as files
       from course.attempt_submissions s
      where s.attempt_id = ${attemptId}::uuid
   `;
   if (error) return error.code === UNDEFINED_TABLE ? undefined : fail("submission read", error);
-  return data ? { answer: data.answer, kind: data.kind, submittedAt: data.submitted_at, files: data.files } : undefined;
+  if (!data) return undefined;
+  const strip = (f: Submission["files"][number] & { q: number | null }) => ({ name: f.name, kind: f.kind, bytes: f.bytes });
+  const answers = Array.isArray(data.answers)
+    ? (data.answers as Record<string, unknown>[]).flatMap((a) => {
+        const n = Number(a.question_no);
+        if (!Number.isInteger(n)) return [];
+        return [{
+          questionNo: n,
+          answer: typeof a.answer === "string" ? a.answer : "",
+          picked: Array.isArray(a.picked) ? (a.picked as unknown[]).map(Number).filter(Number.isInteger) : [],
+          files: data.files.filter((f) => f.q === n).map(strip),
+        }];
+      })
+    : null;
+  return { answer: data.answer, answers, kind: data.kind, submittedAt: data.submitted_at, files: data.files.filter((f) => f.q === null).map(strip) };
 }

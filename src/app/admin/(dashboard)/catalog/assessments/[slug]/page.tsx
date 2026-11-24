@@ -9,6 +9,7 @@ import { requireAdmin } from "@/lib/admin/auth";
 import { allReviews, loadDraft, loadVersions } from "@/lib/company/assessment-data";
 import { candidateTask, contentOf, startingDraft } from "@/lib/company/assessment-rules";
 import { loadCatalog } from "@/lib/company/catalog-data";
+import { klymbLibrary } from "@/lib/company/library-data";
 import { db } from "@/lib/db/client";
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
@@ -33,7 +34,7 @@ export default async function AdminAssessmentPage({
   if (code?.kind !== "assessment") notFound();
 
   const sql = db();
-  const [draft, versions, catalog] = sql ? await Promise.all([loadDraft(sql, slug), loadVersions(sql, slug), loadCatalog(sql)]) : [null, null, null];
+  const [draft, versions, catalog, klymbQs] = sql ? await Promise.all([loadDraft(sql, slug), loadVersions(sql, slug), loadCatalog(sql), klymbLibrary(sql)]) : [null, null, null, null];
   const reviews = sql && versions ? await allReviews(sql, versions.map((v) => v.id)) : null;
   const back = <Link href="/admin/catalog" className="mb-4 inline-block text-sm font-bold underline underline-offset-4">← Business catalog</Link>;
   if (draft === null || !versions || !catalog || !reviews) {
@@ -78,6 +79,7 @@ export default async function AdminAssessmentPage({
           {draft && <p className="mb-6 text-xs text-muted">Draft saved {day(draft.updatedAt!)} by {draft.updatedBy}.</p>}
           <AssessmentEditor
             slug={slug}
+            library={klymbQs ? { klymb: klymbQs, mine: null } : undefined}
             initial={contentOf(start)}
             revision={start.revision}
             skills={catalog.get(slug)?.skills ?? [...code.suggestedSkills]}

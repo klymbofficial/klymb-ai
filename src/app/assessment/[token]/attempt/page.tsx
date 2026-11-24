@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { CandidateNotice, CandidateShell } from "@/components/company/CandidateShell";
 import { Countdown } from "@/components/company/Countdown";
 import { AttemptWork } from "@/components/company/AttemptWork";
-import { attemptByLink, attemptTask, listAttemptFiles, loadDraft } from "@/lib/company/attempt-data";
+import { QuestionsWork } from "@/components/company/QuestionsWork";
+import { attemptByLink, attemptTask, listAttemptFiles, loadAnswers, loadDraft } from "@/lib/company/attempt-data";
 import { attemptState } from "@/lib/company/attempt-rules";
 import { readCandidateLink } from "@/lib/company/batch-link";
 import { candidateByLink } from "@/lib/company/batch-data";
@@ -42,8 +43,8 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
   const now = new Date();
   if (attemptState(attempt, now) !== "in_progress") redirect(home);
 
-  const [task, brandRow, draft, files] = await Promise.all([
-    attemptTask(sql, attempt.id), loadCompanyBrand(sql, found.batch.companyId), loadDraft(sql, attempt.id), listAttemptFiles(sql, attempt.id),
+  const [task, brandRow, draft, files, answers] = await Promise.all([
+    attemptTask(sql, attempt.id), loadCompanyBrand(sql, found.batch.companyId), loadDraft(sql, attempt.id), listAttemptFiles(sql, attempt.id), loadAnswers(sql, attempt.id),
   ]);
   const brand = brandRow ? { name: brandRow.name, logoUrl: brandRow.logoUrl, accent: readableBrandColor(brandRow.brandColor) } : null;
   const support = brandRow?.supportEmail ?? MAIL_SUPPORT;
@@ -59,6 +60,26 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
         <Countdown deadline={attempt.deadlineAt} serverNow={now.toISOString()} />
       </div>
 
+      {task?.questions ? (
+        answers === null || files === null ? (
+          <section role="alert" className="card p-6 text-sm">Your saved work can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section>
+        ) : (
+          <>
+            <h1 className="sr-only">{found.batch.title}</h1>
+            <QuestionsWork
+              token={token}
+              attemptId={attempt.id}
+              questions={task.questions}
+              answers={Object.fromEntries([...answers].map(([no, a]) => [no, { revision: a.revision, answer: a.answer, picked: a.picked, savedAt: new Date(a.savedAt).toISOString() }]))}
+              files={Object.fromEntries(task.questions.map((q) => [q.no, files.filter((f) => f.questionNo === q.no).map((f) => ({ id: f.id, name: f.name, bytes: f.bytes }))]))}
+              deadline={new Date(attempt.deadlineAt).toISOString()}
+              serverNow={now.toISOString()}
+              timeZone={tz}
+            />
+          </>
+        )
+      ) : (
+      <>
       <section aria-labelledby="task" className="card p-6">
         <h1 id="task" className="display text-2xl">{task?.taskTitle ?? "Your task"}</h1>
         <div className="mt-4 whitespace-pre-line text-sm leading-relaxed">{task?.taskBrief ?? "The task can't be shown right now. Reload the page; your time keeps running."}</div>
@@ -79,6 +100,8 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
           serverNow={now.toISOString()}
           timeZone={tz}
         />
+      )}
+      </>
       )}
 
       <p className="text-xs text-muted">

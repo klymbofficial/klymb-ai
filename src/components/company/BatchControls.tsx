@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import {
-  cancelHiringBatch, cancelInvitation, changeCandidate, remindCandidates, retryDelivery, sendHiringBatch, type ActionResult,
+  cancelHiringBatch, cancelInvitation, changeCandidate, copyCandidateLink, remindCandidates, retryDelivery, sendHiringBatch, type ActionResult,
 } from "@/app/org/[slug]/(workspace)/hiring/actions";
 import { BTN_PRIMARY as primary, BTN_SECONDARY as secondary } from "@/components/company/HiringParts";
 import { BATCH_LIMITS } from "@/lib/company/batch-rules";
@@ -130,8 +130,10 @@ export function BatchButtons({ slug, batchId, failed, remindable }: { slug: stri
 
 /** One person's actions. What shows depends on where their invitation stands. */
 export function CandidateActions({
-  slug, batchId, candidateId, name, retry, fixEmail, remind, timeZone, extraMinutes, lastStartInput, newLink = true, passed = false,
+  slug, batchId, candidateId, name, retry, fixEmail, remind, timeZone, extraMinutes, lastStartInput, newLink = true, passed = false, copyLink = false,
 }: {
+  /** Their own private link can be copied to send outside email (I02). */
+  copyLink?: boolean;
   slug: string;
   batchId: string;
   candidateId: string;
@@ -156,17 +158,37 @@ export function CandidateActions({
   const id = useId();
 
   const done = (ok: boolean) => { if (ok) setOpen("none"); };
+  // The copied link, shown to select by hand when the browser won't copy it.
+  const [shown, setShown] = useState<string | null>(null);
+  async function copy() {
+    setShown(null);
+    await run(async () => {
+      const out = await copyCandidateLink(slug, batchId, candidateId);
+      if (!out.ok) return out;
+      try {
+        await navigator.clipboard.writeText(out.url);
+        return { ok: true, message: out.message };
+      } catch {
+        setShown(out.url);
+        return { ok: true, message: "Your browser didn't allow copying. Select the link below and copy it. It opens the test as them, so send it only to them." };
+      }
+    });
+  }
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {retry && <button type="button" className={link} disabled={busy} onClick={() => run(() => retryDelivery(slug, batchId, candidateId))}>Retry</button>}
         {fixEmail && <button type="button" className={link} disabled={busy} aria-expanded={open === "email"} onClick={() => setOpen(open === "email" ? "none" : "email")}>Fix email</button>}
+        {copyLink && <button type="button" className={link} disabled={busy} onClick={() => void copy()}>Copy link</button>}
         {remind && <button type="button" className={link} disabled={busy} onClick={() => run(() => remindCandidates(slug, batchId, candidateId))}>Remind</button>}
         <button type="button" className={link} disabled={busy} aria-expanded={open === "time"} onClick={() => setOpen(open === "time" ? "none" : "time")}>Change time</button>
         {newLink && <button type="button" className={link} disabled={busy} onClick={() => run(() => changeCandidate(slug, batchId, candidateId, { kind: "new_link" }), `Send ${name} a new link? Their current link stops working.`)}>New link</button>}
         <button type="button" className={link} disabled={busy} onClick={() => run(() => cancelInvitation(slug, batchId, candidateId), `Cancel ${name}'s invitation? Their link won't start the test. They aren't emailed.`)}>Cancel</button>
       </div>
+      {shown && (
+        <input readOnly value={shown} aria-label={`${name}'s test link`} onFocus={(e) => e.currentTarget.select()} className={`${input} font-mono text-xs`} />
+      )}
       {passed && open === "none" && <p className="text-xs text-muted">Their time to start has passed. Change time to give them a later start; that emails them a working link.</p>}
 
       {open === "email" && (

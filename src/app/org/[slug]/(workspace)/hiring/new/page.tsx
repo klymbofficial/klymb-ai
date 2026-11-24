@@ -27,7 +27,7 @@ export default async function NewBatchPage({ params, searchParams }: { params: P
   const { slug } = await params;
   const asked = (await searchParams).test;
   const member = await requireCompany(slug);
-  if (!canSchedule(member)) return <RoleOnly role="recruiters" home={`/org/${member.companySlug}`} />;
+  if (!canSchedule(member)) return <RoleOnly role="admins and recruiters" home={`/org/${member.companySlug}`} />;
 
   const title = (
     <OrgPageHead

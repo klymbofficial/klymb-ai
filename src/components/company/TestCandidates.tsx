@@ -120,6 +120,7 @@ export function TestCandidates({ rows, initial, slug }: { rows: PersonRow[]; ini
                             fixEmail={r.actions.fixEmail}
                             remind={r.actions.remind}
                             newLink={r.actions.newLink}
+                            copyLink={r.actions.copyLink}
                             passed={r.actions.passed}
                             timeZone={r.actions.timeZone}
                             extraMinutes={r.actions.extraMinutes}

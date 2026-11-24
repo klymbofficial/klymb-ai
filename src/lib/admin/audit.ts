@@ -46,6 +46,8 @@ export type AuditAction =
   | "company.candidate_new_link"
   | "company.candidate_email"
   | "company.candidate_extend"
+  | "company.candidate_link_copy"
+  | "company.test_settings_save"
   | "company.test_create"
   | "company.test_save"
   | "company.test_publish"

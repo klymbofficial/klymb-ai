@@ -101,7 +101,32 @@ export interface Question {
   brief: string;
   submission: Submission;
   rubric: Criterion[];
+  /** A multiple-choice question (L2): its options and marks. Its rubric is then empty and submission ignored. */
+  mcq?: McqPart;
+  /** The library question it was copied from, if any (L2). The copy never follows later edits. */
+  source?: string;
 }
+
+/** One option of a multiple-choice question. */
+export interface Choice {
+  text: string;
+  correct: boolean;
+}
+
+/** What a multiple-choice question adds: 2 to 8 options, its points, and partial marks when several are correct. */
+export interface McqPart {
+  options: Choice[];
+  points: number;
+  partial: boolean;
+}
+
+export const MCQ_LIMITS = { optionsMin: 2, optionsMax: 8, option: 500, points: 100 } as const;
+
+/** True when the candidate picks every option that applies, not one. */
+export const isMultiAnswer = (m: McqPart) => m.options.filter((o) => o.correct).length > 1;
+
+/** What a question is worth: its points for multiple choice, its rubric's total otherwise. */
+export const questionPoints = (q: Question) => (q.mcq ? q.mcq.points : q.rubric.reduce((n, c) => n + c.points, 0));
 
 /** Everything a version freezes, and a draft holds. */
 export interface AssessmentContent {
@@ -227,6 +252,16 @@ export function readContent(raw: Record<string, unknown>): Result<AssessmentCont
       const section = line(r.section);
       const title = line(r.title);
       const brief = text(r.brief);
+      const source = typeof r.source === "string" && /^[0-9a-f-]{36}$/.test(r.source) ? r.source : undefined;
+      if (r.kind === "mcq") {
+        if (section.length > LIMITS.section) return { ok: false, message: `Question ${n}: keep the section name under ${LIMITS.section} characters.` };
+        if (title.length > LIMITS.title) return { ok: false, message: `Question ${n}: keep the title under ${LIMITS.title} characters.` };
+        if (brief.length > LIMITS.brief) return { ok: false, message: `Question ${n}: keep it under ${LIMITS.brief} characters.` };
+        const mcq = readMcq(r, n);
+        if (!mcq.ok) return mcq;
+        questions.push({ section, title, brief, submission: "written", rubric: [], mcq: mcq.value, ...(source ? { source } : {}) });
+        continue;
+      }
       const sub = SUBMISSIONS.find((x) => x === r.submission);
       if (section.length > LIMITS.section) return { ok: false, message: `Question ${n}: keep the section name under ${LIMITS.section} characters.` };
       if (title.length > LIMITS.title) return { ok: false, message: `Question ${n}: keep the title under ${LIMITS.title} characters.` };
@@ -234,7 +269,7 @@ export function readContent(raw: Record<string, unknown>): Result<AssessmentCont
       if (!sub) return { ok: false, message: `Question ${n}: choose what people hand in.` };
       const rubric = readCriteria(r.rubric, `Question ${n}, area`);
       if (!rubric.ok) return rubric;
-      questions.push({ section, title, brief, submission: sub, rubric: rubric.value });
+      questions.push({ section, title, brief, submission: sub, rubric: rubric.value, ...(source ? { source } : {}) });
     }
     if (new Set(questions.map((q) => q.section.toLowerCase()).filter(Boolean)).size > LIMITS.sections) {
       return { ok: false, message: `A test has at most ${LIMITS.sections} sections.` };
@@ -250,6 +285,23 @@ export function readContent(raw: Record<string, unknown>): Result<AssessmentCont
   const rubric = readCriteria(raw.rubric, "Rubric area");
   if (!rubric.ok) return rubric;
   return { ok: true, value: { ...base, submission, taskTitle, taskBrief, rubric: rubric.value } };
+}
+
+/** A multiple-choice question's options and marks as typed. A draft may be unfinished; publishGaps says what's missing. */
+function readMcq(r: Record<string, unknown>, n: number): Result<McqPart> {
+  if (!Array.isArray(r.options)) return { ok: false, message: `Question ${n}: the options didn't arrive. Reload and try again.` };
+  if (r.options.length > MCQ_LIMITS.optionsMax) return { ok: false, message: `Question ${n}: at most ${MCQ_LIMITS.optionsMax} options.` };
+  const options: Choice[] = [];
+  for (const o of r.options as unknown[]) {
+    const x = (o ?? {}) as Record<string, unknown>;
+    const t = text(x.text);
+    if (t.length > MCQ_LIMITS.option) return { ok: false, message: `Question ${n}: keep each option under ${MCQ_LIMITS.option} characters.` };
+    options.push({ text: t, correct: x.correct === true });
+  }
+  const points = Number(r.points);
+  if (!Number.isInteger(points) || points < 1 || points > MCQ_LIMITS.points) return { ok: false, message: `Question ${n}: points are a whole number from 1 to ${MCQ_LIMITS.points}.` };
+  const part = { options, points, partial: false };
+  return { ok: true, value: { ...part, partial: r.partial === true && isMultiAnswer(part) } };
 }
 
 /** A rubric as typed: at most 10 areas, each within its limits, no two with one name. */
@@ -293,12 +345,12 @@ export function fromQuestions(
   questions: Question[],
 ): AssessmentContent {
   const [only] = questions;
-  if (questions.length === 1 && !only.section) {
+  if (questions.length === 1 && !only.section && !only.mcq) {
     return { ...base, submission: only.submission, taskTitle: only.title, taskBrief: only.brief, rubric: only.rubric };
   }
   return {
     ...base,
-    submission: questions.some((q) => q.submission === "written_file") ? "written_file" : "written",
+    submission: questions.some((q) => !q.mcq && q.submission === "written_file") ? "written_file" : "written",
     taskTitle: "",
     taskBrief: "",
     rubric: [],
@@ -327,6 +379,14 @@ export function publishGaps(c: AssessmentContent): string[] {
   qs.forEach((q, i) => {
     const n = i + 1;
     if (!q.title || !q.brief) gaps.push(`a title and text for question ${n}`);
+    if (q.mcq) {
+      const opts = q.mcq.options;
+      if (opts.length < MCQ_LIMITS.optionsMin || opts.some((o) => !o.text)) gaps.push(`${MCQ_LIMITS.optionsMin} or more filled-in options for question ${n}`);
+      else if (new Set(opts.map((o) => o.text.toLowerCase())).size !== opts.length) gaps.push(`different options for question ${n}`);
+      if (!opts.some((o) => o.correct)) gaps.push(`a correct option for question ${n}`);
+      else if (opts.every((o) => o.correct)) gaps.push(`at least one wrong option for question ${n}`);
+      return;
+    }
     if (!q.rubric.length) gaps.push(`at least one rubric area for question ${n}`);
     const missing = q.rubric.filter((r) => !r.title || !r.skill || !r.guide).length;
     if (missing) gaps.push(`a name, skill and scoring guide for ${missing === 1 ? "1 area" : `${missing} areas`} of question ${n}`);
@@ -347,6 +407,8 @@ export function contentOf(c: AssessmentContent): AssessmentContent {
       ? c.questions.map((q) => ({
         section: q.section, title: q.title, brief: q.brief, submission: q.submission,
         rubric: q.rubric.map(({ title, skill, points, guide }) => ({ title, skill, points, guide })),
+        ...(q.mcq ? { mcq: { options: q.mcq.options.map(({ text, correct }) => ({ text, correct })), points: q.mcq.points, partial: q.mcq.partial } } : {}),
+        ...(q.source ? { source: q.source } : {}),
       }))
       : null,
   };
@@ -368,7 +430,23 @@ export function readQuestions(raw: unknown): Question[] | null {
     const r = (q ?? {}) as Record<string, unknown>;
     const submission = SUBMISSIONS.find((x) => x === r.submission);
     if (typeof r.section !== "string" || typeof r.title !== "string" || typeof r.brief !== "string" || !submission) return null;
-    out.push({ section: r.section, title: r.title, brief: r.brief, submission, rubric: readRubric(r.rubric) });
+    const m = (r.mcq ?? null) as Record<string, unknown> | null;
+    const mcq: McqPart | undefined =
+      m && Array.isArray(m.options) && Number.isInteger(m.points)
+        ? {
+            options: (m.options as unknown[]).flatMap((o) => {
+              const x = (o ?? {}) as Record<string, unknown>;
+              return typeof x.text === "string" ? [{ text: x.text, correct: x.correct === true }] : [];
+            }),
+            points: m.points as number,
+            partial: m.partial === true,
+          }
+        : undefined;
+    out.push({
+      section: r.section, title: r.title, brief: r.brief, submission, rubric: readRubric(r.rubric),
+      ...(mcq ? { mcq } : {}),
+      ...(typeof r.source === "string" ? { source: r.source } : {}),
+    });
   }
   return out;
 }
@@ -399,6 +477,39 @@ export interface CandidateTask {
   taskBrief: string;
   areas: { title: string; points: number }[];
   results: ResultVisibility;
+  /** A test with several questions (L2): each as the candidate sees it; null for a one-task test. */
+  questions: CandidateQuestion[] | null;
+}
+
+/** One question as a candidate sees it: never the right options, never a scoring guide. */
+export interface CandidateQuestion {
+  /** 1-based, as answers are stored. */
+  no: number;
+  section: string;
+  title: string;
+  brief: string;
+  kind: "written" | "written_file" | "mcq";
+  /** Multiple choice: the options' words, in order. */
+  options: string[];
+  /** Multiple choice: pick all that apply rather than one. */
+  multi: boolean;
+  points: number;
+  areas: { title: string; points: number }[];
+}
+
+/** The questions of a version as a candidate sees them. */
+export function candidateQuestions(qs: readonly Question[]): CandidateQuestion[] {
+  return qs.map((q, i) => ({
+    no: i + 1,
+    section: q.section,
+    title: q.title,
+    brief: q.brief,
+    kind: q.mcq ? "mcq" : q.submission,
+    options: q.mcq ? q.mcq.options.map((o) => o.text) : [],
+    multi: q.mcq ? isMultiAnswer(q.mcq) : false,
+    points: questionPoints(q),
+    areas: q.rubric.map(({ title, points }) => ({ title, points })),
+  }));
 }
 
 export function candidateTask(v: Version): CandidateTask {
@@ -414,6 +525,7 @@ export function candidateTask(v: Version): CandidateTask {
     taskBrief: v.taskBrief,
     areas: v.rubric.map(({ title, points }) => ({ title, points })),
     results: v.results,
+    questions: v.questions?.length ? candidateQuestions(v.questions) : null,
   };
 }
 

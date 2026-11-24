@@ -16,10 +16,11 @@ import { normaliseEmail } from "@/lib/email";
 
 // ── Who ─────────────────────────────────────────────────────
 
-/** Recruiters run batches; reviewers score submissions in them (H09); admins and company heads can look. */
+/** Admins and recruiters run batches (I01, 25 Nov: admins too); reviewers score submissions in them (H09); company heads can look. */
 export const HIRING_VIEWERS = ["admin", "company_head", "recruiter", "reviewer"] as const satisfies readonly CompanyRole[];
 export const seesHiring = (m: CompanyMember | null) => hasRole(m, HIRING_VIEWERS);
-export const canSchedule = (m: CompanyMember | null) => hasRole(m, ["recruiter"]);
+export const INVITERS = ["admin", "recruiter"] as const satisfies readonly CompanyRole[];
+export const canSchedule = (m: CompanyMember | null) => hasRole(m, INVITERS);
 /** Any reviewer of the company scores (H05 D5: A); the batch's named reviewer is shown as assigned. */
 export const canScore = (m: CompanyMember | null) => hasRole(m, ["reviewer"]);
 /** Records hiring decisions and shares results (H05 D6: recruiters and company heads; reviewers score, admins view). */

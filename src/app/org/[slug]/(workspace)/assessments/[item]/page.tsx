@@ -15,7 +15,11 @@ import {
   RESULTS_LABEL, SUBMISSION_LABEL, candidateTask, canReview, canWriteTests, seesAssessments, standingOf, totalPoints, type Version,
 } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
-import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, canSchedule, durationText, lastStart, seesHiring } from "@/lib/company/batch-rules";
+import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, DEFAULT_TIME_ZONE, canSchedule, durationText, lastStart, seesHiring, toZonedInput } from "@/lib/company/batch-rules";
+import { BasicSettingsForm, EmailSettingsForm } from "@/components/company/TestSettingsForms";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
+import { startBlocked } from "@/lib/company/test-settings";
+import { saveBasicSettings, saveEmailSettings } from "../settings-actions";
 import { companyCatalog } from "@/lib/company/catalog-data";
 import { testCandidates, type HubCandidate } from "@/lib/company/test-hub-data";
 import { funnel, percentOf, type HubFacts } from "@/lib/company/test-hub-view";
@@ -155,11 +159,15 @@ export default async function AssessmentPage({
     return q ? `${base}/${itemSlug}?${q}` : `${base}/${itemSlug}`;
   };
 
+  // This company's own settings for the test (U06a): access off or ended means no Invite.
+  const settings = await loadTestSettings(sql, member.companyId, itemSlug);
+  const blocked = settings ? startBlocked(settings) : null;
   const actions = (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+      {blocked && <Link href={hrefFor("settings")} className="text-sm font-semibold text-error underline-offset-4 hover:underline">{blocked === "closed" ? "Access is off" : "Test has ended"}</Link>}
       <Link href={hrefFor("preview")} className={BLUE_LINK}><OrgIcon name="eye" size={16} />Preview</Link>
       {editHref && <Link href={editHref} className={BLUE_LINK}><OrgIcon name="test" size={16} />Edit test</Link>}
-      {recruiter && standing.inUse && (
+      {recruiter && standing.inUse && !blocked && (
         <Link href={`${company}/hiring/new?test=${encodeURIComponent(itemSlug)}`} className={BTN_PRIMARY}><OrgIcon name="invite" size={16} />Invite candidates</Link>
       )}
     </div>
@@ -330,13 +338,33 @@ export default async function AssessmentPage({
   if (tab === "settings") {
     const s = (one(sp.s) as Setting) in SETTING_LABEL ? (one(sp.s) as Setting) : "basic";
     const items = (Object.keys(SETTING_LABEL) as Setting[]).map((k) => ({ key: k, label: SETTING_LABEL[k], href: hrefFor("settings", k === "basic" ? "" : `s=${k}`), current: k === s }));
+    if (!settings) return <>{head}<LoadError what="This test's settings" /></>;
+    const remindEvery = `every ${AUTO_REMIND_HOURS} hours, at most ${AUTO_REMIND_ATTEMPTS} times, until their last start`;
     return (
       <>
         {head}
         <Split title="Settings" items={items}>
           {s === "basic" && (
             <>
-              <h2 className="mb-5 font-bold">Other details</h2>
+              <h2 className="mb-4 font-bold">Access and tags</h2>
+              {recruiter ? (
+                <BasicSettingsForm
+                  key={settings.revision}
+                  save={saveBasicSettings.bind(null, member.companySlug, itemSlug)}
+                  revision={settings.revision}
+                  accessOpen={settings.accessOpen}
+                  endsOnInput={settings.endsOn ? toZonedInput(settings.endsOn, DEFAULT_TIME_ZONE) : ""}
+                  tags={settings.tags}
+                  zoneLabel="India Standard Time"
+                />
+              ) : (
+                <dl className="flex flex-col gap-5">
+                  <Row label="Test access">{settings.accessOpen ? "On" : "Off: nobody can be invited or start"}</Row>
+                  <Row label="Ends on">{settings.endsOn ? day(settings.endsOn) : "No end date"}</Row>
+                  <Row label="Tags">{settings.tags.length ? settings.tags.join(", ") : "None"}</Row>
+                </dl>
+              )}
+              <h2 className="mb-5 mt-10 border-t border-line/30 pt-6 font-bold">Other details</h2>
               <dl className="flex flex-col gap-5">
                 <Row label="Test name">{shown.title}</Row>
                 <Row label="Role">{shown.role}</Row>
@@ -374,9 +402,28 @@ export default async function AssessmentPage({
           {s === "email" && (
             <dl className="flex flex-col gap-6">
               <Row label="Candidate result report">{RESULTS_LABEL[shown.results]}. A recruiter shares it after the review.</Row>
-              <Row label="Auto-reminder email">On. People who haven&apos;t started get a reminder once every {AUTO_REMIND_HOURS} hours, at most {AUTO_REMIND_ATTEMPTS} tries, until their last start.</Row>
-              <Row label="Invitation email">Sent in your company&apos;s branding. See it on a batch&apos;s Invitation tab.</Row>
+              {!recruiter && (
+                <>
+                  <Row label="Auto-reminder email">{settings.autoRemind ? `On: a reminder ${remindEvery}.` : "Off"}</Row>
+                  <Row label="Invitation email">{settings.invite ? `Your company's own words: “${settings.invite.subject}”.` : "The standard invitation"}, in your company&apos;s branding.</Row>
+                </>
+              )}
             </dl>
+          )}
+          {s === "email" && recruiter && (
+            <div className="mt-8 border-t border-line/30 pt-6">
+              <EmailSettingsForm
+                key={settings.revision}
+                save={saveEmailSettings.bind(null, member.companySlug, itemSlug)}
+                revision={settings.revision}
+                autoRemind={settings.autoRemind}
+                subject={settings.invite?.subject ?? ""}
+                body={settings.invite?.body ?? ""}
+                testName={shown.title}
+                company={member.companyName}
+                remindEvery={remindEvery}
+              />
+            </div>
           )}
         </Split>
       </>

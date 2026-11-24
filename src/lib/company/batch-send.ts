@@ -1,4 +1,6 @@
 import "server-only";
+import { renderTemplate, type InviteTemplate } from "@/lib/company/test-settings";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { site } from "@/data/config";
 import type { CompanyBrand } from "@/lib/company/brand";
 import { candidateLink } from "@/lib/company/batch-link";
@@ -25,13 +27,28 @@ export function linkBase(): string {
 /** Where a prep course opens for a candidate. */
 const PREP_URL: Record<string, string> = { "system-design": "/learn/system-design" };
 
-/** The email one person gets, for a preview or to send. Null without a link (no AUTH_SECRET here). */
-export function buildCandidateMail(kind: MailKind, batch: Batch, brand: CompanyBrand, t: Pick<MailTarget, "id" | "name" | "email" | "generation" | "extraMinutes" | "lastStartAt">, now = new Date()) {
+/**
+ * The email one person gets, for a preview or to send. Null without a link
+ * (no AUTH_SECRET here). `template` is the company's own invitation for this
+ * test (U06a), used for invitations only, its variables filled in for them.
+ */
+export function buildCandidateMail(
+  kind: MailKind, batch: Batch, brand: CompanyBrand, t: Pick<MailTarget, "id" | "name" | "email" | "generation" | "extraMinutes" | "lastStartAt">,
+  now = new Date(), template: InviteTemplate | null = null,
+) {
   const base = linkBase();
   const link = candidateLink(base, t.id, t.generation);
   if (!link) return null;
   const last = lastStart({ closesAt: batch.closesAt, minutes: batch.minutes }, t);
+  const vars = {
+    candidate_name: t.name,
+    test_name: batch.title,
+    company: brand.name,
+    start_by: deadlineText(last, batch.timeZone),
+    time_allowed: durationText(allowedMinutes(batch.minutes, t.extraMinutes)),
+  };
   return candidateInviteEmail({
+    template: template ? { subject: renderTemplate(template.subject, vars), body: renderTemplate(template.body, vars) } : null,
     kind,
     name: t.name,
     email: t.email,
@@ -65,13 +82,15 @@ export async function deliver(sql: Db, batch: Batch, kind: MailKind, targets: Ma
   const report: SendReport = { sent: 0, failed: 0 };
   if (!targets.length) return report;
   const brand = brandIn ?? (await loadCompanyBrand(sql, batch.companyId));
+  // The company's own invitation for this test, if it wrote one (U06a). Unreadable settings send the standard email.
+  const template = kind === "invite" ? ((await loadTestSettings(sql, batch.companyId, batch.item))?.invite ?? null) : null;
   const queue = [...targets];
 
   async function one(t: MailTarget) {
     let outcome: "sent" | "failed" | "skipped" = "failed";
     let error: string | null = null;
     try {
-      const mail = brand ? buildCandidateMail(kind, batch, brand, t) : null;
+      const mail = brand ? buildCandidateMail(kind, batch, brand, t, new Date(), template) : null;
       if (!mail) {
         error = brand ? "Links can't be made on this server (no AUTH_SECRET)." : "The company's details couldn't be read.";
       } else {
