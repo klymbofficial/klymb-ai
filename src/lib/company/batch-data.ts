@@ -311,7 +311,8 @@ const STALE = `${STALE_SEND_MINUTES} minutes`;
 /**
  * Claims people in a sent batch to send their link again: those given, or
  * every one whose delivery failed. The same link goes out; nobody is added.
- * Nobody whose last start has passed: that link couldn't start the test.
+ * Nobody whose last start has passed (that link couldn't start the test), and
+ * nobody who has already started.
  */
 export async function claimRetry(sql: Db, companyId: string, batchId: string, candidateIds: string[] | null): Promise<MailTarget[] | null> {
   const { data, error } = await sql.rows<TargetRow>`
@@ -324,6 +325,8 @@ export async function claimRetry(sql: Db, companyId: string, batchId: string, ca
        and (${candidateIds}::uuid[] is null or c.id = any(${candidateIds}::uuid[]))
        and (c.delivery in ('failed', 'skipped') or (c.delivery = 'sending' and c.delivery_claimed_at < now() - ${STALE}::interval))
        and coalesce(c.last_start_at, b.closes_at - make_interval(mins => v.minutes + c.extra_minutes)) > now()
+       -- Someone who has started already has their link in use: no invitation to resend.
+       and not exists (select 1 from course.candidate_attempts a where a.candidate_id = c.id)
     returning c.id, c.name, c.email, c.link_generation, c.extra_minutes, c.last_start_at
   `;
   if (error) return fail("retry claim", error);
@@ -372,8 +375,9 @@ export async function claimChange(
 
 /**
  * Claims people for a reminder: active, in a sent batch that has opened or
- * opens within a day, whose last start hasn't passed, and not reminded in
- * the last 10 minutes (a double click). The given ones, or all of them.
+ * opens within a day, whose last start hasn't passed, who haven't started,
+ * and not reminded in the last 10 minutes (a double click). The given ones,
+ * or all of them.
  */
 export async function claimReminders(sql: Db, companyId: string, batchId: string, candidateIds: string[] | null): Promise<MailTarget[] | null> {
   const { data, error } = await sql.rows<TargetRow>`
@@ -387,6 +391,8 @@ export async function claimReminders(sql: Db, companyId: string, batchId: string
        and c.delivery = 'sent'
        and coalesce(c.last_start_at, b.closes_at - make_interval(mins => v.minutes + c.extra_minutes)) > now()
        and (c.last_reminded_at is null or c.last_reminded_at < now() - interval '10 minutes')
+       -- Someone who has started doesn't need reminding to start (H06).
+       and not exists (select 1 from course.candidate_attempts a where a.candidate_id = c.id)
     returning c.id, c.name, c.email, c.link_generation, c.extra_minutes, c.last_start_at
   `;
   if (error) return fail("reminder claim", error);
@@ -419,6 +425,7 @@ export async function claimAutoReminders(sql: Db): Promise<(MailTarget & { batch
        and not exists (select 1 from course.batch_mail_log l where l.candidate_id = c.id and l.kind = 'auto_reminder' and l.outcome = 'sent')
        and (select count(*) from course.batch_mail_log l
              where l.candidate_id = c.id and l.kind = 'auto_reminder' and l.link_generation = c.link_generation) < ${AUTO_REMIND_ATTEMPTS}
+       and not exists (select 1 from course.candidate_attempts a where a.candidate_id = c.id)
        and b.opens_at <= now()
        and coalesce(c.last_start_at, b.closes_at - make_interval(mins => v.minutes + c.extra_minutes))
            between now() and now() + ${`${AUTO_REMIND_HOURS} hours`}::interval
@@ -496,7 +503,7 @@ export async function batchForMail(sql: Db, batchId: string): Promise<Batch | nu
 export interface CandidateView {
   candidate: { id: string; name: string; email: string; status: Candidate["status"]; extraMinutes: number; lastStartAt: string | null; generation: number };
   batch: Batch;
-  version: { toolsAllowed: string[]; toolsNotAllowed: string[]; submission: string };
+  version: { toolsAllowed: string[]; toolsNotAllowed: string[]; submission: string; instructions: string; results: "none" | "overall" | "by_area" };
 }
 
 /**
@@ -507,13 +514,13 @@ export interface CandidateView {
 export async function candidateByLink(sql: Db, id: string): Promise<CandidateView | undefined | null> {
   const { data, error } = await sql.row<BatchRow & {
     c_id: string; c_name: string; c_email: string; c_status: Candidate["status"]; c_extra: number; c_last_start: string | null; c_generation: number;
-    tools_allowed: string[]; tools_not_allowed: string[]; submission: string;
+    tools_allowed: string[]; tools_not_allowed: string[]; submission: string; instructions: string; results: "none" | "overall" | "by_area";
   }>`
     select c.id as c_id, c.name as c_name, c.email as c_email, c.status as c_status, c.extra_minutes as c_extra, c.last_start_at as c_last_start,
            c.link_generation as c_generation,
            b.id, b.company_id, b.item, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, null::text as reviewer_name,
            b.opens_at, b.closes_at, b.time_zone, b.status, b.created_by, b.created_at, b.sent_by, b.sent_at, b.cancelled_by, b.cancelled_at,
-           v.tools_allowed, v.tools_not_allowed, v.submission
+           v.tools_allowed, v.tools_not_allowed, v.submission, v.instructions, v.results
       from course.batch_candidates c
       join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
       join course.assessment_versions v on v.id = b.version_id
@@ -524,7 +531,7 @@ export async function candidateByLink(sql: Db, id: string): Promise<CandidateVie
   return {
     candidate: { id: data.c_id, name: data.c_name, email: data.c_email, status: data.c_status, extraMinutes: data.c_extra, lastStartAt: data.c_last_start, generation: data.c_generation },
     batch: toBatch(data),
-    version: { toolsAllowed: data.tools_allowed, toolsNotAllowed: data.tools_not_allowed, submission: data.submission },
+    version: { toolsAllowed: data.tools_allowed, toolsNotAllowed: data.tools_not_allowed, submission: data.submission, instructions: data.instructions, results: data.results },
   };
 }
 

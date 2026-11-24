@@ -1,0 +1,87 @@
+import { strict as assert } from "node:assert";
+import { readFileSync } from "node:fs";
+import { describe, test } from "node:test";
+import { ATTEMPT_LABEL, attemptState, clockText, remainingMs } from "../src/lib/company/attempt-rules";
+import { candidateTags } from "../src/lib/company/batch-view";
+
+const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
+const code = (s: string) => s.replace(/--.*$/gm, "");
+
+describe("an attempt's clock", () => {
+  const a = { startedAt: "2026-11-25T10:00:00Z", deadlineAt: "2026-11-25T11:30:00Z", submittedAt: null };
+  test("in progress until the deadline, time up from it, submitted once submitted", () => {
+    assert.equal(attemptState(a, new Date("2026-11-25T11:29:59Z")), "in_progress");
+    assert.equal(attemptState(a, new Date("2026-11-25T11:30:00Z")), "time_up", "exactly at the deadline the time is up");
+    assert.equal(attemptState({ ...a, submittedAt: "2026-11-25T11:00:00Z" }, new Date("2026-11-25T12:00:00Z")), "submitted");
+    assert.equal(ATTEMPT_LABEL.none, "Not started");
+  });
+
+  test("time left never goes below zero, and reads as a clock", () => {
+    assert.equal(remainingMs(a, new Date("2026-11-25T11:00:00Z")), 30 * 60000);
+    assert.equal(remainingMs(a, new Date("2026-11-25T12:00:00Z")), 0);
+    assert.equal(clockText(30 * 60000), "30:00");
+    assert.equal(clockText(65 * 60000 + 9000), "1:05:09");
+    assert.equal(clockText(1), "00:01", "a part second still shows as a second");
+  });
+});
+
+describe("the recruiter's filters once someone starts", () => {
+  test("a started person is under Started, not Can start or Start passed", () => {
+    assert.deepEqual(candidateTags({ active: true, delivery: "sent", link: "open", started: true }), ["all", "started", "sent"]);
+    assert.deepEqual(candidateTags({ active: true, delivery: "sent", link: "missed", started: true }), ["all", "started", "sent"], "their last start passing after they began doesn't matter");
+    assert.deepEqual(candidateTags({ active: false, delivery: "sent", link: "cancelled", started: true }), ["all", "cancelled"]);
+  });
+});
+
+describe("start and timing, as written", () => {
+  const data = read("src/lib/company/attempt-data.ts");
+  const start = data.slice(data.indexOf("export async function startAttempt("), data.indexOf("export async function attemptByLink("));
+
+  test("Start checks the current link, an active person, a sent and open batch, and a last start still ahead", () => {
+    assert.match(start, /c\.link_generation = \$\{generation\} and c\.status = 'active'/);
+    assert.match(start, /b\.status = 'sent' and b\.opens_at <= now\(\)/);
+    assert.match(start, /coalesce\(me\.last_start_at, me\.closes_at - make_interval\(mins => me\.minutes \+ me\.extra_minutes\)\) > now\(\)/);
+  });
+
+  test("the server sets the deadline, and a second Start makes nothing new", () => {
+    assert.match(start, /now\(\) \+ make_interval\(mins => me\.minutes \+ me\.extra_minutes\)/);
+    assert.match(start, /on conflict \(candidate_id, attempt_no\) do nothing/);
+    assert.match(start, /where not exists \(select 1 from existing\)/);
+  });
+
+  test("the candidate never receives the rubric", () => {
+    const task = data.slice(data.indexOf("export async function attemptTask("), data.indexOf("export async function recordLinkOpened("));
+    assert.doesNotMatch(task, /rubric|guide/);
+    const view = read("src/lib/company/batch-data.ts");
+    const byLink = view.slice(view.indexOf("export async function candidateByLink("), view.indexOf("export async function hiringOptions("));
+    assert.doesNotMatch(byLink, /rubric|task_brief/, "the landing page doesn't get the task before Start");
+  });
+
+  test("reminders and invitation retries skip anyone who has started", () => {
+    const batch = read("src/lib/company/batch-data.ts");
+    for (const fn of ["claimReminders", "claimAutoReminders", "claimRetry"]) {
+      const body = batch.slice(batch.indexOf(`export async function ${fn}(`));
+      const end = body.indexOf("\nexport ", 1);
+      assert.match(body.slice(0, end), /not exists \(select 1 from course\.candidate_attempts a where a\.candidate_id = c\.id\)/, fn);
+    }
+  });
+
+  test("the attempt page opens only through the current link of an active, sent invitation", () => {
+    const page = read("src/app/assessment/[token]/attempt/page.tsx");
+    assert.match(page, /found\.candidate\.generation !== ref\.generation \|\| found\.candidate\.status !== "active" \|\| found\.batch\.status !== "sent"/);
+    assert.match(page, /attemptState\(attempt, now\) !== "in_progress"/);
+    assert.match(page, /<Countdown deadline=\{attempt\.deadlineAt\} serverNow=\{now\.toISOString\(\)\} \/>/);
+  });
+
+  test("migration 0053: one attempt per number, a clock that can't move, events written once and never edited", () => {
+    const sql = code(read("db/migrations/0053_candidate_attempts.sql"));
+    assert.match(sql, /constraint candidate_attempts_once unique \(candidate_id, attempt_no\)/);
+    assert.match(sql, /check \(deadline_at = started_at \+ make_interval\(mins => allowed_minutes\)\)/);
+    assert.match(sql, /new\.deadline_at <> old\.deadline_at/);
+    assert.match(sql, /before update on course\.candidate_attempts/);
+    assert.match(sql, /constraint hiring_events_once unique \(op_key\)/);
+    assert.match(sql, /raise exception 'hiring_events is append-only'/);
+    assert.match(sql, /references course\.batch_candidates \(id, batch_id\)/, "an attempt's person belongs to its batch");
+    assert.match(sql, /references course\.hiring_batches \(id, company_id\)/, "and its batch to its company");
+  });
+});

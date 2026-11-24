@@ -55,13 +55,14 @@ export function pickBatches<T extends { state: BatchStateKey; role: string; titl
 
 // ── Candidates ──────────────────────────────────────────────
 
-export type CandidateFilter = "all" | "open" | "later" | "sent" | "failed" | "unsent" | "passed" | "cancelled";
+export type CandidateFilter = "all" | "open" | "later" | "started" | "sent" | "failed" | "unsent" | "passed" | "cancelled";
 
 /** The filters on a batch's candidate table, in order. A person can match several. */
 export const CANDIDATE_FILTERS: readonly { key: CandidateFilter; label: string }[] = [
   { key: "all", label: "All" },
   { key: "open", label: "Can start" },
   { key: "later", label: "Opens later" },
+  { key: "started", label: "Started" },
   { key: "sent", label: "Sent" },
   { key: "failed", label: "Failed" },
   { key: "unsent", label: "Not sent" },
@@ -69,13 +70,14 @@ export const CANDIDATE_FILTERS: readonly { key: CandidateFilter; label: string }
   { key: "cancelled", label: "Cancelled" },
 ];
 
-/** Which filters one person falls under. */
-export function candidateTags(c: { active: boolean; delivery: Delivery; link: LinkState }): CandidateFilter[] {
+/** Which filters one person falls under. Once they have started, whether their link could start the test no longer matters. */
+export function candidateTags(c: { active: boolean; delivery: Delivery; link: LinkState; started?: boolean }): CandidateFilter[] {
   if (!c.active || c.link === "cancelled" || c.link === "batch_cancelled") return ["all", "cancelled"];
   const tags: CandidateFilter[] = ["all"];
-  if (c.link === "open") tags.push("open");
-  if (c.link === "not_open") tags.push("later");
-  if (c.link === "missed") tags.push("passed");
+  if (c.started) tags.push("started");
+  else if (c.link === "open") tags.push("open");
+  else if (c.link === "not_open") tags.push("later");
+  else if (c.link === "missed") tags.push("passed");
   if (c.delivery === "sent") tags.push("sent");
   if (c.delivery === "failed" || c.delivery === "skipped") tags.push("failed");
   if (c.delivery === "pending") tags.push("unsent");

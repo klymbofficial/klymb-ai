@@ -7,6 +7,8 @@ import { CandidateTable, type CandidateRow } from "@/components/company/Candidat
 import { Badge, OrgPageHead, PANEL, type Tone } from "@/components/company/HiringParts";
 import { LoadError, RoleOnly } from "@/components/company/OrgPanels";
 import { requireCompany } from "@/lib/company/auth";
+import { attemptsForBatch } from "@/lib/company/attempt-data";
+import { ATTEMPT_LABEL, attemptState, type AttemptState } from "@/lib/company/attempt-rules";
 import { loadBatch, type Candidate } from "@/lib/company/batch-data";
 import {
   DELIVERY_LABEL, MAIL_KIND_LABEL, MAIL_OUTCOME_LABEL, SENT_MEANS, PREP_COURSES, allowedMinutes, canRetry, canSchedule, deadlineText, durationText, formatInZone, lastStart, linkState,
@@ -29,6 +31,7 @@ const LINK: Record<LinkState, { label: string; tone: Tone }> = {
   open: { label: "Can start", tone: "green" },
   missed: { label: "Start passed", tone: "amber" },
 };
+const ATTEMPT_TONE: Record<AttemptState, Tone> = { in_progress: "blue", time_up: "amber", submitted: "green" };
 const DELIVERY_TONE: Record<Delivery, Tone> = { pending: "grey", sending: "grey", sent: "blue", failed: "red", skipped: "amber" };
 
 type Tab = "candidates" | "overview" | "invitation" | "emails";
@@ -65,6 +68,8 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
   if (!found || !sql) return <><OrgPageHead crumbs={crumbs} title="Hiring batch" /><LoadError what="This batch" /></>;
 
   const { batch, candidates, mail } = found;
+  const attempts = await attemptsForBatch(sql, member.companyId, batch.id);
+  const attemptOf = new Map((attempts ?? []).map((a) => [a.candidateId, a]));
   const recruiter = canSchedule(member);
   const now = new Date();
   const tz = batch.timeZone;
@@ -86,9 +91,10 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
   const sent = active.filter((c) => c.delivery === "sent").length;
   const failed = active.filter((c) => c.delivery === "failed" || c.delivery === "skipped").length;
   // Retrying sends the same link, so only to people who can still start.
-  const retryable = active.filter((c) => (c.delivery === "failed" || c.delivery === "skipped") && !passed(c)).length;
+  const retryable = active.filter((c) => (c.delivery === "failed" || c.delivery === "skipped") && !passed(c) && !attemptOf.has(c.id)).length;
   const unsentLate = batch.status === "sent" ? active.filter((c) => c.delivery !== "sent" && passed(c)).length : 0;
-  const remindable = batch.status === "sent" ? active.filter((c) => c.delivery === "sent" && now <= lastOf(c)).length : 0;
+  // Someone who has started isn't reminded to start (the reminder queries skip them too).
+  const remindable = batch.status === "sent" ? active.filter((c) => c.delivery === "sent" && now <= lastOf(c) && !attemptOf.has(c.id)).length : 0;
 
   const meta = (
     <>
@@ -114,7 +120,9 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
     const link = stateOf(c);
     const history = mail.filter((m) => m.candidateId === c.id);
     const reminders = reminderSummary(history);
-    const isPassed = passed(c);
+    const attempt = attemptOf.get(c.id);
+    const where = attempt ? attemptState(attempt, now) : null;
+    const isPassed = passed(c) && !attempt;
     const bad = c.status === "active" && (c.delivery === "failed" || c.delivery === "skipped");
     return {
       id: c.id,
@@ -122,9 +130,16 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
       email: c.email,
       invitation: { label: DELIVERY_LABEL[c.delivery], tone: DELIVERY_TONE[c.delivery] },
       why: bad && c.deliveryError ? { lead: c.delivery === "skipped" ? "Why it wasn't sent" : "Why it failed", text: c.deliveryError } : null,
-      link: LINK[link],
-      startBy: link === "cancelled" || link === "batch_cancelled" ? "—" : formatInZone(lastOf(c), tz),
-      allowed: `${durationText(allowedMinutes(batch.minutes, c.extraMinutes))}${c.extraMinutes ? ` (${c.extraMinutes} extra)` : ""}`,
+      link: where && link !== "cancelled" && link !== "batch_cancelled" ? { label: ATTEMPT_LABEL[where], tone: ATTEMPT_TONE[where] } : LINK[link],
+      startBy: link === "cancelled" || link === "batch_cancelled"
+        ? "—"
+        : attempt
+          ? `Started ${formatInZone(attempt.startedAt, tz)} · ends ${formatInZone(attempt.deadlineAt, tz)}`
+          : formatInZone(lastOf(c), tz),
+      // Once started, the time fixed at Start; a later change of extra minutes doesn't move a running clock.
+      allowed: attempt
+        ? `${durationText(attempt.allowedMinutes)} (fixed at start)`
+        : `${durationText(allowedMinutes(batch.minutes, c.extraMinutes))}${c.extraMinutes ? ` (${c.extraMinutes} extra)` : ""}`,
       reminders: [
         ...(reminders.manual ? [`Reminded ${reminders.manual === 1 ? "once" : `${reminders.manual} times`}`] : []),
         ...(reminders.autoSent ? ["Automatic reminder sent"] : []),
@@ -132,12 +147,13 @@ export default async function BatchPage({ params, searchParams }: { params: Prom
       autoFailed: reminders.autoFailed && c.status === "active"
         ? `Automatic reminder ${reminders.autoFailed.outcome === "skipped" ? "not sent" : "failed"}${reminders.autoFailed.error ? `: ${reminders.autoFailed.error}` : ""}.${live && c.delivery === "sent" && !isPassed ? " Use Remind." : ""}`
         : null,
-      tags: candidateTags({ active: c.status === "active" && batch.status !== "cancelled", delivery: c.delivery, link }),
+      tags: candidateTags({ active: c.status === "active" && batch.status !== "cancelled", delivery: c.delivery, link, started: !!attempt }),
       actions: live && c.status === "active"
         ? {
-            retry: canRetry({ delivery: c.delivery, claimedAt: c.claimedAt }, now) && !isPassed,
-            fixEmail: bad && !isPassed,
-            remind: c.delivery === "sent" && now <= lastOf(c),
+            // Once started their link is in use: no invitation to resend or readdress.
+            retry: canRetry({ delivery: c.delivery, claimedAt: c.claimedAt }, now) && !isPassed && !attempt,
+            fixEmail: bad && !isPassed && !attempt,
+            remind: c.delivery === "sent" && now <= lastOf(c) && !attempt,
             newLink: !isPassed,
             passed: isPassed,
             extraMinutes: c.extraMinutes,

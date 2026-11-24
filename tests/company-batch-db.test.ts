@@ -13,7 +13,11 @@ import type { BatchInput } from "../src/lib/company/batch-rules";
  * with migrations through 0052. Needs the react-server condition, since the
  * modules it tests are server-only:
  *
- *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test tests/company-batch-db.test.ts
+ *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test --test-concurrency=1 tests/company-batch-db.test.ts
+ *
+ * One file at a time (--test-concurrency=1) when running both hiring DB
+ * suites: the automatic reminder claims everyone due in the whole database,
+ * as the daily job does, so a parallel file's people would be claimed too.
  *
  * It makes its own company, members and assessment. The published version
  * and its catalog row stay behind (versions can't be deleted). It refuses to
