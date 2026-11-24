@@ -66,3 +66,57 @@ export function reviewState(a: { submitted: boolean; reviewed: boolean }): Revie
 
 /** "7 / 10". */
 export const scoreText = (total: number, max: number) => `${total} / ${max}`;
+
+// ── Hiring decisions and shared results (H10) ───────────────
+
+export const HIRING_DECISIONS = ["shortlisted", "not_shortlisted", "on_hold"] as const;
+export type HiringDecision = (typeof HIRING_DECISIONS)[number];
+
+export const DECISION_LABEL: Record<HiringDecision, string> = {
+  shortlisted: "Shortlisted",
+  not_shortlisted: "Not shortlisted",
+  on_hold: "On hold",
+};
+
+export const DECISION_REASON_MAX = 1000;
+
+export type DecisionForm = { ok: true; decision: HiringDecision; reason: string } | { ok: false; errors: { decision?: string; reason?: string } };
+
+/** A decision and its reason from a form. Both required; no score or threshold is read. */
+export function readDecisionForm(form: { get(name: string): unknown }): DecisionForm {
+  const d = form.get("decision");
+  const raw = form.get("reason");
+  const reason = typeof raw === "string" ? raw.replace(/\r\n?/g, "\n").trim() : "";
+  const errors: { decision?: string; reason?: string } = {};
+  if (typeof d !== "string" || !(HIRING_DECISIONS as readonly string[]).includes(d)) errors.decision = "Choose Shortlisted, Not shortlisted or On hold.";
+  if (!reason) errors.reason = "Say why, in a sentence or two. It stays in the history.";
+  else if (reason.length > DECISION_REASON_MAX) errors.reason = `Keep the reason under ${DECISION_REASON_MAX} characters.`;
+  if (errors.decision || errors.reason) return { ok: false, errors };
+  return { ok: true, decision: d as HiringDecision, reason };
+}
+
+/**
+ * What a candidate may see of a shared review, by the policy recorded with
+ * the share: the total, or each area's title and points as well. Never the
+ * notes, the summary, the scoring guides or the reviewer.
+ */
+export interface SharedResult {
+  policy: "overall" | "by_area";
+  total: number;
+  max: number;
+  areas: { title: string; points: number; max: number }[] | null;
+  sharedAt: string;
+}
+
+export function candidateResult(
+  share: { policy: "overall" | "by_area"; sharedAt: string },
+  review: { total: number; max: number; scores: readonly { title: string; points: number; max: number }[] },
+): SharedResult {
+  return {
+    policy: share.policy,
+    total: review.total,
+    max: review.max,
+    areas: share.policy === "by_area" ? review.scores.map((s) => ({ title: s.title, points: s.points, max: s.max })) : null,
+    sharedAt: share.sharedAt,
+  };
+}

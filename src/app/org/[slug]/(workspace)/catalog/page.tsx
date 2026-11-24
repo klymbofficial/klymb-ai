@@ -130,7 +130,7 @@ export default async function CatalogPage({
               <h2 className="display text-xl">
                 <Link href={`${base}/${e.item.slug}`} className="underline-offset-4 hover:underline">{e.item.title}</Link>
               </h2>
-              {e.item.summary && <p className="text-sm">{e.item.summary}</p>}
+              {e.item.summary && <p className="line-clamp-2 text-sm text-muted">{e.item.summary}</p>}
               <MetaLine entry={e} />
               <SkillChips skills={e.skills} hrefFor={(s) => hrefFor(base, { ...filters, skill: s })} className="mt-auto pt-1" />
             </li>

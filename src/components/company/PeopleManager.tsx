@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useRef, useState } from "react";
+import { ProgressMeter } from "@/components/company/OrgCharts";
 import { addPerson, previewUpload, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult, type UploadPreview } from "@/app/org/[slug]/(workspace)/people/actions";
 import { GRANTABLE_ROLES, ROLE_LABEL, type GrantableRole } from "@/lib/company/access";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
@@ -13,10 +14,10 @@ const submit = "bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text
 /** What each responsibility opens, beside its checkbox. */
 const ROLE_HINT: Record<GrantableRole, string> = {
   admin: "Runs this workspace: people, teams and assigning",
-  company_head: "Sees learning across the whole company",
-  recruiter: "Hiring batches (coming soon)",
-  reviewer: "Reviews hiring work (coming soon)",
-  employee: "Their own learning",
+  company_head: "Company-wide Upskill progress",
+  recruiter: "Schedules tests and invites candidates",
+  reviewer: "Reviews and approves test content",
+  employee: "Their own Upskill progress",
 };
 
 const rolesOf = (p: PersonRow) => (p.roles.length ? p.roles.map((r) => ROLE_LABEL[r]).join(", ") : "—");
@@ -53,9 +54,10 @@ export function PeopleManager({ slug, me, data }: { slug: string; me: string; da
   const free = Math.max(0, data.seatCount - used);
   return (
     <div className="flex flex-col gap-8">
-      <p className="text-sm nums" aria-live="polite">
-        <strong>{used}</strong> of <strong>{data.seatCount}</strong> seats used · <strong>{free}</strong> free
-      </p>
+      <div className="max-w-xl space-y-3 rounded-lg border border-line/30 bg-white p-5">
+        <p className="text-sm nums" aria-live="polite"><strong>{used}</strong> of <strong>{data.seatCount}</strong> seats used · <strong>{free}</strong> free</p>
+        <ProgressMeter value={used} total={data.seatCount} label="Seats used" />
+      </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <AddOne slug={slug} teams={data.teams.map((t) => t.name)} free={free} />
         <UploadCsv slug={slug} free={free} />

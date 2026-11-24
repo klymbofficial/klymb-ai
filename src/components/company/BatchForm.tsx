@@ -1,11 +1,12 @@
 "use client";
 
+import { PeoplePicker } from "@/components/company/PeoplePicker";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState } from "react";
 import { createHiringBatch } from "@/app/org/[slug]/(workspace)/hiring/actions";
 import {
   BATCH_LIMITS, PREP_COURSES, allowedMinutes, deadlineText, durationText, lastStart, parseCandidates, zonedToUtc,
-  type ApprovedTest, type BatchField, type ListProblem, type PrepCourse,
+  type ApprovedTest, type BatchField, type ListProblem, type PickablePerson, type PrepCourse,
 } from "@/lib/company/batch-rules";
 
 const primary = "border-2 border-red-strong bg-red-strong px-5 py-2.5 text-sm font-bold text-white hover:border-red-press hover:bg-red-press disabled:opacity-50";
@@ -19,22 +20,26 @@ const hint = "text-xs font-normal text-muted";
  * "Preview" saves a draft; nothing is sent from here.
  */
 export function BatchForm({
-  slug, tests, reviewers, prepCourses, timeZones, initial,
+  slug, tests, reviewers, prepCourses, timeZones, initial, company,
 }: {
   slug: string;
   tests: ApprovedTest[];
   reviewers: { email: string; name: string | null }[];
   prepCourses: PrepCourse[];
   timeZones: string[];
-  initial: { timeZone: string; opens: string; closes: string };
+  /** `test` is a catalog slug to choose first (from "Invite candidates" on a test); ignored when it isn't one of `tests`. */
+  initial: { timeZone: string; opens: string; closes: string; test?: string; purpose?: "hiring" | "internal" };
+  /** The company's people and teams, for "Add from your company". */
+  company?: { people: PickablePerson[]; teams: { id: string; name: string; members: number }[] };
 }) {
   const router = useRouter();
   const [requestKey] = useState(() => crypto.randomUUID());
-  const [versionId, setVersionId] = useState(tests.length === 1 ? tests[0].versionId : "");
+  const [versionId, setVersionId] = useState(tests.find((t) => t.item === initial.test)?.versionId ?? (tests.length === 1 ? tests[0].versionId : ""));
   const test = tests.find((t) => t.versionId === versionId) ?? null;
   const [role, setRole] = useState(test?.role ?? "");
   const [roleTouched, setRoleTouched] = useState(false);
   const [prep, setPrep] = useState("");
+  const [purpose, setPurpose] = useState<"hiring" | "internal">(initial.purpose ?? "hiring");
   const [reviewer, setReviewer] = useState(reviewers.length === 1 ? reviewers[0].email : "");
   const [timeZone, setTimeZone] = useState(initial.timeZone);
   const [opens, setOpens] = useState(initial.opens);
@@ -77,9 +82,10 @@ export function BatchForm({
     e.preventDefault();
     setBusy(true);
     setMessage(null);
-    const out = await createHiringBatch(slug, { requestKey, versionId, role, prepCourse: prep, reviewer, timeZone, opens, closes, candidates: list });
+    const out = await createHiringBatch(slug, { requestKey, versionId, role, prepCourse: prep, reviewer, timeZone, opens, closes, candidates: list, purpose });
     if (out.ok) {
-      router.push(`/org/${slug}/hiring/${out.id}`);
+      // The new round opens on its test's Candidates tab, expanded, with Send and the invitation preview.
+      router.push(`/org/${slug}/assessments/${test!.item}?tab=candidates&round=${out.id}#round-${out.id}`);
       return;
     }
     setBusy(false);
@@ -95,6 +101,22 @@ export function BatchForm({
     <form onSubmit={submit} noValidate className="flex max-w-3xl flex-col gap-8">
       <fieldset className="flex flex-col gap-4">
         <legend className="display mb-3 text-lg">The test</legend>
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-xs font-bold">Who is this round for?</legend>
+          <div className="flex flex-wrap gap-2">
+            {(["hiring", "internal"] as const).map((p) => (
+              <label key={p} className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border-2 border-line/40 bg-white px-3 text-sm font-bold has-[:checked]:border-ink">
+                <input type="radio" name="purpose" value={p} checked={purpose === p} onChange={() => setPurpose(p)} />
+                {p === "hiring" ? "Hiring: candidates" : "Internal: colleagues"}
+              </label>
+            ))}
+          </div>
+          <span className={hint}>
+            {purpose === "internal"
+              ? "Colleagues see it under My assessments too. It's scored and reviewed, but nobody is shortlisted."
+              : "Candidates are scored, reviewed and then shortlisted or not by a recruiter."}
+          </span>
+        </fieldset>
         <label className={label} htmlFor={`${id}-test`}>
           Test
           <select id={`${id}-test`} className={input} value={versionId} onChange={(e) => pickTest(e.target.value)}>
@@ -107,7 +129,7 @@ export function BatchForm({
           {err("test")}
         </label>
         <label className={label} htmlFor={`${id}-role`}>
-          Role you&apos;re hiring for
+          {purpose === "internal" ? "Name of this round" : <>Role you&apos;re hiring for</>}
           <input id={`${id}-role`} className={input} value={role} maxLength={BATCH_LIMITS.role} onChange={(e) => { setRole(e.target.value); setRoleTouched(true); }} />
           {err("role")}
         </label>
@@ -169,6 +191,7 @@ export function BatchForm({
 
       <fieldset className="flex flex-col gap-3">
         <legend className="display mb-3 text-lg">Candidates</legend>
+        {company && <PeoplePicker people={company.people} teams={company.teams} list={list} onList={setList} />}
         <label className={label} htmlFor={`${id}-list`}>
           One person per line: name, email
           <span className={hint}>Add a third value for extra minutes, e.g. an accessibility adjustment: <code>Asha Rao, asha@example.com, 30</code>. Up to {BATCH_LIMITS.candidates}.</span>

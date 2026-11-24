@@ -6,9 +6,10 @@ import { EmptyPanel, LoadError, RoleOnly } from "@/components/company/OrgPanels"
 import { requireCompany } from "@/lib/company/auth";
 import { hiringOptions } from "@/lib/company/batch-data";
 import { DEFAULT_TIME_ZONE, canSchedule, toZonedInput } from "@/lib/company/batch-rules";
+import { loadCompanyPeople } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
 
-export const metadata: Metadata = { title: "New hiring batch", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Invite candidates", robots: { index: false, follow: false } };
 
 /** Every zone the server knows, India and UTC first; Node still calls India "Asia/Calcutta". */
 function timeZones(): string[] {
@@ -22,21 +23,21 @@ function defaults(now: Date) {
   return { timeZone: DEFAULT_TIME_ZONE, opens: `${day(1)}T10:00`, closes: `${day(8)}T18:00` };
 }
 
-export default async function NewBatchPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function NewBatchPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ test?: string | string[] }> }) {
   const { slug } = await params;
+  const asked = (await searchParams).test;
   const member = await requireCompany(slug);
-  const base = `/org/${member.companySlug}/hiring`;
   if (!canSchedule(member)) return <RoleOnly role="recruiters" home={`/org/${member.companySlug}`} />;
 
   const title = (
     <OrgPageHead
-      crumbs={[{ href: base, label: "Hiring batches" }, { label: "New batch" }]}
-      title="New batch"
-      meta="Pick the test and the window, add the candidates, then preview the invitation before anything is sent."
+      crumbs={[{ href: `/org/${member.companySlug}/assessments`, label: "Assessments" }, { label: "Invite candidates" }]}
+      title="Invite candidates"
+      meta="Pick the test and the window, add people, then preview the invitation before anything is sent."
     />
   );
   const sql = db();
-  const options = sql ? await hiringOptions(sql, member.companyId) : null;
+  const [options, people] = sql ? await Promise.all([hiringOptions(sql, member.companyId), loadCompanyPeople(sql, member.companyId)]) : [null, null];
   if (!options) return <>{title}<LoadError what="The batch form" /></>;
 
   if (!options.tests.length) {
@@ -61,7 +62,12 @@ export default async function NewBatchPage({ params }: { params: Promise<{ slug:
   return (
     <>
       {title}
-      <BatchForm slug={member.companySlug} tests={options.tests} reviewers={options.reviewers} prepCourses={options.prepCourses} timeZones={timeZones()} initial={defaults(new Date())} />
+      <BatchForm slug={member.companySlug} tests={options.tests} reviewers={options.reviewers} prepCourses={options.prepCourses} timeZones={timeZones()} initial={{ ...defaults(new Date()), test: typeof asked === "string" ? asked : undefined }}
+        company={people ? {
+          people: people.active.map((p) => ({ email: p.email, name: p.name, teamId: p.team_id })),
+          teams: people.teams.map((t) => ({ id: t.id, name: t.name, members: t.members })),
+        } : undefined}
+      />
     </>
   );
 }

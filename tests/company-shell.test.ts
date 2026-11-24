@@ -12,22 +12,22 @@ const shape = (m: CompanyMember) => navGroupsFor(m).map((g) => [g.label, g.items
 
 describe("the sidebar's sections", () => {
   test("an employee sees two plain links, no group names", () => {
-    assert.deepEqual(shape(member(["employee"])), [[null, ["Overview"]], [null, ["My learning"]]]);
+    assert.deepEqual(shape(member(["employee"])), [[null, ["Overview"]], [null, ["My Upskill"]]]);
   });
 
-  test("a recruiter's hiring links sit under Hiring; the open batches page is called Batches", () => {
+  test("a recruiter's hiring link is Assessments only: no separate Batches page (user, 24 Nov)", () => {
     const groups = navGroupsFor(member(["recruiter"]));
     const hiring = groups.find((g) => g.label === "Hiring");
     assert.ok(hiring, "named, since there is more than one group");
-    assert.deepEqual(hiring.items.map((i) => [i.label, i.href]), [["Assessments", "/org/acme/assessments"], ["Batches", "/org/acme/hiring"]]);
+    assert.deepEqual(hiring.items.map((i) => [i.label, i.href]), [["Assessments", "/org/acme/assessments"]]);
     assert.ok(!groups.some((g) => g.items.some((i) => i.label === "People" || i.label === "Branding")), "people and branding are for admins");
   });
 
   test("an admin gets every section, in order: overview, workforce, hiring, company", () => {
     assert.deepEqual(shape(member(["admin"])), [
       [null, ["Overview"]],
-      ["Workforce", ["People", "Teams", "Learning"]],
-      ["Hiring", ["Assessments", "Batches"]],
+      ["Workforce", ["People", "Teams", "Upskill"]],
+      ["Hiring", ["Assessments"]],
       ["Company", ["Catalog", "Branding"]],
     ]);
   });
@@ -35,7 +35,8 @@ describe("the sidebar's sections", () => {
   test("roles add up, and every link stays inside this company's workspace", () => {
     const groups = navGroupsFor(member(["employee", "recruiter"]));
     for (const g of groups) for (const i of g.items) assert.ok(i.href === "/org/acme" || i.href.startsWith("/org/acme/"), i.href);
-    assert.ok(groups.some((g) => g.items.some((i) => i.label === "Batches")));
+    assert.ok(groups.some((g) => g.items.some((i) => i.label === "Assessments")));
+    assert.ok(!groups.some((g) => g.items.some((i) => i.label === "Batches")));
   });
 
   test("the overview is current only on itself; a section also on the pages under it", () => {
@@ -47,7 +48,7 @@ describe("the sidebar's sections", () => {
 
   test("the workspace frame is the sidebar, with the company's brand and support contact", () => {
     const layout = read("src/app/org/[slug]/(workspace)/layout.tsx");
-    assert.match(layout, /groups=\{navGroupsFor\(member\)\}/);
+    assert.match(layout, /groups=\{navGroupsFor\(member, \{ myAssessments \}\)\}/);
     assert.doesNotMatch(layout, /OrgHeader/);
     const sidebar = read("src/components/company/OrgSidebar.tsx");
     assert.match(sidebar, /aria-current=\{current \? "page" : undefined\}/);
@@ -107,18 +108,19 @@ describe("the candidate table's filters", () => {
 });
 
 describe("the hiring screens show only what exists", () => {
-  test("the candidate table's actions are the ones the server already has", () => {
-    const table = read("src/components/company/CandidateTable.tsx");
+  test("the test's candidate table carries the per-person actions the server already has (U10)", () => {
+    const table = read("src/components/company/TestCandidates.tsx");
     assert.match(table, /<CandidateActions/);
-    assert.doesNotMatch(table, /<button[^>]*>\s*(Shortlist|Reject|Review|Reset)/i, "no review or decision controls before T08");
+    const rounds = read("src/components/company/InvitationRounds.tsx");
+    assert.match(rounds, /<SendDraft/);
+    assert.match(rounds, /<BatchButtons/);
     const controls = read("src/components/company/BatchControls.tsx");
     for (const fn of ["retryDelivery", "remindCandidates", "changeCandidate", "cancelInvitation", "cancelHiringBatch", "sendHiringBatch"]) assert.match(controls, new RegExp(`${fn}\\(`), fn);
   });
 
-  test("the batch page's tabs are the four that have content; a draft has no Emails tab", () => {
+  test("no batch pages: an old batch address redirects to its test's round, looked up within the company", () => {
     const page = read("src/app/org/[slug]/(workspace)/hiring/[batch]/page.tsx");
-    assert.match(page, /draft \? \["overview", "candidates", "invitation"\] : \["candidates", "overview", "invitation", "emails"\]/);
-    assert.match(page, /typeof asked === "string" && \(tabs as string\[\]\)\.includes\(asked\)/, "an unknown tab falls back to the first");
-    assert.doesNotMatch(page, /Analysis|Questions|Settings/);
+    assert.match(page, /company_id = \$\{member\.companyId\}::uuid/);
+    assert.match(page, /redirect\(`\/org\/\$\{member\.companySlug\}\/assessments\//);
   });
 });

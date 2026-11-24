@@ -5,6 +5,8 @@ import { LocalTime } from "@/components/company/LocalTime";
 import { StartTest } from "@/components/company/StartTest";
 import { RefreshAt } from "@/components/company/RefreshAt";
 import { attemptByLink, loadSubmission, recordLinkOpened, type Submission } from "@/lib/company/attempt-data";
+import { sharedResultFor } from "@/lib/company/decision-data";
+import type { SharedResult } from "@/lib/company/review-rules";
 import { attemptState, SAVE_GRACE_SECONDS } from "@/lib/company/attempt-rules";
 import { sizeText } from "@/lib/company/attempt-files";
 import { readCandidateLink } from "@/lib/company/batch-link";
@@ -72,7 +74,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
   }
 
   if (attempt?.submittedAt) {
-    const sub = await loadSubmission(sql!, attempt.id);
+    const [sub, result] = await Promise.all([loadSubmission(sql!, attempt.id), sharedResultFor(sql!, attempt.id)]);
     return (
       <CandidateShell brand={brand}>
         <Receipt
@@ -86,6 +88,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
           submission={sub ?? null}
           withFiles={v.submission === "written_file"}
         />
+        {result && <ResultCard company={company} result={result} zone={b.timeZone} />}
         <p className="text-xs text-muted">This link is for {c.email} only. Questions? Write to {write} and quote your receipt code.</p>
       </CandidateShell>
     );
@@ -219,6 +222,31 @@ function Receipt({ company, role, title, receipt, submittedAt, kind, zone, submi
           <p className="mt-2 text-sm text-muted">The details can&apos;t be shown right now; your submission is safe.</p>
         )}
       </div>
+    </section>
+  );
+}
+
+/**
+ * The result the company shared: the total, and each area's points when the
+ * test's policy shows them. Only ever what a recruiter pressed Share on;
+ * never notes, the summary, the scoring guides or a hiring decision.
+ */
+function ResultCard({ company, result, zone }: { company: string; result: SharedResult; zone: string }) {
+  return (
+    <section className="card p-6" aria-labelledby="result-title">
+      <p className={label}>Your result</p>
+      <h2 id="result-title" className="display mt-2 text-2xl">{result.total} / {result.max}</h2>
+      <p className="mt-1 text-sm text-muted">Shared by {company} on {deadlineText(result.sharedAt, zone)}.</p>
+      {result.areas && (
+        <ul className="mt-4 divide-y divide-line/20 border-t border-line/20 text-sm">
+          {result.areas.map((a, i) => (
+            <li key={i} className="flex justify-between gap-4 py-2">
+              <span>{a.title}</span>
+              <span className="shrink-0 tabular-nums">{a.points} / {a.max}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

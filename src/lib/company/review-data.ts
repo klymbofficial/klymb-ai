@@ -30,7 +30,7 @@ export interface ReviewRecord {
 
 export interface ReviewView {
   candidate: { id: string; name: string; email: string; status: "active" | "cancelled" };
-  batch: { id: string; role: string; title: string; version: number; timeZone: string; status: string; reviewerEmail: string; reviewerName: string | null };
+  batch: { id: string; item: string; purpose: "hiring" | "internal"; role: string; title: string; version: number; timeZone: string; status: string; reviewerEmail: string; reviewerName: string | null };
   attempt: {
     id: string; startedAt: string; deadlineAt: string; allowedMinutes: number; receipt: string;
     submittedAt: string | null; submitKind: "candidate" | "deadline" | null;
@@ -38,6 +38,8 @@ export interface ReviewView {
   submission: { answer: string; files: { id: string; name: string; kind: AttemptFileKind; bytes: number }[] } | null;
   /** The rubric pinned to the attempt (the batch's version before anyone starts). Guides included: reviewers only. */
   rubric: RubricItem[];
+  /** What the pinned version lets the candidate see once a recruiter shares (none | overall | by_area). */
+  results: "none" | "overall" | "by_area";
   /** Newest first. */
   reviews: ReviewRecord[];
 }
@@ -57,15 +59,15 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
   await finaliseDue(sql, { candidateId });
   const head = await sql.row<{
     id: string; name: string; email: string; status: "active" | "cancelled";
-    batch_id: string; role: string; time_zone: string; batch_status: string; reviewer_email: string; reviewer_name: string | null; title: string; version: number;
+    batch_id: string; item: string; purpose: "hiring" | "internal" | null; role: string; time_zone: string; batch_status: string; reviewer_email: string; reviewer_name: string | null; title: string; version: number;
     attempt_id: string | null; started_at: string | null; deadline_at: string | null; allowed_minutes: number | null; receipt: string | null;
     submitted_at: string | null; submit_kind: "candidate" | "deadline" | null;
-    answer: string | null; file_ids: string[] | null; submitted: boolean; rubric: RubricItem[];
+    answer: string | null; file_ids: string[] | null; submitted: boolean; rubric: RubricItem[]; results: ReviewView["results"];
   }>`
     select c.id, c.name, c.email, c.status,
-           b.id as batch_id, b.role, b.time_zone, b.status as batch_status, b.reviewer_email, rm.name as reviewer_name, bv.title, bv.version,
+           b.id as batch_id, b.item, b.purpose, b.role, b.time_zone, b.status as batch_status, b.reviewer_email, rm.name as reviewer_name, bv.title, bv.version,
            a.id as attempt_id, a.started_at, a.deadline_at, a.allowed_minutes, a.receipt, a.submitted_at, a.submit_kind,
-           s.answer, s.file_ids, s.attempt_id is not null as submitted, pv.rubric
+           s.answer, s.file_ids, s.attempt_id is not null as submitted, pv.rubric, pv.results
       from course.batch_candidates c
       join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
       join course.assessment_versions bv on bv.id = b.version_id
@@ -103,12 +105,13 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
 
   return {
     candidate: { id: h.id, name: h.name, email: h.email, status: h.status },
-    batch: { id: h.batch_id, role: h.role, title: h.title, version: h.version, timeZone: h.time_zone, status: h.batch_status, reviewerEmail: h.reviewer_email, reviewerName: h.reviewer_name },
+    batch: { id: h.batch_id, item: h.item, purpose: h.purpose ?? "hiring", role: h.role, title: h.title, version: h.version, timeZone: h.time_zone, status: h.batch_status, reviewerEmail: h.reviewer_email, reviewerName: h.reviewer_name },
     attempt: h.attempt_id
       ? { id: h.attempt_id, startedAt: h.started_at!, deadlineAt: h.deadline_at!, allowedMinutes: h.allowed_minutes!, receipt: h.receipt!, submittedAt: h.submitted_at, submitKind: h.submit_kind }
       : null,
     submission: h.submitted ? { answer: h.answer ?? "", files } : null,
     rubric: h.rubric,
+    results: h.results,
     reviews,
   };
 }

@@ -178,14 +178,15 @@ describe("reviewing (H09)", async () => {
   });
 
   test("the review page never reaches the candidate, and the download is forced and uncached", () => {
-    const route = read("src/app/org/[slug]/(workspace)/hiring/[batch]/candidates/[candidate]/files/[file]/route.ts");
+    const route = read("src/app/org/[slug]/(workspace)/assessments/[item]/candidates/[candidate]/files/[file]/route.ts");
     assert.match(route, /seesHiring\(member\)/);
     assert.match(route, /"content-disposition": `attachment;/);
     assert.match(route, /"cache-control": "private, no-store"/);
-    const action = read("src/app/org/[slug]/(workspace)/hiring/[batch]/candidates/[candidate]/actions.ts");
+    const action = read("src/app/org/[slug]/(workspace)/assessments/[item]/candidates/[candidate]/actions.ts");
     assert.match(action, /canScore\(member\)/);
     assert.match(action, /reviewer: member\.email/, "the reviewer comes from the login");
     const receipt = read("src/app/assessment/[token]/page.tsx");
-    assert.doesNotMatch(receipt, /attempt_reviews|loadReviewView|guide/, "nothing of the review on the candidate's page (sharing is H10)");
+    assert.doesNotMatch(receipt, /attempt_reviews|loadReviewView|\.guide\b/, "the review itself never reaches the candidate's page");
+    assert.match(receipt, /sharedResultFor\(/, "only a result a recruiter shared (H10)");
   });
 });

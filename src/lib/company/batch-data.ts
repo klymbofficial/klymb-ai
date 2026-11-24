@@ -1,7 +1,7 @@
 import "server-only";
 import type { Db } from "@/lib/db/client";
 import { companyCatalog } from "@/lib/company/catalog-data";
-import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, STALE_SEND_MINUTES, isPrepCourse, type ApprovedTest, type BatchInput, type Delivery, type MailKind, type PrepCourse } from "@/lib/company/batch-rules";
+import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, STALE_SEND_MINUTES, isPrepCourse, type ApprovedTest, type BatchInput, type Delivery, type MailKind, type PrepCourse, type RoundPurpose } from "@/lib/company/batch-rules";
 
 /**
  * Hiring batches (course.hiring_batches, batch_candidates, batch_mail_log;
@@ -80,8 +80,8 @@ export async function createBatch(sql: Db, b: BatchInput & { companyId: string; 
                       where m.company_id = ${b.companyId}::uuid and m.email = ${b.reviewer} and m.removed_at is null)
          and not exists (select 1 from prior) as ok
     ), made as (
-      insert into course.hiring_batches (company_id, item, version_id, role, prep_course, reviewer_email, opens_at, closes_at, time_zone, request_key, created_by)
-      select ${b.companyId}::uuid, ${b.item}, ${b.versionId}::uuid, ${b.role}, ${b.prepCourse}, ${b.reviewer},
+      insert into course.hiring_batches (company_id, item, purpose, version_id, role, prep_course, reviewer_email, opens_at, closes_at, time_zone, request_key, created_by)
+      select ${b.companyId}::uuid, ${b.item}, ${b.purpose ?? "hiring"}, ${b.versionId}::uuid, ${b.role}, ${b.prepCourse}, ${b.reviewer},
              ${b.opensAt.toISOString()}::timestamptz, ${b.closesAt.toISOString()}::timestamptz, ${b.timeZone}, ${b.requestKey}::uuid, ${b.by}
         from go where go.ok
       on conflict (company_id, request_key) do nothing
@@ -150,6 +150,7 @@ export interface Batch {
   id: string;
   companyId: string;
   item: string;
+  purpose: RoundPurpose;
   versionId: string;
   title: string;
   version: number;
@@ -199,13 +200,13 @@ export interface MailLogRow {
 }
 
 type BatchRow = {
-  id: string; company_id: string; item: string; version_id: string; title: string; version: number; minutes: number; role: string; prep_course: PrepCourse | null;
+  id: string; company_id: string; item: string; purpose: RoundPurpose | null; version_id: string; title: string; version: number; minutes: number; role: string; prep_course: PrepCourse | null;
   reviewer_email: string; reviewer_name: string | null; opens_at: string; closes_at: string; time_zone: string; status: Batch["status"];
   created_by: string; created_at: string; sent_by: string | null; sent_at: string | null; cancelled_by: string | null; cancelled_at: string | null;
 };
 
 const toBatch = (r: BatchRow): Batch => ({
-  id: r.id, companyId: r.company_id, item: r.item, versionId: r.version_id, title: r.title, version: r.version, minutes: r.minutes, role: r.role,
+  id: r.id, companyId: r.company_id, item: r.item, purpose: r.purpose ?? "hiring", versionId: r.version_id, title: r.title, version: r.version, minutes: r.minutes, role: r.role,
   prepCourse: r.prep_course, reviewer: { email: r.reviewer_email, name: r.reviewer_name }, opensAt: r.opens_at, closesAt: r.closes_at, timeZone: r.time_zone,
   status: r.status, createdBy: r.created_by, createdAt: r.created_at, sentBy: r.sent_by, sentAt: r.sent_at, cancelledBy: r.cancelled_by, cancelledAt: r.cancelled_at,
 });
@@ -225,7 +226,7 @@ const toCandidate = (r: CandidateRow): Candidate => ({
 /** One batch of this company, with its people and every email sent to them. Undefined when there's no such batch here. */
 export async function loadBatch(sql: Db, companyId: string, batchId: string): Promise<{ batch: Batch; candidates: Candidate[]; mail: MailLogRow[] } | undefined | null> {
   const head = await sql.row<BatchRow>`
-    select b.id, b.company_id, b.item, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, m.name as reviewer_name,
+    select b.id, b.company_id, b.item, b.purpose, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, m.name as reviewer_name,
            b.opens_at, b.closes_at, b.time_zone, b.status, b.created_by, b.created_at, b.sent_by, b.sent_at, b.cancelled_by, b.cancelled_at
       from course.hiring_batches b
       join course.assessment_versions v on v.id = b.version_id
@@ -491,7 +492,7 @@ export async function cancelBatch(sql: Db, companyId: string, batchId: string, b
 /** What the email and the candidate's page need about the batch, by batch id. */
 export async function batchForMail(sql: Db, batchId: string): Promise<Batch | null> {
   const { data, error } = await sql.row<BatchRow>`
-    select b.id, b.company_id, b.item, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, null::text as reviewer_name,
+    select b.id, b.company_id, b.item, b.purpose, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, null::text as reviewer_name,
            b.opens_at, b.closes_at, b.time_zone, b.status, b.created_by, b.created_at, b.sent_by, b.sent_at, b.cancelled_by, b.cancelled_at
       from course.hiring_batches b join course.assessment_versions v on v.id = b.version_id
      where b.id = ${batchId}::uuid

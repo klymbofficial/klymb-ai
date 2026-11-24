@@ -26,7 +26,7 @@ export const SUBMISSIONS = ["written", "written_file"] as const;
 export type Submission = (typeof SUBMISSIONS)[number];
 export const SUBMISSION_LABEL: Record<Submission, string> = {
   written: "A written answer",
-  written_file: "A written answer, and one file (PDF, PNG or JPG, up to 10 MB)",
+  written_file: "A written answer, and up to 3 files (PDF, PNG, JPG, TXT or MD, 4 MB each)",
 };
 
 export const RESULTS = ["none", "overall", "by_area"] as const;

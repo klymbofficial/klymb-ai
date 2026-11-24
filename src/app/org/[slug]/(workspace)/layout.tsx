@@ -7,7 +7,9 @@ import { contact } from "@/data/config";
 import { allowCompany, ROLE_LABEL } from "@/lib/company/access";
 import { getMemberships, getWorkspaceMember } from "@/lib/company/auth";
 import { getPublishedBrand } from "@/lib/company/branding-data";
+import { hasMyInvitations } from "@/lib/company/my-assessments";
 import { navGroupsFor } from "@/lib/company/nav";
+import { db } from "@/lib/db/client";
 import { ORG_PATH_HEADER, signInHref } from "@/lib/company/return-path";
 
 /**
@@ -31,11 +33,13 @@ export default async function OrgLayout({ children, params }: { children: React.
     redirect(signInHref((await headers()).get(ORG_PATH_HEADER) ?? `/org/${slug.toLowerCase()}`));
   }
   const brand = await getPublishedBrand(member);
+  const sql = db();
+  const myAssessments = sql ? await hasMyInvitations(sql, member.companyId, member.email) : false;
 
   return (
     <div className="min-h-screen bg-paper lg:flex" {...brandProps(brand.accent)}>
       <OrgSidebar
-        groups={navGroupsFor(member)}
+        groups={navGroupsFor(member, { myAssessments })}
         brand={{ name: brand.name, logoUrl: brand.logoUrl, logoAlt: brand.logoAlt }}
         email={member.email}
         roles={member.roles.map((r) => ROLE_LABEL[r])}

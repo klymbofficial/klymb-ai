@@ -38,7 +38,7 @@ export default async function CompanySignInPage({ searchParams }: { searchParams
           <CompanySignInForm next={next} />
         </div>
         <ul className="mt-6 space-y-2 text-xs text-muted">
-          <li>Company admins manage their company&apos;s people and teams. Team leads see their team; everyone sees their own learning.</li>
+          <li>Admins manage people and teams. Track course progress in Upskill.</li>
           <li>
             Not invited by a company? <Link href="/learn" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.
           </li>

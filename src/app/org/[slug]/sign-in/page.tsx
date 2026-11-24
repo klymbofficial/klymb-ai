@@ -44,7 +44,7 @@ export default async function WorkspaceSignInPage({ params, searchParams }: Prop
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
           <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} size="lg" />
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Learning workspace</p>
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-muted">Company workspace</p>
         </div>
         <div className="card p-6 sm:p-8">
           {brand.accent && <div aria-hidden="true" className="-mx-6 -mt-6 mb-6 h-1.5 bg-[var(--brand-accent)] sm:-mx-8 sm:-mt-8" />}

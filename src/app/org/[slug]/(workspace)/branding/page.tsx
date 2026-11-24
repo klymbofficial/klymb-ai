@@ -25,7 +25,7 @@ export default async function BrandingPage({ params }: { params: Promise<{ slug:
     <>
       <OrgPageTitle
         title="Branding"
-        intro="How your workspace looks to your people: on the sign-in page, in the workspace, in invite emails and on courses you assign. Save a draft, check the preview, then publish."
+        intro="Customize your workspace and invitations. Preview your draft before publishing."
       />
       {state ? (
         <BrandingEditor

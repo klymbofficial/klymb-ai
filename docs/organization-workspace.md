@@ -15,13 +15,13 @@ on this branch, not against plans.
   resolves the viewer's membership of the company the URL names
   (`workspaceLookup` in `src/lib/company/lookup.ts`), not "their" company. A
   member of another company gets a 404.
-- **Roles:** HR (People, Teams, Learning), team head (their team's Learning),
+- **Roles:** HR (People, Teams, Upskill), team head (Team Upskill),
   employee (their own). Access is read from `course.company_members` on every
   request; removing a person ends access at once.
 - **Course assignment (pilot):** HR assigns System Design to a person, to
   everyone who has none (after a confirmation showing the count), or takes it
   back. See below.
-- **Learning page:** who has the course, lessons passed and final-assessment
+- **Upskill page:** who has the course, lessons passed and final-assessment
   scores, per email, from `lesson_checks` and `final_attempts`.
 
 - **Branding (T02):** a company admin sets display name, logo (uploaded PNG,
@@ -68,7 +68,7 @@ on this branch, not against plans.
 - **Assignments (T04):** an admin assigns System Design to some people, a
   team or everyone; a team lead to people on their own team (`assignerFor`).
   Each assignment is required (optionally with a due date) or recommended.
-  The Learning page shows who it would reach, who is left out and why, the
+  The Upskill page shows who it would reach, who is left out and why, the
   owner, the date and the seats before anything is written, then writes it
   once (`course.company_assignments` and `company_assignment_recipients`,
   migration 0050). The people are fixed at that moment: someone joining the
@@ -257,3 +257,9 @@ run again there under new names: check they are idempotent first.
 - `SITE_CLOSED` (src/lib/site-status.ts) does not keep `/org` open; if the site
   is closed, company sign-in is hidden too.
 - A member whose work email is not a Google account cannot open the course.
+
+## B2B visual presentation
+
+The company workspace calls its course area **Upskill** (My Upskill / Team Upskill for scoped views). Existing `/learning` URLs and actions stay compatible.
+
+Prefer a short heading, an action and a visual summary over introductory paragraphs. Use rings for completion/coverage, bars for comparisons and stacked bars for exclusive statuses. Keep counts and labels readable without color or hover; use actual scoped data and explicit empty/unavailable states. Do not invent trends, improvement, scores or conversion stages that are not recorded. Keep essential instructions visible; put methodology and secondary help in accessible disclosures. Preserve full details in the relevant table or detail page. This direction applies across the B2B workspace and future screens.

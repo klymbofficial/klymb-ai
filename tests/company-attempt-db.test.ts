@@ -11,7 +11,7 @@ import type { BatchInput } from "../src/lib/company/batch-rules";
 /**
  * H06–H09 against a real database. Opt-in, like company-batch-db: runs only when
  * TEST_DATABASE_URL points at a throwaway database with migrations through
- * 0058, and refuses the app's own database:
+ * 0060, and refuses the app's own database:
  *
  *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test --test-concurrency=1 tests/company-attempt-db.test.ts
  *
@@ -61,6 +61,7 @@ describe("candidate attempts against a real database", { skip }, () => {
   let data: typeof import("../src/lib/company/batch-data");
   let att: typeof import("../src/lib/company/attempt-data");
   let rev: typeof import("../src/lib/company/review-data");
+  let dec: typeof import("../src/lib/company/decision-data");
   /** An attempt that started `minutesAgo` minutes ago with `allowed` minutes, put straight in (the app can't start one in the past). */
   async function pastAttempt(minutesAgo: number, allowed: number) {
     const { batchId, id } = await invited();
@@ -102,6 +103,7 @@ describe("candidate attempts against a real database", { skip }, () => {
     data = await import("../src/lib/company/batch-data");
     att = await import("../src/lib/company/attempt-data");
     rev = await import("../src/lib/company/review-data");
+    dec = await import("../src/lib/company/decision-data");
     await one.connect();
     await two.connect();
     sqlA = adapter(one);
@@ -117,7 +119,7 @@ describe("candidate attempts against a real database", { skip }, () => {
 
   after(async () => {
     if (companyId) await one.query(`delete from course.companies where id = $1`, [companyId]);
-    await one.query(`delete from course.assessment_drafts where slug = $1`, [slug]);
+    await one.query(`delete from course.assessment_drafts where slug = any($1)`, [[slug, `${slug}-area`]]);
     await one.end();
     await two.end();
   });
@@ -531,5 +533,149 @@ describe("candidate attempts against a real database", { skip }, () => {
     assert.equal((await att.attemptsForBatch(sqlA, companyId, batchId))!.length, 1);
     assert.deepEqual(await att.attemptsForBatch(sqlA, randomUUID(), batchId), []);
     await assert.rejects(one.query(`update course.hiring_events set kind = 'submitted' where candidate_id = $1`, [id]), /append-only/);
+  });
+
+  // ── H10: decisions and shared results ──
+  const recruiter = `recr-${run}@test.invalid`;
+  const head = `head-${run}@test.invalid`;
+  async function people() {
+    for (const [email, role] of [[recruiter, "recruiter"], [head, "company_head"]] as const) {
+      await one.query(`insert into course.company_members (email, company_id, role, name) select $1, $2, 'employee', $3
+                        where not exists (select 1 from course.company_members where email = $1 and company_id = $2)`, [email, companyId, role]);
+      await one.query(`insert into course.company_member_roles (company_id, email, role) select $1, $2, $3
+                        where not exists (select 1 from course.company_member_roles where company_id = $1 and email = $2 and role = $3)`, [companyId, email, role]);
+    }
+  }
+  const decide = (attemptId: string, over: Partial<Parameters<typeof dec.recordDecision>[1]> = {}, sql = sqlA) =>
+    dec.recordDecision(sql, { companyId, attemptId, actor: recruiter, baseRevision: 0, decision: "shortlisted", reason: "Clear design.", ...over });
+
+  test("recruiters and company heads decide, with a reason; a decision may come before a review and says so", async () => {
+    await people();
+    const running = await startedWith("not yet");
+    assert.deepEqual(await decide(running.attemptId), { status: "not_submitted" });
+    const x = await submitted();
+    assert.deepEqual(await decide(x.attemptId, { actor: reviewer }), { status: "refused" }, "a reviewer scores, doesn't decide");
+    assert.deepEqual(await decide(x.attemptId, { companyId: randomUUID() }), { status: "refused" }, "another company");
+    assert.deepEqual(await decide(x.attemptId, { reason: "   " }), { status: "invalid" });
+    assert.deepEqual(await decide(x.attemptId, { reason: "x".repeat(1001) }), { status: "invalid" });
+    assert.deepEqual(await decide(x.attemptId, { decision: "hired" as never }), { status: "invalid" });
+
+    assert.deepEqual(await decide(x.attemptId), { status: "recorded", revision: 1 }, "before any review");
+    assert.equal((await review(x.attemptId))?.status, "recorded");
+    assert.deepEqual(await decide(x.attemptId, { actor: head, baseRevision: 1, decision: "on_hold", reason: "Waiting on the panel." }), { status: "recorded", revision: 2 });
+    const h = (await dec.decisionHistory(sqlA, companyId, x.attemptId))!;
+    assert.deepEqual(h.decisions.map((d) => [d.revision, d.decision, d.reviewRevision, d.decidedBy]), [[2, "on_hold", 1, head], [1, "shortlisted", null, recruiter]]);
+    assert.deepEqual(await dec.decisionHistory(sqlA, randomUUID(), x.attemptId), { decisions: [], shares: [] }, "another company sees none");
+    const ev = (await one.query(`select actor_kind, detail from course.hiring_events where attempt_id = $1 and kind = 'decision_recorded' order by at`, [x.attemptId])).rows;
+    assert.deepEqual(ev.map((e) => e.detail.decision), ["shortlisted", "on_hold"]);
+    assert.equal((await dec.decisionsForBatch(sqlA, companyId, x.batchId))!.get(x.attemptId)?.decision, "on_hold", "newest counts");
+
+    // The role ends it at once.
+    await one.query(`delete from course.company_member_roles where company_id = $1 and email = $2`, [companyId, recruiter]);
+    try {
+      assert.deepEqual(await decide(x.attemptId, { baseRevision: 2 }), { status: "refused" });
+    } finally {
+      await one.query(`insert into course.company_member_roles (company_id, email, role) values ($1, $2, 'recruiter')`, [companyId, recruiter]);
+    }
+  });
+
+  test("two people deciding at once: one lands; decisions can't be edited or deleted; a score never decides", async () => {
+    await people();
+    const x = await submitted();
+    assert.equal((await review(x.attemptId, { scores: [{ points: 4, note: "" }] }))?.status, "recorded");
+    assert.equal((await dec.decisionsForBatch(sqlA, companyId, x.batchId))!.get(x.attemptId)?.decision, null, "a full score decides nothing");
+    const [p, q] = await Promise.all([decide(x.attemptId, {}, sqlA), decide(x.attemptId, { decision: "not_shortlisted", actor: head }, sqlB)]);
+    assert.deepEqual([p?.status, q?.status].sort(), ["conflict", "recorded"]);
+    await assert.rejects(one.query(`update course.hiring_decisions set decision = 'shortlisted' where attempt_id = $1`, [x.attemptId]), /cannot be changed/);
+    await assert.rejects(one.query(`delete from course.hiring_decisions where attempt_id = $1`, [x.attemptId]), /only with their attempt/);
+  });
+
+  test("sharing follows the pinned policy: refused for 'none' or before a review; a share keeps the review it showed", async () => {
+    await people();
+    // This file's test pins results 'none'.
+    const none = await submitted();
+    assert.equal((await review(none.attemptId))?.status, "recorded");
+    assert.deepEqual(await dec.shareResult(sqlA, { companyId, attemptId: none.attemptId, actor: recruiter }), { status: "not_allowed" });
+
+    // A second test that shows results by area.
+    const assessments = await import("../src/lib/company/assessment-data");
+    const areaSlug = `${slug}-area`;
+    await assessments.saveDraft(sqlA, { ...code, slug: areaSlug } as CatalogAssessment, {
+      ...content, results: "by_area",
+      rubric: [{ title: "API", skill: "APIs", points: 4, guide: "Secret guide." }, { title: "Data", skill: "Data", points: 6, guide: "Another guide." }],
+    }, 0, "a@test.invalid");
+    await assessments.publishDraft(sqlA, areaSlug, "Area practical", 1, "a@test.invalid");
+    const areaVersion = (await assessments.loadVersions(sqlA, areaSlug))![0].id;
+    await one.query(`insert into course.company_assessment_reviews (company_id, version_id, decision, decided_by) values ($1, $2, 'approved', $3)`, [companyId, areaVersion, reviewer]);
+    const { batchId, id } = await invited({ item: areaSlug, versionId: areaVersion });
+    const started = await att.startAttempt(sqlA, id, 1);
+    assert.ok(started && started.status === "started");
+    const attemptId = started.attempt.id;
+    await att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 0, answer: "area answer" });
+    assert.equal((await att.submitAttempt(sqlA, { candidateId: id, generation: 1, attemptId, revision: 1 }))?.status, "submitted");
+
+    const share = () => dec.shareResult(sqlA, { companyId, attemptId, actor: recruiter });
+    assert.deepEqual(await share(), { status: "not_reviewed" });
+    assert.deepEqual(await dec.shareResult(sqlA, { companyId, attemptId, actor: reviewer }), { status: "refused" });
+    assert.deepEqual(await dec.shareResult(sqlA, { companyId: randomUUID(), attemptId, actor: recruiter }), { status: "refused" });
+    assert.equal(await dec.sharedResultFor(sqlA, attemptId), undefined, "nothing until shared");
+
+    assert.equal((await review(attemptId, { scores: [{ points: 3, note: "Private note." }, { points: 5, note: "" }], summary: "Private summary." }))?.status, "recorded");
+    assert.deepEqual(await share(), { status: "shared", reviewRevision: 1, policy: "by_area" });
+    assert.deepEqual(await share(), { status: "already", reviewRevision: 1, policy: "by_area" }, "a second press changes nothing");
+    const seen = (await dec.sharedResultFor(sqlA, attemptId))!;
+    assert.deepEqual({ ...seen, sharedAt: "" }, { policy: "by_area", total: 8, max: 10, areas: [{ title: "API", points: 3, max: 4 }, { title: "Data", points: 5, max: 6 }], sharedAt: "" });
+    assert.doesNotMatch(JSON.stringify(seen), /Private|guide/i, "never notes, summary or guides");
+
+    // A later review doesn't reach the candidate until shared again.
+    assert.equal((await review(attemptId, { baseRevision: 1, scores: [{ points: 4, note: "" }, { points: 6, note: "" }] }))?.status, "recorded");
+    assert.equal((await dec.sharedResultFor(sqlA, attemptId))!.total, 8);
+    assert.deepEqual(await share(), { status: "shared", reviewRevision: 2, policy: "by_area" });
+    assert.equal((await dec.sharedResultFor(sqlA, attemptId))!.total, 10);
+    const h = (await dec.decisionHistory(sqlA, companyId, attemptId))!;
+    assert.deepEqual(h.shares.map((x) => x.reviewRevision), [2, 1]);
+    assert.equal((await dec.decisionsForBatch(sqlA, companyId, batchId))!.get(attemptId)?.sharedRevision, 2);
+    assert.deepEqual((await one.query(`select count(*)::int n from course.hiring_events where attempt_id = $1 and kind = 'result_shared'`, [attemptId])).rows[0].n, 2);
+    await assert.rejects(one.query(`update course.result_shares set policy = 'overall' where attempt_id = $1`, [attemptId]), /cannot be changed/);
+  });
+
+  test("the review address finds a person's round only within this company and test (U10)", async () => {
+    const { roundOfCandidate } = await import("../src/lib/company/round-data");
+    const { batchId, id } = await invited();
+    assert.equal(await roundOfCandidate(sqlA, companyId, slug, id), batchId);
+    assert.equal(await roundOfCandidate(sqlA, randomUUID(), slug, id), undefined, "another company");
+    assert.equal(await roundOfCandidate(sqlA, companyId, `${slug}-other`, id), undefined, "another test");
+    assert.equal(await roundOfCandidate(sqlA, companyId, slug, randomUUID()), undefined);
+  });
+
+  test("U11: an internal round is scored but never decided; My assessments finds only my own sent invitations", async () => {
+    await people();
+    const mine = await import("../src/lib/company/my-assessments");
+    const email = `colleague-${run}@test.invalid`;
+    const made = await data.createBatch(sqlA, { ...input({ candidates: [{ name: "Colleague", email, extraMinutes: 0 }] }), purpose: "internal" });
+    const batchId = (made as { id: string }).id;
+    assert.equal((await one.query(`select purpose from course.hiring_batches where id = $1`, [batchId])).rows[0].purpose, "internal");
+    assert.equal((await one.query(`select purpose from course.hiring_batches where id = $1`, [(await invited()).batchId])).rows[0].purpose, "hiring", "default");
+
+    // A draft isn't an invitation yet.
+    assert.equal(await mine.hasMyInvitations(sqlA, companyId, email), false);
+    const [t] = (await data.startSending(sqlA, companyId, batchId, "rec"))!;
+    await data.recordMail(sqlA, { candidateId: t.id, kind: "invite", generation: 1, outcome: "sent", error: null, by: "rec" });
+    assert.equal(await mine.hasMyInvitations(sqlA, companyId, email.toUpperCase()), true, "any case");
+    assert.equal(await mine.hasMyInvitations(sqlA, randomUUID(), email), false, "another company");
+    assert.deepEqual((await mine.myInvitations(sqlA, companyId, email))!.map((r) => [r.id, r.purpose]), [[t.id, "internal"]]);
+    assert.deepEqual(await mine.myInvitations(sqlA, companyId, "someone-else@test.invalid"), []);
+    assert.deepEqual(await mine.myInvitation(sqlA, companyId, email, t.id), { id: t.id, generation: 1 });
+    assert.equal(await mine.myInvitation(sqlA, companyId, "someone-else@test.invalid", t.id), undefined, "not mine");
+    assert.equal(await mine.myInvitation(sqlA, randomUUID(), email, t.id), undefined, "not this company");
+
+    const started = await att.startAttempt(sqlA, t.id, 1);
+    assert.ok(started && started.status === "started");
+    await att.saveDraft(sqlA, { candidateId: t.id, generation: 1, attemptId: started.attempt.id, baseRevision: 0, answer: "internal answer" });
+    assert.equal((await att.submitAttempt(sqlA, { candidateId: t.id, generation: 1, attemptId: started.attempt.id, revision: 1 }))?.status, "submitted");
+    assert.equal((await review(started.attempt.id))?.status, "recorded", "scored like anyone");
+    assert.deepEqual(await decide(started.attempt.id), { status: "internal" }, "never shortlisted");
+    assert.equal((await one.query(`select count(*)::int n from course.hiring_decisions where attempt_id = $1`, [started.attempt.id])).rows[0].n, 0);
+    assert.equal((await mine.myInvitations(sqlA, companyId, email))![0].submittedAt !== null, true);
   });
 });

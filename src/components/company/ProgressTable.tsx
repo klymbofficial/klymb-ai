@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { ProgressMeter } from "@/components/company/OrgCharts";
 import { dueState } from "@/lib/company/assign-rules";
 import type { MemberProgress } from "@/lib/company/progress-data";
 import { statusLabel } from "@/lib/company/progress-summary";
@@ -78,7 +79,7 @@ export function ProgressTable({
               {showTeam && <td className="px-3 py-3 text-muted">{p.teamName ?? "No team"}</td>}
               <td className="px-3 py-3 font-semibold">{statusOf(p, total)}</td>
               {showDue && <td className="px-3 py-3"><DueCell p={p} total={total} /></td>}
-              <td className="px-3 py-3 tabular-nums">{p.hasAccess ? `${p.lessonsPassed} of ${total}` : "–"}</td>
+              <td className="px-3 py-3 tabular-nums">{p.hasAccess ? <LessonProgress passed={p.lessonsPassed} total={total} /> : "–"}</td>
               <td className="px-3 py-3 tabular-nums">
                 {p.finalAttempts > 0 ? `${p.finalBest}% best, ${p.finalAttempts} ${p.finalAttempts === 1 ? "try" : "tries"}` : "Not taken"}
               </td>
@@ -103,7 +104,7 @@ export function ProgressTable({
               {showTeam && (<><dt className="text-muted">Team</dt><dd>{p.teamName ?? "No team"}</dd></>)}
               {showDue && (<><dt className="text-muted">Due</dt><dd><DueCell p={p} total={total} /></dd></>)}
               <dt className="text-muted">Lessons passed</dt>
-              <dd className="tabular-nums">{p.hasAccess ? `${p.lessonsPassed} of ${total}` : "–"}</dd>
+              <dd className="tabular-nums">{p.hasAccess ? <LessonProgress passed={p.lessonsPassed} total={total} /> : "–"}</dd>
               <dt className="text-muted">Final assessment</dt>
               <dd className="tabular-nums">{p.finalAttempts > 0 ? `${p.finalBest}% best, ${p.finalAttempts} ${p.finalAttempts === 1 ? "try" : "tries"}` : "Not taken"}</dd>
               <dt className="text-muted">Last activity</dt>
@@ -117,4 +118,8 @@ export function ProgressTable({
       </ul>
     </>
   );
+}
+
+function LessonProgress({ passed, total }: { passed: number; total: number }) {
+  return <div className="min-w-20 max-w-40 space-y-1.5"><span>{passed} / {total}</span><ProgressMeter value={passed} total={total} label="Lessons passed" /></div>;
 }

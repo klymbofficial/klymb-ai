@@ -1,7 +1,7 @@
 import type { OrgNavIcon } from "@/lib/company/nav";
 
 /** Line icons for the company workspace. Decorative: the text beside each one says what it is. */
-const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calendar" | "test" | "search" | "plus", React.ReactNode> = {
+const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calendar" | "test" | "search" | "plus" | "mail" | "eye" | "invite" | "report", React.ReactNode> = {
   overview: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
   people: (
     <>
@@ -72,6 +72,25 @@ const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calen
     </>
   ),
   plus: <path d="M12 5v14M5 12h14" />,
+  mail: (
+    <>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" />
+      <path d="M4 7l8 6 8-6" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="2.8" />
+    </>
+  ),
+  invite: (
+    <>
+      <circle cx="9.5" cy="8" r="3.5" />
+      <path d="M3 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M18.5 8v6M15.5 11h6" />
+    </>
+  ),
+  report: <path d="M5 20V10M10 20V4M15 20v-7M20 20v-11" />,
 };
 
 export type OrgIconName = keyof typeof PATHS;

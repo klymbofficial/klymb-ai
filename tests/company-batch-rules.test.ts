@@ -287,8 +287,9 @@ describe("what a recruiter is told about an email", () => {
       "../src/app/org/[slug]/(workspace)/hiring/actions.ts",
       "../src/components/company/BatchControls.tsx",
       "../src/components/company/BatchForm.tsx",
-      "../src/components/company/BatchList.tsx",
-      "../src/components/company/CandidateTable.tsx",
+      "../src/components/company/InvitationRounds.tsx",
+      "../src/components/company/TestCandidates.tsx",
+      "../src/lib/company/round-data.ts",
       "../src/app/assessment/[token]/page.tsx",
     ];
     for (const f of files) {
@@ -296,8 +297,8 @@ describe("what a recruiter is told about an email", () => {
       // "Delivered" is the claim nothing here can back. Column and field names (delivered_at, deliveredAt) are fine.
       assert.doesNotMatch(src.replace(/delivered_at|deliveredAt/g, ""), /delivered/i, f);
     }
-    const page = readFileSync(new URL("../src/app/org/[slug]/(workspace)/hiring/[batch]/page.tsx", import.meta.url), "utf8");
-    assert.ok(page.includes("{SENT_MEANS}"), "the batch page explains what Sent means");
+    const page = readFileSync(new URL("../src/components/company/InvitationRounds.tsx", import.meta.url), "utf8");
+    assert.ok(page.includes("{SENT_MEANS}"), "the rounds' email log explains what Sent means");
   });
 });
 
@@ -330,7 +331,7 @@ describe("reminders, as the mail log tells it", () => {
     assert.ok(claim.includes("< ${AUTO_REMIND_ATTEMPTS}"), "attempts are capped");
     const record = src.slice(src.indexOf("export async function recordMail("));
     assert.ok(record.includes("set auto_reminded_at = null"), "a failed automatic reminder releases its claim");
-    const page = readFileSync(new URL("../src/app/org/[slug]/(workspace)/hiring/[batch]/page.tsx", import.meta.url), "utf8");
-    assert.doesNotMatch(page, /autoRemindedAt|remindersSent/, "the page reads outcomes, not claim stamps");
+    const page = readFileSync(new URL("../src/lib/company/round-data.ts", import.meta.url), "utf8");
+    assert.doesNotMatch(page, /autoRemindedAt|remindersSent/, "the candidates tab reads outcomes, not claim stamps");
   });
 });

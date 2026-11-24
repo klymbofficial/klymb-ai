@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AssignmentHistory, NeedsAttention } from "@/components/company/AssignmentParts";
 import { AssignmentControls } from "@/components/company/AssignmentControls";
 import { CourseAccessSteps } from "@/components/company/CourseAccessSteps";
+import { UpskillCourseCard } from "@/components/company/UpskillCourseCard";
 import { LearningSummary } from "@/components/company/LearningSummary";
 import { EmptyPanel, LoadError, OrgPageTitle } from "@/components/company/OrgPanels";
 import { ProgressTable } from "@/components/company/ProgressTable";
@@ -13,9 +14,9 @@ import { loadProgress } from "@/lib/company/progress-data";
 import { db } from "@/lib/db/client";
 import { SD_COURSE } from "@/lib/sd-offer";
 
-export const metadata: Metadata = { title: "Learning", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Upskill", robots: { index: false, follow: false } };
 
-const TITLES = { company: "Learning", team: "Team learning", self: "My learning" } as const;
+const TITLES = { company: "Upskill", team: "Team Upskill", self: "My Upskill" } as const;
 
 /**
  * Learning for every member, each seeing their widest slice (loadProgress is
@@ -48,9 +49,9 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
   return (
     <>
       <OrgPageTitle title={TITLES[view]} />
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-6">
         {!progress || progress.status === "unavailable" || (assigner && (!people || !teams)) ? (
-          <LoadError what="Learning activity" />
+          <LoadError what="Upskill activity" />
         ) : progress.rows.length === 0 ? (
           <EmptyPanel title="Nobody here yet">
             {isAdmin(member) ? (
@@ -71,11 +72,11 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
             between={
               <>
                 <NeedsAttention rows={progress.rows} total={progress.totalLessons} />
-                {isAdmin(member) && <LearningSummary rows={progress.rows} totalLessons={progress.totalLessons} teamsHref={`/org/${member.companySlug}/teams`} />}
+                <LearningSummary rows={progress.rows} totalLessons={progress.totalLessons} teamsHref={isAdmin(member) ? `/org/${member.companySlug}/teams` : undefined} />
               </>
             }
           />
-        ) : view === "company" ? (
+        ) : view !== "self" ? (
           <>
             <NeedsAttention rows={progress.rows} total={progress.totalLessons} />
             <LearningSummary rows={progress.rows} totalLessons={progress.totalLessons} />
@@ -83,12 +84,7 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
           </>
         ) : (
           <>
-            {!progress.rows.some((r) => r.hasAccess) && (
-              <EmptyPanel title={view === "self" ? "No course assigned to you yet" : "No one on your team has the course yet"}>
-                Your company&apos;s admin assigns courses.
-              </EmptyPanel>
-            )}
-            <ProgressTable rows={progress.rows} total={progress.totalLessons} showTeam={false} showDue />
+            {progress.rows[0] && <UpskillCourseCard person={progress.rows[0]} total={progress.totalLessons} />}
           </>
         )}
 
@@ -96,10 +92,7 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
 
         {view === "self" && progress?.status === "ok" && <CourseAccessSteps email={member.email} hasAccess={!!progress.rows[0]?.hasAccess} />}
 
-        <ul className="list-disc space-y-1 border-t border-line/25 pt-5 pl-5 text-xs text-muted">
-          <li>Activity is recorded under the email someone signs in to the course with.</li>
-          <li>Only courses your company assigned are shown. What someone learns on their own account stays theirs.</li>
-        </ul>
+        <p className="border-t border-line/25 pt-4 text-sm text-muted">Company-assigned progress is shared here. Personal course activity stays private.</p>
       </div>
     </>
   );

@@ -8,7 +8,7 @@ import { seesAssessments } from "@/lib/company/assessment-rules";
 import { seesHiring } from "@/lib/company/batch-rules";
 import { seesCatalog } from "@/lib/company/catalog";
 
-const LEARNING_LABEL = { company: "Learning", team: "Team learning", self: "My learning" } as const;
+const UPSKILL_LABEL = { company: "Upskill", team: "Team Upskill", self: "My Upskill" } as const;
 
 /**
  * What a member can open. Responsibilities add up: an admin runs People,
@@ -27,7 +27,7 @@ export function navFor(member: CompanyMember): OrgNavItem[] {
           { href: `${base}/teams`, label: "Teams" },
         ]
       : []),
-    { href: `${base}/learning`, label: LEARNING_LABEL[viewOf(member)] },
+    { href: `${base}/learning`, label: UPSKILL_LABEL[viewOf(member)] },
     ...(seesCatalog(member) ? [{ href: `${base}/catalog`, label: "Catalog" }] : []),
     ...(seesAssessments(member) ? [{ href: `${base}/assessments`, label: "Assessments" }] : []),
     ...(seesHiring(member) ? [{ href: `${base}/hiring`, label: "Hiring" }] : []),

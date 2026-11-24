@@ -43,10 +43,9 @@ async function context(slug: unknown, batchId: unknown): Promise<{ member: Compa
   return { member, sql, batch: found.batch, candidates: found.candidates };
 }
 
-/** The list and the batch's own page. (There's no layout under hiring/ for a "layout" revalidation to hit.) */
-function refresh(member: CompanyMember, batchId?: string) {
-  revalidatePath(`/org/${member.companySlug}/hiring`);
-  if (batchId) revalidatePath(`/org/${member.companySlug}/hiring/${batchId}`);
+/** Every workspace page: the test's Candidates tab and rounds, the review pages, the Assessments list counts (U10). */
+function refresh() {
+  revalidatePath("/org/[slug]/(workspace)", "layout");
 }
 const people = (n: number) => (n === 1 ? "1 person" : `${n} people`);
 const PASSED_ONE = "Not sent: their time to start has passed, so the link couldn't start the test. Use Change time to give them a later start, which emails a working link.";
@@ -86,7 +85,7 @@ export async function createHiringBatch(slug: string, form: Record<string, strin
   if (made.status === "created") {
     await logCompany(member, "company.batch_create", { batch_id: made.id, item: read.value.item, version_id: read.value.versionId, people: read.value.candidates.length });
   }
-  refresh(member, made.id);
+  refresh();
   return { ok: true, id: made.id };
 }
 
@@ -110,7 +109,7 @@ export async function sendHiringBatch(slug: string, batchId: string): Promise<Ac
   const left = Math.min(late, Math.max(0, waiting.length - targets.length));
   const report = await deliver(c.sql, { ...c.batch, status: "sent" }, "invite", targets, c.member.email);
   await logCompany(c.member, "company.batch_send", { batch_id: c.batch.id, sent: report.sent, failed: report.failed, start_passed: left });
-  refresh(c.member, c.batch.id);
+  refresh();
   return reportMessage(report, "Invitation sent", left);
 }
 
@@ -128,7 +127,7 @@ export async function retryDelivery(slug: string, batchId: string, candidateId: 
   if (!targets.length && late && candidateId) return { ok: false, message: PASSED_ONE };
   const report = await deliver(c.sql, c.batch, "invite", targets, c.member.email);
   if (targets.length) await logCompany(c.member, "company.batch_retry", { batch_id: c.batch.id, sent: report.sent, failed: report.failed, start_passed: late });
-  refresh(c.member, c.batch.id);
+  refresh();
   return reportMessage(report, "Invitation sent again", late);
 }
 
@@ -144,7 +143,7 @@ export async function remindCandidates(slug: string, batchId: string, candidateI
   }
   const report = await deliver(c.sql, c.batch, "reminder", targets, c.member.email);
   await logCompany(c.member, "company.batch_remind", { batch_id: c.batch.id, sent: report.sent, failed: report.failed });
-  refresh(c.member, c.batch.id);
+  refresh();
   return reportMessage(report, "Reminder sent");
 }
 
@@ -188,7 +187,7 @@ export async function changeCandidate(slug: string, batchId: string, candidateId
   const report = await deliver(c.sql, c.batch, kind, [target], c.member.email);
   const action = claim.kind === "extension" ? "company.candidate_extend" : claim.kind === "email" ? "company.candidate_email" : "company.candidate_new_link";
   await logCompany(c.member, action, { batch_id: c.batch.id, candidate_id: target.id, ...(claim.kind === "extension" ? { extra_minutes: claim.extraMinutes, last_start_set: !!claim.lastStartAt } : {}) });
-  refresh(c.member, c.batch.id);
+  refresh();
   if (report.failed) return { ok: false, message: "Saved, but the email didn't go out. See the reason beside them, then retry." };
   return { ok: true, message: claim.kind === "extension" ? "New time saved and emailed." : "New link emailed. The old one no longer works." };
 }
@@ -202,7 +201,7 @@ export async function cancelInvitation(slug: string, batchId: string, candidateI
   if (n === null) return UNAVAILABLE;
   if (!n) return { ok: false, message: "Already cancelled." };
   await logCompany(c.member, "company.candidate_cancel", { batch_id: c.batch.id, candidate_id: candidateId });
-  refresh(c.member, c.batch.id);
+  refresh();
   return { ok: true, message: "Invitation cancelled. Their link can't start the test." };
 }
 
@@ -214,6 +213,6 @@ export async function cancelHiringBatch(slug: string, batchId: string): Promise<
   if (n === null) return UNAVAILABLE;
   if (!n) return { ok: false, message: "Already cancelled." };
   await logCompany(c.member, "company.batch_cancel", { batch_id: c.batch.id, was: c.batch.status });
-  refresh(c.member, c.batch.id);
+  refresh();
   return { ok: true, message: c.batch.status === "draft" ? "Draft discarded." : "Batch cancelled. No link in it can start the test." };
 }

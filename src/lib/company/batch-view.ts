@@ -1,4 +1,5 @@
 import type { Delivery, LinkState } from "@/lib/company/batch-rules";
+import type { HiringDecision } from "@/lib/company/review-rules";
 
 /**
  * How the hiring screens sort batches and candidates into the filters a
@@ -55,7 +56,7 @@ export function pickBatches<T extends { state: BatchStateKey; role: string; titl
 
 // ── Candidates ──────────────────────────────────────────────
 
-export type CandidateFilter = "all" | "open" | "later" | "started" | "submitted" | "to_review" | "sent" | "failed" | "unsent" | "passed" | "cancelled";
+export type CandidateFilter = "all" | "open" | "later" | "started" | "submitted" | "to_review" | HiringDecision | "sent" | "failed" | "unsent" | "passed" | "cancelled";
 
 /** The filters on a batch's candidate table, in order. A person can match several. */
 export const CANDIDATE_FILTERS: readonly { key: CandidateFilter; label: string }[] = [
@@ -65,6 +66,9 @@ export const CANDIDATE_FILTERS: readonly { key: CandidateFilter; label: string }
   { key: "started", label: "Started" },
   { key: "submitted", label: "Submitted" },
   { key: "to_review", label: "To review" },
+  { key: "shortlisted", label: "Shortlisted" },
+  { key: "on_hold", label: "On hold" },
+  { key: "not_shortlisted", label: "Not shortlisted" },
   { key: "sent", label: "Sent" },
   { key: "failed", label: "Failed" },
   { key: "unsent", label: "Not sent" },
@@ -73,12 +77,14 @@ export const CANDIDATE_FILTERS: readonly { key: CandidateFilter; label: string }
 ];
 
 /** Which filters one person falls under. Once they have started, whether their link could start the test no longer matters. */
-export function candidateTags(c: { active: boolean; delivery: Delivery; link: LinkState; started?: boolean; submitted?: boolean; reviewed?: boolean }): CandidateFilter[] {
+export function candidateTags(c: { active: boolean; delivery: Delivery; link: LinkState; started?: boolean; submitted?: boolean; reviewed?: boolean; decision?: HiringDecision | null }): CandidateFilter[] {
   if (!c.active || c.link === "cancelled" || c.link === "batch_cancelled") return ["all", "cancelled"];
   const tags: CandidateFilter[] = ["all"];
   if (c.started) {
     tags.push("started");
     if (c.submitted) tags.push(...(c.reviewed ? ["submitted" as const] : ["submitted" as const, "to_review" as const]));
+    // The recruiter's decision is its own dimension: never inferred from the review or the score.
+    if (c.submitted && c.decision) tags.push(c.decision);
   } else if (c.link === "open") tags.push("open");
   else if (c.link === "not_open") tags.push("later");
   else if (c.link === "missed") tags.push("passed");

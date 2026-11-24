@@ -297,7 +297,7 @@ function BrandPreview({ brand, isLive }: { brand: ReturnType<typeof resolveBrand
           <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} />
           <p className="mb-2 text-[0.7rem] text-[#b9b5b3]">on Klymb.ai</p>
           <span className="rounded-md bg-red-strong px-2.5 py-1.5 text-sm font-bold text-white">Overview</span>
-          <span className="px-2.5 py-1.5 text-sm text-[#e6e3e2]">My learning</span>
+          <span className="px-2.5 py-1.5 text-sm text-[#e6e3e2]">My Upskill</span>
         </div>
         <div className="min-w-0 flex-1 bg-paper p-4">
           {brand.welcome ? <p className="rounded-md border-l-4 border-red-strong bg-card px-3 py-2 text-sm">{brand.welcome}</p> : <p className="text-sm text-muted">Your workspace</p>}

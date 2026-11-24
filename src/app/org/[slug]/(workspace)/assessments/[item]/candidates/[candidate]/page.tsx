@@ -2,18 +2,27 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Badge, OrgPageHead, PANEL } from "@/components/company/HiringParts";
 import { LoadError, RoleOnly } from "@/components/company/OrgPanels";
+import { DecisionForm, ShareForm } from "@/components/company/DecisionPanel";
 import { ReviewForm } from "@/components/company/ReviewForm";
 import { requireCompany } from "@/lib/company/auth";
 import { sizeText } from "@/lib/company/attempt-files";
 import { ATTEMPT_LABEL, attemptState } from "@/lib/company/attempt-rules";
-import { canScore, durationText, formatInZone, seesHiring } from "@/lib/company/batch-rules";
+import { canDecide, canScore, durationText, formatInZone, seesHiring } from "@/lib/company/batch-rules";
+import { decisionHistory } from "@/lib/company/decision-data";
 import { loadReviewView, type ReviewRecord } from "@/lib/company/review-data";
-import { scoreText } from "@/lib/company/review-rules";
+import { roundOfCandidate } from "@/lib/company/round-data";
+import { DECISION_LABEL, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false, follow: false } };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DECISION_TONE: Record<HiringDecision, "green" | "red" | "amber"> = { shortlisted: "green", not_shortlisted: "red", on_hold: "amber" };
+const RESULTS_SEEN = {
+  none: "This test's settings don't show candidates a result, so there's nothing to share.",
+  overall: "They'll see their total score (for example 15 / 20) on their test link. Never notes, the summary or the scoring guides.",
+  by_area: "They'll see their total and each area's points on their test link. Never notes, the summary or the scoring guides.",
+} as const;
 const label = "text-[0.7rem] font-extrabold uppercase tracking-[0.12em] text-muted";
 
 function Fact({ name, children }: { name: string; children: React.ReactNode }) {
@@ -32,36 +41,46 @@ function Fact({ name, children }: { name: string; children: React.ReactNode }) {
  * guide; a reviewer scores it here, anyone else who sees the batch reads the
  * latest review. Every completed review is kept as a version.
  */
-export default async function ReviewPage({ params }: { params: Promise<{ slug: string; batch: string; candidate: string }> }) {
-  const { slug, batch: batchId, candidate: candidateId } = await params;
+export default async function ReviewPage({ params }: { params: Promise<{ slug: string; item: string; candidate: string }> }) {
+  const { slug, item, candidate: candidateId } = await params;
   const member = await requireCompany(slug);
   const home = `/org/${member.companySlug}`;
   if (!seesHiring(member)) return <RoleOnly role="recruiters, reviewers and admins" home={home} />;
-  if (!UUID.test(batchId) || !UUID.test(candidateId)) notFound();
-  const batchHref = `${home}/hiring/${batchId}`;
+  if (!UUID.test(candidateId)) notFound();
   const sql = db();
-  const view = sql ? await loadReviewView(sql, member.companyId, batchId, candidateId) : null;
+  // The round comes from the database, scoped to this company and test.
+  const batchId = sql ? await roundOfCandidate(sql, member.companyId, item, candidateId) : null;
+  if (batchId === undefined) notFound();
+  const testHref = `${home}/assessments/${item}`;
+  const view = sql && batchId ? await loadReviewView(sql, member.companyId, batchId, candidateId) : null;
   if (view === undefined) notFound();
-  if (!view) return <><OrgPageHead crumbs={[{ href: `${home}/hiring`, label: "Hiring batches" }]} title="Review" /><LoadError what="This submission" /></>;
+  if (!view) return <><OrgPageHead crumbs={[{ href: `${home}/assessments`, label: "Assessments" }]} title="Review" /><LoadError what="This submission" /></>;
 
   const { candidate: c, batch: b, attempt: a, submission: s, rubric, reviews } = view;
   const tz = b.timeZone;
   const latest = reviews[0] ?? null;
   const scorer = canScore(member);
   const where = a ? attemptState(a, new Date()) : null;
+  const history = a && s ? await decisionHistory(sql!, member.companyId, a.id) : { decisions: [], shares: [] };
+  const decider = canDecide(member);
+  const internal = view.batch.purpose === "internal";
+  const decision = history?.decisions[0] ?? null;
+  const share = history?.shares[0] ?? null;
 
   return (
     <>
       <OrgPageHead
-        crumbs={[{ href: `${home}/hiring`, label: "Hiring batches" }, { href: batchHref, label: b.role }]}
+        crumbs={[{ href: `${home}/assessments`, label: "Assessments" }, { href: `${testHref}?tab=candidates`, label: b.title }, { href: `${testHref}?tab=candidates&round=${b.id}#round-${b.id}`, label: b.role }]}
         title={c.name}
         meta={
           <>
             <span>{c.email}</span>
             <span><Badge tone={where === "submitted" ? "green" : where === "in_progress" ? "blue" : where ? "amber" : "grey"}>{where ? ATTEMPT_LABEL[where] : ATTEMPT_LABEL.none}</Badge></span>
             {s && <span><Badge tone={latest ? "green" : "amber"}>{latest ? `Scored ${scoreText(latest.total, latest.max)}` : "To review"}</Badge></span>}
+            {decision && <span><Badge tone={DECISION_TONE[decision.decision]}>{DECISION_LABEL[decision.decision]}</Badge></span>}
             {c.status === "cancelled" && <span><Badge tone="grey">Invitation cancelled</Badge></span>}
             <span>{b.title} · version {b.version}</span>
+            {b.purpose === "internal" && <span><Badge tone="blue">Internal</Badge></span>}
           </>
         }
       />
@@ -102,7 +121,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                     {s.files.map((f) => (
                       <li key={f.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                         <span className="min-w-0 truncate" title={f.name}>{f.name} <span className="text-muted">· {f.kind.toUpperCase()} · {sizeText(f.bytes)}</span></span>
-                        <a href={`${batchHref}/candidates/${c.id}/files/${f.id}`} className="shrink-0 text-xs font-bold underline underline-offset-4">Download</a>
+                        <a href={`${testHref}/candidates/${c.id}/files/${f.id}`} className="shrink-0 text-xs font-bold underline underline-offset-4">Download</a>
                       </li>
                     ))}
                   </ul>
@@ -165,6 +184,72 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
           )}
         </section>
       </div>
+
+      {s && (
+        <section aria-labelledby="decision" className={`${PANEL} mt-6`}>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/20 px-5 py-3">
+            <h2 id="decision" className="text-base font-bold">{internal ? "Result" : "Hiring decision"}</h2>
+            <p className="text-xs text-muted">{internal ? "An internal round: colleagues are scored and reviewed, never shortlisted." : "Recruiters and company heads decide. A score never decides on its own."}</p>
+          </div>
+          {!history ? (
+            <p className="p-5 text-sm text-error">Decisions can&apos;t be loaded right now. Reload in a minute.</p>
+          ) : (
+            <div className="grid gap-6 p-5 lg:grid-cols-2">
+              {internal ? (
+                <p className="min-w-0 text-sm text-muted">No hiring decision for internal rounds. Share the result with them on the right, if this test&apos;s settings allow it.</p>
+              ) : (
+              <div className="min-w-0">
+                <p className="mb-4 text-sm">
+                  {decision
+                    ? <>Now: <Badge tone={DECISION_TONE[decision.decision]}>{DECISION_LABEL[decision.decision]}</Badge> <span className="text-muted">· {decision.deciderName ?? decision.decidedBy} · {formatInZone(decision.decidedAt, tz)}</span></>
+                    : <span className="text-muted">No decision yet.</span>}
+                </p>
+                {decider ? (
+                  <DecisionForm key={decision?.revision ?? 0} ids={{ slug: member.companySlug, batchId: b.id, candidateId: c.id }} baseRevision={decision?.revision ?? 0} current={decision?.decision ?? null} reviewed={!!latest} />
+                ) : (
+                  <p className="text-sm text-muted">{scorer ? "Reviewers score; a recruiter or company head records the decision." : "You can see decisions; a recruiter or company head records them."}</p>
+                )}
+                {history.decisions.length > 0 && (
+                  <div className="mt-5 border-t border-line/20 pt-4">
+                    <h3 className={label}>Decision history</h3>
+                    <ol className="mt-2 space-y-2 text-sm">
+                      {history.decisions.map((d) => (
+                        <li key={d.revision}>
+                          <strong>{DECISION_LABEL[d.decision]}</strong> <span className="text-muted">· {d.deciderName ?? d.decidedBy} · {formatInZone(d.decidedAt, tz)} · {d.reviewRevision ? `after review version ${d.reviewRevision}` : "before any review"}{d.revision === decision?.revision && " (counts)"}</span>
+                          <p className="mt-0.5 whitespace-pre-line text-muted">{d.reason}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+              )}
+
+              <div className="min-w-0 lg:border-l lg:border-line/20 lg:pl-6">
+                <h3 className="text-sm font-bold">Result for the candidate</h3>
+                <p className="mt-1 text-sm text-muted">{RESULTS_SEEN[view.results]}</p>
+                <p className="mt-3 text-sm">
+                  {share
+                    ? <>Shared review version {share.reviewRevision} ({share.policy === "by_area" ? "by area" : "total only"}) · {share.sharerName ?? share.sharedBy} · {formatInZone(share.sharedAt, tz)}</>
+                    : "Not shared."}
+                  {share && latest && latest.revision > share.reviewRevision && (
+                    <strong className="mt-1 block text-[#6b3300]">Score changed since it was shared (now version {latest.revision}). The candidate still sees version {share.reviewRevision} until you share again.</strong>
+                  )}
+                </p>
+                {decider && view.results !== "none" && (
+                  <div className="mt-3">
+                    <ShareForm
+                      ids={{ slug: member.companySlug, batchId: b.id, candidateId: c.id }}
+                      disabled={!latest || (!!share && share.reviewRevision === latest.revision)}
+                      label={!latest ? "Share result (after a review)" : share ? (share.reviewRevision === latest.revision ? "Shared" : "Share the new score") : "Share result"}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
     </>
   );
 }

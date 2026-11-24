@@ -22,6 +22,8 @@ export const seesHiring = (m: CompanyMember | null) => hasRole(m, HIRING_VIEWERS
 export const canSchedule = (m: CompanyMember | null) => hasRole(m, ["recruiter"]);
 /** Any reviewer of the company scores (H05 D5: A); the batch's named reviewer is shown as assigned. */
 export const canScore = (m: CompanyMember | null) => hasRole(m, ["reviewer"]);
+/** Records hiring decisions and shares results (H05 D6: recruiters and company heads; reviewers score, admins view). */
+export const canDecide = (m: CompanyMember | null) => hasRole(m, ["recruiter", "company_head"]);
 
 // ── Limits ──────────────────────────────────────────────────
 
@@ -248,8 +250,14 @@ export interface ApprovedTest {
   role: string;
 }
 
+/** Hiring: candidates, with shortlisting. Internal: colleagues (U11), scored and reviewed but never shortlisted. */
+export type RoundPurpose = "hiring" | "internal";
+export const PURPOSE_LABEL: Record<RoundPurpose, string> = { hiring: "Hiring", internal: "Internal" };
+
 export interface BatchInput {
   item: string;
+  /** Defaults to hiring when not given (older callers). */
+  purpose?: RoundPurpose;
   versionId: string;
   role: string;
   prepCourse: PrepCourse | null;
@@ -280,7 +288,7 @@ export function readBatchForm(
   if (!test) errors.test = ctx.tests.length ? "Choose a test." : "Your company has no approved test yet.";
 
   const role = text(raw.role).replace(/\s+/g, " ");
-  if (!role) errors.role = "Name the role you're hiring for.";
+  if (!role) errors.role = text(raw.purpose) === "internal" ? "Name this round, e.g. \"Engineering team check\"." : "Name the role you're hiring for.";
   else if (role.length > BATCH_LIMITS.role) errors.role = `Keep the role under ${BATCH_LIMITS.role} characters.`;
 
   const prepRaw = text(raw.prepCourse);
@@ -316,7 +324,8 @@ export function readBatchForm(
   }
 
   if (Object.keys(errors).length || !test || !reviewer || !opensAt || !closesAt) return { ok: false, errors, problems };
-  return { ok: true, value: { item: test.item, versionId: test.versionId, role, prepCourse, reviewer, timeZone, opensAt, closesAt, candidates } };
+  const purpose: RoundPurpose = text(raw.purpose) === "internal" ? "internal" : "hiring";
+  return { ok: true, value: { item: test.item, purpose, versionId: test.versionId, role, prepCourse, reviewer, timeZone, opensAt, closesAt, candidates } };
 }
 
 // ── One person's extension ──────────────────────────────────
@@ -416,4 +425,34 @@ export function reminderSummary(history: readonly { kind: MailKind; outcome: "se
 export function deliveryError(reason: string): string {
   if (reason === "not configured") return "Email isn't set up on this server.";
   return reason.replace(/\s+/g, " ").trim().slice(0, 300) || "The mail service refused it.";
+}
+
+// ── Adding people from the company (user, 24 Nov: tests go to anyone, team members too) ──
+
+export interface PickablePerson {
+  email: string;
+  name: string | null;
+  teamId: string | null;
+}
+
+/** A list line for one person, quoted when the name holds a comma or quote, so the list parser reads it back exactly. */
+export function personLine(p: { email: string; name: string | null }): string {
+  const name = (p.name?.trim() || p.email.split("@")[0]).slice(0, 120);
+  const safe = /[",\n]/.test(name) ? `"${name.replace(/"/g, '""')}"` : name;
+  return `${safe}, ${p.email}`;
+}
+
+/** The list with these people added at the end, skipping anyone whose email is already in it (any case). */
+export function addPeopleToList(list: string, people: readonly { email: string; name: string | null }[]): { list: string; added: number; skipped: number } {
+  const have = new Set((list.toLowerCase().match(/[^\s,;"<>]+@[^\s,;"<>]+/g) ?? []).map((e) => e.trim()));
+  const lines: string[] = [];
+  let skipped = 0;
+  for (const p of people) {
+    const email = p.email.toLowerCase();
+    if (have.has(email)) { skipped += 1; continue; }
+    have.add(email);
+    lines.push(personLine({ ...p, email }));
+  }
+  if (!lines.length) return { list, added: 0, skipped };
+  return { list: list.trim() ? `${list.trimEnd()}\n${lines.join("\n")}` : lines.join("\n"), added: lines.length, skipped };
 }

@@ -1,6 +1,5 @@
 import { isAdmin, viewOf, type CompanyMember } from "@/lib/company/access";
 import { seesAssessments } from "@/lib/company/assessment-rules";
-import { seesHiring } from "@/lib/company/batch-rules";
 import { seesCatalog } from "@/lib/company/catalog";
 
 /** The icon a sidebar link draws (src/components/company/OrgIcons.tsx). */
@@ -20,7 +19,7 @@ export interface OrgNavGroup {
 
 const item = (href: string, label: string, icon: OrgNavIcon): OrgNavItem => ({ href, label, icon });
 
-const LEARNING_LABEL = { company: "Learning", team: "Team learning", self: "My learning" } as const;
+const UPSKILL_LABEL = { company: "Upskill", team: "Team Upskill", self: "My Upskill" } as const;
 
 /**
  * What a member can open, grouped the way the work divides: their own
@@ -29,7 +28,7 @@ const LEARNING_LABEL = { company: "Learning", team: "Team learning", self: "My l
  * group with nothing in it isn't shown. Group names appear only when there is
  * more than one group to tell apart, so an employee sees two plain links.
  */
-export function navGroupsFor(member: CompanyMember): OrgNavGroup[] {
+export function navGroupsFor(member: CompanyMember, own: { myAssessments?: boolean } = {}): OrgNavGroup[] {
   const base = `/org/${member.companySlug}`;
   const admin = isAdmin(member);
   const all: OrgNavGroup[] = [
@@ -38,14 +37,15 @@ export function navGroupsFor(member: CompanyMember): OrgNavGroup[] {
       label: "Workforce",
       items: [
         ...(admin ? [item(`${base}/people`, "People", "people"), item(`${base}/teams`, "Teams", "teams")] : []),
-        item(`${base}/learning`, LEARNING_LABEL[viewOf(member)], "learning"),
+        item(`${base}/learning`, UPSKILL_LABEL[viewOf(member)], "learning"),
+        // Tests sent to this member's own work email (U11), only once there is one.
+        ...(own.myAssessments ? [item(`${base}/my-assessments`, "My assessments", "assessments")] : []),
       ],
     },
     {
       label: "Hiring",
       items: [
         ...(seesAssessments(member) ? [item(`${base}/assessments`, "Assessments", "assessments")] : []),
-        ...(seesHiring(member) ? [item(`${base}/hiring`, "Batches", "batches")] : []),
       ],
     },
     {

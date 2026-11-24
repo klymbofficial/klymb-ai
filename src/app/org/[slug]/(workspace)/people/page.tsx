@@ -20,7 +20,7 @@ export default async function PeoplePage({ params }: { params: Promise<{ slug: s
     <>
       <OrgPageTitle
         title="People"
-        intro="Add people one at a time or upload a CSV, and choose what each person does. Each person is emailed how to sign in. Removing someone ends their access at once and frees their seat; their record is kept."
+        intro="Manage people, roles and seats. Add individually or import a CSV."
       />
       {data ? <PeopleManager slug={hr.companySlug} me={hr.email} data={data} /> : <LoadError what="Your people" />}
     </>

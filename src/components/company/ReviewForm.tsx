@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from "react";
-import { completeReview, type ReviewResult } from "@/app/org/[slug]/(workspace)/hiring/[batch]/candidates/[candidate]/actions";
+import { completeReview, type ReviewResult } from "@/app/org/[slug]/(workspace)/assessments/[item]/candidates/[candidate]/actions";
 import { BTN_PRIMARY } from "@/components/company/HiringParts";
 import { REVIEW_LIMITS, scoreText, type RubricItem } from "@/lib/company/review-rules";
 

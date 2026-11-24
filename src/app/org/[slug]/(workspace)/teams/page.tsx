@@ -20,7 +20,7 @@ export default async function TeamsPage({ params }: { params: Promise<{ slug: st
     <>
       <OrgPageTitle
         title="Teams"
-        intro="Create teams, choose one lead for each, and move people between them. A team's lead sees their own team; a lead who moves to another team stops leading the old one."
+        intro="Organize people into teams and assign team leads."
       />
       {data ? <TeamsManager slug={hr.companySlug} teams={data.teams} people={data.active} /> : <LoadError what="Your teams" />}
     </>

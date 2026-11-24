@@ -48,7 +48,7 @@ export function AssignmentControls({
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-5">
       {open ? (
         <AssignPanel
           key={preselect ?? "*"}
@@ -61,7 +61,8 @@ export function AssignmentControls({
           onCancel={() => setOpen(false)}
         />
       ) : (
-        <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="text-lg font-bold">System Design</h2><p className="mt-1 text-sm text-muted">{rows.length} people · {total} lessons</p></div>
           <button type="button" onClick={() => openFor(null)} className={primary}>Assign course</button>
         </div>
       )}
@@ -71,6 +72,7 @@ export function AssignmentControls({
         </p>
       )}
       {between}
+      <h2 className="text-base font-bold">People & progress</h2>
       <ProgressTable
         rows={rows}
         total={total}
