@@ -14,6 +14,18 @@ export type AttemptState = "in_progress" | "time_up" | "submitted";
 
 /** Saves that arrive this long after the deadline still count: the last one may have been in flight (H07). */
 export const SAVE_GRACE_SECONDS = 30;
+/** The longest answer, in characters (the database checks it too). */
+export const MAX_ANSWER_CHARS = 60000;
+/** How long after the last keystroke the answer saves on its own. */
+export const AUTOSAVE_MS = 10000;
+
+/** True while a save can still land: before the deadline plus the grace, and not submitted. */
+export function canSave(a: Pick<AttemptTimes, "deadlineAt" | "submittedAt">, now: Date): boolean {
+  return !a.submittedAt && now.getTime() <= new Date(a.deadlineAt).getTime() + SAVE_GRACE_SECONDS * 1000;
+}
+
+/** What the candidate reads about their answer's save state. */
+export type SaveState = "idle" | "dirty" | "saving" | "saved" | "retrying" | "conflict" | "closed";
 
 /** Where an attempt stands at `now`. */
 export function attemptState(a: AttemptTimes, now: Date): AttemptState {

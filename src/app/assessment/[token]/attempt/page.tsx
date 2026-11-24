@@ -3,7 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CandidateNotice, CandidateShell } from "@/components/company/CandidateShell";
 import { Countdown } from "@/components/company/Countdown";
-import { attemptByLink, attemptTask } from "@/lib/company/attempt-data";
+import { AnswerEditor } from "@/components/company/AnswerEditor";
+import { AttemptFiles } from "@/components/company/AttemptFiles";
+import { attemptByLink, attemptTask, listAttemptFiles, loadDraft } from "@/lib/company/attempt-data";
 import { attemptState } from "@/lib/company/attempt-rules";
 import { readCandidateLink } from "@/lib/company/batch-link";
 import { candidateByLink } from "@/lib/company/batch-data";
@@ -21,7 +23,8 @@ export const metadata: Metadata = { title: "Your test", robots: { index: false, 
  * link's own page, which says why. The task comes from the version pinned
  * to the attempt, and the countdown from the deadline the server set at
  * Start: reloading, reconnecting or opening it on another device shows the
- * same time left. Writing and submitting the answer arrive in H07–H08.
+ * same time left. The answer saves as they write (AnswerEditor); submitting
+ * it arrives in H08.
  */
 export default async function AttemptPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -40,7 +43,9 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
   const now = new Date();
   if (attemptState(attempt, now) !== "in_progress") redirect(home);
 
-  const [task, brandRow] = await Promise.all([attemptTask(sql, attempt.id), loadCompanyBrand(sql, found.batch.companyId)]);
+  const [task, brandRow, draft, files] = await Promise.all([
+    attemptTask(sql, attempt.id), loadCompanyBrand(sql, found.batch.companyId), loadDraft(sql, attempt.id), listAttemptFiles(sql, attempt.id),
+  ]);
   const brand = brandRow ? { name: brandRow.name, logoUrl: brandRow.logoUrl, accent: readableBrandColor(brandRow.brandColor) } : null;
   const support = brandRow?.supportEmail ?? MAIL_SUPPORT;
   const tz = found.batch.timeZone;
@@ -60,9 +65,34 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
         <div className="mt-4 whitespace-pre-line text-sm leading-relaxed">{task?.taskBrief ?? "The task can't be shown right now. Reload the page; your time keeps running."}</div>
       </section>
 
-      <section aria-label="Your answer" className="rounded-lg border-2 border-dashed border-line/50 p-6 text-sm text-muted">
-        Writing your answer here is being switched on. Your time is running: keep this page or your link to come back to it.
-      </section>
+      {draft === null ? (
+        <section role="alert" className="card p-6 text-sm">Your saved answer can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section>
+      ) : (
+        <AnswerEditor
+          token={token}
+          attemptId={attempt.id}
+          initialAnswer={draft?.answer ?? ""}
+          initialRevision={draft?.revision ?? 0}
+          initialSavedAt={draft?.savedAt ? new Date(draft.savedAt).toISOString() : null}
+          deadline={new Date(attempt.deadlineAt).toISOString()}
+          serverNow={now.toISOString()}
+          timeZone={tz}
+        />
+      )}
+
+      {task?.submission === "written_file" && (
+        files === null ? (
+          <section role="alert" className="card p-6 text-sm">Your attached files can&apos;t be listed right now. Reload the page in a moment.</section>
+        ) : (
+          <AttemptFiles
+            token={token}
+            attemptId={attempt.id}
+            initial={files.map((f) => ({ id: f.id, name: f.name, bytes: f.bytes }))}
+            deadline={new Date(attempt.deadlineAt).toISOString()}
+            serverNow={now.toISOString()}
+          />
+        )
+      )}
 
       <p className="text-xs text-muted">
         Problems during the test? Write to <a href={`mailto:${support}`} className="font-bold underline underline-offset-4">{support}</a>.{" "}

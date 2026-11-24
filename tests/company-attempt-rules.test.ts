@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
-import { ATTEMPT_LABEL, attemptState, clockText, remainingMs } from "../src/lib/company/attempt-rules";
+import { ATTEMPT_LABEL, MAX_ANSWER_CHARS, SAVE_GRACE_SECONDS, attemptState, canSave, clockText, remainingMs } from "../src/lib/company/attempt-rules";
 import { candidateTags } from "../src/lib/company/batch-view";
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
@@ -83,5 +83,38 @@ describe("start and timing, as written", () => {
     assert.match(sql, /raise exception 'hiring_events is append-only'/);
     assert.match(sql, /references course\.batch_candidates \(id, batch_id\)/, "an attempt's person belongs to its batch");
     assert.match(sql, /references course\.hiring_batches \(id, company_id\)/, "and its batch to its company");
+  });
+});
+
+describe("saving the answer (H07a)", () => {
+  const a = { deadlineAt: "2026-11-25T11:30:00Z", submittedAt: null };
+  test("saves land until the deadline plus the grace, never after a submit", () => {
+    assert.equal(SAVE_GRACE_SECONDS, 30);
+    assert.equal(canSave(a, new Date("2026-11-25T11:29:59Z")), true);
+    assert.equal(canSave(a, new Date("2026-11-25T11:30:30Z")), true, "a save in flight at the deadline still counts");
+    assert.equal(canSave(a, new Date("2026-11-25T11:30:31Z")), false);
+    assert.equal(canSave({ ...a, submittedAt: "2026-11-25T11:00:00Z" }, new Date("2026-11-25T11:10:00Z")), false);
+  });
+
+  test("the save statement checks the person, the link, the time and the revision", () => {
+    const data = read("src/lib/company/attempt-data.ts");
+    const save = data.slice(data.indexOf("export async function saveDraft("), data.indexOf("export async function attemptsForBatch("));
+    assert.match(save, /c\.link_generation = \$\{s\.generation\} and c\.status = 'active' and b\.status = 'sent'/);
+    assert.match(save, /submitted_at is null and now\(\) <= deadline_at \+ make_interval\(secs => \$\{SAVE_GRACE_SECONDS\}\)/);
+    assert.match(save, /d\.revision = \$\{s\.baseRevision\}::int/, "only on top of the latest save");
+    assert.match(save, /on conflict \(attempt_id\) do nothing/, "a second first save doesn't overwrite");
+    const action = read("src/app/assessment/[token]/actions.ts");
+    assert.match(action, /answer\.length > MAX_ANSWER_CHARS/);
+    assert.equal(MAX_ANSWER_CHARS, 60000);
+    assert.match(code(read("db/migrations/0054_attempt_drafts.sql")), /check \(char_length\(answer\) <= 60000\)/);
+  });
+
+  test("the answer box saves on its own, on leaving, and at the time limit, and stops on a conflict", () => {
+    const editor = read("src/components/company/AnswerEditor.tsx");
+    assert.match(editor, /AUTOSAVE_MS/);
+    assert.match(editor, /onBlur=\{\(\) => void save\(\)\}/);
+    assert.match(editor, /visibilitychange/);
+    assert.match(editor, /out\.status === "conflict"\) \{ setLocked\("conflict"\)/);
+    assert.match(editor, /role="status" aria-live="polite"/);
   });
 });

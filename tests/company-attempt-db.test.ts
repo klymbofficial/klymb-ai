@@ -60,6 +60,16 @@ describe("candidate attempts against a real database", { skip }, () => {
   let sqlB: Db;
   let data: typeof import("../src/lib/company/batch-data");
   let att: typeof import("../src/lib/company/attempt-data");
+  /** An attempt that started `minutesAgo` minutes ago with `allowed` minutes, put straight in (the app can't start one in the past). */
+  async function pastAttempt(minutesAgo: number, allowed: number) {
+    const { batchId, id } = await invited();
+    const row = (await one.query(
+      `insert into course.candidate_attempts (company_id, batch_id, candidate_id, version_id, allowed_minutes, started_at, deadline_at, started_link_generation)
+       values ($1, $2, $3, $4, $5, now() - make_interval(mins => $6), now() - make_interval(mins => $6) + make_interval(mins => $5), 1) returning id`,
+      [companyId, batchId, id, versionId, allowed, minutesAgo],
+    )).rows[0];
+    return { batchId, id, attemptId: row.id as string };
+  }
 
   const code = { kind: "assessment", slug, title: "Attempt practical", suggestedSkills: ["APIs"], suggestedPurposes: ["hiring"] } as unknown as CatalogAssessment;
   const content: AssessmentContent = {
@@ -193,6 +203,101 @@ describe("candidate attempts against a real database", { skip }, () => {
     assert.deepEqual(await data.claimRetry(sqlA, companyId, batchId, null), [], "and their invitation isn't resent");
     await data.cancelCandidate(sqlA, companyId, batchId, id, "rec");
     assert.deepEqual(await att.startAttempt(sqlA, id, 1), { status: "refused" }, "a cancelled invitation can't continue");
+  });
+
+  test("answers save on top of the latest save only; an older tab gets a conflict", async () => {
+    const { id } = await invited();
+    const started = await att.startAttempt(sqlA, id, 1);
+    assert.ok(started && started.status === "started");
+    const attemptId = started.attempt.id;
+    const save = (base: number, answer: string, sql = sqlA) => att.saveDraft(sql, { candidateId: id, generation: 1, attemptId, baseRevision: base, answer });
+
+    assert.equal((await save(0, "first"))?.status, "saved");
+    const second = await save(1, "second");
+    assert.ok(second && second.status === "saved" && second.revision === 2);
+    assert.deepEqual(await save(1, "stale tab"), { status: "conflict", revision: 2 }, "an older tab can't overwrite");
+    assert.deepEqual(await save(0, "another first"), { status: "conflict", revision: 2 });
+    const [x, y] = await Promise.all([save(2, "tab A", sqlA), save(2, "tab B", sqlB)]);
+    assert.deepEqual([x?.status, y?.status].sort(), ["conflict", "saved"], "two saves at once: one lands");
+    const kept = await att.loadDraft(sqlA, attemptId);
+    assert.equal(kept?.revision, 3);
+    assert.ok(kept?.answer === "tab A" || kept?.answer === "tab B");
+    assert.equal(await save(3, "x".repeat(60001)), null, "the database refuses an over-long answer");
+    assert.equal((await att.loadDraft(sqlA, attemptId))?.revision, 3, "and keeps the last good one");
+  });
+
+  test("saves stop after the deadline's grace, after a submit, and for a replaced or cancelled link", async () => {
+    const graced = await pastAttempt(60, 60);
+    await one.query(`update course.candidate_attempts set submitted_at = null where id = $1`, [graced.attemptId]);
+    const inGrace = await att.saveDraft(sqlA, { candidateId: graced.id, generation: 1, attemptId: graced.attemptId, baseRevision: 0, answer: "just in time" });
+    assert.equal(inGrace?.status, "saved", "the deadline passed moments ago: inside the grace");
+
+    const over = await pastAttempt(61, 60);
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: over.id, generation: 1, attemptId: over.attemptId, baseRevision: 0, answer: "late" }), { status: "closed" });
+
+    const { batchId, id } = await invited();
+    const started = await att.startAttempt(sqlA, id, 1);
+    assert.ok(started && started.status === "started");
+    const attemptId = started.attempt.id;
+    await one.query(`update course.candidate_attempts set submitted_at = now(), submit_kind = 'candidate' where id = $1`, [attemptId]);
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: id, generation: 1, attemptId, baseRevision: 0, answer: "after" }), { status: "closed" }, "submitted");
+
+    const other = await invited();
+    const run2 = await att.startAttempt(sqlA, other.id, 1);
+    assert.ok(run2 && run2.status === "started");
+    await data.claimChange(sqlA, companyId, other.batchId, other.id, { kind: "new_link" });
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: other.id, generation: 1, attemptId: run2.attempt.id, baseRevision: 0, answer: "old link" }), { status: "refused" });
+    assert.equal((await att.saveDraft(sqlA, { candidateId: other.id, generation: 2, attemptId: run2.attempt.id, baseRevision: 0, answer: "new link" }))?.status, "saved");
+    await data.cancelCandidate(sqlA, companyId, other.batchId, other.id, "rec");
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: other.id, generation: 2, attemptId: run2.attempt.id, baseRevision: 1, answer: "cancelled" }), { status: "refused" });
+    assert.deepEqual(await att.saveDraft(sqlA, { candidateId: randomUUID(), generation: 1, attemptId, baseRevision: 0, answer: "someone else" }), { status: "refused" });
+    void batchId;
+  });
+
+  test("files: three at most even when uploads race, no duplicates, removable until closed, and fixed once submitted", async () => {
+    const { batchId, id } = await invited();
+    const started = await att.startAttempt(sqlA, id, 1);
+    assert.ok(started && started.status === "started");
+    const attemptId = started.attempt.id;
+    const sha = (n: number) => n.toString(16).padStart(64, "0");
+    const add = (n: number, sql = sqlA, generation = 1) => att.addAttemptFile(sql, {
+      candidateId: id, generation, attemptId, name: `f${n}.pdf`, kind: "pdf", bytes: 1000 + n, sha256: sha(n),
+      storageKey: `attempt-files/${companyId}/${attemptId}/${sha(n)}.pdf`,
+    });
+    assert.deepEqual(await att.fileSlot(sqlA, { candidateId: id, generation: 1, attemptId }), { status: "open", companyId, count: 0 });
+    const first = await add(1);
+    assert.ok(first && first.status === "added");
+    assert.deepEqual(await add(1), { status: "duplicate" }, "the same bytes twice");
+    // Two more and a fourth at once, from two connections: only two land.
+    const racing = await Promise.all([add(2, sqlA), add(3, sqlB), add(4, sqlA), add(5, sqlB)]);
+    const landed = racing.filter((r) => r?.status === "added").length;
+    assert.ok(landed <= 2, `at most two more landed, got ${landed}`);
+    while ((await att.listAttemptFiles(sqlA, attemptId))!.length < 3) await add(10 + Math.floor(Math.random() * 1000));
+    const listed = await att.listAttemptFiles(sqlA, attemptId);
+    assert.equal(listed!.length, 3, "never more than three");
+    assert.deepEqual(await add(99), { status: "full" });
+
+    assert.equal(await att.removeAttemptFile(sqlA, { candidateId: id, generation: 1, attemptId, fileId: listed![0].id }), true);
+    assert.equal((await add(99))?.status, "added", "removing frees a slot");
+    assert.equal(await att.removeAttemptFile(sqlA, { candidateId: id, generation: 2, attemptId, fileId: listed![1].id }), false, "not through a link that isn't current");
+    assert.deepEqual(await add(200, sqlA, 2), { status: "refused" });
+
+    // H08 will do this on submit; here, by hand: a submitted file can't change or be removed by the candidate.
+    await one.query(`update course.attempt_files set stage = 'submitted' where attempt_id = $1`, [attemptId]);
+    await assert.rejects(one.query(`update course.attempt_files set name = 'x' where attempt_id = $1`, [attemptId]), /cannot be changed/);
+    assert.equal(await att.removeAttemptFile(sqlA, { candidateId: id, generation: 1, attemptId, fileId: listed![1].id }), false);
+
+    const over = await pastAttempt(61, 60);
+    assert.deepEqual(await att.fileSlot(sqlA, { candidateId: over.id, generation: 1, attemptId: over.attemptId }), { status: "closed" });
+    assert.deepEqual(await att.addAttemptFile(sqlA, {
+      candidateId: over.id, generation: 1, attemptId: over.attemptId, name: "late.pdf", kind: "pdf", bytes: 10, sha256: sha(7),
+      storageKey: `attempt-files/${companyId}/${over.attemptId}/${sha(7)}.pdf`,
+    }), { status: "closed" });
+    await assert.rejects(one.query(
+      `insert into course.attempt_files (company_id, attempt_id, slot, name, kind, bytes, sha256, storage_key) values ($1, $2, 1, 'big.pdf', 'pdf', 4194305, $3, 'k')`,
+      [companyId, over.attemptId, sha(8)],
+    ), /attempt_files_bytes/, "the database refuses more than 4 MB");
+    void batchId;
   });
 
   test("the first open of each link is noted once; another company sees no attempts", async () => {

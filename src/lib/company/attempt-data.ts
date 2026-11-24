@@ -1,4 +1,6 @@
 import "server-only";
+import { ATTEMPT_FILE_LIMITS, type AttemptFileKind } from "@/lib/company/attempt-files";
+import { SAVE_GRACE_SECONDS } from "@/lib/company/attempt-rules";
 import type { Db } from "@/lib/db/client";
 
 /**
@@ -149,6 +151,194 @@ export async function recordLinkOpened(sql: Db, candidateId: string, generation:
   `;
   if (error) return error.code === UNDEFINED_TABLE ? true : fail("open record", error);
   return true;
+}
+
+export interface Draft {
+  revision: number;
+  answer: string;
+  savedAt: string;
+}
+
+/** The attempt's saved answer, or undefined before the first save. */
+export async function loadDraft(sql: Db, attemptId: string): Promise<Draft | undefined | null> {
+  const { data, error } = await sql.row<{ revision: number; answer: string; saved_at: string }>`
+    select revision, answer, saved_at from course.attempt_drafts where attempt_id = ${attemptId}::uuid
+  `;
+  if (error) return error.code === UNDEFINED_TABLE ? undefined : fail("draft read", error);
+  return data ? { revision: data.revision, answer: data.answer, savedAt: data.saved_at } : undefined;
+}
+
+export type SaveOutcome =
+  | { status: "saved"; revision: number; savedAt: string }
+  /** A newer save came from somewhere else (another tab or device): this one didn't land. */
+  | { status: "conflict"; revision: number | null }
+  /** The time and its grace are over, or the attempt was submitted. */
+  | { status: "closed" }
+  /** Not this link's attempt, a replaced link, or a cancelled invitation. */
+  | { status: "refused" };
+
+/**
+ * Saves the answer, in one statement. The attempt must be this person's,
+ * through their current link, still invited, in a sent batch, not submitted,
+ * and within its deadline plus SAVE_GRACE_SECONDS. The save names the
+ * revision it was based on (0 for the first): it lands only if that is still
+ * the latest, so an older tab can't overwrite newer work.
+ */
+export async function saveDraft(
+  sql: Db,
+  s: { candidateId: string; generation: number; attemptId: string; baseRevision: number; answer: string },
+): Promise<SaveOutcome | null> {
+  const { data, error } = await sql.row<{ live: boolean; open: boolean; revision: number | null; saved_at: string | null; current: number | null }>`
+    with live as (
+      select a.id, a.deadline_at, a.submitted_at
+        from course.candidate_attempts a
+        join course.batch_candidates c on c.id = a.candidate_id and c.batch_id = a.batch_id
+        join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
+       where a.id = ${s.attemptId}::uuid and a.candidate_id = ${s.candidateId}::uuid
+         and c.link_generation = ${s.generation} and c.status = 'active' and b.status = 'sent'
+    ), open as (
+      select id from live
+       where submitted_at is null and now() <= deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
+    ), first as (
+      insert into course.attempt_drafts (attempt_id, revision, answer)
+      select id, 1, ${s.answer} from open where ${s.baseRevision}::int = 0
+      on conflict (attempt_id) do nothing
+      returning revision, saved_at
+    ), next as (
+      update course.attempt_drafts d set revision = d.revision + 1, answer = ${s.answer}, saved_at = now()
+        from open
+       where d.attempt_id = open.id and ${s.baseRevision}::int > 0 and d.revision = ${s.baseRevision}::int
+      returning d.revision, d.saved_at
+    )
+    select exists (select 1 from live) as live,
+           exists (select 1 from open) as open,
+           coalesce((select revision from first), (select revision from next)) as revision,
+           coalesce((select saved_at from first), (select saved_at from next)) as saved_at,
+           (select revision from course.attempt_drafts where attempt_id = ${s.attemptId}::uuid) as current
+  `;
+  if (error) return fail("draft save", error);
+  if (!data?.live) return { status: "refused" };
+  if (!data.open) return { status: "closed" };
+  if (data.revision && data.saved_at) return { status: "saved", revision: data.revision, savedAt: data.saved_at };
+  return { status: "conflict", revision: data.current };
+}
+
+export interface AttemptFile {
+  id: string;
+  name: string;
+  kind: AttemptFileKind;
+  bytes: number;
+  stage: "draft" | "submitted";
+  addedAt: string;
+}
+
+type FileRow = { id: string; name: string; kind: AttemptFileKind; bytes: number; stage: AttemptFile["stage"]; added_at: string };
+const toFile = (r: FileRow): AttemptFile => ({ id: r.id, name: r.name, kind: r.kind, bytes: r.bytes, stage: r.stage, addedAt: r.added_at });
+
+/** An attempt's files, oldest first. */
+export async function listAttemptFiles(sql: Db, attemptId: string): Promise<AttemptFile[] | null> {
+  const { data, error } = await sql.rows<FileRow>`
+    select id, name, kind, bytes, stage, added_at from course.attempt_files where attempt_id = ${attemptId}::uuid order by added_at, id
+  `;
+  if (error) return error.code === UNDEFINED_TABLE ? [] : fail("files read", error);
+  return (data ?? []).map(toFile);
+}
+
+/**
+ * Whether this person can attach a file to this attempt right now, read
+ * before the bytes are stored: their attempt through their current link,
+ * still invited, open (deadline plus grace), and how many files it has.
+ */
+export async function fileSlot(sql: Db, s: { candidateId: string; generation: number; attemptId: string }): Promise<
+  { status: "open"; companyId: string; count: number } | { status: "closed" } | { status: "refused" } | null
+> {
+  const { data, error } = await sql.row<{ company_id: string; open: boolean; count: number }>`
+    select a.company_id,
+           (a.submitted_at is null and now() <= a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})) as open,
+           (select count(*)::int from course.attempt_files f where f.attempt_id = a.id) as count
+      from course.candidate_attempts a
+      join course.batch_candidates c on c.id = a.candidate_id and c.batch_id = a.batch_id
+      join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
+     where a.id = ${s.attemptId}::uuid and a.candidate_id = ${s.candidateId}::uuid
+       and c.link_generation = ${s.generation} and c.status = 'active' and b.status = 'sent'
+  `;
+  if (error) return fail("file slot", error);
+  if (!data) return { status: "refused" };
+  if (!data.open) return { status: "closed" };
+  return { status: "open", companyId: data.company_id, count: data.count };
+}
+
+export type AddFileOutcome =
+  | { status: "added"; file: AttemptFile }
+  | { status: "duplicate" }
+  | { status: "full" }
+  | { status: "closed" }
+  | { status: "refused" };
+
+/**
+ * Records a stored file against the attempt, in one statement that checks
+ * everything again: this person's attempt, current link, still invited,
+ * still open, and a free slot (one of ATTEMPT_FILE_LIMITS.count, unique per
+ * attempt). The same bytes twice are refused as a duplicate. "full" can also
+ * mean another upload took the same slot a moment ago: the caller retries
+ * once.
+ */
+export async function addAttemptFile(
+  sql: Db,
+  f: { candidateId: string; generation: number; attemptId: string; name: string; kind: AttemptFileKind; bytes: number; sha256: string; storageKey: string },
+): Promise<AddFileOutcome | null> {
+  const { data, error } = await sql.row<{ live: boolean; open: boolean; count: number; dup: boolean } & Partial<FileRow>>`
+    with live as (
+      select a.id, a.company_id, a.deadline_at, a.submitted_at
+        from course.candidate_attempts a
+        join course.batch_candidates c on c.id = a.candidate_id and c.batch_id = a.batch_id
+        join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
+       where a.id = ${f.attemptId}::uuid and a.candidate_id = ${f.candidateId}::uuid
+         and c.link_generation = ${f.generation} and c.status = 'active' and b.status = 'sent'
+    ), open as (
+      select id, company_id from live where submitted_at is null and now() <= deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
+    ), slot as (
+      -- The lowest free slot; none when all are taken. Slots are unique per attempt, so a race can't make a fourth file.
+      select open.id, open.company_id,
+             (select min(n) from generate_series(1, ${ATTEMPT_FILE_LIMITS.count}::int) n
+               where n not in (select x.slot from course.attempt_files x where x.attempt_id = open.id)) as n
+        from open
+    ), made as (
+      insert into course.attempt_files (company_id, attempt_id, slot, name, kind, bytes, sha256, storage_key)
+      select slot.company_id, slot.id, slot.n, ${f.name}, ${f.kind}, ${f.bytes}, ${f.sha256}, ${f.storageKey}
+        from slot
+       where slot.n is not null
+      on conflict do nothing
+      returning id, name, kind, bytes, stage, added_at
+    )
+    select exists (select 1 from live) as live,
+           exists (select 1 from open) as open,
+           (select count(*)::int from course.attempt_files x where x.attempt_id = ${f.attemptId}::uuid) as count,
+           exists (select 1 from course.attempt_files x where x.attempt_id = ${f.attemptId}::uuid and x.sha256 = ${f.sha256}) as dup,
+           made.id, made.name, made.kind, made.bytes, made.stage, made.added_at
+      from (select 1) one left join made on true
+  `;
+  if (error) return fail("file add", error);
+  if (!data?.live) return { status: "refused" };
+  if (!data.open) return { status: "closed" };
+  if (data.id) return { status: "added", file: toFile(data as FileRow) };
+  if (data.dup) return { status: "duplicate" };
+  return { status: "full" };
+}
+
+/** Removes a file the candidate attached, while the attempt is open and before it is submitted. True when one went. */
+export async function removeAttemptFile(sql: Db, f: { candidateId: string; generation: number; attemptId: string; fileId: string }): Promise<boolean | null> {
+  const { data, error } = await sql.run`
+    delete from course.attempt_files x
+     using course.candidate_attempts a, course.batch_candidates c, course.hiring_batches b
+     where x.id = ${f.fileId}::uuid and x.attempt_id = a.id and x.stage = 'draft'
+       and a.id = ${f.attemptId}::uuid and a.candidate_id = ${f.candidateId}::uuid
+       and c.id = a.candidate_id and c.batch_id = a.batch_id and c.link_generation = ${f.generation} and c.status = 'active'
+       and b.id = c.batch_id and b.company_id = c.company_id and b.status = 'sent'
+       and a.submitted_at is null and now() <= a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
+  `;
+  if (error) return fail("file remove", error);
+  return (data ?? 0) > 0;
 }
 
 /** A batch's attempts, for the recruiter's table. The company comes from the signed-in recruiter. */
