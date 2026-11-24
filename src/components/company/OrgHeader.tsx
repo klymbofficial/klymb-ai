@@ -6,14 +6,13 @@ import { isAdmin, ROLE_LABEL, viewOf, type CompanyMember } from "@/lib/company/a
 import type { ResolvedBrand } from "@/lib/company/branding";
 import { seesAssessments } from "@/lib/company/assessment-rules";
 import { seesHiring } from "@/lib/company/batch-rules";
-import { seesCatalog } from "@/lib/company/catalog";
 
 const UPSKILL_LABEL = { company: "Upskill", team: "Team Upskill", self: "My Upskill" } as const;
 
 /**
  * What a member can open. Responsibilities add up: an admin runs People,
- * Teams and Branding; anyone who chooses courses or tests opens the
- * Catalog; the people who hire, and admins, open Assessments and Hiring; the learning
+ * Teams and Branding; the people who hire, review, and admins, open
+ * Assessments, the Library and Hiring; the learning
  * tab shows the widest view they have (the company, their team, or
  * themselves).
  */
@@ -28,8 +27,7 @@ export function navFor(member: CompanyMember): OrgNavItem[] {
         ]
       : []),
     { href: `${base}/learning`, label: UPSKILL_LABEL[viewOf(member)] },
-    ...(seesCatalog(member) ? [{ href: `${base}/catalog`, label: "Catalog" }] : []),
-    ...(seesAssessments(member) ? [{ href: `${base}/assessments`, label: "Assessments" }] : []),
+    ...(seesAssessments(member) ? [{ href: `${base}/assessments`, label: "Assessments" }, { href: `${base}/library`, label: "Library" }] : []),
     ...(seesHiring(member) ? [{ href: `${base}/hiring`, label: "Hiring" }] : []),
     ...(isAdmin(member) ? [{ href: `${base}/branding`, label: "Branding" }] : []),
   ];

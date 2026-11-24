@@ -8,6 +8,7 @@ import { LearningSummary } from "@/components/company/LearningSummary";
 import { EmptyPanel, LoadError, OrgPageTitle } from "@/components/company/OrgPanels";
 import { ProgressTable } from "@/components/company/ProgressTable";
 import { isAdmin, viewOf } from "@/lib/company/access";
+import { seesCatalog } from "@/lib/company/catalog";
 import { listAssignments, loadAssignPeople, loadTeams } from "@/lib/company/assign-data";
 import { assignerFor, requireCompany } from "@/lib/company/auth";
 import { loadProgress } from "@/lib/company/progress-data";
@@ -49,6 +50,11 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
   return (
     <>
       <OrgPageTitle title={TITLES[view]} />
+      {seesCatalog(member) && (
+        <p className="-mt-4 mb-6 text-sm">
+          <Link href={`/org/${member.companySlug}/learning/courses`} className="font-bold underline underline-offset-4 hover:text-red-deep">Browse courses and programs</Link>
+        </p>
+      )}
       <div className="flex flex-col gap-6">
         {!progress || progress.status === "unavailable" || (assigner && (!people || !teams)) ? (
           <LoadError what="Upskill activity" />

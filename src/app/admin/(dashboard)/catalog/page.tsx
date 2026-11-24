@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CatalogAdmin, type AdminCatalogItem } from "@/components/admin/CatalogAdmin";
 import { EmptyState } from "@/components/admin/EmptyState";
 import { PageTitle } from "@/components/admin/PageTitle";
@@ -32,6 +33,7 @@ export default async function AdminCatalogPage() {
         eyebrow="B2B"
         title="Business catalog"
         intro="A company sees an item only once it is published and given to them. Changes are logged in Admin activity."
+        actions={<Link href="/admin/catalog/questions" className="text-sm font-bold underline underline-offset-4">Klymb&apos;s question library →</Link>}
       />
       {data ? (
         <CatalogAdmin

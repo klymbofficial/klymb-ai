@@ -15,11 +15,11 @@ describe("the sidebar's sections", () => {
     assert.deepEqual(shape(member(["employee"])), [[null, ["Overview"]], [null, ["My Upskill"]]]);
   });
 
-  test("a recruiter's hiring link is Assessments only: no separate Batches page (user, 24 Nov)", () => {
+  test("a recruiter's hiring links are Assessments and the Library: no separate Batches page (user, 24 Nov)", () => {
     const groups = navGroupsFor(member(["recruiter"]));
     const hiring = groups.find((g) => g.label === "Hiring");
     assert.ok(hiring, "named, since there is more than one group");
-    assert.deepEqual(hiring.items.map((i) => [i.label, i.href]), [["Assessments", "/org/acme/assessments"]]);
+    assert.deepEqual(hiring.items.map((i) => [i.label, i.href]), [["Assessments", "/org/acme/assessments"], ["Library", "/org/acme/library"]]);
     assert.ok(!groups.some((g) => g.items.some((i) => i.label === "People" || i.label === "Branding")), "people and branding are for admins");
   });
 
@@ -27,8 +27,8 @@ describe("the sidebar's sections", () => {
     assert.deepEqual(shape(member(["admin"])), [
       [null, ["Overview"]],
       ["Workforce", ["People", "Teams", "Upskill"]],
-      ["Hiring", ["Assessments"]],
-      ["Company", ["Catalog", "Branding"]],
+      ["Hiring", ["Assessments", "Library"]],
+      ["Company", ["Branding"]],
     ]);
   });
 
@@ -37,6 +37,14 @@ describe("the sidebar's sections", () => {
     for (const g of groups) for (const i of g.items) assert.ok(i.href === "/org/acme" || i.href.startsWith("/org/acme/"), i.href);
     assert.ok(groups.some((g) => g.items.some((i) => i.label === "Assessments")));
     assert.ok(!groups.some((g) => g.items.some((i) => i.label === "Batches")));
+  });
+
+  test("Catalog became the Library (L1): no Catalog link; a team lead reaches courses from Upskill", () => {
+    for (const roles of [["admin"], ["team_lead"], ["recruiter"], ["company_head"], ["reviewer"]] as const) {
+      assert.ok(!navGroupsFor(member([...roles])).some((g) => g.items.some((i) => i.label === "Catalog" || i.href.endsWith("/catalog"))), roles.join());
+    }
+    assert.ok(!navGroupsFor(member(["team_lead"])).some((g) => g.items.some((i) => i.label === "Library")), "the Library is for those who see Assessments");
+    assert.match(read("src/app/org/[slug]/(workspace)/learning/page.tsx"), /learning\/courses/);
   });
 
   test("the overview is current only on itself; a section also on the pages under it", () => {

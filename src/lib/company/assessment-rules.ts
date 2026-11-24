@@ -253,7 +253,7 @@ export function readContent(raw: Record<string, unknown>): Result<AssessmentCont
 }
 
 /** A rubric as typed: at most 10 areas, each within its limits, no two with one name. */
-function readCriteria(raw: unknown, what: string): Result<Criterion[]> {
+export function readCriteria(raw: unknown, what: string): Result<Criterion[]> {
   if (!Array.isArray(raw)) return { ok: false, message: "The rubric didn't arrive. Reload and try again." };
   if (raw.length > LIMITS.criteria) return { ok: false, message: `A rubric has at most ${LIMITS.criteria} areas.` };
   const rubric: Criterion[] = [];

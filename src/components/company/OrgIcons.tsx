@@ -30,7 +30,7 @@ const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calen
       <path d="M3 7l9 6 9-6" />
     </>
   ),
-  catalog: <path d="M4 6h16M4 12h16M4 18h10" />,
+  library: <path d="M4 5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM10 5h4v15h-4M15.5 5.5l3.5-1 2.5 14.5-3.5 1z" />,
   branding: (
     <>
       <circle cx="12" cy="12" r="8.5" />

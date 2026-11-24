@@ -34,6 +34,8 @@ const LABELS: Record<string, string> = {
   "catalog.revoke": "Took a catalog item back from a company",
   "catalog.assessment_save": "Saved an assessment draft",
   "catalog.assessment_publish": "Published a new assessment version",
+  "catalog.question_create": "Added a question to Klymb's library",
+  "catalog.question_save": "Edited a question in Klymb's library",
   "company.course_assign": "Company admin assigned a course",
   "company.course_unassign": "Company admin removed a course assignment",
   "company.course_assign_all": "Company admin assigned a course to everyone without it",
@@ -51,6 +53,9 @@ const LABELS: Record<string, string> = {
   "company.test_create": "Company created its own test",
   "company.test_save": "Company saved its own test's draft",
   "company.test_publish": "Company published its own test",
+  "company.question_create": "Company added a question to its library",
+  "company.question_save": "Company edited a question in its library",
+  "company.question_remove": "Company removed a question from its library",
 };
 
 const UUID = /^[0-9a-f-]{36}$/i;

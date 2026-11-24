@@ -40,7 +40,7 @@ export async function reviewAssessment(slug: string, item: string, versionId: st
   // Literal pages: there's no layout under assessments/ for a "layout" revalidation to hit.
   revalidatePath(`/org/${member.companySlug}/assessments`);
   revalidatePath(`/org/${member.companySlug}/assessments/${item}`);
-  revalidatePath(`/org/${member.companySlug}/catalog/${item}`);
+  revalidatePath(`/org/${member.companySlug}/learning/courses/${item}`);
   return {
     ok: true,
     message: review.value.decision === "approved" ? "Approved. Recruiters can pick this version for a hiring batch." : "Declined. Klymb sees your note. Recruiters can't pick this version.",

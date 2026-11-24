@@ -1,9 +1,9 @@
 import { isAdmin, viewOf, type CompanyMember } from "@/lib/company/access";
 import { seesAssessments } from "@/lib/company/assessment-rules";
-import { seesCatalog } from "@/lib/company/catalog";
+import { seesLibrary } from "@/lib/company/library-rules";
 
 /** The icon a sidebar link draws (src/components/company/OrgIcons.tsx). */
-export type OrgNavIcon = "overview" | "people" | "teams" | "learning" | "assessments" | "batches" | "catalog" | "branding";
+export type OrgNavIcon = "overview" | "people" | "teams" | "learning" | "assessments" | "batches" | "library" | "branding";
 
 export interface OrgNavItem {
   href: string;
@@ -24,7 +24,7 @@ const UPSKILL_LABEL = { company: "Upskill", team: "Team Upskill", self: "My Upsk
 /**
  * What a member can open, grouped the way the work divides: their own
  * workforce (people, teams, learning), hiring (tests and batches), and the
- * company's own settings (catalog, branding). Responsibilities add up, and a
+ * company's own settings (branding). Responsibilities add up, and a
  * group with nothing in it isn't shown. Group names appear only when there is
  * more than one group to tell apart, so an employee sees two plain links.
  */
@@ -46,12 +46,12 @@ export function navGroupsFor(member: CompanyMember, own: { myAssessments?: boole
       label: "Hiring",
       items: [
         ...(seesAssessments(member) ? [item(`${base}/assessments`, "Assessments", "assessments")] : []),
+        ...(seesLibrary(member) ? [item(`${base}/library`, "Library", "library")] : []),
       ],
     },
     {
       label: "Company",
       items: [
-        ...(seesCatalog(member) ? [item(`${base}/catalog`, "Catalog", "catalog")] : []),
         ...(admin ? [item(`${base}/branding`, "Branding", "branding")] : []),
       ],
     },

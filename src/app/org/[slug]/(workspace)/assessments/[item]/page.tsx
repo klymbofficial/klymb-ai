@@ -126,8 +126,8 @@ export default async function AssessmentPage({
           </EmptyPanel>
         ) : (
           <EmptyPanel title="Not published yet">
-            Klymb is still writing this test. You can see what it covers in the{" "}
-            <Link href={`${company}/catalog/${itemSlug}`} className="font-bold underline underline-offset-2">catalog</Link>.
+            Klymb is still writing this test. You can see{" "}
+            <Link href={`${company}/learning/courses/${itemSlug}`} className="font-bold underline underline-offset-2">what it covers</Link>.
           </EmptyPanel>
         )}
       </>
