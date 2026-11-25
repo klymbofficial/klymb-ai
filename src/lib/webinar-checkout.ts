@@ -27,6 +27,8 @@ export async function payForSeat(order: WebinarOrder): Promise<SeatResult> {
   }
   const money = { value: order.amount / 100, currency: order.currency, webinar: WEBINAR.slug };
   trackEvent("webinar_checkout_open", money, { currency: order.currency });
+  // Far more people open the checkout than pay $1, so Meta gets a signal it can optimise ads on in a short campaign.
+  metaTrack("InitiateCheckout", { value: order.amount / 100, currency: order.currency, content_name: "System Design webinar" });
   return new Promise((resolve) => {
     // A failed attempt leaves Razorpay open to try another card, so it's only reported if they then close it.
     let failed = "";
