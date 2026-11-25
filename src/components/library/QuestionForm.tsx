@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { BTN_PRIMARY, BTN_SECONDARY } from "@/components/company/HiringParts";
-import { useConfirm } from "@/components/company/Overlay";
 import { LIMITS } from "@/lib/company/assessment-rules";
 import {
   DIFFICULTIES,
@@ -190,16 +189,14 @@ export function QuestionForm({
 export function RemoveQuestionButton({ remove }: { remove: () => Promise<{ ok: false; message: string } | null> }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [confirm, dialog] = useConfirm();
   return (
     <span className="inline-flex items-center gap-3">
-      {dialog}
       <button
         type="button"
         disabled={pending}
         className={BTN_SECONDARY}
-        onClick={async () => {
-          if (!(await confirm({ title: "Remove this question from My Library?", body: "Tests that already use it keep their copy.", confirmLabel: "Remove", cancelLabel: "Keep it" }))) return;
+        onClick={() => {
+          if (!window.confirm("Remove this question from My Library? Tests that already use it keep their copy.")) return;
           start(async () => {
             const out = await remove();
             if (out && !out.ok) setError(out.message);

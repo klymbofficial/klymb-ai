@@ -5,8 +5,6 @@ import { CandidateNotice, CandidateShell } from "@/components/company/CandidateS
 import { Countdown } from "@/components/company/Countdown";
 import { AttemptWork } from "@/components/company/AttemptWork";
 import { QuestionsWork } from "@/components/company/QuestionsWork";
-import { ProctorChips, ProctorGuard } from "@/components/company/ProctorGuard";
-import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { attemptByLink, attemptTask, listAttemptFiles, loadAnswers, loadDraft } from "@/lib/company/attempt-data";
 import { attemptState } from "@/lib/company/attempt-rules";
 import { readCandidateLink } from "@/lib/company/batch-link";
@@ -45,27 +43,20 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
   const now = new Date();
   if (attemptState(attempt, now) !== "in_progress") redirect(home);
 
-  const [task, brandRow, draft, files, answers, settings] = await Promise.all([
+  const [task, brandRow, draft, files, answers] = await Promise.all([
     attemptTask(sql, attempt.id), loadCompanyBrand(sql, found.batch.companyId), loadDraft(sql, attempt.id), listAttemptFiles(sql, attempt.id), loadAnswers(sql, attempt.id),
-    loadTestSettings(sql, found.batch.companyId, found.batch.item),
   ]);
-  // The company's proctoring for this test (0070), read fresh on every load.
-  const proctor = settings?.proctor ?? { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null };
   const brand = brandRow ? { name: brandRow.name, logoUrl: brandRow.logoUrl, accent: readableBrandColor(brandRow.brandColor) } : null;
   const support = brandRow?.supportEmail ?? MAIL_SUPPORT;
   const tz = found.batch.timeZone;
 
   return (
     <CandidateShell brand={brand} wide>
-      <ProctorGuard token={token} attemptId={attempt.id} config={proctor} home={home}>
-      <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line/30 bg-paper/95 px-4 py-3 shadow-[0_1px_0_rgba(0,0,0,0.02)] backdrop-blur sm:-mx-6 sm:px-6">
-        <div className="min-w-0">
-          <p className="truncate text-base font-bold">{found.batch.title}</p>
-          <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <span>Ends {deadlineText(attempt.deadlineAt, tz)} · answers save as you go</span>
-            <ProctorChips config={proctor} />
-          </p>
-        </div>
+      <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line/30 bg-paper/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <p className="text-sm">
+          <strong>{found.batch.title}</strong>
+          <span className="text-muted"> · ends {deadlineText(attempt.deadlineAt, tz)}</span>
+        </p>
         <Countdown deadline={attempt.deadlineAt} serverNow={now.toISOString()} />
       </div>
 
@@ -115,9 +106,8 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
 
       <p className="text-xs text-muted">
         Problems during the test? Write to <a href={`mailto:${support}`} className="font-bold underline underline-offset-4">{support}</a>.{" "}
-        {!proctor.fullscreen && <Link href={home} className="underline underline-offset-4">Back to the test&apos;s page</Link>}
+        <Link href={home} className="underline underline-offset-4">Back to the test&apos;s page</Link>
       </p>
-      </ProctorGuard>
     </CandidateShell>
   );
 }

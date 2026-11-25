@@ -43,7 +43,7 @@ export default async function SystemDesignOfferPage({ searchParams }: { searchPa
   const session = await auth();
   const email = verifiedEmailFrom(session);
 
-  if (email && (await hasCourseAccess(email, SD_COURSE))) redirect("/learn/system-design");
+  if (email && (await hasCourseAccess(email, SD_COURSE))) redirect("/learn");
 
   const sql = db();
   const lead = email && sql

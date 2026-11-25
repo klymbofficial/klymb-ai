@@ -5,14 +5,18 @@ import { redirect } from "next/navigation";
 import type { DraftResult, PublishResult } from "@/app/admin/assessment-actions";
 import { allowCompany } from "@/lib/company/access";
 import { loadDraft, loadVersions } from "@/lib/company/assessment-data";
+<<<<<<< Updated upstream
 import { LIMITS, canWriteTests, candidateQuestions, publishGaps, readContent, readTestName, sameContent, type CandidateTask } from "@/lib/company/assessment-rules";
 import { AUTO_LIMITS, autoContent, pickQuestions, readSkills, summarise, type Mix } from "@/lib/company/auto-test";
 import { isAssessmentAudience, type AssessmentAudience } from "@/lib/company/batch-rules";
 import { klymbLibrary, ownLibrary } from "@/lib/company/library-data";
 import { activeRoles } from "@/lib/company/roles-data";
+=======
+import { LIMITS, canWriteTests, publishGaps, readContent, readTestName, sameContent } from "@/lib/company/assessment-rules";
+>>>>>>> Stashed changes
 import { logCompany } from "@/lib/company/audit";
 import { getWorkspaceMember } from "@/lib/company/auth";
-import { createTest, createTestKeyed, ownTest, publishOwnDraft, saveOwnDraft } from "@/lib/company/company-test-data";
+import { createTest, ownTest, publishOwnDraft, saveOwnDraft } from "@/lib/company/company-test-data";
 import { db } from "@/lib/db/client";
 
 /**
@@ -66,6 +70,7 @@ export async function createOwnTest(_prev: CreateResult, form: FormData): Promis
   redirect(`/org/${member.companySlug}/assessments/${item}/edit`);
 }
 
+<<<<<<< Updated upstream
 export type AutoResult =
   | {
       ok: true; item: string; title: string; role: string; audience: AssessmentAudience; revision: number; existed: boolean;
@@ -139,6 +144,8 @@ export async function createAutoTest(input: { slug: string; title: string; role:
   };
 }
 
+=======
+>>>>>>> Stashed changes
 /** Saves the draft and the name, if nobody else saved since `expected`. An unfinished draft saves fine. */
 export async function saveOwnTest(company: string, item: string, form: Record<string, unknown>, expected: number): Promise<DraftResult> {
   const member = await writer(company);

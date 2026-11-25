@@ -156,13 +156,12 @@ test("recruiters use the newest approved version; a newer one waits for its own 
   assert.equal(standingLabel(standingOf([], new Map())), "Not published yet");
 });
 
-test("only hiring people and the workspace's runners open tests; reviewers and admins review versions", () => {
+test("only hiring people and the workspace's runners open tests; only reviewers decide", () => {
   for (const r of ["admin", "company_head", "recruiter", "reviewer"] as const) assert.equal(seesAssessments(member([r])), true, r);
   for (const r of ["team_lead", "employee"] as const) assert.equal(seesAssessments(member([r])), false, r);
   assert.equal(seesAssessments(null), false);
   assert.equal(canReview(member(["reviewer"])), true);
-  assert.equal(canReview(member(["admin"])), true, "a company admin holds every power (25 Nov)");
-  assert.equal(canReview(member(["recruiter"])), false);
+  assert.equal(canReview(member(["admin", "recruiter"])), false, "an admin grants themselves reviewer to decide");
 });
 
 test("time reads in hours and minutes", () => {

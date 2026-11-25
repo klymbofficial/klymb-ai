@@ -35,7 +35,6 @@ const LABELS: Record<string, string> = {
   "catalog.assessment_save": "Saved an assessment draft",
   "catalog.assessment_publish": "Published a new assessment version",
   "catalog.question_create": "Added a question to Klymb's library",
-  "catalog.role_save": "Saved a job role for automatic tests",
   "catalog.question_save": "Edited a question in Klymb's library",
   "company.course_assign": "Company admin assigned a course",
   "company.course_unassign": "Company admin removed a course assignment",

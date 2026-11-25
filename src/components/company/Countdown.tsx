@@ -38,11 +38,10 @@ export function Countdown({ deadline, serverNow }: { deadline: string; serverNow
   }, [end, skew]);
 
   const low = left > 0 && left <= 5 * 60000;
-  const soon = left > 5 * 60000 && left <= 10 * 60000;
   return (
-    <div className={`flex items-baseline gap-2 rounded-md border-2 px-3 py-1 ${low ? "border-error bg-[#fdecea]" : soon ? "border-[#b26a00] bg-[#fff4e0]" : "border-line/40 bg-white"}`}>
-      <span className="text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-muted">Time left</span>
-      <span role="timer" aria-live="off" className={`font-mono text-2xl font-bold tabular-nums ${low ? "text-error" : soon ? "text-[#8a5200]" : ""}`}>
+    <div className="flex items-baseline gap-2">
+      <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">Time left</span>
+      <span role="timer" aria-live="off" className={`font-mono text-2xl font-bold tabular-nums ${low ? "text-error" : ""}`}>
         {left === 0 ? "00:00" : clockText(left)}
       </span>
       <span className="sr-only" aria-live="polite">{said}</span>
