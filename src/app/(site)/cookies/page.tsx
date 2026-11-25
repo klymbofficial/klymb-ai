@@ -13,12 +13,12 @@ export default function CookiePolicyPage() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="Two cookies keep you signed in. We measure aggregate usage with Google Analytics, which runs by default, and use Meta Pixel for our Instagram ads only if you allow it. You can change either on this page at any time."
+      intro="Two cookies keep you signed in. We measure aggregate usage with Google Analytics, which runs by default, and use Meta Pixel and Google Ads for our ads only if you allow it. You can change either on this page at any time."
     >
-      <Section n="1." title="Your choice" plain="Analytics is on by default. Meta Pixel is off until you tap OK. Change either here.">
+      <Section n="1." title="Your choice" plain="Analytics is on by default. Meta Pixel and Google Ads are off until you tap OK. Change either here.">
         <p>
-          On your first visit a small notice tells you about analytics and Meta Pixel. Google Analytics runs by default so we can see, in aggregate,
-          which pages people read and where they arrive from. Meta Pixel loads only if you tap OK. If you would rather we did not, switch them off below: the
+          On your first visit a small notice tells you about analytics and our ad tools. Google Analytics runs by default so we can see, in aggregate,
+          which pages people read and where they arrive from. Meta Pixel and Google Ads load only if you tap OK. If you would rather we did not, switch them off below: the
           scripts stop immediately, on this and every later page.
         </p>
         <p>
@@ -54,15 +54,21 @@ export default function CookiePolicyPage() {
           name, email, phone number or answers. Meta keeps this under its own privacy policy.
         </p>
         <p>
+          <strong>Google Ads (only if you tap OK):</strong> remembers whether this browser arrived from one of our Google
+          ads, and tells Google when a webinar seat is paid for, with the amount and an order number. Google uses it to
+          measure whether the ads led to a sign-up. We never send your name, email, phone number or answers. Google keeps
+          this under its own privacy policy.
+        </p>
+        <p>
           If you turn analytics off, we stop loading the script immediately for the rest of your visit and on every page
           afterwards. Events Google has already recorded stay until they age out of its 14-month retention window.
         </p>
       </Section>
 
-      <Section n="4." title="What we do not do" plain="No selling data, no data brokers, no pixel without your OK.">
+      <Section n="4." title="What we do not do" plain="No selling data, no data brokers, no ad tracking without your OK.">
         <p>
-          We do not sell personal data, and we do not use third-party data brokers. The only advertising tool we use is
-          Meta Pixel, and only after you tap OK. If that ever changes, we will update this policy and ask for your consent
+          We do not sell personal data, and we do not use third-party data brokers. The only advertising tools we use are
+          Meta Pixel and Google Ads, and only after you tap OK. If that ever changes, we will update this policy and ask for your consent
           again before enabling anything new.
         </p>
         <p>

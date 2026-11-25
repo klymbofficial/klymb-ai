@@ -18,6 +18,8 @@ const isDev = process.env.NODE_ENV === "development";
  *   *.r2.cloudflarestorage.com  System Design videos, played from signed R2 links
  *   connect.facebook.net        Meta Pixel script, loaded only after OK on the cookie notice
  *   www.facebook.com            Meta Pixel events
+ *   googleadservices.com, *.doubleclick.net, www.google.com
+ *                               Google Ads conversion tag, loaded only after OK on the cookie notice
  *
  * 'unsafe-inline' on script-src is required by Next.js, which inlines a small
  * bootstrap and the flight payload; a nonce would mean giving up static
@@ -26,7 +28,7 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com https://connect.facebook.net`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net`,
   "style-src 'self' 'unsafe-inline'",
   // Any https image: company logos are links an admin pastes from the
   // company's own site (/admin/companies), so the hosts can't be listed.
@@ -43,6 +45,10 @@ const csp = [
     "https://*.analytics.google.com",
     "https://*.googletagmanager.com",
     "https://stats.g.doubleclick.net",
+    "https://googleads.g.doubleclick.net",
+    "https://ad.doubleclick.net",
+    "https://www.googleadservices.com",
+    "https://www.google.com",
     "https://*.razorpay.com",
     "https://www.facebook.com",
     "https://connect.facebook.net",
@@ -53,7 +59,7 @@ const csp = [
   ]
     .filter(Boolean)
     .join(" "),
-  "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com",
+  "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com https://td.doubleclick.net https://www.googletagmanager.com",
   // Clickjacking: nothing may embed this site.
   "frame-ancestors 'none'",
   "base-uri 'self'",
