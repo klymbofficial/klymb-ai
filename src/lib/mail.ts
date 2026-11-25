@@ -619,15 +619,21 @@ export function noteEmail(p: { subject: string; preview: string; eyebrow: string
  * logo and name in the header, their color where it is readable, and their
  * name in the sender ("Acme via Klymb.ai"). The sending address stays Klymb's.
  */
-export function companyInviteEmail(p: { email: string; name: string | null; role: "hr" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
+export function companyInviteEmail(p: { email: string; name: string | null; role: "admin" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
   const company = p.company.name;
   const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
-  const brand: MailBrand = { name: company, logoUrl: p.company.logoUrl, color: accent };
-  const signIn = `${p.siteUrl}/org/sign-in`;
+  // Emails need an absolute address; a logo served by Klymb arrives as a path.
+  const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
+  const brand: MailBrand = { name: company, logoUrl, color: accent };
+  const signIn = p.company.slug ? `${p.siteUrl}/org/${p.company.slug}/sign-in` : `${p.siteUrl}/org/sign-in`;
+  // Questions about the workspace go to the company's own contact when it has published one.
+  const help = p.company.supportEmail
+    ? `Questions? Write to ${p.company.supportEmail}${p.company.supportText ? ` (${p.company.supportText})` : ""}. For trouble with Klymb itself, write to ${p.supportEmail}.`
+    : `Questions? Reply to this email or write to ${p.supportEmail}.`;
 
   const subject = p.resend ? `Reminder: you've been added to ${company} on Klymb.ai` : `You've been added to ${company} on Klymb.ai`;
-  const intro = p.role === "hr" ? `You've been added as an HR contact for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
+  const intro = p.role === "admin" ? `You've been added as an admin for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
   const steps = [
     { title: "Open the sign-in page", body: `Go to ${signIn}.` },
     { title: "Use this email", body: `Enter ${p.email}. We'll email you a 6-digit code: no password needed.` },
@@ -638,12 +644,12 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
     "Getting started",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
     `Sign in: ${signIn}`, "",
-    `Questions? Reply to this email or write to ${p.supportEmail}.`, "",
+    help, "",
     `Sent for ${company} by Klymb.ai`,
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail, brand,
-    preview: p.role === "hr" ? `You're the HR contact for ${company}.` : `${company} has given you a place on Klymb.ai.`,
+    preview: p.role === "admin" ? `You're an admin for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`,
     eyebrow: p.resend ? "A reminder" : "You're invited",
     title: p.name ? `Welcome, ${esc(p.name)}.` : "Welcome aboard.",
     intro: esc(intro),
@@ -651,9 +657,118 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
       `${sectionTitle("Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
       </table>${button(esc(signIn), "Sign in", accent)}`,
+      ...(p.company.supportEmail
+        ? [`<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">Questions about your workspace? Write to <a href="mailto:${esc(p.company.supportEmail)}" style="color:${C.ink};font-weight:600">${esc(p.company.supportEmail)}</a>${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.</div>`]
+        : []),
     ],
   });
   return { subject, html, text, fromName: inviteSenderName(company) };
+}
+
+/**
+ * An external candidate's invitation or an employee's assigned assessment,
+ * plus follow-up emails (a reminder, a new link, a new time). Always says
+ * three things apart: when the batch opens, the last moment to start, and
+ * how long they have once they start. Times are written in the batch's time
+ * zone, named.
+ */
+export function candidateInviteEmail(p: {
+  kind: "invite" | "reminder" | "auto_reminder" | "new_link" | "extension";
+  name: string;
+  email: string;
+  company: CompanyBrand;
+  title: string;
+  role: string;
+  /** Internal assessments are assigned to employees; external ones invite candidates. */
+  internal: boolean;
+  /** "Thu 4 Dec 2026, 10:00 am India Standard Time" */
+  opens: string;
+  lastStart: string;
+  allowed: string;
+  opened: boolean;
+  link: string;
+  prep: { course: string; url: string; until: string } | null;
+  siteUrl: string;
+  supportEmail: string;
+  /**
+   * The company's own words for the invitation (U06a), variables already
+   * filled in: replaces the subject and the opening line. The times, the
+   * link button, the prep course and the help lines are always added.
+   */
+  template?: { subject: string; body: string } | null;
+}) {
+  const site = esc(p.siteUrl);
+  const company = p.company.name;
+  const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
+  const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
+  const brand: MailBrand = { name: company, logoUrl, color: accent };
+  const what = p.internal ? "your assigned assessment" : `the ${p.role} assessment`;
+
+  const messages = p.internal
+    ? {
+        invite: { subject: `${company} assigned you an assessment: ${p.title}`, eyebrow: "Assessment assigned", intro: `${company} assigned you an internal assessment on Klymb.ai: ${p.title}.` },
+        reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
+        auto_reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
+        new_link: { subject: `Your new link for ${company}'s assigned assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link for your assigned assessment. The earlier one no longer works.` },
+        extension: { subject: `New time for your assigned assessment from ${company}`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
+      }
+    : {
+        invite: { subject: `${company} invites you to ${what}`, eyebrow: "You're invited", intro: `${company} invites you to take ${what} on Klymb.ai: ${p.title}.` },
+        reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
+        auto_reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
+        new_link: { subject: `Your new link for ${company}'s ${p.role} assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link. The earlier one no longer works.` },
+        extension: { subject: `New time for ${company}'s ${p.role} assessment`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
+      };
+  const message = messages[p.kind];
+  const own = p.kind === "invite" && p.template ? p.template : null;
+  if (own) {
+    message.subject = own.subject;
+    message.intro = own.body;
+  }
+
+  const when = [
+    ...(p.opened ? [] : [{ title: "Opens", body: p.opens }]),
+    { title: "Start by", body: `${p.lastStart}. After that the link won't start the test.` },
+    { title: "Time allowed", body: `${p.allowed} once you start. The clock keeps running if you close the page.` },
+  ];
+  const help = p.company.supportEmail
+    ? `Questions about the assessment? Write to ${p.company.supportEmail}${p.company.supportText ? ` (${p.company.supportText})` : ""}. For trouble with Klymb itself, write to ${p.supportEmail}.`
+    : `Questions? Reply to this email or write to ${p.supportEmail}.`;
+  const prepLine = p.prep
+    ? `To prepare, ${company} has opened ${p.prep.course} for you until ${p.prep.until}. Sign in with Google as ${p.email} at ${p.prep.url}.`
+    : null;
+
+  const text = [
+    `Hi ${p.name},`, "",
+    message.intro, "",
+    ...when.map((w) => `${w.title}: ${w.body}`), "",
+    `Open your assessment: ${p.link}`, "",
+    ...(prepLine ? [prepLine, ""] : []),
+    "This link is for you only. Please don't share it.", "",
+    help, "",
+    `Sent for ${company} by Klymb.ai`,
+  ].join("\n");
+
+  const html = layout({
+    site, supportEmail: p.supportEmail, brand,
+    preview: message.intro,
+    eyebrow: message.eyebrow,
+    title: `Hi ${esc(p.name)}.`,
+    intro: own ? esc(message.intro).replace(/\n/g, "<br>") : esc(message.intro),
+    sections: [
+      `${sectionTitle("When", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${when.map((w, i) => step(i + 1, esc(w.title), esc(w.body), accent)).join("")}
+      </table>${button(esc(p.link), p.internal ? "Open assigned assessment" : "Open your assessment", accent)}
+      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:0 0 16px">This link is for you only. Please don't share it.</div>`,
+      ...(p.prep
+        ? [`${sectionTitle("Prepare", accent)}<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">${esc(company)} has opened <strong>${esc(p.prep.course)}</strong> for you until ${esc(p.prep.until)}. Sign in with Google as <strong>${esc(p.email)}</strong> at <a href="${esc(p.prep.url)}" style="color:${C.ink};font-weight:600">${esc(p.prep.url)}</a>.</div>`]
+        : []),
+      ...(p.company.supportEmail
+        ? [`<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">Questions about the assessment? Write to <a href="mailto:${esc(p.company.supportEmail)}" style="color:${C.ink};font-weight:600">${esc(p.company.supportEmail)}</a>${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.</div>`]
+        : []),
+    ],
+  });
+  return { subject: message.subject, html, text, fromName: inviteSenderName(company), replyTo: p.company.supportEmail ?? undefined };
 }
 
 /** The line under every reminder: how to stop them. One click, no sign-in. */

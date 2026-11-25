@@ -12,7 +12,7 @@ export default async function AdminCompaniesPage() {
       <PageTitle
         eyebrow="B2B"
         title="Companies"
-        intro="Companies that buy seats for their people. Set each one's logo, color and seats, and add its first HR person, who then signs in at /org/sign-in with an emailed code. Every change is recorded in Admin activity."
+        intro="Companies that buy seats for their people. Set each one's logo, color and seats, and add its first admin, who then signs in at /org/sign-in with an emailed code. Every change is recorded in Admin activity."
       />
       <CompaniesAdmin companies={companies} />
     </>

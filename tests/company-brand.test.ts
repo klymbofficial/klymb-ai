@@ -70,17 +70,18 @@ test("mail: emails without a brand keep Klymb's header and footer", () => {
   }
 });
 
-test("both invite senders pass the company's brand", () => {
-  assert.match(read("src/app/admin/company-actions.ts"), /company: \{ name: c\.name, logoUrl: c\.logo_url, brandColor: c\.brand_color \}/);
-  const people = read("src/app/org/[slug]/people/actions.ts");
+test("both invite senders pass the company's published brand", () => {
+  assert.match(read("src/app/admin/company-actions.ts"), /company: \(await loadCompanyBrand\(sql, id\)\) \?\?/);
+  assert.match(read("src/lib/company/invite.ts"), /publishedBrand\(sql, companyId\)/);
+  const people = read("src/app/org/[slug]/(workspace)/people/actions.ts");
   assert.match(people, /sendCompanyInvite\(\{ email: p\.email, name: p\.name, company, role: p\.role \}\)/);
 });
 
-test("resend is HR-only, for active people, and limited per person and per HR before anything is sent", () => {
-  const src = read("src/app/org/[slug]/people/actions.ts");
+test("resend is admin-only, for active people, and limited per person and per admin before anything is sent", () => {
+  const src = read("src/app/org/[slug]/(workspace)/people/actions.ts");
   const fn = src.slice(src.indexOf("export async function resendInvite"));
   const at = (s: string) => { const i = fn.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at("hrFor(slug)") < at("loadPerson("));
+  assert.ok(at("adminFor(slug)") < at("loadPerson("));
   assert.ok(at("target.removed") < at('checkRateLimit("company_invite_resend"'));
   assert.ok(at('checkRateLimit("company_invite_resend"') < at("sendCompanyInvite("));
   assert.ok(at('checkRateLimit("company_invite_resend_hr"') < at("sendCompanyInvite("));

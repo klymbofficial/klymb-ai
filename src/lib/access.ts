@@ -43,7 +43,36 @@ export async function hasCourseAccess(email: string, course: string) {
   `;
   if (error) return error.code !== UNDEFINED_TABLE;
   if (data?.length) return true;
-  return hasCompanyAssignment(sql, email, course);
+  if (await hasCompanyAssignment(sql, email, course)) return true;
+  return !!(await candidatePrep(sql, email, course));
+}
+
+/**
+ * A company opened this course for a candidate it invited to a hiring test,
+ * as prep: the person is active in a sent batch that names the course, and
+ * the batch hasn't closed (or their own later last start hasn't passed).
+ * Returns the company's name and when it ends, or null. Like
+ * hasCompanyAssignment it fails closed, and a missing table (0052 not run)
+ * means nobody.
+ */
+export async function candidatePrep(sql: NonNullable<ReturnType<typeof db>>, email: string, course: string): Promise<{ company: string; until: string } | null> {
+  const { data, error } = await sql.row<{ company: string; until: string }>`
+    select coalesce(nullif(br.published->>'displayName', ''), co.name) as company,
+           greatest(b.closes_at, coalesce(c.last_start_at, b.closes_at)) as until
+      from course.batch_candidates c
+      join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
+      join course.companies co on co.id = b.company_id
+      left join course.company_branding br on br.company_id = co.id
+     where c.email = ${email} and c.status = 'active' and b.status = 'sent' and b.prep_course = ${course}
+       and greatest(b.closes_at, coalesce(c.last_start_at, b.closes_at)) > now()
+     order by 2 desc
+     limit 1
+  `;
+  if (error) {
+    if (error.code !== UNDEFINED_TABLE) console.error("candidate prep read failed:", error.code, error.message);
+    return null;
+  }
+  return data ?? null;
 }
 
 /**
@@ -57,14 +86,25 @@ export async function hasCourseAccess(email: string, course: string) {
  * simply means nobody has been assigned.
  */
 export async function hasCompanyAssignment(sql: NonNullable<ReturnType<typeof db>>, email: string, course: string) {
-  const { data, error } = await sql.rows<{ email: string }>`
-    select a.email
-      from course.company_course_assignments a
-      join course.company_members m on m.company_id = a.company_id and m.email = a.email
-     where a.email = ${email} and a.course = ${course}
-       and a.revoked_at is null and m.removed_at is null
+  const live = await sql.rows<{ email: string }>`
+    select r.email
+      from course.company_assignment_recipients r
+      join course.company_members m on m.company_id = r.company_id and m.email = r.email
+     where r.email = ${email} and r.course = ${course}
+       and r.revoked_at is null and m.removed_at is null
      limit 1
   `;
+  // Before 0050 (a preview against an unmigrated database): 0030's table.
+  const { data, error } = live.error?.code === UNDEFINED_TABLE
+    ? await sql.rows<{ email: string }>`
+        select a.email
+          from course.company_course_assignments a
+          join course.company_members m on m.company_id = a.company_id and m.email = a.email
+         where a.email = ${email} and a.course = ${course}
+           and a.revoked_at is null and m.removed_at is null
+         limit 1
+      `
+    : live;
   if (error) {
     if (error.code !== UNDEFINED_TABLE) console.error("company assignment read failed:", error.code, error.message);
     return false;

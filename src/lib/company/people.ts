@@ -1,3 +1,4 @@
+import { GRANTABLE_ROLES, type GrantableRole } from "@/lib/company/access";
 import { normaliseEmail } from "@/lib/email";
 
 /**
@@ -103,22 +104,25 @@ export function tidyName(input: unknown): string | null {
 
 // ── Planning an add ─────────────────────────────────────────
 
-export type AddRole = "employee" | "hr";
+/** How someone joins from the People page or a CSV; more responsibilities are given afterwards. */
+export type AddRole = "employee" | "admin";
 
-/** What the database says about an email, gathered before planning. */
+/** What the database says about an email in this company, gathered before planning. */
 export interface ExistingPerson {
-  /** True when the row is in this company. */
-  sameCompany: boolean;
   removed: boolean;
 }
 
+/**
+ * Facts for planning an add. Only this company's rows matter: the same email
+ * may belong to other companies, and may be a Klymb learner with their own
+ * courses, which this company never sees (see progress-data).
+ */
 export interface AddContext {
   seatCount: number;
   activeMembers: number;
   /** Team name, lowercased and trimmed → team id. */
   teams: Map<string, string>;
   existing: Map<string, ExistingPerson>;
-  learners: Set<string>;
 }
 
 export interface PlannedPerson {
@@ -137,9 +141,15 @@ export const teamKey = (name: string) => name.trim().replace(/\s+/g, " ").toLowe
  * All or nothing: `ok` only when every person can be added and they fit in
  * the free seats. Otherwise every problem is listed, by line.
  */
-export function planAdd(people: (CsvPerson & { role?: AddRole })[], ctx: AddContext): { ok: boolean; add: PlannedPerson[]; errors: RowError[] } {
+export function planAdd(
+  people: (CsvPerson & { role?: AddRole })[],
+  ctx: AddContext,
+  options: { skipExisting?: boolean } = {},
+): { ok: boolean; add: PlannedPerson[]; errors: RowError[]; skipped: { line: number; email: string }[] } {
   const errors: RowError[] = [];
   const add: PlannedPerson[] = [];
+  // A file uploaded again: people already here are left as they are, not refused.
+  const skipped: { line: number; email: string }[] = [];
   const firstLine = new Map<string, number>();
 
   for (const p of people) {
@@ -150,9 +160,11 @@ export function planAdd(people: (CsvPerson & { role?: AddRole })[], ctx: AddCont
     firstLine.set(email, p.line);
 
     const existing = ctx.existing.get(email);
-    if (existing && !existing.sameCompany) { errors.push({ line: p.line, message: `${email} already belongs to another company.` }); continue; }
-    if (existing?.sameCompany && !existing.removed) { errors.push({ line: p.line, message: `${email} is already in your company.` }); continue; }
-    if (ctx.learners.has(email)) { errors.push({ line: p.line, message: `${email} is a Klymb learner. Company members need a different email.` }); continue; }
+    if (existing && !existing.removed) {
+      if (options.skipExisting) skipped.push({ line: p.line, email });
+      else errors.push({ line: p.line, message: `${email} is already in your company.` });
+      continue;
+    }
 
     let teamId: string | null = null;
     if (p.team) {
@@ -172,17 +184,46 @@ export function planAdd(people: (CsvPerson & { role?: AddRole })[], ctx: AddCont
         : `${asked} only ${free} of ${ctx.seatCount} seats ${free === 1 ? "is" : "are"} free. Ask Klymb for more seats or upload fewer people.`,
     });
   }
-  return { ok: errors.length === 0, add: errors.length ? [] : add, errors };
+  return { ok: errors.length === 0, add: errors.length ? [] : add, errors, skipped };
 }
 
 // ── Removing ────────────────────────────────────────────────
 
-/** Why HR may not remove this person, or null when they may. */
-export function removeBlocked(p: { actorEmail: string; target: { email: string; role: string; removed: boolean } | null; activeHr: number }): string | null {
+/** Why an admin may not remove this person, or null when they may. */
+export function removeBlocked(p: { actorEmail: string; target: { email: string; roles: readonly string[]; removed: boolean } | null; activeAdmins: number }): string | null {
   if (!p.target) return "That person isn't in your company.";
   if (p.target.removed) return "That person has already been removed.";
-  if (p.target.email === p.actorEmail) return "You can't remove yourself. Ask another HR person.";
-  if (p.target.role === "hr" && p.activeHr <= 1) return "The last HR person can't be removed.";
+  if (p.target.email === p.actorEmail) return "You can't remove yourself. Ask another admin.";
+  if (p.target.roles.includes("admin") && p.activeAdmins <= 1) return "The last admin can't be removed.";
+  return null;
+}
+
+// ── Responsibilities ────────────────────────────────────────
+
+/** The responsibilities ticked on the People page, checked: known ones only, no repeats, in a fixed order. */
+export function grantedRoles(input: unknown): GrantableRole[] | null {
+  if (!Array.isArray(input) || input.length > GRANTABLE_ROLES.length * 2) return null;
+  if (!input.every((r) => typeof r === "string" && (GRANTABLE_ROLES as readonly string[]).includes(r))) return null;
+  return GRANTABLE_ROLES.filter((r) => input.includes(r));
+}
+
+/**
+ * Why an admin may not set these responsibilities, or null when they may.
+ * Everyone keeps at least one (a team lead's role counts); an admin can't
+ * take their own admin away, and the last admin stays one.
+ */
+export function rolesBlocked(p: {
+  actorEmail: string;
+  target: { email: string; roles: readonly string[]; removed: boolean } | null;
+  next: readonly GrantableRole[];
+  activeAdmins: number;
+}): string | null {
+  if (!p.target || p.target.removed) return "That person isn't in your company.";
+  const leads = p.target.roles.includes("team_lead");
+  if (!p.next.length && !leads) return "Everyone needs at least one responsibility. Choose Employee if nothing else fits.";
+  const losesAdmin = p.target.roles.includes("admin") && !p.next.includes("admin");
+  if (losesAdmin && p.target.email === p.actorEmail) return "You can't take away your own admin role. Ask another admin.";
+  if (losesAdmin && p.activeAdmins <= 1) return "The last admin must stay an admin. Make someone else an admin first.";
   return null;
 }
 
@@ -195,14 +236,13 @@ export function teamName(input: unknown): { ok: true; value: string } | { ok: fa
   return { ok: true, value };
 }
 
-/** Why this person can't be made a team's head, or null. */
-export function headBlocked(target: { role: string; removed: boolean } | null): string | null {
+/** Why this person can't be made a team's lead, or null. Any active member can lead, admins included. */
+export function leadBlocked(target: { removed: boolean } | null): string | null {
   if (!target || target.removed) return "That person isn't in your company.";
-  if (target.role === "hr") return "HR people can't also be a team head. Choose an employee.";
   return null;
 }
 
-/** A head who moves team becomes an employee there; anyone else keeps their role. */
-export function roleAfterMove(role: string, fromTeam: string | null, toTeam: string | null): string {
-  return role === "head" && fromTeam !== toTeam ? "employee" : role;
+/** A lead who moves to another team stops leading the old one; everything else they hold stays. */
+export function leadsAfterMove(leadTeamId: string | null, toTeam: string | null): string | null {
+  return leadTeamId !== null && leadTeamId === toTeam ? leadTeamId : null;
 }

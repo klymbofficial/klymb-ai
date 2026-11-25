@@ -1,3 +1,6 @@
+import clsx from "clsx";
+import { ProgressMeter } from "@/components/company/OrgCharts";
+import { dueState } from "@/lib/company/assign-rules";
 import type { MemberProgress } from "@/lib/company/progress-data";
 import { statusLabel } from "@/lib/company/progress-summary";
 
@@ -18,15 +21,33 @@ export function lastActiveOf(p: MemberProgress) {
   return p.lastActive ? DATE.format(new Date(p.lastActive)) : "–";
 }
 
+const DAY = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "UTC" });
+export const dayLabel = (day: string) => DAY.format(new Date(`${day}T00:00:00Z`));
+
+/** Required or recommended, and when it's due; overdue stands out until every lesson is passed. */
+export function DueCell({ p, total }: { p: MemberProgress; total: number }) {
+  if (!p.assigned || !p.requirement) return <span className="text-muted">–</span>;
+  if (p.requirement === "recommended") return <span className="text-muted">Recommended</span>;
+  if (!p.dueOn) return <span>Required</span>;
+  const state = dueState(p.dueOn, p.lessonsPassed >= total);
+  return (
+    <span className={clsx(state === "overdue" && "font-bold text-error", state === "soon" && "font-semibold")}>
+      {state === "overdue" ? `Overdue, ${dayLabel(p.dueOn)}` : `Due ${dayLabel(p.dueOn)}`}
+    </span>
+  );
+}
+
 const th = "px-3 py-2 text-left text-xs font-extrabold uppercase tracking-[0.12em] text-muted";
 
 /** System Design activity for the people the viewer may see. No totals that Klymb doesn't hold. */
 export function ProgressTable({
-  rows, total, showTeam, renderAction, actionLabel,
+  rows, total, showTeam, showDue = false, renderAction, actionLabel,
 }: {
   rows: MemberProgress[];
   total: number;
   showTeam: boolean;
+  /** The assignment's requirement and due date. */
+  showDue?: boolean;
   /** HR's Assign / Remove button for a row. Omitted for everyone else, who only read. */
   renderAction?: (p: MemberProgress) => React.ReactNode;
   actionLabel?: string;
@@ -41,6 +62,7 @@ export function ProgressTable({
             <th scope="col" className={th}>Person</th>
             {showTeam && <th scope="col" className={th}>Team</th>}
             <th scope="col" className={th}>Status</th>
+            {showDue && <th scope="col" className={th}>Due</th>}
             <th scope="col" className={th}>Lessons passed</th>
             <th scope="col" className={th}>Final assessment</th>
             <th scope="col" className={th}>Last activity</th>
@@ -56,7 +78,8 @@ export function ProgressTable({
               </th>
               {showTeam && <td className="px-3 py-3 text-muted">{p.teamName ?? "No team"}</td>}
               <td className="px-3 py-3 font-semibold">{statusOf(p, total)}</td>
-              <td className="px-3 py-3 tabular-nums">{p.hasAccess ? `${p.lessonsPassed} of ${total}` : "–"}</td>
+              {showDue && <td className="px-3 py-3"><DueCell p={p} total={total} /></td>}
+              <td className="px-3 py-3 tabular-nums">{p.hasAccess ? <LessonProgress passed={p.lessonsPassed} total={total} /> : "–"}</td>
               <td className="px-3 py-3 tabular-nums">
                 {p.finalAttempts > 0 ? `${p.finalBest}% best, ${p.finalAttempts} ${p.finalAttempts === 1 ? "try" : "tries"}` : "Not taken"}
               </td>
@@ -79,8 +102,9 @@ export function ProgressTable({
             <p className="mt-2 text-sm font-semibold">{statusOf(p, total)}</p>
             <dl className="mt-3 grid grid-cols-[8.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
               {showTeam && (<><dt className="text-muted">Team</dt><dd>{p.teamName ?? "No team"}</dd></>)}
+              {showDue && (<><dt className="text-muted">Due</dt><dd><DueCell p={p} total={total} /></dd></>)}
               <dt className="text-muted">Lessons passed</dt>
-              <dd className="tabular-nums">{p.hasAccess ? `${p.lessonsPassed} of ${total}` : "–"}</dd>
+              <dd className="tabular-nums">{p.hasAccess ? <LessonProgress passed={p.lessonsPassed} total={total} /> : "–"}</dd>
               <dt className="text-muted">Final assessment</dt>
               <dd className="tabular-nums">{p.finalAttempts > 0 ? `${p.finalBest}% best, ${p.finalAttempts} ${p.finalAttempts === 1 ? "try" : "tries"}` : "Not taken"}</dd>
               <dt className="text-muted">Last activity</dt>
@@ -94,4 +118,8 @@ export function ProgressTable({
       </ul>
     </>
   );
+}
+
+function LessonProgress({ passed, total }: { passed: number; total: number }) {
+  return <div className="min-w-20 max-w-40 space-y-1.5"><span>{passed} / {total}</span><ProgressMeter value={passed} total={total} label="Lessons passed" /></div>;
 }

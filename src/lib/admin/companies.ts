@@ -84,24 +84,27 @@ export function seatCount(input: unknown, members: number): Checked<number> {
 export interface HrCheck {
   seatCount: number;
   members: number;
+  /** The company already has an active admin. */
   hasHr: boolean;
-  isLearner: boolean;
-  /** The slug of the company this email already belongs to, if any. */
-  memberOf: string | null;
+  /** The email already has a row in this company, active or removed. */
+  inCompany: boolean;
 }
 
-/** Why the first HR person can't be added, or null when they can. */
+/**
+ * Why the first company admin can't be added, or null when they can. The
+ * email may already be in other companies, or be a Klymb learner: each
+ * company sees only its own membership and the courses it assigns.
+ */
 export function firstHrBlocked(c: HrCheck): string | null {
-  if (c.hasHr) return "This company already has an HR person. More people are added by HR, not here.";
-  if (c.memberOf) return `That email already belongs to a company (${c.memberOf}). A person can only be in one.`;
-  if (c.isLearner) return "That email is a Klymb learner. Company members need a different email.";
+  if (c.hasHr) return "This company already has an admin. More people are added by the company's admin, not here.";
+  if (c.inCompany) return "That email is already in this company.";
   if (c.members >= c.seatCount) return "There's no free seat. Raise the seat count first.";
   return null;
 }
 
 export function hrEmail(input: unknown): Checked<string> {
   const value = normaliseEmail(input);
-  return value ? { ok: true, value } : { ok: false, message: "Enter a valid email for the HR person." };
+  return value ? { ok: true, value } : { ok: false, message: "Enter a valid email for the company's admin." };
 }
 
 export function personName(input: unknown): string | null {

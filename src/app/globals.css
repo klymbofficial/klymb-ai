@@ -409,3 +409,30 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   .learner-shell:has(.learner-rail[data-rail="wide"]) { padding-left: 248px; }
   .learner-shell:has(.learner-rail[data-rail="compact"]) { padding-left: 72px; }
 }
+
+/*
+ * A company's published accent inside its own pages (src/components/company/brand-style.ts).
+ * The theme above is `inline`, so utilities hold Klymb's red as a value rather than a
+ * variable; these put the accent back in for the classes company pages use. The accent
+ * always carries white text at WCAG AA (checked before it is saved).
+ */
+[data-brand] .bg-red-strong { background-color: var(--brand-accent); }
+[data-brand] .border-red-strong { border-color: var(--brand-accent); }
+[data-brand] .text-red,
+[data-brand] .text-red-deep { color: var(--brand-accent); }
+@media (hover: hover) {
+  [data-brand] .hover\:bg-red-press:hover { background-color: var(--brand-press); }
+  [data-brand] .hover\:border-red-press:hover { border-color: var(--brand-press); }
+  [data-brand] .hover\:text-red-deep:hover { color: var(--brand-accent); }
+}
+
+/* Click feedback (P0 polish): the top bar's progress, and a pressed look on every control. */
+@keyframes nav-progress {
+  0% { transform: scaleX(0.05); }
+  100% { transform: scaleX(0.9); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(button, [role="button"], a.inline-flex):not(:disabled):active { transform: translateY(1px); }
+}
+:where(button):disabled { cursor: not-allowed; }
+[aria-busy="true"] { cursor: progress; }

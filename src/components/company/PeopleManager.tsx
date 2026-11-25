@@ -1,7 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { addPerson, removePerson, resendInvite, uploadPeople, type PeopleResult } from "@/app/org/[slug]/people/actions";
+import { Fragment, useRef, useState } from "react";
+import { ProgressMeter } from "@/components/company/OrgCharts";
+import { useConfirm } from "@/components/company/Overlay";
+import { addPerson, previewUpload, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult, type UploadPreview } from "@/app/org/[slug]/(workspace)/people/actions";
+import { GRANTABLE_ROLES, ROLE_LABEL, type GrantableRole } from "@/lib/company/access";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
 import type { CompanyPeople, PersonRow } from "@/lib/company/people-data";
 
@@ -9,7 +12,16 @@ const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink
 const label = "flex flex-col gap-1 text-xs font-bold";
 const submit = "bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50";
 
-const ROLE_LABEL: Record<PersonRow["role"], string> = { hr: "HR", head: "Team head", employee: "Employee" };
+/** What each responsibility opens, beside its checkbox. */
+const ROLE_HINT: Record<GrantableRole, string> = {
+  admin: "Runs this workspace: people, teams and assigning",
+  company_head: "Company-wide Upskill progress",
+  recruiter: "Schedules tests and invites candidates",
+  reviewer: "Reviews and approves test content",
+  employee: "Their own Upskill progress",
+};
+
+const rolesOf = (p: PersonRow) => (p.roles.length ? p.roles.map((r) => ROLE_LABEL[r]).join(", ") : "—");
 const TEMPLATE = `${CSV_COLUMNS.join(",")}\nasha@example.com,Asha Rao,Sales\nsam@example.com,Sam Lee,\n`;
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -43,9 +55,10 @@ export function PeopleManager({ slug, me, data }: { slug: string; me: string; da
   const free = Math.max(0, data.seatCount - used);
   return (
     <div className="flex flex-col gap-8">
-      <p className="text-sm nums" aria-live="polite">
-        <strong>{used}</strong> of <strong>{data.seatCount}</strong> seats used · <strong>{free}</strong> free
-      </p>
+      <div className="max-w-xl space-y-3 rounded-lg border border-line/30 bg-white p-5">
+        <p className="text-sm nums" aria-live="polite"><strong>{used}</strong> of <strong>{data.seatCount}</strong> seats used · <strong>{free}</strong> free</p>
+        <ProgressMeter value={used} total={data.seatCount} label="Seats used" />
+      </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <AddOne slug={slug} teams={data.teams.map((t) => t.name)} free={free} />
         <UploadCsv slug={slug} free={free} />
@@ -71,7 +84,7 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
         e.preventDefault();
         setBusy(true);
         setResult(null);
-        const r = await addPerson(slug, { email, name, team: role === "hr" ? "" : team, role });
+        const r = await addPerson(slug, { email, name, team, role });
         setBusy(false);
         setResult(r);
         if (r.ok) { setEmail(""); setName(""); }
@@ -88,20 +101,21 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
       </label>
       <div className="flex flex-wrap gap-3">
         <label className={label}>
-          Role
+          Joins as
           <select value={role} onChange={(e) => setRole(e.target.value)} className={input}>
-            <option value="employee">Employee</option>
-            <option value="hr">HR</option>
+            <option value="employee">{ROLE_LABEL.employee}</option>
+            <option value="admin">{ROLE_LABEL.admin}</option>
           </select>
         </label>
         <label className={label}>
           Team
-          <select value={role === "hr" ? "" : team} onChange={(e) => setTeam(e.target.value)} disabled={role === "hr"} className={`${input} min-w-40`}>
+          <select value={team} onChange={(e) => setTeam(e.target.value)} className={`${input} min-w-40`}>
             <option value="">No team</option>
             {teams.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </label>
       </div>
+      <p className="text-xs text-muted">Give more responsibilities, like recruiter or company head, from the list below once they&apos;re added.</p>
       <div>
         <button type="submit" disabled={busy || free === 0} className={submit}>{busy ? "Adding…" : "Add person"}</button>
       </div>
@@ -113,26 +127,75 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
 
 function UploadCsv({ slug, free }: { slug: string; free: number }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<null | "check" | "add">(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
+  const [preview, setPreview] = useState<UploadPreview | null>(null);
+  const [file, setFile] = useState<FormData | null>(null);
+
+  const reset = () => { setPreview(null); setFile(null); if (fileRef.current) fileRef.current.value = ""; };
+
+  async function check(form: HTMLFormElement) {
+    const data = new FormData(form);
+    setBusy("check");
+    setResult(null);
+    const r = await previewUpload(slug, data);
+    setBusy(null);
+    if (!r.ok) return setResult(r);
+    setFile(data);
+    setPreview(r.preview);
+  }
+
+  async function add() {
+    if (!file || !preview) return;
+    setBusy("add");
+    const r = await uploadPeople(slug, file, preview.add.map((p) => p.email));
+    setBusy(null);
+    setResult(r);
+    if (r.ok) reset();
+  }
+
+  if (preview) {
+    const n = preview.add.length;
+    return (
+      <section aria-labelledby="csv-check" className="card flex flex-col gap-4 p-5">
+        <h2 id="csv-check" className="text-base font-black">Check the file</h2>
+        <p className="text-sm">
+          {n ? <><strong>{n}</strong> to add</> : "Nobody new to add"}
+          {preview.skipped.length > 0 && <> · <strong>{preview.skipped.length}</strong> already here, left as they are</>}
+          {" · "}{preview.activeMembers + n} of {preview.seats} seats after
+        </p>
+        {n > 0 && (
+          <ul className="max-h-64 overflow-y-auto border border-line/40 bg-white text-sm">
+            {preview.add.map((p) => (
+              <li key={p.email} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-3 border-b border-line/15 px-3 py-1.5 last:border-0">
+                <span className="font-mono text-xs text-muted">Line {p.line}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{p.name ?? p.email}</span>
+                  <span className="block truncate text-xs text-muted">{[p.name ? p.email : null, p.team, p.returning ? "returning" : null].filter(Boolean).join(" · ")}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-xs text-muted">Each person gets an email with how to sign in.</p>
+        <div className="flex flex-wrap items-center gap-2">
+          {n > 0 && <button type="button" onClick={add} disabled={busy !== null} className={submit}>{busy === "add" ? "Adding…" : `Add ${n} ${n === 1 ? "person" : "people"}`}</button>}
+          <button type="button" onClick={() => { reset(); setResult(null); }} disabled={busy !== null} className="px-3 py-2 text-xs font-bold underline underline-offset-4">Choose another file</button>
+        </div>
+        <Note result={result} />
+      </section>
+    );
+  }
 
   return (
     <form
       className="card flex flex-col gap-3 p-5"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setResult(null);
-        const r = await uploadPeople(slug, new FormData(e.currentTarget));
-        setBusy(false);
-        setResult(r);
-        if (r.ok && fileRef.current) fileRef.current.value = "";
-      }}
+      onSubmit={(e) => { e.preventDefault(); void check(e.currentTarget); }}
     >
       <h2 className="text-base font-black">Upload a CSV</h2>
       <p className="text-xs text-muted">
-        Columns: <code className="font-mono">{CSV_COLUMNS.join(", ")}</code>, with a header row. Only email is needed. Teams must already exist.
-        Everyone joins as an employee. Up to {MAX_CSV_ROWS} people per file; if any row has a problem, nobody is added.
+        Columns: <code className="font-mono">{CSV_COLUMNS.join(", ")}</code>, with a header row. Only email is needed; teams must already exist.
+        Up to {MAX_CSV_ROWS} people. You check the list before anyone is added, and people already here are left as they are.
       </p>
       <a
         href={`data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE)}`}
@@ -143,7 +206,7 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
       </a>
       <input ref={fileRef} type="file" name="file" accept=".csv,text/csv" required className="text-sm file:mr-3 file:border file:border-line/60 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-bold" />
       <div>
-        <button type="submit" disabled={busy || free === 0} className={submit}>{busy ? "Checking…" : "Upload"}</button>
+        <button type="submit" disabled={busy !== null || free === 0} className={submit}>{busy === "check" ? "Checking…" : "Check file"}</button>
       </div>
       <Note result={result} />
     </form>
@@ -154,6 +217,8 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
   // Which row is working, and on what, so only that row's button says so.
   const [busy, setBusy] = useState<{ email: string; what: "remove" | "resend" } | null>(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [confirm, dialog] = useConfirm();
 
   async function act(p: PersonRow, what: "remove" | "resend") {
     setBusy({ email: p.email, what });
@@ -162,15 +227,16 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
     setBusy(null);
   }
 
-  function remove(p: PersonRow) {
+  async function remove(p: PersonRow) {
     const who = p.name ? `${p.name} (${p.email})` : p.email;
-    if (!window.confirm(`Remove ${who}?\n\nTheir access ends now and their seat frees up. Their record is kept, and you can add them back later.`)) return;
+    if (!(await confirm({ title: `Remove ${who}?`, body: "Their access ends now and their seat frees up. Their record is kept, and you can add them back later.", confirmLabel: "Remove", cancelLabel: "Keep them" }))) return;
     return act(p, "remove");
   }
   const working = (p: PersonRow, what: "remove" | "resend") => busy?.email === p.email && busy.what === what;
 
   return (
     <section aria-labelledby="active-people" className="flex flex-col gap-3">
+      {dialog}
       <h2 id="active-people" className="text-lg font-black">People <span className="text-muted nums">({people.length})</span></h2>
       <Note result={result} />
       {people.length === 0 ? (
@@ -179,16 +245,28 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
         <div className="overflow-x-auto border border-line/25 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-line/25 text-xs uppercase tracking-wider text-muted">
-              <tr><th className="px-3 py-2">Person</th><th className="px-3 py-2">Role</th><th className="px-3 py-2">Team</th><th className="px-3 py-2">Added</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr>
+              <tr><th className="px-3 py-2">Person</th><th className="px-3 py-2">Does</th><th className="px-3 py-2">Team</th><th className="px-3 py-2">Added</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
               {people.map((p) => (
-                <tr key={p.email} className="border-b border-line/15 last:border-0">
+                <Fragment key={p.email}>
+                <tr className="border-b border-line/15 last:border-0">
                   <td className="px-3 py-2">
                     <div className="font-semibold">{p.name ?? p.email}</div>
                     {p.name && <div className="text-xs text-muted">{p.email}</div>}
                   </td>
-                  <td className="px-3 py-2">{ROLE_LABEL[p.role]}</td>
+                  <td className="px-3 py-2">
+                    {rolesOf(p)}
+                    <button
+                      type="button"
+                      onClick={() => { setResult(null); setEditing(editing === p.email ? null : p.email); }}
+                      aria-expanded={editing === p.email}
+                      aria-controls={`roles-${p.email}`}
+                      className="ml-2 text-xs font-bold underline underline-offset-2"
+                    >
+                      {editing === p.email ? "Close" : "Change"}<span className="sr-only"> what {p.name ?? p.email} does</span>
+                    </button>
+                  </td>
                   <td className="px-3 py-2">{p.team_name ?? <span className="text-muted">—</span>}</td>
                   <td className="px-3 py-2 nums text-muted">{day(p.added_at)}</td>
                   <td className="px-3 py-2 text-right">
@@ -206,12 +284,60 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
                     )}
                   </td>
                 </tr>
+                {editing === p.email && (
+                  <tr id={`roles-${p.email}`} className="border-b border-line/15 bg-surface">
+                    <td colSpan={5} className="px-3 py-3">
+                      <RolesEditor
+                        slug={slug}
+                        person={p}
+                        onDone={(r) => { setResult(r); if (r.ok) setEditing(null); }}
+                      />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>
         </div>
       )}
     </section>
+  );
+}
+
+/** Ticks for what someone does. A team's lead is set on the Teams page, so it is shown, not edited, here. */
+function RolesEditor({ slug, person, onDone }: { slug: string; person: PersonRow; onDone: (r: PeopleResult) => void }) {
+  const [roles, setRoles] = useState<GrantableRole[]>(GRANTABLE_ROLES.filter((r) => person.roles.includes(r)));
+  const [busy, setBusy] = useState(false);
+  const leads = person.roles.includes("team_lead");
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        const r = await updateRoles(slug, person.email, roles);
+        setBusy(false);
+        onDone(r);
+      }}
+    >
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-xs font-bold">What {person.name ?? person.email} does</legend>
+        {GRANTABLE_ROLES.map((r) => (
+          <label key={r} className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={roles.includes(r)}
+              onChange={(e) => setRoles((now) => (e.target.checked ? GRANTABLE_ROLES.filter((x) => x === r || now.includes(x)) : now.filter((x) => x !== r)))}
+              className="mt-1"
+            />
+            <span><strong className="font-semibold">{ROLE_LABEL[r]}</strong> <span className="text-xs text-muted">· {ROLE_HINT[r]}</span></span>
+          </label>
+        ))}
+        {leads && <p className="text-xs text-muted">Also leads {person.team_name ?? "a team"}. Change a team&apos;s lead on the Teams page.</p>}
+      </fieldset>
+      <button type="submit" disabled={busy} className={`${submit} mt-3`}>{busy ? "Saving…" : "Save"}</button>
+    </form>
   );
 }
 

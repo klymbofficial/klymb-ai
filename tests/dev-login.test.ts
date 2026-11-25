@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import type { Session } from "next-auth";
 import { adminEmailFrom, companyEmailFrom, verifiedEmailFrom } from "../src/auth";
-import { DEV_USERS, devLoginEnabled, devUserByEmail } from "../src/lib/dev-login";
+import { DEV_COMPANY, DEV_COMPANY_TWO, DEV_TEAM, DEV_USERS, devLandingPath, devLoginEnabled, devUserByEmail } from "../src/lib/dev-login";
 
 const session = (user: Record<string, unknown> | null): Session =>
   ({ user, expires: "2099-01-01" }) as unknown as Session;
@@ -82,4 +82,43 @@ test("a dev session for an address outside the list is nothing, even while enabl
     assert.equal(verifiedEmailFrom(s), null);
     assert.equal(adminEmailFrom(s), null);
   });
+});
+
+test("there are two dev companies, each with its own admin, and one person in both", () => {
+  const company = DEV_USERS.filter((u) => u.role === "company");
+  const slugs = (u: (typeof company)[number]) => (u.memberships ?? []).map((m) => m.company.slug);
+  assert.notEqual(DEV_COMPANY.slug, DEV_COMPANY_TWO.slug);
+  const admins = company.filter((u) => u.memberships?.length === 1 && u.memberships[0].roles.includes("admin"));
+  assert.deepEqual(admins.map((u) => slugs(u)[0]).sort(), [DEV_COMPANY.slug, DEV_COMPANY_TWO.slug].sort());
+  for (const u of admins) assert.equal(devLandingPath(u), `/org/${slugs(u)[0]}`, u.email);
+  const both = company.find((u) => (u.memberships?.length ?? 0) > 1);
+  assert.ok(both, "someone belongs to both companies");
+  assert.deepEqual(slugs(both).sort(), [DEV_COMPANY.slug, DEV_COMPANY_TWO.slug].sort());
+  assert.equal(both.ownCourse, true, "and keeps a course of their own");
+  assert.equal(devLandingPath(both), "/org");
+});
+
+test("there is a plain test employee at Dev Company, who is not an admin of anything", () => {
+  const employee = DEV_USERS.find((u) => u.email === "dev-employee@klymb.test");
+  assert.ok(employee, "dev-employee@klymb.test exists");
+  assert.equal(employee.role, "company");
+  assert.deepEqual(employee.memberships, [{ company: DEV_COMPANY, roles: ["employee"], team: DEV_TEAM }]);
+  assert.notEqual(employee.ownCourse, true, "no course of their own: HR assigns one in the workspace");
+  assert.equal(devLandingPath(employee), `/org/${DEV_COMPANY.slug}`);
+});
+
+test("a dev team lead leads the employee's team at Dev Company, and holds no admin role", () => {
+  const lead = DEV_USERS.find((u) => u.email === "dev-lead@klymb.test");
+  assert.ok(lead?.memberships);
+  assert.deepEqual(lead.memberships, [{ company: DEV_COMPANY, roles: ["employee"], team: DEV_TEAM, leads: true }]);
+  const employee = DEV_USERS.find((u) => u.email === "dev-employee@klymb.test");
+  assert.equal(employee?.memberships?.[0].team, DEV_TEAM, "on the team the lead leads");
+  assert.equal(devLandingPath(lead), `/org/${DEV_COMPANY.slug}`);
+});
+
+test("the reviewer fixture reviews tests at the dev company, and does nothing else there", () => {
+  const reviewer = DEV_USERS.find((u) => u.email === "dev-reviewer@klymb.test");
+  assert.ok(reviewer?.memberships);
+  assert.deepEqual(reviewer.memberships, [{ company: DEV_COMPANY, roles: ["reviewer"] }]);
+  assert.equal(devLandingPath(reviewer), `/org/${DEV_COMPANY.slug}`);
 });

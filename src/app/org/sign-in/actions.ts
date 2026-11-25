@@ -4,6 +4,7 @@ import { AuthError, CredentialsSignin } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { CODE_TTL_MINUTES } from "@/lib/company/signin-code";
+import { safeOrgNext } from "@/lib/company/return-path";
 import { requestSignInCode } from "@/lib/company/signin";
 import { normaliseEmail } from "@/lib/email";
 
@@ -60,8 +61,10 @@ export async function companySignIn(_prev: SignInState, formData: FormData): Pro
       throw error;
     }
 
-    // Signed in. /org sends them to their own company; the slug comes from the database, never the form.
-    redirect("/org");
+    // Signed in. Back to the workspace page they asked for, when it is a safe
+    // one; otherwise /org sends them to their own company. Either way the
+    // workspace's layout checks membership again, so `next` grants nothing.
+    redirect(safeOrgNext(formData.get("next")) ?? "/org");
   }
 
   return { step: "email" };

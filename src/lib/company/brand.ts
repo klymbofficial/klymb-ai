@@ -1,12 +1,18 @@
 /**
  * A company's look in the emails Klymb sends for it (invites). Pure, so the
- * tests can import it.
+ * tests can import it. Built from the company's published branding
+ * (branding.ts, resolveBrand) by loadCompanyBrand.
  */
 
 export interface CompanyBrand {
   name: string;
+  /** An https link, or a path on this site (a logo served by /api/company-brand). */
   logoUrl: string | null;
   brandColor: string | null;
+  /** The workspace, for its own sign-in page. Without it, the neutral one. */
+  slug?: string;
+  supportEmail?: string | null;
+  supportText?: string | null;
 }
 
 /** WCAG relative luminance of a #rrggbb color. */

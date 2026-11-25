@@ -20,7 +20,11 @@ import type { MemberProgress } from "@/lib/company/progress-data";
  *     person's progress state or label. It says nothing about the score, and
  *     no pass or fail is derived from it.
  *   - A person with company-assigned access and a person with their own paid
- *     access are kept apart (`assigned`, `ownAccess`); `withAccess` is either.
+ *     access are kept apart (`assigned`, `ownAccess`). Another person's own
+ *     access isn't access the company gave, and its details stay private, so
+ *     they count under `noAccess` (labelled "Has their own access") unless
+ *     the company assigned the course too. On a viewer's own row, either kind
+ *     counts (progress-data sets `hasAccess`).
  *
  * Everything below describes people who can open the course (`hasAccess`).
  * Someone with no access is counted once, under `noAccess`, even if records
@@ -125,7 +129,7 @@ export function progressState(p: Person, totalLessons: number): ProgressState {
 export function statusLabel(p: Person, totalLessons: number): string {
   switch (progressState(p, totalLessons)) {
     case "no-access":
-      return "No course access";
+      return p.ownAccess ? "Has their own access" : "No course access";
     case "no-activity":
       return "Access, no recorded activity";
     case "activity-no-lessons":

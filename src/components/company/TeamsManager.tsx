@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { chooseHead, createTeam, movePerson, type TeamsResult } from "@/app/org/[slug]/teams/actions";
+import { chooseLead, createTeam, movePerson, type TeamsResult } from "@/app/org/[slug]/(workspace)/teams/actions";
 import type { PersonRow, TeamRow } from "@/lib/company/people-data";
 
 const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none";
@@ -31,8 +31,8 @@ function useAction() {
 }
 
 export function TeamsManager({ slug, teams, people }: { slug: string; teams: TeamRow[]; people: PersonRow[] }) {
-  // HR people can't head a team, so they're left out of the head choices.
-  const candidates = people.filter((p) => p.role !== "hr");
+  // Anyone active can lead a team, admins included.
+  const candidates = people;
   return (
     <div className="flex flex-col gap-8">
       <CreateTeam slug={slug} />
@@ -72,7 +72,7 @@ function CreateTeam({ slug }: { slug: string }) {
 function TeamCard({ slug, team: t, candidates }: { slug: string; team: TeamRow; candidates: PersonRow[] }) {
   const [email, setEmail] = useState("");
   const { busy, result, run } = useAction();
-  const choices = candidates.filter((p) => p.email !== t.head_email);
+  const choices = candidates.filter((p) => p.email !== t.lead_email);
   const picked = choices.find((p) => p.email === email);
   const fromElsewhere = picked && picked.team_id !== t.id;
 
@@ -83,18 +83,18 @@ function TeamCard({ slug, team: t, candidates }: { slug: string; team: TeamRow; 
         <span className="text-xs text-muted nums">{t.members} {t.members === 1 ? "person" : "people"}</span>
       </header>
       <p className="text-sm">
-        <span className="text-xs font-bold uppercase tracking-wider text-muted">Head</span>{" "}
-        {t.head_email ? <strong>{t.head_name ?? t.head_email}</strong> : <span className="text-muted">None yet</span>}
+        <span className="text-xs font-bold uppercase tracking-wider text-muted">Lead</span>{" "}
+        {t.lead_email ? <strong>{t.lead_name ?? t.lead_email}</strong> : <span className="text-muted">None yet</span>}
       </p>
       <form
         className="flex flex-wrap items-end gap-3"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (await run(() => chooseHead(slug, t.id, email))) setEmail("");
+          if (await run(() => chooseLead(slug, t.id, email))) setEmail("");
         }}
       >
         <label className={label}>
-          {t.head_email ? "Change head to" : "Choose a head"}
+          {t.lead_email ? "Change lead to" : "Choose a lead"}
           <select required value={email} onChange={(e) => setEmail(e.target.value)} className={`${input} w-64 max-w-full`}>
             <option value="">Choose a person…</option>
             {choices.map((p) => (
@@ -102,11 +102,11 @@ function TeamCard({ slug, team: t, candidates }: { slug: string; team: TeamRow; 
             ))}
           </select>
         </label>
-        <button type="submit" disabled={busy || !email} className={submit}>{busy ? "Saving…" : "Make head"}</button>
-        {(t.head_email || fromElsewhere) && !result && (
+        <button type="submit" disabled={busy || !email} className={submit}>{busy ? "Saving…" : "Make lead"}</button>
+        {(t.lead_email || fromElsewhere) && !result && (
           <p className="w-full text-xs text-muted">
-            {t.head_email && "The current head stays on the team as an employee. "}
-            {fromElsewhere && `${picked.name ?? picked.email} will move to ${t.name}${picked.role === "head" ? `, leaving ${picked.team_name} without a head` : ""}.`}
+            {t.lead_email && "The current lead stays on the team and keeps everything else they do. "}
+            {fromElsewhere && `${picked.name ?? picked.email} will move to ${t.name}${picked.lead_team_id ? `, leaving ${picked.team_name} without a lead` : ""}.`}
           </p>
         )}
         <Note result={result} />
@@ -120,7 +120,7 @@ function MovePeople({ slug, teams, people }: { slug: string; teams: TeamRow[]; p
   const [teamId, setTeamId] = useState("");
   const { busy, result, run } = useAction();
   const picked = people.find((p) => p.email === email);
-  const headLeaving = picked?.role === "head" && picked.team_id !== (teamId || null);
+  const leadLeaving = !!picked?.lead_team_id && picked.lead_team_id !== (teamId || null);
 
   if (people.length === 0) return null;
   return (
@@ -147,7 +147,7 @@ function MovePeople({ slug, teams, people }: { slug: string; teams: TeamRow[]; p
         </select>
       </label>
       <button type="submit" disabled={busy || !email || picked?.team_id === (teamId || null)} className={submit}>{busy ? "Moving…" : "Move"}</button>
-      {headLeaving && !result && <p className="w-full text-xs text-muted">{picked.name ?? picked.email} heads {picked.team_name}. After the move they&apos;ll be an employee, and {picked.team_name} will have no head.</p>}
+      {leadLeaving && !result && <p className="w-full text-xs text-muted">{picked.name ?? picked.email} leads {picked.team_name}. After the move they won&apos;t, and {picked.team_name} will have no lead. Everything else they do stays.</p>}
       <Note result={result} />
     </form>
   );
