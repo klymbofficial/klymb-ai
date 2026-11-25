@@ -8,7 +8,8 @@ const input =
   "block w-full rounded-md border border-line/40 bg-card px-3 py-2.5 text-sm transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-line/70 focus:border-ink/60 focus:ring-4 focus:ring-ink/5 focus:outline-none";
 
 /**
- * Two steps on one page: the email, then the 6-digit code sent to it. `next`
+ * The email and password, or (for a first sign-in or a forgotten password)
+ * the email and then the 6-digit code sent to it. `next`
  * (already checked by the page) rides along in both steps; the action checks
  * it again before following it.
  */
@@ -34,9 +35,27 @@ export function CompanySignInForm({ next }: { next?: string | null }) {
               className={input}
             />
           </label>
-          <Button type="submit" name="intent" value="request" disabled={pending} className="w-full">
-            {pending ? "Sending..." : "Email me a code"}
+          <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">
+            Password
+            <input
+              key="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              maxLength={128}
+              className={input}
+            />
+          </label>
+          {/* First in the form, so Enter signs in with the password. */}
+          <Button type="submit" name="intent" value="password" disabled={pending} className="w-full">
+            {pending ? "Signing in..." : "Sign in"}
           </Button>
+          <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-xs text-muted">
+            No password yet, or forgot it?
+            <button type="submit" name="intent" value="request" disabled={pending} className="font-semibold text-ink underline underline-offset-2 disabled:opacity-60">
+              Email me a code
+            </button>
+          </p>
         </>
       ) : (
         <>

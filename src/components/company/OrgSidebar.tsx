@@ -19,6 +19,8 @@ export interface OrgSidebarProps {
   roles: string[];
   /** Where Support writes to: the company's own contact, or Klymb's. */
   supportHref: string;
+  /** The member's own account page (password). */
+  settingsHref: string;
 }
 
 // The focus ring reads --color-red; on the dark sidebar it is white so it shows whatever the company's accent.
@@ -46,7 +48,7 @@ const snapshot = () => memory ?? readCollapsed();
  * focus kept inside), and on wide screens collapses to icons and back
  * without leaving the page.
  */
-export function OrgSidebar({ groups, brand, email, roles, supportHref }: OrgSidebarProps) {
+export function OrgSidebar({ groups, brand, email, roles, supportHref, settingsHref }: OrgSidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const drawer = useRef<HTMLDivElement>(null);
@@ -98,6 +100,20 @@ export function OrgSidebar({ groups, brand, email, roles, supportHref }: OrgSide
 
   const footer = (narrow: boolean) => (
     <div className="mt-auto flex flex-col gap-1 border-t border-white/15 pt-3">
+      <Link
+        href={settingsHref}
+        aria-current={isCurrent(settingsHref, pathname, overview) ? "page" : undefined}
+        title={narrow ? "Settings" : undefined}
+        className={clsx(
+          "flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-sm",
+          narrow && "justify-center",
+          isCurrent(settingsHref, pathname, overview) ? "bg-red-strong font-bold text-white" : "text-[#e6e3e2] hover:bg-white/10 hover:text-white",
+        )}
+      >
+        <OrgIcon name="settings" className="shrink-0" />
+        <span className={narrow ? "sr-only" : undefined}>Settings</span>
+        {!narrow && <PendingDot className="ml-auto" />}
+      </Link>
       <a href={supportHref} title={narrow ? "Support" : undefined} className={clsx("flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-sm text-[#e6e3e2] hover:bg-white/10 hover:text-white", narrow && "justify-center")}>
         <OrgIcon name="support" className="shrink-0" />
         <span className={narrow ? "sr-only" : undefined}>Support</span>
