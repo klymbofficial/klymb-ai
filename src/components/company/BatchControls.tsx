@@ -5,19 +5,17 @@ import {
   cancelHiringBatch, cancelInvitation, changeCandidate, copyCandidateLink, remindCandidates, retryDelivery, sendHiringBatch, type ActionResult,
 } from "@/app/org/[slug]/(workspace)/hiring/actions";
 import { BTN_PRIMARY as primary, BTN_SECONDARY as secondary } from "@/components/company/HiringParts";
-import { useConfirm, type ConfirmOptions } from "@/components/company/Overlay";
 import { BATCH_LIMITS } from "@/lib/company/batch-rules";
 
 const link = "text-xs font-bold underline underline-offset-4 hover:text-red-deep disabled:opacity-50";
 const input = "w-full rounded-md border-2 border-line/50 bg-white px-3 py-2 text-sm focus:border-ink";
 
-/** Runs one action, after an in-app confirmation when it has consequences; holds the button while it works, and shows what happened. */
+/** Runs one action, holds the button while it works, and shows what happened. */
 function useAction() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [confirm, dialog] = useConfirm();
-  async function run(fn: () => Promise<ActionResult>, ask?: ConfirmOptions) {
-    if (ask && !(await confirm(ask))) return false;
+  async function run(fn: () => Promise<ActionResult>, confirmText?: string) {
+    if (confirmText && !window.confirm(confirmText)) return false;
     setBusy(true);
     setMsg(null);
     try {
@@ -31,7 +29,7 @@ function useAction() {
       setBusy(false);
     }
   }
-  const note = <>{dialog}{msg && <p role={msg.ok ? "status" : "alert"} className={`text-sm font-semibold ${msg.ok ? "" : "text-error"}`}>{msg.text}</p>}</>;
+  const note = msg && <p role={msg.ok ? "status" : "alert"} className={`text-sm font-semibold ${msg.ok ? "" : "text-error"}`}>{msg.text}</p>;
   return { busy, run, note };
 }
 
@@ -49,11 +47,11 @@ export function SendDraft({ slug, batchId, count, passed = 0 }: { slug: string; 
       )}
       <div className="flex flex-wrap items-center gap-4">
         {count > 0 && (
-          <button type="button" className={primary} disabled={busy} onClick={() => run(() => sendHiringBatch(slug, batchId), { title: `Send ${who} now?`, body: `Each person gets their own private link by email.${left}`, confirmLabel: `Send ${who}` })}>
+          <button type="button" className={primary} disabled={busy} onClick={() => run(() => sendHiringBatch(slug, batchId), `Send ${who} now?${left}`)}>
             {busy ? "Sending…" : `Send ${who}`}
           </button>
         )}
-        <button type="button" className={link} disabled={busy} onClick={() => run(() => cancelHiringBatch(slug, batchId), { title: "Discard this draft?", body: "Nothing has been sent.", confirmLabel: "Discard draft", cancelLabel: "Keep it" })}>
+        <button type="button" className={link} disabled={busy} onClick={() => run(() => cancelHiringBatch(slug, batchId), "Discard this draft? Nothing has been sent.")}>
           Discard draft
         </button>
       </div>
@@ -88,7 +86,7 @@ export function BatchButtons({ slug, batchId, failed, remindable }: { slug: stri
     <div className="flex max-w-md flex-col items-start gap-3 lg:items-end">
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
         {remindable > 0 && (
-          <button type="button" className={failed > 0 ? secondary : primary} disabled={busy} onClick={() => run(() => remindCandidates(slug, batchId, null), { title: `Email a reminder to ${remindable === 1 ? "1 person" : `${remindable} people`}?`, body: "Only people who can still start get one.", confirmLabel: "Send reminders" })}>
+          <button type="button" className={failed > 0 ? secondary : primary} disabled={busy} onClick={() => run(() => remindCandidates(slug, batchId, null), `Email a reminder to ${remindable === 1 ? "1 person" : `${remindable} people`} who can still start?`)}>
             {remindLabel}
           </button>
         )}
@@ -117,7 +115,7 @@ export function BatchButtons({ slug, batchId, failed, remindable }: { slug: stri
                 role="menuitem"
                 autoFocus
                 className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold text-error hover:bg-error-tint"
-                onClick={() => { setMenu(false); void run(() => cancelHiringBatch(slug, batchId), { title: "Cancel the whole round?", body: "No link in it will start the test. Candidates aren't emailed.", confirmLabel: "Cancel the round", cancelLabel: "Keep it" }); }}
+                onClick={() => { setMenu(false); void run(() => cancelHiringBatch(slug, batchId), "Cancel the whole batch? No link in it will start the test. Candidates aren't emailed."); }}
               >
                 Cancel batch…
               </button>
@@ -185,8 +183,8 @@ export function CandidateActions({
         {copyLink && <button type="button" className={link} disabled={busy} onClick={() => void copy()}>Copy link</button>}
         {remind && <button type="button" className={link} disabled={busy} onClick={() => run(() => remindCandidates(slug, batchId, candidateId))}>Remind</button>}
         <button type="button" className={link} disabled={busy} aria-expanded={open === "time"} onClick={() => setOpen(open === "time" ? "none" : "time")}>Change time</button>
-        {newLink && <button type="button" className={link} disabled={busy} onClick={() => run(() => changeCandidate(slug, batchId, candidateId, { kind: "new_link" }), { title: `Send ${name} a new link?`, body: "Their current link stops working.", confirmLabel: "Send new link" })}>New link</button>}
-        <button type="button" className={link} disabled={busy} onClick={() => run(() => cancelInvitation(slug, batchId, candidateId), { title: `Cancel ${name}'s invitation?`, body: "Their link won't start the test. They aren't emailed.", confirmLabel: "Cancel invitation", cancelLabel: "Keep it" })}>Cancel</button>
+        {newLink && <button type="button" className={link} disabled={busy} onClick={() => run(() => changeCandidate(slug, batchId, candidateId, { kind: "new_link" }), `Send ${name} a new link? Their current link stops working.`)}>New link</button>}
+        <button type="button" className={link} disabled={busy} onClick={() => run(() => cancelInvitation(slug, batchId, candidateId), `Cancel ${name}'s invitation? Their link won't start the test. They aren't emailed.`)}>Cancel</button>
       </div>
       {shown && (
         <input readOnly value={shown} aria-label={`${name}'s test link`} onFocus={(e) => e.currentTarget.select()} className={`${input} font-mono text-xs`} />

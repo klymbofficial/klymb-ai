@@ -5,12 +5,23 @@ import { OrgPageHead } from "@/components/company/HiringParts";
 import { EmptyPanel, LoadError, RoleOnly } from "@/components/company/OrgPanels";
 import { requireCompany } from "@/lib/company/auth";
 import { hiringOptions } from "@/lib/company/batch-data";
-import { canSchedule } from "@/lib/company/batch-rules";
-import { inviteDefaults as defaults, timeZoneList as timeZones } from "@/lib/company/invite-defaults";
+import { DEFAULT_TIME_ZONE, canSchedule, toZonedInput } from "@/lib/company/batch-rules";
 import { loadCompanyPeople } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = { title: "Invite candidates", robots: { index: false, follow: false } };
+
+/** Every zone the server knows, India and UTC first; Node still calls India "Asia/Calcutta". */
+function timeZones(): string[] {
+  const all = Intl.supportedValuesOf("timeZone").filter((z) => z !== "Asia/Calcutta" && z !== "UTC");
+  return [DEFAULT_TIME_ZONE, "UTC", ...all];
+}
+
+/** Tomorrow at 10:00 and a week later at 18:00, in India time: a starting point to change. */
+function defaults(now: Date) {
+  const day = (n: number) => toZonedInput(new Date(now.getTime() + n * 86400000), DEFAULT_TIME_ZONE).slice(0, 10);
+  return { timeZone: DEFAULT_TIME_ZONE, opens: `${day(1)}T10:00`, closes: `${day(8)}T18:00` };
+}
 
 export default async function NewBatchPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ test?: string | string[] }> }) {
   const { slug } = await params;

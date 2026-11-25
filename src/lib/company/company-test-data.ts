@@ -91,53 +91,26 @@ export async function ownTest(sql: Db, companyId: string, slug: string): Promise
   return data ?? undefined;
 }
 
-/**
- * Makes the test and its first draft (revision 1) in one statement. Returns
- * the new slug. With `createKey` (one Create press, P0.4), a retry or a
- * second press returns the test that key already made, with `existed`.
- */
+/** Makes the test and its first draft (revision 1) in one statement. Returns the new slug. */
 export async function createTest(
   sql: Db,
-  t: { companyId: string; title: string; role: string; by: string; createKey?: string },
+  t: { companyId: string; title: string; role: string; by: string },
 ): Promise<string | null> {
-  const out = await createTestKeyed(sql, t);
-  return out ? out.slug : null;
-}
-
-export async function createTestKeyed(
-  sql: Db,
-  t: { companyId: string; title: string; role: string; by: string; createKey?: string },
-): Promise<{ slug: string; existed: boolean } | null> {
-  const key = t.createKey ?? null;
-  if (key) {
-    const { data, error } = await sql.row<{ slug: string }>`
-      select slug from course.catalog_items where owner_company_id = ${t.companyId}::uuid and create_key = ${key}
-    `;
-    if (error && error.code !== UNDEFINED_COLUMN) return fail("create lookup", error);
-    if (data) return { slug: data.slug, existed: true };
-  }
   for (let tries = 0; tries < 3; tries++) {
     const slug = newTestSlug();
     const { data, error } = await sql.row<{ slug: string }>`
       with item as (
-        insert into course.catalog_items (slug, kind, status, skills, purposes, title, owner_company_id, updated_by, create_key)
-        values (${slug}, 'assessment', 'published', '{}', array['hiring'], ${t.title}, ${t.companyId}::uuid, ${t.by}, ${key})
+        insert into course.catalog_items (slug, kind, status, skills, purposes, title, owner_company_id, updated_by)
+        values (${slug}, 'assessment', 'published', '{}', array['hiring'], ${t.title}, ${t.companyId}::uuid, ${t.by})
         returning slug
       )
       insert into course.assessment_drafts (slug, revision, role, minutes, submission, rubric, results, updated_by)
       select slug, 1, ${t.role}, null, 'written', '[]'::jsonb, 'none', ${t.by} from item
       returning slug
     `;
-    if (error?.code === UNIQUE) {
-      // The same key landed from a parallel press: return that test.
-      if (key) {
-        const again = await sql.row<{ slug: string }>`select slug from course.catalog_items where owner_company_id = ${t.companyId}::uuid and create_key = ${key}`;
-        if (again.data) return { slug: again.data.slug, existed: true };
-      }
-      continue;
-    }
+    if (error?.code === UNIQUE) continue;
     if (error) return fail("create", error);
-    return data ? { slug: data.slug, existed: false } : null;
+    return data?.slug ?? null;
   }
   return null;
 }

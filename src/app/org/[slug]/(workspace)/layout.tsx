@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { BrandSupport } from "@/components/company/BrandSupport";
 import { brandProps } from "@/components/company/brand-style";
-import { NavProgress } from "@/components/company/NavFeedback";
 import { OrgSidebar } from "@/components/company/OrgSidebar";
 import { contact } from "@/data/config";
 import { allowCompany, ROLE_LABEL } from "@/lib/company/access";
@@ -39,7 +38,6 @@ export default async function OrgLayout({ children, params }: { children: React.
 
   return (
     <div className="min-h-screen bg-paper lg:flex" {...brandProps(brand.accent)}>
-      <NavProgress />
       <OrgSidebar
         groups={navGroupsFor(member, { myAssessments })}
         brand={{ name: brand.name, logoUrl: brand.logoUrl, logoAlt: brand.logoAlt }}

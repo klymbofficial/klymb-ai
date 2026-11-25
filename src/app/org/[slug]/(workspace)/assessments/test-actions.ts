@@ -5,13 +5,10 @@ import { redirect } from "next/navigation";
 import type { DraftResult, PublishResult } from "@/app/admin/assessment-actions";
 import { allowCompany } from "@/lib/company/access";
 import { loadDraft, loadVersions } from "@/lib/company/assessment-data";
-import { LIMITS, canWriteTests, candidateQuestions, publishGaps, readContent, readTestName, sameContent, type CandidateTask } from "@/lib/company/assessment-rules";
-import { AUTO_LIMITS, autoContent, pickQuestions, readSkills, summarise, type Mix } from "@/lib/company/auto-test";
-import { klymbLibrary, ownLibrary } from "@/lib/company/library-data";
-import { activeRoles } from "@/lib/company/roles-data";
+import { LIMITS, canWriteTests, publishGaps, readContent, readTestName, sameContent } from "@/lib/company/assessment-rules";
 import { logCompany } from "@/lib/company/audit";
 import { getWorkspaceMember } from "@/lib/company/auth";
-import { createTest, createTestKeyed, ownTest, publishOwnDraft, saveOwnDraft } from "@/lib/company/company-test-data";
+import { createTest, ownTest, publishOwnDraft, saveOwnDraft } from "@/lib/company/company-test-data";
 import { db } from "@/lib/db/client";
 
 /**
@@ -60,77 +57,6 @@ export async function createOwnTest(_prev: CreateResult, form: FormData): Promis
   await logCompany(member, "company.test_create", { item });
   refresh(member.companySlug);
   redirect(`/org/${member.companySlug}/assessments/${item}/edit`);
-}
-
-export type AutoResult =
-  | {
-      ok: true; item: string; title: string; role: string; revision: number; existed: boolean;
-      count: number; points: number; minutes: number; mix: Mix; planned: Mix; adapted: boolean;
-      /** What candidates will see: never the right options. */
-      task: CandidateTask;
-    }
-  | { ok: false; message: string };
-
-const KEY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-
-/**
- * Automatic creation (P0.4): picks multiple-choice questions for the role's
- * chosen skills from the Klymb Library and this company's own, once, on the
- * server, and saves them into a new draft ready to publish. The editor
- * doesn't open. The press's key makes a retry return the same test instead
- * of a second one; a shortage is reported, never padded.
- */
-export async function createAutoTest(input: { slug: string; title: string; role: string; skills: string[]; count: number; createKey: string }): Promise<AutoResult> {
-  const member = await writer(input?.slug);
-  if (!member) return NOT_ALLOWED;
-  const name = readTestName(input.title);
-  if (!name.ok) return name;
-  if (typeof input.createKey !== "string" || !KEY.test(input.createKey)) return { ok: false, message: "Reload the page and try again." };
-  const count = Number(input.count);
-  if (!Number.isInteger(count) || count < AUTO_LIMITS.min || count > AUTO_LIMITS.max) return { ok: false, message: `Ask for ${AUTO_LIMITS.min} to ${AUTO_LIMITS.max} questions.` };
-  const skills = readSkills(input.skills);
-
-  const sql = db();
-  if (!sql) return UNAVAILABLE;
-  const [roles, klymb, mine] = await Promise.all([activeRoles(sql), klymbLibrary(sql), ownLibrary(sql, member.companyId)]);
-  if (!roles || !klymb || !mine) return UNAVAILABLE;
-  const role = roles.find((r) => r.slug === input.role);
-  if (!role) return { ok: false, message: "Choose a job role from the list." };
-
-  const picked = pickQuestions([...klymb, ...mine], skills, count);
-  if (!picked.ok) return { ok: false, message: picked.message };
-  const sum = summarise(picked.questions);
-  const content = autoContent(role.label, picked.questions, sum.minutes);
-
-  const made = await createTestKeyed(sql, { companyId: member.companyId, title: name.value, role: role.label, by: member.email, createKey: input.createKey });
-  if (!made) return UNAVAILABLE;
-  let revision = 1;
-  let saved = content;
-  if (made.existed) {
-    // A retry: keep what the first press saved, unless it never got its questions.
-    const draft = await loadDraft(sql, made.slug);
-    if (draft === null) return UNAVAILABLE;
-    if (draft && draft.questions?.length) { revision = draft.revision; saved = draft; }
-  }
-  if (revision === 1) {
-    const out = await saveOwnDraft(sql, { companyId: member.companyId, slug: made.slug, title: name.value, content, expected: 1, by: member.email });
-    if (!out || out.status !== "saved") return UNAVAILABLE;
-    revision = out.revision;
-    if (!made.existed) await logCompany(member, "company.test_create", { item: made.slug, automatic: true, questions: content.questions!.length, role: role.slug });
-  }
-  refresh(member.companySlug, made.slug);
-  const qs = saved.questions ?? [];
-  const mix: Mix = made.existed && saved !== content ? { easy: 0, medium: 0, hard: 0 } : picked.mix;
-  return {
-    ok: true, item: made.slug, title: name.value, role: role.label, revision, existed: made.existed,
-    count: qs.length, points: qs.reduce((n, q) => n + (q.mcq?.points ?? 0), 0), minutes: saved.minutes ?? sum.minutes,
-    mix, planned: picked.planned, adapted: picked.adapted && !made.existed,
-    task: {
-      title: name.value, role: saved.role, minutes: saved.minutes ?? sum.minutes, submission: saved.submission,
-      toolsAllowed: saved.toolsAllowed, toolsNotAllowed: saved.toolsNotAllowed, instructions: saved.instructions,
-      taskTitle: "", taskBrief: "", areas: [], results: saved.results, questions: candidateQuestions(qs),
-    },
-  };
 }
 
 /** Saves the draft and the name, if nobody else saved since `expected`. An unfinished draft saves fine. */

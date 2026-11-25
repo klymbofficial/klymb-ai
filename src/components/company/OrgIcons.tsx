@@ -1,7 +1,7 @@
 import type { OrgNavIcon } from "@/lib/company/nav";
 
 /** Line icons for the company workspace. Decorative: the text beside each one says what it is. */
-const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calendar" | "test" | "search" | "plus" | "mail" | "eye" | "invite" | "report" | "collapse" | "expand" | "signout", React.ReactNode> = {
+const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calendar" | "test" | "search" | "plus" | "mail" | "eye" | "invite" | "report", React.ReactNode> = {
   overview: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
   people: (
     <>
@@ -46,19 +46,6 @@ const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calen
     </>
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
-  collapse: (
-    <>
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
-      <path d="M9 4.5v15M15.5 9.5L13 12l2.5 2.5" />
-    </>
-  ),
-  expand: (
-    <>
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
-      <path d="M9 4.5v15M13 9.5l2.5 2.5-2.5 2.5" />
-    </>
-  ),
-  signout: <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10" />,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   clock: (
     <>

@@ -6,7 +6,7 @@ import { getWorkspaceMember } from "@/lib/company/auth";
 import { canDecide, canScore } from "@/lib/company/batch-rules";
 import { recordDecision, shareResult } from "@/lib/company/decision-data";
 import { loadReviewView, recordReview } from "@/lib/company/review-data";
-import { DECISION_LABEL, autoMarks, readDecisionForm, readReviewForm, reviewItems } from "@/lib/company/review-rules";
+import { DECISION_LABEL, readDecisionForm, readReviewForm } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
 
 export type ReviewResult =
@@ -37,10 +37,7 @@ export async function completeReview(_prev: ReviewResult | null, form: FormData)
   if (view === null) return UNAVAILABLE;
   if (!view || !view.attempt || !view.submission) return { ok: false, message: "There's no submission to review here. Reload the page." };
 
-  // A test with questions is scored per question, multiple choice starting from its automatic mark (L3).
-  const items = view.questions ? reviewItems(view.questions) : view.rubric;
-  const autos = view.questions ? autoMarks(view.questions, view.submission.answers) : undefined;
-  const read = readReviewForm(form, items, autos);
+  const read = readReviewForm(form, view.rubric);
   if (!read.ok) {
     const errors = Object.fromEntries(Object.entries(read.errors).map(([k, v]) => [String(k), v]));
     return { ok: false, message: "Check the highlighted scores.", errors };
@@ -50,7 +47,7 @@ export async function completeReview(_prev: ReviewResult | null, form: FormData)
   if (out.status === "conflict") return { ok: false, conflict: true, message: "Someone completed a newer review of this submission while you were scoring. Reload to see it; your scores here aren't saved." };
   if (out.status === "refused") return { ok: false, message: "Only a reviewer in your company can score. Try signing in again." };
   if (out.status === "not_submitted") return { ok: false, message: "This test isn't submitted yet." };
-  if (out.status !== "recorded") return { ok: false, message: view.questions ? "Those scores don't match this test's questions, or a changed automatic mark has no reason. Reload the page and score again." : "Those scores don't match this test's rubric. Reload the page and score again." };
+  if (out.status !== "recorded") return { ok: false, message: "Those scores don't match this test's rubric. Reload the page and score again." };
   revalidatePath("/org/[slug]/(workspace)", "layout");
   return { ok: true, revision: out.revision, message: `Review ${out.revision === 1 ? "completed" : `revised (version ${out.revision})`}: ${out.total} / ${out.max}.` };
 }
