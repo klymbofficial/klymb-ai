@@ -79,9 +79,9 @@ export default function PrivacyPage() {
           address for this.
         </p>
         <p>
-          <strong>Advertising:</strong> Meta Pixel and Google Ads run only if you tap OK on the cookie notice. Meta Pixel tells
+          <strong>Advertising and page research:</strong> Meta Pixel, Google Ads and Microsoft Clarity run only if you tap OK on the cookie notice. Meta Pixel tells
           Meta which of our pages this browser opened and whether a purchase happened, so our ads reach people who visited.
-          Google Ads tells Google when a webinar seat bought after one of our Google ads is paid for, with the amount. Neither ever sends
+          Google Ads tells Google when a webinar seat bought after one of our Google ads is paid for, with the amount. Clarity records taps and scrolling on our public pages as heatmaps and replays, with form typing masked. Neither ever sends
           your name, email, phone or submissions, and you can turn them off at <Link href="/cookies">/cookies</Link>.
         </p>
       </Section>

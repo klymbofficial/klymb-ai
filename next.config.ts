@@ -18,6 +18,7 @@ const isDev = process.env.NODE_ENV === "development";
  *   *.r2.cloudflarestorage.com  System Design videos, played from signed R2 links
  *   connect.facebook.net        Meta Pixel script, loaded only after OK on the cookie notice
  *   www.facebook.com            Meta Pixel events
+ *   *.clarity.ms                Microsoft Clarity heatmaps and recordings, loaded only after OK on the cookie notice
  *   googleadservices.com, *.doubleclick.net, www.google.com
  *                               Google Ads conversion tag, loaded only after OK on the cookie notice
  *
@@ -28,7 +29,7 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://checkout.razorpay.com https://cdn.razorpay.com https://connect.facebook.net https://www.googleadservices.com https://googleads.g.doubleclick.net https://www.clarity.ms https://*.clarity.ms`,
   "style-src 'self' 'unsafe-inline'",
   // Any https image: company logos are links an admin pastes from the
   // company's own site (/admin/companies), so the hosts can't be listed.
@@ -49,6 +50,7 @@ const csp = [
     "https://ad.doubleclick.net",
     "https://www.googleadservices.com",
     "https://www.google.com",
+    "https://*.clarity.ms",
     "https://*.razorpay.com",
     "https://www.facebook.com",
     "https://connect.facebook.net",
