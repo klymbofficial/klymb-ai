@@ -49,9 +49,8 @@ export async function companyReviewers(sql: Db, companyId: string): Promise<{ em
   const { data, error } = await sql.rows<{ email: string; name: string | null }>`
     select m.email, m.name
       from course.company_members m
+      join course.company_member_roles r on r.company_id = m.company_id and r.email = m.email and r.role = 'reviewer'
      where m.company_id = ${companyId}::uuid and m.removed_at is null
-       -- Reviewers, and admins, who hold every power (0069).
-       and exists (select 1 from course.company_member_roles r where r.company_id = m.company_id and r.email = m.email and r.role in ('reviewer', 'admin'))
      order by lower(coalesce(m.name, m.email))
   `;
   if (error) return error.code === UNDEFINED_TABLE ? [] : fail("reviewers read", error);
@@ -80,7 +79,7 @@ export async function createBatch(sql: Db, b: BatchInput & { companyId: string; 
     ), go as (
       select exists (select 1 from current_version where id = ${b.versionId}::uuid)
          and exists (select 1 from course.company_members m
-                       join course.company_member_roles r on r.company_id = m.company_id and r.email = m.email and r.role in ('reviewer', 'admin')
+                       join course.company_member_roles r on r.company_id = m.company_id and r.email = m.email and r.role = 'reviewer'
                       where m.company_id = ${b.companyId}::uuid and m.email = ${b.reviewer} and m.removed_at is null)
          and not exists (select 1 from prior) as ok
     ), made as (
@@ -229,16 +228,17 @@ const toCandidate = (r: CandidateRow): Candidate => ({
 
 /** One batch of this company, with its people and every email sent to them. Undefined when there's no such batch here. */
 export async function loadBatch(sql: Db, companyId: string, batchId: string): Promise<{ batch: Batch; candidates: Candidate[]; mail: MailLogRow[] } | undefined | null> {
-  // All three at once (U10/P0.5): the people and mail queries are scoped to the company too, so they return nothing for another company's batch.
-  const [head, people, mail] = await Promise.all([
-    sql.row<BatchRow>`
+  const head = await sql.row<BatchRow>`
     select b.id, b.company_id, b.item, b.purpose, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, m.name as reviewer_name,
            b.opens_at, b.closes_at, b.time_zone, b.status, b.created_by, b.created_at, b.sent_by, b.sent_at, b.cancelled_by, b.cancelled_at
       from course.hiring_batches b
       join course.assessment_versions v on v.id = b.version_id
       left join course.company_members m on m.company_id = b.company_id and m.email = b.reviewer_email
      where b.id = ${batchId}::uuid and b.company_id = ${companyId}::uuid
-  `,
+  `;
+  if (head.error) return head.error.code === UNDEFINED_TABLE ? undefined : fail("read", head.error);
+  if (!head.data) return undefined;
+  const [people, mail] = await Promise.all([
     sql.rows<CandidateRow>`
       select id, name, email, extra_minutes, last_start_at, link_generation, status, cancelled_by, cancelled_at, delivery, delivery_error,
              delivery_claimed_at, delivered_at, reminders_sent, last_reminded_at, auto_reminded_at
@@ -253,8 +253,6 @@ export async function loadBatch(sql: Db, companyId: string, batchId: string): Pr
        limit 2000
     `,
   ]);
-  if (head.error) return head.error.code === UNDEFINED_TABLE ? undefined : fail("read", head.error);
-  if (!head.data) return undefined;
   if (people.error) return fail("people read", people.error);
   if (mail.error) return fail("mail log read", mail.error);
   return {

@@ -52,7 +52,7 @@ export async function saveQuestion(company: string, id: string | null, expected:
     saved = id;
   }
   revalidatePath(`/org/${member.companySlug}/library`);
-  redirect(`/org/${member.companySlug}/library?tab=mine&open=${saved}`);
+  redirect(`/org/${member.companySlug}/library?tab=mine&q=${saved}`);
 }
 
 /** Removes one of the company's questions from My Library. Tests that copied it keep their copy. */

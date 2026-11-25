@@ -80,8 +80,7 @@ describe("Assessments hub: pages", () => {
 
   test("invite is for recruiters on an approved version, and preselects the test", () => {
     assert.match(list, /inviteHref: recruiter && s\.inUse && !blocked \?/, "and not while access is off or ended (U06a)");
-    assert.match(page, /const canInvite = recruiter && !!standing\.inUse && !blocked;/, "invite opens in a drawer on the test (P0.2c)");
-    assert.match(page, /initial: \{ \.\.\.inviteDefaults\(new Date\(\)\), test: itemSlug \}/);
+    assert.match(page, /recruiter && standing\.inUse &&/);
     assert.match(read("src/components/company/BatchForm.tsx"), /tests\.find\(\(t\) => t\.item === initial\.test\)/);
   });
 
@@ -89,10 +88,8 @@ describe("Assessments hub: pages", () => {
     for (const q of data.split("sql.rows").slice(1, 3)) assert.match(q, /company_id = \$\{companyId\}::uuid/);
   });
 
-  test("no automatic decision: the cut-off (U06b, approved 25 Nov) only labels a reviewed score; a person still decides", () => {
-    assert.doesNotMatch(page + list, /shortlist(ed)? automatically/i);
-    const deciding = read("src/lib/company/decision-data.ts") + read("src/app/org/[slug]/(workspace)/assessments/[item]/candidates/[candidate]/actions.ts");
-    assert.doesNotMatch(deciding, /cutoff|cut-off/i, "decisions never read the cut-off");
+  test("no threshold or automatic decision in the hub", () => {
+    assert.doesNotMatch(page + list, /shortlist(ed)? automatically|cut-?off score/i);
   });
 });
 

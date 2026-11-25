@@ -24,9 +24,6 @@ import {
   type LibraryFilters,
 } from "@/lib/company/library-rules";
 import { db } from "@/lib/db/client";
-import { QuestionDrawer, TryQuestion } from "@/components/library/QuestionDrawer";
-import { STATS_MIN, questionStats, type QuestionStats } from "@/lib/company/question-stats";
-import { questionStatsRows } from "@/lib/company/question-stats-data";
 import { removeQuestion } from "./actions";
 
 export const metadata: Metadata = { title: "Library", robots: { index: false, follow: false } };
@@ -70,8 +67,7 @@ export default async function LibraryPage({
   const [list, openQ] = sql
     ? await Promise.all([
         f.tab === "mine" ? ownLibrary(sql, member.companyId) : klymbLibrary(sql),
-        // The open question has its own parameter; `q` is the search text.
-        one(sp.open) ? libraryQuestion(sql, member.companyId, one(sp.open)!) : Promise.resolve(undefined),
+        one(sp.q) ? libraryQuestion(sql, member.companyId, one(sp.q)!) : Promise.resolve(undefined),
       ])
     : [null, undefined];
   if (!list || openQ === null) return <>{head}<LoadError what="The library" /></>;
@@ -84,8 +80,6 @@ export default async function LibraryPage({
   const here = libraryHref(base, f);
   const narrowed = f.types.length > 0 || f.difficulties.length > 0 || !!f.tag || !!f.q;
   const view = one(sp.view) === "answer" ? "answer" : "description";
-  const statsRows = openQ && sql ? await questionStatsRows(sql, member.companyId, openQ.id) : [];
-  const stats = statsRows ? questionStats(statsRows) : null;
 
   return (
     <>
@@ -168,7 +162,7 @@ export default async function LibraryPage({
             <>
               <ul className="flex flex-col gap-3">
                 {page.items.map((q) => (
-                  <QuestionCard key={q.id} q={q} open={openQ?.id === q.id} href={libraryHref(base, { ...f, page: page.page }, { open: q.id })} />
+                  <QuestionCard key={q.id} q={q} open={openQ?.id === q.id} href={libraryHref(base, { ...f, page: page.page }, { q: q.id })} />
                 ))}
               </ul>
               {page.pages > 1 && (
@@ -184,85 +178,44 @@ export default async function LibraryPage({
       </div>
 
       {openQ && (
-        <QuestionDrawer
-          key={openQ.id}
-          closeHref={here}
-          title={openQ.title}
-          kicker={`${TYPE_LABEL[openQ.type]} · ${openQ.own ? "Your company" : "Klymb Library"} · ${DIFFICULTY_LABEL[openQ.difficulty]} · ${openQ.points} points`}
-          initial={view === "answer" ? "answer" : "description"}
-          actions={openQ.own && writer ? (
-            <>
-              <Link href={`${base}/${openQ.id}/edit`} className={BTN_SECONDARY}>Edit</Link>
-              <RemoveQuestionButton remove={removeQuestion.bind(null, member.companySlug, openQ.id)} />
-            </>
-          ) : undefined}
-          tabs={[
-            { key: "description", label: "Description", body: <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_12rem]"><div className="min-w-0"><QuestionStatement q={openQ} /></div><QuestionFacts q={openQ} /></div> },
-            {
-              key: "answer",
-              label: openQ.type === "mcq" ? "Answer" : "Scoring",
-              body: (
-                <div className="flex flex-col gap-5">
-                  <QuestionAnswer q={openQ} />
-                  {openQ.explanation && (
-                    <div className="rounded-md border-l-4 border-line/50 bg-white p-4 text-sm">
-                      <p className="text-xs font-bold text-muted">Why</p>
-                      <p className="mt-1 whitespace-pre-line">{openQ.explanation}</p>
-                    </div>
-                  )}
-                </div>
-              ),
-            },
-            { key: "analytics", label: "Analytics", body: <QuestionAnalytics stats={stats} /> },
-            ...(openQ.type === "mcq" && openQ.options
-              ? [{ key: "try" as const, label: "Try question", body: <TryQuestion statement={openQ.statement} options={openQ.options} partial={openQ.partial} points={openQ.points} /> }]
-              : []),
-          ]}
-        />
+        <div className="fixed inset-0 z-40 flex justify-end">
+          <Link href={here} scroll={false} aria-label="Close the question" className="absolute inset-0 bg-ink/40" />
+          <aside role="dialog" aria-modal="true" aria-labelledby="question-title" className="relative z-10 flex h-full w-full max-w-4xl flex-col overflow-y-auto bg-paper shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-line/30 p-5">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-muted">{TYPE_LABEL[openQ.type]} question{openQ.own ? " · Your company" : " · Klymb Library"}</p>
+                <h2 id="question-title" className="display mt-1 break-words text-2xl">{openQ.title}</h2>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {openQ.own && writer && (
+                  <>
+                    <Link href={`${base}/${openQ.id}/edit`} className={BTN_SECONDARY}>Edit</Link>
+                    <RemoveQuestionButton remove={removeQuestion.bind(null, member.companySlug, openQ.id)} />
+                  </>
+                )}
+                <Link href={here} scroll={false} aria-label="Close" className="grid size-10 place-items-center rounded-md border-2 border-line/50 hover:border-ink"><OrgIcon name="close" size={18} /></Link>
+              </div>
+            </div>
+            <nav aria-label="Question" className="flex gap-6 border-b border-line/30 px-5">
+              {(["description", "answer"] as const).map((v) => (
+                <Link
+                  key={v}
+                  href={libraryHref(base, f, v === "answer" ? { q: openQ.id, view: "answer" } : { q: openQ.id })}
+                  scroll={false}
+                  aria-current={view === v ? "page" : undefined}
+                  className={clsx("-mb-px border-b-2 py-3 text-sm font-bold", view === v ? "border-red-strong text-ink" : "border-transparent text-muted hover:text-ink")}
+                >
+                  {v === "description" ? "Description" : openQ.type === "mcq" ? "Answer" : "Scoring"}
+                </Link>
+              ))}
+            </nav>
+            <div className="grid gap-8 p-5 md:grid-cols-[minmax(0,1fr)_12rem]">
+              <div className="min-w-0">{view === "answer" ? <QuestionAnswer q={openQ} /> : <QuestionStatement q={openQ} />}</div>
+              <QuestionFacts q={openQ} />
+            </div>
+          </aside>
+        </div>
       )}
     </>
-  );
-}
-
-/** Attempts, success and use over time, from this company's own candidates. */
-function QuestionAnalytics({ stats }: { stats: QuestionStats | null }) {
-  if (!stats) return <p className="text-sm text-error">Analytics can&apos;t be loaded right now.</p>;
-  const top = Math.max(1, ...stats.months.map((m) => m.count));
-  return (
-    <div className="flex flex-col gap-6">
-      <dl className="grid grid-cols-3 gap-3">
-        {[
-          ["Attempted", String(stats.attempts)],
-          ["Full marks", stats.fullRate === null ? "—" : `${stats.fullRate}%`],
-          ["Average score", stats.averageRate === null ? "—" : `${stats.averageRate}%`],
-        ].map(([k, v]) => (
-          <div key={k} className="rounded-md border border-line/30 bg-white p-3">
-            <dt className="text-xs font-bold text-muted">{k}</dt>
-            <dd className="mt-1 text-xl font-black">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      {stats.fullRate !== null && (
-        <div>
-          <p className="mb-1 text-xs font-bold text-muted">Success rate</p>
-          <div className="h-3 overflow-hidden rounded-full bg-line/20"><div className="h-full bg-[#2f7d4f]" style={{ width: `${stats.fullRate}%` }} /></div>
-        </div>
-      )}
-      <div>
-        <p className="mb-2 text-xs font-bold text-muted">Attempts per month (last 12)</p>
-        <div className="flex h-28 items-end gap-1" role="img" aria-label={stats.months.map((m) => `${m.month}: ${m.count}`).join(", ")}>
-          {stats.months.map((m) => (
-            <div key={m.month} className="flex flex-1 flex-col items-center gap-1">
-              <div className="w-full rounded-t bg-ink/80" style={{ height: `${(100 * m.count) / top}%`, minHeight: m.count ? 2 : 0 }} />
-              <span className="text-[0.6rem] text-muted">{m.month.slice(5)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <p className="text-xs text-muted">
-        From your company&apos;s candidates only, using the automatic marks given at submission.
-        {stats.attempts < STATS_MIN ? ` Rates appear once ${STATS_MIN} people have answered it (${stats.attempts} so far).` : ""}
-      </p>
-    </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import { publishBrand, saveBrandDraft, uploadBrandLogo, type BrandingResult } from "@/app/org/[slug]/(workspace)/branding/actions";
 import { BrandMark } from "@/components/company/BrandMark";
-import { useConfirm } from "@/components/company/Overlay";
 import { brandProps } from "@/components/company/brand-style";
 import { contrastWithWhite } from "@/lib/company/brand";
 import {
@@ -95,9 +94,8 @@ export function BrandingEditor({
     }
   }
 
-  const [confirm, dialog] = useConfirm();
-  const publish = async () => {
-    if (await confirm({ title: "Publish this branding?", body: "Everyone in your workspace, your sign-in page and new invite emails will use it.", confirmLabel: "Publish" })) void act("publish", () => publishBrand(slug));
+  const publish = () => {
+    if (window.confirm("Publish this branding? Everyone in your workspace, your sign-in page and new invite emails will use it.")) void act("publish", () => publishBrand(slug));
   };
 
   const ratio = /^#?[0-9a-f]{6}$/i.test(fields.accent.trim()) ? contrastWithWhite(fields.accent.trim().replace(/^#?/, "#")) : null;
@@ -105,7 +103,6 @@ export function BrandingEditor({
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      {dialog}
       <div className="flex flex-col gap-6">
         <div aria-live="polite">
           <PublishStatus companyName={company.name} publishedAt={publishedAt} unsaved={unsaved} publishable={publishable} busy={busy} onPublish={publish} />

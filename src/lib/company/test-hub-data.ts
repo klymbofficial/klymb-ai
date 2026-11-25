@@ -117,23 +117,3 @@ export async function publishedDates(sql: Db, slugs: string[]): Promise<Map<stri
   if (error) return error.code === UNDEFINED_TABLE ? new Map() : fail("dates", error);
   return new Map((data ?? []).map((r) => [r.id, new Date(r.published_at).toISOString()]));
 }
-
-/**
- * Automatic marks per question for one version of a test in this company
- * (P0.6), from frozen submissions. Never another company's. Null on error.
- */
-export async function versionQuestionMarks(sql: Db, companyId: string, versionId: string): Promise<{ questionNo: number; points: number; max: number }[] | null> {
-  const { data, error } = await sql.rows<{ question_no: number; points: number; max: number }>`
-    select (m ->> 'question_no')::int as question_no, (m ->> 'points')::int as points, (m ->> 'max')::int as max
-      from course.attempt_submissions s
-      join course.candidate_attempts a on a.id = s.attempt_id and a.company_id = s.company_id
-      cross join lateral jsonb_array_elements(case when jsonb_typeof(s.auto_scores) = 'array' then s.auto_scores else '[]'::jsonb end) as m
-     where s.company_id = ${companyId}::uuid and a.version_id = ${versionId}::uuid
-  `;
-  if (error) {
-    if (error.code === "42703" || error.code === "42P01") return [];
-    console.error("version question marks failed:", error.code, error.message);
-    return null;
-  }
-  return (data ?? []).map((r) => ({ questionNo: r.question_no, points: r.points, max: r.max }));
-}
