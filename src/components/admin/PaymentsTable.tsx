@@ -86,6 +86,7 @@ function PaceBadge({ payment }: { payment: PaymentRow }) {
   return (
     <span className={`text-xs font-bold ${refund === "earned" ? "text-red-deep" : "text-muted"}`}>
       {PACE_WORDS[refund]}{missed ? `: missed ${missed}` : refund === "on-track" ? `, on Day ${day}` : ""}
+      {payment.refund_claimed_at && <span className="block">Claimed {new Date(payment.refund_claimed_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}{payment.status === "paid" ? ", refund due" : ""}</span>}
     </span>
   );
 }
