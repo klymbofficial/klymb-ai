@@ -57,11 +57,31 @@ export interface Owner { email: string; name: string | null; rep?: boolean }
 export interface LeadFilter {
   stage?: string;
   source?: string;
+  /** A "Source detail" label, such as "US AI cohort": the list a lead was imported under. */
+  list?: string;
   owner?: string;
   due?: boolean;
   q?: string;
   /** "none": nobody has reached out yet; an email: that person has reached out at least once. */
   by?: string;
+}
+
+/** Every "Source detail" label in use, with how many leads carry it, for the List filter. A rep sees only their own leads' labels. */
+export async function getLeadLists(): Promise<{ list: string; n: number }[]> {
+  const user = await getSalesUser();
+  if (!user) return [];
+  const sql = db();
+  if (!sql) return [];
+  const owner = user.role === "rep" ? user.email : null;
+  const { data, error } = await sql.rows<{ list: string; n: number }>`
+    select trim(source_detail) as list, count(*)::int as n
+      from course.sales_leads
+     where nullif(trim(source_detail), '') is not null
+       and (${owner}::text is null or owner_email = ${owner})
+     group by 1 order by 1
+  `;
+  if (error) console.error("sales lists read failed:", error.code, error.message);
+  return data ?? [];
 }
 
 export async function getOwners(): Promise<Owner[]> {
@@ -104,6 +124,7 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
   if (!sql) return [];
   const stage = f.stage || null;
   const source = f.source || null;
+  const list = f.list?.trim() || null;
   // A rep only ever sees their own leads, whatever the filter asks for.
   const owner = user.role === "rep" ? user.email : f.owner === "none" ? "" : f.owner || null;
   const due = f.due ? istToday() : null;
@@ -143,6 +164,7 @@ export async function getLeads(f: LeadFilter): Promise<Lead[]> {
       left join paid on paid.id = l.id
      where (${stage}::text is null or l.stage = ${stage})
        and (${source}::text is null or l.source = ${source})
+       and (${list}::text is null or trim(l.source_detail) = ${list})
        and (${owner}::text is null or coalesce(l.owner_email, '') = ${owner})
        and (${by}::text is null
             or (${by} = 'none' and coalesce(t.n, 0) = 0)
