@@ -5,7 +5,8 @@ import { ExportCsv } from "@/components/admin/ExportCsv";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { WebinarMeetSend } from "@/components/admin/WebinarMeetSend";
-import { getWebinarRegistrations } from "@/lib/admin/webinars";
+import { AutoSelect } from "@/components/admin/sales/LeadSearch";
+import { getWebinarList, getWebinarRegistrations } from "@/lib/admin/webinars";
 import { WEBINAR, webinarOpen } from "@/lib/webinar";
 
 export const dynamic = "force-dynamic";
@@ -15,12 +16,25 @@ export const maxDuration = 300;
 const iso = (v: string | Date | null) => (v ? new Date(v).toISOString() : "");
 const when = (v: string | Date) => new Date(v).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
-/** Who registered for the live webinar on /webinar, with a CSV for mailing them the Meet link on the day. */
-export default async function AdminWebinarsPage() {
-  const rows = await getWebinarRegistrations(WEBINAR.slug);
+const SLUG = /^[a-z0-9-]{1,80}$/;
+
+/**
+ * Who registered for the live webinar on /webinar, with a CSV for mailing them the Meet link on the day.
+ * ?webinar= opens a past one's list instead, read-only.
+ */
+export default async function AdminWebinarsPage({ searchParams }: { searchParams: Promise<{ webinar?: string }> }) {
+  const sp = await searchParams;
+  const slug = sp.webinar && SLUG.test(sp.webinar) ? sp.webinar : WEBINAR.slug;
+  const isCurrent = slug === WEBINAR.slug;
+  const [rows, webinars] = await Promise.all([
+    getWebinarRegistrations(slug),
+    getWebinarList({ slug: WEBINAR.slug, label: `${WEBINAR.title} · ${WEBINAR.shortDate} (now)` }),
+  ]);
   const all = rows ?? [];
+  const past = webinars.find((w) => w.slug === slug);
   // A paid webinar's seat is only theirs once paid; the rest started checkout and stopped, which still makes them a lead.
-  const paid = !!WEBINAR.price;
+  // A past webinar's price is no longer in lib/webinar.ts, so its rows say whether it charged.
+  const paid = isCurrent ? !!WEBINAR.price : all.some((r) => r.amount != null);
   const list = paid ? all.filter((r) => r.paid_at) : all;
   const unpaid = paid ? all.filter((r) => !r.paid_at) : [];
   const students = list.filter((r) => r.role === "student").length;
@@ -35,11 +49,22 @@ export default async function AdminWebinarsPage() {
   return (
     <>
       <PageTitle
-        eyebrow="Live webinar"
-        title={WEBINAR.title}
-        intro={`${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}.${paid ? ` ${WEBINAR.price!.label} a seat.` : ""} Everyone who registered on /webinar, newest first.`}
-        actions={<div className="flex items-center gap-2"><Link href="/webinar" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Open page</Link><ExportCsv rows={csv} filename="klymb-webinar" /></div>}
+        eyebrow={isCurrent ? "Live webinar" : "Past webinar"}
+        title={isCurrent ? WEBINAR.title : (past?.label ?? slug)}
+        intro={isCurrent
+          ? `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}.${WEBINAR.price ? ` ${WEBINAR.price.label} a seat.` : ""} Everyone who registered on /webinar, newest first.`
+          : "Everyone who registered for this webinar, newest first. The /webinar page now shows the next one."}
+        actions={<div className="flex items-center gap-2">{isCurrent && <Link href="/webinar" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Open page</Link>}<ExportCsv rows={csv} filename={`klymb-webinar-${slug}`} /></div>}
       />
+      {webinars.length > 1 && (
+        <form method="get" className="mb-6 flex items-center gap-2">
+          <label htmlFor="webinar-pick" className="text-xs font-extrabold uppercase tracking-[0.1em] text-muted">Webinar</label>
+          <AutoSelect id="webinar-pick" name="webinar" defaultValue={slug} className="rounded-lg border border-line/40 bg-card px-3 py-2 text-sm font-semibold focus:border-ink focus:outline-none">
+            {webinars.map((w) => <option key={w.slug} value={w.slug}>{w.label} · {w.registered}</option>)}
+          </AutoSelect>
+          <noscript><button type="submit" className="rounded-lg border border-line/50 px-3 py-2 text-xs font-bold">Open</button></noscript>
+        </form>
+      )}
       {rows === null ? (
         <EmptyState title="Can't read registrations" body="The webinar_registrations table isn't there yet. Run db/migrations/0042_webinar_registrations.sql, then 0049_webinar_payments.sql, in the Neon SQL editor." />
       ) : all.length === 0 ? (
@@ -47,7 +72,7 @@ export default async function AdminWebinarsPage() {
       ) : (
         <div className="flex flex-col gap-6">
           {/* Only until the webinar ends: after that the Meet room is dead. */}
-          {webinarOpen() && <WebinarMeetSend meetUrl={WEBINAR.meetUrl} total={list.length} />}
+          {isCurrent && webinarOpen() && <WebinarMeetSend meetUrl={WEBINAR.meetUrl} total={list.length} />}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatTile label={paid ? "Paid" : "Registered"} value={list.length} hint={paid && unpaid.length ? `${unpaid.length} started checkout, didn't pay` : undefined} />
             <StatTile label="Students" value={students} />

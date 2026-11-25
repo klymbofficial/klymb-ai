@@ -35,11 +35,14 @@ export function rangeDays(key: string | undefined): number {
 export interface Filters {
   country?: string;
   device?: string;
+  /** One page's path, such as /webinar: only visits that viewed it count. */
+  page?: string;
 }
 
-export function readFilters(params: { country?: string; device?: string }): Filters {
+export function readFilters(params: { country?: string; device?: string; page?: string }): Filters {
   const clean = (v?: string) => (v && v.length <= 64 && /^[\p{L}\p{N} ().'-]+$/u.test(v) ? v : undefined);
-  return { country: clean(params.country), device: clean(params.device) };
+  const path = (v?: string) => (v && v.length <= 200 && /^\/[\w\-./~%]*$/.test(v) ? v : undefined);
+  return { country: clean(params.country), device: clean(params.device), page: path(params.page) };
 }
 
 export type SparkKey = "totalUsers" | "newUsers" | "activeUsers" | "sessions" | "views";
@@ -112,7 +115,7 @@ export interface AnalyticsDashboard {
   /** Klymb's own events, counted by GA in the window. */
   conversions: { registrations: number; daySubmissions: number; knowledgeChecks: number };
   /** Choices for the filter dropdowns, unfiltered so they never empty themselves. */
-  options: { countries: string[]; devices: string[] };
+  options: { countries: string[]; devices: string[]; pages: string[] };
 }
 
 const EMPTY: AnalyticsDashboard = {
@@ -133,7 +136,7 @@ const EMPTY: AnalyticsDashboard = {
   events: [],
   funnel: [],
   conversions: { registrations: 0, daySubmissions: 0, knowledgeChecks: 0 },
-  options: { countries: [], devices: [] },
+  options: { countries: [], devices: [], pages: [] },
 };
 
 function client() {
@@ -168,18 +171,19 @@ function dimensionFilter(f: Filters) {
   const clauses: StringFilter[] = [];
   if (f.country) clauses.push({ filter: { fieldName: "country", stringFilter: { matchType: "EXACT", value: f.country } } });
   if (f.device) clauses.push({ filter: { fieldName: "deviceCategory", stringFilter: { matchType: "EXACT", value: f.device } } });
+  if (f.page) clauses.push({ filter: { fieldName: "pagePath", stringFilter: { matchType: "EXACT", value: f.page } } });
   if (!clauses.length) return undefined;
   return clauses.length === 1 ? clauses[0] : { andGroup: { expressions: clauses } };
 }
 
-/** The GA calls themselves, cached per (days, country, device). */
+/** The GA calls themselves, cached per (days, country, device, page). */
 const fetchDashboard = unstable_cache(
-  async (days: number, country: string, device: string): Promise<AnalyticsDashboard> => {
+  async (days: number, country: string, device: string, page: string): Promise<AnalyticsDashboard> => {
     const connection = client();
     if (!connection) return EMPTY;
 
     const { analytics, property } = connection;
-    const filters: Filters = { country: country || undefined, device: device || undefined };
+    const filters: Filters = { country: country || undefined, device: device || undefined, page: page || undefined };
     const where = dimensionFilter(filters);
     const scoped = where ? { dimensionFilter: where } : {};
 
@@ -212,7 +216,7 @@ const fetchDashboard = unstable_cache(
     try {
       const [
         totals, prior, timeseries, countries, cities, devices, browsers, os, languages, returning,
-        channels, sourceMedium, landing, pages, events, eventUsers, countryOptions, deviceOptions,
+        channels, sourceMedium, landing, pages, events, eventUsers, countryOptions, deviceOptions, pageOptions,
       ] = await Promise.all([
         analytics.runReport({ property, dateRanges: [current], metrics: summaryMetrics, ...scoped }),
         analytics.runReport({ property, dateRanges: [previous], metrics: summaryMetrics, ...scoped }),
@@ -257,6 +261,7 @@ const fetchDashboard = unstable_cache(
         breakdown("eventName", "totalUsers", 25),
         breakdown("country", "totalUsers", 50, true),
         breakdown("deviceCategory", "sessions", 5, true),
+        breakdown("pagePath", "screenPageViews", 60, true),
       ]);
 
       type Report = (typeof totals)[0];
@@ -353,6 +358,7 @@ const fetchDashboard = unstable_cache(
         options: {
           countries: rows(countryOptions[0]).map((r) => r.label).filter((c) => c !== "(not set)"),
           devices: rows(deviceOptions[0]).map((r) => r.label),
+          pages: rows(pageOptions[0]).map((r) => r.label).filter((p) => p.startsWith("/")),
         },
       };
     } catch (error) {
@@ -364,13 +370,13 @@ const fetchDashboard = unstable_cache(
       };
     }
   },
-  ["ga-dashboard-v7"],
+  ["ga-dashboard-v8"],
   { revalidate: 300 },
 );
 
 export async function getAnalyticsDashboard(days = 30, filters: Filters = {}): Promise<AnalyticsDashboard> {
   if (!(await getAdmin())) return EMPTY;
-  return fetchDashboard(days, filters.country ?? "", filters.device ?? "");
+  return fetchDashboard(days, filters.country ?? "", filters.device ?? "", filters.page ?? "");
 }
 
 /**
