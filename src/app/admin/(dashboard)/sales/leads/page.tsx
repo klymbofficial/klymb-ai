@@ -8,10 +8,10 @@ import { AutoSelect, LeadSearch } from "@/components/admin/sales/LeadSearch";
 import { AssignForm, SelectAll } from "@/components/admin/sales/TeamForms";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { captureWebsiteLeads } from "@/lib/admin/sales-capture";
-import { getLeads, getOwners } from "@/lib/admin/sales";
+import { getLeadLists, getLeads, getOwners } from "@/lib/admin/sales";
 import { CHANNELS, formatPhone, istToday, labelOf, SOURCES, STAGES, WHATSAPP_BY } from "@/lib/sales";
 
-type Search = { stage?: string; source?: string; owner?: string; by?: string; due?: string; q?: string; add?: string };
+type Search = { stage?: string; source?: string; list?: string; owner?: string; by?: string; due?: string; q?: string; add?: string };
 
 const shortDate = (iso: string) =>
   new Date(iso.length === 10 ? `${iso}T00:00:00+05:30` : iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
@@ -24,12 +24,13 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
   const due = sp.due === "1";
   // "Due today" is your own list unless an owner is picked.
   const owner = sp.owner ?? (due ? admin.email : "");
-  const [leads, owners] = await Promise.all([
-    getLeads({ stage: sp.stage, source: sp.source, owner: owner || undefined, by: sp.by, due, q: sp.q }),
+  const [leads, owners, lists] = await Promise.all([
+    getLeads({ stage: sp.stage, source: sp.source, list: sp.list, owner: owner || undefined, by: sp.by, due, q: sp.q }),
     getOwners(),
+    getLeadLists(),
   ]);
   const today = istToday();
-  const filtered = Boolean(sp.stage || sp.source || sp.owner || sp.by || sp.q);
+  const filtered = Boolean(sp.stage || sp.source || sp.list || sp.owner || sp.by || sp.q);
   const who = (email: string) => email === WHATSAPP_BY ? "WhatsApp dashboard" : owners.find((o) => o.email === email)?.name ?? email.split("@")[0];
   const ownerName = (email: string | null) => (email ? owners.find((o) => o.email === email)?.name ?? email.split("@")[0] : "—");
 
@@ -64,6 +65,11 @@ export default async function SalesLeadsPage({ searchParams }: { searchParams: P
         <AutoSelect name="source" defaultValue={sp.source ?? ""} aria-label="Source" className={`${input} min-w-0 flex-1 sm:flex-none`}>
           <option value="">All sources</option>
           {SOURCES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </AutoSelect>
+        {/* The list a lead was imported or added under (its "Source detail"), such as "US AI cohort". */}
+        <AutoSelect name="list" defaultValue={sp.list ?? ""} aria-label="List" className={`${input} min-w-0 flex-1 sm:flex-none`}>
+          <option value="">All lists</option>
+          {lists.map((l) => <option key={l.list} value={l.list}>{l.list} ({l.n})</option>)}
         </AutoSelect>
         <AutoSelect name="owner" defaultValue={owner} aria-label="Owner" className={`${input} min-w-0 flex-1 sm:flex-none`}>
           <option value="">Any owner</option>
