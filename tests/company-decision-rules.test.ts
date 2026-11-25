@@ -57,7 +57,7 @@ describe("H10: what a candidate sees", () => {
   });
 
   test("no threshold anywhere in decisions: the SQL and the page never compare a total", () => {
-    const sql = read("db/migrations/0059_hiring_decisions.sql");
+    const sql = read("db/migrations/0084_hiring_decisions.sql");
     const fn = sql.slice(sql.indexOf("create or replace function course.record_decision"), sql.indexOf("create or replace function course.share_result"));
     assert.doesNotMatch(fn, /total|threshold|cut.?off/i);
     const panel = read("src/components/company/DecisionPanel.tsx");
@@ -92,6 +92,6 @@ describe("U11: tests sent to colleagues", async () => {
     assert.match(route, /signCandidateToken\(secret, mine\.id, mine\.generation\)/);
     const data = read("src/lib/company/my-assessments.ts");
     for (const q of data.split("sql.").slice(1)) assert.match(q, /c\.company_id = \$\{companyId\}::uuid and c\.email = lower\(\$\{email\}\)/);
-    assert.match(read("db/migrations/0060_round_purpose.sql"), /b\.purpose = 'internal'[\s\S]*'internal'::text/);
+    assert.match(read("db/migrations/0085_round_purpose.sql"), /b\.purpose = 'internal'[\s\S]*'internal'::text/);
   });
 });

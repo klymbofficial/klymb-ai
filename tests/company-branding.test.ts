@@ -223,8 +223,8 @@ test("an assigned course names the company only when a company assignment opens 
   assert.match(fn, /a\.revoked_at is null and m\.removed_at is null/);
 });
 
-test("migration 0048 keeps a draft and a published version, both JSON objects, safe to re-run", () => {
-  const sql = read("db/migrations/0048_company_branding.sql");
+test("migration 0073 keeps a draft and a published version, both JSON objects, safe to re-run", () => {
+  const sql = read("db/migrations/0073_company_branding.sql");
   assert.match(sql, /create table if not exists course\.company_branding/);
   assert.match(sql, /company_id uuid primary key references course\.companies \(id\) on delete cascade/);
   assert.match(sql, /check \(jsonb_typeof\(draft\) = 'object'\)/);

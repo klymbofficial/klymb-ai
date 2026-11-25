@@ -7,7 +7,7 @@ import type { Db, DbError } from "../src/lib/db/client";
 import type { QuestionInput } from "../src/lib/company/library-rules";
 
 /**
- * The question library (L1, migration 0063) against a real database.
+ * The question library (L1, migration 0088) against a real database.
  * TEST_DATABASE_URL points at a throwaway database with migrations through
  * 0063; never the app's own database. Run:
  *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test --test-concurrency=1 tests/company-library-db.test.ts

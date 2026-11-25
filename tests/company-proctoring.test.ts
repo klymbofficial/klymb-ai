@@ -37,7 +37,7 @@ describe("proctoring settings", () => {
     assert.match(guard, /"copy", onCopy/);
     assert.match(guard, /getUserMedia/);
     assert.match(guard, /out\.submitted\) \{ leaving\.current = true; window\.location\.assign\(home\)/);
-    const mig = read("db/migrations/0070_proctoring.sql");
+    const mig = read("db/migrations/0095_proctoring.sql");
     assert.match(mig, /n >= lim/);
     assert.match(mig, /course\.submit_attempt\(p_attempt, 'candidate', p_candidate, p_generation, null, 30\)/);
     const start = read("src/app/assessment/[token]/actions.ts");
@@ -60,7 +60,7 @@ describe("a company admin holds every power", () => {
     assert.equal(hasRole(null, ["admin"]), false);
   });
   test("the database agrees: decisions and reviews accept an admin", () => {
-    const mig = read("db/migrations/0069_admin_all_powers.sql");
+    const mig = read("db/migrations/0094_admin_all_powers.sql");
     assert.match(mig, /r\.role in \('recruiter', 'company_head', 'admin'\)/);
     assert.match(mig, /r\.role in \('reviewer', 'admin'\)/);
   });

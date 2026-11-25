@@ -94,7 +94,7 @@ insert into course.company_member_roles (company_id, email, role, team_id, grant
 select m.company_id, m.email,
        case m.role when 'hr' then 'admin' when 'head' then 'team_lead' else 'employee' end,
        case when m.role = 'head' then m.team_id end,
-       'migration 0047'
+       'migration 0072'
   from course.company_members m
  where m.removed_at is null
 on conflict (company_id, email, role) do nothing;

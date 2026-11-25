@@ -14,7 +14,7 @@ import {
 import type { Db } from "@/lib/db/client";
 
 /**
- * The question library (L1, migration 0063). Klymb's questions have no
+ * The question library (L1, migration 0088). Klymb's questions have no
  * owner; a company sees them once published. A company's own questions are
  * read and written only with that company's id, so another company's
  * question reads as not found. Every save names the revision it started

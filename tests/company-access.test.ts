@@ -126,7 +126,7 @@ test("a lead team on a row without the team_lead role is ignored", async () => {
   assert.equal(viewOf(m!), "self");
 });
 
-// ── Before migration 0047 (a preview on an unmigrated database) ─
+// ── Before migration 0072 (a preview on an unmigrated database) ─
 
 test("with no roles rows, the one old role is read: hr → admin, head → team lead, employee", async () => {
   const legacy = (role: string, team: string | null) => ({ ...row("x@acme.com", ACME, [], team), roles: null, legacy_role: role });
@@ -409,7 +409,7 @@ test("a scope only ever matches rows the member may see", async () => {
 // ── The schema backs the rule ───────────────────────────────
 
 const sql0010 = readFileSync("db/migrations/0010_companies.sql", "utf8");
-const sql0047 = readFileSync("db/migrations/0047_company_member_roles.sql", "utf8");
+const sql0047 = readFileSync("db/migrations/0072_company_member_roles.sql", "utf8");
 
 test("several companies per person: the membership key becomes (company, email)", () => {
   assert.match(sql0010, /company_members_email_lowercase check \(email = lower\(email\)\)/);

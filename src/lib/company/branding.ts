@@ -2,7 +2,7 @@ import { contrastWithWhite, readableBrandColor } from "@/lib/company/brand";
 import { normaliseEmail } from "@/lib/email";
 
 /**
- * A company's branding (course.company_branding, migration 0048): the rules
+ * A company's branding (course.company_branding, migration 0073): the rules
  * for a draft, reading what is stored, and turning a company plus its
  * published branding into what a page or an email shows. Pure, so it can be
  * tested and used on the client for the live preview.

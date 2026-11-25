@@ -6,7 +6,7 @@ import { normaliseEmail } from "@/lib/email";
  *
  * A member is a verified email with a row in company_members for a company,
  * and one or more responsibilities there (course.company_member_roles, one
- * row each; migration 0047). The same email may be a member of several
+ * row each; migration 0072). The same email may be a member of several
  * companies, each with its own responsibilities. Every company page and every
  * company data query asks this rule first:
  *
@@ -154,7 +154,7 @@ export function belongsTo(member: CompanyMember | null, slug: unknown): member i
 /**
  * True when the member holds any of the roles. A company admin holds every
  * power in their company (decided 25 Nov): they count as every role, in the
- * app here and in the database's own checks (migration 0069).
+ * app here and in the database's own checks (migration 0094).
  */
 export function hasRole(member: CompanyMember | null, roles: readonly CompanyRole[]): boolean {
   return member !== null && (member.roles.includes("admin") || member.roles.some((r) => roles.includes(r)));

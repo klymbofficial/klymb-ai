@@ -16,7 +16,7 @@ import {
 } from "@/lib/company/assessment-rules";
 
 /**
- * Practical assessment queries (migration 0051): Klymb's draft, the frozen
+ * Practical assessment queries (migration 0076): Klymb's draft, the frozen
  * versions publishing makes, and each company's decision on them. Every
  * write is one statement. A missing table (a preview against an unmigrated
  * database) reads as "no draft, no versions, no decisions", so a company

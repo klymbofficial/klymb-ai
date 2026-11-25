@@ -27,7 +27,7 @@ on this branch, not against plans.
 - **Branding (T02):** a company admin sets display name, logo (uploaded PNG,
   JPEG or WebP up to 512 KB), accent (must carry white text at 4.5:1),
   welcome text and support contact at `/org/<slug>/branding`, saves a draft,
-  previews it and publishes it (`course.company_branding`, migration 0048).
+  previews it and publishes it (`course.company_branding`, migration 0073).
   Only the published version shows: the workspace band and pages, the branded
   sign-in page at `/org/<slug>/sign-in` (where invites and deep links lead),
   invite emails, and an "Assigned by" mark on a System Design course the
@@ -52,7 +52,7 @@ on this branch, not against plans.
   can't see, drafts included, is a 404.
   - Item details for Klymb's courses and assessments are in code
     (`src/data/business-catalog.ts`); publication state, skill tags,
-    purposes, programs and grants are in the database (migration 0049) and
+    purposes, programs and grants are in the database (migration 0074) and
     set by a Klymb admin at `/admin/catalog`. Everything starts as a draft.
     One course serves every company granted it; nothing is copied.
   - The two assessments are **preview only**: their wording is a draft for
@@ -71,7 +71,7 @@ on this branch, not against plans.
   The Upskill page shows who it would reach, who is left out and why, the
   owner, the date and the seats before anything is written, then writes it
   once (`course.company_assignments` and `company_assignment_recipients`,
-  migration 0050). The people are fixed at that moment: someone joining the
+  migration 0075). The people are fixed at that moment: someone joining the
   team later isn't added. The database allows one live assignment per person
   and course, so a retried submit or two people assigning at once give
   nobody the course twice. Needs attention lists required assignments that
@@ -86,7 +86,7 @@ on this branch, not against plans.
   listing in `src/data/business-catalog.ts`; the real task and scoring
   guides are left for a person to write. Saving keeps a draft; publishing
   copies the saved draft into the next numbered version
-  (`course.assessment_versions`, migration 0051), which a trigger stops
+  (`course.assessment_versions`, migration 0076), which a trigger stops
   anyone changing or deleting, and one draft revision makes at most one
   version. A company reviewer approves or declines (with a note Klymb sees)
   the newest version at `/org/[slug]/assessments`, and can see exactly what
@@ -229,13 +229,10 @@ idempotent. On 2026-11-10 a read-only check found it in `course.schema_migration
 on Neon's `production` branch with a checksum matching this file. Not verified:
 that Vercel's Production `DATABASE_URL` points at that branch.
 
-**Numbering clash to fix when merging main:** main now has
-`0047_hidden_payments.sql`, and this branch has
-`0047_company_member_roles.sql`. The runner keys on file names, so both
-apply, but `tests/course-schema.test.ts` requires unique numbers. Renumber
-this branch's 0047-0052 after main's last migration when merging. 0047-0052
-are already recorded by name on the young-shadow dev database, so they would
-run again there under new names: check they are idempotent first.
+**Numbering clash, fixed 2026-11-25:** main took 0047-0049 and 0069-0071 for
+other work, and `tests/course-schema.test.ts` requires unique numbers, so this
+branch's B2B migrations (once 0047-0071) are now 0072-0096, after main's last,
+in the same order. None of main's migrations touch the B2B tables.
 
 ## Verification status
 

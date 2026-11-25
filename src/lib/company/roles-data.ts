@@ -3,7 +3,7 @@ import type { AssessmentRole } from "@/lib/company/auto-test";
 import type { Db } from "@/lib/db/client";
 
 /**
- * Klymb's job roles for automatic tests (P0.4, migration 0068): the skills
+ * Klymb's job roles for automatic tests (P0.4, migration 0093): the skills
  * each role draws questions from. Companies read active roles; Klymb admins
  * edit them. Empty before 0068.
  */

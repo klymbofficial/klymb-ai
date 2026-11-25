@@ -3,7 +3,7 @@
  * what it covers and what a company can look at before choosing it.
  *
  * Whether a company sees any of it is decided elsewhere: publication state,
- * skill tags and purposes live in the database (migration 0049), set by a
+ * skill tags and purposes live in the database (migration 0074), set by a
  * Klymb admin at /admin/catalog, and an item reaches a company only once it is
  * published and granted to that company. Programs (items in an order) exist
  * only in the database. One course serves every company granted it; nothing
@@ -14,7 +14,7 @@
  * admin's first draft starts (src/lib/company/assessment-rules.ts,
  * startingDraft). The test itself, with the real task and the reviewers'
  * scoring guide, is written and published as numbered versions at
- * /admin/catalog/assessments (migration 0051). No answer key or scoring rule
+ * /admin/catalog/assessments (migration 0076). No answer key or scoring rule
  * is kept here.
  */
 import { MODULES } from "@/data/system-design/course-app";

@@ -80,7 +80,7 @@ describe("L3: results per question", () => {
   });
 
   test("the database and the page use the same rule", () => {
-    const sql = readFileSync(new URL("../db/migrations/0067_question_scoring.sql", import.meta.url), "utf8");
+    const sql = readFileSync(new URL("../db/migrations/0092_question_scoring.sql", import.meta.url), "utf8");
     assert.match(sql, /greatest\(0, floor\(s\.pts \* \(s\.right_n - s\.wrong_n\)::numeric \/ s\.correct\)\)/);
     assert.match(sql, /pts::int <> auto and note = ''/, "a changed mark needs a reason in the database too");
   });

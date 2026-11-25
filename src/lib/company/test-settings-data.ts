@@ -3,7 +3,7 @@ import { DEFAULT_SETTINGS, DETAIL_KEYS, type DetailField, type Proctoring, type 
 import type { Db } from "@/lib/db/client";
 
 /**
- * A company's settings for its tests (U06a, migration 0065). Every query
+ * A company's settings for its tests (U06a, migration 0090). Every query
  * names the company, so one company never reads or writes another's. No row
  * means the defaults. Saves name the revision they read (0 before the first
  * save) and are refused when someone saved since.

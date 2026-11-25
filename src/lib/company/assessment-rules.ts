@@ -2,7 +2,7 @@
  * Practical assessments' rules: what a draft holds, what a Klymb admin may
  * save, what stops a publish, what a candidate is shown, and where each
  * company stands on each version. Pure, so it can be tested; the database
- * side is src/lib/company/assessment-data.ts (migration 0051).
+ * side is src/lib/company/assessment-data.ts (migration 0076).
  *
  * A Klymb admin edits one draft per assessment and publishes it as a
  * numbered version that never changes. A company reviewer approves or

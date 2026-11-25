@@ -108,7 +108,7 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
   }>`
     select c.name, c.logo_url, c.brand_color, c.seat_count,
            (select count(*)::int from course.company_members m where m.company_id = c.id and m.removed_at is null) as members,
-           -- company_members.role is 'hr' for every admin (kept so by migration 0047's trigger).
+           -- company_members.role is 'hr' for every admin (kept so by migration 0072's trigger).
            exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null) as has_hr,
            exists (select 1 from course.company_members m where m.company_id = c.id and m.email = ${email.value}) as in_company
       from course.companies c where c.id = ${id}

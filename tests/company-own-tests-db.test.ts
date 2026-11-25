@@ -7,7 +7,7 @@ import type { Db, DbError } from "../src/lib/db/client";
 import type { AssessmentContent } from "../src/lib/company/assessment-rules";
 
 /**
- * A company's own tests (U04a, migration 0061) against a real database.
+ * A company's own tests (U04a, migration 0086) against a real database.
  * TEST_DATABASE_URL points at a throwaway database with migrations through
  * 0061; never the app's own database. Run:
  *   TEST_DATABASE_URL=postgres://... node --conditions=react-server --import tsx --test --test-concurrency=1 tests/company-own-tests-db.test.ts
@@ -173,7 +173,7 @@ describe("company-written tests against a real database", { skip }, () => {
     assert.equal(a.slug, b.slug, "the same test");
     assert.deepEqual([a.existed, b.existed].sort(), [false, true]);
     const again = await own.createTestKeyed(sql, t);
-    assert.deepEqual(again, { slug: a.slug, existed: true });
+    assert.deepEqual(again, { slug: a.slug, audience: "external", existed: true }, "no audience given means external");
     const other = await own.createTestKeyed(sql, { ...t, companyId: theirs });
     assert.ok(other && other.slug !== a.slug && !other.existed, "another company's same key is its own");
     assert.equal((await client.query(`select count(*)::int n from course.catalog_items where create_key = $1`, [key])).rows[0].n, 2);

@@ -73,8 +73,8 @@ describe("start and timing, as written", () => {
     assert.match(page, /<Countdown deadline=\{attempt\.deadlineAt\} serverNow=\{now\.toISOString\(\)\} \/>/);
   });
 
-  test("migration 0053: one attempt per number, a clock that can't move, events written once and never edited", () => {
-    const sql = code(read("db/migrations/0053_candidate_attempts.sql"));
+  test("migration 0078: one attempt per number, a clock that can't move, events written once and never edited", () => {
+    const sql = code(read("db/migrations/0078_candidate_attempts.sql"));
     assert.match(sql, /constraint candidate_attempts_once unique \(candidate_id, attempt_no\)/);
     assert.match(sql, /check \(deadline_at = started_at \+ make_interval\(mins => allowed_minutes\)\)/);
     assert.match(sql, /new\.deadline_at <> old\.deadline_at/);
@@ -106,7 +106,7 @@ describe("saving the answer (H07a)", () => {
     const action = read("src/app/assessment/[token]/actions.ts");
     assert.match(action, /answer\.length > MAX_ANSWER_CHARS/);
     assert.equal(MAX_ANSWER_CHARS, 60000);
-    assert.match(code(read("db/migrations/0054_attempt_drafts.sql")), /check \(char_length\(answer\) <= 60000\)/);
+    assert.match(code(read("db/migrations/0079_attempt_drafts.sql")), /check \(char_length\(answer\) <= 60000\)/);
   });
 
   test("the answer box saves on its own, on leaving, and at the time limit, and stops on a conflict", () => {

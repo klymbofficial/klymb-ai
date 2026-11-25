@@ -8,7 +8,7 @@ import type { CatalogEntry } from "@/lib/company/catalog";
 import type { Db } from "@/lib/db/client";
 
 /**
- * A company's own tests (U04a, migration 0061): catalog items with
+ * A company's own tests (U04a, migration 0086): catalog items with
  * owner_company_id set. Every query is scoped to the signed-in member's
  * company, so another company's test reads as not found. Drafts and
  * versions are the same tables Klymb's tests use; publishing also records

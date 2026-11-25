@@ -128,7 +128,7 @@ describe("P0.4 automatic selection", () => {
     assert.match(modal, /crypto\.randomUUID\(\)/);
     assert.match(modal, /setView\("summary"\)/);
     assert.doesNotMatch(modal.slice(modal.indexOf("const createAuto"), modal.indexOf("const publish")), /router|redirect|location/);
-    const mig = readFileSync(new URL("../db/migrations/0068_roles_and_question_bank.sql", import.meta.url), "utf8");
+    const mig = readFileSync(new URL("../db/migrations/0093_roles_and_question_bank.sql", import.meta.url), "utf8");
     assert.match(mig, /catalog_items_create_once on course\.catalog_items \(owner_company_id, create_key\)/);
   });
 });
