@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { B2BTabs, DealTable } from "@/components/admin/b2b/parts";
 import { input } from "@/components/admin/sales/styles";
-import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getB2BPeople, getDeals } from "@/lib/admin/b2b";
 import { B2B_STAGES, inr, weighted } from "@/lib/b2b";
@@ -45,7 +44,6 @@ export default async function B2BDealsPage({ searchParams }: { searchParams: Pro
         title={due ? "Next steps due today" : "All deals"}
         intro={`${deals.length} deal${deals.length === 1 ? "" : "s"} · ${inr(total)} in all · ${inr(w)} weighted.`}
       />
-      <SalesTabs current="b2b" />
       <B2BTabs current={due ? "due" : "deals"} />
 
       <form method="get" className="mb-3 flex flex-wrap items-end gap-2">

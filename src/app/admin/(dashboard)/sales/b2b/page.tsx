@@ -2,7 +2,6 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { B2BStageBadge, B2BTabs, DealTable, docNames, personName, shortDay, when } from "@/components/admin/b2b/parts";
-import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getB2BOverview, getB2BPeople, type DealRow } from "@/lib/admin/b2b";
 import { ACTIVITY_KINDS, B2B_STAGES, inr } from "@/lib/b2b";
@@ -47,7 +46,6 @@ export default async function B2BOverviewPage() {
         title="Company deals"
         intro="Every company we are selling to: the pipeline in rupees, what will close this month and quarter, and what needs a push today."
       />
-      <SalesTabs current="b2b" />
       <B2BTabs current="overview" />
 
       {!o.ready && (

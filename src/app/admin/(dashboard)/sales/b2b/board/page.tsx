@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { B2BBoard } from "@/components/admin/b2b/B2BBoard";
 import { B2BTabs, personName } from "@/components/admin/b2b/parts";
-import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getB2BPeople, getDeals } from "@/lib/admin/b2b";
 import { istToday } from "@/lib/sales";
@@ -21,7 +20,6 @@ export default async function B2BBoardPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageTitle eyebrow="Sales · B2B" title="Deal board" intro="Every deal in its stage, with each column's value. Drag a card to move it. Signed needs every document signed first." />
-      <SalesTabs current="b2b" />
       <B2BTabs current="board" />
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Link href={`/admin/sales/b2b/board${q ? `?${q}` : ""}`} className={chip(!mine)}>Everyone</Link>

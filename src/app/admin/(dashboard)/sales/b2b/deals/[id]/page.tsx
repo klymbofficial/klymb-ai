@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { ActivityForm, Contacts, DealDetailsForm, DeleteDeal, DocChecklist, StageControl, StatusNote, Tasks, Workspace } from "@/components/admin/b2b/B2BForms";
 import { B2BStageBadge, B2BTabs, docNames, NextStep, personName, when } from "@/components/admin/b2b/parts";
-import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getB2BPeople, getDeal } from "@/lib/admin/b2b";
 import {
@@ -42,7 +41,6 @@ export default async function B2BDealPage({ params }: { params: Promise<{ id: st
         intro={[d.title, primary && `${primary.name}${primary.designation ? `, ${primary.designation}` : ""}`, c.city].filter(Boolean).join(" · ")}
         actions={<Link href="/admin/sales/b2b/deals" className="text-xs font-bold uppercase tracking-wider underline underline-offset-4 hover:text-red-deep">← All deals</Link>}
       />
-      <SalesTabs current="b2b" />
       <B2BTabs current="none" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">

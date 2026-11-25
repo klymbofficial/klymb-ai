@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { CompanyForm, Contacts } from "@/components/admin/b2b/B2BForms";
 import { B2BTabs, DealTable } from "@/components/admin/b2b/parts";
-import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getB2BPeople, getCompany } from "@/lib/admin/b2b";
 import { istToday } from "@/lib/sales";
@@ -23,7 +22,6 @@ export default async function B2BCompanyPage({ params }: { params: Promise<{ id:
         intro={[c.industry, c.city, c.employees && `${c.employees} people`].filter(Boolean).join(" · ") || undefined}
         actions={<Link href={`/admin/sales/b2b/deals/new?company=${c.id}`} className="bg-ink px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-paper">+ New deal with {c.name.split(" ")[0]}</Link>}
       />
-      <SalesTabs current="b2b" />
       <B2BTabs current="companies" />
 
       <div className="mb-6 flex flex-wrap gap-x-5 gap-y-1 text-sm">

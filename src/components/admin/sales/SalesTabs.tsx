@@ -8,11 +8,10 @@ const tabs = [
   { href: "/admin/sales/leads", label: "All leads", key: "leads" },
   { href: "/admin/sales/list", label: "My list", key: "list" },
   { href: "/admin/sales/board", label: "Board", key: "board" },
-  { href: "/admin/sales/b2b", label: "B2B", key: "b2b" },
   { href: "/admin/sales/team", label: "Team", key: "team" },
 ];
 
-export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "list" | "board" | "b2b" | "team" }) {
+export function SalesTabs({ current }: { current: "report" | "leads" | "due" | "list" | "board" | "team" }) {
   return (
     <nav aria-label="Sales" className="-mx-4 mb-6 flex gap-1 overflow-x-auto border-b border-line/25 px-4 sm:mx-0 sm:px-0">
       {tabs.map((t) => {

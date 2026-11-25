@@ -2,7 +2,6 @@ import Link from "next/link";
 import { PageTitle } from "@/components/admin/PageTitle";
 import { CompanyForm } from "@/components/admin/b2b/B2BForms";
 import { B2BTabs } from "@/components/admin/b2b/parts";
-import { SalesTabs } from "@/components/admin/sales/SalesTabs";
 import { requireSalesAdmin } from "@/lib/admin/auth";
 import { getCompanies } from "@/lib/admin/b2b";
 import { inr } from "@/lib/b2b";
@@ -16,7 +15,6 @@ export default async function B2BCompaniesPage({ searchParams }: { searchParams:
   return (
     <>
       <PageTitle eyebrow="Sales · B2B" title="Companies" intro="Each company once, with its people and every deal with it: a pilot first, then more seats." />
-      <SalesTabs current="b2b" />
       <B2BTabs current="companies" />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <form method="get" className="flex items-center gap-2">
