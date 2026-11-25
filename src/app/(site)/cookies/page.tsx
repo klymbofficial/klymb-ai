@@ -17,7 +17,7 @@ export default function CookiePolicyPage() {
     >
       <Section n="1." title="Your choice" plain="Analytics is on by default. Meta Pixel and Google Ads are off until you tap OK. Change either here.">
         <p>
-          On your first visit a small notice tells you about analytics and our ad tools. Google Analytics runs by default so we can see, in aggregate,
+          On your first visit a small notice tells you about analytics and our ad tags. Google Analytics runs by default so we can see, in aggregate,
           which pages people read and where they arrive from. Meta Pixel and Google Ads load only if you tap OK. If you would rather we did not, switch them off below: the
           scripts stop immediately, on this and every later page.
         </p>
@@ -49,15 +49,15 @@ export default function CookiePolicyPage() {
         />
         <p>
           <strong>Meta Pixel (only if you tap OK):</strong> tells Meta that this browser opened our pages, viewed the System
-          Design course page, started a payment or bought the course, with the amount. Meta uses it to show our Instagram
+          Design course page, started a payment, bought the course or paid for a webinar seat, with the amount. Meta uses it to show our Instagram
           and Facebook ads to people who visited, and to measure whether the ads led to a purchase. We never send your
           name, email, phone number or answers. Meta keeps this under its own privacy policy.
         </p>
         <p>
-          <strong>Google Ads (only if you tap OK):</strong> remembers whether this browser arrived from one of our Google
-          ads, and tells Google when a webinar seat is paid for, with the amount and an order number. Google uses it to
-          measure whether the ads led to a sign-up. We never send your name, email, phone number or answers. Google keeps
-          this under its own privacy policy.
+          <strong>Google Ads (only if you tap OK):</strong> tells Google that this browser opened our pages and, if you
+          paid for a webinar seat, the amount and the payment reference, so Google can measure whether its ads led to a
+          sign-up and show our ads to people who visited. We never send your name, email, phone number or answers.
+          Google keeps this under its own privacy policy.
         </p>
         <p>
           If you turn analytics off, we stop loading the script immediately for the rest of your visit and on every page
@@ -65,7 +65,7 @@ export default function CookiePolicyPage() {
         </p>
       </Section>
 
-      <Section n="4." title="What we do not do" plain="No selling data, no data brokers, no ad tracking without your OK.">
+      <Section n="4." title="What we do not do" plain="No selling data, no data brokers, no ad tag without your OK.">
         <p>
           We do not sell personal data, and we do not use third-party data brokers. The only advertising tools we use are
           Meta Pixel and Google Ads, and only after you tap OK. If that ever changes, we will update this policy and ask for your consent

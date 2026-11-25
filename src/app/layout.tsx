@@ -1,8 +1,8 @@
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
-import { GoogleAds } from "@/components/legal/GoogleAds";
 import { MetaPixel } from "@/components/legal/MetaPixel";
+import { GoogleAds } from "@/components/legal/GoogleAds";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SupportBot } from "@/components/support/SupportBot";
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SpeedInsights />
         {/* Instagram ads: loads only after OK on the cookie notice. */}
         <MetaPixel />
-        {/* Google Ads conversions for the webinar: also only after OK. */}
+        {/* Google Ads for the webinar: loads only after OK on the cookie notice. */}
         <GoogleAds />
       </body>
       {gaId && <Analytics gaId={gaId} />}

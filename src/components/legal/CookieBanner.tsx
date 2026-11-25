@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { readConsent, writeConsent } from "@/lib/consent";
 
 /**
- * Tells first-time visitors about analytics and the Meta Pixel. Google Analytics
+ * Tells first-time visitors about analytics and the ad tags. Google Analytics
  * is opt-out, as the Cookie Policy states; the Meta Pixel is opt-in and loads
  * only after OK. Once a choice is saved the banner does not return until the
  * policy version changes.
