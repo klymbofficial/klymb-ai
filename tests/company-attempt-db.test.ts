@@ -63,12 +63,12 @@ describe("candidate attempts against a real database", { skip }, () => {
   let rev: typeof import("../src/lib/company/review-data");
   let dec: typeof import("../src/lib/company/decision-data");
   /** An attempt that started `minutesAgo` minutes ago with `allowed` minutes, put straight in (the app can't start one in the past). */
-  async function pastAttempt(minutesAgo: number, allowed: number, over: Partial<BatchInput> = {}) {
-    const { batchId, id } = await invited(over);
+  async function pastAttempt(minutesAgo: number, allowed: number) {
+    const { batchId, id } = await invited();
     const row = (await one.query(
       `insert into course.candidate_attempts (company_id, batch_id, candidate_id, version_id, allowed_minutes, started_at, deadline_at, started_link_generation)
        values ($1, $2, $3, $4, $5, now() - make_interval(mins => $6), now() - make_interval(mins => $6) + make_interval(mins => $5), 1) returning id`,
-      [companyId, batchId, id, over.versionId ?? versionId, allowed, minutesAgo],
+      [companyId, batchId, id, versionId, allowed, minutesAgo],
     )).rows[0];
     return { batchId, id, attemptId: row.id as string };
   }
@@ -119,7 +119,7 @@ describe("candidate attempts against a real database", { skip }, () => {
 
   after(async () => {
     if (companyId) await one.query(`delete from course.companies where id = $1`, [companyId]);
-    await one.query(`delete from course.assessment_drafts where slug = any($1)`, [[slug, `${slug}-area`, `${slug}-l3`, `${slug}-p06`]]);
+    await one.query(`delete from course.assessment_drafts where slug = any($1)`, [[slug, `${slug}-area`]]);
     await one.end();
     await two.end();
   });
@@ -793,188 +793,5 @@ describe("candidate attempts against a real database", { skip }, () => {
     assert.ok(!(await ids()).includes(due.id), "reminders off");
     await one.query(`update course.company_test_settings set auto_remind = true where company_id = $1 and item_slug = $2`, [companyId, slug]);
     assert.ok((await ids()).includes(due.id), "reminders on");
-  });
-  test("U06b: details given at Start stay with the attempt; the cut-off saves as its own group", async () => {
-    const ts = await import("../src/lib/company/test-settings-data");
-    const cur = (await ts.loadTestSettings(sqlA, companyId, slug))!;
-    const base = { companyId, item: slug, by: "rec@test.invalid" };
-    assert.equal((await ts.saveTestSettings(sqlA, { ...base, group: "candidate", expected: cur.revision, cutoffPercent: 60, collect: ["phone", "college"] }))?.status, "saved");
-    const after = (await ts.loadTestSettings(sqlA, companyId, slug))!;
-    assert.deepEqual([after.cutoffPercent, after.collect, after.autoRemind, after.tags], [60, ["phone", "college"], cur.autoRemind, cur.tags], "other groups kept");
-    await assert.rejects(one.query(`update course.company_test_settings set collect = '{shoe_size}' where company_id = $1 and item_slug = $2`, [companyId, slug]), /company_test_settings_collect/);
-    await assert.rejects(one.query(`update course.company_test_settings set cutoff_percent = 120 where company_id = $1 and item_slug = $2`, [companyId, slug]), /company_test_settings_cutoff/);
-
-    const p = await invited();
-    const started = await att.startAttempt(sqlA, p.id, 1, { phone: "+91 90000 00000", college: "IIT" });
-    assert.ok(started && started.status === "started");
-    const again = await att.startAttempt(sqlA, p.id, 1, { phone: "changed", college: "x" });
-    assert.equal(again?.status, "resumed");
-    const row = (await one.query(`select details from course.candidate_attempts where id = $1`, [started.attempt.id])).rows[0];
-    assert.deepEqual(row.details, { phone: "+91 90000 00000", college: "IIT" }, "a resume never overwrites them");
-    const batchId = (await one.query(`select batch_id from course.candidate_attempts where candidate_id = $1`, [p.id])).rows[0].batch_id as string;
-    const view = await rev.loadReviewView(sqlA, companyId, batchId, p.id);
-    assert.deepEqual(view?.attempt?.details, { phone: "+91 90000 00000", college: "IIT" });
-    assert.ok(Array.isArray(await ts.reviewedPercents(sqlA, companyId, slug)));
-  });
-
-  test("L3: Submit marks multiple choice on the server; a reviewer confirms or changes a mark with a reason; results share per question", async () => {
-    await people();
-    const assessments = await import("../src/lib/company/assessment-data");
-    const rules = await import("../src/lib/company/review-rules");
-    const l3 = `${slug}-l3`;
-    const qs = [
-      { section: "", title: "Pick one", brief: "Which is a join?", submission: "written" as const, rubric: [],
-        mcq: { options: [{ text: "SUM", correct: false }, { text: "LEFT", correct: true }], points: 3, partial: false } },
-      { section: "", title: "Pick all", brief: "Which are aggregates?", submission: "written" as const, rubric: [],
-        mcq: { options: [{ text: "SUM", correct: true }, { text: "AVG", correct: true }, { text: "MAX", correct: true }, { text: "JOIN", correct: false }], points: 4, partial: true } },
-      { section: "", title: "Explain", brief: "Explain an index.", submission: "written" as const,
-        rubric: [{ title: "Clarity", skill: "SQL", points: 4, guide: "Secret guide." }, { title: "Depth", skill: "SQL", points: 2, guide: "Another." }] },
-    ];
-    await assessments.saveDraft(sqlA, { ...code, slug: l3 } as CatalogAssessment, { ...content, results: "by_area", taskTitle: "", taskBrief: "", rubric: [], questions: qs }, 0, "a@test.invalid");
-    assert.equal((await assessments.publishDraft(sqlA, l3, "Scored practical", 1, "a@test.invalid"))?.status, "published");
-    const l3Version = (await assessments.loadVersions(sqlA, l3))![0].id;
-    await one.query(`insert into course.company_assessment_reviews (company_id, version_id, decision, decided_by) values ($1, $2, 'approved', $3)`, [companyId, l3Version, reviewer]);
-
-    const { batchId, id } = await invited({ item: l3, versionId: l3Version });
-    const started = await att.startAttempt(sqlA, id, 1);
-    assert.ok(started && started.status === "started");
-    const who = { candidateId: id, generation: 1, attemptId: started.attempt.id };
-    await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 1, baseRevision: 0, answer: "", picked: [1] });
-    await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 2, baseRevision: 0, answer: "", picked: [0, 1] });
-    await att.saveQuestionAnswer(sqlA, { ...who, questionNo: 3, baseRevision: 0, answer: "An index speeds reads.", picked: [] });
-    assert.equal((await att.submitAttempt(sqlA, { ...who, revision: null }))?.status, "submitted");
-
-    const frozen = (await one.query(`select auto_scores from course.attempt_submissions where attempt_id = $1`, [who.attemptId])).rows[0].auto_scores;
-    assert.deepEqual(frozen, [{ question_no: 1, points: 3, max: 3 }, { question_no: 2, points: 2, max: 4 }], "2 of 3 right, none wrong: 4 × 2 ÷ 3 rounded down");
-    await assert.rejects(one.query(`update course.attempt_submissions set auto_scores = '[]' where attempt_id = $1`, [who.attemptId]), /cannot be changed/);
-    const view = (await rev.loadReviewView(sqlA, companyId, batchId, id))!;
-    assert.deepEqual(view.submission?.auto, { total: 5, max: 7, questions: 2 });
-    assert.deepEqual(rules.autoMarks(view.questions!, view.submission!.answers), [3, 2, null, null], "the page's marks agree with the database's");
-    assert.deepEqual((await rev.autoScoresForBatch(sqlA, companyId, batchId))?.get(who.attemptId), { total: 5, max: 7 });
-    assert.deepEqual(await rev.autoScoresForBatch(sqlA, randomUUID(), batchId), new Map(), "another company sees none");
-
-    const score = (scores: { points: number; note: string }[], base = 0) => review(who.attemptId, { scores, baseRevision: base, summary: "Private summary." });
-    const ok = (q2: number, note = "") => [{ points: 3, note: "" }, { points: q2, note }, { points: 3, note: "Private note." }, { points: 2, note: "" }];
-    assert.deepEqual(await score(ok(2).slice(0, 3)), { status: "invalid" }, "every question's entries");
-    assert.deepEqual(await score(ok(4)), { status: "invalid" }, "a changed automatic mark needs a reason");
-    assert.deepEqual(await score(ok(4, "   ")), { status: "invalid" }, "a blank reason isn't one");
-    assert.deepEqual(await score(ok(5, "too many")), { status: "invalid" }, "never above the question's points");
-    assert.deepEqual(await score([{ points: 3, note: "" }, { points: 2, note: "" }, { points: 5, note: "" }, { points: 2, note: "" }]), { status: "invalid" }, "an area's maximum still holds");
-    assert.deepEqual(await score(ok(4, "Accepted an equivalent answer.")), { status: "recorded", revision: 1, total: 12, max: 13 });
-    const stored = (await one.query(`select scores from course.attempt_reviews where attempt_id = $1`, [who.attemptId])).rows[0].scores;
-    assert.deepEqual(stored[1], { question_no: 2, question: "Pick all", title: "Pick all", points: 4, max: 4, note: "Accepted an equivalent answer.", auto: 2 });
-    assert.deepEqual(stored[2], { question_no: 3, question: "Explain", title: "Clarity", points: 3, max: 4, note: "Private note." });
-    assert.deepEqual(await score(ok(2), 1), { status: "recorded", revision: 2, total: 10, max: 13 }, "back to the automatic mark: no reason needed");
-    const latest = (await rev.loadReviewView(sqlA, companyId, batchId, id))!.reviews[0];
-    assert.deepEqual(rules.byQuestion(latest.scores), [{ title: "Pick one", points: 3, max: 3 }, { title: "Pick all", points: 2, max: 4 }, { title: "Explain", points: 5, max: 6 }]);
-
-    assert.equal((await dec.shareResult(sqlA, { companyId, attemptId: who.attemptId, actor: recruiter }))?.status, "shared");
-    const seen = (await dec.sharedResultFor(sqlA, who.attemptId))!;
-    assert.deepEqual(seen.areas, [{ title: "Pick one", points: 3, max: 3 }, { title: "Pick all", points: 2, max: 4 }, { title: "Explain", points: 5, max: 6 }], "one line per question");
-    assert.doesNotMatch(JSON.stringify(seen), /Private|guide|auto|Accepted/i, "never notes, summary, guides or automatic marks");
-  });
-
-  test("L3: the time limit marks multiple choice too, answered or not", async () => {
-    const l3Version = (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [`${slug}-l3`])).rows[0].id as string;
-    const { id, attemptId } = await pastAttempt(90, 60, { item: `${slug}-l3`, versionId: l3Version });
-    await one.query(`insert into course.attempt_answers (attempt_id, question_no, revision, answer, picked) values ($1, 2, 1, '', '{0,3}')`, [attemptId]);
-    assert.ok(((await att.finaliseDue(sqlA, { candidateId: id })) ?? 0) >= 1);
-    const row = (await one.query(`select kind, auto_scores from course.attempt_submissions where attempt_id = $1`, [attemptId])).rows[0];
-    assert.equal(row.kind, "deadline");
-    assert.deepEqual(row.auto_scores, [{ question_no: 1, points: 0, max: 3 }, { question_no: 2, points: 0, max: 4 }], "one right and one wrong cancel out; never below zero");
-  });
-
-  test("L3: a one-task test has no automatic marks and is reviewed as before", async () => {
-    const x = await pastAttempt(90, 60, { item: `${slug}-area`, versionId: (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [`${slug}-area`])).rows[0].id });
-    await att.finaliseDue(sqlA, { candidateId: x.id });
-    assert.equal((await one.query(`select auto_scores from course.attempt_submissions where attempt_id = $1`, [x.attemptId])).rows[0].auto_scores, null);
-    assert.equal((await review(x.attemptId, { scores: [{ points: 3, note: "" }, { points: 6, note: "" }] }))?.status, "recorded");
-  });
-
-  test("P0.6: per-question marks and library stats count only this company's attempts on copies of the question", async () => {
-    const statsData = await import("../src/lib/company/question-stats-data");
-    const hub = await import("../src/lib/company/test-hub-data");
-    const assessments = await import("../src/lib/company/assessment-data");
-    const src = randomUUID();
-    const s6 = `${slug}-p06`;
-    const qs = [{ section: "", title: "Sourced", brief: "Pick B.", submission: "written" as const, rubric: [], source: src,
-      mcq: { options: [{ text: "A", correct: false }, { text: "B", correct: true }], points: 2, partial: false } }];
-    await assessments.saveDraft(sqlA, { ...code, slug: s6 } as CatalogAssessment, { ...content, taskTitle: "", taskBrief: "", rubric: [], questions: qs }, 0, "a@test.invalid");
-    await assessments.publishDraft(sqlA, s6, "Stats practical", 1, "a@test.invalid");
-    const v = (await assessments.loadVersions(sqlA, s6))![0].id;
-    await one.query(`insert into course.company_assessment_reviews (company_id, version_id, decision, decided_by) values ($1, $2, 'approved', $3)`, [companyId, v, reviewer]);
-    for (const pick of [[1], [0]]) {
-      const { id } = await invited({ item: s6, versionId: v });
-      const st = await att.startAttempt(sqlA, id, 1);
-      assert.ok(st && st.status === "started");
-      await att.saveQuestionAnswer(sqlA, { candidateId: id, generation: 1, attemptId: st.attempt.id, questionNo: 1, baseRevision: 0, answer: "", picked: pick });
-      assert.equal((await att.submitAttempt(sqlA, { candidateId: id, generation: 1, attemptId: st.attempt.id, revision: null }))?.status, "submitted");
-    }
-    const rows = (await statsData.questionStatsRows(sqlA, companyId, src))!;
-    assert.deepEqual(rows.map((r) => r.points).sort(), [0, 2]);
-    assert.deepEqual(await statsData.questionStatsRows(sqlA, randomUUID(), src), [], "another company sees none");
-    const marks = (await hub.versionQuestionMarks(sqlA, companyId, v))!;
-    assert.deepEqual(marks.map((m) => [m.questionNo, m.points, m.max]).sort(), [[1, 0, 2], [1, 2, 2]]);
-    assert.deepEqual(await hub.versionQuestionMarks(sqlA, randomUUID(), v), []);
-  });
-
-  test("proctoring: events need the open attempt's own link; the limit submits the test; snapshots need the setting", async () => {
-    const proctor = await import("../src/lib/company/proctor-data");
-    const ts = await import("../src/lib/company/test-settings-data");
-    const p6 = `${slug}-p06`;
-    const v = (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [p6])).rows[0].id as string;
-    const cur = (await ts.loadTestSettings(sqlA, companyId, p6))!;
-    const saved = await ts.saveTestSettings(sqlA, { group: "proctoring", companyId, item: p6, expected: cur.revision, by: "rec@test.invalid", proctor: { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2 } });
-    assert.equal(saved?.status, "saved");
-    assert.deepEqual((await ts.loadTestSettings(sqlA, companyId, p6))!.proctor, { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2 });
-
-    const { id } = await invited({ item: p6, versionId: v });
-    const st = await att.startAttempt(sqlA, id, 1);
-    assert.ok(st && st.status === "started");
-    const ev = (kind: "tab_hidden" | "copy_blocked" | "fullscreen_exit", over: Partial<{ candidateId: string; generation: number }> = {}) =>
-      proctor.recordAttemptEvent(sqlA, { attemptId: st.attempt.id, candidateId: id, generation: 1, kind, ...over });
-    assert.deepEqual(await ev("tab_hidden", { generation: 2 }), { status: "refused" }, "a replaced link");
-    assert.deepEqual(await ev("tab_hidden", { candidateId: randomUUID() }), { status: "refused" }, "someone else");
-    assert.deepEqual(await ev("copy_blocked"), { status: "recorded", warnings: 0, limit: 2, submitted: false }, "copy is recorded, not a warning");
-    assert.deepEqual(await ev("tab_hidden"), { status: "recorded", warnings: 1, limit: 2, submitted: false });
-    assert.equal((await one.query(`select submitted_at from course.candidate_attempts where id = $1`, [st.attempt.id])).rows[0].submitted_at, null);
-    assert.deepEqual(await ev("fullscreen_exit"), { status: "recorded", warnings: 2, limit: 2, submitted: true }, "the limit submits");
-    const sub = (await one.query(`select kind from course.attempt_submissions where attempt_id = $1`, [st.attempt.id])).rows[0];
-    assert.equal(sub.kind, "candidate");
-    assert.deepEqual(await ev("tab_hidden"), { status: "closed" }, "nothing more once submitted");
-    const seen = (await proctor.attemptProctoring(sqlA, companyId, st.attempt.id))!;
-    assert.deepEqual(seen.events.map((e) => e.kind), ["copy_blocked", "tab_hidden", "fullscreen_exit", "limit_submitted"]);
-    assert.deepEqual(await proctor.attemptProctoring(sqlA, randomUUID(), st.attempt.id), { events: [], snapshots: [] }, "another company sees none");
-    const batchId = (await one.query(`select batch_id from course.candidate_attempts where id = $1`, [st.attempt.id])).rows[0].batch_id as string;
-    assert.equal((await proctor.warningsForBatch(sqlA, companyId, batchId))!.get(st.attempt.id), 2);
-    await assert.rejects(one.query(`update course.attempt_events set kind = 'copy_blocked' where attempt_id = $1`, [st.attempt.id]), /cannot be changed/);
-
-    // Snapshots: refused while webcam is off, accepted once on, for the open attempt only.
-    const second = await invited({ item: p6, versionId: v });
-    const s2 = await att.startAttempt(sqlA, second.id, 1);
-    assert.ok(s2 && s2.status === "started");
-    const snap = (key: string) => proctor.addSnapshot(sqlA, { attemptId: s2.attempt.id, candidateId: second.id, generation: 1, key, bytes: 1000 });
-    const key = (n: number) => `attempt-files/${companyId}/${s2.attempt.id}/${String(n).padStart(64, "0")}.jpg`;
-    assert.equal(await snap(key(1)), false, "webcam off");
-    const now = (await ts.loadTestSettings(sqlA, companyId, p6))!;
-    await ts.saveTestSettings(sqlA, { group: "proctoring", companyId, item: p6, expected: now.revision, by: "rec@test.invalid", proctor: { ...now.proctor, webcam: true, limit: null } });
-    assert.equal(await snap(key(2)), true);
-    assert.equal((await proctor.attemptProctoring(sqlA, companyId, s2.attempt.id))!.snapshots.length, 1);
-  });
-
-  test("a company admin may decide and review (0069)", async () => {
-    await people();
-    const admin = `adm-${run}@test.invalid`;
-    await one.query(`insert into course.company_members (email, company_id, role, name) values ($1, $2, 'hr', 'Adm')`, [admin, companyId]);
-    await one.query(`insert into course.company_member_roles (company_id, email, role) select $1, $2, 'admin'
-                      where not exists (select 1 from course.company_member_roles where company_id = $1 and email = $2 and role = 'admin')`, [companyId, admin]);
-    assert.deepEqual((await one.query(`select role from course.company_member_roles where company_id = $1 and email = $2`, [companyId, admin])).rows.map((r) => r.role), ["admin"], "an admin only, no reviewer or recruiter role");
-    const areaVersion = (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [`${slug}-area`])).rows[0].id as string;
-    const x = await pastAttempt(90, 60, { item: `${slug}-area`, versionId: areaVersion });
-    await att.finaliseDue(sqlA, { candidateId: x.id });
-    assert.equal((await review(x.attemptId, { reviewer: admin, scores: [{ points: 3, note: "" }, { points: 5, note: "" }] }))?.status, "recorded", "an admin scores");
-    assert.equal((await review(x.attemptId, { reviewer: `rec-${run}@test.invalid`, baseRevision: 1, scores: [{ points: 3, note: "" }, { points: 5, note: "" }] }))?.status, "refused", "someone without the role still can't");
-    assert.equal((await decide(x.attemptId, { actor: admin }))?.status, "recorded", "an admin decides");
-    assert.ok((await data.companyReviewers(sqlA, companyId))!.some((r) => r.email === admin), "and can be named a round's reviewer");
   });
 });

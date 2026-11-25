@@ -70,8 +70,6 @@ export interface LibraryQuestion extends QuestionInput {
   status: QuestionStatus;
   revision: number;
   updatedAt: string;
-  /** Why the right options are right (Klymb's bank, 0068); for test writers and reviewers, never candidates. */
-  explanation?: string | null;
 }
 
 type Result<T> = { ok: true; value: T } | { ok: false; message: string };

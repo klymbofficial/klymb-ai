@@ -60,7 +60,7 @@ export function QuestionsWork({
   );
   const [fileState, setFileState] = useState<Record<number, { count: number; busy: boolean }>>({});
   const controls = useRef<Record<number, AnswerControl | null>>({});
-  const [asking, setAsking] = useState(false);
+  const [asking, setAsking] = useState<null | { missing: number[] }>(null);
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [over, setOver] = useState(false);
@@ -68,7 +68,7 @@ export function QuestionsWork({
   const top = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const id = window.setTimeout(() => { setOver(true); setAsking(false); }, Math.max(0, new Date(deadline).getTime() - (Date.now() + skew)));
+    const id = window.setTimeout(() => { setOver(true); setAsking(null); }, Math.max(0, new Date(deadline).getTime() - (Date.now() + skew)));
     return () => window.clearTimeout(id);
   }, [deadline, skew]);
 
@@ -84,8 +84,6 @@ export function QuestionsWork({
 
   const busy = Object.values(fileState).some((s) => s.busy);
   const isAnswered = (no: number) => answered[no] || (fileState[no]?.count ?? 0) > 0;
-  // Worked out on every render, so a save that lands after Submit is pressed counts.
-  const missing = questions.filter((q) => !isAnswered(q.no)).map((q) => q.no);
   const go = (i: number) => {
     setCurrent(i);
     setMenu(false);
@@ -107,7 +105,7 @@ export function QuestionsWork({
     const why = await flushAll();
     setPending(false);
     if (why) return setProblem(WHY[why] ?? WHY.error);
-    setAsking(true);
+    setAsking({ missing: questions.filter((q) => !isAnswered(q.no)).map((q) => q.no) });
   }
 
   async function submit() {
@@ -115,12 +113,12 @@ export function QuestionsWork({
     setProblem(null);
     try {
       const why = await flushAll();
-      if (why) { setAsking(false); return setProblem(WHY[why] ?? WHY.error); }
+      if (why) { setAsking(null); return setProblem(WHY[why] ?? WHY.error); }
       const out = await submitTest(token, attemptId, null);
-      setAsking(false);
+      setAsking(null);
       if (out) setProblem(WHY[out.status] ?? WHY.error);
     } catch {
-      setAsking(false);
+      setAsking(null);
       setProblem(WHY.error);
     } finally {
       setPending(false);
@@ -232,15 +230,15 @@ export function QuestionsWork({
           ) : asking ? (
             <div className="mt-3 border-l-4 border-ink bg-white px-4 py-3">
               <p className="text-sm font-semibold">Submit now? You can&apos;t change any answer after.</p>
-              {missing.length > 0 && (
+              {asking.missing.length > 0 && (
                 <p className="mt-1 text-sm text-error">
-                  {missing.length === 1 ? "Question " : "Questions "}
-                  {missing.join(", ")} {missing.length === 1 ? "has" : "have"} no answer yet.
+                  {asking.missing.length === 1 ? "Question " : "Questions "}
+                  {asking.missing.join(", ")} {asking.missing.length === 1 ? "has" : "have"} no answer yet.
                 </p>
               )}
               <div className="mt-3 flex flex-wrap gap-3">
                 <button type="button" onClick={() => void submit()} disabled={pending || busy} className={PRIMARY}>{pending ? "Submitting…" : "Yes, submit"}</button>
-                <button type="button" onClick={() => setAsking(false)} disabled={pending} className={SECONDARY}>Keep working</button>
+                <button type="button" onClick={() => setAsking(null)} disabled={pending} className={SECONDARY}>Keep working</button>
               </div>
             </div>
           ) : (

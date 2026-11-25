@@ -2,7 +2,7 @@
 
 import { PeoplePicker } from "@/components/company/PeoplePicker";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { createHiringBatch } from "@/app/org/[slug]/(workspace)/hiring/actions";
 import {
   BATCH_LIMITS, PREP_COURSES, allowedMinutes, deadlineText, durationText, lastStart, parseCandidates, zonedToUtc,
@@ -20,12 +20,8 @@ const hint = "text-xs font-normal text-muted";
  * "Preview" saves a draft; nothing is sent from here.
  */
 export function BatchForm({
-  slug, tests, reviewers, prepCourses, timeZones, initial, company, onDirtyChange, onDone,
+  slug, tests, reviewers, prepCourses, timeZones, initial, company,
 }: {
-  /** In an overlay (P0.2c): told when people have been typed in, so closing asks first. */
-  onDirtyChange?: (dirty: boolean) => void;
-  /** In an overlay: called once the draft round is saved, before moving to it. */
-  onDone?: () => void;
   slug: string;
   tests: ApprovedTest[];
   reviewers: { email: string; name: string | null }[];
@@ -54,7 +50,6 @@ export function BatchForm({
   const [problems, setProblems] = useState<ListProblem[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const id = useId();
-  useEffect(() => { onDirtyChange?.(list.trim() !== ""); }, [list, onDirtyChange]);
 
   const parsed = useMemo(() => (list.trim() ? parseCandidates(list) : null), [list]);
   const timing = useMemo(() => {
@@ -89,7 +84,6 @@ export function BatchForm({
     setMessage(null);
     const out = await createHiringBatch(slug, { requestKey, versionId, role, prepCourse: prep, reviewer, timeZone, opens, closes, candidates: list, purpose });
     if (out.ok) {
-      onDone?.();
       // The new round opens on its test's Candidates tab, expanded, with Send and the invitation preview.
       router.push(`/org/${slug}/assessments/${test!.item}?tab=candidates&round=${out.id}#round-${out.id}`);
       return;

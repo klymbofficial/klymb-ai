@@ -1,6 +1,5 @@
 import { strict as assert } from "node:assert";
 import { describe, test } from "node:test";
-import * as mod from "../src/lib/company/test-settings";
 import { readBasic, readEmail, renderTemplate, roundBlocked, startBlocked, unknownVars } from "../src/lib/company/test-settings";
 
 const now = new Date("2026-11-25T06:00:00Z");
@@ -53,41 +52,5 @@ describe("U06a: who may start, and which rounds may go", () => {
     assert.equal(roundBlocked(s, "2026-11-29T00:00:00Z", now), null);
     assert.match(roundBlocked(s, "2026-12-02T00:00:00Z", now)!, /closes after the test ends/);
     assert.match(roundBlocked({ accessOpen: false, endsOn: null }, "2026-11-29T00:00:00Z", now)!, /access is off/);
-  });
-});
-
-describe("U06b: cut-off and details before Start", () => {
-  test("cut-off is a whole percent or none; only known fields, in a fixed order", () => {
-    const { readCandidate } = mod;
-    assert.deepEqual(readCandidate({ cutoffPercent: "", collect: [] }), { ok: true, value: { cutoffPercent: null, collect: [] } });
-    assert.deepEqual(readCandidate({ cutoffPercent: "65", collect: ["college", "phone", "shoe_size"] }), { ok: true, value: { cutoffPercent: 65, collect: ["phone", "college"] } });
-    assert.ok(!readCandidate({ cutoffPercent: "101" }).ok);
-    assert.ok(!readCandidate({ cutoffPercent: "62.5" }).ok);
-  });
-  test("asked details are all required, shaped, and unasked ones dropped", () => {
-    const { readDetails } = mod;
-    const all = ["phone", "linkedin", "experience", "company", "notice", "college", "graduation"] as const;
-    const good = { phone: "+91 98765 43210", linkedin: "linkedin.com/in/asha", experience: "4.5", company: "Acme", notice: "30 days", college: "IIT Delhi", graduation: "2022", extra: "x" };
-    const r = readDetails(good, [...all], now);
-    assert.ok(r.ok);
-    assert.equal(Object.keys(r.value).length, 7);
-    assert.ok(!("extra" in r.value));
-    assert.deepEqual(readDetails(good, ["phone"], now), { ok: true, value: { phone: "+91 98765 43210" } });
-    const msg = (o: Record<string, string>, k: (typeof all)[number]) => { const x = readDetails(o, [k], now); return x.ok ? "ok" : x.message; };
-    assert.match(msg({}, "company"), /Fill in current company/);
-    assert.match(msg({ phone: "call me" }, "phone"), /phone number/);
-    assert.match(msg({ linkedin: "https://example.com/me" }, "linkedin"), /LinkedIn/);
-    assert.match(msg({ experience: "lots" }, "experience"), /Years of experience/);
-    assert.match(msg({ graduation: "1850" }, "graduation"), /graduation year/);
-    assert.equal(msg({ linkedin: "https://www.linkedin.com/in/asha-rao" }, "linkedin"), "ok");
-  });
-  test("cleared or below, and a median suggestion from 5 reviewed", () => {
-    const { cutoffResult, suggestCutoff } = mod;
-    assert.equal(cutoffResult(7, 10, 70), "cleared");
-    assert.equal(cutoffResult(6, 10, 70), "below");
-    assert.equal(cutoffResult(6, 10, null), null);
-    assert.equal(suggestCutoff([50, 60, 70, 80]), null, "too few");
-    assert.equal(suggestCutoff([90, 50, 70, 60, 80]), 70);
-    assert.equal(suggestCutoff([50, 60, 70, 80, 90, 100]), 75);
   });
 });

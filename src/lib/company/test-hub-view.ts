@@ -135,34 +135,3 @@ export function funnel(rows: readonly (HubFacts & { opened: boolean })[]): { ste
 }
 
 export const percentOf = pct;
-
-// ── Distributions (P0.6) ────────────────────────────────────
-
-/** Counts per bucket: `edges` are the lower bounds, the last bucket open-ended. */
-export function histogram(values: readonly number[], edges: readonly number[]): { from: number; to: number | null; count: number }[] {
-  return edges.map((from, i) => {
-    const to = i + 1 < edges.length ? edges[i + 1] : null;
-    return { from, to, count: values.filter((v) => v >= from && (to === null || v < to)).length };
-  });
-}
-
-/** Score buckets of 10 points of percent: 0–9 … 90–100. */
-export const SCORE_EDGES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90] as const;
-
-/** Time buckets in minutes, finer at the start. */
-export function timeEdges(allowed: number): number[] {
-  const step = Math.max(5, Math.ceil(allowed / 6 / 5) * 5);
-  return Array.from({ length: 6 }, (_, i) => i * step);
-}
-
-export interface QuestionResultRow { questionNo: number; points: number; max: number }
-
-/** Per question: how many answered it in this version, how many got full marks, the average percent. */
-export function questionResults(rows: readonly QuestionResultRow[], count: number) {
-  return Array.from({ length: count }, (_, i) => {
-    const mine = rows.filter((r) => r.questionNo === i + 1);
-    const full = mine.filter((r) => r.max > 0 && r.points >= r.max).length;
-    const avg = mine.length ? Math.round((100 * mine.reduce((n, r) => n + (r.max ? r.points / r.max : 0), 0)) / mine.length) : null;
-    return { questionNo: i + 1, attempts: mine.length, full, average: avg };
-  });
-}

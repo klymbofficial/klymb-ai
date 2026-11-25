@@ -23,7 +23,7 @@ export default async function EditQuestionPage({ params }: { params: Promise<{ s
   if (!q || !q.own) notFound();
   return (
     <>
-      <OrgPageHead crumbs={[{ href: `${base}?tab=mine`, label: "My Library" }, { href: `${base}?tab=mine&open=${q.id}`, label: q.title }, { label: "Edit" }]} title="Edit question" />
+      <OrgPageHead crumbs={[{ href: `${base}?tab=mine`, label: "My Library" }, { href: `${base}?tab=mine&q=${q.id}`, label: q.title }, { label: "Edit" }]} title="Edit question" />
       <QuestionForm initial={q} save={saveQuestion.bind(null, member.companySlug, q.id, q.revision)} submitLabel="Save changes" />
     </>
   );

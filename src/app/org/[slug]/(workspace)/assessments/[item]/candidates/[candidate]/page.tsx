@@ -11,11 +11,8 @@ import { canDecide, canScore, durationText, formatInZone, seesHiring } from "@/l
 import { decisionHistory } from "@/lib/company/decision-data";
 import { loadReviewView, type ReviewRecord } from "@/lib/company/review-data";
 import { roundOfCandidate } from "@/lib/company/round-data";
-import { EVENT_LABEL, WARNING_KINDS, attemptProctoring } from "@/lib/company/proctor-data";
-import { DECISION_LABEL, autoMarks, byQuestion, reviewItems, scoreText, type HiringDecision } from "@/lib/company/review-rules";
+import { DECISION_LABEL, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
-import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult } from "@/lib/company/test-settings";
-import { loadTestSettings } from "@/lib/company/test-settings-data";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false, follow: false } };
 
@@ -24,7 +21,7 @@ const DECISION_TONE: Record<HiringDecision, "green" | "red" | "amber"> = { short
 const RESULTS_SEEN = {
   none: "This test's settings don't show candidates a result, so there's nothing to share.",
   overall: "They'll see their total score (for example 15 / 20) on their test link. Never notes, the summary or the scoring guides.",
-  by_area: "They'll see their total and each area's points (each question's, in a test with questions) on their test link. Never notes, the summary or the scoring guides.",
+  by_area: "They'll see their total and each area's points on their test link. Never notes, the summary or the scoring guides.",
 } as const;
 const label = "text-[0.7rem] font-extrabold uppercase tracking-[0.12em] text-muted";
 
@@ -62,18 +59,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   const { candidate: c, batch: b, attempt: a, submission: s, rubric, reviews, questions } = view;
   const tz = b.timeZone;
   const latest = reviews[0] ?? null;
-  // This company's cut-off for the test (U06b), against the latest review; never shown to the candidate.
-  const settings = sql ? await loadTestSettings(sql, member.companyId, item) : null;
-  const cut = latest && settings ? cutoffResult(latest.total, latest.max, settings.cutoffPercent) : null;
   const scorer = canScore(member);
-  // A test with questions (L3): what a reviewer scores, and each entry's automatic mark from the frozen answers.
-  const items = questions ? reviewItems(questions) : rubric;
-  const autos = questions && s ? autoMarks(questions, s.answers) : null;
   const where = a ? attemptState(a, new Date()) : null;
-  const [history, proctoring] = await Promise.all([
-    a && s ? decisionHistory(sql!, member.companyId, a.id) : Promise.resolve({ decisions: [], shares: [] }),
-    a ? attemptProctoring(sql!, member.companyId, a.id) : Promise.resolve(null),
-  ]);
+  const history = a && s ? await decisionHistory(sql!, member.companyId, a.id) : { decisions: [], shares: [] };
   const decider = canDecide(member);
   const internal = view.batch.purpose === "internal";
   const decision = history?.decisions[0] ?? null;
@@ -88,7 +76,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
           <>
             <span>{c.email}</span>
             <span><Badge tone={where === "submitted" ? "green" : where === "in_progress" ? "blue" : where ? "amber" : "grey"}>{where ? ATTEMPT_LABEL[where] : ATTEMPT_LABEL.none}</Badge></span>
-            {s && <span><Badge tone={latest ? "green" : "amber"}>{latest ? `Scored ${scoreText(latest.total, latest.max)}` : s.auto ? `Auto-marked ${scoreText(s.auto.total, s.auto.max)} · to confirm` : "To review"}</Badge></span>}
+            {s && <span><Badge tone={latest ? "green" : "amber"}>{latest ? `Scored ${scoreText(latest.total, latest.max)}` : "To review"}</Badge></span>}
             {decision && <span><Badge tone={DECISION_TONE[decision.decision]}>{DECISION_LABEL[decision.decision]}</Badge></span>}
             {c.status === "cancelled" && <span><Badge tone="grey">Invitation cancelled</Badge></span>}
             <span>{b.title} · version {b.version}</span>
@@ -118,20 +106,6 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 <Fact name="Started">{formatInZone(a.startedAt, tz)}<span className="block text-xs text-muted">{durationText(a.allowedMinutes)} allowed</span></Fact>
                 <Fact name="Receipt"><span className="font-mono">{a.receipt}</span></Fact>
               </dl>
-              {a.details && Object.keys(a.details).length > 0 && (
-                <dl className="grid gap-3 rounded-md border border-line/30 bg-paper p-4 sm:grid-cols-2">
-                  {DETAIL_KEYS.filter((k) => a.details![k]).map((k) => (
-                    <div key={k}>
-                      <dt className="text-xs font-bold text-muted">{DETAIL_FIELDS[k].label}</dt>
-                      <dd className="mt-0.5 break-words text-sm">
-                        {k === "linkedin"
-                          ? <a href={/^https?:\/\//i.test(a.details![k]) ? a.details![k] : `https://${a.details![k]}`} target="_blank" rel="noopener noreferrer nofollow" className="underline underline-offset-2">{a.details![k]}</a>
-                          : a.details![k]}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              )}
               {questions ? (
                 <ol className="space-y-5">
                   {questions.map((q, i) => {
@@ -139,10 +113,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                     return (
                       <li key={i} className="border-t border-line/20 pt-4 first:border-t-0 first:pt-0">
                         {q.section && q.section !== questions[i - 1]?.section && <p className="mb-1 text-xs font-bold text-muted">{q.section}</p>}
-                        <h3 className="text-sm font-bold">
-                          {i + 1}. {q.title}
-                          {q.mcq && <span className="ml-2 font-normal text-muted">· auto {questionAuto(questions, i, s.answers)} / {q.mcq.points}</span>}
-                        </h3>
+                        <h3 className="text-sm font-bold">{i + 1}. {q.title}</h3>
                         {q.mcq ? (
                           ans?.picked.length ? (
                             <ul className="mt-2 space-y-1 text-sm">
@@ -213,43 +184,32 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
             <p className="text-xs text-muted">Assigned reviewer: {b.reviewerName ?? b.reviewerEmail}</p>
           </div>
           <div className="p-5">
-            {s && scorer ? (
+            {questions ? (
+              <p className="text-sm text-muted">
+                This test has {questions.length} questions. Scoring each question, with multiple choice marked automatically, comes in the next step;
+                the answers are on the left.
+              </p>
+            ) : s && scorer ? (
               <ReviewForm
                 key={latest?.revision ?? 0}
                 slug={member.companySlug}
                 batchId={b.id}
                 candidateId={c.id}
-                rubric={items}
-                autos={autos ?? undefined}
+                rubric={rubric}
                 baseRevision={latest?.revision ?? 0}
                 initial={{
-                  // A revision starts from the latest review; a first review of multiple choice starts from the automatic marks.
-                  points: items.map((_, i) => latest?.scores[i]?.points ?? autos?.[i] ?? null),
-                  notes: items.map((_, i) => latest?.scores[i]?.note ?? ""),
+                  points: rubric.map((_, i) => latest?.scores[i]?.points ?? null),
+                  notes: rubric.map((_, i) => latest?.scores[i]?.note ?? ""),
                   summary: latest?.summary ?? "",
                 }}
               />
             ) : latest ? (
-              <>
-                {cut && (
-                  <p className="mb-3"><Badge tone={cut === "cleared" ? "green" : "red"}>{cut === "cleared" ? "Cleared cut-off" : "Below cut-off"}</Badge> <span className="text-xs text-muted">Cut-off {settings!.cutoffPercent}%</span></p>
-                )}
-                <ReviewRead review={latest} tz={tz} />
-              </>
+              <ReviewRead review={latest} tz={tz} />
             ) : (
               <>
-                <p className="text-sm text-muted">
-                  {!s ? "Scoring opens once the test is submitted."
-                    : s.auto ? `Multiple choice auto-marked ${scoreText(s.auto.total, s.auto.max)}. Not reviewed yet: a reviewer confirms it${items.some((x) => !x.mcq) ? " and scores the written answers" : ""} here.`
-                    : "Not reviewed yet. A reviewer scores it here."}
-                </p>
+                <p className="text-sm text-muted">{s ? "Not reviewed yet. A reviewer scores it here." : "Scoring opens once the test is submitted."}</p>
                 <ul className="mt-4 space-y-2 text-sm">
-                  {items.map((r, i) => (
-                    <li key={i}>
-                      <span className="font-semibold">{r.questionNo != null && !r.mcq ? `${r.questionNo}. ${r.question}: ` : r.mcq ? `${r.questionNo}. ` : ""}{r.title}</span>{" "}
-                      <span className="text-muted">· {r.mcq ? `multiple choice${autos ? ` · auto ${autos[i]}` : ""}` : r.skill} · up to {r.points}</span>
-                    </li>
-                  ))}
+                  {rubric.map((r, i) => <li key={i}><span className="font-semibold">{r.title}</span> <span className="text-muted">· {r.skill} · up to {r.points}</span></li>)}
                 </ul>
               </>
             )}
@@ -274,55 +234,6 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
           )}
         </section>
       </div>
-
-      {a && proctoring && (proctoring.events.length > 0 || proctoring.snapshots.length > 0) && (
-        <section aria-labelledby="proctoring" className={`${PANEL} mt-6`}>
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/20 px-5 py-3">
-            <h2 id="proctoring" className="text-base font-bold">Proctoring</h2>
-            <p className="text-xs text-muted">Signals from the test window, not proof. Times in {tz}.</p>
-          </div>
-          <div className="grid gap-6 p-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <div className="min-w-0">
-              {(() => {
-                const warnings = proctoring.events.filter((e) => WARNING_KINDS.includes(e.kind)).length;
-                const blocked = proctoring.events.filter((e) => e.kind.endsWith("_blocked")).length;
-                const auto = proctoring.events.some((e) => e.kind === "limit_submitted");
-                return (
-                  <dl className="grid grid-cols-3 gap-3">
-                    <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Warnings</dt><dd className={`mt-1 text-xl font-black ${warnings ? "text-error" : ""}`}>{warnings}</dd></div>
-                    <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Blocked copy/paste</dt><dd className="mt-1 text-xl font-black">{blocked}</dd></div>
-                    <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Snapshots</dt><dd className="mt-1 text-xl font-black">{proctoring.snapshots.length}</dd></div>
-                    {auto && <p className="col-span-3 text-sm font-semibold text-error">Submitted automatically when the warning limit was reached.</p>}
-                  </dl>
-                );
-              })()}
-              <ol className="mt-4 max-h-72 space-y-1 overflow-y-auto text-sm">
-                {proctoring.events.map((e, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className="w-24 shrink-0 tabular-nums text-muted">{new Date(e.at).toLocaleTimeString("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-                    <span className={WARNING_KINDS.includes(e.kind) || e.kind === "limit_submitted" ? "font-semibold text-error" : ""}>{EVENT_LABEL[e.kind]}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div className="min-w-0">
-              {proctoring.snapshots.length ? (
-                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                  {proctoring.snapshots.map((p) => (
-                    <li key={p.id}>
-                      <a href={`${testHref}/candidates/${c.id}/snapshots/${p.id}`} target="_blank" rel="noopener noreferrer">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={`${testHref}/candidates/${c.id}/snapshots/${p.id}`} alt={`Webcam snapshot at ${formatInZone(p.at, tz)}`} loading="lazy" className="aspect-[4/3] w-full rounded border border-line/30 object-cover" />
-                      </a>
-                      <p className="mt-0.5 text-[0.65rem] text-muted">{new Date(p.at).toLocaleTimeString("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit" })}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="text-sm text-muted">No webcam snapshots.</p>}
-            </div>
-          </div>
-        </section>
-      )}
 
       {s && (
         <section aria-labelledby="decision" className={`${PANEL} mt-6`}>
@@ -397,49 +308,15 @@ function ReviewRead({ review, tz, compact = false }: { review: ReviewRecord; tz:
   return (
     <div className="space-y-3 text-sm">
       {!compact && <p><span className="font-bold">{scoreText(review.total, review.max)}</span> <span className="text-muted">· {review.reviewerName ?? review.reviewerEmail} · {formatInZone(review.completedAt, tz)}</span></p>}
-      {review.scores.some((s) => s.questionNo != null) && (
-        <QuestionBars rows={byQuestion(review.scores)} />
-      )}
       <ul className="space-y-2">
         {review.scores.map((s, i) => (
           <li key={i}>
-            {s.questionNo != null && s.auto === undefined && s.questionNo !== review.scores[i - 1]?.questionNo && (
-              <p className="text-xs font-bold text-muted">{s.questionNo}. {s.question}</p>
-            )}
-            <span className="font-semibold">{s.auto !== undefined ? `${s.questionNo}. ${s.title}` : s.title}</span> <span className="text-muted">· {s.points} / {s.max}</span>
-            {s.auto !== undefined && (
-              <span className="text-xs text-muted">{s.points === s.auto ? " · auto mark confirmed" : ` · auto mark ${s.auto}, changed`}</span>
-            )}
+            <span className="font-semibold">{s.title}</span> <span className="text-muted">· {s.points} / {s.max}</span>
             {s.note && <p className="mt-0.5 whitespace-pre-line text-muted">{s.note}</p>}
           </li>
         ))}
       </ul>
       {review.summary && <p className="whitespace-pre-line border-l-4 border-line/40 pl-3">{review.summary}</p>}
     </div>
-  );
-}
-
-/** The marks of one question from the frozen answers (multiple choice only). */
-function questionAuto(questions: NonNullable<Parameters<typeof autoMarks>[0]>, index: number, answers: Parameters<typeof autoMarks>[1]): number {
-  return autoMarks([questions[index]], (answers ?? []).filter((a) => a.questionNo === index + 1).map((a) => ({ ...a, questionNo: 1 })))[0] ?? 0;
-}
-
-/** Each question's share of its points, as a bar. */
-function QuestionBars({ rows }: { rows: { title: string; points: number; max: number }[] }) {
-  return (
-    <ol className="space-y-1.5" aria-label="Score by question">
-      {rows.map((r, i) => {
-        const pct = r.max ? Math.round((100 * r.points) / r.max) : 0;
-        return (
-          <li key={i} className="grid grid-cols-[1.5rem_minmax(0,1fr)_3.5rem] items-center gap-2 text-xs">
-            <span className="font-bold text-muted">{i + 1}</span>
-            <span className="h-2 overflow-hidden rounded-full bg-line/20" title={r.title}>
-              <span className="block h-full rounded-full bg-ink" style={{ width: `${pct}%` }} />
-            </span>
-            <span className="text-right tabular-nums">{r.points} / {r.max}</span>
-          </li>
-        );
-      })}
-    </ol>
   );
 }

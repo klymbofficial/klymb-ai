@@ -10,21 +10,15 @@ import { REVIEW_LIMITS, scoreText, type RubricItem } from "@/lib/company/review-
  * The reviewer's scoring form: every criterion of the pinned rubric with its
  * guide, whole points from 0 to its maximum, an optional note, and a
  * summary. Starts from the latest review when there is one, so revising
- * means changing what's there. A test with questions (L3) lists each
- * multiple-choice question with its automatic mark preselected, and each
- * written question's areas under its heading. The server checks everything
- * again.
+ * means changing what's there. The server checks everything again.
  */
-export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, initial, autos }: {
+export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, initial }: {
   slug: string;
   batchId: string;
   candidateId: string;
-  /** A test with questions (L3): one entry per multiple-choice question and per rubric area of the others. */
   rubric: RubricItem[];
   baseRevision: number;
   initial: { points: (number | null)[]; notes: string[]; summary: string };
-  /** Each entry's automatic mark (multiple choice), or null. A changed mark needs a reason. */
-  autos?: (number | null)[];
 }) {
   const [state, action, pending] = useActionState<ReviewResult | null, FormData>(completeReview, null);
   const form = useRef<HTMLFormElement>(null);
@@ -33,7 +27,7 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
   const recount = useCallback(() => {
     if (!form.current) return;
     const data = new FormData(form.current);
-    setPoints(rubric.map((_, i) => { const v = data.get(`points-${i}`); return typeof v === "string" && v.trim() !== "" ? Number(v) : null; }));
+    setPoints(rubric.map((_, i) => { const v = data.get(`points-${i}`); return typeof v === "string" ? Number(v) : null; }));
   }, [rubric]);
   useEffect(() => { const id = window.requestAnimationFrame(recount); return () => window.cancelAnimationFrame(id); }, [recount]);
   const total = points.reduce<number>((n, p) => n + (p ?? 0), 0);
@@ -56,57 +50,33 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
       <input type="hidden" name="candidateId" value={candidateId} />
       <input type="hidden" name="baseRevision" value={baseRevision} />
 
-      {rubric.map((c, i) => {
-        const auto = autos?.[i] ?? null;
-        const changed = auto !== null && points[i] !== null && points[i] !== auto;
-        const heading = c.questionNo != null && c.questionNo !== rubric[i - 1]?.questionNo;
-        return (
-          <div key={i} className="contents">
-            {heading && !c.mcq && (
-              <h3 className="-mb-2 text-sm font-bold">{c.questionNo}. {c.question} <span className="font-normal text-muted">· written</span></h3>
-            )}
-            <fieldset className={clsx("rounded-md border p-4", errors[i] ? "border-error" : "border-line/30")}>
-              <legend className="float-left w-full text-sm font-bold">
-                {c.mcq ? `${c.questionNo}. ${c.title}` : c.title}{" "}
-                <span className="font-normal text-muted">· {c.mcq ? "multiple choice" : c.skill} · up to {c.points}</span>
-              </legend>
-              {c.mcq ? (
-                <p className="clear-both pt-1 text-xs text-muted">
-                  <span className="font-bold text-ink">Automatic mark: {auto} / {c.points}.</span> Keep it, or change it and say why.
-                </p>
-              ) : (
-                <p className="clear-both whitespace-pre-line pt-1 text-xs leading-relaxed text-muted"><span className="font-bold text-ink">Guide: </span>{c.guide}</p>
-              )}
-              {c.points > 10 ? (
+      {rubric.map((c, i) => (
+        <fieldset key={i} className={clsx("rounded-md border p-4", errors[i] ? "border-error" : "border-line/30")}>
+          <legend className="float-left w-full text-sm font-bold">{c.title} <span className="font-normal text-muted">· {c.skill} · up to {c.points}</span></legend>
+          <p className="clear-both whitespace-pre-line pt-1 text-xs leading-relaxed text-muted"><span className="font-bold text-ink">Guide: </span>{c.guide}</p>
+          <div role="radiogroup" aria-label={`${c.title} points`} className="mt-3 flex flex-wrap gap-1.5">
+            {Array.from({ length: c.points + 1 }, (_, n) => (
+              <label key={n} className={clsx(
+                "inline-flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md border-2 border-line/40 bg-white px-2 text-sm font-bold hover:border-ink",
+                "has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:outline has-[:focus-visible]:outline-2",
+              )}>
                 <input
-                  type="number" name={`points-${i}`} min={0} max={c.points} step={1} inputMode="numeric"
-                  defaultValue={initial.points[i] ?? ""} aria-label={`${c.title} points`}
-                  className="mt-3 w-28 rounded-md border-2 border-line/40 bg-white px-2 py-1.5 text-sm font-bold focus:border-ink"
+                  type="radio"
+                  name={`points-${i}`}
+                  value={n}
+                  defaultChecked={initial.points[i] === n}
+                  className="sr-only"
                 />
-              ) : (
-                <div role="radiogroup" aria-label={`${c.title} points`} className="mt-3 flex flex-wrap gap-1.5">
-                  {Array.from({ length: c.points + 1 }, (_, n) => (
-                    <label key={n} className={clsx(
-                      "inline-flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-md border-2 border-line/40 bg-white px-2 text-sm font-bold hover:border-ink",
-                      "has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-paper has-[:focus-visible]:outline has-[:focus-visible]:outline-2",
-                    )}>
-                      <input type="radio" name={`points-${i}`} value={n} defaultChecked={initial.points[i] === n} className="sr-only" />
-                      {n}
-                    </label>
-                  ))}
-                </div>
-              )}
-              <label className="mt-3 block text-xs font-bold text-muted" htmlFor={`note-${i}`}>
-                {c.mcq ? (changed ? "Reason for changing the automatic mark (required)" : "Note (needed only if you change the mark)") : "Note (optional)"}
+                {n}
               </label>
-              <textarea id={`note-${i}`} name={`note-${i}`} defaultValue={initial.notes[i] ?? ""} maxLength={REVIEW_LIMITS.note} rows={c.mcq ? 1 : 2}
-                required={changed}
-                className="mt-1 w-full rounded-md border-2 border-line/40 bg-white p-2 text-sm focus:border-ink" />
-              {errors[i] && <p role="alert" className="mt-1 text-xs font-semibold text-error">{errors[i]}</p>}
-            </fieldset>
+            ))}
           </div>
-        );
-      })}
+          <label className="mt-3 block text-xs font-bold text-muted" htmlFor={`note-${i}`}>Note (optional)</label>
+          <textarea id={`note-${i}`} name={`note-${i}`} defaultValue={initial.notes[i] ?? ""} maxLength={REVIEW_LIMITS.note} rows={2}
+            className="mt-1 w-full rounded-md border-2 border-line/40 bg-white p-2 text-sm focus:border-ink" />
+          {errors[i] && <p role="alert" className="mt-1 text-xs font-semibold text-error">{errors[i]}</p>}
+        </fieldset>
+      ))}
 
       <div>
         <label className="block text-sm font-bold" htmlFor="summary">Summary (optional)</label>

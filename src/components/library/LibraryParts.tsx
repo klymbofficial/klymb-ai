@@ -96,7 +96,7 @@ export function QuestionAnswer({ q }: { q: LibraryQuestion }) {
               ? `Partial marks: ${q.points} points × (right picks − wrong picks) ÷ ${q.options.filter((o) => o.correct).length}, never below zero.`
               : `All or nothing: ${q.points} points only for exactly the right options.`
             : `${q.points} points for the right option.`}{" "}
-          In a test it is marked automatically when the candidate submits, and a reviewer confirms or changes the mark.
+          Once tests can include it, it is scored automatically and a reviewer confirms before any decision.
         </p>
       </div>
     );
