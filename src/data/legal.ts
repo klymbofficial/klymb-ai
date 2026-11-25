@@ -63,8 +63,8 @@ export const grievance = {
 } as const;
 
 export const policyVersion = {
-  version: "2026-11-13",
-  effective: "13 November 2026",
+  version: "2026-11-25",
+  effective: "25 November 2026",
 } as const;
 
 /**

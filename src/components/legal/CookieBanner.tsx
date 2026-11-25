@@ -29,7 +29,7 @@ export function CookieBanner() {
     >
       {/* On a phone the help button sits over this corner: the text stays clear of it. */}
       <p className="pr-14 leading-relaxed text-white/85 sm:pr-0">
-        We use Google Analytics to see which pages help people. Tap OK to also allow Meta Pixel and Google Ads, so our ads reach people who visited. We never sell your data.{" "}
+        We use Google Analytics to see which pages help people. Tap OK to also allow Meta Pixel, Google Ads and Microsoft Clarity, so our ads reach people who visited and we can see where pages confuse people. We never sell your data.{" "}
         <Link href="/cookies" className="font-semibold text-white underline underline-offset-2">Cookie Policy</Link>
       </p>
       <div className="mt-3 flex gap-2">
