@@ -8,6 +8,7 @@ import { signOutOfCompany } from "@/app/org/actions";
 import { BrandMark } from "@/components/company/BrandMark";
 import { OrgIcon } from "@/components/company/OrgIcons";
 import { CloseX, useOverlayFocus, usePresence } from "@/components/company/Overlay";
+import { PendingDot } from "@/components/company/NavFeedback";
 import { isCurrent, type OrgNavGroup } from "@/lib/company/nav";
 
 export interface OrgSidebarProps {
@@ -86,6 +87,7 @@ export function OrgSidebar({ groups, brand, email, roles, supportHref }: OrgSide
               >
                 <OrgIcon name={item.icon} className="shrink-0" />
                 <span className={narrow ? "sr-only" : undefined}>{item.label}</span>
+                {!narrow && <PendingDot className="ml-auto" />}
               </Link>
             );
           })}

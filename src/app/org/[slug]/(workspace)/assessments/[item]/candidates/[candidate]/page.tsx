@@ -11,6 +11,7 @@ import { canDecide, canScore, durationText, formatInZone, seesHiring } from "@/l
 import { decisionHistory } from "@/lib/company/decision-data";
 import { loadReviewView, type ReviewRecord } from "@/lib/company/review-data";
 import { roundOfCandidate } from "@/lib/company/round-data";
+import { EVENT_LABEL, WARNING_KINDS, attemptProctoring } from "@/lib/company/proctor-data";
 import { DECISION_LABEL, autoMarks, byQuestion, reviewItems, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
 import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult } from "@/lib/company/test-settings";
@@ -69,7 +70,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   const items = questions ? reviewItems(questions) : rubric;
   const autos = questions && s ? autoMarks(questions, s.answers) : null;
   const where = a ? attemptState(a, new Date()) : null;
-  const history = a && s ? await decisionHistory(sql!, member.companyId, a.id) : { decisions: [], shares: [] };
+  const [history, proctoring] = await Promise.all([
+    a && s ? decisionHistory(sql!, member.companyId, a.id) : Promise.resolve({ decisions: [], shares: [] }),
+    a ? attemptProctoring(sql!, member.companyId, a.id) : Promise.resolve(null),
+  ]);
   const decider = canDecide(member);
   const internal = view.batch.purpose === "internal";
   const decision = history?.decisions[0] ?? null;
@@ -270,6 +274,55 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
           )}
         </section>
       </div>
+
+      {a && proctoring && (proctoring.events.length > 0 || proctoring.snapshots.length > 0) && (
+        <section aria-labelledby="proctoring" className={`${PANEL} mt-6`}>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/20 px-5 py-3">
+            <h2 id="proctoring" className="text-base font-bold">Proctoring</h2>
+            <p className="text-xs text-muted">Signals from the test window, not proof. Times in {tz}.</p>
+          </div>
+          <div className="grid gap-6 p-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <div className="min-w-0">
+              {(() => {
+                const warnings = proctoring.events.filter((e) => WARNING_KINDS.includes(e.kind)).length;
+                const blocked = proctoring.events.filter((e) => e.kind.endsWith("_blocked")).length;
+                const auto = proctoring.events.some((e) => e.kind === "limit_submitted");
+                return (
+                  <dl className="grid grid-cols-3 gap-3">
+                    <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Warnings</dt><dd className={`mt-1 text-xl font-black ${warnings ? "text-error" : ""}`}>{warnings}</dd></div>
+                    <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Blocked copy/paste</dt><dd className="mt-1 text-xl font-black">{blocked}</dd></div>
+                    <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Snapshots</dt><dd className="mt-1 text-xl font-black">{proctoring.snapshots.length}</dd></div>
+                    {auto && <p className="col-span-3 text-sm font-semibold text-error">Submitted automatically when the warning limit was reached.</p>}
+                  </dl>
+                );
+              })()}
+              <ol className="mt-4 max-h-72 space-y-1 overflow-y-auto text-sm">
+                {proctoring.events.map((e, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="w-24 shrink-0 tabular-nums text-muted">{new Date(e.at).toLocaleTimeString("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+                    <span className={WARNING_KINDS.includes(e.kind) || e.kind === "limit_submitted" ? "font-semibold text-error" : ""}>{EVENT_LABEL[e.kind]}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="min-w-0">
+              {proctoring.snapshots.length ? (
+                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {proctoring.snapshots.map((p) => (
+                    <li key={p.id}>
+                      <a href={`${testHref}/candidates/${c.id}/snapshots/${p.id}`} target="_blank" rel="noopener noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`${testHref}/candidates/${c.id}/snapshots/${p.id}`} alt={`Webcam snapshot at ${formatInZone(p.at, tz)}`} loading="lazy" className="aspect-[4/3] w-full rounded border border-line/30 object-cover" />
+                      </a>
+                      <p className="mt-0.5 text-[0.65rem] text-muted">{new Date(p.at).toLocaleTimeString("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit" })}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-sm text-muted">No webcam snapshots.</p>}
+            </div>
+          </div>
+        </section>
+      )}
 
       {s && (
         <section aria-labelledby="decision" className={`${PANEL} mt-6`}>

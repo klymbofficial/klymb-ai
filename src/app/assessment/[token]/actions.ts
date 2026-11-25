@@ -6,6 +6,7 @@ import { MAX_ANSWER_CHARS } from "@/lib/company/attempt-rules";
 import { candidateByLink } from "@/lib/company/batch-data";
 import { DETAIL_KEYS, readDetails } from "@/lib/company/test-settings";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
+import { recordAttemptEvent } from "@/lib/company/proctor-data";
 import { readCandidateLink } from "@/lib/company/batch-link";
 import { db } from "@/lib/db/client";
 
@@ -32,9 +33,14 @@ export async function startTest(_prev: StartResult, form: FormData): Promise<Sta
   const typed = Object.fromEntries(DETAIL_KEYS.map((k) => [k, typeof form.get(k) === "string" ? String(form.get(k)) : ""]));
   const details = readDetails(typed, settings.collect);
   if (!details.ok) return { message: details.message, values: typed };
+  // Webcam snapshots (0070) need the person's agreement before Start.
+  if (settings.proctor.webcam && form.get("webcam_consent") !== "on") return { message: "Tick the box to agree to webcam snapshots, or ask the company about another way to take the test.", values: typed };
   const out = await startAttempt(sql, ref.id, ref.generation, settings.collect.length ? details.value : null);
   if (!out) return { message: "The test can't start right now. Try again in a minute." };
   if (out.status === "refused") return { message: "This link can't start the test now. Reload the page to see why." };
+  if (settings.proctor.webcam && out.status === "started") {
+    await recordAttemptEvent(sql, { attemptId: out.attempt.id, candidateId: ref.id, generation: ref.generation, kind: "webcam_consent" });
+  }
   redirect(`/assessment/${token}/attempt`);
 }
 

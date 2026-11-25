@@ -6,7 +6,7 @@ import { logCompany } from "@/lib/company/audit";
 import { getWorkspaceMember } from "@/lib/company/auth";
 import { DEFAULT_TIME_ZONE, canSchedule } from "@/lib/company/batch-rules";
 import { companyCatalog } from "@/lib/company/catalog-data";
-import { readBasic, readCandidate, readEmail, type TestSettings } from "@/lib/company/test-settings";
+import { readBasic, readCandidate, readEmail, readProctoring, type TestSettings } from "@/lib/company/test-settings";
 import { loadTestSettings, saveTestSettings } from "@/lib/company/test-settings-data";
 import { db } from "@/lib/db/client";
 
@@ -88,4 +88,18 @@ export async function saveCandidateSettings(company: string, item: string, expec
     revision: out.revision,
     message: read.value.collect.length ? "Saved. People are asked these details before they start; anyone already started isn't asked." : "Saved.",
   };
+}
+
+/** Proctoring (0070): full screen, tab/window switches, copy and paste, webcam snapshots and the warning limit. */
+export async function saveProctorSettings(company: string, item: string, expected: number, form: Record<string, unknown>): Promise<SettingsResult> {
+  const c = await load(company, item, expected);
+  if ("ok" in c) return c;
+  const read = readProctoring(form ?? {});
+  if (!read.ok) return read;
+  const out = await saveTestSettings(c.sql, { group: "proctoring", companyId: c.member.companyId, item, expected, by: c.member.email, proctor: read.value });
+  if (!out) return UNAVAILABLE;
+  if (out.status === "changed") return CHANGED;
+  await logCompany(c.member, "company.test_settings_save", { item, group: "proctoring", revision: out.revision, changed: changed(c.before, { proctor: read.value }) });
+  revalidatePath("/org/[slug]/(workspace)", "layout");
+  return { ok: true, revision: out.revision, message: "Saved. It applies whenever a test window next opens or reloads." };
 }

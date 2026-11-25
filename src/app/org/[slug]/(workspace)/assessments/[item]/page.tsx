@@ -12,19 +12,20 @@ import { TestCandidates } from "@/components/company/TestCandidates";
 import { loadTestRounds, type PersonFilter } from "@/lib/company/round-data";
 import { companyReviews, loadVersions } from "@/lib/company/assessment-data";
 import {
-  RESULTS_LABEL, SUBMISSION_LABEL, candidateTask, canReview, canWriteTests, seesAssessments, standingOf, totalPoints, type Version,
+  RESULTS_LABEL, SUBMISSION_LABEL, candidateTask, canReview, canWriteTests, isMultiAnswer, questionPoints, seesAssessments, standingOf, totalPoints, type Version,
 } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
 import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, DEFAULT_TIME_ZONE, canSchedule, durationText, lastStart, seesHiring, toZonedInput } from "@/lib/company/batch-rules";
-import { BasicSettingsForm, CandidateSettingsForm, EmailSettingsForm } from "@/components/company/TestSettingsForms";
+import { BasicSettingsForm, CandidateSettingsForm, EmailSettingsForm, ProctorSettingsForm } from "@/components/company/TestSettingsForms";
 import { loadTestSettings, reviewedPercents } from "@/lib/company/test-settings-data";
-import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, startBlocked, suggestCutoff } from "@/lib/company/test-settings";
-import { saveBasicSettings, saveCandidateSettings, saveEmailSettings } from "../settings-actions";
+import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, proctorRules, startBlocked, suggestCutoff } from "@/lib/company/test-settings";
+import { saveBasicSettings, saveCandidateSettings, saveEmailSettings, saveProctorSettings } from "../settings-actions";
 import { companyCatalog } from "@/lib/company/catalog-data";
 import { testCandidates, versionQuestionMarks, type HubCandidate } from "@/lib/company/test-hub-data";
 import { SCORE_EDGES, funnel, histogram, percentOf, questionResults, timeEdges, type HubFacts } from "@/lib/company/test-hub-view";
 import { db } from "@/lib/db/client";
 import { InviteOverlay, OverlayLaunch } from "@/components/company/OverlayLaunch";
+import { PendingDot } from "@/components/company/NavFeedback";
 import { hiringOptions } from "@/lib/company/batch-data";
 import { loadCompanyPeople } from "@/lib/company/people-data";
 import { inviteDefaults, timeZoneList } from "@/lib/company/invite-defaults";
@@ -34,8 +35,8 @@ export const metadata: Metadata = { title: "Assessment", robots: { index: false,
 
 type Tab = "overview" | "questions" | "settings" | "candidates" | "analysis";
 const TAB_LABEL: Record<Tab, string> = { overview: "Overview", questions: "Questions", settings: "Settings", candidates: "Candidates", analysis: "Test analysis" };
-type Setting = "basic" | "candidate" | "email";
-const SETTING_LABEL: Record<Setting, string> = { basic: "Basic test setting", candidate: "Candidate settings", email: "Email and reports" };
+type Setting = "basic" | "candidate" | "proctoring" | "email";
+const SETTING_LABEL: Record<Setting, string> = { basic: "Basic test setting", candidate: "Candidate settings", proctoring: "Proctoring", email: "Email and reports" };
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -66,6 +67,7 @@ function Split({ title, items, children }: { title: string; items: { key: string
                 className={clsx("flex min-h-10 items-center whitespace-nowrap rounded-md px-3 text-sm", it.current ? "bg-[#eef2fd] font-semibold text-[#1f4fd1]" : "hover:bg-paper")}
               >
                 {it.label}
+                <PendingDot />
               </Link>
             </li>
           ))}
@@ -216,6 +218,7 @@ export default async function AssessmentPage({
               className={clsx("-mb-px whitespace-nowrap border-b-[3px] px-4 py-3 text-sm font-semibold uppercase tracking-wide", current ? "border-[#1f4fd1] text-[#1f4fd1]" : "border-transparent text-ink hover:text-[#1f4fd1]")}
             >
               {TAB_LABEL[t]}
+              <PendingDot />
             </Link>
           );
         })}
@@ -235,7 +238,8 @@ export default async function AssessmentPage({
     );
   }
 
-  const points = totalPoints(shown.rubric);
+  // A test with questions scores across them all (the one-task test keeps its rubric total).
+  const points = shown.questions?.length ? shown.questions.reduce((n, q) => n + questionPoints(q), 0) : totalPoints(shown.rubric);
 
   // ── Overview ──
   if (tab === "overview") {
@@ -309,6 +313,74 @@ export default async function AssessmentPage({
   }
 
   // ── Questions ──
+  if (tab === "questions" && shown.questions?.length) {
+    const qs = shown.questions;
+    const mcqCount = qs.filter((q) => q.mcq).length;
+    return (
+      <>
+        {head}
+        <div className={clsx(PANEL, "mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-4")}>
+          <h2 className="text-xl font-bold">Questions ({qs.length})</h2>
+          <p className="text-sm text-muted">
+            Total score: {points} | <OrgIcon name="clock" size={14} className="inline align-[-2px]" /> Total duration: {durationText(shown.minutes)}
+            {" "}| {mcqCount} multiple choice, {qs.length - mcqCount} written
+          </p>
+        </div>
+        <p className="mb-3 text-xs text-muted">Right answers and scoring guides show only here, to your company&apos;s staff. Candidates never see them.</p>
+        <ol className="flex flex-col gap-4">
+          {qs.map((q, i) => (
+            <li key={i} className={clsx(PANEL, "p-5")}>
+              {q.section && q.section !== qs[i - 1]?.section && <p className={clsx(CAPS, "mb-2")}>{q.section}</p>}
+              <div className="flex items-start justify-between gap-4">
+                <h3 className="text-base font-bold"><span className="mr-2 tabular-nums">{String(i + 1).padStart(2, "0")}.</span>{q.title}</h3>
+                <span className="shrink-0 rounded-full border border-line/50 px-2.5 py-0.5 text-xs">Score: {questionPoints(q)}</span>
+              </div>
+              <Prose text={q.brief} className="mt-3" />
+              {q.mcq ? (
+                <>
+                  <p className="mt-3 text-xs font-semibold text-muted">
+                    Multiple choice · {isMultiAnswer(q.mcq) ? `choose all that apply${q.mcq.partial ? " · partial marks, never below zero" : " · all or nothing"}` : "choose one"}
+                  </p>
+                  <ul className="mt-2 flex flex-col gap-1.5">
+                    {q.mcq.options.map((o, k) => (
+                      <li key={k} className={clsx("flex items-start gap-2 rounded-md border px-3 py-2 text-sm", o.correct ? "border-[#2f7d4f] bg-[#eef8f1]" : "border-line/30 bg-white")}>
+                        <span className="font-bold tabular-nums">{String.fromCharCode(65 + k)}.</span>
+                        <span className="min-w-0 flex-1">{o.text}</span>
+                        {o.correct && <span className="shrink-0 text-xs font-bold text-[#2f7d4f]">Correct</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <>
+                  <p className="mt-3 text-xs font-semibold text-muted">{SUBMISSION_LABEL[q.submission]} · scored by a reviewer</p>
+                  <ol className="mt-2 flex flex-col divide-y divide-line/20">
+                    {q.rubric.map((c, k) => (
+                      <li key={k} className="py-2.5">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <p className="text-sm font-semibold">{c.title}{c.skill && <span className="ml-2 rounded-full bg-paper px-2 py-0.5 text-xs font-normal">{c.skill}</span>}</p>
+                          <span className="rounded-full border border-line/50 px-2.5 py-0.5 text-xs">Score: {c.points}</span>
+                        </div>
+                        <Prose text={c.guide} className="mt-1 text-muted" />
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
+        {shown.sampleTitle && (
+          <article className={clsx(PANEL, "mt-4 p-5")}>
+            <h3 className="text-base font-bold">Practice task: {shown.sampleTitle}</h3>
+            <Prose text={shown.sampleBrief} className="mt-2" />
+            <p className="mt-2 text-xs text-muted">Shared before the test so people can prepare.</p>
+          </article>
+        )}
+      </>
+    );
+  }
+
   if (tab === "questions") {
     return (
       <>
@@ -429,6 +501,15 @@ export default async function AssessmentPage({
               />
             </div>
           )}
+          {s === "proctoring" && (recruiter ? (
+            <ProctorSettingsForm key={settings.revision} save={saveProctorSettings.bind(null, member.companySlug, itemSlug)} revision={settings.revision} initial={settings.proctor} />
+          ) : (
+            <dl className="flex flex-col gap-6">
+              <Row label="Proctoring">
+                {proctorRules(settings.proctor).length ? <ul className="list-disc pl-5">{proctorRules(settings.proctor).map((r) => <li key={r}>{r}</li>)}</ul> : "Off: nothing is checked during the test."}
+              </Row>
+            </dl>
+          ))}
           {s === "candidate" && (
             <dl className="flex flex-col gap-6">
               <Row label="Time allowed">{durationText(shown.minutes)} from when they start. Extra time is set per person on a batch.</Row>
@@ -487,7 +568,6 @@ export default async function AssessmentPage({
     return (
       <>
         {head}
-        <InvitationRounds sql={sql} member={member} rounds={loaded.rounds} focus={focus} />
         {loaded.people.length === 0 ? (
           <EmptyPanel title="Nobody invited yet" action={recruiter && standing.inUse ? <Link href={`${base}/${itemSlug}?tab=candidates&invite=1`} className="text-sm font-bold underline underline-offset-4">Invite candidates</Link> : undefined}>
             Candidates appear here once a round of invitations on this test is sent.
@@ -495,6 +575,7 @@ export default async function AssessmentPage({
         ) : (
           <TestCandidates rows={loaded.people} initial={initial} slug={member.companySlug} />
         )}
+        <InvitationRounds sql={sql} member={member} rounds={loaded.rounds} focus={focus} />
         <p className="mt-3 text-xs text-muted">A score doesn&apos;t shortlist or reject anyone; the recruiter decides.</p>
       </>
     );

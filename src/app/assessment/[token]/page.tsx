@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CandidateNotice, CandidateShell } from "@/components/company/CandidateShell";
+import { getMemberships } from "@/lib/company/auth";
 import { LocalTime } from "@/components/company/LocalTime";
 import { StartTest } from "@/components/company/StartTest";
 import { RefreshAt } from "@/components/company/RefreshAt";
 import { attemptByLink, loadSubmission, recordLinkOpened, type Submission } from "@/lib/company/attempt-data";
-import { DETAIL_FIELDS, startBlocked } from "@/lib/company/test-settings";
+import { DETAIL_FIELDS, proctorRules, startBlocked } from "@/lib/company/test-settings";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { sharedResultFor } from "@/lib/company/decision-data";
 import type { SharedResult } from "@/lib/company/review-rules";
@@ -56,29 +57,34 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
   }
 
   const { candidate: c, batch: b, version: v } = found;
+  // Signed in to this company (an employee taking an internal test, or staff checking a link): a way back.
+  const member = (await getMemberships()).find((m) => m.companyId === b.companyId) ?? null;
+  const back = !member ? null
+    : member.email === c.email.toLowerCase() ? { href: `/org/${member.companySlug}/my-assessments`, label: "Back to My assessments" }
+    : { href: `/org/${member.companySlug}`, label: "Back to your workspace" };
   const company = brand?.name ?? "The company";
   if (ref.generation !== c.generation) {
-    return <CandidateShell brand={brand}><CandidateNotice title="This link has been replaced">{company} sent you a newer link. Use the one in their latest email. If you had started, your test continues from there. Questions? Write to {write}.</CandidateNotice></CandidateShell>;
+    return <CandidateShell brand={brand} back={back}><CandidateNotice title="This link has been replaced">{company} sent you a newer link. Use the one in their latest email. If you had started, your test continues from there. Questions? Write to {write}.</CandidateNotice></CandidateShell>;
   }
 
   const now = new Date();
   const last = lastStart({ closesAt: b.closesAt, minutes: b.minutes }, c);
   const state = linkState({ batchStatus: b.status, candidateStatus: c.status, opensAt: b.opensAt, lastStart: last, now });
   if (state === "cancelled" || state === "batch_cancelled") {
-    return <CandidateShell brand={brand}><CandidateNotice title="This invitation was cancelled">{company} cancelled this invitation, so the test can&apos;t be started or continued from this link. Questions? Write to {write}.</CandidateNotice></CandidateShell>;
+    return <CandidateShell brand={brand} back={back}><CandidateNotice title="This invitation was cancelled">{company} cancelled this invitation, so the test can&apos;t be started or continued from this link. Questions? Write to {write}.</CandidateNotice></CandidateShell>;
   }
 
   // The first open of this link, for the company's reports. A failure here never stops the page.
   await recordLinkOpened(sql!, c.id, c.generation);
   const attempt = await attemptByLink(sql!, c.id, c.generation);
   if (attempt === null) {
-    return <CandidateShell brand={brand}><CandidateNotice title="This page can't load right now">Try again in a minute. If it keeps happening, write to {write}.</CandidateNotice></CandidateShell>;
+    return <CandidateShell brand={brand} back={back}><CandidateNotice title="This page can't load right now">Try again in a minute. If it keeps happening, write to {write}.</CandidateNotice></CandidateShell>;
   }
 
   if (attempt?.submittedAt) {
     const [sub, result] = await Promise.all([loadSubmission(sql!, attempt.id), sharedResultFor(sql!, attempt.id)]);
     return (
-      <CandidateShell brand={brand}>
+      <CandidateShell brand={brand} back={back}>
         <Receipt
           company={company}
           role={b.role}
@@ -100,7 +106,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
   if (attempt) {
     const where = attemptState(attempt, now);
     return (
-      <CandidateShell brand={brand}>
+      <CandidateShell brand={brand} back={back}>
         <section className="card p-6">
           <p className={label}>{b.role} · {company}</p>
           {where === "in_progress" ? (
@@ -129,7 +135,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
   const blocked = settings ? startBlocked(settings, now) : null;
   if (blocked) {
     return (
-      <CandidateShell brand={brand}>
+      <CandidateShell brand={brand} back={back}>
         <CandidateNotice title={blocked === "ended" ? "This assessment has ended" : "This assessment is closed"}>
           {company} {blocked === "ended" ? "has ended" : "has closed"} {b.title}, so it can&apos;t be started from this link. Questions? Write to {write}.
         </CandidateNotice>
@@ -141,7 +147,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
   const heading = state === "missed" ? "The time to start has passed" : state === "not_open" ? "Your assessment opens soon" : "Your assessment is open";
 
   return (
-    <CandidateShell brand={brand}>
+    <CandidateShell brand={brand} back={back}>
       <section className="card p-6">
         <p className={label}>{b.role} · {company}</p>
         <h1 className="display mt-2 text-3xl">{heading}</h1>
@@ -171,7 +177,8 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
         ) : state === "not_open" ? (
           <p className="mt-6 border-l-4 border-ink bg-white px-4 py-3 text-sm">Come back to this link when it opens. Start by the time above to get your full {allowed}.</p>
         ) : (
-          <StartTest token={token} allowed={allowed} fields={(settings?.collect ?? []).map((k) => ({ key: k, ...DETAIL_FIELDS[k] }))} />
+          <StartTest token={token} allowed={allowed} fields={(settings?.collect ?? []).map((k) => ({ key: k, ...DETAIL_FIELDS[k] }))}
+            rules={settings ? proctorRules(settings.proctor) : []} webcam={!!settings?.proctor.webcam} />
         )}
       </section>
 

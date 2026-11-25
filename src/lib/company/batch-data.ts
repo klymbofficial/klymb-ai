@@ -48,8 +48,9 @@ export async function companyReviewers(sql: Db, companyId: string): Promise<{ em
   const { data, error } = await sql.rows<{ email: string; name: string | null }>`
     select m.email, m.name
       from course.company_members m
-      join course.company_member_roles r on r.company_id = m.company_id and r.email = m.email and r.role = 'reviewer'
      where m.company_id = ${companyId}::uuid and m.removed_at is null
+       -- Reviewers, and admins, who hold every power (0069).
+       and exists (select 1 from course.company_member_roles r where r.company_id = m.company_id and r.email = m.email and r.role in ('reviewer', 'admin'))
      order by lower(coalesce(m.name, m.email))
   `;
   if (error) return error.code === UNDEFINED_TABLE ? [] : fail("reviewers read", error);
@@ -76,7 +77,7 @@ export async function createBatch(sql: Db, b: BatchInput & { companyId: string; 
     ), go as (
       select exists (select 1 from current_version where id = ${b.versionId}::uuid)
          and exists (select 1 from course.company_members m
-                       join course.company_member_roles r on r.company_id = m.company_id and r.email = m.email and r.role = 'reviewer'
+                       join course.company_member_roles r on r.company_id = m.company_id and r.email = m.email and r.role in ('reviewer', 'admin')
                       where m.company_id = ${b.companyId}::uuid and m.email = ${b.reviewer} and m.removed_at is null)
          and not exists (select 1 from prior) as ok
     ), made as (

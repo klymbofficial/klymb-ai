@@ -917,4 +917,64 @@ describe("candidate attempts against a real database", { skip }, () => {
     assert.deepEqual(marks.map((m) => [m.questionNo, m.points, m.max]).sort(), [[1, 0, 2], [1, 2, 2]]);
     assert.deepEqual(await hub.versionQuestionMarks(sqlA, randomUUID(), v), []);
   });
+
+  test("proctoring: events need the open attempt's own link; the limit submits the test; snapshots need the setting", async () => {
+    const proctor = await import("../src/lib/company/proctor-data");
+    const ts = await import("../src/lib/company/test-settings-data");
+    const p6 = `${slug}-p06`;
+    const v = (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [p6])).rows[0].id as string;
+    const cur = (await ts.loadTestSettings(sqlA, companyId, p6))!;
+    const saved = await ts.saveTestSettings(sqlA, { group: "proctoring", companyId, item: p6, expected: cur.revision, by: "rec@test.invalid", proctor: { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2 } });
+    assert.equal(saved?.status, "saved");
+    assert.deepEqual((await ts.loadTestSettings(sqlA, companyId, p6))!.proctor, { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2 });
+
+    const { id } = await invited({ item: p6, versionId: v });
+    const st = await att.startAttempt(sqlA, id, 1);
+    assert.ok(st && st.status === "started");
+    const ev = (kind: "tab_hidden" | "copy_blocked" | "fullscreen_exit", over: Partial<{ candidateId: string; generation: number }> = {}) =>
+      proctor.recordAttemptEvent(sqlA, { attemptId: st.attempt.id, candidateId: id, generation: 1, kind, ...over });
+    assert.deepEqual(await ev("tab_hidden", { generation: 2 }), { status: "refused" }, "a replaced link");
+    assert.deepEqual(await ev("tab_hidden", { candidateId: randomUUID() }), { status: "refused" }, "someone else");
+    assert.deepEqual(await ev("copy_blocked"), { status: "recorded", warnings: 0, limit: 2, submitted: false }, "copy is recorded, not a warning");
+    assert.deepEqual(await ev("tab_hidden"), { status: "recorded", warnings: 1, limit: 2, submitted: false });
+    assert.equal((await one.query(`select submitted_at from course.candidate_attempts where id = $1`, [st.attempt.id])).rows[0].submitted_at, null);
+    assert.deepEqual(await ev("fullscreen_exit"), { status: "recorded", warnings: 2, limit: 2, submitted: true }, "the limit submits");
+    const sub = (await one.query(`select kind from course.attempt_submissions where attempt_id = $1`, [st.attempt.id])).rows[0];
+    assert.equal(sub.kind, "candidate");
+    assert.deepEqual(await ev("tab_hidden"), { status: "closed" }, "nothing more once submitted");
+    const seen = (await proctor.attemptProctoring(sqlA, companyId, st.attempt.id))!;
+    assert.deepEqual(seen.events.map((e) => e.kind), ["copy_blocked", "tab_hidden", "fullscreen_exit", "limit_submitted"]);
+    assert.deepEqual(await proctor.attemptProctoring(sqlA, randomUUID(), st.attempt.id), { events: [], snapshots: [] }, "another company sees none");
+    const batchId = (await one.query(`select batch_id from course.candidate_attempts where id = $1`, [st.attempt.id])).rows[0].batch_id as string;
+    assert.equal((await proctor.warningsForBatch(sqlA, companyId, batchId))!.get(st.attempt.id), 2);
+    await assert.rejects(one.query(`update course.attempt_events set kind = 'copy_blocked' where attempt_id = $1`, [st.attempt.id]), /cannot be changed/);
+
+    // Snapshots: refused while webcam is off, accepted once on, for the open attempt only.
+    const second = await invited({ item: p6, versionId: v });
+    const s2 = await att.startAttempt(sqlA, second.id, 1);
+    assert.ok(s2 && s2.status === "started");
+    const snap = (key: string) => proctor.addSnapshot(sqlA, { attemptId: s2.attempt.id, candidateId: second.id, generation: 1, key, bytes: 1000 });
+    const key = (n: number) => `attempt-files/${companyId}/${s2.attempt.id}/${String(n).padStart(64, "0")}.jpg`;
+    assert.equal(await snap(key(1)), false, "webcam off");
+    const now = (await ts.loadTestSettings(sqlA, companyId, p6))!;
+    await ts.saveTestSettings(sqlA, { group: "proctoring", companyId, item: p6, expected: now.revision, by: "rec@test.invalid", proctor: { ...now.proctor, webcam: true, limit: null } });
+    assert.equal(await snap(key(2)), true);
+    assert.equal((await proctor.attemptProctoring(sqlA, companyId, s2.attempt.id))!.snapshots.length, 1);
+  });
+
+  test("a company admin may decide and review (0069)", async () => {
+    await people();
+    const admin = `adm-${run}@test.invalid`;
+    await one.query(`insert into course.company_members (email, company_id, role, name) values ($1, $2, 'hr', 'Adm')`, [admin, companyId]);
+    await one.query(`insert into course.company_member_roles (company_id, email, role) select $1, $2, 'admin'
+                      where not exists (select 1 from course.company_member_roles where company_id = $1 and email = $2 and role = 'admin')`, [companyId, admin]);
+    assert.deepEqual((await one.query(`select role from course.company_member_roles where company_id = $1 and email = $2`, [companyId, admin])).rows.map((r) => r.role), ["admin"], "an admin only, no reviewer or recruiter role");
+    const areaVersion = (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [`${slug}-area`])).rows[0].id as string;
+    const x = await pastAttempt(90, 60, { item: `${slug}-area`, versionId: areaVersion });
+    await att.finaliseDue(sqlA, { candidateId: x.id });
+    assert.equal((await review(x.attemptId, { reviewer: admin, scores: [{ points: 3, note: "" }, { points: 5, note: "" }] }))?.status, "recorded", "an admin scores");
+    assert.equal((await review(x.attemptId, { reviewer: `rec-${run}@test.invalid`, baseRevision: 1, scores: [{ points: 3, note: "" }, { points: 5, note: "" }] }))?.status, "refused", "someone without the role still can't");
+    assert.equal((await decide(x.attemptId, { actor: admin }))?.status, "recorded", "an admin decides");
+    assert.ok((await data.companyReviewers(sqlA, companyId))!.some((r) => r.email === admin), "and can be named a round's reviewer");
+  });
 });

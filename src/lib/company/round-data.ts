@@ -12,6 +12,7 @@ import {
 import { batchStateKey, type BatchStateKey } from "@/lib/company/batch-view";
 import { decisionsForBatch } from "@/lib/company/decision-data";
 import { autoScoresForBatch, reviewsForBatch } from "@/lib/company/review-data";
+import { warningsForBatch } from "@/lib/company/proctor-data";
 import { DECISION_LABEL, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { hubTags, type HubFilter } from "@/lib/company/test-hub-view";
 import type { Db } from "@/lib/db/client";
@@ -51,6 +52,8 @@ export interface PersonRow {
   score: string | null;
   /** Multiple choice marked automatically at Submit, while nobody has reviewed it yet (L3). */
   autoScore: string | null;
+  /** Proctoring warnings during the attempt (0070). */
+  warnings: number;
   /** The reviewed score against this company's cut-off for the test (U06b); null without one. */
   cutoff: "cleared" | "below" | null;
   decision: { label: string; tone: Tone; shared: boolean } | null;
@@ -100,21 +103,22 @@ export async function loadTestRounds(sql: Db, member: CompanyMember, item: strin
   // Every round at once: on a remote database, one after another adds up quickly.
   const loaded = await Promise.all((ids.data ?? []).map(async ({ id }) => {
     // A draft round has no attempts; asking anyway costs nothing extra now that it all runs at once.
-    const [found, attempts, reviews, decisions, autos] = await Promise.all([
+    const [found, attempts, reviews, decisions, autos, warnings] = await Promise.all([
       loadBatch(sql, member.companyId, id),
       attemptsForBatch(sql, member.companyId, id, { finalised: true }),
       reviewsForBatch(sql, member.companyId, id),
       decisionsForBatch(sql, member.companyId, id),
       autoScoresForBatch(sql, member.companyId, id),
+      warningsForBatch(sql, member.companyId, id),
     ]);
     if (!found) return null;
-    if (!attempts || !reviews || !decisions || !autos) return null;
-    return { id, ...found, attempts, reviews, decisions, autos };
+    if (!attempts || !reviews || !decisions || !autos || !warnings) return null;
+    return { id, ...found, attempts, reviews, decisions, autos, warnings };
   }));
   if (loaded.some((l) => l === null)) return null;
 
   for (const l of loaded) {
-    const { id, batch, candidates, mail, attempts, reviews, decisions, autos } = l!;
+    const { id, batch, candidates, mail, attempts, reviews, decisions, autos, warnings } = l!;
     const draft = batch.status === "draft";
     const attemptOf = new Map(attempts.map((a) => [a.candidateId, a]));
     const reviewOf = new Map(reviews.map((r) => [r.attemptId, r]));
@@ -182,6 +186,7 @@ export async function loadTestRounds(sql: Db, member: CompanyMember, item: strin
           : `Start by ${deadlineText(lastOf(c), tz)}`,
         allowed: attempt ? `${durationText(attempt.allowedMinutes)} (fixed at start)` : `${durationText(allowedMinutes(batch.minutes, c.extraMinutes))}${c.extraMinutes ? ` (${c.extraMinutes} extra)` : ""}`,
         score: scored ? scoreText(scored.total, scored.max) : null,
+        warnings: attempt ? warnings.get(attempt.id) ?? 0 : 0,
         autoScore: !scored && attempt && autos.get(attempt.id) ? scoreText(autos.get(attempt.id)!.total, autos.get(attempt.id)!.max) : null,
         cutoff: scored ? cutoffResult(scored.total, scored.max, cutoffPercent) : null,
         decision: decided?.decision ? { label: DECISION_LABEL[decided.decision], tone: DECISION_TONE[decided.decision], shared: !!decided.sharedRevision } : null,

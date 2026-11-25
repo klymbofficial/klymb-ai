@@ -24,6 +24,8 @@ export interface TestSettings {
   cutoffPercent: number | null;
   /** U06b: details asked before Start. */
   collect: DetailField[];
+  /** Proctoring (0070): what the test window enforces; limit = warnings before automatic submission, or null. */
+  proctor: Proctoring;
   /** 0 until the first save. */
   revision: number;
   updatedBy: string | null;
@@ -31,7 +33,9 @@ export interface TestSettings {
 }
 
 export const DEFAULT_SETTINGS: TestSettings = {
-  accessOpen: true, endsOn: null, tags: [], autoRemind: true, invite: null, cutoffPercent: null, collect: [], revision: 0, updatedBy: null, updatedAt: null,
+  accessOpen: true, endsOn: null, tags: [], autoRemind: true, invite: null, cutoffPercent: null, collect: [],
+  proctor: { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null },
+  revision: 0, updatedBy: null, updatedAt: null,
 };
 
 export const SETTINGS_LIMITS = { tags: 10, tag: 40, subject: 160, body: 3000 } as const;
@@ -185,4 +189,47 @@ export function suggestCutoff(percents: readonly number[]): number | null {
   const s = [...percents].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return Math.round(s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2);
+}
+
+// ── Proctoring (0070) ─────────────────────────────────────────────────────
+
+export interface Proctoring {
+  fullscreen: boolean;
+  tabs: boolean;
+  copy: boolean;
+  webcam: boolean;
+  /** Full-screen exits plus tab/window switches before the test submits itself; null: never. */
+  limit: number | null;
+}
+
+export const PROCTOR_LIMIT_MAX = 20;
+/** Minutes between webcam snapshots. */
+export const SNAPSHOT_EVERY_MIN = 2;
+
+/** The proctoring switches as a recruiter sets them. A limit only counts when full screen or tab detection is on. */
+export function readProctoring(raw: Record<string, unknown>): Result<Proctoring> {
+  const typed = text(raw.limit);
+  let limit: number | null = null;
+  if (typed) {
+    const n = Number(typed);
+    if (!Number.isInteger(n) || n < 1 || n > PROCTOR_LIMIT_MAX) return { ok: false, message: `The warning limit is a whole number from 1 to ${PROCTOR_LIMIT_MAX}, or empty for none.` };
+    limit = n;
+  }
+  const p = { fullscreen: on(raw.fullscreen), tabs: on(raw.tabs), copy: on(raw.copy), webcam: on(raw.webcam), limit };
+  if (limit !== null && !p.fullscreen && !p.tabs) return { ok: false, message: "A warning limit needs full screen or tab detection switched on." };
+  return { ok: true, value: p };
+}
+
+/** True when any proctoring is on: the candidate is told before Start. */
+export const proctored = (p: Proctoring) => p.fullscreen || p.tabs || p.copy || p.webcam;
+
+/** What the candidate is told before Start, one line each. */
+export function proctorRules(p: Proctoring): string[] {
+  const out: string[] = [];
+  if (p.fullscreen) out.push("The test runs in full screen. Leaving full screen is recorded.");
+  if (p.tabs) out.push("Switching to another tab or window is recorded.");
+  if (p.copy) out.push("Copying, pasting and right-click are turned off.");
+  if (p.webcam) out.push(`Your camera takes a photo every ${SNAPSHOT_EVERY_MIN} minutes, seen only by the company's reviewers. You'll be asked to agree first.`);
+  if (p.limit !== null && (p.fullscreen || p.tabs)) out.push(`After ${p.limit} ${p.limit === 1 ? "warning" : "warnings"}, your test is submitted automatically with the answers saved so far.`);
+  return out;
 }

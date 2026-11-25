@@ -151,8 +151,13 @@ export function belongsTo(member: CompanyMember | null, slug: unknown): member i
 }
 
 /** True when the member holds at least one of these responsibilities. */
+/**
+ * True when the member holds any of the roles. A company admin holds every
+ * power in their company (decided 25 Nov): they count as every role, in the
+ * app here and in the database's own checks (migration 0069).
+ */
 export function hasRole(member: CompanyMember | null, roles: readonly CompanyRole[]): boolean {
-  return member !== null && member.roles.some((r) => roles.includes(r));
+  return member !== null && (member.roles.includes("admin") || member.roles.some((r) => roles.includes(r)));
 }
 
 /** Runs the workspace: People, Teams, assigning. */

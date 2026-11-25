@@ -15,10 +15,14 @@ const MODE: Record<string, "tel" | "decimal" | "numeric" | "url" | "text"> = { p
  * and opens it. What they typed comes back with any problem, so nothing is
  * lost.
  */
-export function StartTest({ token, allowed, fields = [] }: {
+export function StartTest({ token, allowed, fields = [], rules = [], webcam = false }: {
   token: string;
   allowed: string;
   fields?: { key: string; label: string; kind: string; max: number }[];
+  /** Proctoring (0070), one line each, shown before Start. */
+  rules?: string[];
+  /** Webcam snapshots are on: the person must agree first. */
+  webcam?: boolean;
 }) {
   const [state, action, pending] = useActionState<StartResult, FormData>(startTest, null);
   // The question is open for the result it was asked after; a new result from the server (a problem to fix) closes it.
@@ -56,6 +60,18 @@ export function StartTest({ token, allowed, fields = [] }: {
             </label>
           ))}
         </fieldset>
+      )}
+      {rules.length > 0 && (
+        <div className="w-full max-w-md rounded-md border-2 border-line/40 bg-white p-4 text-sm">
+          <p className="font-bold">This test is proctored</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">{rules.map((r) => <li key={r}>{r}</li>)}</ul>
+          {webcam && (
+            <label className="mt-3 flex items-start gap-2 font-semibold">
+              <input type="checkbox" name="webcam_consent" required className="mt-1" />
+              I agree to webcam snapshots during this test.
+            </label>
+          )}
+        </div>
       )}
       {asking ? (
         <div role="group" aria-labelledby="start-ask" className="flex w-full max-w-md flex-col gap-3 rounded-md border-2 border-ink/80 bg-white p-4">
