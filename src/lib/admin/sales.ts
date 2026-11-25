@@ -270,7 +270,12 @@ export async function getSalesReport(key: PeriodKey): Promise<SalesReport | null
     sql.row<{ cur: number; prev: number }>`
       select count(*) filter (where signed_at >= ${s} and signed_at < ${e})::int as cur,
              count(*) filter (where signed_at >= ${ps} and signed_at < ${pe})::int as prev
-        from course.sales_leads where kind = 'b2b' and stage = 'signed'`,
+        from (
+          -- Deals signed in Sales › B2B, plus older B2B leads signed before it existed.
+          select signed_at from course.b2b_deals where stage = 'signed'
+          union all
+          select signed_at from course.sales_leads where kind = 'b2b' and stage = 'signed'
+        ) signed`,
     key === "mtd"
       ? sql.row<{ enrolments: number; b2b: number; hackathons: number; webinars: number }>`
           select enrolments, b2b, hackathons, webinars from course.sales_targets where month = ${p.month}::date`

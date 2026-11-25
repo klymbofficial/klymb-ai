@@ -39,7 +39,9 @@ export type AuditAction =
   | "internship.payout"
   | "internship.code"
   | "webinar.meet_link"
-  | "webinar.meet_link_test";
+  | "webinar.meet_link_test"
+  | "b2b.deal_delete"
+  | "b2b.workspace_link";
 
 /**
  * Records an admin action. Never throws and never blocks the action itself:

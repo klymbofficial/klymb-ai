@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { site } from "@/data/config";
-import { isOwnerEmail } from "@/lib/admin/access";
+import { isOwnerEmail, isSalesManager } from "@/lib/admin/access";
 import { isCronRequest } from "@/lib/cron-auth";
 import { db } from "@/lib/db/client";
+import { b2bDigestEmail, type DueDeal, type DueTask } from "@/lib/b2b-digest";
 import { mailReady, sendMail } from "@/lib/mail";
 import { istToday } from "@/lib/sales";
 import { salesDigestEmail, type DueLead } from "@/lib/sales-digest";
@@ -58,5 +59,54 @@ export async function GET(req: Request) {
     });
     results[email] = r.ok ? `sent ${o.leads.length}` : r.reason;
   }
-  return NextResponse.json({ today, owners: byOwner.size, results });
+
+  const b2b = await sendB2BDigests(today);
+  return NextResponse.json({ today, owners: byOwner.size, results, b2b });
+}
+
+/**
+ * The B2B email, to each owner or sales manager with a deal whose next step
+ * is due, or a task due. Before 0069_b2b_deals.sql has run the reads fail
+ * and nobody gets one.
+ */
+async function sendB2BDigests(today: string): Promise<Record<string, string>> {
+  const sql = db();
+  if (!sql) return {};
+  const [deals, tasks, admins] = await Promise.all([
+    sql.rows<DueDeal & { owner_email: string }>`
+      select d.id, c.name as company_name, d.title, d.stage, d.value_inr, d.next_step,
+             d.next_step_date::text as next_step_date, d.owner_email
+        from course.b2b_deals d join course.b2b_companies c on c.id = d.company_id
+       where d.owner_email is not null and d.next_step_date <= ${today}::date and d.stage not in ('signed', 'lost')
+       order by d.next_step_date, d.value_inr desc`,
+    sql.rows<DueTask & { assignee_email: string }>`
+      select t.deal_id, c.name as company_name, t.title, t.due::text as due, t.assignee_email
+        from course.b2b_tasks t join course.b2b_deals d on d.id = t.deal_id join course.b2b_companies c on c.id = d.company_id
+       where t.done_at is null and t.assignee_email is not null and t.due <= ${today}::date
+       order by t.due`,
+    sql.rows<{ email: string; name: string | null }>`select email, name from course.admin_users`,
+  ]);
+  if (deals.error || tasks.error) return {};
+  const names = new Map((admins.data ?? []).map((a) => [a.email, a.name]));
+  // Only people who can open B2B: owners and sales managers who are admins.
+  const allowed = (e: string) => names.has(e) && (isOwnerEmail(e) || isSalesManager(e));
+  const by = new Map<string, { deals: DueDeal[]; tasks: DueTask[] }>();
+  for (const d of deals.data ?? []) if (allowed(d.owner_email)) {
+    const o = by.get(d.owner_email) ?? { deals: [], tasks: [] };
+    o.deals.push(d);
+    by.set(d.owner_email, o);
+  }
+  for (const t of tasks.data ?? []) if (allowed(t.assignee_email)) {
+    const o = by.get(t.assignee_email) ?? { deals: [], tasks: [] };
+    o.tasks.push(t);
+    by.set(t.assignee_email, o);
+  }
+  const results: Record<string, string> = {};
+  for (const [email, o] of by) {
+    const name = names.get(email) ?? null;
+    const mail = b2bDigestEmail({ name, today, deals: o.deals, tasks: o.tasks, siteUrl: site.url });
+    const r = await sendMail({ to: { email, name: name ?? undefined }, ...mail, kind: "sales.b2b_digest", idempotencyKey: `b2b-digest:${email}:${today}` });
+    results[email] = r.ok ? `sent ${o.deals.length} deals, ${o.tasks.length} tasks` : r.reason;
+  }
+  return results;
 }
