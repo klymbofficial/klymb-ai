@@ -16,7 +16,7 @@ const hint = "text-xs font-normal text-muted";
 
 /**
  * A recruiter's new batch. Shows, as they type, the last moment anyone can
- * start and how long they have, and reads the candidate list line by line.
+ * start and how long they have, and reads the invitee list line by line.
  * "Preview" saves a draft; nothing is sent from here.
  */
 export function BatchForm({
@@ -32,7 +32,7 @@ export function BatchForm({
   prepCourses: PrepCourse[];
   timeZones: string[];
   /** `test` is a catalog slug to choose first (from "Invite candidates" on a test); ignored when it isn't one of `tests`. */
-  initial: { timeZone: string; opens: string; closes: string; test?: string; purpose?: "hiring" | "internal" };
+  initial: { timeZone: string; opens: string; closes: string; test?: string };
   /** The company's people and teams, for "Add from your company". */
   company?: { people: PickablePerson[]; teams: { id: string; name: string; members: number }[] };
 }) {
@@ -43,7 +43,6 @@ export function BatchForm({
   const [role, setRole] = useState(test?.role ?? "");
   const [roleTouched, setRoleTouched] = useState(false);
   const [prep, setPrep] = useState("");
-  const [purpose, setPurpose] = useState<"hiring" | "internal">(initial.purpose ?? "hiring");
   const [reviewer, setReviewer] = useState(reviewers.length === 1 ? reviewers[0].email : "");
   const [timeZone, setTimeZone] = useState(initial.timeZone);
   const [opens, setOpens] = useState(initial.opens);
@@ -54,6 +53,7 @@ export function BatchForm({
   const [problems, setProblems] = useState<ListProblem[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const id = useId();
+  const internal = test?.audience === "internal";
   useEffect(() => { onDirtyChange?.(list.trim() !== ""); }, [list, onDirtyChange]);
 
   const parsed = useMemo(() => (list.trim() ? parseCandidates(list) : null), [list]);
@@ -87,7 +87,7 @@ export function BatchForm({
     e.preventDefault();
     setBusy(true);
     setMessage(null);
-    const out = await createHiringBatch(slug, { requestKey, versionId, role, prepCourse: prep, reviewer, timeZone, opens, closes, candidates: list, purpose });
+    const out = await createHiringBatch(slug, { requestKey, versionId, role, prepCourse: prep, reviewer, timeZone, opens, closes, candidates: list });
     if (out.ok) {
       onDone?.();
       // The new round opens on its test's Candidates tab, expanded, with Send and the invitation preview.
@@ -107,22 +107,6 @@ export function BatchForm({
     <form onSubmit={submit} noValidate className="flex max-w-3xl flex-col gap-8">
       <fieldset className="flex flex-col gap-4">
         <legend className="display mb-3 text-lg">The test</legend>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-xs font-bold">Who is this round for?</legend>
-          <div className="flex flex-wrap gap-2">
-            {(["hiring", "internal"] as const).map((p) => (
-              <label key={p} className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md border-2 border-line/40 bg-white px-3 text-sm font-bold has-[:checked]:border-ink">
-                <input type="radio" name="purpose" value={p} checked={purpose === p} onChange={() => setPurpose(p)} />
-                {p === "hiring" ? "Hiring: candidates" : "Internal: colleagues"}
-              </label>
-            ))}
-          </div>
-          <span className={hint}>
-            {purpose === "internal"
-              ? "Colleagues see it under My assessments too. It's scored and reviewed, but nobody is shortlisted."
-              : "Candidates are scored, reviewed and then shortlisted or not by a recruiter."}
-          </span>
-        </fieldset>
         <label className={label} htmlFor={`${id}-test`}>
           Test
           <select id={`${id}-test`} className={input} value={versionId} onChange={(e) => pickTest(e.target.value)}>
@@ -131,11 +115,17 @@ export function BatchForm({
               <option key={t.versionId} value={t.versionId}>{t.title} · version {t.version} · {durationText(t.minutes)}</option>
             ))}
           </select>
-          <span className={hint}>Only versions your reviewer approved are listed.</span>
+          <span className={hint}>
+            {test
+              ? internal
+                ? "This is an internal employee assessment. Assigned employees see it under My assessments; no hiring decision is recorded."
+                : "This is an external candidate assessment. Recruiters can review candidates and record hiring decisions."
+              : "Only versions your reviewer approved are listed."}
+          </span>
           {err("test")}
         </label>
         <label className={label} htmlFor={`${id}-role`}>
-          {purpose === "internal" ? "Name of this round" : <>Role you&apos;re hiring for</>}
+          {internal ? "Name of this assessment round" : <>Role you&apos;re hiring for</>}
           <input id={`${id}-role`} className={input} value={role} maxLength={BATCH_LIMITS.role} onChange={(e) => { setRole(e.target.value); setRoleTouched(true); }} />
           {err("role")}
         </label>
@@ -155,7 +145,7 @@ export function BatchForm({
               <option value="">None</option>
               {prepCourses.map((c) => <option key={c} value={c}>{PREP_COURSES[c]}</option>)}
             </select>
-            <span className={hint}>Opens the course for each candidate until the batch closes. They sign in with Google using the invited email.</span>
+            <span className={hint}>Opens the course for each {internal ? "employee" : "candidate"} until the batch closes. They sign in with Google using the invited email.</span>
             {err("prep")}
           </label>
         )}
@@ -196,10 +186,10 @@ export function BatchForm({
       </fieldset>
 
       <fieldset className="flex flex-col gap-3">
-        <legend className="display mb-3 text-lg">Candidates</legend>
+        <legend className="display mb-3 text-lg">{internal ? "Employees" : "Candidates"}</legend>
         {company && <PeoplePicker people={company.people} teams={company.teams} list={list} onList={setList} />}
         <label className={label} htmlFor={`${id}-list`}>
-          One person per line: name, email
+          One {internal ? "employee" : "person"} per line: name, email
           <span className={hint}>Add a third value for extra minutes, e.g. an accessibility adjustment: <code>Asha Rao, asha@example.com, 30</code>. Up to {BATCH_LIMITS.candidates}.</span>
           <textarea id={`${id}-list`} rows={8} className={`${input} font-mono`} value={list} onChange={(e) => setList(e.target.value)} placeholder={"Asha Rao, asha@example.com\nRavi Menon, ravi@example.com, 30"} />
         </label>

@@ -69,16 +69,15 @@ describe("U11: tests sent to colleagues", async () => {
   const { readBatchForm } = await import("../src/lib/company/batch-rules");
   const { navGroupsFor } = await import("../src/lib/company/nav");
   const now = new Date("2026-11-24T00:00:00Z");
-  const ctx = { now, tests: [{ item: "t", title: "T", versionId: "v", version: 1, minutes: 60, role: "Engineer" }], reviewers: ["r@acme.test"], prepCourses: [] };
+  const ctx = { now, tests: [{ item: "t", title: "T", versionId: "v", version: 1, minutes: 60, role: "Engineer", audience: "external" as const }], reviewers: ["r@acme.test"], prepCourses: [] };
   const raw = { versionId: "v", role: "Team check", reviewer: "r@acme.test", timeZone: "UTC", opens: "2026-11-25T10:00", closes: "2026-11-27T10:00", candidates: "Asha, asha@acme.test" };
 
-  test("a round is Hiring unless the form says Internal", () => {
-    const hiring = readBatchForm(raw, ctx);
-    assert.ok(hiring.ok && hiring.value.purpose === "hiring");
-    const internal = readBatchForm({ ...raw, purpose: "internal" }, ctx);
-    assert.ok(internal.ok && internal.value.purpose === "internal");
-    const odd = readBatchForm({ ...raw, purpose: "hired" }, ctx);
-    assert.ok(odd.ok && odd.value.purpose === "hiring");
+  test("the assessment's audience, not the invite form, determines a round's purpose", () => {
+    const external = readBatchForm({ ...raw, purpose: "internal" }, ctx);
+    assert.ok(external.ok && !("purpose" in external.value), "the invite form cannot choose a purpose");
+    const internalCtx = { ...ctx, tests: [{ ...ctx.tests[0], audience: "internal" as const }] };
+    const internal = readBatchForm(raw, internalCtx);
+    assert.ok(internal.ok && internal.value.item === "t");
   });
 
   test("My assessments shows in the sidebar only for someone sent a test", () => {

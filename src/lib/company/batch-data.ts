@@ -1,7 +1,7 @@
 import "server-only";
 import type { Db } from "@/lib/db/client";
 import { companyCatalog } from "@/lib/company/catalog-data";
-import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, STALE_SEND_MINUTES, isPrepCourse, type ApprovedTest, type BatchInput, type Delivery, type MailKind, type PrepCourse, type RoundPurpose } from "@/lib/company/batch-rules";
+import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, STALE_SEND_MINUTES, isPrepCourse, type ApprovedTest, type AssessmentAudience, type BatchInput, type Delivery, type MailKind, type PrepCourse, type RoundPurpose } from "@/lib/company/batch-rules";
 
 /**
  * Hiring batches (course.hiring_batches, batch_candidates, batch_mail_log;
@@ -32,15 +32,16 @@ const fail = (what: string, error: { code?: string; message: string }) => {
 /** Each assessment's newest version this company approved, for the items given. */
 export async function approvedTests(sql: Db, companyId: string, items: { slug: string; title: string }[]): Promise<ApprovedTest[] | null> {
   if (!items.length) return [];
-  const { data, error } = await sql.rows<{ slug: string; id: string; version: number; minutes: number; role: string }>`
-    select distinct on (v.slug) v.slug, v.id, v.version, v.minutes, v.role
+  const { data, error } = await sql.rows<{ slug: string; id: string; version: number; minutes: number; role: string; assessment_audience: AssessmentAudience | null }>`
+    select distinct on (v.slug) v.slug, v.id, v.version, v.minutes, v.role, i.assessment_audience
       from course.assessment_versions v
+      join course.catalog_items i on i.slug = v.slug
       join course.company_assessment_reviews r on r.version_id = v.id and r.company_id = ${companyId}::uuid and r.decision = 'approved'
      where v.slug = any(${items.map((i) => i.slug)}::text[])
      order by v.slug, v.version desc
   `;
   if (error) return error.code === UNDEFINED_TABLE ? [] : fail("approved tests read", error);
-  return (data ?? []).map((r) => ({ item: r.slug, title: items.find((i) => i.slug === r.slug)?.title ?? r.slug, versionId: r.id, version: r.version, minutes: r.minutes, role: r.role }));
+  return (data ?? []).map((r) => ({ item: r.slug, title: items.find((i) => i.slug === r.slug)?.title ?? r.slug, versionId: r.id, version: r.version, minutes: r.minutes, role: r.role, audience: r.assessment_audience === "internal" ? "internal" : "external" }));
 }
 
 /** The company's active reviewers. */
@@ -70,7 +71,9 @@ export async function createBatch(sql: Db, b: BatchInput & { companyId: string; 
     with prior as (
       select id from course.hiring_batches where company_id = ${b.companyId}::uuid and request_key = ${b.requestKey}::uuid
     ), current_version as (
-      select v.id from course.assessment_versions v
+      select v.id, case when i.assessment_audience = 'internal' then 'internal' else 'hiring' end as purpose
+        from course.assessment_versions v
+        join course.catalog_items i on i.slug = v.slug
         join course.company_assessment_reviews r on r.version_id = v.id and r.company_id = ${b.companyId}::uuid and r.decision = 'approved'
        where v.slug = ${b.item}
        order by v.version desc limit 1
@@ -82,9 +85,9 @@ export async function createBatch(sql: Db, b: BatchInput & { companyId: string; 
          and not exists (select 1 from prior) as ok
     ), made as (
       insert into course.hiring_batches (company_id, item, purpose, version_id, role, prep_course, reviewer_email, opens_at, closes_at, time_zone, request_key, created_by)
-      select ${b.companyId}::uuid, ${b.item}, ${b.purpose ?? "hiring"}, ${b.versionId}::uuid, ${b.role}, ${b.prepCourse}, ${b.reviewer},
+      select ${b.companyId}::uuid, ${b.item}, current_version.purpose, ${b.versionId}::uuid, ${b.role}, ${b.prepCourse}, ${b.reviewer},
              ${b.opensAt.toISOString()}::timestamptz, ${b.closesAt.toISOString()}::timestamptz, ${b.timeZone}, ${b.requestKey}::uuid, ${b.by}
-        from go where go.ok
+        from go join current_version on current_version.id = ${b.versionId}::uuid where go.ok
       on conflict (company_id, request_key) do nothing
       returning id
     ), added as (

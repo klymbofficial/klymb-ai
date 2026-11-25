@@ -7,6 +7,7 @@ import { allowCompany } from "@/lib/company/access";
 import { loadDraft, loadVersions } from "@/lib/company/assessment-data";
 import { LIMITS, canWriteTests, candidateQuestions, publishGaps, readContent, readTestName, sameContent, type CandidateTask } from "@/lib/company/assessment-rules";
 import { AUTO_LIMITS, autoContent, pickQuestions, readSkills, summarise, type Mix } from "@/lib/company/auto-test";
+import { isAssessmentAudience, type AssessmentAudience } from "@/lib/company/batch-rules";
 import { klymbLibrary, ownLibrary } from "@/lib/company/library-data";
 import { activeRoles } from "@/lib/company/roles-data";
 import { logCompany } from "@/lib/company/audit";
@@ -29,6 +30,7 @@ const NOT_ALLOWED = { ok: false as const, message: "Only an admin or a recruiter
 const GONE = { ok: false as const, message: "That test is no longer available." };
 const CHANGED = { ok: false as const, message: "Someone else saved this draft since you opened it. Reload to see their version; your edits here are not saved." };
 const SLUG = /^t-[a-z0-9]{10}$/;
+const readAudience = (v: unknown): AssessmentAudience | null => isAssessmentAudience(v) ? v : null;
 
 async function writer(slug: unknown) {
   const member = typeof slug === "string" ? await getWorkspaceMember(slug) : null;
@@ -52,19 +54,21 @@ export async function createOwnTest(_prev: CreateResult, form: FormData): Promis
   const roleRaw = form.get("role");
   const role = typeof roleRaw === "string" ? roleRaw.replace(/\s+/g, " ").trim() : "";
   if (role.length > LIMITS.role) return { ok: false, message: `Keep the role under ${LIMITS.role} characters.` };
+  const audience = readAudience(form.get("audience"));
+  if (!audience) return { ok: false, message: "Choose whether this assessment is for external candidates or internal employees." };
 
   const sql = db();
   if (!sql) return UNAVAILABLE;
-  const item = await createTest(sql, { companyId: member.companyId, title: name.value, role, by: member.email });
+  const item = await createTest(sql, { companyId: member.companyId, title: name.value, role, audience, by: member.email });
   if (!item) return UNAVAILABLE;
-  await logCompany(member, "company.test_create", { item });
+  await logCompany(member, "company.test_create", { item, audience });
   refresh(member.companySlug);
   redirect(`/org/${member.companySlug}/assessments/${item}/edit`);
 }
 
 export type AutoResult =
   | {
-      ok: true; item: string; title: string; role: string; revision: number; existed: boolean;
+      ok: true; item: string; title: string; role: string; audience: AssessmentAudience; revision: number; existed: boolean;
       count: number; points: number; minutes: number; mix: Mix; planned: Mix; adapted: boolean;
       /** What candidates will see: never the right options. */
       task: CandidateTask;
@@ -80,11 +84,13 @@ const KEY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
  * doesn't open. The press's key makes a retry return the same test instead
  * of a second one; a shortage is reported, never padded.
  */
-export async function createAutoTest(input: { slug: string; title: string; role: string; skills: string[]; count: number; createKey: string }): Promise<AutoResult> {
+export async function createAutoTest(input: { slug: string; title: string; role: string; skills: string[]; count: number; audience: AssessmentAudience; createKey: string }): Promise<AutoResult> {
   const member = await writer(input?.slug);
   if (!member) return NOT_ALLOWED;
   const name = readTestName(input.title);
   if (!name.ok) return name;
+  const audience = readAudience(input.audience);
+  if (!audience) return { ok: false, message: "Choose whether this assessment is for external candidates or internal employees." };
   if (typeof input.createKey !== "string" || !KEY.test(input.createKey)) return { ok: false, message: "Reload the page and try again." };
   const count = Number(input.count);
   if (!Number.isInteger(count) || count < AUTO_LIMITS.min || count > AUTO_LIMITS.max) return { ok: false, message: `Ask for ${AUTO_LIMITS.min} to ${AUTO_LIMITS.max} questions.` };
@@ -102,7 +108,7 @@ export async function createAutoTest(input: { slug: string; title: string; role:
   const sum = summarise(picked.questions);
   const content = autoContent(role.label, picked.questions, sum.minutes);
 
-  const made = await createTestKeyed(sql, { companyId: member.companyId, title: name.value, role: role.label, by: member.email, createKey: input.createKey });
+  const made = await createTestKeyed(sql, { companyId: member.companyId, title: name.value, role: role.label, audience, by: member.email, createKey: input.createKey });
   if (!made) return UNAVAILABLE;
   let revision = 1;
   let saved = content;
@@ -116,13 +122,13 @@ export async function createAutoTest(input: { slug: string; title: string; role:
     const out = await saveOwnDraft(sql, { companyId: member.companyId, slug: made.slug, title: name.value, content, expected: 1, by: member.email });
     if (!out || out.status !== "saved") return UNAVAILABLE;
     revision = out.revision;
-    if (!made.existed) await logCompany(member, "company.test_create", { item: made.slug, automatic: true, questions: content.questions!.length, role: role.slug });
+    if (!made.existed) await logCompany(member, "company.test_create", { item: made.slug, automatic: true, questions: content.questions!.length, role: role.slug, audience });
   }
   refresh(member.companySlug, made.slug);
   const qs = saved.questions ?? [];
   const mix: Mix = made.existed && saved !== content ? { easy: 0, medium: 0, hard: 0 } : picked.mix;
   return {
-    ok: true, item: made.slug, title: name.value, role: role.label, revision, existed: made.existed,
+    ok: true, item: made.slug, title: name.value, role: role.label, audience: made.audience, revision, existed: made.existed,
     count: qs.length, points: qs.reduce((n, q) => n + (q.mcq?.points ?? 0), 0), minutes: saved.minutes ?? sum.minutes,
     mix, planned: picked.planned, adapted: picked.adapted && !made.existed,
     task: {

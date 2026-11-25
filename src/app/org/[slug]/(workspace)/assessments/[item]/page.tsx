@@ -53,7 +53,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /** A tab's body with a secondary menu on the left, as Settings and Test analysis are laid out. */
-function Split({ title, items, children }: { title: string; items: { key: string; label: string; href: string; current: boolean }[]; children: React.ReactNode }) {
+function Split({ title, items, children }: { title: string; items: { key: string; label: string; href?: string; current: boolean; unavailable?: boolean }[]; children: React.ReactNode }) {
   return (
     <div className={clsx(PANEL, "flex flex-col lg:flex-row")}>
       <nav aria-label={title} className="border-b border-line/30 p-2 lg:w-60 lg:shrink-0 lg:border-r lg:border-b-0 lg:py-4">
@@ -61,14 +61,21 @@ function Split({ title, items, children }: { title: string; items: { key: string
         <ul className="flex gap-1 overflow-x-auto lg:flex-col">
           {items.map((it) => (
             <li key={it.key} className="shrink-0">
-              <Link
-                href={it.href}
-                aria-current={it.current ? "page" : undefined}
-                className={clsx("flex min-h-10 items-center whitespace-nowrap rounded-md px-3 text-sm", it.current ? "bg-[#eef2fd] font-semibold text-[#1f4fd1]" : "hover:bg-paper")}
-              >
-                {it.label}
-                <PendingDot />
-              </Link>
+              {it.href ? (
+                <Link
+                  href={it.href}
+                  aria-current={it.current ? "page" : undefined}
+                  className={clsx("flex min-h-10 items-center whitespace-nowrap rounded-md px-3 text-sm", it.current ? "bg-[#eef2fd] font-semibold text-[#1f4fd1]" : "hover:bg-paper")}
+                >
+                  {it.label}
+                  <PendingDot />
+                </Link>
+              ) : (
+                <span aria-disabled="true" className="flex min-h-10 cursor-not-allowed items-center gap-2 whitespace-nowrap rounded-md px-3 text-sm text-muted">
+                  {it.label}
+                  {it.unavailable && <span className="text-xs">Coming soon</span>}
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -597,77 +604,102 @@ export default async function AssessmentPage({
   const awaiting = people.filter((c) => c.submittedAt && c.total === null).length;
   const marks = shown.questions?.length ? await versionQuestionMarks(sql, member.companyId, shown.id) : [];
   const perQuestion = shown.questions?.length && marks ? questionResults(marks, shown.questions.length) : [];
+  const analysisPanel = one(sp.analytics) === "questions" ? "questions" : "test";
+  const clearedCount = cleared ?? 0;
+  const analyticsSteps = [
+    { label: "Invited", count: invited, note: "active invitations", share: 100 },
+    { label: "Start passed", count: expired, note: invited ? `${percentOf(expired, invited)}% of invited` : "no invitations", share: invited ? percentOf(expired, invited) ?? 0 : 0 },
+    { label: "Test started", count: started, note: invited ? `${percentOf(started, invited)}% of invited` : "no invitations", share: invited ? percentOf(started, invited) ?? 0 : 0 },
+    { label: cut === null ? "Reviewed" : "Cut-off cleared", count: cut === null ? scored.length : clearedCount, note: cut === null ? "no cut-off set" : `${cut}% cut-off`, share: scored.length ? percentOf(cut === null ? scored.length : clearedCount, scored.length) ?? 0 : 0 },
+    { label: "Shortlisted", count: steps[5].count, note: submitted ? `${percentOf(steps[5].count, submitted)}% of submitted` : "no submissions", share: submitted ? percentOf(steps[5].count, submitted) ?? 0 : 0 },
+  ];
   return (
     <>
       {head}
-      <Split title="Test analysis" items={[{ key: "analytics", label: "Test analytics", href: hrefFor("analysis"), current: true }]}>
-        <section aria-labelledby="funnel">
-          <h2 id="funnel" className="text-lg font-bold">Candidate hiring funnel</h2>
-          <p className="mt-1 text-sm text-muted">
-            {invited === 0 ? "Nobody has been invited to this test yet." : `${percentOf(started, invited)}% of the ${invited} invited candidates have started the test.`}
-          </p>
-          <ol className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line/30 bg-line/30 sm:grid-cols-3 lg:grid-cols-6">
-            {steps.map((st, i) => (
-              <li key={st.key} className="flex flex-col bg-white p-4">
-                <p className="text-sm">{st.label}</p>
-                <p className="mt-1 text-3xl font-semibold tabular-nums">{st.count}</p>
-                <div aria-hidden="true" className="mt-4 h-2 rounded-full bg-paper">
-                  <div className="h-2 rounded-full bg-[#3aa7d6]" style={{ width: `${invited ? Math.round((st.count / invited) * 100) : 0}%` }} />
-                </div>
-                {i > 0 && st.ofPrevious !== null && (
-                  <p className="mt-3 text-xs text-muted">{st.ofPrevious}% of {steps[i - 1].label.toLowerCase()}</p>
-                )}
-              </li>
-            ))}
-          </ol>
-          <p className="mt-3 text-xs text-muted">
-            Counted from what Klymb records (a link opened, a Start, a submission, a completed review, a recruiter&apos;s decision), never from email opens.
-            {expired > 0 && ` ${expired} ${expired === 1 ? "person's" : "people's"} start time passed without starting.`} Cancelled invitations nobody started aren&apos;t counted.
-          </p>
-        </section>
+      <Split title="Test analysis" items={[
+        { key: "test", label: "Test analytics", href: hrefFor("analysis"), current: analysisPanel === "test" },
+        { key: "questions", label: "Question analytics", href: hrefFor("analysis", "analytics=questions"), current: analysisPanel === "questions" },
+        { key: "feedback", label: "Candidate feedback", current: false, unavailable: true },
+      ]}>
+        {analysisPanel === "test" ? (
+          <>
+            <section aria-labelledby="funnel">
+              <h2 id="funnel" className="text-xl font-bold">Candidate hiring funnel</h2>
+              <p className="mt-1 text-sm text-muted">
+                {invited === 0 ? "Nobody has been invited to this test yet." : `${percentOf(started, invited)}% of the total invited candidates have started the test.`}
+              </p>
+              <ol className="mt-6 grid overflow-hidden rounded-md border border-line/30 sm:grid-cols-2 xl:grid-cols-5">
+                {analyticsSteps.map((step, i) => (
+                  <li key={step.label} className="border-b border-line/20 p-4 last:border-b-0 sm:[&:nth-child(odd)]:border-r xl:border-b-0 xl:border-r xl:last:border-r-0">
+                    <p className="text-sm font-medium">{step.label}</p>
+                    <p className="mt-1 text-3xl font-semibold tabular-nums">{step.count}</p>
+                    <div aria-hidden="true" className="mt-5 h-2 overflow-hidden rounded-full bg-paper"><span className="block h-full rounded-full bg-[#19a7c9]" style={{ width: `${step.share}%` }} /></div>
+                    <p className="mt-3 text-xs text-muted">{i === 0 ? step.note : `${step.share}% · ${step.note}`}</p>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-3 text-xs text-muted">
+                Counts are based on recorded invitations, starts, submissions, reviews and recruiter decisions. {expired > 0 && `${expired} ${expired === 1 ? "candidate's" : "candidates'"} start window passed without a start. `}Cancelled invitations that never started are excluded.
+              </p>
+            </section>
 
-        <section aria-labelledby="metrics" className="mt-10">
-          <h2 id="metrics" className="text-lg font-bold">Test performance metrics</h2>
-          <dl className="mt-4 grid gap-6 sm:grid-cols-3">
-            <div><dt className="text-sm text-muted">Invited candidates who submitted</dt><dd className="mt-1 text-2xl font-semibold">{invited ? `${percentOf(submitted, invited)}%` : "—"}<span className="ml-2 text-sm font-normal text-muted">{submitted} of {invited}</span></dd></div>
-            <div><dt className="text-sm text-muted">Started candidates who submitted</dt><dd className="mt-1 text-2xl font-semibold">{started ? `${percentOf(submitted, started)}%` : "—"}<span className="ml-2 text-sm font-normal text-muted">{submitted} of {started}</span></dd></div>
-            <div><dt className="text-sm text-muted">Average reviewed score</dt><dd className="mt-1 text-2xl font-semibold">{avg === null ? "—" : `${avg}%`}<span className="ml-2 text-sm font-normal text-muted">{scored.length} reviewed</span></dd></div>
-            <div><dt className="text-sm text-muted">Cleared the cut-off</dt><dd className="mt-1 text-2xl font-semibold">{cleared === null ? "—" : cleared}<span className="ml-2 text-sm font-normal text-muted">{cut === null ? "no cut-off set" : `of ${scored.length} reviewed · cut-off ${cut}%`}</span></dd></div>
-            <div><dt className="text-sm text-muted">Submitted, waiting for review</dt><dd className="mt-1 text-2xl font-semibold">{awaiting}<span className="ml-2 text-sm font-normal text-muted">multiple choice already auto-marked</span></dd></div>
-          </dl>
-        </section>
+            <section aria-labelledby="metrics" className="mt-10">
+              <h2 id="metrics" className="text-xl font-bold">Test performance metrics</h2>
+              <dl className="mt-4 grid gap-px overflow-hidden rounded-md border border-line/30 bg-line/20 sm:grid-cols-2">
+                <div className="bg-white p-5"><dt className="text-sm text-muted">Of invited candidates</dt><dd className="mt-2 text-base"><strong className="text-2xl tabular-nums">{invited ? `${percentOf(started, invited)}%` : "—"}</strong> have started the test</dd></div>
+                <div className="bg-white p-5"><dt className="text-sm text-muted">Of reviewed candidates</dt><dd className="mt-2 text-base"><strong className="text-2xl tabular-nums">{cut === null ? "—" : `${percentOf(clearedCount, scored.length) ?? 0}%`}</strong> {cut === null ? "no cut-off is set" : `cleared the ${cut}% cut-off`}</dd></div>
+                <div className="bg-white p-5"><dt className="text-sm text-muted">Average reviewed score</dt><dd className="mt-2 text-base"><strong className="text-2xl tabular-nums">{avg === null ? "—" : `${avg}%`}</strong> <span className="text-muted">across {scored.length} reviewed</span></dd></div>
+                <div className="bg-white p-5"><dt className="text-sm text-muted">Waiting for review</dt><dd className="mt-2 text-base"><strong className="text-2xl tabular-nums">{awaiting}</strong> <span className="text-muted">submitted candidates</span></dd></div>
+              </dl>
+            </section>
 
-        <section aria-labelledby="dists" className="mt-10 grid gap-8 lg:grid-cols-2">
-          <h2 id="dists" className="sr-only">Distributions</h2>
-          <Bars title="Reviewed scores" note={`${scored.length} reviewed candidates, by percent of the total. Confirmed reviews only.`} bins={scoreBins.map((b) => ({ label: `${b.from}${b.to === null ? "–100" : `–${b.to - 1}`}%`, count: b.count }))} />
-          <Bars title="Time taken" note={`${taken.length} submissions, minutes from Start to submission (${durationText(shown.minutes)} allowed).`} bins={timeBins.map((b) => ({ label: b.to === null ? `${b.from}+ min` : `${b.from}–${b.to} min`, count: b.count }))} />
-        </section>
+            <section aria-labelledby="scores" className="mt-10">
+              <h2 id="scores" className="text-xl font-bold">Distribution of candidates based on score</h2>
+              <p className="mt-1 text-sm text-muted">This graph displays the reviewed-score distribution for candidates who have completed the test.</p>
+              <ScoreBars bins={scoreBins.map((b) => ({ label: `${b.from}${b.to === null ? "–100" : `–${b.to - 1}`}`, count: b.count }))} />
+              <p className="mt-5 text-sm text-muted">
+                {cut === null ? "Set a cut-off in Settings to track clearance here." : `${clearedCount} ${clearedCount === 1 ? "candidate" : "candidates"} scored at or above the ${cut}% cut-off.`}
+              </p>
+            </section>
 
-        {perQuestion.length > 0 && (
-          <section aria-labelledby="per-question" className="mt-10">
-            <h2 id="per-question" className="text-lg font-bold">Questions in version {shown.version}</h2>
-            <p className="mt-1 text-sm text-muted">Automatic marks for multiple choice at submission (an unanswered question is marked 0), before any reviewer change. Written questions are scored in reviews.</p>
-            <table className="mt-4 w-full text-left text-sm">
-              <thead className={CAPS}><tr className="border-b border-line/30"><th className="py-2 pr-3">#</th><th className="py-2 pr-3">Question</th><th className="py-2 pr-3">Marked</th><th className="py-2 pr-3">Full marks</th><th className="py-2">Average</th></tr></thead>
-              <tbody>
-                {perQuestion.map((r) => {
-                  const q = shown.questions![r.questionNo - 1];
+            <section className="mt-10"><Bars title="Time taken" note={`${taken.length} submissions, from Start to submission (${durationText(shown.minutes)} allowed).`} bins={timeBins.map((b) => ({ label: b.to === null ? `${b.from}+ min` : `${b.from}–${b.to} min`, count: b.count }))} /></section>
+          </>
+        ) : (
+          <section aria-labelledby="question-analytics">
+            <h2 id="question-analytics" className="text-xl font-bold">Question analytics</h2>
+            <p className="mt-1 text-sm text-muted">See how candidates performed on each multiple-choice question. Written-question marks appear after a reviewer completes scoring.</p>
+            {!shown.questions?.length ? (
+              <p className="mt-6 rounded-md border border-line/30 bg-paper p-5 text-sm text-muted">This assessment has one written task, so there are no individual question analytics yet.</p>
+            ) : (
+              <ol className="mt-6 space-y-4">
+                {shown.questions.map((q, i) => {
+                  const stats = perQuestion[i];
+                  const attempts = q.mcq ? stats?.attempts ?? 0 : 0;
+                  const correct = q.mcq ? stats?.full ?? 0 : 0;
                   return (
-                    <tr key={r.questionNo} className="border-b border-line/20 align-top">
-                      <td className="py-2 pr-3 tabular-nums">{r.questionNo}</td>
-                      <td className="py-2 pr-3">{q.title}{!q.mcq && <span className="text-muted"> · written</span>}</td>
-                      <td className="py-2 pr-3 tabular-nums">{q.mcq ? r.attempts : "—"}</td>
-                      <td className="py-2 pr-3 tabular-nums">{q.mcq && r.attempts ? `${r.full} (${percentOf(r.full, r.attempts)}%)` : "—"}</td>
-                      <td className="py-2">
-                        {q.mcq && r.average !== null ? (
-                          <span className="flex items-center gap-2"><span className="h-2 w-24 overflow-hidden rounded-full bg-line/20"><span className="block h-full bg-[#3aa7d6]" style={{ width: `${r.average}%` }} /></span><span className="tabular-nums">{r.average}%</span></span>
-                        ) : "—"}
-                      </td>
-                    </tr>
+                    <li key={i} className="overflow-hidden rounded-md border border-line/30">
+                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line/30 bg-paper px-5 py-4">
+                        <h3 className="max-w-3xl font-semibold">Question {i + 1}: {q.title}</h3>
+                        <span className="shrink-0 text-sm font-semibold">Score: {questionPoints(q)}</span>
+                      </div>
+                      <div className="grid gap-6 p-5 lg:grid-cols-2">
+                        <Prose text={q.brief} className="max-w-none text-sm text-muted" />
+                        {q.mcq ? (
+                          <div>
+                            <div className="flex justify-between gap-3 text-sm font-semibold"><span>Candidates attempted</span><span>Total candidates: {submitted}</span></div>
+                            <MetricBar label="Correct attempts" value={correct} total={submitted} tone="bg-[#269d88]" />
+                            <MetricBar label="Total attempts" value={attempts} total={submitted} tone="bg-[#3182ce]" />
+                            <p className="mt-3 text-xs text-muted">{stats?.average === null || stats?.average === undefined ? "No submitted automatic marks yet." : `Average mark: ${stats.average}%`}</p>
+                          </div>
+                        ) : (
+                          <p className="rounded-md bg-paper p-4 text-sm text-muted">Written question — candidate answers are reviewed manually, so automatic attempt and correctness analytics are not available.</p>
+                        )}
+                      </div>
+                    </li>
                   );
                 })}
-              </tbody>
-            </table>
+              </ol>
+            )}
           </section>
         )}
       </Split>
@@ -691,6 +723,33 @@ function Bars({ title, note, bins }: { title: string; note: string; bins: { labe
         ))}
       </ol>
       <p className="mt-2 text-xs text-muted">{note}</p>
+    </div>
+  );
+}
+
+/** Score distribution styled as a compact vertical chart, like the analytics reference. */
+function ScoreBars({ bins }: { bins: { label: string; count: number }[] }) {
+  const top = Math.max(1, ...bins.map((b) => b.count));
+  return (
+    <ol className="mt-6 grid h-56 grid-cols-5 items-end gap-x-2 gap-y-4 border-b border-l border-line/30 px-4 pt-4 sm:grid-cols-10" aria-label="Reviewed-score distribution">
+      {bins.map((b) => (
+        <li key={b.label} className="flex h-full min-w-0 flex-col items-center justify-end gap-1">
+          <span className="text-xs font-semibold tabular-nums">{b.count || ""}</span>
+          <span className="flex h-40 w-full max-w-8 items-end rounded-t bg-paper"><span className="block w-full rounded-t bg-[#19a7c9]" style={{ height: `${(100 * b.count) / top}%` }} /></span>
+          <span className="whitespace-nowrap text-[0.7rem] text-muted">{b.label}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** A labelled proportion bar for a question's attempts and correct answers. */
+function MetricBar({ label, value, total, tone }: { label: string; value: number; total: number; tone: string }) {
+  const share = total ? Math.round((100 * value) / total) : 0;
+  return (
+    <div className="mt-3">
+      <div className="mb-1 flex items-baseline justify-between gap-3 text-xs"><span>{label}</span><strong className="tabular-nums">{value}</strong></div>
+      <div className="h-5 overflow-hidden rounded bg-paper"><span className={clsx("block h-full rounded", tone)} style={{ width: `${share}%` }} /></div>
     </div>
   );
 }

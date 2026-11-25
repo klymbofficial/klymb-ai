@@ -652,10 +652,12 @@ describe("candidate attempts against a real database", { skip }, () => {
     await people();
     const mine = await import("../src/lib/company/my-assessments");
     const email = `colleague-${run}@test.invalid`;
-    const made = await data.createBatch(sqlA, { ...input({ candidates: [{ name: "Colleague", email, extraMinutes: 0 }] }), purpose: "internal" });
+    const externalBatchId = (await invited()).batchId;
+    await one.query(`update course.catalog_items set assessment_audience = 'internal' where slug = $1`, [slug]);
+    const made = await data.createBatch(sqlA, input({ candidates: [{ name: "Colleague", email, extraMinutes: 0 }] }));
     const batchId = (made as { id: string }).id;
     assert.equal((await one.query(`select purpose from course.hiring_batches where id = $1`, [batchId])).rows[0].purpose, "internal");
-    assert.equal((await one.query(`select purpose from course.hiring_batches where id = $1`, [(await invited()).batchId])).rows[0].purpose, "hiring", "default");
+    assert.equal((await one.query(`select purpose from course.hiring_batches where id = $1`, [externalBatchId])).rows[0].purpose, "hiring", "external assessment");
 
     // A draft isn't an invitation yet.
     assert.equal(await mine.hasMyInvitations(sqlA, companyId, email), false);

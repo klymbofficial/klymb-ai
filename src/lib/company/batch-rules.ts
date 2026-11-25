@@ -249,7 +249,14 @@ export interface ApprovedTest {
   version: number;
   minutes: number;
   role: string;
+  /** Set when the assessment was created; omitted only for pre-U12 callers. */
+  audience?: AssessmentAudience;
 }
+
+/** An assessment's audience is fixed when its company creates it. */
+export type AssessmentAudience = "external" | "internal";
+export const isAssessmentAudience = (v: unknown): v is AssessmentAudience => v === "external" || v === "internal";
+export const AUDIENCE_LABEL: Record<AssessmentAudience, string> = { external: "External candidates", internal: "Internal employees" };
 
 /** Hiring: candidates, with shortlisting. Internal: colleagues (U11), scored and reviewed but never shortlisted. */
 export type RoundPurpose = "hiring" | "internal";
@@ -257,8 +264,6 @@ export const PURPOSE_LABEL: Record<RoundPurpose, string> = { hiring: "Hiring", i
 
 export interface BatchInput {
   item: string;
-  /** Defaults to hiring when not given (older callers). */
-  purpose?: RoundPurpose;
   versionId: string;
   role: string;
   prepCourse: PrepCourse | null;
@@ -289,7 +294,7 @@ export function readBatchForm(
   if (!test) errors.test = ctx.tests.length ? "Choose a test." : "Your company has no approved test yet.";
 
   const role = text(raw.role).replace(/\s+/g, " ");
-  if (!role) errors.role = text(raw.purpose) === "internal" ? "Name this round, e.g. \"Engineering team check\"." : "Name the role you're hiring for.";
+  if (!role) errors.role = test?.audience === "internal" ? "Name this assessment round, e.g. \"Engineering team check\"." : "Name the role you're hiring for.";
   else if (role.length > BATCH_LIMITS.role) errors.role = `Keep the role under ${BATCH_LIMITS.role} characters.`;
 
   const prepRaw = text(raw.prepCourse);
@@ -325,8 +330,7 @@ export function readBatchForm(
   }
 
   if (Object.keys(errors).length || !test || !reviewer || !opensAt || !closesAt) return { ok: false, errors, problems };
-  const purpose: RoundPurpose = text(raw.purpose) === "internal" ? "internal" : "hiring";
-  return { ok: true, value: { item: test.item, purpose, versionId: test.versionId, role, prepCourse, reviewer, timeZone, opensAt, closesAt, candidates } };
+  return { ok: true, value: { item: test.item, versionId: test.versionId, role, prepCourse, reviewer, timeZone, opensAt, closesAt, candidates } };
 }
 
 // ── One person's extension ──────────────────────────────────

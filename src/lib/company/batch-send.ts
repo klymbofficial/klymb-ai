@@ -55,6 +55,7 @@ export function buildCandidateMail(
     company: brand,
     title: batch.title,
     role: batch.role,
+    internal: batch.purpose === "internal",
     opens: deadlineText(batch.opensAt, batch.timeZone),
     lastStart: deadlineText(last, batch.timeZone),
     allowed: durationText(allowedMinutes(batch.minutes, t.extraMinutes)),

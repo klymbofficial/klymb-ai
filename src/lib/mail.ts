@@ -637,10 +637,11 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
 }
 
 /**
- * A candidate's invitation to a company's hiring test, and the emails that
- * follow it (a reminder, a new link, a new time). Always says three things
- * apart: when the batch opens, the last moment to start, and how long they
- * have once they start. Times are written in the batch's time zone, named.
+ * An external candidate's invitation or an employee's assigned assessment,
+ * plus follow-up emails (a reminder, a new link, a new time). Always says
+ * three things apart: when the batch opens, the last moment to start, and
+ * how long they have once they start. Times are written in the batch's time
+ * zone, named.
  */
 export function candidateInviteEmail(p: {
   kind: "invite" | "reminder" | "auto_reminder" | "new_link" | "extension";
@@ -649,6 +650,8 @@ export function candidateInviteEmail(p: {
   company: CompanyBrand;
   title: string;
   role: string;
+  /** Internal assessments are assigned to employees; external ones invite candidates. */
+  internal: boolean;
   /** "Thu 4 Dec 2026, 10:00 am India Standard Time" */
   opens: string;
   lastStart: string;
@@ -670,19 +673,28 @@ export function candidateInviteEmail(p: {
   const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
   const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
   const brand: MailBrand = { name: company, logoUrl, color: accent };
-  const what = `the ${p.role} assessment`;
+  const what = p.internal ? "your assigned assessment" : `the ${p.role} assessment`;
 
-  const copy = {
-    invite: { subject: `${company} invites you to ${what}`, eyebrow: "You're invited", intro: `${company} invites you to take ${what} on Klymb.ai: ${p.title}.` },
-    reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
-    auto_reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
-    new_link: { subject: `Your new link for ${company}'s ${p.role} assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link. The earlier one no longer works.` },
-    extension: { subject: `New time for ${company}'s ${p.role} assessment`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
-  }[p.kind];
+  const messages = p.internal
+    ? {
+        invite: { subject: `${company} assigned you an assessment: ${p.title}`, eyebrow: "Assessment assigned", intro: `${company} assigned you an internal assessment on Klymb.ai: ${p.title}.` },
+        reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
+        auto_reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
+        new_link: { subject: `Your new link for ${company}'s assigned assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link for your assigned assessment. The earlier one no longer works.` },
+        extension: { subject: `New time for your assigned assessment from ${company}`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
+      }
+    : {
+        invite: { subject: `${company} invites you to ${what}`, eyebrow: "You're invited", intro: `${company} invites you to take ${what} on Klymb.ai: ${p.title}.` },
+        reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
+        auto_reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
+        new_link: { subject: `Your new link for ${company}'s ${p.role} assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link. The earlier one no longer works.` },
+        extension: { subject: `New time for ${company}'s ${p.role} assessment`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
+      };
+  const message = messages[p.kind];
   const own = p.kind === "invite" && p.template ? p.template : null;
   if (own) {
-    copy.subject = own.subject;
-    copy.intro = own.body;
+    message.subject = own.subject;
+    message.intro = own.body;
   }
 
   const when = [
@@ -699,7 +711,7 @@ export function candidateInviteEmail(p: {
 
   const text = [
     `Hi ${p.name},`, "",
-    copy.intro, "",
+    message.intro, "",
     ...when.map((w) => `${w.title}: ${w.body}`), "",
     `Open your assessment: ${p.link}`, "",
     ...(prepLine ? [prepLine, ""] : []),
@@ -710,14 +722,14 @@ export function candidateInviteEmail(p: {
 
   const html = layout({
     site, supportEmail: p.supportEmail, brand,
-    preview: copy.intro,
-    eyebrow: copy.eyebrow,
+    preview: message.intro,
+    eyebrow: message.eyebrow,
     title: `Hi ${esc(p.name)}.`,
-    intro: own ? esc(copy.intro).replace(/\n/g, "<br>") : esc(copy.intro),
+    intro: own ? esc(message.intro).replace(/\n/g, "<br>") : esc(message.intro),
     sections: [
       `${sectionTitle("When", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${when.map((w, i) => step(i + 1, esc(w.title), esc(w.body), accent)).join("")}
-      </table>${button(esc(p.link), "Open your assessment", accent)}
+      </table>${button(esc(p.link), p.internal ? "Open assigned assessment" : "Open your assessment", accent)}
       <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:0 0 16px">This link is for you only. Please don't share it.</div>`,
       ...(p.prep
         ? [`${sectionTitle("Prepare", accent)}<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">${esc(company)} has opened <strong>${esc(p.prep.course)}</strong> for you until ${esc(p.prep.until)}. Sign in with Google as <strong>${esc(p.email)}</strong> at <a href="${esc(p.prep.url)}" style="color:${C.ink};font-weight:600">${esc(p.prep.url)}</a>.</div>`]
@@ -727,7 +739,7 @@ export function candidateInviteEmail(p: {
         : []),
     ],
   });
-  return { subject: copy.subject, html, text, fromName: inviteSenderName(company), replyTo: p.company.supportEmail ?? undefined };
+  return { subject: message.subject, html, text, fromName: inviteSenderName(company), replyTo: p.company.supportEmail ?? undefined };
 }
 
 /** The line under every reminder: how to stop them. One click, no sign-in. */

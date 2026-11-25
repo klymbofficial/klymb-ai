@@ -40,6 +40,7 @@ export function CreateAssessment({ slug, roles, pool, startOpen = false }: { slu
 function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; roles: AssessmentRole[]; pool: PoolItem[]; open: boolean; onClose: () => void }) {
   const [createKey] = useState(() => crypto.randomUUID());
   const [mode, setMode] = useState<"auto" | "manual">("auto");
+  const [audience, setAudience] = useState<"external" | "internal">("external");
   const [title, setTitle] = useState("");
   const [roleSlug, setRoleSlug] = useState(roles[0]?.slug ?? "");
   const [manualRole, setManualRole] = useState("");
@@ -58,7 +59,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
   const mix = plannedMix(count);
   const empty = skills.filter((s) => !avail.bySkill[s]);
   const short = avail.total < count;
-  const dirty = !done && (title.trim() !== "" || manualRole.trim() !== "");
+  const dirty = !done && (title.trim() !== "" || manualRole.trim() !== "" || audience !== "external");
 
   const pickRole = (slugValue: string) => {
     setRoleSlug(slugValue);
@@ -68,7 +69,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
   const createAuto = () => go(async () => {
     setError(null);
     try {
-      const out = await createAutoTest({ slug, title, role: roleSlug, skills, count, createKey });
+      const out = await createAutoTest({ slug, title, role: roleSlug, skills, count, audience, createKey });
       if (!out.ok) { setError(out.message); return; }
       setDone(out);
       setView("summary");
@@ -97,7 +98,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
       open={open}
       onClose={onClose}
       title={title_}
-      description={done ? (view === "preview" ? "What candidates see. Right answers are never sent to them." : `${done.role} · ${published ? "published" : "draft"}`) : "Choose a job role. Automatic picks multiple-choice questions for its skills; Manual opens the editor."}
+      description={done ? (view === "preview" ? "What invitees see. Right answers are never sent to them." : `${done.role} · ${published ? "published" : "draft"}`) : "Choose who this assessment is for, then a job role. Automatic picks multiple-choice questions for its skills; Manual opens the editor."}
       size={view === "preview" ? "lg" : "md"}
       dirty={dirty}
       footer={
@@ -108,7 +109,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
               : <button type="button" className={BTN_SECONDARY} onClick={() => setView("preview")}>Preview</button>}
             <Link href={`${base}/${done.item}/edit`} className={BTN_SECONDARY}>Edit questions</Link>
             {published
-              ? <Link href={`${base}/${done.item}?tab=candidates&invite=1`} className={BTN_PRIMARY}>Add candidates</Link>
+              ? <Link href={`${base}/${done.item}?tab=candidates&invite=1`} className={BTN_PRIMARY}>{done.audience === "internal" ? "Assign employees" : "Invite candidates"}</Link>
               : <button type="button" className={BTN_PRIMARY} disabled={pending} onClick={publish}>{pending ? "Publishing…" : "Publish"}</button>}
           </div>
         ) : (
@@ -130,8 +131,8 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
       ) : done ? (
         <div className="flex flex-col gap-5">
           <p className="text-base font-bold">{done.title}</p>
-          <dl className="grid grid-cols-3 gap-3 text-center">
-            {[["Questions", String(done.count)], ["Points", String(done.points)], ["Time", minutesLabel(done.minutes)]].map(([k, v]) => (
+          <dl className="grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+            {[["Audience", done.audience === "internal" ? "Internal employees" : "External candidates"], ["Questions", String(done.count)], ["Points", String(done.points)], ["Time", minutesLabel(done.minutes)]].map(([k, v]) => (
               <div key={k} className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">{k}</dt><dd className="mt-1 text-lg font-black">{v}</dd></div>
             ))}
           </dl>
@@ -150,6 +151,26 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
             Test name
             <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={TEST_NAME_MAX} placeholder="e.g. Backend developer screen" className={input} data-autofocus="" />
           </label>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-bold">Who is this assessment for?</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {([[
+                "external",
+                "External candidates",
+                "For hiring. Recruiters can review candidates and record a hiring decision.",
+              ], [
+                "internal",
+                "Internal employees",
+                "For your workforce. Assigned employees see it in My assessments; no hiring decision is recorded.",
+              ]] as const).map(([value, heading, detail]) => (
+                <label key={value} className={clsx("flex cursor-pointer gap-2 rounded-md border-2 p-3 text-sm", audience === value ? "border-ink bg-white" : "border-line/40")}>
+                  <input type="radio" name="audience" value={value} checked={audience === value} onChange={() => setAudience(value)} className="mt-1" />
+                  <span><span className="font-bold">{heading}</span><span className="block text-muted">{detail}</span></span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-bold">How to build it</legend>
@@ -220,6 +241,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
             <form id="create-manual" action={(fd) => go(async () => { setError(null); const out = await createOwnTest(null, fd); if (out && !out.ok) setError(out.message); })} className="flex flex-col gap-4">
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="title" value={title} />
+              <input type="hidden" name="audience" value={audience} />
               <label className={label}>
                 Role it tests <span className="font-normal text-muted">(optional)</span>
                 <input name="role" value={manualRole} onChange={(e) => setManualRole(e.target.value)} maxLength={LIMITS.role} placeholder="e.g. Backend engineer" className={input} />
