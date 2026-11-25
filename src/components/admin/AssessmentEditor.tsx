@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { LibraryPicker } from "@/components/library/LibraryPicker";
+import { useConfirm } from "@/components/company/Overlay";
 import { publishAssessment, saveAssessmentDraft, type DraftResult, type PublishResult } from "@/app/admin/assessment-actions";
 import {
   LIMITS,
@@ -127,6 +128,7 @@ export function AssessmentEditor({
   latest: { version: number; content: AssessmentContent } | null;
   nextVersion: number;
 }) {
+  const [confirm, dialog] = useConfirm();
   const [form, setForm] = useState<Form>(() => formOf(initial, title?.value));
   const [saved, setSaved] = useState<string>(() => JSON.stringify(formOf(initial, title?.value)));
   const [revision, setRevision] = useState(startRevision);
@@ -180,7 +182,7 @@ export function AssessmentEditor({
   }
 
   async function publish() {
-    if (!window.confirm(`Publish as version ${nextVersion}? A published version can't be changed.`)) return;
+    if (!(await confirm({ title: `Publish as version ${nextVersion}?`, body: "A published version can't be changed. Tests already sent keep the version they had.", confirmLabel: `Publish version ${nextVersion}` }))) return;
     setBusy(true);
     setMsg(null);
     const out = await (publishAction ?? ((r) => publishAssessment(slug, r)))(revision);
@@ -435,6 +437,7 @@ export function AssessmentEditor({
         </div>
         {msg && <p role={msg.ok ? "status" : "alert"} className={`text-xs font-semibold ${msg.ok ? "text-ink" : "text-error"}`}>{msg.text}</p>}
       </div>
+      {dialog}
     </form>
   );
 }

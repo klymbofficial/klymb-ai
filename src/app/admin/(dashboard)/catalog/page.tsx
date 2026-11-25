@@ -33,7 +33,7 @@ export default async function AdminCatalogPage() {
         eyebrow="B2B"
         title="Business catalog"
         intro="A company sees an item only once it is published and given to them. Changes are logged in Admin activity."
-        actions={<Link href="/admin/catalog/questions" className="text-sm font-bold underline underline-offset-4">Klymb&apos;s question library →</Link>}
+        actions={<span className="flex flex-wrap gap-4"><Link href="/admin/catalog/questions" className="text-sm font-bold underline underline-offset-4">Klymb&apos;s question library →</Link><Link href="/admin/catalog/roles" className="text-sm font-bold underline underline-offset-4">Job roles →</Link></span>}
       />
       {data ? (
         <CatalogAdmin

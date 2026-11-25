@@ -103,7 +103,10 @@ export function TestCandidates({ rows, initial, slug }: { rows: PersonRow[]; ini
                         <p className="mt-1 text-xs">{r.when}</p>
                         <p className="text-xs text-muted">{r.allowed}</p>
                       </td>
-                      <td className="px-3 py-3 tabular-nums">{r.score ?? <span className="text-muted">—</span>}</td>
+                      <td className="px-3 py-3 tabular-nums">
+                        {r.score ?? (r.autoScore ? <span title="Multiple choice marked automatically; a reviewer confirms it">Auto {r.autoScore}<span className="block text-xs text-muted">to confirm</span></span> : <span className="text-muted">—</span>)}
+                        {r.cutoff && <span className="mt-1 block"><Badge tone={r.cutoff === "cleared" ? "green" : "red"}>{r.cutoff === "cleared" ? "Cleared cut-off" : "Below cut-off"}</Badge></span>}
+                      </td>
                       <td className="px-3 py-3">
                         {r.decision ? <Badge tone={r.decision.tone}>{r.decision.label}</Badge> : <span className="text-muted">{r.internal ? "Internal" : "—"}</span>}
                         {r.decision?.shared && <span className="mt-1 block whitespace-nowrap text-xs text-muted">Result shared</span>}

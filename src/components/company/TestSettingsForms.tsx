@@ -156,3 +156,58 @@ export function EmailSettingsForm({
     </form>
   );
 }
+
+/** The cut-off, with a suggestion once enough people are reviewed, and the details asked before Start (U06b). */
+export function CandidateSettingsForm({
+  save, revision, cutoffPercent, collect, suggested, reviewed, fields,
+}: {
+  save: Save;
+  revision: number;
+  cutoffPercent: number | null;
+  collect: string[];
+  /** The median reviewed score, or null below the minimum. */
+  suggested: number | null;
+  reviewed: number;
+  /** Every field a company may ask for, in order. */
+  fields: { key: string; label: string }[];
+}) {
+  const [cut, setCut] = useState(cutoffPercent === null ? "" : String(cutoffPercent));
+  const [asked, setAsked] = useState<string[]>(collect);
+  const { run, pending, note } = useSave(save, revision);
+  return (
+    <form className="flex max-w-xl flex-col gap-6" onSubmit={(e) => { e.preventDefault(); run({ cutoffPercent: cut, collect: asked }); }}>
+      <label className={label}>
+        Cut-off score <span className="font-normal text-muted">(percent of the total; empty for none; never shown to candidates)</span>
+        <span className="flex items-center gap-2">
+          <input type="number" min={0} max={100} step={1} inputMode="numeric" value={cut} onChange={(e) => setCut(e.target.value)} className={`${input} max-w-28`} />
+          <span className="text-sm font-normal">%</span>
+          {suggested !== null && String(suggested) !== cut && (
+            <button type="button" onClick={() => setCut(String(suggested))} className={BTN_SECONDARY}>Use {suggested}%</button>
+          )}
+        </span>
+        <span className="text-xs font-normal text-muted">
+          {suggested !== null
+            ? `Suggested: ${suggested}%, the middle score of the ${reviewed} people reviewed so far.`
+            : `A suggestion appears once 5 people are reviewed (${reviewed} so far).`}{" "}
+          Reviewed candidates are marked cleared or below it.
+        </span>
+      </label>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-bold">Ask before they start <span className="font-normal text-muted">(name and email are always known)</span></legend>
+        {fields.map((f) => (
+          <label key={f.key} className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={asked.includes(f.key)} onChange={(e) => setAsked((a) => (e.target.checked ? [...a, f.key] : a.filter((x) => x !== f.key)))} />
+            {f.label}
+          </label>
+        ))}
+        <p className="text-xs text-muted">Each is required. People who already started aren&apos;t asked.</p>
+      </fieldset>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" disabled={pending} className={BTN_PRIMARY}>{pending ? "Saving…" : "Save"}</button>
+        {note}
+      </div>
+    </form>
+  );
+}

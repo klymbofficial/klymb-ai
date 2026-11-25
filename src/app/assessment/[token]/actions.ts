@@ -3,10 +3,13 @@
 import { redirect } from "next/navigation";
 import { attemptTask, saveDraft, saveQuestionAnswer, startAttempt, submitAttempt, type SaveOutcome, type SubmitOutcome } from "@/lib/company/attempt-data";
 import { MAX_ANSWER_CHARS } from "@/lib/company/attempt-rules";
+import { candidateByLink } from "@/lib/company/batch-data";
+import { DETAIL_KEYS, readDetails } from "@/lib/company/test-settings";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { readCandidateLink } from "@/lib/company/batch-link";
 import { db } from "@/lib/db/client";
 
-export type StartResult = { message: string } | null;
+export type StartResult = { message: string; values?: Record<string, string> } | null;
 
 /**
  * The candidate's Start. Their private link is their only key: its
@@ -21,7 +24,15 @@ export async function startTest(_prev: StartResult, form: FormData): Promise<Sta
   if (!ref || typeof token !== "string") return { message: "This link doesn't work. Open the whole link from your email." };
   const sql = db();
   if (!sql) return { message: "The test can't start right now. Try again in a minute." };
-  const out = await startAttempt(sql, ref.id, ref.generation);
+  // The details this company asks for before Start (U06b), checked here; they're kept only on a new start.
+  const found = await candidateByLink(sql, ref.id);
+  if (!found) return { message: "The test can't start right now. Try again in a minute." };
+  const settings = await loadTestSettings(sql, found.batch.companyId, found.batch.item);
+  if (!settings) return { message: "The test can't start right now. Try again in a minute." };
+  const typed = Object.fromEntries(DETAIL_KEYS.map((k) => [k, typeof form.get(k) === "string" ? String(form.get(k)) : ""]));
+  const details = readDetails(typed, settings.collect);
+  if (!details.ok) return { message: details.message, values: typed };
+  const out = await startAttempt(sql, ref.id, ref.generation, settings.collect.length ? details.value : null);
   if (!out) return { message: "The test can't start right now. Try again in a minute." };
   if (out.status === "refused") return { message: "This link can't start the test now. Reload the page to see why." };
   redirect(`/assessment/${token}/attempt`);

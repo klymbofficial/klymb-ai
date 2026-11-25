@@ -20,6 +20,10 @@ export interface TestSettings {
   autoRemind: boolean;
   /** Null: the standard invitation. */
   invite: InviteTemplate | null;
+  /** U06b: a whole percent, or null for no cut-off. */
+  cutoffPercent: number | null;
+  /** U06b: details asked before Start. */
+  collect: DetailField[];
   /** 0 until the first save. */
   revision: number;
   updatedBy: string | null;
@@ -27,7 +31,7 @@ export interface TestSettings {
 }
 
 export const DEFAULT_SETTINGS: TestSettings = {
-  accessOpen: true, endsOn: null, tags: [], autoRemind: true, invite: null, revision: 0, updatedBy: null, updatedAt: null,
+  accessOpen: true, endsOn: null, tags: [], autoRemind: true, invite: null, cutoffPercent: null, collect: [], revision: 0, updatedBy: null, updatedAt: null,
 };
 
 export const SETTINGS_LIMITS = { tags: 10, tag: 40, subject: 160, body: 3000 } as const;
@@ -113,4 +117,72 @@ export function roundBlocked(s: Pick<TestSettings, "accessOpen" | "endsOn">, clo
     return "This round closes after the test ends. Close it by the test's end date, or move the end date in the test's settings.";
   }
   return null;
+}
+
+// ── U06b: cut-off and the details asked before Start ─────────────────────
+
+/** Details a company may ask for before Start (name and email are always known). */
+export const DETAIL_FIELDS = {
+  phone: { label: "Phone number", max: 20, kind: "phone" },
+  linkedin: { label: "LinkedIn profile", max: 200, kind: "url" },
+  experience: { label: "Years of experience", max: 4, kind: "years" },
+  company: { label: "Current company", max: 120, kind: "text" },
+  notice: { label: "Notice period", max: 60, kind: "text" },
+  college: { label: "College or university", max: 160, kind: "text" },
+  graduation: { label: "Graduation year", max: 4, kind: "year" },
+} as const;
+export type DetailField = keyof typeof DETAIL_FIELDS;
+export const DETAIL_KEYS = Object.keys(DETAIL_FIELDS) as DetailField[];
+
+/** The cut-off (a whole percent, or none) and which details to ask, as a person sets them. */
+export function readCandidate(raw: Record<string, unknown>): Result<{ cutoffPercent: number | null; collect: DetailField[] }> {
+  const typed = text(raw.cutoffPercent);
+  let cutoffPercent: number | null = null;
+  if (typed) {
+    const n = Number(typed);
+    if (!Number.isInteger(n) || n < 0 || n > 100) return { ok: false, message: "The cut-off is a whole percent from 0 to 100, or empty for none." };
+    cutoffPercent = n;
+  }
+  const asked = Array.isArray(raw.collect) ? raw.collect : [];
+  const collect = DETAIL_KEYS.filter((k) => asked.includes(k));
+  return { ok: true, value: { cutoffPercent, collect } };
+}
+
+/**
+ * What a candidate typed for the asked details, checked: every asked field
+ * filled, each within its limit and shape. Unasked fields are dropped.
+ */
+export function readDetails(raw: Record<string, unknown>, collect: readonly DetailField[], now = new Date()): Result<Partial<Record<DetailField, string>>> {
+  const out: Partial<Record<DetailField, string>> = {};
+  for (const k of collect) {
+    const f = DETAIL_FIELDS[k];
+    const v = line(raw[k]);
+    if (!v) return { ok: false, message: `Fill in ${f.label.toLowerCase()}.` };
+    if (v.length > f.max) return { ok: false, message: `${f.label}: keep it under ${f.max} characters.` };
+    if (f.kind === "phone" && !/^\+?[0-9][0-9 -]{5,18}$/.test(v)) return { ok: false, message: "Enter a phone number with digits only, and a + for the country code if you like." };
+    if (f.kind === "url" && !/^(https?:\/\/)?([a-z]{2,3}\.)?linkedin\.com\/\S+$/i.test(v)) return { ok: false, message: "Enter your LinkedIn profile link (linkedin.com/in/…)." };
+    if (f.kind === "years" && !(/^\d{1,2}(\.\d)?$/.test(v) && Number(v) <= 60)) return { ok: false, message: "Years of experience is a number, like 3 or 4.5." };
+    if (f.kind === "year") {
+      const y = Number(v);
+      if (!/^\d{4}$/.test(v) || y < 1960 || y > now.getUTCFullYear() + 6) return { ok: false, message: "Enter your graduation year, like 2024." };
+    }
+    out[k] = v;
+  }
+  return { ok: true, value: out };
+}
+
+/** A reviewed score against the cut-off; null when there is none. */
+export function cutoffResult(total: number, max: number, cutoffPercent: number | null): "cleared" | "below" | null {
+  if (cutoffPercent === null || max <= 0) return null;
+  return (total / max) * 100 >= cutoffPercent ? "cleared" : "below";
+}
+
+export const SUGGEST_MIN = 5;
+
+/** A suggested cut-off: the median reviewed percent, once SUGGEST_MIN people are reviewed. A hint, never applied by itself. */
+export function suggestCutoff(percents: readonly number[]): number | null {
+  if (percents.length < SUGGEST_MIN) return null;
+  const s = [...percents].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return Math.round(s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2);
 }

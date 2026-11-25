@@ -1,6 +1,8 @@
 import "server-only";
+import { cutoffResult } from "@/lib/company/test-settings";
+import { loadTestSettings } from "@/lib/company/test-settings-data";
 import type { CompanyMember } from "@/lib/company/access";
-import { attemptsForBatch, type Attempt } from "@/lib/company/attempt-data";
+import { attemptsForBatch, finaliseDue } from "@/lib/company/attempt-data";
 import { attemptState } from "@/lib/company/attempt-rules";
 import { loadBatch, type Batch, type Candidate, type MailLogRow } from "@/lib/company/batch-data";
 import {
@@ -9,7 +11,7 @@ import {
 } from "@/lib/company/batch-rules";
 import { batchStateKey, type BatchStateKey } from "@/lib/company/batch-view";
 import { decisionsForBatch } from "@/lib/company/decision-data";
-import { reviewsForBatch } from "@/lib/company/review-data";
+import { autoScoresForBatch, reviewsForBatch } from "@/lib/company/review-data";
 import { DECISION_LABEL, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { hubTags, type HubFilter } from "@/lib/company/test-hub-view";
 import type { Db } from "@/lib/db/client";
@@ -47,6 +49,10 @@ export interface PersonRow {
   when: string;
   allowed: string;
   score: string | null;
+  /** Multiple choice marked automatically at Submit, while nobody has reviewed it yet (L3). */
+  autoScore: string | null;
+  /** The reviewed score against this company's cut-off for the test (U06b); null without one. */
+  cutoff: "cleared" | "below" | null;
   decision: { label: string; tone: Tone; shared: boolean } | null;
   open: { href: string; label: string } | null;
   actions: { retry: boolean; fixEmail: boolean; remind: boolean; newLink: boolean; copyLink: boolean; passed: boolean; extraMinutes: number; lastStartInput: string; timeZone: string } | null;
@@ -74,12 +80,18 @@ export interface Round {
 
 /** Every round of a test in this company, newest first. Null on a database error. */
 export async function loadTestRounds(sql: Db, member: CompanyMember, item: string, now: Date): Promise<{ rounds: Round[]; people: PersonRow[] } | null> {
-  const ids = await sql.rows<{ id: string }>`
-    select id from course.hiring_batches where company_id = ${member.companyId}::uuid and item = ${item} order by created_at desc limit 50
-  `;
+  // One trip for the round ids, the settings and finalising timed-out attempts, then every round's data at once (U10, P0.5).
+  const [ids, settings] = await Promise.all([
+    sql.rows<{ id: string }>`
+      select id from course.hiring_batches where company_id = ${member.companyId}::uuid and item = ${item} order by created_at desc limit 50
+    `,
+    loadTestSettings(sql, member.companyId, item),
+    finaliseDue(sql, { companyId: member.companyId, item }),
+  ]);
   if (ids.error) return ids.error.code === "42P01" ? { rounds: [], people: [] } : null;
 
   const base = `/org/${member.companySlug}/assessments/${item}/candidates`;
+  const cutoffPercent = settings?.cutoffPercent ?? null;
   const recruiter = canSchedule(member);
   const scorer = canScore(member);
   const rounds: Round[] = [];
@@ -87,19 +99,22 @@ export async function loadTestRounds(sql: Db, member: CompanyMember, item: strin
 
   // Every round at once: on a remote database, one after another adds up quickly.
   const loaded = await Promise.all((ids.data ?? []).map(async ({ id }) => {
-    const found = await loadBatch(sql, member.companyId, id);
+    // A draft round has no attempts; asking anyway costs nothing extra now that it all runs at once.
+    const [found, attempts, reviews, decisions, autos] = await Promise.all([
+      loadBatch(sql, member.companyId, id),
+      attemptsForBatch(sql, member.companyId, id, { finalised: true }),
+      reviewsForBatch(sql, member.companyId, id),
+      decisionsForBatch(sql, member.companyId, id),
+      autoScoresForBatch(sql, member.companyId, id),
+    ]);
     if (!found) return null;
-    const draft = found.batch.status === "draft";
-    const [attempts, reviews, decisions] = draft
-      ? [[] as Attempt[], [], new Map<string, { decision: HiringDecision | null; sharedRevision: number | null }>()]
-      : await Promise.all([attemptsForBatch(sql, member.companyId, id), reviewsForBatch(sql, member.companyId, id), decisionsForBatch(sql, member.companyId, id)]);
-    if (!attempts || !reviews || !decisions) return null;
-    return { id, ...found, attempts, reviews, decisions };
+    if (!attempts || !reviews || !decisions || !autos) return null;
+    return { id, ...found, attempts, reviews, decisions, autos };
   }));
   if (loaded.some((l) => l === null)) return null;
 
   for (const l of loaded) {
-    const { id, batch, candidates, mail, attempts, reviews, decisions } = l!;
+    const { id, batch, candidates, mail, attempts, reviews, decisions, autos } = l!;
     const draft = batch.status === "draft";
     const attemptOf = new Map(attempts.map((a) => [a.candidateId, a]));
     const reviewOf = new Map(reviews.map((r) => [r.attemptId, r]));
@@ -167,6 +182,8 @@ export async function loadTestRounds(sql: Db, member: CompanyMember, item: strin
           : `Start by ${deadlineText(lastOf(c), tz)}`,
         allowed: attempt ? `${durationText(attempt.allowedMinutes)} (fixed at start)` : `${durationText(allowedMinutes(batch.minutes, c.extraMinutes))}${c.extraMinutes ? ` (${c.extraMinutes} extra)` : ""}`,
         score: scored ? scoreText(scored.total, scored.max) : null,
+        autoScore: !scored && attempt && autos.get(attempt.id) ? scoreText(autos.get(attempt.id)!.total, autos.get(attempt.id)!.max) : null,
+        cutoff: scored ? cutoffResult(scored.total, scored.max, cutoffPercent) : null,
         decision: decided?.decision ? { label: DECISION_LABEL[decided.decision], tone: DECISION_TONE[decided.decision], shared: !!decided.sharedRevision } : null,
         open: attempt ? { href: `${base}/${c.id}`, label: attempt.submittedAt && !scored && scorer ? "Review" : "Open" } : null,
         // Once submitted there is nothing left to do about the invitation; once started, no resend or readdress.

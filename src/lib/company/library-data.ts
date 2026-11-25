@@ -31,6 +31,7 @@ const fail = (what: string, error: { code?: string; message: string }) => {
 type Row = {
   id: string; owner_company_id: string | null; type: string; title: string; statement: string; difficulty: string; tags: string[];
   points: number; minutes: number; options: unknown; partial: boolean; rubric: unknown; status: string; revision: number; updated_at: string;
+  explanation?: string | null;
 };
 
 function readOptions(raw: unknown): McqOption[] | null {
@@ -59,6 +60,7 @@ function fromRow(r: Row): LibraryQuestion | null {
     status: QUESTION_STATUSES.includes(r.status as QuestionStatus) ? (r.status as QuestionStatus) : "draft",
     revision: r.revision,
     updatedAt: r.updated_at,
+    explanation: r.explanation ?? null,
   };
 }
 
@@ -68,7 +70,7 @@ const json = (v: unknown) => (v === null ? null : JSON.stringify(v));
 /** Klymb's published questions, newest first. Empty before 0063; null on a database error. */
 export async function klymbLibrary(sql: Db): Promise<LibraryQuestion[] | null> {
   const { data, error } = await sql.rows<Row>`
-    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at
+    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at, explanation
       from course.library_questions
      where owner_company_id is null and status = 'published'
      order by updated_at desc limit 2000
@@ -80,7 +82,7 @@ export async function klymbLibrary(sql: Db): Promise<LibraryQuestion[] | null> {
 /** This company's own questions (not removed), newest first. Empty before 0063; null on a database error. */
 export async function ownLibrary(sql: Db, companyId: string): Promise<LibraryQuestion[] | null> {
   const { data, error } = await sql.rows<Row>`
-    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at
+    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at, explanation
       from course.library_questions
      where owner_company_id = ${companyId}::uuid and status <> 'retired'
      order by updated_at desc limit 2000
@@ -96,7 +98,7 @@ export async function ownLibrary(sql: Db, companyId: string): Promise<LibraryQue
 export async function libraryQuestion(sql: Db, companyId: string, id: string): Promise<LibraryQuestion | undefined | null> {
   if (!UUID.test(id)) return undefined;
   const { data, error } = await sql.row<Row>`
-    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at
+    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at, explanation
       from course.library_questions
      where id = ${id}::uuid
        and ((owner_company_id is null and status = 'published') or (owner_company_id = ${companyId}::uuid and status <> 'retired'))
@@ -153,7 +155,7 @@ export async function removeOwnQuestion(sql: Db, r: { companyId: string; id: str
 /** Every Klymb question in any status, newest first. Null on a database error. */
 export async function adminLibrary(sql: Db): Promise<LibraryQuestion[] | null> {
   const { data, error } = await sql.rows<Row>`
-    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at
+    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at, explanation
       from course.library_questions
      where owner_company_id is null
      order by updated_at desc limit 2000
@@ -166,7 +168,7 @@ export async function adminLibrary(sql: Db): Promise<LibraryQuestion[] | null> {
 export async function adminQuestion(sql: Db, id: string): Promise<LibraryQuestion | undefined | null> {
   if (!UUID.test(id)) return undefined;
   const { data, error } = await sql.row<Row>`
-    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at
+    select id, owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, revision, updated_at, explanation
       from course.library_questions where id = ${id}::uuid and owner_company_id is null
   `;
   if (error) return error.code === UNDEFINED_TABLE ? undefined : fail("admin read", error);

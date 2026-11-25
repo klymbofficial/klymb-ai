@@ -1,5 +1,5 @@
 import "server-only";
-import { candidateResult, type HiringDecision, type SharedResult } from "@/lib/company/review-rules";
+import { candidateResult, readScores, type HiringDecision, type SharedResult } from "@/lib/company/review-rules";
 import type { Db } from "@/lib/db/client";
 
 /**
@@ -121,7 +121,7 @@ export async function shareResult(sql: Db, r: { companyId: string; attemptId: st
  * again). Undefined when nothing has been shared. Never notes or summary.
  */
 export async function sharedResultFor(sql: Db, attemptId: string): Promise<SharedResult | undefined | null> {
-  const { data, error } = await sql.row<{ policy: "overall" | "by_area"; shared_at: string; total: number; max: number; scores: { title: string; points: number; max: number }[] }>`
+  const { data, error } = await sql.row<{ policy: "overall" | "by_area"; shared_at: string; total: number; max: number; scores: unknown }>`
     select s.policy, s.shared_at, r.total, r.max, r.scores
       from course.result_shares s
       join course.attempt_reviews r on r.attempt_id = s.attempt_id and r.revision = s.review_revision
@@ -131,5 +131,5 @@ export async function sharedResultFor(sql: Db, attemptId: string): Promise<Share
   `;
   if (error) return error.code === UNDEFINED_TABLE ? undefined : fail("candidate read", error);
   if (!data) return undefined;
-  return candidateResult({ policy: data.policy, sharedAt: iso(data.shared_at) }, { total: data.total, max: data.max, scores: data.scores });
+  return candidateResult({ policy: data.policy, sharedAt: iso(data.shared_at) }, { total: data.total, max: data.max, scores: readScores(data.scores) });
 }

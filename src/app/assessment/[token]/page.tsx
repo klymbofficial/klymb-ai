@@ -5,7 +5,7 @@ import { LocalTime } from "@/components/company/LocalTime";
 import { StartTest } from "@/components/company/StartTest";
 import { RefreshAt } from "@/components/company/RefreshAt";
 import { attemptByLink, loadSubmission, recordLinkOpened, type Submission } from "@/lib/company/attempt-data";
-import { startBlocked } from "@/lib/company/test-settings";
+import { DETAIL_FIELDS, startBlocked } from "@/lib/company/test-settings";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
 import { sharedResultFor } from "@/lib/company/decision-data";
 import type { SharedResult } from "@/lib/company/review-rules";
@@ -171,7 +171,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ toke
         ) : state === "not_open" ? (
           <p className="mt-6 border-l-4 border-ink bg-white px-4 py-3 text-sm">Come back to this link when it opens. Start by the time above to get your full {allowed}.</p>
         ) : (
-          <StartTest token={token} allowed={allowed} />
+          <StartTest token={token} allowed={allowed} fields={(settings?.collect ?? []).map((k) => ({ key: k, ...DETAIL_FIELDS[k] }))} />
         )}
       </section>
 

@@ -225,17 +225,16 @@ const toCandidate = (r: CandidateRow): Candidate => ({
 
 /** One batch of this company, with its people and every email sent to them. Undefined when there's no such batch here. */
 export async function loadBatch(sql: Db, companyId: string, batchId: string): Promise<{ batch: Batch; candidates: Candidate[]; mail: MailLogRow[] } | undefined | null> {
-  const head = await sql.row<BatchRow>`
+  // All three at once (U10/P0.5): the people and mail queries are scoped to the company too, so they return nothing for another company's batch.
+  const [head, people, mail] = await Promise.all([
+    sql.row<BatchRow>`
     select b.id, b.company_id, b.item, b.purpose, b.version_id, v.title, v.version, v.minutes, b.role, b.prep_course, b.reviewer_email, m.name as reviewer_name,
            b.opens_at, b.closes_at, b.time_zone, b.status, b.created_by, b.created_at, b.sent_by, b.sent_at, b.cancelled_by, b.cancelled_at
       from course.hiring_batches b
       join course.assessment_versions v on v.id = b.version_id
       left join course.company_members m on m.company_id = b.company_id and m.email = b.reviewer_email
      where b.id = ${batchId}::uuid and b.company_id = ${companyId}::uuid
-  `;
-  if (head.error) return head.error.code === UNDEFINED_TABLE ? undefined : fail("read", head.error);
-  if (!head.data) return undefined;
-  const [people, mail] = await Promise.all([
+  `,
     sql.rows<CandidateRow>`
       select id, name, email, extra_minutes, last_start_at, link_generation, status, cancelled_by, cancelled_at, delivery, delivery_error,
              delivery_claimed_at, delivered_at, reminders_sent, last_reminded_at, auto_reminded_at
@@ -250,6 +249,8 @@ export async function loadBatch(sql: Db, companyId: string, batchId: string): Pr
        limit 2000
     `,
   ]);
+  if (head.error) return head.error.code === UNDEFINED_TABLE ? undefined : fail("read", head.error);
+  if (!head.data) return undefined;
   if (people.error) return fail("people read", people.error);
   if (mail.error) return fail("mail log read", mail.error);
   return {

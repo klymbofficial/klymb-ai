@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { BTN_PRIMARY, OrgPageHead } from "@/components/company/HiringParts";
-import { OrgIcon } from "@/components/company/OrgIcons";
+import { CreateAssessment } from "@/components/company/CreateAssessment";
+import { OrgPageHead } from "@/components/company/HiringParts";
 import { EmptyPanel, LoadError, RoleOnly } from "@/components/company/OrgPanels";
 import { TestList, type TestRow } from "@/components/company/TestList";
 import { companyStandings } from "@/lib/company/assessment-data";
@@ -12,6 +11,8 @@ import { companyCatalog } from "@/lib/company/catalog-data";
 import { publishedDates, testCounts } from "@/lib/company/test-hub-data";
 import { testStatus } from "@/lib/company/test-hub-view";
 import { db } from "@/lib/db/client";
+import { klymbLibrary, ownLibrary } from "@/lib/company/library-data";
+import { activeRoles } from "@/lib/company/roles-data";
 import { startBlocked } from "@/lib/company/test-settings";
 import { companyTestSettings } from "@/lib/company/test-settings-data";
 
@@ -25,20 +26,24 @@ const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "n
  * batch, and the actions the person's roles allow. Only those who hire,
  * review or run the workspace open it.
  */
-export default async function AssessmentsPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function AssessmentsPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { slug } = await params;
+  const sp = await searchParams;
   const member = await requireCompany(slug);
   const base = `/org/${member.companySlug}/assessments`;
   if (!seesAssessments(member)) return <RoleOnly role="recruiters, reviewers and admins" home={`/org/${member.companySlug}`} />;
 
   const writer = canWriteTests(member);
+  const sql = db();
+  // The Create modal's roles and a slim view of the questions it can draw on (tags and difficulty; never the answers).
+  const [roles, klymb, mine] = writer && sql ? await Promise.all([activeRoles(sql), klymbLibrary(sql), ownLibrary(sql, member.companyId)]) : [[], [], []];
+  const pool = [...(klymb ?? []), ...(mine ?? [])].map(({ id, type, status, tags, difficulty, points, minutes }) => ({ id, type, status, tags, difficulty, points, minutes }));
   const head = (
     <OrgPageHead
       title="Assessments"
-      actions={writer ? <Link href={`${base}/new`} className={BTN_PRIMARY}><OrgIcon name="plus" size={16} />Create test</Link> : undefined}
+      actions={writer ? <CreateAssessment slug={member.companySlug} roles={roles ?? []} pool={pool} startOpen={sp.create === "1"} /> : undefined}
     />
   );
-  const sql = db();
   const catalog = sql ? await companyCatalog(sql, member.companyId) : null;
   const tests = (catalog ?? []).flatMap((e) => (e.item.kind === "assessment" ? [{ ...e, item: e.item }] : []));
   const slugs = tests.map((t) => t.item.slug);
@@ -51,7 +56,7 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
       <>
         {head}
         <EmptyPanel title="No tests yet">
-          {writer ? "Create your own test, or ask Klymb to add theirs: team@klymb.ai." : "Klymb adds them as your plan includes them, and your recruiters can write their own. To ask what's available, write to team@klymb.ai."}
+          {writer ? "Create one with Create assessment: pick a role and Klymb picks the questions, or write your own." : "Klymb adds them as your plan includes them, and your recruiters can write their own. To ask what's available, write to team@klymb.ai."}
         </EmptyPanel>
       </>
     );
@@ -85,8 +90,8 @@ export default async function AssessmentsPage({ params }: { params: Promise<{ sl
       invited: c.invited,
       taken: c.taken,
       reportHref: seesPeople && s.latest ? `${href}?tab=candidates` : null,
-      previewHref: s.latest ? `${href}?tab=preview` : null,
-      inviteHref: recruiter && s.inUse && !blocked ? `/org/${member.companySlug}/hiring/new?test=${encodeURIComponent(t.item.slug)}` : null,
+      previewHref: s.latest ? `${href}?preview=1` : null,
+      inviteHref: recruiter && s.inUse && !blocked ? `${href}?tab=candidates&invite=1` : null,
       own: !!t.own,
       tags: own?.tags ?? [],
       blocked,

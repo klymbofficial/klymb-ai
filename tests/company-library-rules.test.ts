@@ -90,7 +90,7 @@ describe("Library filters", () => {
     assert.deepEqual(tagOptions(list), ["Design", "Python", "SQL"]);
     const p = pageOf(Array.from({ length: 45 }, (_, i) => i), 9);
     assert.deepEqual([p.page, p.pages, p.items[0]], [3, 3, 40]);
-    assert.equal(libraryHref("/l", { tab: "mine", types: ["mcq"], difficulties: [], tag: null, q: "x y", page: 1 }, { q: "id" }), "/l?tab=mine&type=mcq&q=id");
+    assert.equal(libraryHref("/l", { tab: "mine", types: ["mcq"], difficulties: [], tag: null, q: "x y", page: 1 }, { open: "id" }), "/l?tab=mine&type=mcq&q=x+y&open=id", "search text and the open question are separate");
     assert.equal(libraryHref("/l", { tab: "klymb", types: [], difficulties: [], tag: null, q: null, page: 1 }), "/l");
   });
 });

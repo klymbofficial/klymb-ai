@@ -16,14 +16,18 @@ import {
 } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
 import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, DEFAULT_TIME_ZONE, canSchedule, durationText, lastStart, seesHiring, toZonedInput } from "@/lib/company/batch-rules";
-import { BasicSettingsForm, EmailSettingsForm } from "@/components/company/TestSettingsForms";
-import { loadTestSettings } from "@/lib/company/test-settings-data";
-import { startBlocked } from "@/lib/company/test-settings";
-import { saveBasicSettings, saveEmailSettings } from "../settings-actions";
+import { BasicSettingsForm, CandidateSettingsForm, EmailSettingsForm } from "@/components/company/TestSettingsForms";
+import { loadTestSettings, reviewedPercents } from "@/lib/company/test-settings-data";
+import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, startBlocked, suggestCutoff } from "@/lib/company/test-settings";
+import { saveBasicSettings, saveCandidateSettings, saveEmailSettings } from "../settings-actions";
 import { companyCatalog } from "@/lib/company/catalog-data";
-import { testCandidates, type HubCandidate } from "@/lib/company/test-hub-data";
-import { funnel, percentOf, type HubFacts } from "@/lib/company/test-hub-view";
+import { testCandidates, versionQuestionMarks, type HubCandidate } from "@/lib/company/test-hub-data";
+import { SCORE_EDGES, funnel, histogram, percentOf, questionResults, timeEdges, type HubFacts } from "@/lib/company/test-hub-view";
 import { db } from "@/lib/db/client";
+import { InviteOverlay, OverlayLaunch } from "@/components/company/OverlayLaunch";
+import { hiringOptions } from "@/lib/company/batch-data";
+import { loadCompanyPeople } from "@/lib/company/people-data";
+import { inviteDefaults, timeZoneList } from "@/lib/company/invite-defaults";
 
 
 export const metadata: Metadata = { title: "Assessment", robots: { index: false, follow: false } };
@@ -162,13 +166,33 @@ export default async function AssessmentPage({
   // This company's own settings for the test (U06a): access off or ended means no Invite.
   const settings = await loadTestSettings(sql, member.companyId, itemSlug);
   const blocked = settings ? startBlocked(settings) : null;
+  // Invite inside the test (P0.2c): the round form in a drawer, this test chosen.
+  const canInvite = recruiter && !!standing.inUse && !blocked;
+  const [inviteOptions, invitePeople] = canInvite ? await Promise.all([hiringOptions(sql, member.companyId), loadCompanyPeople(sql, member.companyId)]) : [null, null];
+  const inviteReady = !!inviteOptions && inviteOptions.tests.some((t) => t.item === itemSlug) && inviteOptions.reviewers.length > 0;
   const actions = (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {blocked && <Link href={hrefFor("settings")} className="text-sm font-semibold text-error underline-offset-4 hover:underline">{blocked === "closed" ? "Access is off" : "Test has ended"}</Link>}
-      <Link href={hrefFor("preview")} className={BLUE_LINK}><OrgIcon name="eye" size={16} />Preview</Link>
+      <OverlayLaunch label="Preview" icon="eye" className={BLUE_LINK} title={`Preview: ${shown.title}`} description={`Version ${shown.version}, as candidates see it before they start. Right answers and scoring guides are never shown to them.`} startOpen={one(sp.preview) === "1"}>
+        <CandidatePreview t={candidateTask(shown)} />
+      </OverlayLaunch>
       {editHref && <Link href={editHref} className={BLUE_LINK}><OrgIcon name="test" size={16} />Edit test</Link>}
-      {recruiter && standing.inUse && !blocked && (
-        <Link href={`${company}/hiring/new?test=${encodeURIComponent(itemSlug)}`} className={BTN_PRIMARY}><OrgIcon name="invite" size={16} />Invite candidates</Link>
+      {canInvite && inviteOptions && inviteReady && (
+        <InviteOverlay
+          className={BTN_PRIMARY}
+          startOpen={one(sp.invite) === "1"}
+          form={{
+            slug: member.companySlug, tests: inviteOptions.tests, reviewers: inviteOptions.reviewers, prepCourses: inviteOptions.prepCourses,
+            timeZones: timeZoneList(), initial: { ...inviteDefaults(new Date()), test: itemSlug },
+            company: invitePeople ? {
+              people: invitePeople.active.map((p) => ({ email: p.email, name: p.name, teamId: p.team_id })),
+              teams: invitePeople.teams.map((t) => ({ id: t.id, name: t.name, members: t.members })),
+            } : undefined,
+          }}
+        />
+      )}
+      {canInvite && inviteOptions && !inviteOptions.reviewers.length && (
+        <span className="text-sm text-muted">To invite people, give someone the reviewer role on People first.</span>
       )}
     </div>
   );
@@ -338,6 +362,7 @@ export default async function AssessmentPage({
   if (tab === "settings") {
     const s = (one(sp.s) as Setting) in SETTING_LABEL ? (one(sp.s) as Setting) : "basic";
     const items = (Object.keys(SETTING_LABEL) as Setting[]).map((k) => ({ key: k, label: SETTING_LABEL[k], href: hrefFor("settings", k === "basic" ? "" : `s=${k}`), current: k === s }));
+    const percents = s === "candidate" && recruiter ? await reviewedPercents(sql, member.companyId, itemSlug) : [];
     if (!settings) return <>{head}<LoadError what="This test's settings" /></>;
     const remindEvery = `every ${AUTO_REMIND_HOURS} hours, at most ${AUTO_REMIND_ATTEMPTS} times, until their last start`;
     return (
@@ -390,13 +415,30 @@ export default async function AssessmentPage({
               </dl>
             </>
           )}
+          {s === "candidate" && recruiter && (
+            <div className="mb-8 border-b border-line/30 pb-8">
+              <CandidateSettingsForm
+                key={settings.revision}
+                save={saveCandidateSettings.bind(null, member.companySlug, itemSlug)}
+                revision={settings.revision}
+                cutoffPercent={settings.cutoffPercent}
+                collect={settings.collect}
+                suggested={suggestCutoff(percents ?? [])}
+                reviewed={(percents ?? []).length}
+                fields={DETAIL_KEYS.map((k) => ({ key: k, label: DETAIL_FIELDS[k].label }))}
+              />
+            </div>
+          )}
           {s === "candidate" && (
             <dl className="flex flex-col gap-6">
               <Row label="Time allowed">{durationText(shown.minutes)} from when they start. Extra time is set per person on a batch.</Row>
               <Row label="Hand in">{SUBMISSION_LABEL[shown.submission]}</Row>
               <Row label="Tools allowed">{shown.toolsAllowed.length ? <ul className="list-disc pl-5">{shown.toolsAllowed.map((t) => <li key={t}>{t}</li>)}</ul> : "Nothing listed"}</Row>
               <Row label="Tools not allowed">{shown.toolsNotAllowed.length ? <ul className="list-disc pl-5">{shown.toolsNotAllowed.map((t) => <li key={t}>{t}</li>)}</ul> : "Nothing listed"}</Row>
-              <Row label="Information collected from candidates">Full name and email, from the batch&apos;s list.</Row>
+              {!recruiter && <Row label="Cut-off score">{settings.cutoffPercent === null ? "None" : `${settings.cutoffPercent}%`}</Row>}
+              <Row label="Information collected from candidates">
+                Full name and email, from the round&apos;s list{settings.collect.length ? `; before Start: ${settings.collect.map((k) => DETAIL_FIELDS[k].label.toLowerCase()).join(", ")}` : ""}.
+              </Row>
             </dl>
           )}
           {s === "email" && (
@@ -447,7 +489,7 @@ export default async function AssessmentPage({
         {head}
         <InvitationRounds sql={sql} member={member} rounds={loaded.rounds} focus={focus} />
         {loaded.people.length === 0 ? (
-          <EmptyPanel title="Nobody invited yet" action={recruiter && standing.inUse ? <Link href={`${company}/hiring/new?test=${encodeURIComponent(itemSlug)}`} className="text-sm font-bold underline underline-offset-4">Invite candidates</Link> : undefined}>
+          <EmptyPanel title="Nobody invited yet" action={recruiter && standing.inUse ? <Link href={`${base}/${itemSlug}?tab=candidates&invite=1`} className="text-sm font-bold underline underline-offset-4">Invite candidates</Link> : undefined}>
             Candidates appear here once a round of invitations on this test is sent.
           </EmptyPanel>
         ) : (
@@ -465,6 +507,15 @@ export default async function AssessmentPage({
   const submitted = steps[3].count;
   const scored = people.filter((c) => c.total !== null && c.max !== null && c.max > 0);
   const avg = scored.length ? Math.round((scored.reduce((n, c) => n + c.total! / c.max!, 0) / scored.length) * 100) : null;
+  // Distributions (P0.6): reviewed scores, time taken, the cut-off, and each question of the version shown.
+  const scoreBins = histogram(scored.map((c) => Math.min(99.9, (100 * c.total!) / c.max!)), SCORE_EDGES);
+  const taken = people.filter((c) => c.startedAt && c.submittedAt).map((c) => (new Date(c.submittedAt!).getTime() - new Date(c.startedAt!).getTime()) / 60000);
+  const timeBins = histogram(taken, timeEdges(shown.minutes));
+  const cut = settings?.cutoffPercent ?? null;
+  const cleared = cut === null ? null : scored.filter((c) => cutoffResult(c.total!, c.max!, cut) === "cleared").length;
+  const awaiting = people.filter((c) => c.submittedAt && c.total === null).length;
+  const marks = shown.questions?.length ? await versionQuestionMarks(sql, member.companyId, shown.id) : [];
+  const perQuestion = shown.questions?.length && marks ? questionResults(marks, shown.questions.length) : [];
   return (
     <>
       {head}
@@ -500,9 +551,65 @@ export default async function AssessmentPage({
             <div><dt className="text-sm text-muted">Invited candidates who submitted</dt><dd className="mt-1 text-2xl font-semibold">{invited ? `${percentOf(submitted, invited)}%` : "—"}<span className="ml-2 text-sm font-normal text-muted">{submitted} of {invited}</span></dd></div>
             <div><dt className="text-sm text-muted">Started candidates who submitted</dt><dd className="mt-1 text-2xl font-semibold">{started ? `${percentOf(submitted, started)}%` : "—"}<span className="ml-2 text-sm font-normal text-muted">{submitted} of {started}</span></dd></div>
             <div><dt className="text-sm text-muted">Average reviewed score</dt><dd className="mt-1 text-2xl font-semibold">{avg === null ? "—" : `${avg}%`}<span className="ml-2 text-sm font-normal text-muted">{scored.length} reviewed</span></dd></div>
+            <div><dt className="text-sm text-muted">Cleared the cut-off</dt><dd className="mt-1 text-2xl font-semibold">{cleared === null ? "—" : cleared}<span className="ml-2 text-sm font-normal text-muted">{cut === null ? "no cut-off set" : `of ${scored.length} reviewed · cut-off ${cut}%`}</span></dd></div>
+            <div><dt className="text-sm text-muted">Submitted, waiting for review</dt><dd className="mt-1 text-2xl font-semibold">{awaiting}<span className="ml-2 text-sm font-normal text-muted">multiple choice already auto-marked</span></dd></div>
           </dl>
         </section>
+
+        <section aria-labelledby="dists" className="mt-10 grid gap-8 lg:grid-cols-2">
+          <h2 id="dists" className="sr-only">Distributions</h2>
+          <Bars title="Reviewed scores" note={`${scored.length} reviewed candidates, by percent of the total. Confirmed reviews only.`} bins={scoreBins.map((b) => ({ label: `${b.from}${b.to === null ? "–100" : `–${b.to - 1}`}%`, count: b.count }))} />
+          <Bars title="Time taken" note={`${taken.length} submissions, minutes from Start to submission (${durationText(shown.minutes)} allowed).`} bins={timeBins.map((b) => ({ label: b.to === null ? `${b.from}+ min` : `${b.from}–${b.to} min`, count: b.count }))} />
+        </section>
+
+        {perQuestion.length > 0 && (
+          <section aria-labelledby="per-question" className="mt-10">
+            <h2 id="per-question" className="text-lg font-bold">Questions in version {shown.version}</h2>
+            <p className="mt-1 text-sm text-muted">Automatic marks for multiple choice at submission (an unanswered question is marked 0), before any reviewer change. Written questions are scored in reviews.</p>
+            <table className="mt-4 w-full text-left text-sm">
+              <thead className={CAPS}><tr className="border-b border-line/30"><th className="py-2 pr-3">#</th><th className="py-2 pr-3">Question</th><th className="py-2 pr-3">Marked</th><th className="py-2 pr-3">Full marks</th><th className="py-2">Average</th></tr></thead>
+              <tbody>
+                {perQuestion.map((r) => {
+                  const q = shown.questions![r.questionNo - 1];
+                  return (
+                    <tr key={r.questionNo} className="border-b border-line/20 align-top">
+                      <td className="py-2 pr-3 tabular-nums">{r.questionNo}</td>
+                      <td className="py-2 pr-3">{q.title}{!q.mcq && <span className="text-muted"> · written</span>}</td>
+                      <td className="py-2 pr-3 tabular-nums">{q.mcq ? r.attempts : "—"}</td>
+                      <td className="py-2 pr-3 tabular-nums">{q.mcq && r.attempts ? `${r.full} (${percentOf(r.full, r.attempts)}%)` : "—"}</td>
+                      <td className="py-2">
+                        {q.mcq && r.average !== null ? (
+                          <span className="flex items-center gap-2"><span className="h-2 w-24 overflow-hidden rounded-full bg-line/20"><span className="block h-full bg-[#3aa7d6]" style={{ width: `${r.average}%` }} /></span><span className="tabular-nums">{r.average}%</span></span>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </section>
+        )}
       </Split>
     </>
+  );
+}
+
+/** A simple bar chart of counts per bucket. */
+function Bars({ title, note, bins }: { title: string; note: string; bins: { label: string; count: number }[] }) {
+  const top = Math.max(1, ...bins.map((b) => b.count));
+  return (
+    <div>
+      <h3 className="text-base font-bold">{title}</h3>
+      <ol className="mt-3 space-y-1.5" aria-label={title}>
+        {bins.map((b) => (
+          <li key={b.label} className="grid grid-cols-[6.5rem_minmax(0,1fr)_2rem] items-center gap-2 text-xs">
+            <span className="text-muted">{b.label}</span>
+            <span className="h-3 overflow-hidden rounded bg-paper"><span className="block h-full rounded bg-[#3aa7d6]" style={{ width: `${(100 * b.count) / top}%` }} /></span>
+            <span className="text-right tabular-nums">{b.count}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs text-muted">{note}</p>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import "server-only";
-import { DEFAULT_SETTINGS, type TestSettings } from "@/lib/company/test-settings";
+import { DEFAULT_SETTINGS, DETAIL_KEYS, type DetailField, type TestSettings } from "@/lib/company/test-settings";
 import type { Db } from "@/lib/db/client";
 
 /**
@@ -19,6 +19,7 @@ const fail = (what: string, error: { code?: string; message: string }) => {
 type Row = {
   item_slug: string; access_open: boolean; ends_on: string | null; tags: string[]; auto_remind: boolean;
   invite_subject: string | null; invite_body: string | null; revision: number; updated_by: string; updated_at: string;
+  cutoff_percent?: number | null; collect?: string[] | null;
 };
 
 const iso = (v: string | Date | null) => (v === null ? null : new Date(v).toISOString());
@@ -28,6 +29,8 @@ const fromRow = (r: Row): TestSettings => ({
   tags: r.tags ?? [],
   autoRemind: r.auto_remind,
   invite: r.invite_subject !== null && r.invite_body !== null ? { subject: r.invite_subject, body: r.invite_body } : null,
+  cutoffPercent: r.cutoff_percent ?? null,
+  collect: DETAIL_KEYS.filter((k) => (r.collect ?? []).includes(k)),
   revision: r.revision,
   updatedBy: r.updated_by,
   updatedAt: iso(r.updated_at),
@@ -36,7 +39,7 @@ const fromRow = (r: Row): TestSettings => ({
 /** This company's settings for one test; the defaults when none are saved. Null on a database error. */
 export async function loadTestSettings(sql: Db, companyId: string, item: string): Promise<TestSettings | null> {
   const { data, error } = await sql.row<Row>`
-    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, revision, updated_by, updated_at
+    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, revision, updated_by, updated_at
       from course.company_test_settings where company_id = ${companyId}::uuid and item_slug = ${item}
   `;
   if (error) return error.code === UNDEFINED_TABLE ? { ...DEFAULT_SETTINGS } : fail("read", error);
@@ -46,7 +49,7 @@ export async function loadTestSettings(sql: Db, companyId: string, item: string)
 /** This company's saved settings, by test. Tests with none are left out. Null on a database error. */
 export async function companyTestSettings(sql: Db, companyId: string): Promise<Map<string, TestSettings> | null> {
   const { data, error } = await sql.rows<Row>`
-    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, revision, updated_by, updated_at
+    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, revision, updated_by, updated_at
       from course.company_test_settings where company_id = ${companyId}::uuid
   `;
   if (error) return error.code === UNDEFINED_TABLE ? new Map() : fail("list", error);
@@ -65,30 +68,41 @@ export async function saveTestSettings(
   s: { companyId: string; item: string; expected: number; by: string } & (
     | { group: "basic"; accessOpen: boolean; endsOn: string | null; tags: string[] }
     | { group: "email"; autoRemind: boolean; invite: { subject: string; body: string } | null }
+    | { group: "candidate"; cutoffPercent: number | null; collect: DetailField[] }
   ),
 ): Promise<SaveSettingsResult> {
   const basic = s.group === "basic";
   const v = {
-    accessOpen: basic ? s.accessOpen : true,
-    endsOn: basic ? s.endsOn : null,
-    tags: basic ? s.tags : [],
-    autoRemind: basic ? true : s.autoRemind,
-    subject: basic ? null : (s.invite?.subject ?? null),
-    body: basic ? null : (s.invite?.body ?? null),
+    accessOpen: s.group === "basic" ? s.accessOpen : true,
+    endsOn: s.group === "basic" ? s.endsOn : null,
+    tags: s.group === "basic" ? s.tags : [],
+    autoRemind: s.group === "email" ? s.autoRemind : true,
+    subject: s.group === "email" ? (s.invite?.subject ?? null) : null,
+    body: s.group === "email" ? (s.invite?.body ?? null) : null,
+    cutoff: s.group === "candidate" ? s.cutoffPercent : null,
+    collect: s.group === "candidate" ? s.collect : [],
   };
   if (s.expected === 0) {
     const { data, error } = await sql.row<{ revision: number }>`
       insert into course.company_test_settings
-        (company_id, item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, revision, updated_by)
+        (company_id, item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, revision, updated_by)
       values (${s.companyId}::uuid, ${s.item}, ${v.accessOpen}, ${v.endsOn}::timestamptz, ${v.tags}::text[], ${v.autoRemind},
-              ${v.subject}, ${v.body}, 1, ${s.by})
+              ${v.subject}, ${v.body}, ${v.cutoff}::int, ${v.collect}::text[], 1, ${s.by})
       on conflict (company_id, item_slug) do nothing
       returning revision
     `;
     if (error) return fail("create", error);
     return data ? { status: "saved", revision: data.revision } : { status: "changed" };
   }
-  const { data, error } = basic
+  const { data, error } = s.group === "candidate"
+    ? await sql.row<{ revision: number }>`
+        update course.company_test_settings
+           set cutoff_percent = ${v.cutoff}::int, collect = ${v.collect}::text[],
+               revision = revision + 1, updated_by = ${s.by}, updated_at = now()
+         where company_id = ${s.companyId}::uuid and item_slug = ${s.item} and revision = ${s.expected}::int
+        returning revision
+      `
+    : basic
     ? await sql.row<{ revision: number }>`
         update course.company_test_settings
            set access_open = ${v.accessOpen}, ends_on = ${v.endsOn}::timestamptz, tags = ${v.tags}::text[],
@@ -105,4 +119,22 @@ export async function saveTestSettings(
       `;
   if (error) return fail("save", error);
   return data ? { status: "saved", revision: data.revision } : { status: "changed" };
+}
+
+/**
+ * Every reviewed attempt's score in percent for this company and test (its
+ * latest review), for the suggested cut-off (U06b). Null on a database error.
+ */
+export async function reviewedPercents(sql: Db, companyId: string, item: string): Promise<number[] | null> {
+  const { data, error } = await sql.rows<{ p: number }>`
+    select (100.0 * r.total / nullif(r.max, 0))::float8 as p
+      from course.hiring_batches b
+      join course.candidate_attempts a on a.batch_id = b.id and a.company_id = b.company_id
+      join lateral (
+        select x.total, x.max from course.attempt_reviews x where x.attempt_id = a.id and x.company_id = b.company_id order by x.revision desc limit 1
+      ) r on true
+     where b.company_id = ${companyId}::uuid and b.item = ${item} and r.max > 0
+  `;
+  if (error) return error.code === UNDEFINED_TABLE ? [] : fail("reviewed scores", error);
+  return (data ?? []).map((r) => Number(r.p));
 }
