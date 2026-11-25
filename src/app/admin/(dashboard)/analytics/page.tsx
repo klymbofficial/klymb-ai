@@ -29,7 +29,7 @@ const ICONS = {
   "Bounce rate": TrendingDown,
 } as const;
 
-type Params = { range?: string; country?: string; device?: string; tab?: string };
+type Params = { range?: string; country?: string; device?: string; page?: string; tab?: string };
 
 export default async function AdminAnalyticsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
@@ -43,7 +43,7 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
       />
       {/* The header answers instantly; GA streams in beneath it. Keyed on the
           query so a new range or filter shows the skeleton instead of stale data. */}
-      <Suspense key={`${params.range}|${params.country}|${params.device}`} fallback={<AnalyticsSkeleton />}>
+      <Suspense key={`${params.range}|${params.country}|${params.device}|${params.page}`} fallback={<AnalyticsSkeleton />}>
         <AnalyticsBody params={params} />
       </Suspense>
     </>
@@ -74,7 +74,7 @@ async function AnalyticsBody({ params }: { params: Params }) {
   const stats = summariseRegistrations(registrations);
   const spark = (key?: SparkKey) => (key ? analytics.series.map((p) => p[key]) : undefined);
   const visitors = analytics.kpis.find((k) => k.label === "Total users")?.value ?? 0;
-  const filtered = Boolean(filters.country || filters.device);
+  const filtered = Boolean(filters.country || filters.device || filters.page);
 
   return (
     <>
@@ -103,11 +103,14 @@ async function AnalyticsBody({ params }: { params: Params }) {
                 )}
               </p>
             </div>
-            <GaFilters countries={analytics.options.countries} devices={analytics.options.devices} />
+            <GaFilters countries={analytics.options.countries} devices={analytics.options.devices} pages={analytics.options.pages} />
           </div>
           {filtered && (
             <p className="-mt-3 text-xs font-semibold text-red-deep">
-              Filtered to {[filters.country, filters.device].filter(Boolean).join(" · ")}. Every number below reflects only those visits.
+              Filtered to {[filters.page, filters.country, filters.device].filter(Boolean).join(" · ")}.{" "}
+              {filters.page
+                ? `Every number below counts only visits that opened ${filters.page}; Source / medium shows where those visits came from.`
+                : "Every number below reflects only those visits."}
             </p>
           )}
 

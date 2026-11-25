@@ -2,8 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-/** Country and device filters. They live in the URL, so a filtered view can be shared. */
-export function GaFilters({ countries, devices }: { countries: string[]; devices: string[] }) {
+/** Page, country and device filters. They live in the URL, so a filtered view can be shared. */
+export function GaFilters({ countries, devices, pages }: { countries: string[]; devices: string[]; pages: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -16,10 +16,18 @@ export function GaFilters({ countries, devices }: { countries: string[]; devices
 
   const country = params.get("country") ?? "";
   const device = params.get("device") ?? "";
+  const page = params.get("page") ?? "";
+  // A page picked from a link may not be among this window's top pages; keep it selectable.
+  const pageChoices = page && !pages.includes(page) ? [page, ...pages] : pages;
   const select = "rounded-lg border border-line/40 bg-card px-3 py-2 text-sm font-semibold focus:border-ink focus:outline-none";
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <label className="sr-only" htmlFor="ga-page">Page</label>
+      <select id="ga-page" value={page} onChange={(e) => set("page", e.target.value)} className={`${select} max-w-[16rem]`}>
+        <option value="">All pages</option>
+        {pageChoices.map((p) => <option key={p} value={p}>{p}</option>)}
+      </select>
       <label className="sr-only" htmlFor="ga-country">Country</label>
       <select id="ga-country" value={country} onChange={(e) => set("country", e.target.value)} className={select}>
         <option value="">All countries</option>
@@ -30,13 +38,14 @@ export function GaFilters({ countries, devices }: { countries: string[]; devices
         <option value="">All devices</option>
         {devices.map((d) => <option key={d} value={d.toLowerCase()}>{d}</option>)}
       </select>
-      {(country || device) && (
+      {(country || device || page) && (
         <button
           type="button"
           onClick={() => {
             const sp = new URLSearchParams(params.toString());
             sp.delete("country");
             sp.delete("device");
+            sp.delete("page");
             router.replace(`${pathname}?${sp}`, { scroll: false });
           }}
           className="rounded-lg px-3 py-2 text-sm font-bold text-red-deep hover:bg-red-tint"
