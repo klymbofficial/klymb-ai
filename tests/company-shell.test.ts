@@ -61,7 +61,7 @@ describe("the sidebar's sections", () => {
     const sidebar = read("src/components/company/OrgSidebar.tsx");
     assert.match(sidebar, /aria-current=\{current \? "page" : undefined\}/);
     assert.match(sidebar, /aria-expanded=\{open\}/);
-    assert.match(sidebar, /e\.key !== "Escape"/, "the phone drawer closes on Escape");
+    assert.match(sidebar, /useOverlayFocus\(mounted && open, drawer, \(\) => setOpen\(false\)\)/, "the phone drawer closes on Escape (the shared overlay handles it, P0.2a)");
     assert.match(sidebar, /action=\{signOutOfCompany\}/);
   });
 });

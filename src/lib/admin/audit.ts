@@ -62,6 +62,7 @@ export type AuditAction =
   | "catalog.assessment_publish"
   | "catalog.question_create"
   | "catalog.question_save"
+  | "catalog.role_save"
   | "hackathon.score"
   | "hackathon.results"
   | "chat.reply"

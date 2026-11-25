@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { removeAssignment, type ConfirmResult } from "@/app/org/[slug]/(workspace)/learning/actions";
 import { AssignPanel, type PanelPerson } from "@/components/company/AssignPanel";
 import { ProgressTable } from "@/components/company/ProgressTable";
+import { useConfirm } from "@/components/company/Overlay";
 import type { MemberProgress } from "@/lib/company/progress-data";
 
 const rowBtn =
@@ -33,6 +34,7 @@ export function AssignmentControls({
   const [result, setResult] = useState<ConfirmResult | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [confirm, dialog] = useConfirm();
 
   const openFor = (email: string | null) => {
     setPreselect(email);
@@ -41,14 +43,15 @@ export function AssignmentControls({
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const remove = (p: MemberProgress) => {
-    if (!window.confirm(`Remove System Design from ${p.name ?? p.email}?\n\nThey can no longer open the course. What they did is kept.`)) return;
+  const remove = async (p: MemberProgress) => {
+    if (!(await confirm({ title: `Remove System Design from ${p.name ?? p.email}?`, body: "They can no longer open the course. What they did is kept.", confirmLabel: "Remove", cancelLabel: "Keep it" }))) return;
     setBusy(p.email);
     start(async () => { setResult(await removeAssignment(slug, p.email)); setBusy(null); });
   };
 
   return (
     <div className="flex flex-col gap-5">
+      {dialog}
       {open ? (
         <AssignPanel
           key={preselect ?? "*"}

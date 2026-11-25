@@ -425,3 +425,14 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   [data-brand] .hover\:border-red-press:hover { border-color: var(--brand-press); }
   [data-brand] .hover\:text-red-deep:hover { color: var(--brand-accent); }
 }
+
+/* Click feedback (P0 polish): the top bar's progress, and a pressed look on every control. */
+@keyframes nav-progress {
+  0% { transform: scaleX(0.05); }
+  100% { transform: scaleX(0.9); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(button, [role="button"], a.inline-flex):not(:disabled):active { transform: translateY(1px); }
+}
+:where(button):disabled { cursor: not-allowed; }
+[aria-busy="true"] { cursor: progress; }

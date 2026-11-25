@@ -11,11 +11,12 @@ const member = (roles: CompanyMember["roles"]) => ({ email: "x@acme.test", compa
 const form = (v: Record<string, string>) => ({ get: (k: string) => v[k] ?? null });
 
 describe("H10: hiring decisions", () => {
-  test("recruiters and company heads decide; reviewers score; admins and employees do neither", () => {
+  test("recruiters and company heads decide; reviewers score; admins do everything (25 Nov); employees do neither", () => {
     assert.equal(canDecide(member(["recruiter"])), true);
     assert.equal(canDecide(member(["company_head"])), true);
     assert.equal(canDecide(member(["reviewer"])), false);
-    assert.equal(canDecide(member(["admin"])), false);
+    assert.equal(canDecide(member(["admin"])), true, "a company admin holds every power");
+    assert.equal(canScore(member(["admin"])), true);
     assert.equal(canDecide(member(["employee"])), false);
     assert.equal(canScore(member(["recruiter"])), false);
   });

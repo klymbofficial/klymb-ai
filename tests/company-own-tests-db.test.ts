@@ -164,4 +164,44 @@ describe("company-written tests against a real database", { skip }, () => {
     assert.deepEqual(await assessments.publishDraft(sql, slug, "Klymb Q", 1, "k@test.invalid"), { status: "published", version: 1 });
     assert.equal((await assessments.loadVersions(sql, slug))?.[0].questions?.[0].title, "One");
   });
+
+  test("P0.4: one Create press makes one test, even pressed twice at once or retried; keys are per company", async () => {
+    const key = randomUUID();
+    const t = { companyId: mine, title: "Auto screen", role: "Backend developer", by: "rec@test.invalid", createKey: key };
+    const [a, b] = await Promise.all([own.createTestKeyed(sql, t), own.createTestKeyed(sql, t)]);
+    assert.ok(a && b);
+    assert.equal(a.slug, b.slug, "the same test");
+    assert.deepEqual([a.existed, b.existed].sort(), [false, true]);
+    const again = await own.createTestKeyed(sql, t);
+    assert.deepEqual(again, { slug: a.slug, existed: true });
+    const other = await own.createTestKeyed(sql, { ...t, companyId: theirs });
+    assert.ok(other && other.slug !== a.slug && !other.existed, "another company's same key is its own");
+    assert.equal((await client.query(`select count(*)::int n from course.catalog_items where create_key = $1`, [key])).rows[0].n, 2);
+    await assert.rejects(client.query(`update course.catalog_items set create_key = 'nope' where slug = $1`, [a.slug]), /catalog_items_create_key/);
+  });
+
+  test("P0.4: roles save by revision; companies read active ones only", async () => {
+    const roles = await import("../src/lib/company/roles-data");
+    const slug = `r-${run}`;
+    const base = { slug, label: "Test role", summary: "", skills: ["Java"], status: "hidden" as const, sort: 999, by: "a@test.invalid" };
+    assert.deepEqual(await roles.saveRole(sql, { ...base, expected: 0 }), { status: "saved", revision: 1 });
+    assert.deepEqual(await roles.saveRole(sql, { ...base, expected: 0 }), { status: "exists" });
+    assert.ok(!(await roles.activeRoles(sql))?.some((r) => r.slug === slug), "hidden");
+    assert.deepEqual(await roles.saveRole(sql, { ...base, status: "active", expected: 1 }), { status: "saved", revision: 2 });
+    assert.deepEqual(await roles.saveRole(sql, { ...base, expected: 1 }), { status: "changed" }, "stale");
+    assert.ok((await roles.activeRoles(sql))?.some((r) => r.slug === slug));
+    await assert.rejects(client.query(`insert into course.assessment_roles (slug, label, skills, updated_by) values ('Bad Slug', 'x', '{a}', 'x')`), /check/);
+    await client.query(`delete from course.assessment_roles where slug = $1`, [slug]);
+  });
+
+  test("P0.3: a seed key belongs to Klymb's questions only and is unique", async () => {
+    const key = `kb-test-${run}`;
+    const ins = (owner: string | null) => client.query(
+      `insert into course.library_questions (owner_company_id, type, title, statement, difficulty, points, minutes, options, created_by, updated_by, seed_key)
+       values ($1, 'mcq', 't', 's', 'easy', 2, 1, '[{"text":"a","correct":true},{"text":"b","correct":false}]', 'x', 'x', $2)`, [owner, key]);
+    await assert.rejects(ins(mine), /library_questions_seed_key/, "never on a company's question");
+    await ins(null);
+    await assert.rejects(ins(null), /library_questions_seed_key_once|duplicate/);
+    await client.query(`delete from course.library_questions where seed_key = $1`, [key]);
+  });
 });

@@ -2,6 +2,7 @@
 
 import { Fragment, useRef, useState } from "react";
 import { ProgressMeter } from "@/components/company/OrgCharts";
+import { useConfirm } from "@/components/company/Overlay";
 import { addPerson, previewUpload, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult, type UploadPreview } from "@/app/org/[slug]/(workspace)/people/actions";
 import { GRANTABLE_ROLES, ROLE_LABEL, type GrantableRole } from "@/lib/company/access";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
@@ -217,6 +218,7 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
   const [busy, setBusy] = useState<{ email: string; what: "remove" | "resend" } | null>(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [confirm, dialog] = useConfirm();
 
   async function act(p: PersonRow, what: "remove" | "resend") {
     setBusy({ email: p.email, what });
@@ -225,15 +227,16 @@ function ActiveList({ slug, me, people }: { slug: string; me: string; people: Pe
     setBusy(null);
   }
 
-  function remove(p: PersonRow) {
+  async function remove(p: PersonRow) {
     const who = p.name ? `${p.name} (${p.email})` : p.email;
-    if (!window.confirm(`Remove ${who}?\n\nTheir access ends now and their seat frees up. Their record is kept, and you can add them back later.`)) return;
+    if (!(await confirm({ title: `Remove ${who}?`, body: "Their access ends now and their seat frees up. Their record is kept, and you can add them back later.", confirmLabel: "Remove", cancelLabel: "Keep them" }))) return;
     return act(p, "remove");
   }
   const working = (p: PersonRow, what: "remove" | "resend") => busy?.email === p.email && busy.what === what;
 
   return (
     <section aria-labelledby="active-people" className="flex flex-col gap-3">
+      {dialog}
       <h2 id="active-people" className="text-lg font-black">People <span className="text-muted nums">({people.length})</span></h2>
       <Note result={result} />
       {people.length === 0 ? (

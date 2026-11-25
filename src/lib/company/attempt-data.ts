@@ -54,7 +54,8 @@ export type StartOutcome = { status: "started" | "resumed"; attempt: Attempt } |
  * minutes. Two presses at once make one attempt: the loser of the race finds
  * nothing to insert, and reads the winner's.
  */
-export async function startAttempt(sql: Db, candidateId: string, generation: number): Promise<StartOutcome | null> {
+/** `details` (U06b): what the person gave before Start, kept with a new attempt only; null when nothing was asked. */
+export async function startAttempt(sql: Db, candidateId: string, generation: number, details: Record<string, string> | null = null): Promise<StartOutcome | null> {
   const { data, error } = await sql.row<AttemptRow & { made: boolean }>`
     with me as (
       select c.id, c.batch_id, c.company_id, c.link_generation, c.extra_minutes, c.last_start_at, b.version_id, b.closes_at, v.minutes, b.item
@@ -66,9 +67,9 @@ export async function startAttempt(sql: Db, candidateId: string, generation: num
     ), existing as (
       select a.* from course.candidate_attempts a join me on a.candidate_id = me.id where a.attempt_no = 1
     ), made as (
-      insert into course.candidate_attempts (company_id, batch_id, candidate_id, attempt_no, version_id, allowed_minutes, deadline_at, started_link_generation)
+      insert into course.candidate_attempts (company_id, batch_id, candidate_id, attempt_no, version_id, allowed_minutes, deadline_at, started_link_generation, details)
       select me.company_id, me.batch_id, me.id, 1, me.version_id, me.minutes + me.extra_minutes,
-             now() + make_interval(mins => me.minutes + me.extra_minutes), me.link_generation
+             now() + make_interval(mins => me.minutes + me.extra_minutes), me.link_generation, ${details ? JSON.stringify(details) : null}::jsonb
         from me
        where not exists (select 1 from existing)
          and coalesce(me.last_start_at, me.closes_at - make_interval(mins => me.minutes + me.extra_minutes)) > now()
@@ -444,8 +445,9 @@ export async function removeAttemptFile(sql: Db, f: { candidateId: string; gener
  * signed-in recruiter. Attempts whose time and grace are over are submitted
  * first (finaliseDue).
  */
-export async function attemptsForBatch(sql: Db, companyId: string, batchId: string): Promise<Attempt[] | null> {
-  await finaliseDue(sql, { companyId, batchId });
+export async function attemptsForBatch(sql: Db, companyId: string, batchId: string, opts: { finalised?: boolean } = {}): Promise<Attempt[] | null> {
+  // The caller may have finalised the whole test already (P0.5).
+  if (!opts.finalised) await finaliseDue(sql, { companyId, batchId });
   const { data, error } = await sql.rows<AttemptRow>`
     select id, candidate_id, attempt_no, version_id, allowed_minutes, started_at, deadline_at, receipt, submitted_at, submit_kind
       from course.candidate_attempts
@@ -500,7 +502,23 @@ export async function submitAttempt(
  * just before the attempts are read. Only people still invited, in a sent
  * batch. Returns how many it submitted; a failure here never stops the page.
  */
-export async function finaliseDue(sql: Db, scope: { companyId: string; batchId: string } | { candidateId: string }): Promise<number | null> {
+export async function finaliseDue(sql: Db, scope: { companyId: string; batchId: string } | { candidateId: string } | { companyId: string; item: string }): Promise<number | null> {
+  if ("item" in scope) {
+    // Every round of one test at once (P0.5), so the Candidates tab finalises in one trip.
+    const { data, error } = await sql.scalar<number>`
+      select count(*) filter (where s.status = 'submitted')::int
+        from (
+          select a.id from course.candidate_attempts a
+            join course.hiring_batches b on b.id = a.batch_id and b.company_id = a.company_id
+           where a.submitted_at is null and now() > a.deadline_at + make_interval(secs => ${SAVE_GRACE_SECONDS})
+             and b.company_id = ${scope.companyId}::uuid and b.item = ${scope.item}
+           order by a.id
+        ) due
+        cross join lateral course.submit_attempt(due.id, 'deadline', null, null, null, ${SAVE_GRACE_SECONDS}::int) s
+    `;
+    if (error) return error.code === UNDEFINED_FUNCTION || error.code === UNDEFINED_TABLE ? 0 : fail("finalise", error);
+    return data ?? 0;
+  }
   const byBatch = "batchId" in scope;
   const { data, error } = await sql.scalar<number>`
     select count(*) filter (where s.status = 'submitted')::int

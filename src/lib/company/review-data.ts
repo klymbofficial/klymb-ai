@@ -2,7 +2,7 @@ import "server-only";
 import type { AttemptFileKind } from "@/lib/company/attempt-files";
 import { readQuestions, type Question } from "@/lib/company/assessment-rules";
 import { finaliseDue } from "@/lib/company/attempt-data";
-import type { RubricItem, ScoreInput } from "@/lib/company/review-rules";
+import { readScores, type RubricItem, type ScoreEntry, type ScoreInput } from "@/lib/company/review-rules";
 import type { Db } from "@/lib/db/client";
 
 /**
@@ -13,6 +13,7 @@ import type { Db } from "@/lib/db/client";
  */
 
 const UNDEFINED_TABLE = "42P01";
+const UNDEFINED_COLUMN = "42703";
 const fail = (what: string, error: { code?: string; message: string }) => {
   console.error(`review ${what} failed:`, error.code, error.message);
   return null;
@@ -22,7 +23,7 @@ export interface ReviewRecord {
   revision: number;
   reviewerEmail: string;
   reviewerName: string | null;
-  scores: { title: string; points: number; max: number; note: string }[];
+  scores: ScoreEntry[];
   total: number;
   max: number;
   summary: string;
@@ -35,6 +36,8 @@ export interface ReviewView {
   attempt: {
     id: string; startedAt: string; deadlineAt: string; allowedMinutes: number; receipt: string;
     submittedAt: string | null; submitKind: "candidate" | "deadline" | null;
+    /** What they gave before Start (U06b), by field; null when nothing was asked. */
+    details: Record<string, string> | null;
   } | null;
   submission: {
     answer: string;
@@ -42,6 +45,8 @@ export interface ReviewView {
     files: { id: string; name: string; kind: AttemptFileKind; bytes: number }[];
     /** A test with questions (L2): each answered question's frozen answer, picks and files. Null for a one-task test. */
     answers: { questionNo: number; answer: string; picked: number[]; files: { id: string; name: string; kind: AttemptFileKind; bytes: number }[] }[] | null;
+    /** Multiple choice marked on the server at Submit (L3): total and most possible. Null when the test has none or it was submitted before L3. */
+    auto: { total: number; max: number; questions: number } | null;
   } | null;
   /** The pinned version's questions (L2), right options and guides included: reviewers only. Null for a one-task test. */
   questions: Question[] | null;
@@ -54,11 +59,11 @@ export interface ReviewView {
 }
 
 type ReviewRow = {
-  revision: number; reviewer_email: string; reviewer_name: string | null; scores: ReviewRecord["scores"];
+  revision: number; reviewer_email: string; reviewer_name: string | null; scores: unknown;
   total: number; max: number; summary: string; completed_at: string;
 };
 const toReview = (r: ReviewRow): ReviewRecord => ({
-  revision: r.revision, reviewerEmail: r.reviewer_email, reviewerName: r.reviewer_name, scores: r.scores,
+  revision: r.revision, reviewerEmail: r.reviewer_email, reviewerName: r.reviewer_name, scores: readScores(r.scores),
   total: r.total, max: r.max, summary: r.summary, completedAt: r.completed_at,
 });
 
@@ -72,12 +77,12 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
     attempt_id: string | null; started_at: string | null; deadline_at: string | null; allowed_minutes: number | null; receipt: string | null;
     submitted_at: string | null; submit_kind: "candidate" | "deadline" | null;
     answer: string | null; file_ids: string[] | null; submitted: boolean; rubric: RubricItem[]; results: ReviewView["results"];
-    answers: unknown; questions: unknown;
+    answers: unknown; auto_scores: unknown; questions: unknown; details: Record<string, string> | null;
   }>`
     select c.id, c.name, c.email, c.status,
            b.id as batch_id, b.item, b.purpose, b.role, b.time_zone, b.status as batch_status, b.reviewer_email, rm.name as reviewer_name, bv.title, bv.version,
-           a.id as attempt_id, a.started_at, a.deadline_at, a.allowed_minutes, a.receipt, a.submitted_at, a.submit_kind,
-           s.answer, s.file_ids, s.attempt_id is not null as submitted, pv.rubric, pv.results, s.answers, pv.questions
+           a.id as attempt_id, a.started_at, a.deadline_at, a.allowed_minutes, a.receipt, a.submitted_at, a.submit_kind, a.details,
+           s.answer, s.file_ids, s.attempt_id is not null as submitted, pv.rubric, pv.results, s.answers, s.auto_scores, pv.questions
       from course.batch_candidates c
       join course.hiring_batches b on b.id = c.batch_id and b.company_id = c.company_id
       join course.assessment_versions bv on bv.id = b.version_id
@@ -117,7 +122,7 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
     candidate: { id: h.id, name: h.name, email: h.email, status: h.status },
     batch: { id: h.batch_id, item: h.item, purpose: h.purpose ?? "hiring", role: h.role, title: h.title, version: h.version, timeZone: h.time_zone, status: h.batch_status, reviewerEmail: h.reviewer_email, reviewerName: h.reviewer_name },
     attempt: h.attempt_id
-      ? { id: h.attempt_id, startedAt: h.started_at!, deadlineAt: h.deadline_at!, allowedMinutes: h.allowed_minutes!, receipt: h.receipt!, submittedAt: h.submitted_at, submitKind: h.submit_kind }
+      ? { id: h.attempt_id, startedAt: h.started_at!, deadlineAt: h.deadline_at!, allowedMinutes: h.allowed_minutes!, receipt: h.receipt!, submittedAt: h.submitted_at, submitKind: h.submit_kind, details: h.details ?? null }
       : null,
     submission: h.submitted
       ? {
@@ -135,6 +140,7 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
                 }];
               })
             : null,
+          auto: autoTotal(h.auto_scores),
         }
       : null,
     questions: readQuestions(h.questions),
@@ -142,6 +148,35 @@ export async function loadReviewView(sql: Db, companyId: string, batchId: string
     results: h.results,
     reviews,
   };
+}
+
+/** The total of frozen automatic marks ([{question_no, points, max}]); null when there are none. */
+export function autoTotal(raw: unknown): { total: number; max: number; questions: number } | null {
+  if (!Array.isArray(raw) || !raw.length) return null;
+  let total = 0;
+  let max = 0;
+  for (const x of raw as Record<string, unknown>[]) {
+    total += Number(x?.points) || 0;
+    max += Number(x?.max) || 0;
+  }
+  return max > 0 ? { total, max, questions: raw.length } : null;
+}
+
+/** Automatic multiple-choice marks of every submitted attempt in a batch (L3), for the candidates table before review. */
+export async function autoScoresForBatch(sql: Db, companyId: string, batchId: string): Promise<Map<string, { total: number; max: number }> | null> {
+  const { data, error } = await sql.rows<{ attempt_id: string; auto_scores: unknown }>`
+    select s.attempt_id, s.auto_scores
+      from course.attempt_submissions s
+      join course.candidate_attempts a on a.id = s.attempt_id and a.company_id = s.company_id
+     where a.batch_id = ${batchId}::uuid and s.company_id = ${companyId}::uuid and s.auto_scores is not null
+  `;
+  if (error) return error.code === UNDEFINED_COLUMN || error.code === UNDEFINED_TABLE ? new Map() : fail("auto read", error);
+  const out = new Map<string, { total: number; max: number }>();
+  for (const r of data ?? []) {
+    const t = autoTotal(r.auto_scores);
+    if (t) out.set(r.attempt_id, { total: t.total, max: t.max });
+  }
+  return out;
 }
 
 export interface LatestReview {

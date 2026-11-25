@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import type { CatalogAssessment } from "@/data/business-catalog";
 import { readRubric, type AssessmentContent, type Submission } from "@/lib/company/assessment-rules";
 import { questionsJson } from "@/lib/company/assessment-data";
-import { durationText } from "@/lib/company/batch-rules";
+import { durationText, type AssessmentAudience } from "@/lib/company/batch-rules";
 import type { CatalogEntry } from "@/lib/company/catalog";
 import type { Db } from "@/lib/db/client";
 
@@ -32,6 +32,7 @@ export function newTestSlug(): string {
 
 type OwnRow = {
   slug: string; title: string;
+  assessment_audience: AssessmentAudience | null;
   role: string | null; minutes: number | null; submission: Submission | null; rubric: unknown;
   tools_allowed: string[] | null; tools_not_allowed: string[] | null; sample_title: string | null; sample_brief: string | null;
 };
@@ -39,7 +40,7 @@ type OwnRow = {
 /** This company's own tests as catalog entries, newest version's details first, else the draft's. Null on a database error. */
 export async function ownTests(sql: Db, companyId: string): Promise<CatalogEntry[] | null> {
   const { data, error } = await sql.rows<OwnRow>`
-    select i.slug, i.title,
+    select i.slug, i.title, i.assessment_audience,
            coalesce(v.role, d.role) as role, coalesce(v.minutes, d.minutes) as minutes, coalesce(v.submission, d.submission) as submission,
            coalesce(v.rubric, d.rubric) as rubric, coalesce(v.tools_allowed, d.tools_allowed) as tools_allowed,
            coalesce(v.tools_not_allowed, d.tools_not_allowed) as tools_not_allowed,
@@ -55,19 +56,20 @@ export async function ownTests(sql: Db, companyId: string): Promise<CatalogEntry
   // Before 0061 there is no such column: a company simply has no tests of its own.
   if (error) return error.code === UNDEFINED_COLUMN || error.code === UNDEFINED_TABLE ? [] : fail("list", error);
   return (data ?? []).map((r) => {
+    const audience: AssessmentAudience = r.assessment_audience === "internal" ? "internal" : "external";
     const item: CatalogAssessment = {
       kind: "assessment",
       slug: r.slug,
       title: r.title,
       summary: "",
-      purpose: "",
-      audience: r.role || "Role not set",
+      purpose: audience === "internal" ? "Internal employee assessment" : "External candidate assessment",
+      audience: audience === "internal" ? "Internal employees" : r.role || "External candidates",
       level: "Intermediate",
       duration: r.minutes ? durationText(r.minutes) : "Time not set",
       outcomes: [],
       author: "Your company",
       suggestedSkills: [],
-      suggestedPurposes: ["hiring"],
+      suggestedPurposes: [audience === "internal" ? "workforce" : "hiring"],
       format: "",
       rubric: readRubric(r.rubric).map((c) => c.title),
       tools: { allowed: r.tools_allowed ?? [], notAllowed: r.tools_not_allowed ?? [] },
@@ -77,7 +79,7 @@ export async function ownTests(sql: Db, companyId: string): Promise<CatalogEntry
       submission: r.submission ?? "written",
       runnable: false,
     };
-    return { item, status: "published", skills: [], purposes: ["hiring"], own: true };
+    return { item, status: "published", skills: [], purposes: [audience === "internal" ? "workforce" : "hiring"], own: true };
   });
 }
 
@@ -91,26 +93,54 @@ export async function ownTest(sql: Db, companyId: string, slug: string): Promise
   return data ?? undefined;
 }
 
-/** Makes the test and its first draft (revision 1) in one statement. Returns the new slug. */
+/**
+ * Makes the test and its first draft (revision 1) in one statement. Returns
+ * the new slug. With `createKey` (one Create press, P0.4), a retry or a
+ * second press returns the test that key already made, with `existed`.
+ */
 export async function createTest(
   sql: Db,
-  t: { companyId: string; title: string; role: string; by: string },
+  t: { companyId: string; title: string; role: string; audience?: AssessmentAudience; by: string; createKey?: string },
 ): Promise<string | null> {
+  const out = await createTestKeyed(sql, t);
+  return out ? out.slug : null;
+}
+
+export async function createTestKeyed(
+  sql: Db,
+  t: { companyId: string; title: string; role: string; audience?: AssessmentAudience; by: string; createKey?: string },
+): Promise<{ slug: string; audience: AssessmentAudience; existed: boolean } | null> {
+  const key = t.createKey ?? null;
+  const audience = t.audience ?? "external";
+  if (key) {
+    const { data, error } = await sql.row<{ slug: string; assessment_audience: AssessmentAudience | null }>`
+      select slug, assessment_audience from course.catalog_items where owner_company_id = ${t.companyId}::uuid and create_key = ${key}
+    `;
+    if (error && error.code !== UNDEFINED_COLUMN) return fail("create lookup", error);
+    if (data) return { slug: data.slug, audience: data.assessment_audience === "internal" ? "internal" : "external", existed: true };
+  }
   for (let tries = 0; tries < 3; tries++) {
     const slug = newTestSlug();
     const { data, error } = await sql.row<{ slug: string }>`
       with item as (
-        insert into course.catalog_items (slug, kind, status, skills, purposes, title, owner_company_id, updated_by)
-        values (${slug}, 'assessment', 'published', '{}', array['hiring'], ${t.title}, ${t.companyId}::uuid, ${t.by})
+        insert into course.catalog_items (slug, kind, status, skills, purposes, title, owner_company_id, assessment_audience, updated_by, create_key)
+        values (${slug}, 'assessment', 'published', '{}', ${audience === "internal" ? ["workforce"] : ["hiring"]}::text[], ${t.title}, ${t.companyId}::uuid, ${audience}, ${t.by}, ${key})
         returning slug
       )
       insert into course.assessment_drafts (slug, revision, role, minutes, submission, rubric, results, updated_by)
       select slug, 1, ${t.role}, null, 'written', '[]'::jsonb, 'none', ${t.by} from item
       returning slug
     `;
-    if (error?.code === UNIQUE) continue;
+    if (error?.code === UNIQUE) {
+      // The same key landed from a parallel press: return that test.
+      if (key) {
+        const again = await sql.row<{ slug: string; assessment_audience: AssessmentAudience | null }>`select slug, assessment_audience from course.catalog_items where owner_company_id = ${t.companyId}::uuid and create_key = ${key}`;
+        if (again.data) return { slug: again.data.slug, audience: again.data.assessment_audience === "internal" ? "internal" : "external", existed: true };
+      }
+      continue;
+    }
     if (error) return fail("create", error);
-    return data?.slug ?? null;
+    return data ? { slug: data.slug, audience, existed: false } : null;
   }
   return null;
 }
