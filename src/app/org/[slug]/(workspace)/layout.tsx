@@ -46,6 +46,7 @@ export default async function OrgLayout({ children, params }: { children: React.
         email={member.email}
         roles={member.roles.map((r) => ROLE_LABEL[r])}
         supportHref={`mailto:${brand.supportEmail ?? contact.email}`}
+        settingsHref={`/org/${member.companySlug}/settings`}
       />
       {/* pb-28: the site-wide help button floats bottom-right (64px + its margin). This leaves room to scroll the last row clear of it. */}
       <main className="min-w-0 flex-1 px-4 pt-6 pb-28 sm:px-6 lg:px-8 lg:pt-8">

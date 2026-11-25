@@ -9,8 +9,8 @@ import { safeOrgNext } from "@/lib/company/return-path";
 export const metadata: Metadata = { title: "Company sign-in", robots: { index: false, follow: false } };
 
 /**
- * The sign-in page for every company. Invited members ask for a code by
- * email; nothing here names a company, so it can't be used to find out
+ * The sign-in page for every company. Invited members sign in with a
+ * password, or ask for a code by email; nothing here names a company, so it can't be used to find out
  * which companies or people are on Klymb.
  *
  * ?next= is the workspace page someone was sent here from. It is kept through
@@ -33,11 +33,12 @@ export default async function CompanySignInPage({ searchParams }: { searchParams
         <div className="card p-6 sm:p-8">
           <h1 className="display text-2xl">Sign in</h1>
           <p className="mt-2 text-sm text-muted">
-            For people invited by their company. Enter your work email and we&apos;ll send you a code.
+            For people invited by their company. Sign in with your work email.
           </p>
           <CompanySignInForm next={next} />
         </div>
         <ul className="mt-6 space-y-2 text-xs text-muted">
+          <li>First time here, or forgot your password? Email yourself a code, then set a password in Settings.</li>
           <li>Admins manage people and teams. Track course progress in Upskill.</li>
           <li>
             Not invited by a company? <Link href="/learn" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.

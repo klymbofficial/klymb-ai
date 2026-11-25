@@ -25,9 +25,9 @@ declare module "next-auth/jwt" {
 }
 
 /**
- * "email-code" is the company sign-in; it is never treated as Google-verified.
+ * "email-code" and "password" are the company sign-ins; neither is ever treated as Google-verified.
  * "dev" is the fake-user sign-in (src/lib/dev-login.ts), honoured only while it is enabled.
  */
-type SignInMethod = "google" | "email-code" | "dev";
+type SignInMethod = "google" | "email-code" | "password" | "dev";
 
 export {};

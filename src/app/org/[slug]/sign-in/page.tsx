@@ -18,9 +18,9 @@ type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ next?:
 /**
  * A company's own sign-in page: where invite emails and deep links into its
  * workspace lead. It shows the company's published brand (logo, name, accent,
- * welcome, support contact) and the same email-code sign-in as everywhere.
- * Getting in back to a lost account is the same two steps: a new code, or a
- * different email; the support contact is the way out when neither works.
+ * welcome, support contact) and the same sign-in as everywhere: a password,
+ * or an email code. A forgotten password is an email code, then a new
+ * password in Settings; the support contact is the way out when neither works.
  *
  * Only a page in this company's workspace is followed afterwards; anything
  * else returns to the workspace's home. An unknown company gets the plain
@@ -50,12 +50,12 @@ export default async function WorkspaceSignInPage({ params, searchParams }: Prop
           {brand.accent && <div aria-hidden="true" className="-mx-6 -mt-6 mb-6 h-1.5 bg-[var(--brand-accent)] sm:-mx-8 sm:-mt-8" />}
           <h1 className="display text-2xl">Sign in to {brand.name}</h1>
           <p className="mt-2 text-sm text-muted">
-            {brand.welcome ?? "For people your company has invited. Enter your work email and we'll send you a code."}
+            {brand.welcome ?? "For people your company has invited. Sign in with your work email."}
           </p>
           <CompanySignInForm next={next} />
         </div>
         <ul className="mt-6 space-y-2 text-xs text-muted">
-          <li>No password: each time, we email a 6-digit code to the address your company invited. Lost access? Ask for a new code, or try the other work email you may have been invited with.</li>
+          <li>First time here, or forgot your password? Email yourself a 6-digit code, then set a password in Settings. Still stuck? Try the other work email you may have been invited with.</li>
           <li><BrandSupport brand={brand} /></li>
           <li>
             Here for your own Klymb courses? <Link href="/learn" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.
