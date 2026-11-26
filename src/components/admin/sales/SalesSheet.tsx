@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { logCallOutcome, logTouch, quickAddLead, updateLeadField } from "@/app/admin/sales-actions";
 import { CALL_OUTCOMES, formatPhone, labelOf, SOURCES, STAGES, STATUS_NOTE_MAX } from "@/lib/sales";
+import { useWhatsAppMessage, WhatsAppMessageEditor, whatsappHref } from "@/components/admin/sales/WhatsAppMessage";
 
 export interface SheetRow {
   id: string;
@@ -41,6 +42,7 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
   const [flash, setFlash] = useState<string | null>(null);
   // The row whose call is in progress: its outcome buttons are showing.
   const [calling, setCalling] = useState<string | null>(null);
+  const waMessage = useWhatsAppMessage();
 
   async function save(id: string, field: "stage" | "next_follow_up" | "notes" | "status_note" | "owner_email", value: string) {
     setError("");
@@ -63,7 +65,7 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
         <span className="mt-1 flex flex-wrap gap-1">
           {r.phone && (
             <>
-              <a href={`https://wa.me/${r.phone}`} target="_blank" rel="noopener noreferrer" onClick={() => touch(r, "whatsapp")}
+              <a href={whatsappHref(r.phone, r.name, waMessage)} target="_blank" rel="noopener noreferrer" onClick={() => touch(r, "whatsapp")}
                 className={clsx(btn, "border border-emerald-700/40 font-bold text-emerald-800 hover:bg-emerald-50")} title="Open WhatsApp and log it">WhatsApp</a>
               <a href={`tel:+${r.phone}`} onClick={() => setCalling(r.id)}
                 className={clsx(btn, "border border-line/50 font-bold hover:bg-surface")} title="Call and log it">Call</a>
@@ -145,6 +147,7 @@ export function SalesSheet({ rows, today, owners, base = "/admin/sales", canAssi
   return (
     <div className="flex flex-col gap-3">
       {quickAdd && <QuickAdd onError={setError} />}
+      <WhatsAppMessageEditor />
       {error && <p role="alert" className="text-xs font-semibold text-error">{error}</p>}
 
       {/* Laptop: a sheet. */}
