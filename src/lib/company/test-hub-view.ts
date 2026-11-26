@@ -38,14 +38,16 @@ export function takeUpText(invited: number, taken: number): string {
   return `${who} and ${taken} ${taken === 1 ? "has" : "have"} taken the test.`;
 }
 
-/** Tests matching a status, a creation-date window and a search (title, role or a tag, any case), in the chosen order. */
-export function pickTests<T extends { status: TestStatus; title: string; role: string; publishedAt: string | null; invited: number; tags?: string[] }>(
+/** Tests matching a status, a creation-date window, who published them and a search (title, role or a tag, any case), in the chosen order. */
+export function pickTests<T extends { status: TestStatus; title: string; role: string; publishedAt: string | null; invited: number; tags?: string[]; publisher?: { key: string } | null }>(
   all: readonly T[],
   status: TestStatus,
   query: string,
   age: TestAge,
   sort: TestSort,
   now: Date,
+  /** "any", or a publisher's key: "klymb" or the person's email (user, 26 Nov). */
+  by = "any",
 ): T[] {
   const q = query.trim().toLowerCase();
   const since = age === "any" ? null : now.getTime() - Number(age) * 86400000;
@@ -53,7 +55,8 @@ export function pickTests<T extends { status: TestStatus; title: string; role: s
     (t) =>
       t.status === status &&
       (!q || t.title.toLowerCase().includes(q) || t.role.toLowerCase().includes(q) || (t.tags ?? []).some((g) => g.toLowerCase().includes(q))) &&
-      (since === null || (t.publishedAt !== null && new Date(t.publishedAt).getTime() >= since)),
+      (since === null || (t.publishedAt !== null && new Date(t.publishedAt).getTime() >= since)) &&
+      (by === "any" || t.publisher?.key === by),
   );
   const at = (t: T) => (t.publishedAt ? new Date(t.publishedAt).getTime() : 0);
   return [...shown].sort((a, b) => (sort === "candidates" ? b.invited - a.invited : sort === "oldest" ? at(a) - at(b) : at(b) - at(a)));
@@ -165,4 +168,11 @@ export function questionResults(rows: readonly QuestionResultRow[], count: numbe
     const avg = mine.length ? Math.round((100 * mine.reduce((n, r) => n + (r.max ? r.points / r.max : 0), 0)) / mine.length) : null;
     return { questionNo: i + 1, attempts: mine.length, full, average: avg };
   });
+}
+
+/** The "Published by" choices for these tests: Klymb first, then people by name, each once. */
+export function publisherOptions(rows: readonly { publisher?: { key: string; label: string } | null }[]): { key: string; label: string }[] {
+  const seen = new Map<string, string>();
+  for (const r of rows) if (r.publisher && !seen.has(r.publisher.key)) seen.set(r.publisher.key, r.publisher.label);
+  return [...seen].map(([key, label]) => ({ key, label })).sort((a, b) => (a.key === "klymb" ? -1 : b.key === "klymb" ? 1 : a.label.localeCompare(b.label)));
 }

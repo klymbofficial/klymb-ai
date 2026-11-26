@@ -8,7 +8,7 @@ import { canReview, canWriteTests, seesAssessments } from "@/lib/company/assessm
 import { requireCompany } from "@/lib/company/auth";
 import { canSchedule, durationText, seesHiring } from "@/lib/company/batch-rules";
 import { companyCatalog } from "@/lib/company/catalog-data";
-import { publishedDates, testCounts } from "@/lib/company/test-hub-data";
+import { publishedFacts, testCounts } from "@/lib/company/test-hub-data";
 import { testStatus } from "@/lib/company/test-hub-view";
 import { db } from "@/lib/db/client";
 import { klymbLibrary, ownLibrary } from "@/lib/company/library-data";
@@ -48,7 +48,7 @@ export default async function AssessmentsPage({ params, searchParams }: { params
   const tests = (catalog ?? []).flatMap((e) => (e.item.kind === "assessment" ? [{ ...e, item: e.item }] : []));
   const slugs = tests.map((t) => t.item.slug);
   const [standings, counts, dates, settings] = sql && catalog
-    ? await Promise.all([companyStandings(sql, member.companyId, slugs), testCounts(sql, member.companyId), publishedDates(sql, slugs), companyTestSettings(sql, member.companyId)])
+    ? await Promise.all([companyStandings(sql, member.companyId, slugs), testCounts(sql, member.companyId), publishedFacts(sql, member.companyId, slugs), companyTestSettings(sql, member.companyId)])
     : [null, null, null, null];
   if (!catalog || !standings || !counts || !dates || !settings) return <>{head}<LoadError what="Assessments" /></>;
   if (!tests.length) {
@@ -70,7 +70,10 @@ export default async function AssessmentsPage({ params, searchParams }: { params
     const shown = s.inUse ?? s.latest;
     const status = testStatus(s);
     const c = counts.get(t.item.slug) ?? { invited: 0, taken: 0, batches: 0 };
-    const published = shown ? dates.get(shown.id) ?? null : null;
+    const facts = shown ? dates.get(shown.id) ?? null : null;
+    const published = facts?.at ?? null;
+    // Who published it (user, 26 Nov): Klymb for Klymb's tests; the person, by name, for the company's own.
+    const publisher = !facts ? null : t.own ? { key: facts.by, label: facts.name ?? facts.by } : { key: "klymb", label: "Klymb" };
     const href = `${base}/${t.item.slug}`;
     const waiting = s.latest && !s.latestReview;
     const own = settings.get(t.item.slug);
@@ -84,6 +87,7 @@ export default async function AssessmentsPage({ params, searchParams }: { params
       duration: shown?.minutes ? durationText(shown.minutes) : t.item.duration,
       versionLine: shown ? `Version ${shown.version}${published ? ` · published ${day(published)}` : ""}` : "Not published yet",
       publishedAt: published,
+      publisher,
       note: waiting
         ? reviewer ? `Version ${s.latest!.version} is waiting for your review.` : `Version ${s.latest!.version} is waiting for a reviewer in your company.`
         : s.latestReview?.decision === "declined" ? `Version ${s.latest!.version} was declined.` : null,

@@ -109,13 +109,21 @@ export async function testCandidates(sql: Db, companyId: string, item: string): 
 }
 
 /** When each version was published, by version id. */
-export async function publishedDates(sql: Db, slugs: string[]): Promise<Map<string, string> | null> {
+/**
+ * When each version of these tests was published and by whom, with the
+ * publisher's name when they're in this company (their own tests). Klymb's
+ * tests are published by Klymb staff, whose names aren't shown here.
+ */
+export async function publishedFacts(sql: Db, companyId: string, slugs: string[]): Promise<Map<string, { at: string; by: string; name: string | null }> | null> {
   if (!slugs.length) return new Map();
-  const { data, error } = await sql.rows<{ id: string; published_at: string }>`
-    select id, published_at from course.assessment_versions where slug = any(${slugs}::text[])
+  const { data, error } = await sql.rows<{ id: string; published_at: string; published_by: string; name: string | null }>`
+    select v.id, v.published_at, v.published_by, m.name
+      from course.assessment_versions v
+      left join course.company_members m on m.company_id = ${companyId}::uuid and m.email = v.published_by
+     where v.slug = any(${slugs}::text[])
   `;
   if (error) return error.code === UNDEFINED_TABLE ? new Map() : fail("dates", error);
-  return new Map((data ?? []).map((r) => [r.id, new Date(r.published_at).toISOString()]));
+  return new Map((data ?? []).map((r) => [r.id, { at: new Date(r.published_at).toISOString(), by: r.published_by, name: r.name }]));
 }
 
 /**

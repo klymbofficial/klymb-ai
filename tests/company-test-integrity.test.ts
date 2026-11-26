@@ -44,3 +44,20 @@ describe("proctoring and plagiarism options (0099, user 26 Nov)", () => {
     assert.match(read("src/lib/company/round-data.ts"), /settings\?\.proctor\.integrity \? integrityIndex\(/);
   });
 });
+
+describe("Published by filter on Assessments (user, 26 Nov)", async () => {
+  const { pickTests, publisherOptions } = await import("../src/lib/company/test-hub-view");
+  const row = (title: string, publisher: { key: string; label: string } | null) => ({ status: "ongoing" as const, title, role: "", publishedAt: "2026-11-20T00:00:00Z", invited: 0, tags: [], publisher });
+  const rows = [row("A", { key: "klymb", label: "Klymb" }), row("B", { key: "asha@acme.test", label: "Asha Rao" }), row("C", { key: "asha@acme.test", label: "Asha Rao" }), row("D", { key: "dev@acme.test", label: "Dev" })];
+  const now = new Date("2026-11-26T00:00:00Z");
+
+  test("choices: Klymb first, then people by name, each once", () => {
+    assert.deepEqual(publisherOptions(rows).map((o) => o.label), ["Klymb", "Asha Rao", "Dev"]);
+  });
+
+  test("filters to one publisher; Anyone shows them all", () => {
+    assert.deepEqual(pickTests(rows, "ongoing", "", "any", "newest", now, "asha@acme.test").map((t) => t.title).sort(), ["B", "C"]);
+    assert.deepEqual(pickTests(rows, "ongoing", "", "any", "newest", now, "klymb").map((t) => t.title), ["A"]);
+    assert.equal(pickTests(rows, "ongoing", "", "any", "newest", now).length, 4);
+  });
+});

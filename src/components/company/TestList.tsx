@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PANEL, SearchBox } from "@/components/company/HiringParts";
 import { OrgIcon, type OrgIconName } from "@/components/company/OrgIcons";
-import { TEST_AGE_LABEL, TEST_STATUS_FILTERS, pickTests, takeUpText, type TestAge, type TestSort, type TestStatus } from "@/lib/company/test-hub-view";
+import { TEST_AGE_LABEL, TEST_STATUS_FILTERS, pickTests, publisherOptions, takeUpText, type TestAge, type TestSort, type TestStatus } from "@/lib/company/test-hub-view";
 
 /** One test as the list shows it. Words are prepared on the server. */
 export interface TestRow {
@@ -19,6 +19,8 @@ export interface TestRow {
   /** "Version 2 · published 6 Nov 2026", or why there's no version yet. */
   versionLine: string;
   publishedAt: string | null;
+  /** Who published the version shown: "klymb" for Klymb's tests, else the person's email, with the name to show. */
+  publisher: { key: string; label: string } | null;
   /** "Waiting for your review", shown on tests that aren't ongoing. */
   note: string | null;
   invited: number;
@@ -59,6 +61,8 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
   const first = TEST_STATUS_FILTERS.find((f) => rows.some((r) => r.status === f.key))?.key ?? "ongoing";
   const [status, setStatus] = useState<TestStatus>(first);
   const [age, setAge] = useState<TestAge>("any");
+  const [by, setBy] = useState("any");
+  const publishers = useMemo(() => publisherOptions(rows), [rows]);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<TestSort>("newest");
 
@@ -67,7 +71,7 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
     for (const r of rows) c[r.status] += 1;
     return c;
   }, [rows]);
-  const shown = pickTests(rows, status, query, age, sort, new Date(now));
+  const shown = pickTests(rows, status, query, age, sort, new Date(now), by);
 
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-0">
@@ -88,6 +92,13 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
           Creation date
           <select value={age} onChange={(e) => setAge(e.target.value as TestAge)} className="h-10 rounded-md border border-line/50 bg-white px-3 text-sm font-normal">
             {(Object.keys(TEST_AGE_LABEL) as TestAge[]).map((k) => <option key={k} value={k}>{TEST_AGE_LABEL[k]}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm font-bold">
+          Published by
+          <select value={by} onChange={(e) => setBy(e.target.value)} className="h-10 rounded-md border border-line/50 bg-white px-3 text-sm font-normal">
+            <option value="any">Anyone</option>
+            {publishers.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
           </select>
         </label>
         <div className="text-sm">
