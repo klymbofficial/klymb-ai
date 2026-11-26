@@ -6,6 +6,7 @@ import { createLead, deleteLead, importLeads, logTouch, saveTarget, syncWhatsApp
 import { CHANNELS, SOURCES, STAGES, STATUS_NOTE_MAX } from "@/lib/sales";
 
 import { input } from "@/components/admin/sales/styles";
+import { useWhatsAppMessage, whatsappHref } from "@/components/admin/sales/WhatsAppMessage";
 
 export { input };
 const label = "flex flex-col gap-1 text-xs font-bold";
@@ -99,12 +100,13 @@ export function LeadForm({ owners, me, lead, base = "/admin/sales", canAssign = 
  * out shows in History and on the report without filling in the form.
  * Logged once per page view, so a second click doesn't count twice.
  */
-export function OpenWhatsApp({ leadId, phone }: { leadId: string; phone: string }) {
+export function OpenWhatsApp({ leadId, phone, name }: { leadId: string; phone: string; name: string }) {
   const router = useRouter();
   const [logged, setLogged] = useState(false);
+  const message = useWhatsAppMessage();
   return (
     <a
-      href={`https://wa.me/${phone}`}
+      href={whatsappHref(phone, name, message)}
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => {
