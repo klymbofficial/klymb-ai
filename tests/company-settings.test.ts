@@ -32,8 +32,8 @@ describe("Settings (user, 26 Nov)", () => {
   });
 
   test("company details: a bare domain becomes https; nonsense is refused", () => {
-    const ok = readCompanyDetails({ phone: "", website: "www.exl.com", address: " 1 Road \n\n Mumbai " });
-    assert.deepEqual(ok, { ok: true, value: { phone: null, website: "https://www.exl.com/", address: "1 Road\nMumbai" } });
+    const ok = readCompanyDetails({ phone: "", website: "www.testcompany.com", address: " 1 Road \n\n Mumbai " });
+    assert.deepEqual(ok, { ok: true, value: { phone: null, website: "https://www.testcompany.com/", address: "1 Road\nMumbai" } });
     assert.equal((readCompanyDetails({ website: "not a site" }) as { field: string }).field, "website");
   });
 

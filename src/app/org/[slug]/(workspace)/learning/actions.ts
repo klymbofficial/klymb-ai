@@ -9,6 +9,12 @@ import type { CompanyMember } from "@/lib/company/access";
 import { db, type Db } from "@/lib/db/client";
 import { normaliseEmail } from "@/lib/email";
 import { SD_COURSE } from "@/lib/sd-offer";
+import { site } from "@/data/config";
+import { grievance } from "@/data/legal";
+import { loadCompanyBrand } from "@/lib/company/invite";
+import { changeLearnerAssignment, lastReminderAt, loadCourseView, recordReminder } from "@/lib/company/upskill-data";
+import { SYSTEM_DESIGN, nextLesson } from "@/lib/company/upskill-course";
+import { sendMail, upskillReminderEmail } from "@/lib/mail";
 
 /** What the assign form sends. */
 export interface AssignFormInput {
@@ -41,7 +47,7 @@ const NOT_ALLOWED = { ok: false as const, message: "Only your company's admin, o
 const UNAVAILABLE = { ok: false as const, message: "That didn't work just now. Try again in a minute." };
 
 function refresh(slug: string) {
-  revalidatePath(`/org/${slug}/learning`);
+  revalidatePath(`/org/${slug}/learning`, "layout");
   revalidatePath(`/org/${slug}`);
 }
 
@@ -137,7 +143,7 @@ export async function confirmAssignment(slug: string, input: AssignFormInput, ex
   });
   refresh(slug);
   const n = out.added;
-  return { ok: true, message: `System Design assigned to ${n} ${n === 1 ? "person" : "people"}. They open it by signing in to the course with Google, using their work email.` };
+  return { ok: true, message: `System Design assigned to ${n} ${n === 1 ? "person" : "people"}. They find it under Upskill in this workspace.` };
 }
 
 /** Takes the course back from one person. What they did is kept. A lead can only do this for their own team. */
@@ -154,4 +160,77 @@ export async function removeAssignment(slug: string, rawEmail: string): Promise<
   await logCompany(who.member, "company.course_unassign", { email, course: SD_COURSE });
   refresh(slug);
   return { ok: true, message: `Removed from ${email}. They can no longer open the course; what they did is kept.` };
+}
+
+/** The person, as this assigner sees them (their scope: the company, or a lead's team). */
+async function personInScope(sql: Db, member: CompanyMember, email: string) {
+  const view = await loadCourseView(sql, member);
+  if (!view) return null;
+  return { view, person: view.people.find((p) => p.email === email) ?? undefined };
+}
+
+/**
+ * Emails one person a nudge back into the course (user, 26 Nov): where they
+ * are, their next lesson, the due date if required. One a day per person, so
+ * nobody is flooded; every send is recorded with who sent it.
+ */
+export async function sendUpskillReminder(slug: string, rawEmail: string): Promise<ConfirmResult> {
+  const who = await assignerFor(slug);
+  if (!who) return NOT_ALLOWED;
+  const email = normaliseEmail(rawEmail);
+  const sql = db();
+  if (!email || !sql) return UNAVAILABLE;
+  const found = await personInScope(sql, who.member, email);
+  if (!found) return UNAVAILABLE;
+  const p = found.person;
+  if (!p || !p.assigned) return { ok: false, message: "That person doesn't have the course assigned here." };
+  if (p.lessonsPassed >= found.view.totalLessons) return { ok: false, message: `${p.name ?? p.email} has finished every lesson. Nothing to remind them about.` };
+  const last = await lastReminderAt(sql, who.member.companyId, email);
+  if (last === undefined) return UNAVAILABLE;
+  if (last && Date.now() - last.getTime() < 20 * 3600000) return { ok: false, message: `${p.name ?? p.email} was already reminded today. You can send another tomorrow.` };
+
+  const brand = await loadCompanyBrand(sql, who.member.companyId);
+  if (!brand) return UNAVAILABLE;
+  const passed = new Set(p.lessons.filter((l) => l.passedAt).map((l) => l.lesson));
+  const next = nextLesson(SYSTEM_DESIGN, passed);
+  const mail = upskillReminderEmail({
+    name: p.name, course: SYSTEM_DESIGN.title, company: brand, passed: p.lessonsPassed, total: found.view.totalLessons,
+    next: next ? `Lesson ${next.no}: ${next.title}` : "The final assessment",
+    dueOn: p.requirement === "required" && p.dueOn ? new Date(`${p.dueOn}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : null,
+    courseUrl: `${site.url}/org/${slug}/learning/${SD_COURSE}`, siteUrl: site.url, supportEmail: grievance.email,
+  });
+  const { fromName, ...content } = mail;
+  const sent = await sendMail({ to: { email, ...(p.name ? { name: p.name } : {}) }, fromName, ...content, kind: "company.upskill_reminder" }).catch(() => ({ ok: false as const, reason: "error" }));
+  await recordReminder(sql, { companyId: who.member.companyId, email, by: who.member.email, outcome: sent.ok ? "sent" : "failed" });
+  await logCompany(who.member, "company.upskill_reminder", { course: SD_COURSE, sent: sent.ok });
+  refresh(slug);
+  return sent.ok
+    ? { ok: true, message: `Reminder sent to ${p.name ?? p.email}.` }
+    : { ok: false, message: "The reminder couldn't be sent just now. Try again later." };
+}
+
+/** One person's requirement and due date. Others on the same assignment keep theirs. */
+export async function changeLearnerDue(slug: string, rawEmail: string, requirement: string, dueOn: string): Promise<ConfirmResult> {
+  const who = await assignerFor(slug);
+  if (!who) return NOT_ALLOWED;
+  const email = normaliseEmail(rawEmail);
+  const sql = db();
+  if (!email || !sql) return UNAVAILABLE;
+  if (requirement !== "required" && requirement !== "recommended") return { ok: false, message: "Choose required or recommended." };
+  const due = requirement === "required" && dueOn ? dueOn : null;
+  if (due && (!/^\d{4}-\d{2}-\d{2}$/.test(due) || due < todayIst())) return { ok: false, message: "Choose a due date from today onwards, or leave it empty." };
+  const found = await personInScope(sql, who.member, email);
+  if (!found) return UNAVAILABLE;
+  const p = found.person;
+  if (!p || !p.assigned) return { ok: false, message: "That person doesn't have the course assigned here." };
+  const out = await changeLearnerAssignment(sql, {
+    companyId: who.member.companyId, email, requirement, dueOn: due, by: who.member.email,
+    scopeTeamId: who.scope.kind === "team" ? who.scope.teamId : null, label: p.name ?? email,
+  });
+  if (!out) return UNAVAILABLE;
+  if (out === "none") return { ok: false, message: "That person doesn't have the course assigned here." };
+  if (out === "invalid") return { ok: false, message: "Choose required or recommended." };
+  await logCompany(who.member, "company.assignment_change", { course: SD_COURSE, requirement, due_on: due, moved: out === "moved" });
+  refresh(slug);
+  return { ok: true, message: requirement === "required" ? (due ? `Saved: required, due ${due}.` : "Saved: required, no due date.") : "Saved: recommended." };
 }

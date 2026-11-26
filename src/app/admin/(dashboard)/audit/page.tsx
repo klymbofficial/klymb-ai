@@ -39,6 +39,8 @@ const LABELS: Record<string, string> = {
   "catalog.question_save": "Edited a question in Klymb's library",
   "company.course_assign": "Company admin assigned a course",
   "company.course_unassign": "Company admin removed a course assignment",
+  "company.upskill_reminder": "Company sent a course reminder",
+  "company.assignment_change": "Company changed someone's due date",
   "company.course_assign_all": "Company admin assigned a course to everyone without it",
   "company.assignment_create": "Company admin or team lead assigned a course",
   "company.assessment_review": "Company reviewer approved or declined an assessment version",

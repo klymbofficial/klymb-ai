@@ -666,6 +666,52 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
 }
 
 /**
+ * A nudge from a company to someone it assigned a course to (Upskill, user
+ * 26 Nov): where they are, what's next, the due date when there is one, and
+ * one button back into the course. In the company's look, from "<Company> via
+ * Klymb.ai", like the invite.
+ */
+export function upskillReminderEmail(p: {
+  name: string | null; course: string; company: CompanyBrand; passed: number; total: number;
+  next: string | null; dueOn: string | null; courseUrl: string; siteUrl: string; supportEmail: string;
+}) {
+  const site = esc(p.siteUrl);
+  const company = p.company.name;
+  const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
+  const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
+  const brand: MailBrand = { name: company, logoUrl, color: accent };
+  const started = p.passed > 0;
+  const subject = started ? `Keep going: ${p.course}` : `Your ${p.course} course is waiting`;
+  const intro = started
+    ? `${company} is cheering you on. You've finished ${p.passed} of ${p.total} lessons of ${p.course}.`
+    : `${company} has given you ${p.course}, and your first lesson is ready.`;
+  const steps = [
+    ...(p.next ? [{ title: started ? "Pick up where you left off" : "Start with lesson 1", body: p.next }] : []),
+    ...(p.dueOn ? [{ title: "Due", body: `Finish by ${p.dueOn}.` }] : []),
+    { title: "Sign in to your workspace", body: "Use the same email this message was sent to. The course is under Upskill." },
+  ];
+  const help = p.company.supportEmail ? `Questions? Write to ${p.company.supportEmail}.` : `Questions? Reply to this email or write to ${p.supportEmail}.`;
+  const text = [
+    p.name ? `Hi ${p.name},` : "Hi,", "", intro, "",
+    ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
+    `Continue the course: ${p.courseUrl}`, "", help, "", `Sent for ${company} by Klymb.ai`,
+  ].join("\n");
+  const html = layout({
+    site, supportEmail: p.supportEmail, brand,
+    preview: intro,
+    eyebrow: "A friendly reminder",
+    title: p.name ? `Hi ${esc(p.name)}, keep going.` : "Keep going.",
+    intro: esc(intro),
+    sections: [
+      `${sectionTitle(started ? "Your next step" : "Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
+      </table>${button(esc(p.courseUrl), started ? "Continue the course" : "Start the course", accent)}`,
+    ],
+  });
+  return { subject, html, text, fromName: inviteSenderName(company) };
+}
+
+/**
  * An external candidate's invitation or an employee's assigned assessment,
  * plus follow-up emails (a reminder, a new link, a new time). Always says
  * three things apart: when the batch opens, the last moment to start, and

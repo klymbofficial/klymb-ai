@@ -7,6 +7,7 @@ import type { AssignScope } from "@/lib/company/assign-rules";
 import { membershipsLookup, workspaceLookup } from "@/lib/company/lookup";
 import { sessionCutoff } from "@/lib/company/settings-data";
 import { sessionAllowed } from "@/lib/company/settings-rules";
+import { hasCompanyAssignment } from "@/lib/access";
 import { db } from "@/lib/db/client";
 
 /**
@@ -49,6 +50,19 @@ const companyEmail = cache(async (): Promise<string | null> => {
   if (cutoff === undefined) return null;
   return sessionAllowed(cutoff, { sid: session?.user?.sid, authAt: session?.user?.authAt }) ? email : null;
 });
+
+/**
+ * The signed-in company email, when that person's company assigned them this
+ * course (user, 26 Nov): a workspace sign-in by code or password opens a
+ * company-assigned course too, with no second Google sign-in. Their own
+ * purchases still need Google (verifiedEmailFrom). Null otherwise.
+ */
+export async function companyCourseEmail(course: string): Promise<string | null> {
+  const email = await companyEmail();
+  const sql = db();
+  if (!email || !sql) return null;
+  return (await hasCompanyAssignment(sql, email, course)) ? email : null;
+}
 
 export const getMemberships = cache(async (): Promise<CompanyMember[]> => {
   const sql = db();

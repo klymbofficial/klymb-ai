@@ -35,6 +35,8 @@ export type CompanyAuditAction = Extract<
   | "company.brand_publish"
   | "company.course_assign"
   | "company.course_unassign"
+  | "company.upskill_reminder"
+  | "company.assignment_change"
   | "company.course_assign_all"
   | "company.assignment_create"
   | "company.assessment_review"

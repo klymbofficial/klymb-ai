@@ -1,5 +1,6 @@
 import { currentEmail } from "@/auth";
 import { hasCourseAccess } from "@/lib/access";
+import { companyCourseEmail } from "@/lib/company/auth";
 import { signedLink } from "@/lib/r2";
 import { isFreeVideo } from "@/lib/sd-lessons";
 import { SD_COURSE } from "@/lib/sd-offer";
@@ -11,7 +12,8 @@ const FILE = /^[a-z0-9-]+\.mp4$/;
 
 /**
  * Plays a System Design video: redirects to a fresh signed R2 link. The
- * overview is open to everyone; every lesson needs a seat. Without
+ * overview is open to everyone; every lesson needs a seat, through Google or,
+ * for a company-assigned seat, the workspace sign-in. Without
  * R2 keys (local dev) the free videos fall back to their copies in public/,
  * which hold no paid lesson.
  */
@@ -19,7 +21,8 @@ export async function GET(_req: Request, { params }: RouteContext<"/api/video/[f
   const { file } = await params;
   if (!FILE.test(file)) return new Response("Not found", { status: 404 });
   if (!isFreeVideo(file)) {
-    const email = await currentEmail();
+    // A Google sign-in, or a workspace sign-in for a course the company assigned (user, 26 Nov).
+    const email = (await currentEmail()) ?? (await companyCourseEmail(SD_COURSE));
     if (!email || !(await hasCourseAccess(email, SD_COURSE))) return new Response("This lesson is in the full course.", { status: 403 });
   }
   const url = (await signedLink(`system-design/${file}`)) ?? `/videos/system-design/${file}`;

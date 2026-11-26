@@ -35,8 +35,8 @@ describe("U06a: the invitation template", () => {
     const ok = readEmail({ autoRemind: false, inviteSubject: "  {{company}}:   {{ test_name }} ", inviteBody: "Dear {{candidate_name}},\nStart by {{start_by}}." });
     assert.ok(ok.ok);
     assert.deepEqual(ok.value, { autoRemind: false, invite: { subject: "{{company}}: {{ test_name }}", body: "Dear {{candidate_name}},\nStart by {{start_by}}." } });
-    const vars = { candidate_name: "Asha", test_name: "SQL", company: "EXL", start_by: "Fri", time_allowed: "45 minutes" };
-    assert.equal(renderTemplate(ok.value.invite!.subject, vars), "EXL: SQL");
+    const vars = { candidate_name: "Asha", test_name: "SQL", company: "Test Company", start_by: "Fri", time_allowed: "45 minutes" };
+    assert.equal(renderTemplate(ok.value.invite!.subject, vars), "Test Company: SQL");
     assert.equal(renderTemplate("{{candidate_name}} {{other}}", vars), "Asha {{other}}");
     assert.deepEqual(unknownVars("{{company}} {{x}} {{x}}"), ["x"]);
   });

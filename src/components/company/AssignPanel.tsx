@@ -107,7 +107,7 @@ export function AssignPanel({
           <dt className="font-bold">Seats</dt>
           <dd>{preview.assignedNow} of {preview.seats} have the course now, {after} after this</dd>
         </dl>
-        <p className="text-sm text-muted">Each person opens it by signing in to the course with Google, using their work email. Someone who joins a team later isn&apos;t included.</p>
+        <p className="text-sm text-muted">Each person finds it under Upskill when they sign in to this workspace. Someone who joins a team later isn&apos;t included.</p>
         {error && <p role="alert" className="border-2 border-error bg-error-tint p-3 text-sm font-semibold text-error">{error}</p>}
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" onClick={assign} disabled={pending} className={primary}>{pending ? "Assigning…" : "Assign course"}</button>
