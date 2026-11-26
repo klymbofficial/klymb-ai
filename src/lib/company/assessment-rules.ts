@@ -495,6 +495,8 @@ export interface CandidateQuestion {
   multi: boolean;
   points: number;
   areas: { title: string; points: number }[];
+  /** Shuffling (0099): the options' original indexes in the order to show them. Picks are still saved by original index. */
+  order?: number[];
 }
 
 /** The questions of a version as a candidate sees them. */

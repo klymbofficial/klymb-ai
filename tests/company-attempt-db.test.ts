@@ -926,7 +926,7 @@ describe("candidate attempts against a real database", { skip }, () => {
     const p6 = `${slug}-p06`;
     const v = (await one.query(`select id from course.assessment_versions where slug = $1 order by version desc limit 1`, [p6])).rows[0].id as string;
     const cur = (await ts.loadTestSettings(sqlA, companyId, p6))!;
-    const saved = await ts.saveTestSettings(sqlA, { group: "proctoring", companyId, item: p6, expected: cur.revision, by: "rec@test.invalid", proctor: { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2 } });
+    const saved = await ts.saveTestSettings(sqlA, { group: "proctoring", companyId, item: p6, expected: cur.revision, by: "rec@test.invalid", proctor: { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2, shuffle: false, watermark: false, integrity: false } });
     assert.equal(saved?.status, "saved");
     assert.deepEqual((await ts.loadTestSettings(sqlA, companyId, p6))!.proctor, { fullscreen: true, tabs: true, copy: true, webcam: false, limit: 2 });
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { cutoffResult } from "@/lib/company/test-settings";
+import { cutoffResult, integrityIndex } from "@/lib/company/test-settings";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
 import type { CompanyMember } from "@/lib/company/access";
 import { attemptsForBatch, finaliseDue } from "@/lib/company/attempt-data";
@@ -54,6 +54,8 @@ export interface PersonRow {
   autoScore: string | null;
   /** Proctoring warnings during the attempt (0070). */
   warnings: number;
+  /** The integrity index (0099), when the test has it on and they started. */
+  integrity: { score: number; label: "High" | "Medium" | "Low" } | null;
   /** The reviewed score against this company's cut-off for the test (U06b); null without one. */
   cutoff: "cleared" | "below" | null;
   decision: { label: string; tone: Tone; shared: boolean } | null;
@@ -187,6 +189,7 @@ export async function loadTestRounds(sql: Db, member: CompanyMember, item: strin
         allowed: attempt ? `${durationText(attempt.allowedMinutes)} (fixed at start)` : `${durationText(allowedMinutes(batch.minutes, c.extraMinutes))}${c.extraMinutes ? ` (${c.extraMinutes} extra)` : ""}`,
         score: scored ? scoreText(scored.total, scored.max) : null,
         warnings: attempt ? warnings.get(attempt.id) ?? 0 : 0,
+        integrity: attempt && settings?.proctor.integrity ? integrityIndex(warnings.get(attempt.id) ?? 0) : null,
         autoScore: !scored && attempt && autos.get(attempt.id) ? scoreText(autos.get(attempt.id)!.total, autos.get(attempt.id)!.max) : null,
         cutoff: scored ? cutoffResult(scored.total, scored.max, cutoffPercent) : null,
         decision: decided?.decision ? { label: DECISION_LABEL[decided.decision], tone: DECISION_TONE[decided.decision], shared: !!decided.sharedRevision } : null,

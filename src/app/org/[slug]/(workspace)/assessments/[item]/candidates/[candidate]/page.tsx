@@ -14,7 +14,7 @@ import { roundOfCandidate } from "@/lib/company/round-data";
 import { EVENT_LABEL, WARNING_KINDS, attemptProctoring } from "@/lib/company/proctor-data";
 import { DECISION_LABEL, autoMarks, byQuestion, reviewItems, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
-import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult } from "@/lib/company/test-settings";
+import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, integrityIndex } from "@/lib/company/test-settings";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false, follow: false } };
@@ -275,7 +275,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
         </section>
       </div>
 
-      {a && proctoring && (proctoring.events.length > 0 || proctoring.snapshots.length > 0) && (
+      {a && proctoring && (proctoring.events.length > 0 || proctoring.snapshots.length > 0 || settings?.proctor.integrity) && (
         <section aria-labelledby="proctoring" className={`${PANEL} mt-6`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/20 px-5 py-3">
             <h2 id="proctoring" className="text-base font-bold">Proctoring</h2>
@@ -287,8 +287,18 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 const warnings = proctoring.events.filter((e) => WARNING_KINDS.includes(e.kind)).length;
                 const blocked = proctoring.events.filter((e) => e.kind.endsWith("_blocked")).length;
                 const auto = proctoring.events.some((e) => e.kind === "limit_submitted");
+                const index = settings?.proctor.integrity ? integrityIndex(warnings) : null;
                 return (
                   <dl className="grid grid-cols-3 gap-3">
+                    {index && (
+                      <div className="col-span-3 flex items-center justify-between gap-3 rounded-md border border-line/30 bg-white p-3">
+                        <div>
+                          <dt className="text-xs font-bold text-muted">Integrity index</dt>
+                          <dd className="mt-0.5 text-xs text-muted">100, less 10 for each full-screen exit or tab/window switch.</dd>
+                        </div>
+                        <dd className="text-right"><span className="text-2xl font-black tabular-nums">{index.score}</span><span className="block"><Badge tone={index.label === "High" ? "green" : index.label === "Medium" ? "amber" : "red"}>{index.label}</Badge></span></dd>
+                      </div>
+                    )}
                     <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Warnings</dt><dd className={`mt-1 text-xl font-black ${warnings ? "text-error" : ""}`}>{warnings}</dd></div>
                     <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Blocked copy/paste</dt><dd className="mt-1 text-xl font-black">{blocked}</dd></div>
                     <div className="rounded-md border border-line/30 bg-white p-3"><dt className="text-xs font-bold text-muted">Snapshots</dt><dd className="mt-1 text-xl font-black">{proctoring.snapshots.length}</dd></div>

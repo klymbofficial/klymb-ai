@@ -105,6 +105,7 @@ export function TestCandidates({ rows, initial, slug }: { rows: PersonRow[]; ini
                       </td>
                       <td className="px-3 py-3 tabular-nums">
                         {r.score ?? (r.autoScore ? <span title="Multiple choice marked automatically; a reviewer confirms it">Auto {r.autoScore}<span className="block text-xs text-muted">to confirm</span></span> : <span className="text-muted">—</span>)}
+                        {r.integrity && <span className="mt-1 block whitespace-nowrap text-xs" title="Integrity index: 100, less 10 for each full-screen exit or tab/window switch">Integrity <strong className="tabular-nums">{r.integrity.score}</strong> <Badge tone={r.integrity.label === "High" ? "green" : r.integrity.label === "Medium" ? "amber" : "red"}>{r.integrity.label}</Badge></span>}
                         {r.warnings > 0 && <span className="mt-1 block text-xs font-bold text-error" title="Full-screen exits and tab or window switches">{r.warnings} proctoring {r.warnings === 1 ? "warning" : "warnings"}</span>}
                         {r.cutoff && <span className="mt-1 block"><Badge tone={r.cutoff === "cleared" ? "green" : "red"}>{r.cutoff === "cleared" ? "Cleared cut-off" : "Below cut-off"}</Badge></span>}
                       </td>

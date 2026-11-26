@@ -85,7 +85,8 @@ export function QuestionsWork({
   const busy = Object.values(fileState).some((s) => s.busy);
   const isAnswered = (no: number) => answered[no] || (fileState[no]?.count ?? 0) > 0;
   // Worked out on every render, so a save that lands after Submit is pressed counts.
-  const missing = questions.filter((q) => !isAnswered(q.no)).map((q) => q.no);
+  // Numbered as the candidate sees them, which is their own order when shuffling is on (0099).
+  const missing = questions.flatMap((q, i) => (isAnswered(q.no) ? [] : [i + 1]));
   const go = (i: number) => {
     setCurrent(i);
     setMenu(false);
@@ -145,10 +146,10 @@ export function QuestionsWork({
               className={clsx("flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-sm", i === current ? "bg-ink text-paper" : "hover:bg-white")}
             >
               <span aria-hidden="true" className={clsx("mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border text-[10px] font-bold", isAnswered(x.no) ? "border-transparent bg-[#14532d] text-white" : i === current ? "border-paper" : "border-line/60")}>
-                {isAnswered(x.no) ? "✓" : x.no}
+                {isAnswered(x.no) ? "✓" : i + 1}
               </span>
               <span className="min-w-0">
-                <span className="line-clamp-2">{x.title || `Question ${x.no}`}</span>
+                <span className="line-clamp-2">{x.title || `Question ${i + 1}`}</span>
                 <span className="sr-only">{isAnswered(x.no) ? ", answered" : ", not answered"}</span>
               </span>
             </button>
@@ -175,7 +176,7 @@ export function QuestionsWork({
             <div key={x.no} hidden={i !== current} className="flex flex-col gap-6">
               <section aria-labelledby={`q${x.no}-title`} className="card p-6">
                 {x.section && <p className="text-xs font-bold text-muted">{x.section}</p>}
-                <p className="mt-1 text-xs text-muted">Question {x.no} of {questions.length} · {x.points} {x.points === 1 ? "point" : "points"}</p>
+                <p className="mt-1 text-xs text-muted">Question {i + 1} of {questions.length} · {x.points} {x.points === 1 ? "point" : "points"}</p>
                 <h2 id={`q${x.no}-title`} className="display mt-2 text-2xl">{x.title}</h2>
                 <div className="mt-4 whitespace-pre-line text-sm leading-relaxed">{x.brief}</div>
                 {x.areas.length > 0 && (
@@ -188,6 +189,7 @@ export function QuestionsWork({
                   attemptId={attemptId}
                   questionNo={x.no}
                   options={x.options}
+                  order={x.order}
                   multi={x.multi}
                   initialPicked={a?.picked ?? []}
                   initialRevision={a?.revision ?? 0}

@@ -6,7 +6,10 @@ import { Countdown } from "@/components/company/Countdown";
 import { AttemptWork } from "@/components/company/AttemptWork";
 import { QuestionsWork } from "@/components/company/QuestionsWork";
 import { ProctorChips, ProctorGuard } from "@/components/company/ProctorGuard";
+import { Watermark } from "@/components/company/Watermark";
+import { shuffleForAttempt } from "@/lib/company/shuffle";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
+import { DEFAULT_SETTINGS } from "@/lib/company/test-settings";
 import { attemptByLink, attemptTask, listAttemptFiles, loadAnswers, loadDraft } from "@/lib/company/attempt-data";
 import { attemptState } from "@/lib/company/attempt-rules";
 import { readCandidateLink } from "@/lib/company/batch-link";
@@ -50,7 +53,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
     loadTestSettings(sql, found.batch.companyId, found.batch.item),
   ]);
   // The company's proctoring for this test (0070), read fresh on every load.
-  const proctor = settings?.proctor ?? { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null };
+  const proctor = settings?.proctor ?? DEFAULT_SETTINGS.proctor;
   const brand = brandRow ? { name: brandRow.name, logoUrl: brandRow.logoUrl, accent: readableBrandColor(brandRow.brandColor) } : null;
   const support = brandRow?.supportEmail ?? MAIL_SUPPORT;
   const tz = found.batch.timeZone;
@@ -58,6 +61,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
   return (
     <CandidateShell brand={brand} wide>
       <ProctorGuard token={token} attemptId={attempt.id} config={proctor} home={home}>
+      {proctor.watermark && <Watermark text={found.candidate.email} />}
       <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line/30 bg-paper/95 px-4 py-3 shadow-[0_1px_0_rgba(0,0,0,0.02)] backdrop-blur sm:-mx-6 sm:px-6">
         <div className="min-w-0">
           <p className="truncate text-base font-bold">{found.batch.title}</p>
@@ -78,7 +82,7 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
             <QuestionsWork
               token={token}
               attemptId={attempt.id}
-              questions={task.questions}
+              questions={proctor.shuffle ? shuffleForAttempt(task.questions, attempt.id) : task.questions}
               answers={Object.fromEntries([...answers].map(([no, a]) => [no, { revision: a.revision, answer: a.answer, picked: a.picked, savedAt: new Date(a.savedAt).toISOString() }]))}
               files={Object.fromEntries(task.questions.map((q) => [q.no, files.filter((f) => f.questionNo === q.no).map((f) => ({ id: f.id, name: f.name, bytes: f.bytes }))]))}
               deadline={new Date(attempt.deadlineAt).toISOString()}

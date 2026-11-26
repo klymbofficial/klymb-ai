@@ -16,12 +16,14 @@ const same = (a: number[], b: number[]) => a.length === b.length && a.every((x, 
  * The page never knows which options are right.
  */
 export function McqAnswer({
-  token, attemptId, questionNo, options, multi, initialPicked, initialRevision, deadline, serverNow, controlRef, onAnswered,
+  token, attemptId, questionNo, options, order, multi, initialPicked, initialRevision, deadline, serverNow, controlRef, onAnswered,
 }: {
   token: string;
   attemptId: string;
   questionNo: number;
   options: string[];
+  /** Shuffling (0099): original indexes in display order; picks stay by original index. */
+  order?: number[];
   multi: boolean;
   initialPicked: number[];
   initialRevision: number;
@@ -119,7 +121,8 @@ export function McqAnswer({
         <p role="status" aria-live="polite" className={clsx("text-sm", locked === "conflict" || state === "retrying" ? "font-semibold text-error" : "text-muted")}>{status}</p>
       </div>
       <div role={multi ? "group" : "radiogroup"} aria-labelledby={`choice-${questionNo}`} className="flex flex-col gap-2">
-        {options.map((o, i) => {
+        {(order && order.length === options.length ? order : options.map((_, i) => i)).map((i) => {
+          const o = options[i];
           const on = picked.includes(i);
           return (
             <label key={i} className={clsx("flex cursor-pointer items-start gap-3 rounded-md border-2 px-4 py-3 text-sm", on ? "border-ink bg-white" : "border-line/40 bg-white hover:border-ink", locked && "cursor-default opacity-80")}>

@@ -15,10 +15,10 @@ import {
   RESULTS_LABEL, SUBMISSION_LABEL, candidateTask, canReview, canWriteTests, isMultiAnswer, questionPoints, seesAssessments, standingOf, totalPoints, type Version,
 } from "@/lib/company/assessment-rules";
 import { requireCompany } from "@/lib/company/auth";
-import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, DEFAULT_TIME_ZONE, canSchedule, durationText, lastStart, seesHiring, toZonedInput } from "@/lib/company/batch-rules";
-import { BasicSettingsForm, CandidateSettingsForm, EmailSettingsForm, ProctorSettingsForm } from "@/components/company/TestSettingsForms";
+import { AUTO_REMIND_ATTEMPTS, AUTO_REMIND_HOURS, DEFAULT_TIME_ZONE, canSchedule, durationText, formatInZone, lastStart, seesHiring, toZonedInput } from "@/lib/company/batch-rules";
+import { TestSettingsPanel } from "@/components/company/TestSettingsForms";
 import { loadTestSettings, reviewedPercents } from "@/lib/company/test-settings-data";
-import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, proctorRules, startBlocked, suggestCutoff } from "@/lib/company/test-settings";
+import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, startBlocked, suggestCutoff } from "@/lib/company/test-settings";
 import { saveBasicSettings, saveCandidateSettings, saveEmailSettings, saveProctorSettings } from "../settings-actions";
 import { companyCatalog } from "@/lib/company/catalog-data";
 import { testCandidates, versionQuestionMarks, type HubCandidate } from "@/lib/company/test-hub-data";
@@ -35,8 +35,9 @@ export const metadata: Metadata = { title: "Assessment", robots: { index: false,
 
 type Tab = "overview" | "questions" | "settings" | "candidates" | "analysis";
 const TAB_LABEL: Record<Tab, string> = { overview: "Overview", questions: "Questions", settings: "Settings", candidates: "Candidates", analysis: "Test analysis" };
-type Setting = "basic" | "candidate" | "proctoring" | "email";
-const SETTING_LABEL: Record<Setting, string> = { basic: "Basic test setting", candidate: "Candidate settings", proctoring: "Proctoring", email: "Email and reports" };
+type Setting = "basic" | "proctoring" | "candidate" | "email" | "templates";
+/** The Settings tab's menu, in HackerEarth's order and words (user, 26 Nov). */
+const SETTING_LABEL: Record<Setting, string> = { basic: "Basic test setting", proctoring: "Proctoring and plagiarism settings", candidate: "Candidate settings", email: "Email and reports", templates: "Email templates" };
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -65,7 +66,7 @@ function Split({ title, items, children }: { title: string; items: { key: string
                 <Link
                   href={it.href}
                   aria-current={it.current ? "page" : undefined}
-                  className={clsx("flex min-h-10 items-center whitespace-nowrap rounded-md px-3 text-sm", it.current ? "bg-[#eef2fd] font-semibold text-[#1f4fd1]" : "hover:bg-paper")}
+                  className={clsx("flex min-h-10 items-center whitespace-nowrap rounded-md px-3 py-2 text-sm lg:whitespace-normal", it.current ? "bg-[#eef2fd] font-semibold text-[#1f4fd1]" : "hover:bg-paper")}
                 >
                   {it.label}
                   <PendingDot />
@@ -441,119 +442,75 @@ export default async function AssessmentPage({
   if (tab === "settings") {
     const s = (one(sp.s) as Setting) in SETTING_LABEL ? (one(sp.s) as Setting) : "basic";
     const items = (Object.keys(SETTING_LABEL) as Setting[]).map((k) => ({ key: k, label: SETTING_LABEL[k], href: hrefFor("settings", k === "basic" ? "" : `s=${k}`), current: k === s }));
-    const percents = s === "candidate" && recruiter ? await reviewedPercents(sql, member.companyId, itemSlug) : [];
+    const percents = s === "candidate" ? await reviewedPercents(sql, member.companyId, itemSlug) : [];
     if (!settings) return <>{head}<LoadError what="This test's settings" /></>;
     const remindEvery = `every ${AUTO_REMIND_HOURS} hours, at most ${AUTO_REMIND_ATTEMPTS} times, until their last start`;
     return (
       <>
         {head}
         <Split title="Settings" items={items}>
+          <TestSettingsPanel
+            key={s}
+            section={s}
+            canEdit={recruiter}
+            values={{
+              revision: settings.revision,
+              accessOpen: settings.accessOpen,
+              endsOnInput: settings.endsOn ? toZonedInput(settings.endsOn, DEFAULT_TIME_ZONE) : "",
+              endsOnText: settings.endsOn ? `${formatInZone(settings.endsOn, DEFAULT_TIME_ZONE)} IST` : null,
+              tags: settings.tags,
+              autoRemind: settings.autoRemind,
+              subject: settings.invite?.subject ?? "",
+              body: settings.invite?.body ?? "",
+              cutoffPercent: settings.cutoffPercent,
+              collect: settings.collect,
+              proctor: settings.proctor,
+            }}
+            saveBasic={saveBasicSettings.bind(null, member.companySlug, itemSlug)}
+            saveProctor={saveProctorSettings.bind(null, member.companySlug, itemSlug)}
+            saveCandidate={saveCandidateSettings.bind(null, member.companySlug, itemSlug)}
+            saveEmail={saveEmailSettings.bind(null, member.companySlug, itemSlug)}
+            info={{
+              testName: shown.title,
+              role: shown.role,
+              itemSlug,
+              editHref,
+              company: member.companyName,
+              remindEvery,
+              resultReport: RESULTS_LABEL[shown.results],
+              suggested: suggestCutoff(percents ?? []),
+              reviewed: (percents ?? []).length,
+              fields: DETAIL_KEYS.map((k) => ({ key: k, label: DETAIL_FIELDS[k].label })),
+            }}
+          />
           {s === "basic" && (
-            <>
-              <h2 className="mb-4 font-bold">Access and tags</h2>
-              {recruiter ? (
-                <BasicSettingsForm
-                  key={settings.revision}
-                  save={saveBasicSettings.bind(null, member.companySlug, itemSlug)}
-                  revision={settings.revision}
-                  accessOpen={settings.accessOpen}
-                  endsOnInput={settings.endsOn ? toZonedInput(settings.endsOn, DEFAULT_TIME_ZONE) : ""}
-                  tags={settings.tags}
-                  zoneLabel="India Standard Time"
-                />
-              ) : (
-                <dl className="flex flex-col gap-5">
-                  <Row label="Test access">{settings.accessOpen ? "On" : "Off: nobody can be invited or start"}</Row>
-                  <Row label="Ends on">{settings.endsOn ? day(settings.endsOn) : "No end date"}</Row>
-                  <Row label="Tags">{settings.tags.length ? settings.tags.join(", ") : "None"}</Row>
-                </dl>
-              )}
-              <h2 className="mb-5 mt-10 border-t border-line/30 pt-6 font-bold">Other details</h2>
-              <dl className="flex flex-col gap-5">
-                <Row label="Test name">{shown.title}</Row>
-                <Row label="Role">{shown.role}</Row>
-                <Row label="Test type">Invite only: each candidate starts from their own link. There is no public link.</Row>
-                <Row label="Assessment ID"><code className="rounded bg-paper px-1.5 py-0.5">{itemSlug}</code></Row>
-                <Row label="Published">Version {shown.version}, by {own ? shown.publishedBy : author} on {day(shown.publishedAt)}</Row>
-                <Row label="Versions">
-                  <ol className="flex flex-col gap-1.5">
-                    {versions.map((v) => {
-                      const r = reviews.get(v.id);
-                      return (
-                        <li key={v.id}>
-                          <Link href={`${base}/${itemSlug}?tab=settings&v=${v.version}`} aria-current={v.id === shown.id ? "page" : undefined} className="font-semibold underline-offset-4 hover:underline aria-[current=page]:underline">
-                            Version {v.version}
-                          </Link>
-                          <span className="text-muted"> · {day(v.publishedAt)} · {r ? (r.decision === "approved" ? "Approved" : "Declined") : v.id === latest.id ? "Waiting for review" : "Not reviewed"}{standing.inUse?.id === v.id && " · in use"}</span>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                  <p className="mt-2 text-xs text-muted">A published version never changes. {author}&apos;s edits come as a new version, and rounds keep the version they started on.</p>
-                </Row>
-              </dl>
-            </>
-          )}
-          {s === "candidate" && recruiter && (
-            <div className="mb-8 border-b border-line/30 pb-8">
-              <CandidateSettingsForm
-                key={settings.revision}
-                save={saveCandidateSettings.bind(null, member.companySlug, itemSlug)}
-                revision={settings.revision}
-                cutoffPercent={settings.cutoffPercent}
-                collect={settings.collect}
-                suggested={suggestCutoff(percents ?? [])}
-                reviewed={(percents ?? []).length}
-                fields={DETAIL_KEYS.map((k) => ({ key: k, label: DETAIL_FIELDS[k].label }))}
-              />
-            </div>
-          )}
-          {s === "proctoring" && (recruiter ? (
-            <ProctorSettingsForm key={settings.revision} save={saveProctorSettings.bind(null, member.companySlug, itemSlug)} revision={settings.revision} initial={settings.proctor} />
-          ) : (
-            <dl className="flex flex-col gap-6">
-              <Row label="Proctoring">
-                {proctorRules(settings.proctor).length ? <ul className="list-disc pl-5">{proctorRules(settings.proctor).map((r) => <li key={r}>{r}</li>)}</ul> : "Off: nothing is checked during the test."}
+            <dl className="mt-8 flex max-w-2xl flex-col gap-5 border-t border-line/30 pt-6">
+              <Row label="Published">Version {shown.version}, by {own ? shown.publishedBy : author} on {day(shown.publishedAt)}</Row>
+              <Row label="Versions">
+                <ol className="flex flex-col gap-1.5">
+                  {versions.map((v) => {
+                    const r = reviews.get(v.id);
+                    return (
+                      <li key={v.id}>
+                        <Link href={`${base}/${itemSlug}?tab=settings&v=${v.version}`} aria-current={v.id === shown.id ? "page" : undefined} className="font-semibold text-[#1f4fd1] underline-offset-4 hover:underline aria-[current=page]:underline">
+                          Version {v.version}
+                        </Link>
+                        <span className="text-muted"> · {day(v.publishedAt)} · {r ? (r.decision === "approved" ? "Approved" : "Declined") : v.id === latest.id ? "Waiting for review" : "Not reviewed"}{standing.inUse?.id === v.id && " · in use"}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+                <p className="mt-2 text-xs text-muted">A published version never changes. {author}&apos;s edits come as a new version, and rounds keep the version they started on.</p>
               </Row>
             </dl>
-          ))}
+          )}
           {s === "candidate" && (
-            <dl className="flex flex-col gap-6">
+            <dl className="mt-8 flex max-w-2xl flex-col gap-5 border-t border-line/30 pt-6">
               <Row label="Time allowed">{durationText(shown.minutes)} from when they start. Extra time is set per person on a batch.</Row>
               <Row label="Hand in">{SUBMISSION_LABEL[shown.submission]}</Row>
               <Row label="Tools allowed">{shown.toolsAllowed.length ? <ul className="list-disc pl-5">{shown.toolsAllowed.map((t) => <li key={t}>{t}</li>)}</ul> : "Nothing listed"}</Row>
               <Row label="Tools not allowed">{shown.toolsNotAllowed.length ? <ul className="list-disc pl-5">{shown.toolsNotAllowed.map((t) => <li key={t}>{t}</li>)}</ul> : "Nothing listed"}</Row>
-              {!recruiter && <Row label="Cut-off score">{settings.cutoffPercent === null ? "None" : `${settings.cutoffPercent}%`}</Row>}
-              <Row label="Information collected from candidates">
-                Full name and email, from the round&apos;s list{settings.collect.length ? `; before Start: ${settings.collect.map((k) => DETAIL_FIELDS[k].label.toLowerCase()).join(", ")}` : ""}.
-              </Row>
             </dl>
-          )}
-          {s === "email" && (
-            <dl className="flex flex-col gap-6">
-              <Row label="Candidate result report">{RESULTS_LABEL[shown.results]}. A recruiter shares it after the review.</Row>
-              {!recruiter && (
-                <>
-                  <Row label="Auto-reminder email">{settings.autoRemind ? `On: a reminder ${remindEvery}.` : "Off"}</Row>
-                  <Row label="Invitation email">{settings.invite ? `Your company's own words: “${settings.invite.subject}”.` : "The standard invitation"}, in your company&apos;s branding.</Row>
-                </>
-              )}
-            </dl>
-          )}
-          {s === "email" && recruiter && (
-            <div className="mt-8 border-t border-line/30 pt-6">
-              <EmailSettingsForm
-                key={settings.revision}
-                save={saveEmailSettings.bind(null, member.companySlug, itemSlug)}
-                revision={settings.revision}
-                autoRemind={settings.autoRemind}
-                subject={settings.invite?.subject ?? ""}
-                body={settings.invite?.body ?? ""}
-                testName={shown.title}
-                company={member.companyName}
-                remindEvery={remindEvery}
-              />
-            </div>
           )}
         </Split>
       </>

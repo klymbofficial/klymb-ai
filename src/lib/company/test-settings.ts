@@ -34,7 +34,7 @@ export interface TestSettings {
 
 export const DEFAULT_SETTINGS: TestSettings = {
   accessOpen: true, endsOn: null, tags: [], autoRemind: true, invite: null, cutoffPercent: null, collect: [],
-  proctor: { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null },
+  proctor: { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null, shuffle: false, watermark: false, integrity: false },
   revision: 0, updatedBy: null, updatedAt: null,
 };
 
@@ -200,6 +200,12 @@ export interface Proctoring {
   webcam: boolean;
   /** Full-screen exits plus tab/window switches before the test submits itself; null: never. */
   limit: number | null;
+  /** 0099: each candidate's own question and option order. */
+  shuffle: boolean;
+  /** 0099: the candidate's email shown faintly across the test. */
+  watermark: boolean;
+  /** 0099: reviewers see an integrity index worked out from the warnings. */
+  integrity: boolean;
 }
 
 export const PROCTOR_LIMIT_MAX = 20;
@@ -215,13 +221,13 @@ export function readProctoring(raw: Record<string, unknown>): Result<Proctoring>
     if (!Number.isInteger(n) || n < 1 || n > PROCTOR_LIMIT_MAX) return { ok: false, message: `The warning limit is a whole number from 1 to ${PROCTOR_LIMIT_MAX}, or empty for none.` };
     limit = n;
   }
-  const p = { fullscreen: on(raw.fullscreen), tabs: on(raw.tabs), copy: on(raw.copy), webcam: on(raw.webcam), limit };
+  const p = { fullscreen: on(raw.fullscreen), tabs: on(raw.tabs), copy: on(raw.copy), webcam: on(raw.webcam), limit, shuffle: on(raw.shuffle), watermark: on(raw.watermark), integrity: on(raw.integrity) };
   if (limit !== null && !p.fullscreen && !p.tabs) return { ok: false, message: "A warning limit needs full screen or tab detection switched on." };
   return { ok: true, value: p };
 }
 
 /** True when any proctoring is on: the candidate is told before Start. */
-export const proctored = (p: Proctoring) => p.fullscreen || p.tabs || p.copy || p.webcam;
+export const proctored = (p: Proctoring) => p.fullscreen || p.tabs || p.copy || p.webcam || p.shuffle || p.watermark;
 
 /** What the candidate is told before Start, one line each. */
 export function proctorRules(p: Proctoring): string[] {
@@ -230,6 +236,18 @@ export function proctorRules(p: Proctoring): string[] {
   if (p.tabs) out.push("Switching to another tab or window is recorded.");
   if (p.copy) out.push("Copying, pasting and right-click are turned off.");
   if (p.webcam) out.push(`Your camera takes a photo every ${SNAPSHOT_EVERY_MIN} minutes, seen only by the company's reviewers. You'll be asked to agree first.`);
+  if (p.shuffle) out.push("Questions and answer options appear in your own order.");
+  if (p.watermark) out.push("Your email is shown faintly across the test.");
   if (p.limit !== null && (p.fullscreen || p.tabs)) out.push(`After ${p.limit} ${p.limit === 1 ? "warning" : "warnings"}, your test is submitted automatically with the answers saved so far.`);
   return out;
+}
+
+/**
+ * The integrity index (0099): 100 for an attempt with no proctoring
+ * warnings, 10 less for each full-screen exit or tab/window switch, never
+ * below 0. Said in words too, so the number is never read alone.
+ */
+export function integrityIndex(warnings: number): { score: number; label: "High" | "Medium" | "Low" } {
+  const score = Math.max(0, 100 - 10 * Math.max(0, Math.floor(warnings)));
+  return { score, label: score >= 80 ? "High" : score >= 50 ? "Medium" : "Low" };
 }

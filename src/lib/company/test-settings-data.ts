@@ -21,6 +21,7 @@ type Row = {
   invite_subject: string | null; invite_body: string | null; revision: number; updated_by: string; updated_at: string;
   cutoff_percent?: number | null; collect?: string[] | null;
   proctor_fullscreen?: boolean; proctor_tabs?: boolean; proctor_copy?: boolean; proctor_webcam?: boolean; proctor_limit?: number | null;
+  proctor_shuffle?: boolean; proctor_watermark?: boolean; proctor_integrity?: boolean;
 };
 
 const iso = (v: string | Date | null) => (v === null ? null : new Date(v).toISOString());
@@ -32,7 +33,10 @@ const fromRow = (r: Row): TestSettings => ({
   invite: r.invite_subject !== null && r.invite_body !== null ? { subject: r.invite_subject, body: r.invite_body } : null,
   cutoffPercent: r.cutoff_percent ?? null,
   collect: DETAIL_KEYS.filter((k) => (r.collect ?? []).includes(k)),
-  proctor: { fullscreen: !!r.proctor_fullscreen, tabs: !!r.proctor_tabs, copy: !!r.proctor_copy, webcam: !!r.proctor_webcam, limit: r.proctor_limit ?? null },
+  proctor: {
+    fullscreen: !!r.proctor_fullscreen, tabs: !!r.proctor_tabs, copy: !!r.proctor_copy, webcam: !!r.proctor_webcam, limit: r.proctor_limit ?? null,
+    shuffle: !!r.proctor_shuffle, watermark: !!r.proctor_watermark, integrity: !!r.proctor_integrity,
+  },
   revision: r.revision,
   updatedBy: r.updated_by,
   updatedAt: iso(r.updated_at),
@@ -41,7 +45,7 @@ const fromRow = (r: Row): TestSettings => ({
 /** This company's settings for one test; the defaults when none are saved. Null on a database error. */
 export async function loadTestSettings(sql: Db, companyId: string, item: string): Promise<TestSettings | null> {
   const { data, error } = await sql.row<Row>`
-    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, proctor_fullscreen, proctor_tabs, proctor_copy, proctor_webcam, proctor_limit, revision, updated_by, updated_at
+    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, proctor_fullscreen, proctor_tabs, proctor_copy, proctor_webcam, proctor_limit, proctor_shuffle, proctor_watermark, proctor_integrity, revision, updated_by, updated_at
       from course.company_test_settings where company_id = ${companyId}::uuid and item_slug = ${item}
   `;
   if (error) return error.code === UNDEFINED_TABLE ? { ...DEFAULT_SETTINGS } : fail("read", error);
@@ -51,7 +55,7 @@ export async function loadTestSettings(sql: Db, companyId: string, item: string)
 /** This company's saved settings, by test. Tests with none are left out. Null on a database error. */
 export async function companyTestSettings(sql: Db, companyId: string): Promise<Map<string, TestSettings> | null> {
   const { data, error } = await sql.rows<Row>`
-    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, proctor_fullscreen, proctor_tabs, proctor_copy, proctor_webcam, proctor_limit, revision, updated_by, updated_at
+    select item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect, proctor_fullscreen, proctor_tabs, proctor_copy, proctor_webcam, proctor_limit, proctor_shuffle, proctor_watermark, proctor_integrity, revision, updated_by, updated_at
       from course.company_test_settings where company_id = ${companyId}::uuid
   `;
   if (error) return error.code === UNDEFINED_TABLE ? new Map() : fail("list", error);
@@ -90,10 +94,11 @@ export async function saveTestSettings(
     const { data, error } = await sql.row<{ revision: number }>`
       insert into course.company_test_settings
         (company_id, item_slug, access_open, ends_on, tags, auto_remind, invite_subject, invite_body, cutoff_percent, collect,
-         proctor_fullscreen, proctor_tabs, proctor_copy, proctor_webcam, proctor_limit, revision, updated_by)
+         proctor_fullscreen, proctor_tabs, proctor_copy, proctor_webcam, proctor_limit, proctor_shuffle, proctor_watermark, proctor_integrity, revision, updated_by)
       values (${s.companyId}::uuid, ${s.item}, ${v.accessOpen}, ${v.endsOn}::timestamptz, ${v.tags}::text[], ${v.autoRemind},
               ${v.subject}, ${v.body}, ${v.cutoff}::int, ${v.collect}::text[],
-              ${v.proctor.fullscreen}, ${v.proctor.tabs}, ${v.proctor.copy}, ${v.proctor.webcam}, ${v.proctor.limit}::int, 1, ${s.by})
+              ${v.proctor.fullscreen}, ${v.proctor.tabs}, ${v.proctor.copy}, ${v.proctor.webcam}, ${v.proctor.limit}::int,
+              ${v.proctor.shuffle}, ${v.proctor.watermark}, ${v.proctor.integrity}, 1, ${s.by})
       on conflict (company_id, item_slug) do nothing
       returning revision
     `;
@@ -105,6 +110,7 @@ export async function saveTestSettings(
         update course.company_test_settings
            set proctor_fullscreen = ${v.proctor.fullscreen}, proctor_tabs = ${v.proctor.tabs}, proctor_copy = ${v.proctor.copy},
                proctor_webcam = ${v.proctor.webcam}, proctor_limit = ${v.proctor.limit}::int,
+               proctor_shuffle = ${v.proctor.shuffle}, proctor_watermark = ${v.proctor.watermark}, proctor_integrity = ${v.proctor.integrity},
                revision = revision + 1, updated_by = ${s.by}, updated_at = now()
          where company_id = ${s.companyId}::uuid and item_slug = ${s.item} and revision = ${s.expected}::int
         returning revision

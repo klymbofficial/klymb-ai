@@ -10,21 +10,21 @@ const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "u
 
 describe("proctoring settings", () => {
   test("off by default", () => {
-    assert.deepEqual(DEFAULT_SETTINGS.proctor, { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null });
+    assert.deepEqual(DEFAULT_SETTINGS.proctor, { fullscreen: false, tabs: false, copy: false, webcam: false, limit: null, shuffle: false, watermark: false, integrity: false });
     assert.equal(proctored(DEFAULT_SETTINGS.proctor), false);
   });
 
   test("switches and a warning limit from 1 to 20 that needs full screen or tab detection", () => {
-    assert.deepEqual(readProctoring({ fullscreen: true, tabs: "on", copy: false, webcam: "true", limit: "3" }), { ok: true, value: { fullscreen: true, tabs: true, copy: false, webcam: true, limit: 3 } });
+    assert.deepEqual(readProctoring({ fullscreen: true, tabs: "on", copy: false, webcam: "true", limit: "3" }), { ok: true, value: { fullscreen: true, tabs: true, copy: false, webcam: true, limit: 3, shuffle: false, watermark: false, integrity: false } });
     assert.equal(readProctoring({ fullscreen: true, limit: "0" }).ok, false);
     assert.equal(readProctoring({ fullscreen: true, limit: "21" }).ok, false);
     assert.equal(readProctoring({ fullscreen: true, limit: "2.5" }).ok, false);
     assert.equal(readProctoring({ copy: true, limit: "3" }).ok, false, "copy alone never counts warnings");
-    assert.deepEqual(readProctoring({ tabs: true, limit: "" }), { ok: true, value: { fullscreen: false, tabs: true, copy: false, webcam: false, limit: null } });
+    assert.deepEqual(readProctoring({ tabs: true, limit: "" }), { ok: true, value: { fullscreen: false, tabs: true, copy: false, webcam: false, limit: null, shuffle: false, watermark: false, integrity: false } });
   });
 
   test("the candidate is told every rule before Start, the limit included", () => {
-    const rules = proctorRules({ fullscreen: true, tabs: true, copy: true, webcam: true, limit: 3 });
+    const rules = proctorRules({ fullscreen: true, tabs: true, copy: true, webcam: true, limit: 3, shuffle: false, watermark: false, integrity: false });
     assert.equal(rules.length, 5);
     assert.match(rules.join(" "), /full screen/);
     assert.match(rules.join(" "), /After 3 warnings, your test is submitted automatically/);
@@ -46,8 +46,9 @@ describe("proctoring settings", () => {
 
   test("recruiters edit proctoring in Settings", () => {
     const page = read("src/app/org/[slug]/(workspace)/assessments/[item]/page.tsx");
-    assert.match(page, /proctoring: "Proctoring"/);
-    assert.match(page, /<ProctorSettingsForm/);
+    assert.match(page, /proctoring: "Proctoring and plagiarism settings"/, "HackerEarth's menu (user, 26 Nov)");
+    assert.match(page, /<TestSettingsPanel/);
+    assert.match(page, /saveProctor=\{saveProctorSettings\.bind/);
     assert.match(read("src/app/org/[slug]/(workspace)/assessments/settings-actions.ts"), /export async function saveProctorSettings/);
   });
 });
