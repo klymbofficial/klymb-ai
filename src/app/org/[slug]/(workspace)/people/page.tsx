@@ -1,28 +1,29 @@
 import type { Metadata } from "next";
-import { LoadError, OrgPageTitle, RoleOnly } from "@/components/company/OrgPanels";
-import { PeopleManager } from "@/components/company/PeopleManager";
-import { isAdmin } from "@/lib/company/access";
+import { OrgPageHead } from "@/components/company/HiringParts";
+import { LoadError, RoleOnly } from "@/components/company/OrgPanels";
+import { PeopleDirectory } from "@/components/company/PeopleDirectory";
 import { requireCompany } from "@/lib/company/auth";
-import { loadCompanyPeople } from "@/lib/company/people-data";
+import { seesHiring } from "@/lib/company/batch-rules";
+import { loadCandidatePeople } from "@/lib/company/candidate-people";
 import { db } from "@/lib/db/client";
 
 export const metadata: Metadata = { title: "People", robots: { index: false, follow: false } };
 
-/** 1.8 and 1.11: an admin adds people one at a time or by CSV, sets what each does, and removes them. Anyone else is told the page is for admins, and nothing is loaded. */
+/**
+ * People outside the company (user, 26 Nov): everyone invited to an
+ * external test, with each test's status, score and decision. Those who see
+ * hiring open it; the company's own members are on the Team page.
+ */
 export default async function PeoplePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const hr = await requireCompany(slug);
-  if (!isAdmin(hr)) return <RoleOnly role="company admins" home={`/org/${hr.companySlug}`} />;
+  const member = await requireCompany(slug);
+  if (!seesHiring(member)) return <RoleOnly role="recruiters, reviewers and admins" home={`/org/${member.companySlug}`} />;
   const sql = db();
-  const data = sql ? await loadCompanyPeople(sql, hr.companyId) : null;
-
+  const people = sql ? await loadCandidatePeople(sql, member, new Date()) : null;
   return (
     <>
-      <OrgPageTitle
-        title="People"
-        intro="Manage people, roles and seats. Add individually or import a CSV."
-      />
-      {data ? <PeopleManager slug={hr.companySlug} me={hr.email} data={data} /> : <LoadError what="Your people" />}
+      <OrgPageHead title="People" meta="Everyone you've invited to a test from outside the company." />
+      {people ? <PeopleDirectory people={people} /> : <LoadError what="Your candidates" />}
     </>
   );
 }

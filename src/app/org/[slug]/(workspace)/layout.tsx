@@ -5,7 +5,7 @@ import { brandProps } from "@/components/company/brand-style";
 import { NavProgress } from "@/components/company/NavFeedback";
 import { OrgSidebar } from "@/components/company/OrgSidebar";
 import { contact } from "@/data/config";
-import { allowCompany, ROLE_LABEL } from "@/lib/company/access";
+import { allowCompany, isAdmin, ROLE_LABEL } from "@/lib/company/access";
 import { getMemberships, getWorkspaceMember } from "@/lib/company/auth";
 import { getPublishedBrand } from "@/lib/company/branding-data";
 import { hasMyInvitations } from "@/lib/company/my-assessments";
@@ -46,7 +46,11 @@ export default async function OrgLayout({ children, params }: { children: React.
         email={member.email}
         roles={member.roles.map((r) => ROLE_LABEL[r])}
         supportHref={`mailto:${brand.supportEmail ?? contact.email}`}
-        settingsHref={`/org/${member.companySlug}/settings`}
+        account={{
+          company: brand.name,
+          settingsHref: `/org/${member.companySlug}/settings`,
+          billingHref: isAdmin(member) ? `/org/${member.companySlug}/settings/plan` : null,
+        }}
       />
       {/* pb-28: the site-wide help button floats bottom-right (64px + its margin). This leaves room to scroll the last row clear of it. */}
       <main className="min-w-0 flex-1 px-4 pt-6 pb-28 sm:px-6 lg:px-8 lg:pt-8">

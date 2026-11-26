@@ -1,28 +1,26 @@
 import type { Metadata } from "next";
 import { LoadError, OrgPageTitle, RoleOnly } from "@/components/company/OrgPanels";
-import { TeamsManager } from "@/components/company/TeamsManager";
+import { TeamWorkspace } from "@/components/company/TeamWorkspace";
 import { isAdmin } from "@/lib/company/access";
 import { requireCompany } from "@/lib/company/auth";
 import { loadCompanyPeople } from "@/lib/company/people-data";
 import { db } from "@/lib/db/client";
 
-export const metadata: Metadata = { title: "Teams", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Team", robots: { index: false, follow: false } };
 
-/** 1.10: an admin creates teams, chooses each team's lead and moves people. Anyone else is told the page is for admins, and nothing is loaded. */
-export default async function TeamsPage({ params }: { params: Promise<{ slug: string }> }) {
+/**
+ * Everyone inside the company (user, 26 Nov): teams, members, adding by hand
+ * or CSV, roles, leads and moves, all on one page. `?add=admin` (the account
+ * menu's Add admin) opens the add form with Admin chosen. Anyone but an admin
+ * is told the page is for admins, and nothing is loaded.
+ */
+export default async function TeamPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { slug } = await params;
+  const sp = await searchParams;
   const hr = await requireCompany(slug);
   if (!isAdmin(hr)) return <RoleOnly role="company admins" home={`/org/${hr.companySlug}`} />;
   const sql = db();
   const data = sql ? await loadCompanyPeople(sql, hr.companyId) : null;
-
-  return (
-    <>
-      <OrgPageTitle
-        title="Teams"
-        intro="Organize people into teams and assign team leads."
-      />
-      {data ? <TeamsManager slug={hr.companySlug} teams={data.teams} people={data.active} /> : <LoadError what="Your teams" />}
-    </>
-  );
+  if (!data) return <><OrgPageTitle title="Team" /><LoadError what="Your team" /></>;
+  return <TeamWorkspace key={sp.add === "admin" ? "add-admin" : "team"} slug={hr.companySlug} me={hr.email} data={data} addAdmin={sp.add === "admin"} />;
 }

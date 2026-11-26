@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { signOutOfCompany } from "@/app/org/actions";
 import { BrandMark } from "@/components/company/BrandMark";
 import { OrgIcon } from "@/components/company/OrgIcons";
@@ -19,8 +19,8 @@ export interface OrgSidebarProps {
   roles: string[];
   /** Where Support writes to: the company's own contact, or Klymb's. */
   supportHref: string;
-  /** The member's own account page (password). */
-  settingsHref: string;
+  /** The account menu: the company's name, Settings, and Billing (Plan and usage; null unless an admin). */
+  account: { company: string; settingsHref: string; billingHref: string | null };
 }
 
 // The focus ring reads --color-red; on the dark sidebar it is white so it shows whatever the company's accent.
@@ -48,11 +48,12 @@ const snapshot = () => memory ?? readCollapsed();
  * focus kept inside), and on wide screens collapses to icons and back
  * without leaving the page.
  */
-export function OrgSidebar({ groups, brand, email, roles, supportHref, settingsHref }: OrgSidebarProps) {
+export function OrgSidebar({ groups, brand, email, roles, supportHref, account }: OrgSidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const drawer = useRef<HTMLDivElement>(null);
-  const overview = groups[0]?.items[0]?.href ?? "";
+  // No Overview link any more: every link is current on its own page and the pages under it.
+  const overview = "";
   const { mounted, shown } = usePresence(open);
   useOverlayFocus(mounted && open, drawer, () => setOpen(false));
   const collapsed = useSyncExternalStore(subscribe, snapshot, () => false);
@@ -100,38 +101,12 @@ export function OrgSidebar({ groups, brand, email, roles, supportHref, settingsH
 
   const footer = (narrow: boolean) => (
     <div className="mt-auto flex flex-col gap-1 border-t border-white/15 pt-3">
-      <Link
-        href={settingsHref}
-        aria-current={isCurrent(settingsHref, pathname, overview) ? "page" : undefined}
-        title={narrow ? "Settings" : undefined}
-        className={clsx(
-          "flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-sm",
-          narrow && "justify-center",
-          isCurrent(settingsHref, pathname, overview) ? "bg-red-strong font-bold text-white" : "text-[#e6e3e2] hover:bg-white/10 hover:text-white",
-        )}
-      >
-        <OrgIcon name="settings" className="shrink-0" />
-        <span className={narrow ? "sr-only" : undefined}>Settings</span>
-        {!narrow && <PendingDot className="ml-auto" />}
-      </Link>
       <a href={supportHref} title={narrow ? "Support" : undefined} className={clsx("flex min-h-10 items-center gap-2.5 rounded-md px-2.5 text-sm text-[#e6e3e2] hover:bg-white/10 hover:text-white", narrow && "justify-center")}>
         <OrgIcon name="support" className="shrink-0" />
         <span className={narrow ? "sr-only" : undefined}>Support</span>
       </a>
-      <div className={clsx("px-2.5 py-2", narrow && "sr-only")}>
-        <p className="truncate text-xs" title={email}>{email}</p>
-        <p className="mt-1.5 flex flex-wrap gap-1">
-          {roles.map((r) => (
-            <span key={r} className="rounded-sm border border-white/40 px-1.5 py-0.5 text-[0.6rem] font-extrabold uppercase tracking-[0.12em] text-[#d9d6d5]">{r}</span>
-          ))}
-        </p>
-      </div>
-      <form action={signOutOfCompany}>
-        <button type="submit" title={narrow ? "Sign out" : undefined} className={clsx("flex min-h-10 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-sm text-[#e6e3e2] hover:bg-white/10 hover:text-white", narrow && "justify-center")}>
-          {narrow && <OrgIcon name="signout" className="shrink-0" />}
-          <span className={narrow ? "sr-only" : undefined}>Sign out</span>
-        </button>
-      </form>
+      {/* A new page closes the menu: keyed by the path, it starts closed again. */}
+      <AccountMenu key={pathname} narrow={narrow} email={email} roles={roles} account={account} />
     </div>
   );
 
@@ -216,5 +191,78 @@ export function OrgSidebar({ groups, brand, email, roles, supportHref, settingsH
         </div>
       )}
     </>
+  );
+}
+
+const initials = (email: string) => {
+  const parts = email.split("@")[0].split(/[._-]+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase() || "?";
+};
+
+const MENU_ITEM = "flex min-h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm text-ink hover:bg-paper";
+
+/**
+ * The signed-in person at the foot of the sidebar. Clicking it opens a small
+ * menu above it, like HackerEarth's: the company's name, then Settings
+ * (Personal, and for admins Company), Billing (Plan and usage, admins
+ * only) and Logout. Adding people is on the Team page. Escape or a click outside closes it.
+ */
+function AccountMenu({ narrow, email, roles, account }: { narrow: boolean; email: string; roles: string[]; account: OrgSidebarProps["account"] }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); button.current?.focus(); } };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); };
+  }, [open]);
+
+  return (
+    <div ref={box} className="relative">
+      {open && (
+        <div
+          role="menu"
+          aria-label="Account"
+          className={clsx(
+            "z-50 rounded-lg border border-line/30 bg-white p-1.5 text-ink shadow-[0_12px_32px_rgba(0,0,0,0.28)]",
+            // Open, the menu is exactly the sidebar's width: the sidebar clips anything wider (it hides
+            // sideways overflow). Collapsed, the sidebar is too narrow, so the menu sits beside it.
+            narrow ? "fixed bottom-3 left-[4.5rem] w-60" : "absolute inset-x-0 bottom-full mb-2",
+          )}
+        >
+          <div className="px-3 pb-2 pt-2">
+            <p className="truncate text-base font-semibold" title={account.company}>{account.company}</p>
+            <p className="mt-0.5 truncate text-xs text-muted" title={email}>{email}</p>
+            {roles.length > 0 && <p className="mt-1 text-[0.7rem] text-muted">{roles.join(" · ")}</p>}
+          </div>
+          <div className="border-t border-line/20 pt-1">
+            <Link role="menuitem" href={account.settingsHref} className={MENU_ITEM}><OrgIcon name="settings" className="shrink-0 text-muted" />Settings</Link>
+            {account.billingHref && (
+              <Link role="menuitem" href={account.billingHref} className={MENU_ITEM}><OrgIcon name="billing" className="shrink-0 text-muted" />Billing</Link>
+            )}
+            <form action={signOutOfCompany}>
+              <button type="submit" role="menuitem" className={MENU_ITEM}><OrgIcon name="signout" className="shrink-0 text-muted" />Logout</button>
+            </form>
+          </div>
+        </div>
+      )}
+      <button
+        ref={button}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title={narrow ? email : undefined}
+        onClick={() => setOpen((v) => !v)}
+        className={clsx("flex min-h-11 w-full items-center gap-2.5 rounded-md px-2 text-left text-sm text-[#e6e3e2] hover:bg-white/10 hover:text-white", narrow && "justify-center", open && "bg-white/10 text-white")}
+      >
+        <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-strong text-[0.65rem] font-extrabold text-white">{initials(email)}</span>
+        <span className={narrow ? "sr-only" : "min-w-0 flex-1 truncate"}>{email}</span>
+        {!narrow && <OrgIcon name="chevron" size={16} className={clsx("shrink-0 transition-transform", !open && "rotate-180")} />}
+      </button>
+    </div>
   );
 }

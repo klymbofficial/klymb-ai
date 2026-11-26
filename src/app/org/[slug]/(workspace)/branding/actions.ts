@@ -36,7 +36,7 @@ export async function saveBrandDraft(slug: string, input: Record<string, unknown
   if (!checked.ok) return { ok: false, message: "Nothing was saved. Fix the fields marked below.", errors: checked.errors };
   if (!(await saveDraft(sql, admin.companyId, checked.value, admin.email))) return UNAVAILABLE;
   await logCompany(admin, "company.brand_draft", {});
-  revalidatePath(`/org/${slug}/branding`);
+  revalidatePath(`/org/${slug}/settings/company`);
   return { ok: true, message: "Draft saved. Check the preview, then publish it when it looks right.", draft: checked.value };
 }
 
@@ -70,7 +70,7 @@ export async function uploadBrandLogo(slug: string, formData: FormData): Promise
   const draft: BrandSettings = { ...state.draft, logo: { key, alt: state.draft.logo?.alt ?? null } };
   if (!(await saveDraft(sql, admin.companyId, draft, admin.email))) return UNAVAILABLE;
   await logCompany(admin, "company.brand_logo", { bytes: bytes.byteLength, type: ext });
-  revalidatePath(`/org/${slug}/branding`);
+  revalidatePath(`/org/${slug}/settings/company`);
   return { ok: true, message: "Logo added to the draft. Your people won't see it until you publish.", draft };
 }
 

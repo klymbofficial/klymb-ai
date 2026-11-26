@@ -61,7 +61,7 @@ export default async function LearningPage({ params }: { params: Promise<{ slug:
         ) : progress.rows.length === 0 ? (
           <EmptyPanel title="Nobody here yet">
             {isAdmin(member) ? (
-              <>Add people first. <Link href={`/org/${member.companySlug}/people`} className="font-semibold text-ink underline underline-offset-2">Go to People</Link></>
+              <>Add people first. <Link href={`/org/${member.companySlug}/teams`} className="font-semibold text-ink underline underline-offset-2">Go to Team</Link></>
             ) : (
               "Your company's admin adds people and chooses who is on a team."
             )}

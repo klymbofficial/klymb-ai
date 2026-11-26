@@ -1,7 +1,7 @@
 import type { OrgNavIcon } from "@/lib/company/nav";
 
 /** Line icons for the company workspace. Decorative: the text beside each one says what it is. */
-const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calendar" | "test" | "search" | "plus" | "mail" | "eye" | "invite" | "report" | "collapse" | "expand" | "signout" | "settings", React.ReactNode> = {
+const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calendar" | "test" | "search" | "plus" | "mail" | "eye" | "invite" | "report" | "collapse" | "expand" | "signout" | "settings" | "billing" | "chevron", React.ReactNode> = {
   overview: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
   people: (
     <>
@@ -110,6 +110,13 @@ const PATHS: Record<OrgNavIcon | "support" | "menu" | "close" | "clock" | "calen
     </>
   ),
   report: <path d="M5 20V10M10 20V4M15 20v-7M20 20v-11" />,
+  billing: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M15 9.2c-.5-1-1.6-1.6-3-1.6-1.8 0-3 .9-3 2.2 0 3.2 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2-1.5 0-2.6-.7-3.1-1.7M12 6v1.6M12 16.6V18" />
+    </>
+  ),
+  chevron: <path d="M6 15l6-6 6 6" />,
 };
 
 export type OrgIconName = keyof typeof PATHS;

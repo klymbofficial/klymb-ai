@@ -105,12 +105,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const device = await import("@/lib/learner/device");
         if (email && !(await device.deviceBusy(email))) await device.claimDevice(email, sid);
       }
+      // Every sign-in records when it happened and has an id, so "Log out from
+      // other sessions" can refuse older ones and keep this one (0098).
+      if (params.account) {
+        token.authAt = Date.now();
+        token.sid ??= randomUUID();
+      }
       return token;
     },
     session(params) {
       const session = authConfig.callbacks.session(params);
       if (session.user) {
         session.user.sid = typeof params.token.sid === "string" ? params.token.sid : undefined;
+        session.user.authAt = typeof params.token.authAt === "number" ? params.token.authAt : undefined;
         const method = params.token.signInMethod;
         session.user.signInMethod =
           method === "google" || method === "email-code" || method === "password" || method === "dev" ? method : undefined;

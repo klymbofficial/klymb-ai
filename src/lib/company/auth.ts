@@ -5,6 +5,8 @@ import { auth, companyEmailFrom } from "@/auth";
 import { allowCompany, hasRole, isAdmin, resolveMember, resolveMemberships, type CompanyMember, type CompanyRole } from "@/lib/company/access";
 import type { AssignScope } from "@/lib/company/assign-rules";
 import { membershipsLookup, workspaceLookup } from "@/lib/company/lookup";
+import { sessionCutoff } from "@/lib/company/settings-data";
+import { sessionAllowed } from "@/lib/company/settings-rules";
 import { db } from "@/lib/db/client";
 
 /**
@@ -34,17 +36,31 @@ import { db } from "@/lib/db/client";
  * is named (/org, the sign-in page). Pages under /org/[slug] use
  * getWorkspaceMember, which resolves the workspace from the requested link.
  */
+/**
+ * The signed-in company email, unless "Log out from other sessions" has since
+ * signed this session out (0098). Fails closed when the cut-off can't be read.
+ */
+const companyEmail = cache(async (): Promise<string | null> => {
+  const session = await auth();
+  const email = companyEmailFrom(session);
+  const sql = db();
+  if (!email || !sql) return null;
+  const cutoff = await sessionCutoff(sql, email);
+  if (cutoff === undefined) return null;
+  return sessionAllowed(cutoff, { sid: session?.user?.sid, authAt: session?.user?.authAt }) ? email : null;
+});
+
 export const getMemberships = cache(async (): Promise<CompanyMember[]> => {
   const sql = db();
   if (!sql) return [];
-  return resolveMemberships(companyEmailFrom(await auth()), membershipsLookup(sql));
+  return resolveMemberships(await companyEmail(), membershipsLookup(sql));
 });
 
 /** The signed-in person's membership of the workspace this slug names, or null. */
 export const getWorkspaceMember = cache(async (slug: string): Promise<CompanyMember | null> => {
   const sql = db();
   if (!sql) return null;
-  return resolveMember(companyEmailFrom(await auth()), workspaceLookup(sql, slug));
+  return resolveMember(await companyEmail(), workspaceLookup(sql, slug));
 });
 
 /**

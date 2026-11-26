@@ -11,25 +11,28 @@ const member = (roles: CompanyMember["roles"], over: Partial<CompanyMember> = {}
 const shape = (m: CompanyMember) => navGroupsFor(m).map((g) => [g.label, g.items.map((i) => i.label)]);
 
 describe("the sidebar's sections", () => {
-  test("an employee sees two plain links, no group names", () => {
-    assert.deepEqual(shape(member(["employee"])), [[null, ["Overview"]], [null, ["My Upskill"]]]);
+  test("one plain list, no headings and no Overview (user, 26 Nov): an employee sees only their Upskill", () => {
+    assert.deepEqual(shape(member(["employee"])), [[null, ["My Upskill"]]]);
   });
 
-  test("a recruiter's hiring links are Assessments and the Library: no separate Batches page (user, 24 Nov)", () => {
+  test("a recruiter sees Assessments first, then Upskill, People (candidates) and the Library; no Team or Branding", () => {
     const groups = navGroupsFor(member(["recruiter"]));
-    const hiring = groups.find((g) => g.label === "Hiring");
-    assert.ok(hiring, "named, since there is more than one group");
-    assert.deepEqual(hiring.items.map((i) => [i.label, i.href]), [["Assessments", "/org/acme/assessments"], ["Library", "/org/acme/library"]]);
-    assert.ok(!groups.some((g) => g.items.some((i) => i.label === "People" || i.label === "Branding")), "people and branding are for admins");
+    assert.equal(groups.length, 1);
+    assert.equal(groups[0].label, null);
+    assert.deepEqual(groups[0].items.map((i) => [i.label, i.href]), [
+      ["Assessments", "/org/acme/assessments"], ["My Upskill", "/org/acme/learning"], ["People", "/org/acme/people"], ["Library", "/org/acme/library"],
+    ]);
   });
 
-  test("an admin gets every section, in order: overview, workforce, hiring, company", () => {
-    assert.deepEqual(shape(member(["admin"])), [
-      [null, ["Overview"]],
-      ["Workforce", ["People", "Teams", "Upskill"]],
-      ["Hiring", ["Assessments", "Library"]],
-      ["Company", ["Branding"]],
-    ]);
+  test("an admin: Assessments, Upskill, People, Team, Library; Branding is Settings in the account menu", () => {
+    assert.deepEqual(shape(member(["admin"])), [[null, ["Assessments", "Upskill", "People", "Team", "Library"]]]);
+  });
+
+  test("the workspace home opens Assessments, or Upskill for those who don't see them", async () => {
+    const { homeFor } = await import("../src/lib/company/nav");
+    assert.equal(homeFor(member(["admin"])), "/org/acme/assessments");
+    assert.equal(homeFor(member(["employee"])), "/org/acme/learning");
+    assert.match(read("src/app/org/[slug]/(workspace)/page.tsx"), /redirect\(homeFor\(/);
   });
 
   test("roles add up, and every link stays inside this company's workspace", () => {
@@ -63,6 +66,9 @@ describe("the sidebar's sections", () => {
     assert.match(sidebar, /aria-expanded=\{open\}/);
     assert.match(sidebar, /useOverlayFocus\(mounted && open, drawer, \(\) => setOpen\(false\)\)/, "the phone drawer closes on Escape (the shared overlay handles it, P0.2a)");
     assert.match(sidebar, /action=\{signOutOfCompany\}/);
+    assert.match(sidebar, /aria-haspopup="menu"/, "the account opens a menu: Settings, Billing, Logout");
+    for (const label of ["Settings", "Billing", "Logout"]) assert.match(sidebar, new RegExp(`>${label}<|${label}\\n`), label);
+    assert.doesNotMatch(sidebar, /Add admin/, "adding people is on the Team page (user, 26 Nov)");
   });
 });
 

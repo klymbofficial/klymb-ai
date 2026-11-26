@@ -283,12 +283,12 @@ test("every People and Teams action checks for an admin of this company first", 
   }
 });
 
-test("both pages are admin-only: other roles get a role panel and nothing is loaded; the org layout checks membership (task 1.7)", () => {
-  for (const page of ["people", "teams"]) {
+test("Team is admin-only and People (candidates) is for those who see hiring: other roles get a role panel before any query; the org layout checks membership (task 1.7)", () => {
+  for (const [page, check] of [["teams", "!isAdmin(hr)"], ["people", "!seesHiring(member)"]] as const) {
     const src = read(`src/app/org/[slug]/(workspace)/${page}/page.tsx`);
-    // Membership of this company is required, then the role; a non-admin member is stopped before any query.
+    // Membership of this company is required, then the role; a member without it is stopped before any query.
     assert.match(src, /requireCompany\(slug\)/);
-    const role = src.indexOf("!isAdmin(hr)");
+    const role = src.indexOf(check);
     assert.ok(role > -1, `${page} checks the role`);
     assert.match(src.slice(role, role + 140), /return <RoleOnly/);
     assert.ok(role < src.indexOf("db()"), `${page} checks the role before touching the database`);

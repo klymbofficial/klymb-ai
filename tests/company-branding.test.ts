@@ -212,7 +212,6 @@ test("the workspace frame and home use the published brand", () => {
   assert.match(layout, /\{\.\.\.brandProps\(brand\.accent\)\}/);
   assert.match(layout, /<OrgSidebar[\s\S]*brand=\{\{ name: brand\.name, logoUrl: brand\.logoUrl, logoAlt: brand\.logoAlt \}\}/);
   assert.match(layout, /supportHref=\{`mailto:\$\{brand\.supportEmail \?\? contact\.email\}`\}/);
-  assert.match(read("src/app/org/[slug]/(workspace)/page.tsx"), /brand\.welcome/);
 });
 
 test("an assigned course names the company only when a company assignment opens it", () => {

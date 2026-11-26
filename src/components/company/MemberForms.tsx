@@ -1,16 +1,15 @@
 "use client";
 
-import { Fragment, useRef, useState } from "react";
-import { ProgressMeter } from "@/components/company/OrgCharts";
-import { useConfirm } from "@/components/company/Overlay";
-import { addPerson, previewUpload, removePerson, resendInvite, updateRoles, uploadPeople, type PeopleResult, type UploadPreview } from "@/app/org/[slug]/(workspace)/people/actions";
+import { useRef, useState } from "react";
+import { BTN_PRIMARY } from "@/components/company/HiringParts";
+import { addPerson, previewUpload, updateRoles, uploadPeople, type PeopleResult, type UploadPreview } from "@/app/org/[slug]/(workspace)/people/actions";
 import { GRANTABLE_ROLES, ROLE_LABEL, type GrantableRole } from "@/lib/company/access";
 import { CSV_COLUMNS, MAX_CSV_ROWS, type RowError } from "@/lib/company/people";
-import type { CompanyPeople, PersonRow } from "@/lib/company/people-data";
+import type { PersonRow } from "@/lib/company/people-data";
 
-const input = "border border-line/60 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none";
+const input = "min-h-10 rounded-md border border-line/50 bg-white px-3 py-2 text-sm focus:border-ink focus:outline-none";
 const label = "flex flex-col gap-1 text-xs font-bold";
-const submit = "bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wider text-paper disabled:opacity-50";
+const submit = BTN_PRIMARY;
 
 /** What each responsibility opens, beside its checkbox. */
 const ROLE_HINT: Record<GrantableRole, string> = {
@@ -21,12 +20,11 @@ const ROLE_HINT: Record<GrantableRole, string> = {
   employee: "Their own Upskill progress",
 };
 
-const rolesOf = (p: PersonRow) => (p.roles.length ? p.roles.map((r) => ROLE_LABEL[r]).join(", ") : "—");
 const TEMPLATE = `${CSV_COLUMNS.join(",")}\nasha@example.com,Asha Rao,Sales\nsam@example.com,Sam Lee,\n`;
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-function Note({ result }: { result: PeopleResult | null }) {
+export function Note({ result }: { result: PeopleResult | null }) {
   if (!result) return null;
   return (
     <div role={result.ok ? "status" : "alert"} className={`w-full text-xs font-semibold ${result.ok ? "text-ink" : "text-error"}`}>
@@ -50,36 +48,17 @@ function ErrorReport({ errors }: { errors: RowError[] }) {
   );
 }
 
-export function PeopleManager({ slug, me, data }: { slug: string; me: string; data: CompanyPeople }) {
-  const used = data.active.length;
-  const free = Math.max(0, data.seatCount - used);
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="max-w-xl space-y-3 rounded-lg border border-line/30 bg-white p-5">
-        <p className="text-sm nums" aria-live="polite"><strong>{used}</strong> of <strong>{data.seatCount}</strong> seats used · <strong>{free}</strong> free</p>
-        <ProgressMeter value={used} total={data.seatCount} label="Seats used" />
-      </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <AddOne slug={slug} teams={data.teams.map((t) => t.name)} free={free} />
-        <UploadCsv slug={slug} free={free} />
-      </div>
-      <ActiveList slug={slug} me={me} people={data.active} />
-      <RemovedList people={data.removed} />
-    </div>
-  );
-}
-
-function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: number }) {
+export function AddOne({ slug, teams, free, initialRole = "employee" }: { slug: string; teams: string[]; free: number; initialRole?: "employee" | "admin" }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [team, setTeam] = useState("");
-  const [role, setRole] = useState("employee");
+  const [role, setRole] = useState<string>(initialRole);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<PeopleResult | null>(null);
 
   return (
     <form
-      className="card flex flex-col gap-3 p-5"
+      className="flex flex-col gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -90,8 +69,7 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
         if (r.ok) { setEmail(""); setName(""); }
       }}
     >
-      <h2 className="text-base font-black">Add one person</h2>
-      <label className={label}>
+            <label className={label}>
         Email
         <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" spellCheck={false} className={input} />
       </label>
@@ -115,7 +93,7 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
           </select>
         </label>
       </div>
-      <p className="text-xs text-muted">Give more responsibilities, like recruiter or company head, from the list below once they&apos;re added.</p>
+      <p className="text-xs text-muted">Give more responsibilities, like recruiter or company head, by opening the person in the members list once they&apos;re added.</p>
       <div>
         <button type="submit" disabled={busy || free === 0} className={submit}>{busy ? "Adding…" : "Add person"}</button>
       </div>
@@ -125,7 +103,7 @@ function AddOne({ slug, teams, free }: { slug: string; teams: string[]; free: nu
   );
 }
 
-function UploadCsv({ slug, free }: { slug: string; free: number }) {
+export function UploadCsv({ slug, free }: { slug: string; free: number }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<null | "check" | "add">(null);
   const [result, setResult] = useState<PeopleResult | null>(null);
@@ -157,7 +135,7 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
   if (preview) {
     const n = preview.add.length;
     return (
-      <section aria-labelledby="csv-check" className="card flex flex-col gap-4 p-5">
+      <section aria-labelledby="csv-check" className="flex flex-col gap-4">
         <h2 id="csv-check" className="text-base font-black">Check the file</h2>
         <p className="text-sm">
           {n ? <><strong>{n}</strong> to add</> : "Nobody new to add"}
@@ -189,11 +167,10 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
 
   return (
     <form
-      className="card flex flex-col gap-3 p-5"
+      className="flex flex-col gap-4"
       onSubmit={(e) => { e.preventDefault(); void check(e.currentTarget); }}
     >
-      <h2 className="text-base font-black">Upload a CSV</h2>
-      <p className="text-xs text-muted">
+            <p className="text-xs text-muted">
         Columns: <code className="font-mono">{CSV_COLUMNS.join(", ")}</code>, with a header row. Only email is needed; teams must already exist.
         Up to {MAX_CSV_ROWS} people. You check the list before anyone is added, and people already here are left as they are.
       </p>
@@ -213,100 +190,8 @@ function UploadCsv({ slug, free }: { slug: string; free: number }) {
   );
 }
 
-function ActiveList({ slug, me, people }: { slug: string; me: string; people: PersonRow[] }) {
-  // Which row is working, and on what, so only that row's button says so.
-  const [busy, setBusy] = useState<{ email: string; what: "remove" | "resend" } | null>(null);
-  const [result, setResult] = useState<PeopleResult | null>(null);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [confirm, dialog] = useConfirm();
-
-  async function act(p: PersonRow, what: "remove" | "resend") {
-    setBusy({ email: p.email, what });
-    setResult(null);
-    setResult(await (what === "remove" ? removePerson(slug, p.email) : resendInvite(slug, p.email)));
-    setBusy(null);
-  }
-
-  async function remove(p: PersonRow) {
-    const who = p.name ? `${p.name} (${p.email})` : p.email;
-    if (!(await confirm({ title: `Remove ${who}?`, body: "Their access ends now and their seat frees up. Their record is kept, and you can add them back later.", confirmLabel: "Remove", cancelLabel: "Keep them" }))) return;
-    return act(p, "remove");
-  }
-  const working = (p: PersonRow, what: "remove" | "resend") => busy?.email === p.email && busy.what === what;
-
-  return (
-    <section aria-labelledby="active-people" className="flex flex-col gap-3">
-      {dialog}
-      <h2 id="active-people" className="text-lg font-black">People <span className="text-muted nums">({people.length})</span></h2>
-      <Note result={result} />
-      {people.length === 0 ? (
-        <p className="text-sm text-muted">Nobody yet. Add someone above.</p>
-      ) : (
-        <div className="overflow-x-auto border border-line/25 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-line/25 text-xs uppercase tracking-wider text-muted">
-              <tr><th className="px-3 py-2">Person</th><th className="px-3 py-2">Does</th><th className="px-3 py-2">Team</th><th className="px-3 py-2">Added</th><th className="px-3 py-2"><span className="sr-only">Actions</span></th></tr>
-            </thead>
-            <tbody>
-              {people.map((p) => (
-                <Fragment key={p.email}>
-                <tr className="border-b border-line/15 last:border-0">
-                  <td className="px-3 py-2">
-                    <div className="font-semibold">{p.name ?? p.email}</div>
-                    {p.name && <div className="text-xs text-muted">{p.email}</div>}
-                  </td>
-                  <td className="px-3 py-2">
-                    {rolesOf(p)}
-                    <button
-                      type="button"
-                      onClick={() => { setResult(null); setEditing(editing === p.email ? null : p.email); }}
-                      aria-expanded={editing === p.email}
-                      aria-controls={`roles-${p.email}`}
-                      className="ml-2 text-xs font-bold underline underline-offset-2"
-                    >
-                      {editing === p.email ? "Close" : "Change"}<span className="sr-only"> what {p.name ?? p.email} does</span>
-                    </button>
-                  </td>
-                  <td className="px-3 py-2">{p.team_name ?? <span className="text-muted">—</span>}</td>
-                  <td className="px-3 py-2 nums text-muted">{day(p.added_at)}</td>
-                  <td className="px-3 py-2 text-right">
-                    {p.email === me ? (
-                      <span className="text-xs text-muted">You</span>
-                    ) : (
-                      <span className="inline-flex gap-4 whitespace-nowrap">
-                        <button type="button" onClick={() => act(p, "resend")} disabled={busy !== null} className="text-xs font-bold underline underline-offset-2 disabled:opacity-50">
-                          {working(p, "resend") ? "Sending…" : "Resend invite"}
-                        </button>
-                        <button type="button" onClick={() => remove(p)} disabled={busy !== null} className="text-xs font-bold text-error underline underline-offset-2 disabled:opacity-50">
-                          {working(p, "remove") ? "Removing…" : "Remove"}
-                        </button>
-                      </span>
-                    )}
-                  </td>
-                </tr>
-                {editing === p.email && (
-                  <tr id={`roles-${p.email}`} className="border-b border-line/15 bg-surface">
-                    <td colSpan={5} className="px-3 py-3">
-                      <RolesEditor
-                        slug={slug}
-                        person={p}
-                        onDone={(r) => { setResult(r); if (r.ok) setEditing(null); }}
-                      />
-                    </td>
-                  </tr>
-                )}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
-  );
-}
-
-/** Ticks for what someone does. A team's lead is set on the Teams page, so it is shown, not edited, here. */
-function RolesEditor({ slug, person, onDone }: { slug: string; person: PersonRow; onDone: (r: PeopleResult) => void }) {
+/** Ticks for what someone does. A team's lead is set from the team's card, so it is shown, not edited, here. */
+export function RolesEditor({ slug, person, onDone }: { slug: string; person: PersonRow; onDone: (r: PeopleResult) => void }) {
   const [roles, setRoles] = useState<GrantableRole[]>(GRANTABLE_ROLES.filter((r) => person.roles.includes(r)));
   const [busy, setBusy] = useState(false);
   const leads = person.roles.includes("team_lead");
@@ -334,14 +219,14 @@ function RolesEditor({ slug, person, onDone }: { slug: string; person: PersonRow
             <span><strong className="font-semibold">{ROLE_LABEL[r]}</strong> <span className="text-xs text-muted">· {ROLE_HINT[r]}</span></span>
           </label>
         ))}
-        {leads && <p className="text-xs text-muted">Also leads {person.team_name ?? "a team"}. Change a team&apos;s lead on the Teams page.</p>}
+        {leads && <p className="text-xs text-muted">Also leads {person.team_name ?? "a team"}. Change a team&apos;s lead by opening the team card.</p>}
       </fieldset>
       <button type="submit" disabled={busy} className={`${submit} mt-3`}>{busy ? "Saving…" : "Save"}</button>
     </form>
   );
 }
 
-function RemovedList({ people }: { people: PersonRow[] }) {
+export function RemovedList({ people }: { people: PersonRow[] }) {
   if (people.length === 0) return null;
   return (
     <section aria-labelledby="removed-people" className="flex flex-col gap-3">
