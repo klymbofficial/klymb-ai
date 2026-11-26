@@ -2,6 +2,8 @@
 
 import clsx from "clsx";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Prose } from "@/components/company/AssessmentParts";
+import { Overlay } from "@/components/company/Overlay";
 import {
   DIFFICULTIES,
   DIFFICULTY_LABEL,
@@ -42,14 +44,19 @@ export function LibraryPicker({
   const [difficulties, setDifficulties] = useState<Difficulty[]>([]);
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<Map<string, LibraryQuestion>>(new Map());
+  const [preview, setPreview] = useState<LibraryQuestion | null>(null);
   const dialog = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     dialog.current?.focus();
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (preview) setPreview(null);
+      else onClose();
+    };
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
-  }, [onClose]);
+  }, [onClose, preview]);
 
   const list = tab === "mine" && mine ? mine : klymb;
   const shown = useMemo(() => filterQuestions(list, { types, difficulties, tag: null, q: q.trim().replace(/\s+/g, " ") || null }), [list, types, difficulties, q]);
@@ -57,8 +64,9 @@ export function LibraryPicker({
   const full = picked.size >= room;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-ink/50 p-0 sm:items-center sm:p-6">
-      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="picker-title" className="flex max-h-full w-full max-w-3xl flex-col bg-paper shadow-xl outline-none">
+    <>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 p-0 sm:p-6">
+      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="picker-title" className="flex h-[min(52rem,100dvh)] w-full max-w-3xl flex-col overflow-hidden bg-paper shadow-xl outline-none transition-[height] duration-200 ease-out motion-reduce:transition-none sm:h-[min(52rem,calc(100dvh-3rem))] sm:rounded-lg">
         <div className="flex items-center justify-between gap-3 border-b border-line/40 p-4">
           <h2 id="picker-title" className="display text-xl">Add questions from the library</h2>
           <button type="button" onClick={onClose} className="border border-line/60 px-3 py-1 text-xs font-bold hover:border-ink">Close</button>
@@ -95,10 +103,11 @@ export function LibraryPicker({
             const on = picked.has(x.id);
             return (
               <li key={x.id}>
-                <label className={clsx("flex cursor-pointer items-start gap-3 border p-3", on ? "border-ink" : "border-line/40 hover:border-ink")}>
+                <div className={clsx("flex items-start gap-3 rounded-md border bg-white p-3", on ? "border-ink" : "border-line/40 hover:border-ink")}>
                   <input
                     type="checkbox"
                     className="mt-1"
+                    aria-label={`Select ${x.title}`}
                     checked={on}
                     disabled={!on && full}
                     onChange={() =>
@@ -110,14 +119,14 @@ export function LibraryPicker({
                       })
                     }
                   />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-bold">{x.title}</span>
+                  <button type="button" onClick={() => setPreview(x)} className="min-w-0 flex-1 text-left group">
+                    <span className="block text-sm font-bold text-[#1f4fd1] underline-offset-4 group-hover:underline">{x.title}</span>
                     <span className="mt-0.5 block text-xs text-muted">
                       {TYPE_LABEL[x.type]}{x.type === "mcq" && isMulti(x) ? " · several correct" : ""} · {DIFFICULTY_LABEL[x.difficulty]} · {x.points} points · {x.minutes} min
                       {x.tags.length ? ` · ${x.tags.join(", ")}` : ""}
                     </span>
-                  </span>
-                </label>
+                  </button>
+                </div>
               </li>
             );
           })}
@@ -139,6 +148,51 @@ export function LibraryPicker({
           </button>
         </div>
       </div>
+    </div>
+    <Overlay open={preview !== null} onClose={() => setPreview(null)} title={preview?.title ?? "Question preview"} description="Question preview" kind="drawer" size="md">
+      {preview && <QuestionPreview question={preview} />}
+    </Overlay>
+    </>
+  );
+}
+
+function QuestionPreview({ question: q }: { question: LibraryQuestion }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap gap-2 text-xs text-muted">
+        <span className="rounded-full border border-line/40 px-2.5 py-1">{TYPE_LABEL[q.type]}</span>
+        <span className="rounded-full border border-line/40 px-2.5 py-1">{DIFFICULTY_LABEL[q.difficulty]}</span>
+        <span className="rounded-full border border-line/40 px-2.5 py-1">{q.points} {q.points === 1 ? "point" : "points"}</span>
+        <span className="rounded-full border border-line/40 px-2.5 py-1">{q.minutes} min</span>
+      </div>
+      <section>
+        <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Question</h3>
+        <Prose text={q.statement} className="mt-2 text-sm" />
+      </section>
+      {q.options && (
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Options</h3>
+          <ol className="mt-2 flex flex-col gap-2">
+            {q.options.map((option, i) => (
+              <li key={i} className={clsx("flex items-start gap-3 rounded-md border p-3 text-sm", option.correct ? "border-[#86b99b] bg-[#f0f8f3]" : "border-line/30 bg-white")}>
+                <span className={clsx("grid size-5 shrink-0 place-items-center rounded-full text-[0.65rem] font-bold", option.correct ? "bg-[#14532d] text-white" : "border border-line/60")}>{option.correct ? "✓" : String.fromCharCode(65 + i)}</span>
+                <span>{option.text}</span>
+              </li>
+            ))}
+          </ol>
+          {isMulti(q) && <p className="mt-2 text-xs text-muted">Multiple answers are correct.</p>}
+        </section>
+      )}
+      {q.rubric && (
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-muted">Scoring areas</h3>
+          <ul className="mt-2 divide-y divide-line/20 rounded-md border border-line/30 bg-white">
+            {q.rubric.map((area) => <li key={area.title} className="p-3 text-sm"><strong>{area.title}</strong> · {area.points} points{area.guide && <p className="mt-1 text-muted">{area.guide}</p>}</li>)}
+          </ul>
+        </section>
+      )}
+      {q.explanation && <section><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Explanation</h3><Prose text={q.explanation} className="mt-2 text-sm" /></section>}
+      {q.tags.length > 0 && <p className="text-xs text-muted">Tags: {q.tags.join(", ")}</p>}
     </div>
   );
 }

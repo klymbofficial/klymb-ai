@@ -53,7 +53,7 @@ function Fact({ icon, children }: { icon: OrgIconName; children: React.ReactNode
 
 /**
  * The company's tests, laid out like a recruiter's test list: a status rail
- * with counts and a creation-date filter on the left; search and sort on
+ * with counts and creation filters on the left; search and sort on
  * top; one card per test with its facts, take-up and direct actions.
  * Everything filters what the page already loaded.
  */
@@ -101,11 +101,6 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
             {publishers.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
           </select>
         </label>
-        <div className="text-sm">
-          <p className="font-bold">Test type</p>
-          <p className="mt-1.5 flex items-center gap-2 text-muted"><OrgIcon name="mail" size={16} />Invite only</p>
-          <p className="mt-1 text-xs text-muted">Candidates start from their own invitation link.</p>
-        </div>
       </aside>
 
       <section aria-label="Tests" className="flex min-w-0 flex-1 flex-col gap-4 lg:pl-6">
@@ -133,7 +128,6 @@ export function TestList({ rows, now }: { rows: TestRow[]; now: string }) {
                 </h2>
                 <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
                   {t.own && <Fact icon="test">Your company&apos;s test</Fact>}
-                  <Fact icon="mail">Invite only</Fact>
                   <Fact icon="clock">{t.duration}</Fact>
                   <Fact icon="calendar">{t.versionLine}</Fact>
                   {t.blocked && <span className="font-semibold text-error">{t.blocked === "closed" ? "Access off" : "Ended"}</span>}

@@ -228,3 +228,12 @@ test("the Settings action takes the email and sign-in method from the session, n
   assert.match(source, /signInMethod: session\?\.user\?\.signInMethod/);
   assert.doesNotMatch(source, /formData\.get\("email"\)/);
 });
+
+test("choosing an email code before typing an address hides the password instead of submitting an error", () => {
+  const source = readFileSync("src/components/company/CompanySignInForm.tsx", "utf8");
+  assert.match(source, /useState<"password" \| "code">\("password"\)/);
+  assert.match(source, /if \(email\.current\?\.value\.trim\(\)\) return;\s+event\.preventDefault\(\);\s+setMethod\("code"\)/);
+  assert.match(source, /method === "password" \?/);
+  assert.match(source, /Send sign-in code/);
+  assert.match(source, /Use my password instead/);
+});

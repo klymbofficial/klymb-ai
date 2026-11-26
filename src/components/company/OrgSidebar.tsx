@@ -111,9 +111,8 @@ export function OrgSidebar({ groups, brand, email, roles, supportHref, account }
   );
 
   const identity = (narrow: boolean) => (
-    <div className={clsx("pb-3 pt-1", narrow ? "w-10 self-center overflow-hidden" : "px-1.5")}>
-      <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} showName={!narrow} />
-      {!narrow && <p className="mt-1 pl-0.5 text-[0.7rem] text-[#b9b5b3]">on Klymb.ai</p>}
+    <div className={clsx("pb-3 pt-1", narrow ? "w-10 self-center" : "px-1.5")}>
+      <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} showName={!narrow} compact={narrow} />
     </div>
   );
 

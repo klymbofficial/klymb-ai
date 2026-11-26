@@ -15,7 +15,7 @@ export function CandidateShell({ brand, wide = false, back, children }: {
   back?: { href: string; label: string } | null;
   children: React.ReactNode;
 }) {
-  const width = wide ? "max-w-4xl" : "max-w-2xl";
+  const width = wide ? "max-w-6xl" : "max-w-2xl";
   return (
     <div className="min-h-screen bg-paper">
       <NavProgress />
@@ -29,7 +29,7 @@ export function CandidateShell({ brand, wide = false, back, children }: {
           )}
         </div>
       </header>
-      <main className={`mx-auto flex ${width} flex-col gap-6 px-4 py-10 sm:px-6`}>{children}</main>
+      <main className={`mx-auto flex ${width} flex-col gap-6 px-4 ${wide ? "py-6 sm:py-8" : "py-10"} sm:px-6`}>{children}</main>
     </div>
   );
 }

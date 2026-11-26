@@ -209,7 +209,6 @@ function Basic({ c }: { c: Ctx }) {
           </span>
         )}
       </Field>
-      <Field label="Test type">Invite-only: each candidate starts from their own link.</Field>
       <Field label="Assessment ID">
         <span className="inline-flex items-center gap-2">
           <code className="rounded bg-paper px-1.5 py-0.5">{info.itemSlug}</code>

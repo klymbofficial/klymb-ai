@@ -1,5 +1,6 @@
 /**
- * Loads Klymb's question bank and job roles (src/data/question-bank.ts) into
+ * Loads Klymb's question bank (multiple choice and, from the AI skills
+ * library, written questions with rubrics) and job roles (src/data/question-bank.ts) into
  * the database: `npm run db:seed-bank`.
  *
  * Every question is checked with the Library's own rules first; nothing is
@@ -15,7 +16,7 @@
  */
 import { loadEnvConfig } from "@next/env";
 import { Client } from "pg";
-import { BANK_QUESTIONS, BANK_ROLES } from "../src/data/question-bank";
+import { BANK_QUESTIONS, BANK_ROLES, BANK_WRITTEN } from "../src/data/question-bank";
 import { connectionOptions } from "../src/lib/db/connection";
 import { readQuestion } from "../src/lib/company/library-rules";
 
@@ -33,8 +34,14 @@ async function main() {
     if (!r.ok) throw new Error(`${b.key}: ${r.message}`);
     return { b, q: r.value };
   });
-  const keys = new Set(BANK_QUESTIONS.map((b) => b.key));
-  if (keys.size !== BANK_QUESTIONS.length) throw new Error("Two questions share a key.");
+  const written = BANK_WRITTEN.map((b) => {
+    const points = b.rubric.reduce((n, c) => n + c.points, 0);
+    const r = readQuestion({ type: "written", title: b.title, statement: b.statement, difficulty: b.difficulty, tags: b.tags, points, minutes: b.minutes, rubric: b.rubric });
+    if (!r.ok) throw new Error(`${b.key}: ${r.message}`);
+    return { b, q: r.value };
+  });
+  const keys = new Set([...BANK_QUESTIONS, ...BANK_WRITTEN].map((b) => b.key));
+  if (keys.size !== BANK_QUESTIONS.length + BANK_WRITTEN.length) throw new Error("Two questions share a key.");
 
   const client = new Client(connectionOptions(url));
   await client.connect();
@@ -66,6 +73,30 @@ async function main() {
       if (r.rows[0]?.inserted) made += 1;
       else if (r.rows[0]) changed += 1;
     }
+    // Written questions (the AI skills library): no options, a rubric instead.
+    for (const { b, q } of written) {
+      const r = await client.query<{ inserted: boolean }>(
+        `insert into course.library_questions
+           (owner_company_id, type, title, statement, difficulty, tags, points, minutes, options, partial, rubric, status, created_by, updated_by, seed_key, explanation)
+         values (null, 'written', $1, $2, $3, $4, $5, $6, null, false, $7::jsonb, 'published', $8, $8, $9, $10)
+         on conflict (seed_key) where seed_key is not null do update
+           set title = excluded.title, statement = excluded.statement, difficulty = excluded.difficulty, tags = excluded.tags,
+               points = excluded.points, minutes = excluded.minutes, rubric = excluded.rubric,
+               explanation = excluded.explanation, status = 'published', updated_by = excluded.updated_by, updated_at = now(),
+               revision = course.library_questions.revision + 1
+           where course.library_questions.owner_company_id is null
+             and (course.library_questions.title, course.library_questions.statement, course.library_questions.difficulty,
+                  course.library_questions.tags, course.library_questions.points, course.library_questions.minutes,
+                  course.library_questions.rubric, coalesce(course.library_questions.explanation, ''), course.library_questions.status)
+                 is distinct from
+                 (excluded.title, excluded.statement, excluded.difficulty, excluded.tags, excluded.points, excluded.minutes,
+                  excluded.rubric, coalesce(excluded.explanation, ''), 'published')
+         returning (xmax = 0) as inserted`,
+        [q.title, q.statement, q.difficulty, q.tags, q.points, q.minutes, JSON.stringify(q.rubric), BY, b.key, b.explanation],
+      );
+      if (r.rows[0]?.inserted) made += 1;
+      else if (r.rows[0]) changed += 1;
+    }
     for (const role of BANK_ROLES) {
       await client.query(
         `insert into course.assessment_roles (slug, label, summary, skills, status, sort, updated_by)
@@ -85,7 +116,8 @@ async function main() {
   } finally {
     await client.end();
   }
-  console.log(`✓ ${BANK_QUESTIONS.length} questions checked: ${made} added, ${changed} updated, ${BANK_QUESTIONS.length - made - changed} unchanged. ${BANK_ROLES.length} roles.`);
+  const all = BANK_QUESTIONS.length + BANK_WRITTEN.length;
+  console.log(`✓ ${all} questions checked (${BANK_WRITTEN.length} written): ${made} added, ${changed} updated, ${all - made - changed} unchanged. ${BANK_ROLES.length} roles.`);
 }
 
 main().catch((e) => {

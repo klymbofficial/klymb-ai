@@ -53,7 +53,6 @@ export function OrgHeader({ member, brand }: { member: CompanyMember; brand: Res
                   {ROLE_LABEL[r]}
                 </span>
               ))}
-              <span className="font-semibold">on Klymb.ai</span>
             </p>
           </div>
           <div className="flex min-w-0 items-center gap-4 text-xs">

@@ -62,11 +62,12 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
     <CandidateShell brand={brand} wide>
       <ProctorGuard token={token} attemptId={attempt.id} config={proctor} home={home}>
       {proctor.watermark && <Watermark text={found.candidate.email} />}
-      <div className="sticky top-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line/30 bg-paper/95 px-4 py-3 shadow-[0_1px_0_rgba(0,0,0,0.02)] backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="sticky top-3 z-30 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line/30 bg-white/95 px-4 py-3 shadow-card backdrop-blur sm:px-5">
         <div className="min-w-0">
+          <p className="mb-1 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-[#14532d]">Secure assessment · answers autosave</p>
           <p className="truncate text-base font-bold">{found.batch.title}</p>
           <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <span>Ends {deadlineText(attempt.deadlineAt, tz)} · answers save as you go</span>
+            <span>Ends {deadlineText(attempt.deadlineAt, tz)}</span>
             <ProctorChips config={proctor} />
           </p>
         </div>

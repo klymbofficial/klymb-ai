@@ -20,10 +20,17 @@ export interface AssessmentRole {
 
 export type Mix = Record<Difficulty, number>;
 
-/** The planned mix for a count: 30% easy, 20% hard, the rest medium (10 → 3 / 5 / 2). */
-export function plannedMix(count: number): Mix {
-  const easy = Math.round(count * 0.3);
-  const hard = Math.round(count * 0.2);
+/** The experience a test is pitched at (user, 26 Nov: from a job description). */
+export const LEVELS = ["junior", "mid", "senior"] as const;
+export type Level = (typeof LEVELS)[number];
+export const LEVEL_LABEL: Record<Level, string> = { junior: "Junior (0–2 years)", mid: "Mid-level (2–5 years)", senior: "Senior (5+ years)" };
+/** Easy and hard shares by level; the rest is medium. Mid-level is the long-standing default. */
+const LEVEL_SHARE: Record<Level, { easy: number; hard: number }> = { junior: { easy: 0.5, hard: 0.1 }, mid: { easy: 0.3, hard: 0.2 }, senior: { easy: 0.15, hard: 0.4 } };
+
+/** The planned mix for a count: by default 30% easy, 20% hard, the rest medium (10 → 3 / 5 / 2); junior and senior lean easier or harder. */
+export function plannedMix(count: number, level: Level = "mid"): Mix {
+  const easy = Math.round(count * LEVEL_SHARE[level].easy);
+  const hard = Math.round(count * LEVEL_SHARE[level].hard);
   return { easy, medium: count - easy - hard, hard };
 }
 
@@ -71,7 +78,7 @@ function shuffle<T>(list: readonly T[], rand: () => number): T[] {
  * the planned difficulty mix, borrowing from the next difficulty when one
  * runs short (and saying so). Never pads with questions outside the skills.
  */
-export function pickQuestions(pool: readonly LibraryQuestion[], skills: readonly string[], count: number, rand: () => number = Math.random): PickResult {
+export function pickQuestions(pool: readonly LibraryQuestion[], skills: readonly string[], count: number, rand: () => number = Math.random, level: Level = "mid"): PickResult {
   const list = eligible(pool, skills);
   if (!skills.length) return { ok: false, reason: "no_skills", message: "Choose at least one skill.", available: 0, emptySkills: [] };
   const emptySkills = skills.filter((s) => !list.some((q) => q.tags.some((t) => norm(t) === norm(s))));
@@ -81,7 +88,7 @@ export function pickQuestions(pool: readonly LibraryQuestion[], skills: readonly
   if (list.length < count) {
     return { ok: false, reason: "short", message: `Only ${list.length} questions match these skills. Ask for ${list.length} or fewer, add skills, or choose Manual.`, available: list.length, emptySkills: [] };
   }
-  const planned = plannedMix(count);
+  const planned = plannedMix(count, level);
   const byLevel: Record<Difficulty, LibraryQuestion[]> = { easy: [], medium: [], hard: [] };
   for (const q of shuffle(list, rand)) byLevel[q.difficulty].push(q);
   const chosen: LibraryQuestion[] = [];

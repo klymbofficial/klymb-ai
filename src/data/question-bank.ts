@@ -8,8 +8,12 @@
  *
  * Six areas of 20, each 6 easy / 9 medium / 5 hard, some pick-all-that-apply
  * with partial marks. Roles (BANK_ROLES) draw on the areas through their
- * skills, which are the questions' tags.
+ * skills, which are the questions' tags. The AI skills library (prompting,
+ * RAG, agents, evaluation, debugging AI apps; question-bank-ai.ts) adds
+ * multiple-choice questions, written ones with rubrics (BANK_WRITTEN) and
+ * two AI roles.
  */
+import { AI_MCQ, AI_ROLES, AI_WRITTEN, type BankWritten } from "@/data/question-bank-ai";
 
 export interface BankQuestion {
   key: string;
@@ -180,10 +184,14 @@ const GENERAL = [
   q("db-deadlock", "hard", ["Databases"], "A deadlock", "One transaction locks row A then B; another locks B then A. How do you prevent the deadlock?", ["*Take locks in the same order everywhere", "Raise the lock timeout", "Turn off transactions", "Add more CPUs"], "Consistent lock ordering removes the circular wait."),
 ];
 
-export const BANK_QUESTIONS: BankQuestion[] = [...BACKEND, ...FRONTEND, ...DATA_ANALYSIS, ...DATA_ENGINEERING, ...QA, ...GENERAL].map((x) => ({
+export const BANK_QUESTIONS: BankQuestion[] = [...BACKEND, ...FRONTEND, ...DATA_ANALYSIS, ...DATA_ENGINEERING, ...QA, ...GENERAL, ...AI_MCQ].map((x) => ({
   ...x,
   key: `kb-${x.key}`,
 }));
+
+/** Klymb's written questions, each with its rubric (the AI skills library). */
+export const BANK_WRITTEN: BankWritten[] = AI_WRITTEN.map((x) => ({ ...x, key: `kb-${x.key}` }));
+export type { BankWritten };
 
 export const BANK_ROLES: BankRole[] = [
   { slug: "backend-developer", label: "Backend developer", summary: "Server-side code, APIs and databases.", skills: ["Java", "Spring", "REST", "SQL", "Databases", "Algorithms", "HTTP"], sort: 10 },
@@ -193,4 +201,5 @@ export const BANK_ROLES: BankRole[] = [
   { slug: "data-analyst", label: "Data analyst", summary: "SQL, statistics and spreadsheets.", skills: ["SQL", "Statistics", "Excel", "Data analysis"], sort: 40 },
   { slug: "data-engineer", label: "Data engineer", summary: "Pipelines, Python and data models.", skills: ["Python", "pandas", "Data pipelines", "Data modelling", "SQL", "Databases"], sort: 50 },
   { slug: "qa-engineer", label: "QA engineer", summary: "Testing, API testing and automation.", skills: ["Testing", "API testing", "Test automation", "Performance testing", "HTTP"], sort: 60 },
+  ...AI_ROLES,
 ];

@@ -24,7 +24,7 @@ import { companyCatalog } from "@/lib/company/catalog-data";
 import { testCandidates, versionQuestionMarks, type HubCandidate } from "@/lib/company/test-hub-data";
 import { SCORE_EDGES, funnel, histogram, percentOf, questionResults, timeEdges, type HubFacts } from "@/lib/company/test-hub-view";
 import { db } from "@/lib/db/client";
-import { InviteOverlay, OverlayLaunch } from "@/components/company/OverlayLaunch";
+import { InviteCandidatesAction, InviteOverlay, OverlayLaunch } from "@/components/company/OverlayLaunch";
 import { PendingDot } from "@/components/company/NavFeedback";
 import { hiringOptions } from "@/lib/company/batch-data";
 import { loadCompanyPeople } from "@/lib/company/people-data";
@@ -189,11 +189,12 @@ export default async function AssessmentPage({
       {editHref && <Link href={editHref} className={BLUE_LINK}><OrgIcon name="test" size={16} />Edit test</Link>}
       {canInvite && inviteOptions && inviteReady && (
         <InviteOverlay
+          key={one(sp.invite) === "1" ? "invite-open" : "invite-closed"}
           className={BTN_PRIMARY}
           startOpen={one(sp.invite) === "1"}
           form={{
             slug: member.companySlug, tests: inviteOptions.tests, reviewers: inviteOptions.reviewers, prepCourses: inviteOptions.prepCourses,
-            timeZones: timeZoneList(), initial: { ...inviteDefaults(new Date()), test: itemSlug },
+            timeZones: timeZoneList(), initial: { ...inviteDefaults(new Date()), test: itemSlug, reviewer: member.email },
             company: invitePeople ? {
               people: invitePeople.active.map((p) => ({ email: p.email, name: p.name, teamId: p.team_id })),
               teams: invitePeople.teams.map((t) => ({ id: t.id, name: t.name, members: t.members })),
@@ -500,13 +501,13 @@ export default async function AssessmentPage({
                     );
                   })}
                 </ol>
-                <p className="mt-2 text-xs text-muted">A published version never changes. {author}&apos;s edits come as a new version, and rounds keep the version they started on.</p>
+                <p className="mt-2 text-xs text-muted">A published version never changes. {author}&apos;s edits become a new version, while invitations already sent keep the version they started on.</p>
               </Row>
             </dl>
           )}
           {s === "candidate" && (
             <dl className="mt-8 flex max-w-2xl flex-col gap-5 border-t border-line/30 pt-6">
-              <Row label="Time allowed">{durationText(shown.minutes)} from when they start. Extra time is set per person on a batch.</Row>
+              <Row label="Time allowed">{durationText(shown.minutes)} from when they start. Extra time can be set for each invitee.</Row>
               <Row label="Hand in">{SUBMISSION_LABEL[shown.submission]}</Row>
               <Row label="Tools allowed">{shown.toolsAllowed.length ? <ul className="list-disc pl-5">{shown.toolsAllowed.map((t) => <li key={t}>{t}</li>)}</ul> : "Nothing listed"}</Row>
               <Row label="Tools not allowed">{shown.toolsNotAllowed.length ? <ul className="list-disc pl-5">{shown.toolsNotAllowed.map((t) => <li key={t}>{t}</li>)}</ul> : "Nothing listed"}</Row>
@@ -533,8 +534,8 @@ export default async function AssessmentPage({
       <>
         {head}
         {loaded.people.length === 0 ? (
-          <EmptyPanel title="Nobody invited yet" action={recruiter && standing.inUse ? <Link href={`${base}/${itemSlug}?tab=candidates&invite=1`} className="text-sm font-bold underline underline-offset-4">Invite candidates</Link> : undefined}>
-            Candidates appear here once a round of invitations on this test is sent.
+          <EmptyPanel title="Nobody invited yet" action={canInvite && inviteReady ? <InviteCandidatesAction className="text-sm font-bold underline underline-offset-4" /> : undefined}>
+            Candidates appear here after invitations for this assessment are sent.
           </EmptyPanel>
         ) : (
           <TestCandidates rows={loaded.people} initial={initial} slug={member.companySlug} />

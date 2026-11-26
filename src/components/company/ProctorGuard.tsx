@@ -170,8 +170,9 @@ export function ProctorGuard({ token, attemptId, config, home, children }: { tok
 
       {config.fullscreen && !inFull && (
         <div role="dialog" aria-modal="true" aria-labelledby="fs-title" className="fixed inset-0 z-[70] flex items-center justify-center bg-night p-6 text-paper">
-          <div className="max-w-md text-center">
-            <h2 id="fs-title" className="display text-2xl">{started ? "Return to full screen" : "This test runs in full screen"}</h2>
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-white/5 p-8 text-center shadow-2xl backdrop-blur">
+            <span aria-hidden="true" className="mx-auto grid size-12 place-items-center rounded-full bg-white text-2xl text-ink">✓</span>
+            <h2 id="fs-title" className="display mt-4 text-2xl">{started ? "Return to full screen" : "This test runs in full screen"}</h2>
             <p className="mt-3 text-sm text-[#d9d6d5]">
               {started ? "Your answers are saved and the clock is still running. Go back to full screen to continue." : "Your clock has started. Enter full screen to see the questions."}
             </p>
@@ -218,7 +219,7 @@ export function ProctorChips({ config }: { config: ProctorConfig }) {
   if (!chips.length) return null;
   return (
     <span className="hidden flex-wrap gap-1.5 md:flex" aria-label="Proctoring">
-      {chips.map((c) => <span key={c} className="rounded-full border border-line/50 bg-white px-2 py-0.5 text-[0.7rem] font-semibold text-muted">{c}</span>)}
+      {chips.map((c) => <span key={c} className="rounded-full border border-[#b8c7ee] bg-[#f2f5ff] px-2 py-0.5 text-[0.7rem] font-semibold text-[#24457f]">{c}</span>)}
     </span>
   );
 }

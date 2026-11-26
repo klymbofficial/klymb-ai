@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BatchForm } from "@/components/company/BatchForm";
 import { OrgIcon, type OrgIconName } from "@/components/company/OrgIcons";
 import { Overlay } from "@/components/company/Overlay";
@@ -41,20 +41,44 @@ export function OverlayLaunch({
 export function InviteOverlay({ className, startOpen = false, form }: { className: string; startOpen?: boolean; form: Omit<React.ComponentProps<typeof BatchForm>, "onDirtyChange" | "onDone"> }) {
   const [open, setOpen] = useState(startOpen);
   const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener("company:invite-candidates", show);
+    return () => window.removeEventListener("company:invite-candidates", show);
+  }, []);
+  const close = () => {
+    setOpen(false);
+    setDirty(false);
+    // Make the empty-state link reusable after a drawer opened from ?invite=1.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("invite")) {
+      url.searchParams.delete("invite");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  };
   return (
     <>
       <button type="button" className={className} onClick={() => setOpen(true)}><OrgIcon name="invite" size={16} />Invite candidates</button>
       <Overlay
         open={open}
-        onClose={() => { setOpen(false); setDirty(false); }}
+        onClose={close}
         title="Invite candidates"
-        description="Choose the window and people, then preview the invitation. Nothing is sent until you press Send."
+        description="Choose the people and invitation window."
         kind="drawer"
         size="lg"
         dirty={dirty}
       >
-        <BatchForm {...form} onDirtyChange={setDirty} onDone={() => setOpen(false)} />
+        <BatchForm {...form} onDirtyChange={setDirty} onDone={close} />
       </Overlay>
     </>
+  );
+}
+
+/** Opens the page's existing invite drawer from its empty candidate panel. */
+export function InviteCandidatesAction({ className }: { className: string }) {
+  return (
+    <button type="button" className={className} onClick={() => window.dispatchEvent(new Event("company:invite-candidates"))}>
+      Invite candidates
+    </button>
   );
 }

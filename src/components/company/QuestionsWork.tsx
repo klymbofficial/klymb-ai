@@ -160,21 +160,21 @@ export function QuestionsWork({
   );
 
   return (
-    <div ref={top} className="grid scroll-mt-20 gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+    <div ref={top} className="grid scroll-mt-28 gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
       <div className="lg:hidden">
         <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} className={SECONDARY}>
           Question {current + 1} of {questions.length} · {done} answered
         </button>
-        {menu && <div className="card mt-2 p-3">{list}</div>}
+        {menu && <div className="mt-2 rounded-xl border border-line/30 bg-white p-3 shadow-card">{list}</div>}
       </div>
-      <aside className="hidden lg:block"><div className="card sticky top-20 p-3">{list}</div></aside>
+      <aside className="hidden lg:block"><div className="sticky top-28 rounded-xl border border-line/30 bg-white p-3 shadow-card">{list}</div></aside>
 
       <div className="flex min-w-0 flex-col gap-6">
         {questions.map((x, i) => {
           const a = answers[x.no];
           return (
             <div key={x.no} hidden={i !== current} className="flex flex-col gap-6">
-              <section aria-labelledby={`q${x.no}-title`} className="card p-6">
+              <section aria-labelledby={`q${x.no}-title`} className="rounded-xl border border-line/30 bg-white p-6 shadow-card sm:p-8">
                 {x.section && <p className="text-xs font-bold text-muted">{x.section}</p>}
                 <p className="mt-1 text-xs text-muted">Question {i + 1} of {questions.length} · {x.points} {x.points === 1 ? "point" : "points"}</p>
                 <h2 id={`q${x.no}-title`} className="display mt-2 text-2xl">{x.title}</h2>
@@ -227,7 +227,7 @@ export function QuestionsWork({
           {current < questions.length - 1 && <button type="button" onClick={() => go(current + 1)} className={SECONDARY}>Next question</button>}
         </div>
 
-        <section aria-labelledby="submit-title" className="card p-6">
+        <section aria-labelledby="submit-title" className="rounded-xl border border-line/30 bg-white p-6 shadow-card">
           <h2 id="submit-title" className="display text-lg">Submit</h2>
           {over ? (
             <p className="mt-2 text-sm">Time is up. What you saved will be submitted automatically. <a href={`/assessment/${token}`} className="font-bold underline underline-offset-4">See your receipt</a></p>

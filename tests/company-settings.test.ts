@@ -13,7 +13,7 @@ describe("Settings (user, 26 Nov)", () => {
     const shape = (m: CompanyMember) => settingsGroups(m).map((g) => [g.label, g.links.map((l) => l.label)]);
     assert.deepEqual(shape(member(["admin"])), [
       ["Personal", ["Personal Information", "Email preference", "Security and sign in", "API details"]],
-      ["Company", ["Company Information", "Diversity and Inclusion", "Terms of Use", "EEO compliance", "Integrations"]],
+      ["Company", ["Company Information", "Diversity and Inclusion", "Terms of Use", "EEO compliance", "AI features", "Integrations"]],
       ["Billing", ["Plan and usage"]],
     ]);
     assert.deepEqual(shape(member(["recruiter"])).map(([g]) => g), ["Personal"]);

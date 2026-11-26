@@ -16,7 +16,7 @@ export function settingsGroups(member: CompanyMember): SettingsGroup[] {
   ];
   if (isAdmin(member)) {
     groups.push(
-      { label: "Company", links: [link("company", "Company Information"), link("diversity", "Diversity and Inclusion"), link("terms", "Terms of Use"), link("eeo", "EEO compliance"), link("integrations", "Integrations")] },
+      { label: "Company", links: [link("company", "Company Information"), link("diversity", "Diversity and Inclusion"), link("terms", "Terms of Use"), link("eeo", "EEO compliance"), link("ai", "AI features"), link("integrations", "Integrations")] },
       { label: "Billing", links: [link("plan", "Plan and usage")] },
     );
   }
@@ -24,4 +24,4 @@ export function settingsGroups(member: CompanyMember): SettingsGroup[] {
 }
 
 /** Company and Billing sections are for admins; anyone else is sent to their own details. */
-export const ADMIN_SECTIONS = ["company", "diversity", "terms", "eeo", "integrations", "plan"] as const;
+export const ADMIN_SECTIONS = ["company", "diversity", "terms", "eeo", "ai", "integrations", "plan"] as const;

@@ -8,6 +8,12 @@ import { recordDecision, shareResult } from "@/lib/company/decision-data";
 import { loadReviewView, recordReview } from "@/lib/company/review-data";
 import { DECISION_LABEL, autoMarks, readDecisionForm, readReviewForm, reviewItems } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
+import { createHash } from "node:crypto";
+import { aiConfigured, respondJson } from "@/lib/ai/openai-json";
+import { AI_REVIEW_INSTRUCTIONS, aiReviewPrompt, aiReviewSchema, readAiReview, suggestTargets, type Suggestion } from "@/lib/company/ai-review-rules";
+import { logCompany } from "@/lib/company/audit";
+import { aiReviewOn } from "@/lib/company/settings-data";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export type ReviewResult =
   | { ok: true; message: string; revision: number }
@@ -112,4 +118,56 @@ export async function shareCandidateResult(_prev: DecisionResult | null, form: F
       ? `Review version ${out.reviewRevision} was already shared; nothing changed.`
       : `Shared review version ${out.reviewRevision}. The candidate sees it on their test link now.`,
   };
+}
+
+export type SuggestResult = { ok: true; suggestions: Suggestion[]; model: string } | { ok: false; message: string };
+
+/**
+ * Suggested scores for a submission's written answers (user, 26 Nov), when
+ * the company has turned it on in Settings › AI features. Sends the
+ * questions, their rubric and the answers (never the candidate's name or
+ * email) to OpenAI, checks the reply (points within range, quotes really in
+ * the answer), keeps it on record, and returns it to the reviewer's form.
+ * Nothing is scored: the reviewer accepts or changes each suggestion and
+ * saves their own review.
+ */
+export async function suggestReviewScores(slug: string, batchId: string, candidateId: string): Promise<SuggestResult> {
+  if (typeof slug !== "string" || !isId(batchId) || !isId(candidateId)) return { ok: false, message: "Reload the page and try again." };
+  const member = await getWorkspaceMember(slug);
+  if (!allowCompany(member, slug) || !canScore(member)) return { ok: false, message: "Only a reviewer in your company can ask for suggestions." };
+  const sql = db();
+  if (!sql) return { ok: false, message: "That didn't work just now. Try again in a minute." };
+  if (!(await aiReviewOn(sql, member.companyId))) return { ok: false, message: "AI suggestions are turned off for your company. An admin can turn them on in Settings › AI features." };
+  if (!aiConfigured()) return { ok: false, message: "AI suggestions aren't set up yet." };
+  const view = await loadReviewView(sql, member.companyId, batchId, candidateId);
+  if (view === null) return { ok: false, message: "That didn't work just now. Try again in a minute." };
+  if (!view || !view.attempt || !view.submission) return { ok: false, message: "There's no submission to review here. Reload the page." };
+
+  const items = view.questions ? reviewItems(view.questions) : view.rubric;
+  const targets = suggestTargets(items, view.questions, view.submission, { title: view.batch.title, brief: view.batch.role ? `A ${view.batch.role} assessment.` : "" });
+  if (!targets.length) return { ok: false, message: "There are no written answers to suggest scores for." };
+
+  const limit = await checkRateLimit("ai_review", { limit: 30, windowMinutes: 60, identity: member.email });
+  if (!limit.allowed) return { ok: false, message: "That's a lot of suggestions in an hour. Try again a little later." };
+
+  const reply = await respondJson<unknown>({
+    instructions: AI_REVIEW_INSTRUCTIONS,
+    text: aiReviewPrompt(targets),
+    schemaName: "rubric_suggestions",
+    schema: aiReviewSchema(targets),
+    identity: createHash("sha256").update(`company:${member.companyId}`).digest("hex").slice(0, 32),
+    timeoutMs: 90_000,
+  });
+  if (!reply.ok) return { ok: false, message: reply.error === "timeout" ? "The AI took too long. Try again." : "Suggestions aren't available just now. Score as usual, or try again in a minute." };
+  const suggestions = readAiReview(reply.value, targets);
+  if (!suggestions.length) return { ok: false, message: "The AI didn't return usable suggestions. Score as usual, or try again." };
+
+  const saved = await sql.run`
+    insert into course.ai_review_suggestions (company_id, attempt_id, requested_by, model, suggestions)
+    values (${member.companyId}::uuid, ${view.attempt.id}::uuid, ${member.email}, ${reply.model}, ${JSON.stringify(suggestions)}::jsonb)
+  `;
+  // Kept on record is part of the deal (user, 26 Nov): no record, no suggestion.
+  if (saved.error) return { ok: false, message: "Suggestions couldn't be saved on record, so they aren't shown. Try again in a minute." };
+  await logCompany(member, "company.ai_review_suggest", { item: view.batch.item, areas: suggestions.length, model: reply.model });
+  return { ok: true, suggestions, model: reply.model };
 }

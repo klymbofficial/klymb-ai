@@ -81,8 +81,25 @@ describe("Assessments hub: pages", () => {
   test("invite is for recruiters on an approved version, and preselects the test", () => {
     assert.match(list, /inviteHref: recruiter && s\.inUse && !blocked \?/, "and not while access is off or ended (U06a)");
     assert.match(page, /const canInvite = recruiter && !!standing\.inUse && !blocked;/, "invite opens in a drawer on the test (P0.2c)");
-    assert.match(page, /initial: \{ \.\.\.inviteDefaults\(new Date\(\)\), test: itemSlug \}/);
+    assert.match(page, /initial: \{ \.\.\.inviteDefaults\(new Date\(\)\), test: itemSlug, reviewer: member\.email \}/);
     assert.match(read("src/components/company/BatchForm.tsx"), /tests\.find\(\(t\) => t\.item === initial\.test\)/);
+    assert.match(read("src/components/company/BatchForm.tsx"), /reviewers\.some\(\(r\) => r\.email === initial\.reviewer\)/);
+    assert.match(page, /action=\{canInvite && inviteReady \? <InviteCandidatesAction/);
+  });
+
+  test("the assessments list and settings omit the redundant invite-only test type", () => {
+    const listUi = read("src/components/company/TestList.tsx");
+    assert.doesNotMatch(listUi, />Test type</);
+    assert.doesNotMatch(listUi, />Invite only</);
+    assert.doesNotMatch(read("src/components/company/TestSettingsForms.tsx"), /label="Test type"/);
+  });
+
+  test("an invite query can reopen the drawer after it was discarded", () => {
+    const launch = read("src/components/company/OverlayLaunch.tsx");
+    assert.match(page, /key=\{one\(sp\.invite\) === "1" \? "invite-open" : "invite-closed"\}/);
+    assert.match(launch, /url\.searchParams\.delete\("invite"\)/);
+    assert.match(launch, /addEventListener\("company:invite-candidates", show\)/);
+    assert.match(launch, /dispatchEvent\(new Event\("company:invite-candidates"\)\)/);
   });
 
   test("every hub query is scoped to the company", () => {

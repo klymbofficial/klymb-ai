@@ -298,7 +298,6 @@ function BrandPreview({ brand, isLive }: { brand: ReturnType<typeof resolveBrand
       <div className="flex overflow-hidden rounded-lg border border-line/40" aria-label="Workspace">
         <div className="flex w-40 shrink-0 flex-col gap-1 bg-night p-3 text-paper">
           <BrandMark name={brand.name} logoUrl={brand.logoUrl} logoAlt={brand.logoAlt} />
-          <p className="mb-2 text-[0.7rem] text-[#b9b5b3]">on Klymb.ai</p>
           <span className="rounded-md bg-red-strong px-2.5 py-1.5 text-sm font-bold text-white">Overview</span>
           <span className="px-2.5 py-1.5 text-sm text-[#e6e3e2]">My Upskill</span>
         </div>

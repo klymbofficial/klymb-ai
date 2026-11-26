@@ -6,7 +6,7 @@ import type { DraftResult, PublishResult } from "@/app/admin/assessment-actions"
 import { allowCompany } from "@/lib/company/access";
 import { loadDraft, loadVersions } from "@/lib/company/assessment-data";
 import { LIMITS, canWriteTests, candidateQuestions, publishGaps, readContent, readTestName, sameContent, type CandidateTask } from "@/lib/company/assessment-rules";
-import { AUTO_LIMITS, autoContent, pickQuestions, readSkills, summarise, type Mix } from "@/lib/company/auto-test";
+import { AUTO_LIMITS, LEVELS, autoContent, pickQuestions, readSkills, summarise, type Level, type Mix } from "@/lib/company/auto-test";
 import { isAssessmentAudience, type AssessmentAudience } from "@/lib/company/batch-rules";
 import { klymbLibrary, ownLibrary } from "@/lib/company/library-data";
 import { activeRoles } from "@/lib/company/roles-data";
@@ -84,7 +84,7 @@ const KEY = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
  * doesn't open. The press's key makes a retry return the same test instead
  * of a second one; a shortage is reported, never padded.
  */
-export async function createAutoTest(input: { slug: string; title: string; role: string; skills: string[]; count: number; audience: AssessmentAudience; createKey: string }): Promise<AutoResult> {
+export async function createAutoTest(input: { slug: string; title: string; role: string; skills: string[]; count: number; audience: AssessmentAudience; createKey: string; level?: Level; fromJd?: boolean }): Promise<AutoResult> {
   const member = await writer(input?.slug);
   if (!member) return NOT_ALLOWED;
   const name = readTestName(input.title);
@@ -95,6 +95,7 @@ export async function createAutoTest(input: { slug: string; title: string; role:
   const count = Number(input.count);
   if (!Number.isInteger(count) || count < AUTO_LIMITS.min || count > AUTO_LIMITS.max) return { ok: false, message: `Ask for ${AUTO_LIMITS.min} to ${AUTO_LIMITS.max} questions.` };
   const skills = readSkills(input.skills);
+  const level: Level = (LEVELS as readonly unknown[]).includes(input.level) ? (input.level as Level) : "mid";
 
   const sql = db();
   if (!sql) return UNAVAILABLE;
@@ -103,7 +104,7 @@ export async function createAutoTest(input: { slug: string; title: string; role:
   const role = roles.find((r) => r.slug === input.role);
   if (!role) return { ok: false, message: "Choose a job role from the list." };
 
-  const picked = pickQuestions([...klymb, ...mine], skills, count);
+  const picked = pickQuestions([...klymb, ...mine], skills, count, Math.random, level);
   if (!picked.ok) return { ok: false, message: picked.message };
   const sum = summarise(picked.questions);
   const content = autoContent(role.label, picked.questions, sum.minutes);
@@ -122,7 +123,7 @@ export async function createAutoTest(input: { slug: string; title: string; role:
     const out = await saveOwnDraft(sql, { companyId: member.companyId, slug: made.slug, title: name.value, content, expected: 1, by: member.email });
     if (!out || out.status !== "saved") return UNAVAILABLE;
     revision = out.revision;
-    if (!made.existed) await logCompany(member, "company.test_create", { item: made.slug, automatic: true, questions: content.questions!.length, role: role.slug, audience });
+    if (!made.existed) await logCompany(member, "company.test_create", { item: made.slug, automatic: true, questions: content.questions!.length, role: role.slug, audience, level, ...(input.fromJd ? { from_job_description: true } : {}) });
   }
   refresh(member.companySlug, made.slug);
   const qs = saved.questions ?? [];

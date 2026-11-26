@@ -39,7 +39,7 @@ export function readableBrandColor(color: string | null | undefined): string | n
 }
 
 /**
- * "Acme via Klymb.ai". Quotes, angle brackets and control characters are
+ * A safe company display name. Quotes, angle brackets and control characters are
  * dropped so the name can't break the From header or pose as another address.
  */
 export function inviteSenderName(companyName: string): string {
@@ -50,7 +50,7 @@ export function inviteSenderName(companyName: string): string {
     .trim()
     .slice(0, 60)
     .trim();
-  return clean ? `${clean} via Klymb.ai` : "Klymb.ai";
+  return clean || "Klymb.ai";
 }
 
 /** Resend limits: per person, so nobody is flooded, and per HR person, so one account can't spam. */

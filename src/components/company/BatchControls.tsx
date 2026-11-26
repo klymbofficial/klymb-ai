@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   cancelHiringBatch, cancelInvitation, changeCandidate, copyCandidateLink, remindCandidates, retryDelivery, sendHiringBatch, type ActionResult,
 } from "@/app/org/[slug]/(workspace)/hiring/actions";
@@ -13,6 +14,7 @@ const input = "w-full rounded-md border-2 border-line/50 bg-white px-3 py-2 text
 
 /** Runs one action, after an in-app confirmation when it has consequences; holds the button while it works, and shows what happened. */
 function useAction() {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirm, dialog] = useConfirm();
@@ -23,6 +25,7 @@ function useAction() {
     try {
       const out = await fn();
       setMsg({ ok: out.ok, text: out.message });
+      if (out.ok) router.refresh();
       return out.ok;
     } catch {
       setMsg({ ok: false, text: "That didn't work just now. Try again in a minute." });
@@ -44,7 +47,7 @@ export function SendDraft({ slug, batchId, count, passed = 0 }: { slug: string; 
     <div className="flex max-w-md flex-col items-start gap-3 lg:items-end">
       {count === 0 && (
         <p role="note" className="max-w-2xl text-sm font-semibold text-error">
-          Nobody in this batch can start in time any more, so there is nothing to send. Discard this draft and make a new batch with a later closing time.
+          Nobody in this group can start in time any more, so there is nothing to send. Discard this draft and create new invitations with a later closing time.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-4">
@@ -101,7 +104,7 @@ export function BatchButtons({ slug, batchId, failed, remindable }: { slug: stri
           <button
             ref={toggle}
             type="button"
-            aria-label="More batch actions"
+            aria-label="More invitation actions"
             aria-expanded={menu}
             aria-haspopup="menu"
             disabled={busy}
@@ -117,9 +120,9 @@ export function BatchButtons({ slug, batchId, failed, remindable }: { slug: stri
                 role="menuitem"
                 autoFocus
                 className="block w-full rounded-md px-3 py-2 text-left text-sm font-semibold text-error hover:bg-error-tint"
-                onClick={() => { setMenu(false); void run(() => cancelHiringBatch(slug, batchId), { title: "Cancel the whole round?", body: "No link in it will start the test. Candidates aren't emailed.", confirmLabel: "Cancel the round", cancelLabel: "Keep it" }); }}
+                onClick={() => { setMenu(false); void run(() => cancelHiringBatch(slug, batchId), { title: "Cancel these invitations?", body: "No link in this group will start the test. Candidates aren't emailed.", confirmLabel: "Cancel invitations", cancelLabel: "Keep them" }); }}
               >
-                Cancel batch…
+                Cancel invitations…
               </button>
             </div>
           )}
@@ -221,7 +224,7 @@ export function CandidateActions({
               <input id={`${id}-until`} type="datetime-local" className={input} value={until} onChange={(e) => setUntil(e.target.value)} />
             </label>
           </div>
-          <p className="text-xs text-muted">Leave the last start blank to keep the batch&apos;s rule: closing time minus their time allowed. They get an email with the new time.</p>
+          <p className="text-xs text-muted">Leave the last start blank to keep the invitation window&apos;s rule: closing time minus their time allowed. They get an email with the new time.</p>
           <div><button type="submit" className={secondary} disabled={busy}>Save and email</button></div>
         </form>
       )}

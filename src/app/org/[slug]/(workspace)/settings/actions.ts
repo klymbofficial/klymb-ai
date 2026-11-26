@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { allowCompany, isAdmin } from "@/lib/company/access";
+import { logCompany } from "@/lib/company/audit";
 import { getWorkspaceMember } from "@/lib/company/auth";
 import { savePassword } from "@/lib/company/password";
 import type { ChangeField } from "@/lib/company/password-rules";
@@ -86,7 +87,8 @@ export async function saveCompanySetting(slug: string, key: unknown, on: boolean
   if (!isAdmin(ctx.member)) return ADMINS_ONLY;
   if (!isCompanySwitch(key)) return { ok: false, message: "That isn't a setting here." };
   if (!(await saveCompanySwitch(ctx.sql, ctx.member.companyId, key, on === true))) return NOT_SAVED;
-  revalidatePath(`/org/${ctx.member.companySlug}/settings/${key === "eeo_survey" ? "eeo" : "diversity"}`);
+  revalidatePath(`/org/${ctx.member.companySlug}/settings/${key === "eeo_survey" ? "eeo" : key === "ai_review_suggestions" ? "ai" : "diversity"}`);
+  if (key === "ai_review_suggestions") await logCompany(ctx.member, "company.ai_review_setting", { on: on === true });
   return { ok: true, message: on ? "Turned on." : "Turned off." };
 }
 

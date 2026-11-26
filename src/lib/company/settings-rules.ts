@@ -88,8 +88,8 @@ export function readCompanyDetails(raw: Record<string, unknown>): { ok: true; va
   return { ok: true, value: { phone, website, address } };
 }
 
-/** The two company switches. Saved only for now: the page says nothing acts on them yet. */
-export const COMPANY_SWITCHES = ["hide_candidate_names", "eeo_survey"] as const;
+/** The company switches. The first two are saved only for now (their pages say so); AI review suggestions (0101) act at once. */
+export const COMPANY_SWITCHES = ["hide_candidate_names", "eeo_survey", "ai_review_suggestions"] as const;
 export type CompanySwitch = (typeof COMPANY_SWITCHES)[number];
 export const isCompanySwitch = (v: unknown): v is CompanySwitch => (COMPANY_SWITCHES as readonly unknown[]).includes(v);
 

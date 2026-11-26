@@ -23,11 +23,11 @@ function seeded(seed: number) {
 }
 
 describe("P0.3 question bank", () => {
-  test("120 distinct questions, each valid by the Library's own rules", () => {
-    assert.equal(BANK_QUESTIONS.length, 120);
-    assert.equal(new Set(BANK_QUESTIONS.map((q) => q.key)).size, 120, "keys unique");
-    assert.equal(new Set(BANK_QUESTIONS.map((q) => q.title.toLowerCase())).size, 120, "titles unique");
-    assert.equal(new Set(BANK_QUESTIONS.map((q) => q.statement.toLowerCase())).size, 120, "no repeated filler");
+  test("160 distinct questions (120 + 40 in the AI skills library), each valid by the Library's own rules", () => {
+    assert.equal(BANK_QUESTIONS.length, 160);
+    assert.equal(new Set(BANK_QUESTIONS.map((q) => q.key)).size, 160, "keys unique");
+    assert.equal(new Set(BANK_QUESTIONS.map((q) => q.title.toLowerCase())).size, 160, "titles unique");
+    assert.equal(new Set(BANK_QUESTIONS.map((q) => q.statement.toLowerCase())).size, 160, "no repeated filler");
     for (const b of BANK_QUESTIONS) {
       const r = readQuestion({ type: "mcq", title: b.title, statement: b.statement, difficulty: b.difficulty, tags: b.tags, points: b.points, minutes: b.minutes, options: b.options, partial: b.partial });
       assert.ok(r.ok, `${b.key}: ${r.ok ? "" : r.message}`);
@@ -36,9 +36,9 @@ describe("P0.3 question bank", () => {
     }
   });
 
-  test("balanced: 36 easy, 54 medium, 30 hard; single and multi answer both present", () => {
+  test("balanced: 51 easy, 69 medium, 40 hard; single and multi answer both present", () => {
     const n = (d: string) => BANK_QUESTIONS.filter((q) => q.difficulty === d).length;
-    assert.deepEqual([n("easy"), n("medium"), n("hard")], [36, 54, 30]);
+    assert.deepEqual([n("easy"), n("medium"), n("hard")], [51, 69, 40]);
     const multi = BANK_QUESTIONS.filter((q) => q.options.filter((o) => o.correct).length > 1);
     assert.ok(multi.length >= 18 && multi.every((q) => q.partial), "pick-all questions give partial marks");
   });

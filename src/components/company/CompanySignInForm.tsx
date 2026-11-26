@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { companySignIn, type SignInState } from "@/app/org/sign-in/actions";
 import { Button } from "@/components/ui/Button";
 
@@ -15,6 +15,8 @@ const input =
  */
 export function CompanySignInForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState(companySignIn, { step: "email" } as SignInState);
+  const [method, setMethod] = useState<"password" | "code">("password");
+  const email = useRef<HTMLInputElement>(null);
 
   return (
     <form action={action} className="mt-6 flex flex-col gap-4" noValidate>
@@ -24,6 +26,7 @@ export function CompanySignInForm({ next }: { next?: string | null }) {
           <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">
             Work email
             <input
+              ref={email}
               key="email"
               name="email"
               type="email"
@@ -35,27 +38,55 @@ export function CompanySignInForm({ next }: { next?: string | null }) {
               className={input}
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">
-            Password
-            <input
-              key="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              maxLength={128}
-              className={input}
-            />
-          </label>
-          {/* First in the form, so Enter signs in with the password. */}
-          <Button type="submit" name="intent" value="password" disabled={pending} className="w-full">
-            {pending ? "Signing in..." : "Sign in"}
-          </Button>
-          <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-xs text-muted">
-            No password yet, or forgot it?
-            <button type="submit" name="intent" value="request" disabled={pending} className="font-semibold text-ink underline underline-offset-2 disabled:opacity-60">
-              Email me a code
-            </button>
-          </p>
+          {method === "password" ? (
+            <>
+              <label className="flex flex-col gap-1.5 text-sm font-bold text-ink">
+                Password
+                <input
+                  key="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  maxLength={128}
+                  className={input}
+                />
+              </label>
+              {/* First in the form, so Enter signs in with the password. */}
+              <Button type="submit" name="intent" value="password" disabled={pending} className="w-full">
+                {pending ? "Signing in..." : "Sign in"}
+              </Button>
+              <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-xs text-muted">
+                No password yet, or forgot it?
+                <button
+                  type="submit"
+                  name="intent"
+                  value="request"
+                  disabled={pending}
+                  onClick={(event) => {
+                    // With no address yet, switch the form to its code flow instead of
+                    // submitting a password-shaped form and showing "Enter your email".
+                    if (email.current?.value.trim()) return;
+                    event.preventDefault();
+                    setMethod("code");
+                    requestAnimationFrame(() => email.current?.focus());
+                  }}
+                  className="font-semibold text-ink underline underline-offset-2 disabled:opacity-60"
+                >
+                  Email me a code
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted">Enter your work email and we&apos;ll send a 6-digit sign-in code.</p>
+              <Button type="submit" name="intent" value="request" disabled={pending} className="w-full">
+                {pending ? "Sending..." : "Send sign-in code"}
+              </Button>
+              <button type="button" onClick={() => setMethod("password")} disabled={pending} className="self-center text-xs font-semibold text-muted underline underline-offset-2 disabled:opacity-60">
+                Use my password instead
+              </button>
+            </>
+          )}
         </>
       ) : (
         <>

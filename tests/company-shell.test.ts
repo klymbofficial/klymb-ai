@@ -69,6 +69,7 @@ describe("the sidebar's sections", () => {
     assert.match(sidebar, /aria-haspopup="menu"/, "the account opens a menu: Settings, Billing, Logout");
     for (const label of ["Settings", "Billing", "Logout"]) assert.match(sidebar, new RegExp(`>${label}<|${label}\\n`), label);
     assert.doesNotMatch(sidebar, /Add admin/, "adding people is on the Team page (user, 26 Nov)");
+    assert.doesNotMatch(sidebar, /on Klymb\.ai/);
   });
 });
 
@@ -130,6 +131,7 @@ describe("the hiring screens show only what exists", () => {
     assert.match(rounds, /<BatchButtons/);
     const controls = read("src/components/company/BatchControls.tsx");
     for (const fn of ["retryDelivery", "remindCandidates", "changeCandidate", "cancelInvitation", "cancelHiringBatch", "sendHiringBatch"]) assert.match(controls, new RegExp(`${fn}\\(`), fn);
+    assert.match(controls, /router\.refresh\(\)/, "a completed invitation action refreshes its buttons and notices");
   });
 
   test("no batch pages: an old batch address redirects to its test's round, looked up within the company", () => {

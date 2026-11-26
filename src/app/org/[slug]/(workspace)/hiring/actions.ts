@@ -24,7 +24,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isId = (v: unknown): v is string => typeof v === "string" && UUID.test(v);
 const UNAVAILABLE = { ok: false as const, message: "That didn't work just now. Try again in a minute." };
 const NOT_ALLOWED = { ok: false as const, message: "Only an admin or a recruiter in your company can do this. Try signing in again." };
-const GONE = { ok: false as const, message: "That batch is no longer here. Reload the page." };
+const GONE = { ok: false as const, message: "That invitation group is no longer here. Reload the page." };
 
 /** The signed-in admin or recruiter of this workspace, or null. The company comes from the login, never the form. */
 async function recruiterFor(slug: unknown): Promise<CompanyMember | null> {
@@ -110,7 +110,7 @@ export async function createHiringBatch(slug: string, form: Record<string, strin
 export async function sendHiringBatch(slug: string, batchId: string): Promise<ActionResult> {
   const c = await context(slug, batchId);
   if ("ok" in c) return c;
-  if (c.batch.status !== "draft") return { ok: false, message: "This batch has already been sent or cancelled." };
+  if (c.batch.status !== "draft") return { ok: false, message: "These invitations have already been sent or cancelled." };
   const stop = await settingsStop(c.sql, c.member.companyId, c.batch.item, c.batch.closesAt);
   if (stop) return stop;
   const passed = passedFor(c.batch, new Date());
@@ -120,9 +120,9 @@ export async function sendHiringBatch(slug: string, batchId: string): Promise<Ac
   if (!targets) return UNAVAILABLE;
   if (!targets.length) {
     if (waiting.length && late === waiting.length) {
-      return { ok: false, message: "Nothing was sent: the time to start has passed for everyone in this batch, so their links couldn't start the test. Discard this draft and make a new batch with a later closing time." };
+      return { ok: false, message: "Nothing was sent: the time to start has passed for everyone in this group, so their links couldn't start the test. Discard this draft and create new invitations with a later closing time." };
     }
-    return { ok: false, message: "Nothing was sent. The batch may have closed or been sent already: reload the page." };
+    return { ok: false, message: "Nothing was sent. These invitations may have closed or been sent already: reload the page." };
   }
   // Counted from the page's own read just before the claim; the claim itself is what decided.
   const left = Math.min(late, Math.max(0, waiting.length - targets.length));
@@ -206,8 +206,8 @@ export async function changeCandidate(slug: string, batchId: string, candidateId
 
   const target = await claimChange(c.sql, c.member.companyId, c.batch.id, candidateId, claim);
   if (target === null) return UNAVAILABLE;
-  if (target === "taken") return { ok: false, message: "That email is already in this batch." };
-  if (!target) return { ok: false, message: "That can't be changed now. They may be cancelled, an email to them may be on its way, their time to start may have passed, or the batch isn't sent. Reload the page." };
+  if (target === "taken") return { ok: false, message: "That email is already in this invitation group." };
+  if (!target) return { ok: false, message: "That can't be changed now. They may be cancelled, an email to them may be on its way, their time to start may have passed, or the invitations haven't been sent. Reload the page." };
 
   const kind = claim.kind === "extension" ? "extension" : "new_link";
   const report = await deliver(c.sql, c.batch, kind, [target], c.member.email);
@@ -240,7 +240,7 @@ export async function cancelHiringBatch(slug: string, batchId: string): Promise<
   if (!n) return { ok: false, message: "Already cancelled." };
   await logCompany(c.member, "company.batch_cancel", { batch_id: c.batch.id, was: c.batch.status });
   refresh();
-  return { ok: true, message: c.batch.status === "draft" ? "Draft discarded." : "Batch cancelled. No link in it can start the test." };
+  return { ok: true, message: c.batch.status === "draft" ? "Draft discarded." : "Invitations cancelled. Their links can no longer start the test." };
 }
 
 export type CopyLinkResult = { ok: true; url: string; message: string } | { ok: false; message: string };
@@ -256,7 +256,7 @@ export async function copyCandidateLink(slug: string, batchId: string, candidate
   const c = await context(slug, batchId);
   if ("ok" in c) return { ok: false, message: c.message };
   if (!isId(candidateId)) return GONE;
-  if (c.batch.status !== "sent") return { ok: false, message: "This round isn't sent yet, so there's no link to copy. Send it first." };
+  if (c.batch.status !== "sent") return { ok: false, message: "These invitations haven't been sent yet, so there's no link to copy. Send them first." };
   const person = c.candidates.find((x) => x.id === candidateId);
   if (!person || person.status !== "active") return { ok: false, message: "This person's invitation was cancelled, so their link doesn't start the test." };
   const submitted = await c.sql.scalar<boolean>`

@@ -32,7 +32,7 @@ export function BatchForm({
   prepCourses: PrepCourse[];
   timeZones: string[];
   /** `test` is a catalog slug to choose first (from "Invite candidates" on a test); ignored when it isn't one of `tests`. */
-  initial: { timeZone: string; opens: string; closes: string; test?: string };
+  initial: { timeZone: string; opens: string; closes: string; test?: string; reviewer?: string };
   /** The company's people and teams, for "Add from your company". */
   company?: { people: PickablePerson[]; teams: { id: string; name: string; members: number }[] };
 }) {
@@ -43,7 +43,7 @@ export function BatchForm({
   const [role, setRole] = useState(test?.role ?? "");
   const [roleTouched, setRoleTouched] = useState(false);
   const [prep, setPrep] = useState("");
-  const [reviewer, setReviewer] = useState(reviewers.length === 1 ? reviewers[0].email : "");
+  const [reviewer, setReviewer] = useState(reviewers.some((r) => r.email === initial.reviewer) ? initial.reviewer! : reviewers.length === 1 ? reviewers[0].email : "");
   const [timeZone, setTimeZone] = useState(initial.timeZone);
   const [opens, setOpens] = useState(initial.opens);
   const [closes, setCloses] = useState(initial.closes);
@@ -125,7 +125,7 @@ export function BatchForm({
           {err("test")}
         </label>
         <label className={label} htmlFor={`${id}-role`}>
-          {internal ? "Name of this assessment round" : <>Role you&apos;re hiring for</>}
+          {internal ? "Assessment label" : <>Role you&apos;re hiring for</>}
           <input id={`${id}-role`} className={input} value={role} maxLength={BATCH_LIMITS.role} onChange={(e) => { setRole(e.target.value); setRoleTouched(true); }} />
           {err("role")}
         </label>
@@ -145,7 +145,7 @@ export function BatchForm({
               <option value="">None</option>
               {prepCourses.map((c) => <option key={c} value={c}>{PREP_COURSES[c]}</option>)}
             </select>
-            <span className={hint}>Opens the course for each {internal ? "employee" : "candidate"} until the batch closes. They sign in with Google using the invited email.</span>
+            <span className={hint}>Opens the course for each {internal ? "employee" : "candidate"} until the invitation window closes. They sign in with Google using the invited email.</span>
             {err("prep")}
           </label>
         )}

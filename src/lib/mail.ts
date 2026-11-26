@@ -137,11 +137,10 @@ function headerMark(site: string, brand?: MailBrand) {
   return `${logo}<td style="vertical-align:middle;font-size:19px;font-weight:900;letter-spacing:-0.3px;color:#ffffff">${esc(brand.name)}</td>`;
 }
 
-/** The footer under the card: Klymb's links, or a short "sent by Klymb.ai" line for a company's email. */
+/** The footer under the card: Klymb's links, or the company name for a white-label company email. */
 function footer(site: string, brand?: MailBrand) {
   if (brand) {
-    return `<span style="color:#8a8785">Sent for ${esc(brand.name)} by</span> ${wordmark(site, C.ink)}<br>
-  <a href="${site}/contact" style="color:#8a8785">Contact</a>`;
+    return `<strong style="color:${C.ink}">${esc(brand.name)}</strong>`;
   }
   return `${wordmark(site, C.ink)}<br>
   <a href="${site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${site}/contact" style="color:#8a8785">Contact</a>`;
@@ -617,7 +616,7 @@ export function noteEmail(p: { subject: string; preview: string; eyebrow: string
 /**
  * "You've been added" for a company member, in the company's look: their
  * logo and name in the header, their color where it is readable, and their
- * name in the sender ("Acme via Klymb.ai"). The sending address stays Klymb's.
+ * name in the sender. The verified sending address stays unchanged.
  */
 export function companyInviteEmail(p: { email: string; name: string | null; role: "admin" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
   const site = esc(p.siteUrl);
@@ -632,8 +631,8 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
     ? `Questions? Write to ${p.company.supportEmail}${p.company.supportText ? ` (${p.company.supportText})` : ""}. For trouble with Klymb itself, write to ${p.supportEmail}.`
     : `Questions? Reply to this email or write to ${p.supportEmail}.`;
 
-  const subject = p.resend ? `Reminder: you've been added to ${company} on Klymb.ai` : `You've been added to ${company} on Klymb.ai`;
-  const intro = p.role === "admin" ? `You've been added as an admin for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`;
+  const subject = p.resend ? `Reminder: you've been added to ${company}` : `You've been added to ${company}`;
+  const intro = p.role === "admin" ? `You've been added as an admin for ${company}.` : `${company} has given you access to its workspace.`;
   const steps = [
     { title: "Open the sign-in page", body: `Go to ${signIn}.` },
     { title: "Use this email", body: `Enter ${p.email}. We'll email you a 6-digit code: no password needed.` },
@@ -644,12 +643,11 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
     "Getting started",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
     `Sign in: ${signIn}`, "",
-    help, "",
-    `Sent for ${company} by Klymb.ai`,
+    help, "", company,
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail, brand,
-    preview: p.role === "admin" ? `You're an admin for ${company} on Klymb.ai.` : `${company} has given you a place on Klymb.ai.`,
+    preview: p.role === "admin" ? `You're an admin for ${company}.` : `${company} has given you workspace access.`,
     eyebrow: p.resend ? "A reminder" : "You're invited",
     title: p.name ? `Welcome, ${esc(p.name)}.` : "Welcome aboard.",
     intro: esc(intro),
@@ -669,7 +667,7 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
  * A nudge from a company to someone it assigned a course to (Upskill, user
  * 26 Nov): where they are, what's next, the due date when there is one, and
  * one button back into the course. In the company's look, from "<Company> via
- * Klymb.ai", like the invite.
+ * the company name, like the invite.
  */
 export function upskillReminderEmail(p: {
   name: string | null; course: string; company: CompanyBrand; passed: number; total: number;
@@ -694,7 +692,7 @@ export function upskillReminderEmail(p: {
   const text = [
     p.name ? `Hi ${p.name},` : "Hi,", "", intro, "",
     ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
-    `Continue the course: ${p.courseUrl}`, "", help, "", `Sent for ${company} by Klymb.ai`,
+    `Continue the course: ${p.courseUrl}`, "", help, "", company,
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail, brand,
@@ -752,14 +750,14 @@ export function candidateInviteEmail(p: {
 
   const messages = p.internal
     ? {
-        invite: { subject: `${company} assigned you an assessment: ${p.title}`, eyebrow: "Assessment assigned", intro: `${company} assigned you an internal assessment on Klymb.ai: ${p.title}.` },
+        invite: { subject: `${company} assigned you an assessment: ${p.title}`, eyebrow: "Assessment assigned", intro: `${company} assigned you an internal assessment: ${p.title}.` },
         reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
         auto_reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
         new_link: { subject: `Your new link for ${company}'s assigned assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link for your assigned assessment. The earlier one no longer works.` },
         extension: { subject: `New time for your assigned assessment from ${company}`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
       }
     : {
-        invite: { subject: `${company} invites you to ${what}`, eyebrow: "You're invited", intro: `${company} invites you to take ${what} on Klymb.ai: ${p.title}.` },
+        invite: { subject: `${company} invites you to ${what}`, eyebrow: "You're invited", intro: `${company} invites you to take ${what}: ${p.title}.` },
         reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
         auto_reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
         new_link: { subject: `Your new link for ${company}'s ${p.role} assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link. The earlier one no longer works.` },
@@ -791,8 +789,7 @@ export function candidateInviteEmail(p: {
     `Open your assessment: ${p.link}`, "",
     ...(prepLine ? [prepLine, ""] : []),
     "This link is for you only. Please don't share it.", "",
-    help, "",
-    `Sent for ${company} by Klymb.ai`,
+    help, "", company,
   ].join("\n");
 
   const html = layout({

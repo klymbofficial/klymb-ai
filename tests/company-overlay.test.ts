@@ -7,6 +7,7 @@ import { describe, test } from "node:test";
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const overlay = read("src/components/company/Overlay.tsx");
 const sidebar = read("src/components/company/OrgSidebar.tsx");
+const library = read("src/components/library/LibraryPicker.tsx");
 
 describe("P0.2a overlays", () => {
   test("an overlay is a labelled modal dialog with a visible close X", () => {
@@ -63,5 +64,27 @@ describe("P0.2a sidebar", () => {
     assert.match(sidebar, /collapsed \? "w-16" : "w-60"/);
     assert.match(sidebar, /try \{ window\.localStorage\.setItem/);
     assert.match(sidebar, /<span className=\{narrow \? "sr-only" : undefined\}>\{item\.label\}<\/span>/);
+  });
+
+  test("the collapsed rail uses a fixed compact logo and carries no platform co-brand", () => {
+    assert.match(sidebar, /compact=\{narrow\}/);
+    assert.doesNotMatch(sidebar, /on Klymb\.ai/);
+  });
+});
+
+describe("library picker", () => {
+  test("switching libraries keeps a stable bottom-anchored panel", () => {
+    assert.match(library, /items-end justify-center/);
+    assert.match(library, /h-\[min\(52rem,100dvh\)\]/);
+    assert.match(library, /transition-\[height\]/);
+  });
+
+  test("a question title opens an accessible preview without selecting it", () => {
+    assert.match(library, /onClick=\{\(\) => setPreview\(x\)\}/);
+    assert.match(library, /aria-label=\{`Select \$\{x\.title\}`\}/);
+    assert.match(library, /<Overlay open=\{preview !== null\}/);
+    assert.match(library, /<QuestionPreview question=\{preview\}/);
+    assert.match(library, /if \(preview\) setPreview\(null\)/);
+    assert.match(library, /else onClose\(\)/);
   });
 });

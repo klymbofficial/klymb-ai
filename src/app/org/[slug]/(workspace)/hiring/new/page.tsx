@@ -51,7 +51,7 @@ export default async function NewBatchPage({ params, searchParams }: { params: P
   return (
     <>
       {title}
-      <BatchForm slug={member.companySlug} tests={options.tests} reviewers={options.reviewers} prepCourses={options.prepCourses} timeZones={timeZones()} initial={{ ...defaults(new Date()), test: typeof asked === "string" ? asked : undefined }}
+      <BatchForm slug={member.companySlug} tests={options.tests} reviewers={options.reviewers} prepCourses={options.prepCourses} timeZones={timeZones()} initial={{ ...defaults(new Date()), test: typeof asked === "string" ? asked : undefined, reviewer: member.email }}
         company={people ? {
           people: people.active.map((p) => ({ email: p.email, name: p.name, teamId: p.team_id })),
           teams: people.teams.map((t) => ({ id: t.id, name: t.name, members: t.members })),

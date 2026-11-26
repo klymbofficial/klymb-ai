@@ -16,8 +16,8 @@ const STATE_TONE: Record<BatchStateKey, Tone> = { open: "blue", later: "grey", d
 const summary = "cursor-pointer text-sm font-semibold text-[#1f4fd1]";
 
 /**
- * Each time someone pressed "Invite candidates" on this test: its window,
- * reviewer and counts, and the round's own actions — send or discard a
+ * Each invitation group on this test: its window, reviewer and counts, and
+ * its own actions — send or discard a
  * draft, retry failed invitations, remind, cancel — with the invitation as
  * the first person gets it and every email sent. A draft (or the round just
  * made) opens expanded. Recruiters act; everyone else reads.
@@ -33,11 +33,11 @@ export async function InvitationRounds({ sql, member, rounds, focus }: { sql: Db
     <details open={rounds.some((r) => r.batch.status === "draft") || (focus !== null && rounds.some((r) => r.batch.id === focus))} className={clsx(PANEL, "group mb-6")}>
       <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-2 px-5 py-3">
         <span className="text-base font-bold">
-          Invitation rounds ({rounds.length})
+          Invitations ({rounds.length})
           {draftCount > 0 && <span className="ml-2"><Badge tone="amber">{draftCount === 1 ? "1 draft to send" : `${draftCount} drafts to send`}</Badge></span>}
           {needs > 0 && <span className="ml-2"><Badge tone="red">{needs === 1 ? "1 failed invitation" : `${needs} failed invitations`}</Badge></span>}
         </span>
-        <span className="text-xs text-muted">Each &ldquo;Invite candidates&rdquo; makes one round with its own window. Open to send, retry, remind or cancel.</span>
+        <span className="text-xs text-muted">Open a group to send, retry, remind or cancel invitations.</span>
       </summary>
       <ol className="divide-y divide-line/20 border-t border-line/30">
         {rounds.map((r) => {
@@ -50,7 +50,7 @@ export async function InvitationRounds({ sql, member, rounds, focus }: { sql: Db
           const expanded = draft || focus === b.id;
           const nameOf = new Map(r.candidates.map((c) => [c.id, c.name]));
           return (
-            <li key={b.id} id={`round-${b.id}`} aria-label={`Round: ${b.role}`} className={clsx("px-5 py-4", focus === b.id && "bg-[#f6f8fe]")}>
+            <li key={b.id} id={`round-${b.id}`} aria-label={`Invitations: ${b.role}`} className={clsx("px-5 py-4", focus === b.id && "bg-[#f6f8fe]")}>
               <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2">
@@ -111,7 +111,7 @@ export async function InvitationRounds({ sql, member, rounds, focus }: { sql: Db
                   </div>
                 ) : (
                   <p className="mt-2 text-sm text-muted">
-                    {first ? "The preview can't be shown on this server (no AUTH_SECRET to sign links, or the company's details couldn't be read). Sending would fail the same way." : "Nobody in this round is still invited."}
+                    {first ? "The preview can't be shown on this server (no AUTH_SECRET to sign links, or the company's details couldn't be read). Sending would fail the same way." : "Nobody in this group is still invited."}
                   </p>
                 )}
               </details>

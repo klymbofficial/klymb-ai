@@ -2,14 +2,16 @@
 
 import clsx from "clsx";
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { readJobDescription } from "@/app/org/[slug]/(workspace)/assessments/jd-actions";
 import { createAutoTest, createOwnTest, publishOwnTest, type AutoResult } from "@/app/org/[slug]/(workspace)/assessments/test-actions";
 import { CandidatePreview } from "@/components/company/AssessmentParts";
 import { BTN_PRIMARY, BTN_SECONDARY } from "@/components/company/HiringParts";
 import { OrgIcon } from "@/components/company/OrgIcons";
 import { Overlay } from "@/components/company/Overlay";
 import { LIMITS, TEST_NAME_MAX, minutesLabel } from "@/lib/company/assessment-rules";
-import { AUTO_LIMITS, availability, plannedMix, type AssessmentRole, type PoolItem } from "@/lib/company/auto-test";
+import { AUTO_LIMITS, LEVELS, LEVEL_LABEL, availability, plannedMix, type AssessmentRole, type Level, type PoolItem } from "@/lib/company/auto-test";
+import { JD_LIMITS, type JdProposal } from "@/lib/company/jd-rules";
 
 const input = "w-full rounded-md border-2 border-line/50 bg-white px-3 py-2 text-sm focus:border-ink";
 const label = "flex flex-col gap-1 text-sm font-bold";
@@ -18,15 +20,23 @@ type Done = Extract<AutoResult, { ok: true }>;
 
 /**
  * Create assessment (P0.2b / P0.4): a modal over the Assessments list. Pick a
- * job role and Automatic (the default) or Manual. Automatic shows the role's
+ * job role and Automatic (the default), From a job description, or Manual.
+ * From a job description (user, 26 Nov) reads a pasted or uploaded
+ * description with AI and fills in the role, level and skills, which the
+ * recruiter checks and changes before creating. Automatic shows the role's
  * skills as chips, how many questions match, and the planned mix; Create
  * picks the questions on the server and shows a summary with Preview,
  * Publish and Add candidates, without leaving the list. Manual makes the
  * test and opens the editor. Closing with unsaved choices asks first.
  */
+
 export function CreateAssessment({ slug, roles, pool, startOpen = false }: { slug: string; roles: AssessmentRole[]; pool: PoolItem[]; startOpen?: boolean }) {
-  const [open, setOpen] = useState(startOpen);
+  const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
+  // Opened by a link (?create=1): the dialog's portal exists only in the browser, so the server renders it closed
+  // and it opens once mounted. Setting state here is the point: it must not happen during hydration.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { if (startOpen) setOpen(true); }, [startOpen]);
   return (
     <>
       <button type="button" className={BTN_PRIMARY} onClick={() => { setSession((n) => n + 1); setOpen(true); }}>
@@ -39,7 +49,11 @@ export function CreateAssessment({ slug, roles, pool, startOpen = false }: { slu
 
 function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; roles: AssessmentRole[]; pool: PoolItem[]; open: boolean; onClose: () => void }) {
   const [createKey] = useState(() => crypto.randomUUID());
-  const [mode, setMode] = useState<"auto" | "manual">("auto");
+  const [mode, setMode] = useState<"auto" | "jd" | "manual">("auto");
+  const [level, setLevel] = useState<Level>("mid");
+  const [jdText, setJdText] = useState("");
+  const [jdFile, setJdFile] = useState<File | null>(null);
+  const [proposal, setProposal] = useState<JdProposal | null>(null);
   const [audience, setAudience] = useState<"external" | "internal">("external");
   const [title, setTitle] = useState("");
   const [roleSlug, setRoleSlug] = useState(roles[0]?.slug ?? "");
@@ -56,10 +70,11 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
 
   const avail = useMemo(() => availability(pool, skills), [pool, skills]);
   const allTags = useMemo(() => [...new Set(pool.filter((q) => q.type === "mcq" && q.status === "published").flatMap((q) => q.tags))].sort((a, b) => a.localeCompare(b)), [pool]);
-  const mix = plannedMix(count);
+  const mix = plannedMix(count, level);
+  const picking = mode === "auto" || (mode === "jd" && !!proposal);
   const empty = skills.filter((s) => !avail.bySkill[s]);
   const short = avail.total < count;
-  const dirty = !done && (title.trim() !== "" || manualRole.trim() !== "" || audience !== "external");
+  const dirty = !done && (title.trim() !== "" || manualRole.trim() !== "" || audience !== "external" || jdText.trim() !== "" || !!jdFile);
 
   const pickRole = (slugValue: string) => {
     setRoleSlug(slugValue);
@@ -69,12 +84,32 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
   const createAuto = () => go(async () => {
     setError(null);
     try {
-      const out = await createAutoTest({ slug, title, role: roleSlug, skills, count, audience, createKey });
+      const out = await createAutoTest({ slug, title, role: roleSlug, skills, count, audience, createKey, level, fromJd: mode === "jd" });
       if (!out.ok) { setError(out.message); return; }
       setDone(out);
       setView("summary");
     } catch {
       setError("That didn't work just now. Try again in a minute; pressing again won't make a second test.");
+    }
+  });
+
+  const readJd = () => go(async () => {
+    setError(null);
+    const fd = new FormData();
+    fd.set("slug", slug);
+    fd.set("text", jdText);
+    if (jdFile) fd.set("file", jdFile);
+    try {
+      const out = await readJobDescription(fd);
+      if (!out.ok) { setError(out.message); return; }
+      const p = out.proposal;
+      setProposal(p);
+      if (!title.trim()) setTitle(p.title);
+      if (p.role && roles.some((r) => r.slug === p.role)) setRoleSlug(p.role);
+      setSkills(p.skills.map((x) => x.skill));
+      setLevel(p.level);
+    } catch {
+      setError("Reading that didn't work just now. Try again in a minute.");
     }
   });
 
@@ -98,7 +133,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
       open={open}
       onClose={onClose}
       title={title_}
-      description={done ? (view === "preview" ? "What invitees see. Right answers are never sent to them." : `${done.role} · ${published ? "published" : "draft"}`) : "Choose who this assessment is for, then a job role. Automatic picks multiple-choice questions for its skills; Manual opens the editor."}
+      description={done ? (view === "preview" ? "Candidate view" : `${done.role} · ${published ? "published" : "draft"}`) : undefined}
       size={view === "preview" ? "lg" : "md"}
       dirty={dirty}
       footer={
@@ -115,7 +150,11 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
         ) : (
           <div className="flex flex-wrap items-center justify-end gap-2">
             <button type="button" className={BTN_SECONDARY} onClick={onClose}>Cancel</button>
-            {mode === "auto" ? (
+            {mode === "jd" && !proposal ? (
+              <button type="button" className={BTN_PRIMARY} disabled={pending || (jdText.trim().length < JD_LIMITS.minText && !jdFile)} onClick={readJd}>
+                {pending ? "Reading…" : "Read job description"}
+              </button>
+            ) : picking ? (
               <button type="button" className={BTN_PRIMARY} disabled={pending || !title.trim() || !role || !skills.length || short || empty.length > 0} onClick={createAuto}>
                 {pending ? "Creating…" : `Create with ${count} questions`}
               </button>
@@ -155,18 +194,10 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-bold">Who is this assessment for?</legend>
             <div className="grid gap-2 sm:grid-cols-2">
-              {([[
-                "external",
-                "External candidates",
-                "For hiring. Recruiters can review candidates and record a hiring decision.",
-              ], [
-                "internal",
-                "Internal employees",
-                "For your workforce. Assigned employees see it in My assessments; no hiring decision is recorded.",
-              ]] as const).map(([value, heading, detail]) => (
-                <label key={value} className={clsx("flex cursor-pointer gap-2 rounded-md border-2 p-3 text-sm", audience === value ? "border-ink bg-white" : "border-line/40")}>
-                  <input type="radio" name="audience" value={value} checked={audience === value} onChange={() => setAudience(value)} className="mt-1" />
-                  <span><span className="font-bold">{heading}</span><span className="block text-muted">{detail}</span></span>
+              {([["external", "External candidates"], ["internal", "Internal employees"]] as const).map(([value, heading]) => (
+                <label key={value} className={clsx("flex cursor-pointer items-center gap-2 rounded-md border-2 p-3 text-sm", audience === value ? "border-ink bg-white" : "border-line/40")}>
+                  <input type="radio" name="audience" value={value} checked={audience === value} onChange={() => setAudience(value)} />
+                  <span className="font-bold">{heading}</span>
                 </label>
               ))}
             </div>
@@ -174,28 +205,67 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-bold">How to build it</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {([["auto", "Automatically", "Multiple-choice questions picked for the role. Scored automatically."], ["manual", "Manually", "A custom test: write or add questions of any type in the editor."]] as const).map(([v, t, d]) => (
-                <label key={v} className={clsx("flex cursor-pointer gap-2 rounded-md border-2 p-3 text-sm", mode === v ? "border-ink bg-white" : "border-line/40")}>
-                  <input type="radio" name="mode" value={v} checked={mode === v} onChange={() => setMode(v)} className="mt-1" />
-                  <span><span className="font-bold">{t}</span><span className="block text-muted">{d}</span></span>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {([["auto", "Automatically"], ["jd", "From a job description"], ["manual", "Manually"]] as const).map(([v, t]) => (
+                <label key={v} className={clsx("flex cursor-pointer items-center gap-2 rounded-md border-2 p-3 text-sm", mode === v ? "border-ink bg-white" : "border-line/40")}>
+                  <input type="radio" name="mode" value={v} checked={mode === v} onChange={() => setMode(v)} />
+                  <span className="font-bold">{t}</span>
                 </label>
               ))}
             </div>
           </fieldset>
 
-          {mode === "auto" ? (
+          {mode === "jd" && !proposal && (
+            <div className="flex flex-col gap-3">
+              <label className={label}>
+                Job description
+                <textarea value={jdText} onChange={(e) => setJdText(e.target.value)} maxLength={JD_LIMITS.text} rows={7} placeholder="Paste the job description here…" className={`${input} font-normal`} />
+              </label>
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <label className={clsx(BTN_SECONDARY, "cursor-pointer")}>
+                  <input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" className="sr-only"
+                    onChange={(e) => { const f = e.target.files?.[0] ?? null; setJdFile(f && f.size > JD_LIMITS.fileBytes ? null : f); setError(f && f.size > JD_LIMITS.fileBytes ? "That file is over 900 KB. Paste the text instead." : null); }} />
+                  {jdFile ? "Change file" : "Upload a file"}
+                </label>
+                {jdFile ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="font-semibold">{jdFile.name}</span>
+                    <button type="button" onClick={() => setJdFile(null)} className="text-muted underline underline-offset-2">Remove</button>
+                  </span>
+                ) : <span className="text-muted">PDF, Word (.docx) or .txt, up to 900 KB</span>}
+              </div>
+              <p className="text-xs text-muted">AI reads it and suggests the skills, level and role; you check everything before the test is made. Questions come only from the reviewed Library. The description is sent to OpenAI to read and isn&apos;t kept.</p>
+            </div>
+          )}
+
+          {mode === "jd" && proposal && (
+            <div className="rounded-md border border-line/30 bg-white p-3 text-sm">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="font-bold">Suggested from the job description</p>
+                <button type="button" onClick={() => setProposal(null)} className="text-sm font-semibold underline underline-offset-4">Read another</button>
+              </div>
+              {proposal.summary && <p className="mt-1 text-muted">{proposal.summary}{proposal.years ? ` · asks for ${proposal.years}+ years` : ""}</p>}
+              {proposal.missing.length > 0 && <p className="mt-2 text-[#6b3300]">Not in the Library yet: {proposal.missing.join(", ")}. Add your own questions for these in the editor if they matter.</p>}
+              <details className="mt-2">
+                <summary className="cursor-pointer font-semibold">Why these skills</summary>
+                <ul className="mt-2 flex flex-col gap-1">
+                  {proposal.skills.map((x) => <li key={x.skill}><strong>{x.skill}</strong>{x.evidence && <span className="text-muted">: “{x.evidence}”</span>}</li>)}
+                </ul>
+              </details>
+            </div>
+          )}
+
+          {picking ? (
             <>
               <label className={label}>
                 Job role
                 <select value={roleSlug} onChange={(e) => pickRole(e.target.value)} className={input}>
                   {roles.map((r) => <option key={r.slug} value={r.slug}>{r.label}</option>)}
                 </select>
-                {role?.summary && <span className="text-xs font-normal text-muted">{role.summary}</span>}
               </label>
 
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-bold">Skills <span className="font-normal text-muted">(questions come from these)</span></p>
+                <p className="text-sm font-bold">Skills</p>
                 <ul className="flex flex-wrap gap-2">
                   {skills.map((s) => (
                     <li key={s}>
@@ -217,6 +287,13 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
                 </div>
               </div>
 
+              <label className={label}>
+                Experience level
+                <select value={level} onChange={(e) => setLevel(e.target.value as Level)} className={`${input} max-w-72`}>
+                  {LEVELS.map((l) => <option key={l} value={l}>{LEVEL_LABEL[l]}</option>)}
+                </select>
+              </label>
+
               <div className="grid gap-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:items-end">
                 <label className={label}>
                   Questions
@@ -224,8 +301,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
                     onChange={(e) => setCount(Math.max(AUTO_LIMITS.min, Math.min(AUTO_LIMITS.max, Number(e.target.value) || AUTO_LIMITS.default)))} className={input} />
                 </label>
                 <div className="rounded-md border border-line/30 bg-white p-3 text-sm">
-                  <p><strong>{avail.total}</strong> matching questions · planned {mix.easy} easy, {mix.medium} medium, {mix.hard} hard</p>
-                  <p className="mt-0.5 text-xs text-muted">Available: {avail.byDifficulty.easy} easy · {avail.byDifficulty.medium} medium · {avail.byDifficulty.hard} hard. Time is worked out from the questions picked.</p>
+                  <p><strong>{avail.total}</strong> available · {mix.easy} easy · {mix.medium} medium · {mix.hard} hard</p>
                 </div>
               </div>
               {(short || empty.length > 0) && (
@@ -237,7 +313,7 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
               )}
               {!roles.length && <p role="alert" className="text-sm font-semibold text-error">No job roles are set up yet. Choose Manually, or ask Klymb.</p>}
             </>
-          ) : (
+          ) : mode === "jd" ? null : (
             <form id="create-manual" action={(fd) => go(async () => { setError(null); const out = await createOwnTest(null, fd); if (out && !out.ok) setError(out.message); })} className="flex flex-col gap-4">
               <input type="hidden" name="slug" value={slug} />
               <input type="hidden" name="title" value={title} />
@@ -246,7 +322,6 @@ function CreateDialog({ slug, roles, pool, open, onClose }: { slug: string; role
                 Role it tests <span className="font-normal text-muted">(optional)</span>
                 <input name="role" value={manualRole} onChange={(e) => setManualRole(e.target.value)} maxLength={LIMITS.role} placeholder="e.g. Backend engineer" className={input} />
               </label>
-              <p className="text-sm text-muted">The editor opens next: add questions of any type, from the Library or your own, with sections, points and time.</p>
             </form>
           )}
           {error && <p role="alert" className="text-sm font-semibold text-error">{error}</p>}

@@ -28,12 +28,12 @@ test("readableBrandColor refuses anything that isn't #rrggbb, so nothing odd rea
   }
 });
 
-test("inviteSenderName reads 'Acme via Klymb.ai' and can't break the From header", () => {
-  assert.equal(inviteSenderName("Acme"), "Acme via Klymb.ai");
-  assert.equal(inviteSenderName('  Acme   "Labs" <ceo@acme.com> '), "Acme Labs ceoacme.com via Klymb.ai");
-  assert.equal(inviteSenderName("Acme\r\nBcc: x"), "Acme Bcc: x via Klymb.ai");
+test("inviteSenderName is white-label and can't break the From header", () => {
+  assert.equal(inviteSenderName("Acme"), "Acme");
+  assert.equal(inviteSenderName('  Acme   "Labs" <ceo@acme.com> '), "Acme Labs ceoacme.com");
+  assert.equal(inviteSenderName("Acme\r\nBcc: x"), "Acme Bcc: x");
   assert.equal(inviteSenderName('"<>"'), "Klymb.ai", "nothing left falls back to Klymb.ai");
-  assert.ok(inviteSenderName("x".repeat(200)).length <= 60 + " via Klymb.ai".length);
+  assert.ok(inviteSenderName("x".repeat(200)).length <= 60);
 });
 
 test("resend limits: one per person per 10 minutes, 50 per HR per hour", () => {
@@ -58,6 +58,17 @@ test("mail: the company invite uses the checked color, the escaped logo and the 
   assert.match(fn, /fromName: inviteSenderName\(company\)/);
   assert.match(mail, /src="\$\{esc\(brand\.logoUrl\)\}"/);
   assert.match(mail, /alt="\$\{esc\(brand\.name\)\}"/);
+});
+
+test("mail: company-branded invitations do not add Klymb co-branding", () => {
+  const mail = read("src/lib/mail.ts");
+  const companyInvite = mail.slice(mail.indexOf("export function companyInviteEmail"), mail.indexOf("export function candidateInviteEmail"));
+  const companyAssessment = mail.slice(mail.indexOf("export function candidateInviteEmail"), mail.indexOf("const reminderFooter"));
+  for (const section of [companyInvite, companyAssessment]) {
+    assert.doesNotMatch(section, /on Klymb\.ai/);
+    assert.doesNotMatch(section, /via Klymb\.ai/);
+    assert.doesNotMatch(section, /Sent for .* by Klymb\.ai/);
+  }
 });
 
 test("mail: emails without a brand keep Klymb's header and footer", () => {

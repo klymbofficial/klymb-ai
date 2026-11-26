@@ -1,8 +1,9 @@
 "use client";
 
 import clsx from "clsx";
-import { startTransition, useActionState, useCallback, useEffect, useRef, useState } from "react";
-import { completeReview, type ReviewResult } from "@/app/org/[slug]/(workspace)/assessments/[item]/candidates/[candidate]/actions";
+import { startTransition, useActionState, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { completeReview, suggestReviewScores, type ReviewResult } from "@/app/org/[slug]/(workspace)/assessments/[item]/candidates/[candidate]/actions";
+import type { Suggestion } from "@/lib/company/ai-review-rules";
 import { BTN_PRIMARY } from "@/components/company/HiringParts";
 import { REVIEW_LIMITS, scoreText, type RubricItem } from "@/lib/company/review-rules";
 
@@ -13,9 +14,12 @@ import { REVIEW_LIMITS, scoreText, type RubricItem } from "@/lib/company/review-
  * means changing what's there. A test with questions (L3) lists each
  * multiple-choice question with its automatic mark preselected, and each
  * written question's areas under its heading. The server checks everything
- * again.
+ * again. When the company allows it (Settings › AI features), "Suggest scores
+ * with AI" proposes points for each written area with the candidate's own
+ * supporting lines and what's missing; the reviewer uses or ignores each one,
+ * and only their saved review counts.
  */
-export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, initial, autos }: {
+export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, initial, autos, ai = false }: {
   slug: string;
   batchId: string;
   candidateId: string;
@@ -25,6 +29,8 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
   initial: { points: (number | null)[]; notes: string[]; summary: string };
   /** Each entry's automatic mark (multiple choice), or null. A changed mark needs a reason. */
   autos?: (number | null)[];
+  /** The company allows AI suggestions and there are written answers to read. */
+  ai?: boolean;
 }) {
   const [state, action, pending] = useActionState<ReviewResult | null, FormData>(completeReview, null);
   const form = useRef<HTMLFormElement>(null);
@@ -41,6 +47,35 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
   const scored = points.filter((p) => p !== null).length;
   const errors = state && !state.ok ? state.errors ?? {} : {};
 
+  const [suggested, setSuggested] = useState<Map<number, Suggestion> | null>(null);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const [asking, ask] = useTransition();
+  const askAi = () => {
+    // Cleared at once: updates inside the transition only show when it ends.
+    setAiNote(null);
+    ask(async () => {
+    try {
+      const out = await suggestReviewScores(slug, batchId, candidateId);
+      if (!out.ok) { setAiNote(out.message); return; }
+      setSuggested(new Map(out.suggestions.map((x) => [x.index, x])));
+      setAiNote(`${out.suggestions.length} ${out.suggestions.length === 1 ? "suggestion" : "suggestions"} below. Check each one against the answer before you use it.`);
+    } catch {
+      setAiNote("Suggestions aren't available just now. Score as usual.");
+    }
+    });
+  };
+  /** Puts a suggested score into the form, as if the reviewer had picked it. */
+  const use = (i: number, n: number) => {
+    const f = form.current;
+    if (!f) return;
+    const radio = f.querySelector<HTMLInputElement>(`input[type=radio][name="points-${i}"][value="${n}"]`);
+    if (radio) radio.checked = true;
+    const box = f.querySelector<HTMLInputElement>(`input[type=number][name="points-${i}"]`);
+    if (box) box.value = String(n);
+    recount();
+  };
+  const useAll = () => suggested?.forEach((x) => use(x.index, x.points));
+
   return (
     // Submitted by hand, not through the form's action prop, so React doesn't clear the scores when the server says "check these".
     <form
@@ -55,6 +90,16 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
       <input type="hidden" name="batchId" value={batchId} />
       <input type="hidden" name="candidateId" value={candidateId} />
       <input type="hidden" name="baseRevision" value={baseRevision} />
+
+      {ai && (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-line/30 bg-white p-3 text-sm">
+          <button type="button" onClick={askAi} disabled={asking} className="inline-flex min-h-9 items-center gap-2 rounded-md border-2 border-ink bg-white px-3 font-bold hover:bg-ink hover:text-paper disabled:opacity-50">
+            {asking ? "Reading the answers…" : suggested ? "Suggest again" : "Suggest scores with AI"}
+          </button>
+          {suggested && suggested.size > 0 && <button type="button" onClick={useAll} className="font-semibold underline underline-offset-4">Use all suggestions</button>}
+          <span className="min-w-[12rem] flex-1 text-xs text-muted" role="status">{aiNote ?? "Proposes points for each written area with the lines that support them. You decide every score."}</span>
+        </div>
+      )}
 
       {rubric.map((c, i) => {
         const auto = autos?.[i] ?? null;
@@ -77,6 +122,7 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
               ) : (
                 <p className="clear-both whitespace-pre-line pt-1 text-xs leading-relaxed text-muted"><span className="font-bold text-ink">Guide: </span>{c.guide}</p>
               )}
+              {suggested?.get(i) && <AiHint s={suggested.get(i)!} onUse={() => use(i, suggested.get(i)!.points)} />}
               {c.points > 10 ? (
                 <input
                   type="number" name={`points-${i}`} min={0} max={c.points} step={1} inputMode="numeric"
@@ -124,5 +170,23 @@ export function ReviewForm({ slug, batchId, candidateId, rubric, baseRevision, i
       <p className="-mt-2 text-xs text-muted">A score doesn&apos;t shortlist or reject anyone; the recruiter decides.</p>
       {state && <p role={state.ok ? "status" : "alert"} className={clsx("text-sm", state.ok ? "font-semibold text-ink" : "font-semibold text-error")}>{state.message}</p>}
     </form>
+  );
+}
+
+/** One area's suggestion: the points, why, the candidate's own supporting lines and what's missing. */
+function AiHint({ s, onUse }: { s: Suggestion; onUse: () => void }) {
+  return (
+    <div className="mt-3 rounded-md border border-[#c9d6f2] bg-[#f3f6fd] p-3 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p><span className="font-bold text-ink">AI suggests {s.points} / {s.max}</span>{s.reasoning && <span className="text-muted"> · {s.reasoning}</span>}</p>
+        <button type="button" onClick={onUse} className="rounded border border-ink/40 bg-white px-2 py-1 font-bold hover:bg-ink hover:text-paper">Use {s.points}</button>
+      </div>
+      {s.evidence.length > 0 && (
+        <ul className="mt-2 flex flex-col gap-1">
+          {s.evidence.map((e) => <li key={e} className="border-l-2 border-[#7d97d6] pl-2 italic text-ink">“{e}”</li>)}
+        </ul>
+      )}
+      {s.missing.length > 0 && <p className="mt-2 text-muted"><span className="font-semibold text-ink">Missing: </span>{s.missing.join("; ")}</p>}
+    </div>
   );
 }

@@ -14,6 +14,9 @@ import { roundOfCandidate } from "@/lib/company/round-data";
 import { EVENT_LABEL, WARNING_KINDS, attemptProctoring } from "@/lib/company/proctor-data";
 import { DECISION_LABEL, autoMarks, byQuestion, reviewItems, scoreText, type HiringDecision } from "@/lib/company/review-rules";
 import { db } from "@/lib/db/client";
+import { aiConfigured } from "@/lib/ai/openai-json";
+import { suggestTargets } from "@/lib/company/ai-review-rules";
+import { aiReviewOn } from "@/lib/company/settings-data";
 import { DETAIL_FIELDS, DETAIL_KEYS, cutoffResult, integrityIndex } from "@/lib/company/test-settings";
 import { loadTestSettings } from "@/lib/company/test-settings-data";
 
@@ -69,6 +72,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   // A test with questions (L3): what a reviewer scores, and each entry's automatic mark from the frozen answers.
   const items = questions ? reviewItems(questions) : rubric;
   const autos = questions && s ? autoMarks(questions, s.answers) : null;
+  // AI suggestions (Settings › AI features): only when switched on, set up, and there's a written answer to read.
+  const aiReview = !!s && !!sql && aiConfigured() && (await aiReviewOn(sql, member.companyId))
+    && suggestTargets(items, questions, s, { title: b.title, brief: "" }).length > 0;
   const where = a ? attemptState(a, new Date()) : null;
   const [history, proctoring] = await Promise.all([
     a && s ? decisionHistory(sql!, member.companyId, a.id) : Promise.resolve({ decisions: [], shares: [] }),
@@ -221,6 +227,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 candidateId={c.id}
                 rubric={items}
                 autos={autos ?? undefined}
+                ai={aiReview}
                 baseRevision={latest?.revision ?? 0}
                 initial={{
                   // A revision starts from the latest review; a first review of multiple choice starts from the automatic marks.

@@ -56,6 +56,8 @@ export interface CompanySettings extends CompanyDetails {
   name: string;
   hide_candidate_names: boolean;
   eeo_survey: boolean;
+  /** 0101: reviewers may ask AI to suggest scores for written answers. False before the migration. */
+  ai_review_suggestions: boolean;
 }
 
 export async function loadCompanySettings(sql: Pick<Db, "row">, companyId: string): Promise<CompanySettings | null> {
@@ -63,7 +65,9 @@ export async function loadCompanySettings(sql: Pick<Db, "row">, companyId: strin
     select name, contact_phone, website, address, hide_candidate_names, eeo_survey from course.companies where id = ${companyId}::uuid
   `;
   if (error || !data) return null;
-  return { name: data.name, phone: data.contact_phone, website: data.website, address: data.address, hide_candidate_names: data.hide_candidate_names, eeo_survey: data.eeo_survey };
+  // On its own, so the page still loads before 0101: the switch then reads as off.
+  const ai = await sql.row<{ on: boolean }>`select ai_review_suggestions as on from course.companies where id = ${companyId}::uuid`;
+  return { name: data.name, phone: data.contact_phone, website: data.website, address: data.address, hide_candidate_names: data.hide_candidate_names, eeo_survey: data.eeo_survey, ai_review_suggestions: !ai.error && !!ai.data?.on };
 }
 
 export async function saveCompanyDetails(sql: Pick<Db, "run">, companyId: string, d: CompanyDetails): Promise<boolean> {
@@ -73,11 +77,13 @@ export async function saveCompanyDetails(sql: Pick<Db, "run">, companyId: string
   return !error && data === 1;
 }
 
-/** One of the two whitelisted switches; the column name never comes from the form (isCompanySwitch checks it first). */
+/** One of the whitelisted switches; the column name never comes from the form (isCompanySwitch checks it first). */
 export async function saveCompanySwitch(sql: Pick<Db, "run">, companyId: string, key: CompanySwitch, on: boolean): Promise<boolean> {
   const { data, error } = key === "hide_candidate_names"
     ? await sql.run`update course.companies set hide_candidate_names = ${on} where id = ${companyId}::uuid`
-    : await sql.run`update course.companies set eeo_survey = ${on} where id = ${companyId}::uuid`;
+    : key === "eeo_survey"
+      ? await sql.run`update course.companies set eeo_survey = ${on} where id = ${companyId}::uuid`
+      : await sql.run`update course.companies set ai_review_suggestions = ${on} where id = ${companyId}::uuid`;
   return !error && data === 1;
 }
 
@@ -132,4 +138,10 @@ export async function signOutOthers(sql: Pick<Db, "run">, email: string, keepSid
     on conflict (email) do update set signed_out_before = now(), keep_sid = excluded.keep_sid, updated_at = now()
   `;
   return !error;
+}
+
+/** Whether this company lets reviewers ask AI for suggested scores (0101). False when it can't be read, or before the migration. */
+export async function aiReviewOn(sql: Pick<Db, "row">, companyId: string): Promise<boolean> {
+  const { data, error } = await sql.row<{ on: boolean }>`select ai_review_suggestions as on from course.companies where id = ${companyId}::uuid`;
+  return !error && !!data?.on;
 }
