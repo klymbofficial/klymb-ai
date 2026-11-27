@@ -113,63 +113,45 @@ const wordmark = (site: string, color: string) =>
 const row = (k: string, v: string) =>
   `<tr><td style="padding:10px 0;color:${C.muted};font-size:14px;border-bottom:1px solid ${C.line}">${k}</td><td style="padding:10px 0;text-align:right;font-weight:700;font-size:14px;color:${C.ink};border-bottom:1px solid ${C.line}">${esc(v)}</td></tr>`;
 
-const step = (n: number, title: string, body: string, accent: string = C.maroon) =>
-  `<tr><td style="padding:0 14px 16px 0;vertical-align:top;width:30px"><div style="width:28px;height:28px;border-radius:14px;background:${accent};color:#fff;font-weight:800;font-size:13px;line-height:28px;text-align:center">${n}</div></td><td style="padding:0 0 16px;vertical-align:top"><div style="font-weight:700;font-size:15px;color:${C.ink}">${title}</div><div style="font-size:13px;line-height:1.55;color:${C.muted};margin-top:2px">${body}</div></td></tr>`;
+const step = (n: number, title: string, body: string) =>
+  `<tr><td style="padding:0 14px 16px 0;vertical-align:top;width:30px"><div style="width:28px;height:28px;border-radius:14px;background:${C.maroon};color:#fff;font-weight:800;font-size:13px;line-height:28px;text-align:center">${n}</div></td><td style="padding:0 0 16px;vertical-align:top"><div style="font-weight:700;font-size:15px;color:${C.ink}">${title}</div><div style="font-size:13px;line-height:1.55;color:${C.muted};margin-top:2px">${body}</div></td></tr>`;
 
-const button = (href: string, label: string, accent: string = C.maroon) =>
-  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="border-radius:999px;background:${accent}"><a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">${label} &rarr;</a></td></tr></table>`;
+const button = (href: string, label: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:26px 0 6px"><tr><td style="border-radius:999px;background:${C.maroon}"><a href="${href}" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none">${label} &rarr;</a></td></tr></table>`;
 
-const sectionTitle = (t: string, accent: string = C.maroon) =>
-  `<div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${accent};margin-bottom:14px">${t}</div>`;
+const sectionTitle = (t: string) =>
+  `<div style="font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${C.maroon};margin-bottom:14px">${t}</div>`;
 
-/** A company's look for emails sent on its behalf. `color` is already checked to be readable under white text. */
-interface MailBrand { name: string; logoUrl: string | null; color: string }
-
-/** The header's top row: Klymb's icon and wordmark, or the company's logo and name. */
-function headerMark(site: string, brand?: MailBrand) {
-  if (!brand) {
-    return `<td style="padding-right:12px;vertical-align:middle"><img src="${site}/email/klymb-icon.png" width="34" height="34" alt="" style="display:block;border:0;border-radius:9px"></td>
+/** The header's top row: Klymb's icon and wordmark. */
+function headerMark(site: string) {
+  return `<td style="padding-right:12px;vertical-align:middle"><img src="${site}/email/klymb-icon.png" width="34" height="34" alt="" style="display:block;border:0;border-radius:9px"></td>
     <td style="vertical-align:middle;font-size:19px">${wordmark(site, "#ffffff")}</td>`;
-  }
-  const logo = brand.logoUrl
-    ? `<td style="padding-right:12px;vertical-align:middle"><img src="${esc(brand.logoUrl)}" height="34" alt="${esc(brand.name)}" style="display:block;border:0;border-radius:6px;background:#ffffff;max-width:140px;height:34px"></td>`
-    : "";
-  return `${logo}<td style="vertical-align:middle;font-size:19px;font-weight:900;letter-spacing:-0.3px;color:#ffffff">${esc(brand.name)}</td>`;
 }
 
-/** The footer under the card: Klymb's links, or the company name for a white-label company email. */
-function footer(site: string, brand?: MailBrand) {
-  if (brand) {
-    return `<strong style="color:${C.ink}">${esc(brand.name)}</strong>`;
-  }
+/** The footer under the card: Klymb's links. */
+function footer(site: string) {
   return `${wordmark(site, C.ink)}<br>
   <a href="${site}/tracks" style="color:#8a8785">Career tracks</a> &nbsp;·&nbsp; ${HIDE_MONEY ? "" : `<a href="${site}/refund-policy" style="color:#8a8785">Refund policy</a> &nbsp;·&nbsp; `}<a href="${site}/contact" style="color:#8a8785">Contact</a>`;
 }
 
 /**
  * The shared frame: maroon header (logo, eyebrow, headline), white body
- * sections, linked footer. With a brand, the header and footer are the company's.
+ * sections, linked footer.
  */
-function layout(o: { site: string; preview: string; eyebrow: string; title: string; intro: string; sections: string[]; supportEmail: string; brand?: MailBrand }) {
+function layout(o: { site: string; preview: string; eyebrow: string; title: string; intro: string; sections: string[]; supportEmail: string }) {
   const body = o.sections.map((sec) => `<tr><td style="background:#ffffff;padding:24px 30px 8px">${sec}</td></tr>`).join("");
-  const headerBg = o.brand
-    ? `background:${o.brand.color}`
-    : `background:${C.maroon};background-image:linear-gradient(135deg,#a50d16,${C.maroon} 55%,#4a0206)`;
-  // On a company's color, translucent white reads on any hue; Klymb's pinks only suit maroon.
-  const eyebrowColor = o.brand ? "rgba(255,255,255,0.78)" : "#ffd0cd";
-  const introColor = o.brand ? "rgba(255,255,255,0.9)" : "#ffe4e2";
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"></head>
 <body style="margin:0;background:${C.paper};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(o.preview)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td style="${headerBg};border-radius:18px 18px 0 0;padding:26px 30px 30px">
+<tr><td style="background:${C.maroon};background-image:linear-gradient(135deg,#a50d16,${C.maroon} 55%,#4a0206);border-radius:18px 18px 0 0;padding:26px 30px 30px">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    ${headerMark(o.site, o.brand)}
+    ${headerMark(o.site)}
   </tr></table>
-  <div style="margin-top:26px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${eyebrowColor}">${o.eyebrow}</div>
+  <div style="margin-top:26px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#ffd0cd">${o.eyebrow}</div>
   <div style="margin-top:6px;font-size:30px;line-height:1.15;font-weight:900;color:#fff;letter-spacing:-0.5px">${o.title}</div>
-  <div style="margin-top:8px;font-size:15px;line-height:1.55;color:${introColor}">${o.intro}</div>
+  <div style="margin-top:8px;font-size:15px;line-height:1.55;color:#ffe4e2">${o.intro}</div>
 </td></tr>
 ${body}
 <tr><td style="background:#ffffff;border-radius:0 0 18px 18px;padding:6px 30px 28px">
@@ -178,8 +160,49 @@ ${body}
   </div>
 </td></tr>
 <tr><td align="center" style="padding:22px 10px 0;font-size:12px;line-height:1.7;color:#8a8785">
-  ${footer(o.site, o.brand)}
+  ${footer(o.site)}
 </td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+/** A company's look for emails sent on its behalf. `color` is already checked to be readable under white text. */
+interface MailBrand { name: string; logoUrl: string | null; color: string }
+
+// The company emails are plain business letters. Their blocks:
+const para = (html: string, size = 15, color: string = C.ink) =>
+  `<p style="margin:0 0 16px;font-size:${size}px;line-height:1.6;color:${color}">${html}</p>`;
+
+const details = (rows: [string, string][]) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px">${rows
+    .map(([k, v]) => `<tr><td style="padding:3px 18px 3px 0;vertical-align:top;white-space:nowrap;font-size:15px;line-height:1.5;color:${C.muted}">${esc(k)}</td><td style="padding:3px 0;vertical-align:top;font-size:15px;line-height:1.5;font-weight:600;color:${C.ink}">${esc(v)}</td></tr>`)
+    .join("")}</table>`;
+
+const action = (href: string, label: string, color: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px"><tr><td style="border-radius:6px;background:${color}"><a href="${href}" style="display:inline-block;padding:12px 22px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none">${label}</a></td></tr></table>`;
+
+const textLink = (href: string, label: string) => `<a href="${href}" style="color:${C.ink};font-weight:600">${label}</a>`;
+
+/**
+ * The frame of a company's email: its logo (its name when it has none), the
+ * letter, a sign-off and the help line. White, no banner, nothing of Klymb's
+ * look.
+ */
+function letter(o: { preview: string; brand: MailBrand; blocks: string[]; signOff: string[]; help: string }) {
+  const { brand } = o;
+  const mark = brand.logoUrl
+    ? `<img src="${esc(brand.logoUrl)}" height="40" alt="${esc(brand.name)}" style="display:block;border:0;height:40px;width:auto;font-size:18px;font-weight:700;color:${C.ink}">`
+    : `<div style="font-size:20px;font-weight:700;color:${C.ink}">${esc(brand.name)}</div>`;
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"></head>
+<body style="margin:0;background:#ffffff;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${C.ink}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(o.preview)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 16px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;text-align:left">
+<tr><td style="padding:0 0 18px;border-bottom:1px solid ${C.line}">${mark}</td></tr>
+<tr><td style="padding:24px 0 0">
+${o.blocks.join("\n")}
+${para(`Regards,<br>${o.signOff.map(esc).join("<br>")}`)}
+</td></tr>
+<tr><td style="padding:16px 0 0;border-top:1px solid ${C.line};font-size:13px;line-height:1.6;color:${C.muted}">${o.help}</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -636,7 +659,6 @@ export function noteEmail(p: { subject: string; preview: string; eyebrow: string
  * name in the sender. The verified sending address stays unchanged.
  */
 export function companyInviteEmail(p: { email: string; name: string | null; role: "admin" | "employee"; company: CompanyBrand; resend?: boolean; siteUrl: string; supportEmail: string }) {
-  const site = esc(p.siteUrl);
   const company = p.company.name;
   const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
   // Emails need an absolute address; a logo served by Klymb arrives as a path.
@@ -648,34 +670,35 @@ export function companyInviteEmail(p: { email: string; name: string | null; role
     ? `Questions? Write to ${p.company.supportEmail}${p.company.supportText ? ` (${p.company.supportText})` : ""}. For trouble with Klymb itself, write to ${p.supportEmail}.`
     : `Questions? Reply to this email or write to ${p.supportEmail}.`;
 
-  const subject = p.resend ? `Reminder: you've been added to ${company}` : `You've been added to ${company}`;
-  const intro = p.role === "admin" ? `You've been added as an admin for ${company}.` : `${company} has given you access to its workspace.`;
-  const steps = [
-    { title: "Open the sign-in page", body: `Go to ${signIn}.` },
-    { title: "Use this email", body: `Enter ${p.email}. We'll email you a 6-digit code: no password needed.` },
-  ];
+  const subject = p.resend ? `Reminder: your invitation to ${company}` : `Invitation to join ${company}`;
+  const intro = p.role === "admin"
+    ? `You have been added as an administrator of the ${company} workspace.`
+    : `${company} has given you access to its workspace.`;
+  const how = "Sign in with the email address below. We will email you a 6-digit code, so no password is needed.";
+  const greeting = p.name ? `Dear ${p.name},` : "Hello,";
   const text = [
-    p.name ? `Hi ${p.name},` : "Hi,", "",
+    greeting, "",
     intro, "",
-    "Getting started",
-    ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
+    how, "",
+    `Email: ${p.email}`,
     `Sign in: ${signIn}`, "",
-    help, "", company,
+    "Regards,", company, "",
+    help,
   ].join("\n");
-  const html = layout({
-    site, supportEmail: p.supportEmail, brand,
-    preview: p.role === "admin" ? `You're an admin for ${company}.` : `${company} has given you workspace access.`,
-    eyebrow: p.resend ? "A reminder" : "You're invited",
-    title: p.name ? `Welcome, ${esc(p.name)}.` : "Welcome aboard.",
-    intro: esc(intro),
-    sections: [
-      `${sectionTitle("Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
-      </table>${button(esc(signIn), "Sign in", accent)}`,
-      ...(p.company.supportEmail
-        ? [`<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">Questions about your workspace? Write to <a href="mailto:${esc(p.company.supportEmail)}" style="color:${C.ink};font-weight:600">${esc(p.company.supportEmail)}</a>${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.</div>`]
-        : []),
+  const html = letter({
+    brand, preview: intro,
+    blocks: [
+      para(esc(greeting)),
+      para(esc(intro)),
+      para(how),
+      details([["Email", p.email]]),
+      action(esc(signIn), "Sign in", accent),
+      para(`Or copy this address into your browser: ${textLink(esc(signIn), esc(signIn))}`, 13, C.muted),
     ],
+    signOff: [company],
+    help: p.company.supportEmail
+      ? `Questions about your workspace? Write to ${textLink(`mailto:${esc(p.company.supportEmail)}`, esc(p.company.supportEmail))}${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.`
+      : esc(help),
   });
   return { subject, html, text, fromName: inviteSenderName(company) };
 }
@@ -690,38 +713,40 @@ export function upskillReminderEmail(p: {
   name: string | null; course: string; company: CompanyBrand; passed: number; total: number;
   next: string | null; dueOn: string | null; courseUrl: string; siteUrl: string; supportEmail: string;
 }) {
-  const site = esc(p.siteUrl);
   const company = p.company.name;
   const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
   const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
   const brand: MailBrand = { name: company, logoUrl, color: accent };
   const started = p.passed > 0;
-  const subject = started ? `Keep going: ${p.course}` : `Your ${p.course} course is waiting`;
+  const subject = started ? `Reminder: continue ${p.course}` : `Reminder: start ${p.course}`;
   const intro = started
-    ? `${company} is cheering you on. You've finished ${p.passed} of ${p.total} lessons of ${p.course}.`
-    : `${company} has given you ${p.course}, and your first lesson is ready.`;
-  const steps = [
-    ...(p.next ? [{ title: started ? "Pick up where you left off" : "Start with lesson 1", body: p.next }] : []),
-    ...(p.dueOn ? [{ title: "Due", body: `Finish by ${p.dueOn}.` }] : []),
-    { title: "Sign in to your workspace", body: "Use the same email this message was sent to. The course is under Upskill." },
+    ? `This is a reminder to continue ${p.course}, assigned to you by ${company}. You have completed ${p.passed} of ${p.total} lessons.`
+    : `This is a reminder that ${company} has assigned you the course ${p.course}. Your first lesson is ready.`;
+  const rows: [string, string][] = [
+    ...(p.next ? [["Next lesson", p.next] as [string, string]] : []),
+    ...(p.dueOn ? [["Due date", p.dueOn] as [string, string]] : []),
   ];
+  const how = "Sign in with the email address this message was sent to. You will find the course under Upskill.";
+  const label = started ? "Continue the course" : "Start the course";
+  const greeting = p.name ? `Dear ${p.name},` : "Hello,";
   const help = p.company.supportEmail ? `Questions? Write to ${p.company.supportEmail}.` : `Questions? Reply to this email or write to ${p.supportEmail}.`;
   const text = [
-    p.name ? `Hi ${p.name},` : "Hi,", "", intro, "",
-    ...steps.map((s, i) => `${i + 1}. ${s.title}: ${s.body}`), "",
-    `Continue the course: ${p.courseUrl}`, "", help, "", company,
+    greeting, "", intro, "",
+    ...(rows.length ? [...rows.map(([k, v]) => `${k}: ${v}`), ""] : []),
+    how, "",
+    `${label}: ${p.courseUrl}`, "", "Regards,", company, "", help,
   ].join("\n");
-  const html = layout({
-    site, supportEmail: p.supportEmail, brand,
-    preview: intro,
-    eyebrow: "A friendly reminder",
-    title: p.name ? `Hi ${esc(p.name)}, keep going.` : "Keep going.",
-    intro: esc(intro),
-    sections: [
-      `${sectionTitle(started ? "Your next step" : "Getting started", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${steps.map((s, i) => step(i + 1, esc(s.title), esc(s.body), accent)).join("")}
-      </table>${button(esc(p.courseUrl), started ? "Continue the course" : "Start the course", accent)}`,
+  const html = letter({
+    brand, preview: intro,
+    blocks: [
+      para(esc(greeting)),
+      para(esc(intro)),
+      ...(rows.length ? [details(rows)] : []),
+      para(how),
+      action(esc(p.courseUrl), label, accent),
     ],
+    signOff: [company],
+    help: esc(help),
   });
   return { subject, html, text, fromName: inviteSenderName(company) };
 }
@@ -749,6 +774,8 @@ export function candidateInviteEmail(p: {
   opened: boolean;
   link: string;
   prep: { course: string; url: string; until: string } | null;
+  /** "Add the deadline to Google Calendar"; null once the deadline has passed. */
+  calendarUrl: string | null;
   siteUrl: string;
   supportEmail: string;
   /**
@@ -758,28 +785,35 @@ export function candidateInviteEmail(p: {
    */
   template?: { subject: string; body: string } | null;
 }) {
-  const site = esc(p.siteUrl);
   const company = p.company.name;
   const accent = readableBrandColor(p.company.brandColor) ?? C.maroon;
   const logoUrl = p.company.logoUrl?.startsWith("/") ? `${p.siteUrl}${p.company.logoUrl}` : p.company.logoUrl;
   const brand: MailBrand = { name: company, logoUrl, color: accent };
   const what = p.internal ? "your assigned assessment" : `the ${p.role} assessment`;
 
-  const messages = p.internal
-    ? {
-        invite: { subject: `${company} assigned you an assessment: ${p.title}`, eyebrow: "Assessment assigned", intro: `${company} assigned you an internal assessment: ${p.title}.` },
-        reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
-        auto_reminder: { subject: `Reminder: start your assigned assessment by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started your assigned assessment from ${company} yet. Start by ${p.lastStart} to get your full time.` },
-        new_link: { subject: `Your new link for ${company}'s assigned assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link for your assigned assessment. The earlier one no longer works.` },
-        extension: { subject: `New time for your assigned assessment from ${company}`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
-      }
-    : {
-        invite: { subject: `${company} invites you to ${what}`, eyebrow: "You're invited", intro: `${company} invites you to take ${what}: ${p.title}.` },
-        reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
-        auto_reminder: { subject: `Reminder: start ${what} by ${p.lastStart}`, eyebrow: "A reminder", intro: `You haven't started ${company}'s ${p.role} assessment yet. Start by ${p.lastStart} to get your full time.` },
-        new_link: { subject: `Your new link for ${company}'s ${p.role} assessment`, eyebrow: "A new link", intro: `${company} has sent you a new link. The earlier one no longer works.` },
-        extension: { subject: `New time for ${company}'s ${p.role} assessment`, eyebrow: "New time", intro: `${company} has changed your time for ${what}. Your link stays the same.` },
-      };
+  const named = p.internal ? p.title : p.role;
+  const messages = {
+    invite: {
+      subject: `${p.internal ? "Assigned assessment" : "Assessment invitation"}: ${named} | ${company}`,
+      intro: p.internal ? `${company} has assigned you an internal assessment: ${p.title}.` : `${company} invites you to complete the ${p.role} assessment: ${p.title}.`,
+    },
+    reminder: {
+      subject: `Reminder: start your assessment by ${p.lastStart}`,
+      intro: `This is a reminder that you have not yet started ${what} from ${company}. Please start by ${p.lastStart} to receive your full time.`,
+    },
+    auto_reminder: {
+      subject: `Reminder: start your assessment by ${p.lastStart}`,
+      intro: `This is a reminder that you have not yet started ${what} from ${company}. Please start by ${p.lastStart} to receive your full time.`,
+    },
+    new_link: {
+      subject: `New assessment link: ${named} | ${company}`,
+      intro: `${company} has sent you a new link for ${what}. Your earlier link no longer works.`,
+    },
+    extension: {
+      subject: `Updated assessment time: ${named} | ${company}`,
+      intro: `${company} has updated your time for ${what}. Your link remains the same.`,
+    },
+  };
   const message = messages[p.kind];
   const own = p.kind === "invite" && p.template ? p.template : null;
   if (own) {
@@ -787,11 +821,16 @@ export function candidateInviteEmail(p: {
     message.intro = own.body;
   }
 
-  const when = [
-    ...(p.opened ? [] : [{ title: "Opens", body: p.opens }]),
-    { title: "Start by", body: `${p.lastStart}. After that the link won't start the test.` },
-    { title: "Time allowed", body: `${p.allowed} once you start. The clock keeps running if you close the page.` },
+  const rows: [string, string][] = [
+    ...(p.opened ? [] : [["Opens", p.opens] as [string, string]]),
+    ["Start by", p.lastStart],
+    ["Time allowed", p.allowed],
   ];
+  const rules = "The link will not start the test after the start-by time. Once you start, the timer keeps running even if you close the page.";
+  const label = p.internal ? "Open assigned assessment" : "Open assessment";
+  const keepPrivate = "This link is unique to you. Please do not share it.";
+  const signOff = [`Talent Team, ${company}`];
+  const greeting = `Dear ${p.name},`;
   const help = p.company.supportEmail
     ? `Questions about the assessment? Write to ${p.company.supportEmail}${p.company.supportText ? ` (${p.company.supportText})` : ""}. For trouble with Klymb itself, write to ${p.supportEmail}.`
     : `Questions? Reply to this email or write to ${p.supportEmail}.`;
@@ -800,33 +839,36 @@ export function candidateInviteEmail(p: {
     : null;
 
   const text = [
-    `Hi ${p.name},`, "",
+    greeting, "",
     message.intro, "",
-    ...when.map((w) => `${w.title}: ${w.body}`), "",
-    `Open your assessment: ${p.link}`, "",
+    ...rows.map(([k, v]) => `${k}: ${v}`), "",
+    rules, "",
+    `${label}: ${p.link}`, "",
+    ...(p.calendarUrl ? [`Add the deadline to Google Calendar: ${p.calendarUrl}`, ""] : []),
     ...(prepLine ? [prepLine, ""] : []),
-    "This link is for you only. Please don't share it.", "",
-    help, "", company,
+    keepPrivate, "",
+    "Regards,", ...signOff, "",
+    help,
   ].join("\n");
 
-  const html = layout({
-    site, supportEmail: p.supportEmail, brand,
-    preview: message.intro,
-    eyebrow: message.eyebrow,
-    title: `Hi ${esc(p.name)}.`,
-    intro: own ? esc(message.intro).replace(/\n/g, "<br>") : esc(message.intro),
-    sections: [
-      `${sectionTitle("When", accent)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        ${when.map((w, i) => step(i + 1, esc(w.title), esc(w.body), accent)).join("")}
-      </table>${button(esc(p.link), p.internal ? "Open assigned assessment" : "Open your assessment", accent)}
-      <div style="font-size:13px;line-height:1.6;color:${C.muted};margin:0 0 16px">This link is for you only. Please don't share it.</div>`,
+  const html = letter({
+    brand, preview: message.intro,
+    blocks: [
+      para(esc(greeting)),
+      para(esc(message.intro).replace(/\n/g, "<br>")),
+      details(rows),
+      para(rules),
+      action(esc(p.link), label, accent),
+      ...(p.calendarUrl ? [para(textLink(esc(p.calendarUrl), "Add the deadline to Google Calendar"), 14)] : []),
       ...(p.prep
-        ? [`${sectionTitle("Prepare", accent)}<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">${esc(company)} has opened <strong>${esc(p.prep.course)}</strong> for you until ${esc(p.prep.until)}. Sign in with Google as <strong>${esc(p.email)}</strong> at <a href="${esc(p.prep.url)}" style="color:${C.ink};font-weight:600">${esc(p.prep.url)}</a>.</div>`]
+        ? [para(`To prepare, ${esc(company)} has opened <strong>${esc(p.prep.course)}</strong> for you until ${esc(p.prep.until)}. Sign in with Google as <strong>${esc(p.email)}</strong> at ${textLink(esc(p.prep.url), esc(p.prep.url))}.`)]
         : []),
-      ...(p.company.supportEmail
-        ? [`<div style="font-size:14px;line-height:1.6;color:${C.ink};margin:0 0 16px">Questions about the assessment? Write to <a href="mailto:${esc(p.company.supportEmail)}" style="color:${C.ink};font-weight:600">${esc(p.company.supportEmail)}</a>${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.</div>`]
-        : []),
+      para(keepPrivate, 13, C.muted),
     ],
+    signOff,
+    help: p.company.supportEmail
+      ? `Questions about the assessment? Write to ${textLink(`mailto:${esc(p.company.supportEmail)}`, esc(p.company.supportEmail))}${p.company.supportText ? ` (${esc(p.company.supportText)})` : ""}.`
+      : esc(help),
   });
   return { subject: message.subject, html, text, fromName: inviteSenderName(company), replyTo: p.company.supportEmail ?? undefined };
 }

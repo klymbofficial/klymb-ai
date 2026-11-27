@@ -73,7 +73,7 @@ test("mail: company-branded invitations do not add Klymb co-branding", () => {
 
 test("mail: emails without a brand keep Klymb's header and footer", () => {
   const mail = read("src/lib/mail.ts");
-  assert.match(mail, /if \(!brand\) \{\s+return `<td[^`]*klymb-icon\.png/);
+  assert.match(mail, /function headerMark\(site: string\) \{\s+return `<td[^`]*klymb-icon\.png/);
   assert.match(mail, /Career tracks/);
   for (const fn of ["thankYouEmail", "welcomeEmail", "inviteEmail", "signInCodeEmail", "noteEmail"]) {
     const body = mail.slice(mail.indexOf(`export function ${fn}(`), mail.indexOf("\n}\n", mail.indexOf(`export function ${fn}(`)));
