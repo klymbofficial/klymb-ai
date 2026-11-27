@@ -509,9 +509,10 @@ export function SupportBot() {
         className={clsx(
           "group pointer-events-auto fixed z-[60] grid size-16 cursor-grab place-items-center rounded-full bg-card shadow-[0_10px_30px_rgba(32,30,29,0.25)] ring-2 ring-white transition-transform duration-150 select-none hover:-translate-y-0.5 active:scale-95 active:cursor-grabbing",
           launcherHidden && "hidden",
-          // Home corner, until it is moved. The System Design app has a tab bar and mini player along the bottom.
+          // Home corner, until it is moved. The System Design app has a tab bar and mini player along the bottom;
+          // /counseling has a booking bar along the bottom on phones.
           !pos && "right-4 sm:right-6",
-          !pos && (pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : "bottom-5 sm:bottom-6"),
+          !pos && (pathname.startsWith("/learn/system-design") ? "bottom-36 lg:bottom-28" : pathname === "/counseling" ? "bottom-24 lg:bottom-6" : "bottom-5 sm:bottom-6"),
         )}
       >
         <Image src="/mascots/kamran-excited-v2.png" alt="" width={64} height={64} draggable={false} className="size-16 rounded-full object-cover" />
