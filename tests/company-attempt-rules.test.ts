@@ -123,7 +123,10 @@ describe("saving the answer (H07a)", () => {
 describe("submitting (H08)", () => {
   test("Submit asks first, saves what's typed, waits for uploads, and sends the revision the page shows", () => {
     const work = read("src/components/company/AttemptWork.tsx");
-    assert.match(work, /Submit now\? You can&apos;t change/);
+    // Submit sits in the top bar beside the timer and asks in a dialog first (user, 27 Nov).
+    assert.match(work, /<TestBar [^>]*onSubmit=\{\(\) => void ask\(\)\}/);
+    assert.match(work, /<SubmitDialog [^>]*onConfirm=\{\(\) => void submit\(\)\}/);
+    assert.match(read("src/components/company/TestBar.tsx"), /You can&apos;t change any answer after submitting/);
     assert.match(work, /control\.current\?\.flush\(\)[\s\S]*submitTest\(token, attemptId, saved\.revision\)/);
     assert.match(work, /disabled=\{pending \|\| files\.busy\}/);
   });

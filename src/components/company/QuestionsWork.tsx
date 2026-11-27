@@ -6,9 +6,9 @@ import { submitTest } from "@/app/assessment/[token]/actions";
 import { AnswerEditor, type AnswerControl } from "@/components/company/AnswerEditor";
 import { AttemptFiles, type ShownFile } from "@/components/company/AttemptFiles";
 import { McqAnswer } from "@/components/company/McqAnswer";
+import { SubmitDialog, TestBar, type TestBarParts } from "@/components/company/TestBar";
 import type { CandidateQuestion } from "@/lib/company/assessment-rules";
 
-const PRIMARY = "inline-flex min-h-11 items-center rounded-md border-2 border-red-strong bg-red-strong px-6 text-base font-bold text-white hover:border-red-press hover:bg-red-press disabled:opacity-50";
 const SECONDARY = "inline-flex min-h-11 items-center rounded-md border-2 border-ink bg-white px-5 text-sm font-bold hover:bg-ink hover:text-paper disabled:opacity-50";
 
 const WHY: Record<string, string> = {
@@ -35,11 +35,12 @@ export interface StartingAnswer {
  * left, under their section headings, with a mark on each answered one; the
  * current question on the right with its own answer box, choices or files,
  * each saving on its own; Previous and Next; and one Submit that saves
- * everything first and names any question left unanswered. On a phone the
- * list folds into a menu above the question.
+ * everything first and names any question left unanswered. Submit sits in
+ * the top bar beside the timer (user, 27 Nov) and asks in a dialog first.
+ * On a phone the list folds into a menu above the question.
  */
 export function QuestionsWork({
-  token, attemptId, questions, answers, files, deadline, serverNow, timeZone,
+  token, attemptId, questions, answers, files, deadline, serverNow, timeZone, bar,
 }: {
   token: string;
   attemptId: string;
@@ -49,6 +50,8 @@ export function QuestionsWork({
   deadline: string;
   serverNow: string;
   timeZone: string;
+  /** The top bar's name and timer, drawn on the server. */
+  bar: TestBarParts;
 }) {
   const [current, setCurrent] = useState(0);
   const [menu, setMenu] = useState(false);
@@ -160,6 +163,18 @@ export function QuestionsWork({
   );
 
   return (
+    <>
+    <TestBar parts={bar} over={over} disabled={pending || busy} onSubmit={() => void ask()} label={busy ? "Wait for the file…" : pending ? "Saving…" : "Submit test"} />
+    {problem && !asking && <p role="alert" className="-mt-2 rounded-md border border-error/40 bg-white px-4 py-2 text-sm font-semibold text-error">{problem}</p>}
+    {over && <p role="status" className="-mt-2 rounded-md border border-line/40 bg-white px-4 py-2 text-sm">Time is up. What you saved will be submitted automatically. <a href={`/assessment/${token}`} className="font-bold underline underline-offset-4">See your receipt</a></p>}
+    <SubmitDialog
+      open={asking && !over}
+      warning={missing.length ? `${missing.length === 1 ? "Question" : "Questions"} ${missing.join(", ")} ${missing.length === 1 ? "has" : "have"} no answer yet.` : null}
+      pending={pending}
+      blocked={busy}
+      onConfirm={() => void submit()}
+      onCancel={() => setAsking(false)}
+    />
     <div ref={top} className="grid scroll-mt-28 gap-6 lg:grid-cols-[17rem_minmax(0,1fr)]">
       <div className="lg:hidden">
         <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} className={SECONDARY}>
@@ -227,35 +242,8 @@ export function QuestionsWork({
           {current < questions.length - 1 && <button type="button" onClick={() => go(current + 1)} className={SECONDARY}>Next question</button>}
         </div>
 
-        <section aria-labelledby="submit-title" className="rounded-xl border border-line/30 bg-white p-6 shadow-card">
-          <h2 id="submit-title" className="display text-lg">Submit</h2>
-          {over ? (
-            <p className="mt-2 text-sm">Time is up. What you saved will be submitted automatically. <a href={`/assessment/${token}`} className="font-bold underline underline-offset-4">See your receipt</a></p>
-          ) : asking ? (
-            <div className="mt-3 border-l-4 border-ink bg-white px-4 py-3">
-              <p className="text-sm font-semibold">Submit now? You can&apos;t change any answer after.</p>
-              {missing.length > 0 && (
-                <p className="mt-1 text-sm text-error">
-                  {missing.length === 1 ? "Question " : "Questions "}
-                  {missing.join(", ")} {missing.length === 1 ? "has" : "have"} no answer yet.
-                </p>
-              )}
-              <div className="mt-3 flex flex-wrap gap-3">
-                <button type="button" onClick={() => void submit()} disabled={pending || busy} className={PRIMARY}>{pending ? "Submitting…" : "Yes, submit"}</button>
-                <button type="button" onClick={() => setAsking(false)} disabled={pending} className={SECONDARY}>Keep working</button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <p className="mt-2 text-sm text-muted">{done} of {questions.length} questions answered. Every answer saves as you go; submit when you&apos;re finished.</p>
-              <button type="button" onClick={() => void ask()} disabled={pending || busy} className={`mt-4 ${PRIMARY}`}>
-                {busy ? "Wait for the file…" : pending ? "Saving…" : "Submit test"}
-              </button>
-            </>
-          )}
-          {problem && <p role="alert" className="mt-3 text-sm font-semibold text-error">{problem}</p>}
-        </section>
       </div>
     </div>
+    </>
   );
 }
