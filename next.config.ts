@@ -74,6 +74,9 @@ const csp = [
   .filter(Boolean)
   .join("; ");
 
+/** The site's Permissions-Policy, with the camera set as given: closed, or this origin only. */
+const PERMISSIONS = (camera: string) => `camera=${camera}, microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()`;
+
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -91,9 +94,19 @@ const securityHeaders = [
      * 'none' and the script-src above — nothing third-party runs here.
      */
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()",
+    value: PERMISSIONS("()"),
   },
 ];
+
+/**
+ * The camera is off everywhere except a candidate's test (/assessment/…),
+ * where a company may require webcam snapshots (0095). With camera=() on
+ * those pages the browser refused the camera without even asking, and the
+ * test showed "Camera blocked". Next sends one header per key, the last rule
+ * that matches winning, so this replaces the global value on those pages
+ * rather than adding a second header (which browsers would intersect).
+ */
+const testPageHeaders = [{ key: "Permissions-Policy", value: PERMISSIONS("(self)") }];
 
 const nextConfig: NextConfig = {
   // The System Design bonus PDF is kept out of public/ and read by its route only.
@@ -111,6 +124,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // After the global rule, so it wins: the test window may ask for the camera.
+      { source: "/assessment/:path*", headers: testPageHeaders },
       // The service worker must always be re-checked, or an old one outlives a deploy.
       { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }] },
       // Font file names carry their version (src/app/fonts.css), so they never change in place.
