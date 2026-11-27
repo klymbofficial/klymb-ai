@@ -29,6 +29,7 @@ import { WeeklyQuiz } from "@/components/learner/WeeklyQuiz";
 import { bestQuizScores, publicQuiz } from "@/lib/challenge-quiz";
 import { requireLearner, type Submission } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
+import { opensLater } from "@/lib/release";
 import { DayLocked, DayPaywall } from "@/components/learner/DayPaywall";
 import deskImage from "@/assets/day-desk.png";
 
@@ -85,6 +86,8 @@ export default async function LearnDayPage({
   // Each track's own 30 days; a track without a built course waits on the dashboard.
   const curriculum = getCurriculum(viewer.track);
   if (!getTrack(viewer.track)?.contentLive || !curriculum) redirect("/learn");
+  // Not out yet: the track page says when. An admin preview still opens.
+  if (!preview && opensLater(viewer.track)) redirect(base);
   const { days: courseDays, modules: courseModules } = curriculum;
   const session = await auth();
   const coach = topicsFor(viewer.track).length > 0 ? `${base}/coach` : undefined;

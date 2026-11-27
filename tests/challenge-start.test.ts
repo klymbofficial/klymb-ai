@@ -43,8 +43,8 @@ test("startChallenge starts only open challenges, never trusts the browser for t
   assert.match(src, /isOneClickStart\(found\)/, "the track is checked against the one-click rule");
   assert.doesNotMatch(src, /formData|input\.email|email:\s*track/, "nothing the browser sends names the address");
   assert.doesNotMatch(src, /course\.registrations|insert into/i, "no registrations row, no raw write");
-  // The destination is built from the track's own slug, not from anything passed in.
-  assert.match(src, /href: `\/learn\/tracks\/\$\{found\.slug\}\/day\/1`/);
+  // Where Google returns to is built from the track's own slug, not from anything passed in.
+  assert.match(src, /redirectTo: `\/challenges\/\$\{found\.slug\}`/);
 });
 
 test("only the call that made the place sends the welcome", () => {
@@ -52,17 +52,20 @@ test("only the call that made the place sends the welcome", () => {
   assert.match(src, /if \(outcome === "created"\) after\(\(\) => sendWelcome\(/);
 });
 
-test("the register page never enrols while it renders: that is a POST from the start screen", () => {
+test("neither page enrols while it renders: that takes a press", () => {
   const page = read("../src/app/(register)/register/page.tsx");
   assert.doesNotMatch(page, /startChallenge|enrolLearner|ensureLearner|start-challenge/, "a GET (or a prefetch) must not enrol anyone");
-  const start = read("../src/components/home/StartChallenge.tsx");
-  assert.match(start, /"use client"/);
-  assert.match(start, /useEffect\(/, "it starts from the browser, on arrival");
+  assert.match(page, /redirect\(`\/challenges\/\$\{defaultTrack\}`\)/, "old challenge links go to the challenge page");
+  const button = read("../src/components/challenge/ChallengeEnroll.tsx");
+  assert.match(button, /"use client"/);
+  // After Google, only a press this tab remembers finishes the enrolment: nothing in the address can.
+  assert.match(button, /const pressed = takePress\(slug\);/);
+  assert.match(button, /if \(pressed\) return run\(false\);/);
 });
 
-test("a challenge's sign-in screen carries the privacy line, and the career-track form keeps its agreement box", () => {
-  const signIn = read("../src/components/home/RegisterSignIn.tsx");
-  assert.match(signIn, /oneClick && <ChallengeConsent/);
+test("the challenge button carries the privacy line, and the career-track form keeps its agreement box", () => {
+  const button = read("../src/components/challenge/ChallengeEnroll.tsx");
+  assert.match(button, /<ChallengeConsent/);
   const consent = read("../src/components/home/ChallengeConsent.tsx");
   assert.match(consent, /Privacy Policy/);
   const form = read("../src/components/home/RegistrationForm.tsx");

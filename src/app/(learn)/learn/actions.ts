@@ -9,6 +9,7 @@ import { broadcastTakeover } from "@/lib/learner/device-channel";
 import { checkGithubUrl, checkLinkedinPostUrl, LINKEDIN_POST_DAYS, normaliseGithubUsername, normaliseLinkedinSlug } from "@/lib/learner/evidence";
 import { getLearnerState } from "@/lib/learner/data";
 import { dayLock } from "@/lib/access";
+import { opensLater, releaseDay } from "@/lib/release";
 import { getTrack } from "@/data/tracks";
 import { getCurriculumDay } from "@/data/curricula";
 import { todayIn } from "@/lib/learn";
@@ -54,6 +55,8 @@ export async function submitDay(day: number, formData: FormData): Promise<Submit
   const state = await getLearnerState(typeof trackField === "string" && trackField ? trackField : undefined);
   if (state.state !== "enrolled") return { ok: false, message: "You are not enrolled on this track." };
   if (!getCurriculumDay(state.learner.track, day)) return { ok: false, message: "That is not a valid day." };
+  const opens = opensLater(state.learner.track);
+  if (opens) return { ok: false, message: `Day 1 opens on ${releaseDay(opens)}.` };
   const isChallenge = getTrack(state.learner.track)?.kind === "challenge";
   // Same rules as the page, enforced here too: days in order, Days 2+ paid.
   const lock = await dayLock({
@@ -242,6 +245,8 @@ export async function submitQuiz(track: string, week: number, answers: number[])
   }
   const state = await getLearnerState(track);
   if (state.state !== "enrolled" || getTrack(state.learner.track)?.kind !== "challenge") return { ok: false, message: "You are not on this challenge." };
+  const opens = opensLater(state.learner.track);
+  if (opens) return { ok: false, message: `The challenge opens on ${releaseDay(opens)}.` };
   const limit = await checkRateLimit("challenge_quiz", { limit: 30, windowMinutes: 60, identity: state.learner.id });
   if (!limit.allowed) return { ok: false, message: "That is a lot of tries in an hour. Have a break and come back." };
   const result = await gradeQuiz(state.learner.id, state.learner.track, week, answers);

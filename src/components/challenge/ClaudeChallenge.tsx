@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { JourneyDock } from "@/components/landing/JourneyDock";
 import { reduceMotion } from "@/components/landing/motion";
 import type { CardDetails } from "@/data/course-cards";
 import "@/components/landing/landing.css";
 import "./claude-challenge.css";
+import { EnrollControl, useChallengeEnrollment } from "./ChallengeEnroll";
 import { SKILLS } from "./claude-chats";
 import { Conversation } from "./Conversation";
 
@@ -66,12 +66,13 @@ const Arrow = () => (
  * a drag-to-compare hero (it sweeps once on its own), the five skills as real
  * before-and-after conversations (claude-chats.ts), the 60 squares filling in, and the start banner.
  *
- * `weeks` are the nine week names of the challenge's curriculum; `start` is
- * the registration link; `facts` is what its card in /courses shows. As on the
- * homepage, "Start the challenge, free" docks at the bottom once the hero's
+ * `weeks` are the nine week names of the challenge's curriculum; `facts` is
+ * what its card in /courses shows. People enrol right here (ChallengeEnroll). As on the
+ * homepage, "Enroll now" docks at the bottom once the hero's
  * own button has scrolled away, and steps aside for the start banner.
  */
-export function ClaudeChallenge({ weeks, start, facts }: { weeks: string[]; start: string; facts: CardDetails | null }) {
+export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** "5 December" while the challenge has not opened. */ opens: string | null; facts: CardDetails | null }) {
+  const enrollment = useChallengeEnrollment("claude");
   const [skill, setSkill] = useState(0);
   const [day, setDay] = useState(0);
 
@@ -173,7 +174,7 @@ export function ClaudeChallenge({ weeks, start, facts }: { weeks: string[]; star
               <h1 id="kc-title" className="kc-h1">Same you.<br /><span className="kc-em">60 days</span> apart.</h1>
             </div>
             <div className="kc-hero-aside">
-              <Link href={start} className="kc-cta kc-cta--red">Start the challenge, free <Arrow /></Link>
+              <EnrollControl enrollment={enrollment} opens={opens} className="kc-cta kc-cta--red">Enroll now <Arrow /></EnrollControl>
               {facts && <Facts d={facts} />}
             </div>
           </div>
@@ -271,11 +272,20 @@ export function ClaudeChallenge({ weeks, start, facts }: { weeks: string[]; star
           <ol className="kc-steps">
             {STEPS.map((s) => <li key={s.n}><span>{s.n}</span><span>{s.t}</span></li>)}
           </ol>
-          <h2 id="kc-start" className="kc-h2">Day 1 is today.</h2>
-          <Link href={start} className="kc-cta kc-cta--light">Start the challenge, free <Arrow /></Link>
+          <h2 id="kc-start" className="kc-h2">{opens ? `Day 1 is ${opens}.` : "Day 1 is today."}</h2>
+          <EnrollControl enrollment={enrollment} opens={opens} className="kc-cta kc-cta--light">Enroll now <Arrow /></EnrollControl>
         </section>
       </div>
-      <JourneyDock href={start} label="Start the challenge, free" short="Start free" steps={DOCK_STEPS} />
+      {/* The docked button goes to the start banner first, so what happens next is on screen. */}
+      {enrollment.phase !== "enrolled" && (
+        <JourneyDock
+          onPress={() => {
+            document.getElementById("start")?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+            if (enrollment.phase === "idle") enrollment.enroll();
+          }}
+          label="Enroll now" short="Enroll" steps={DOCK_STEPS}
+        />
+      )}
     </div>
   );
 }

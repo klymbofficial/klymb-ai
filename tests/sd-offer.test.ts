@@ -144,3 +144,8 @@ test("the way out of an app's browser: Chrome on Android, Safari on iPhone, and 
   assert.equal(externalBrowserUrl("javascript:alert(1)", "Android"), null);
   assert.equal(externalBrowserUrl("not a link", "Android"), null);
 });
+
+test("a failed sign-in from a challenge page comes back to it", () => {
+  assert.equal(signInFailedPath("https://www.klymb.ai/challenges/claude"), "/challenges/claude?signin=failed");
+  assert.equal(signInFailedPath("/challenges/claude/../../admin"), null);
+});

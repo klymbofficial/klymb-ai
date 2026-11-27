@@ -1,7 +1,7 @@
 "use server";
 
 import { after } from "next/server";
-import { auth, verifiedEmailFrom } from "@/auth";
+import { auth, signIn, verifiedEmailFrom } from "@/auth";
 import { getTrack, isOneClickStart } from "@/data/tracks";
 import { isListed } from "@/data/course-cards";
 import { db } from "@/lib/db/client";
@@ -10,15 +10,15 @@ import { viewerTimeZone } from "@/lib/viewer-tz";
 import { saveLearnerTimeZone } from "@/lib/learner/zone";
 import { enrolLearner } from "@/lib/learner/enrolment";
 import { enrolmentClient } from "@/lib/learner/enrolment-db";
+import { getLearnerState } from "@/lib/learner/data";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { startDateFor } from "@/lib/release";
 import { clamp, LIMITS } from "@/lib/validation";
 import { sendWelcome } from "@/lib/welcome";
 
 export type StartResult =
   | {
       ok: true;
-      /** Where to go: Day 1 of the challenge. Built here from the track's own slug, never from the browser. */
-      href: string;
       /** This call made the place; false when they were already on the challenge. */
       created: boolean;
     }
@@ -73,8 +73,8 @@ export async function startChallenge(track: string): Promise<StartResult> {
     email,
     name,
     track: found.slug,
-    // Rolling enrolment: Day 1 is the day they start, not a shared date.
-    cohortStart: todayIn(zone),
+    // Rolling enrolment: Day 1 is the day they start, or the release day if that is later.
+    cohortStart: startDateFor(found.slug, todayIn(zone)),
   });
   if (outcome === "created") await saveLearnerTimeZone(sql, email, found.slug, zone);
   if (outcome === "failed") {
@@ -84,5 +84,25 @@ export async function startChallenge(track: string): Promise<StartResult> {
   // Welcomed once, after the response so the page never waits on email: only the call that made the place sends it.
   if (outcome === "created") after(() => sendWelcome({ email, name, track: found.slug }));
 
-  return { ok: true, created: outcome === "created", href: `/learn/tracks/${found.slug}/day/1` };
+  return { ok: true, created: outcome === "created" };
+}
+
+/** The challenge this name stands for, when it takes enrolments here. */
+const openChallenge = (track: string) => {
+  const found = typeof track === "string" ? getTrack(track) : undefined;
+  return found && isOneClickStart(found) && isListed(found.slug) ? found : null;
+};
+
+/** Whether the signed-in visitor is already on this challenge, for its page to say so. Reads only their own place. */
+export async function challengeStatus(track: string): Promise<"enrolled" | "other-device" | "none"> {
+  const found = openChallenge(track);
+  if (!found) return "none";
+  const { state } = await getLearnerState(found.slug);
+  return state === "enrolled" || state === "other-device" ? state : "none";
+}
+
+/** Google, and straight back to the challenge's own page: the path is built from the track's slug alone. */
+export async function signInToEnroll(track: string) {
+  const found = openChallenge(track);
+  if (found) await signIn("google", { redirectTo: `/challenges/${found.slug}` });
 }

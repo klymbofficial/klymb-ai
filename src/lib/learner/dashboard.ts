@@ -3,6 +3,7 @@ import { MODULES } from "@/data/system-design/course-app";
 import { COURSES } from "@/data/courses/registry";
 import type { MyCourse } from "@/data/course-cards";
 import { getCurriculum } from "@/data/curricula";
+import { opensLater, releaseDay } from "@/lib/release";
 import { getTrack } from "@/data/tracks";
 import { trackMilestones, SD_BADGES, type CourseBadge, type MedalIcon } from "@/lib/achievements";
 import { hasCourseAccess, lessonPasses } from "@/lib/access";
@@ -124,6 +125,8 @@ function trackCourse(learner: Learner, submissions: Submission[]): DashCourse {
     lastActive: latest(submissions.map((s) => s.submitted_at)), ready: false, due: false, complete: false,
   };
   if (!curriculum) return { ...base, note: "Day 1 opens soon.", action: { label: challenge ? "Open challenge" : "Open track", href: home } };
+  const opens = opensLater(learner.track);
+  if (opens) return { ...base, note: `Day 1 opens ${releaseDay(opens)}.`, action: { label: "Open challenge", href: home } };
   const next = nextDayFor(days, total);
   if (!next) return { ...base, complete: true, action: { label: challenge ? "Review the challenge" : "Review the track", href: home } };
   return {
@@ -241,7 +244,7 @@ export interface Dashboard {
 
 /** A challenge's weekly quiz: the latest week whose days are all submitted, or week 1 before that. */
 async function weeklyQuiz(places: { learner: Learner; submissions: Submission[] }[]): Promise<WeeklyQuizStatus | null> {
-  const challenges = places.filter((p) => getTrack(p.learner.track)?.kind === "challenge");
+  const challenges = places.filter((p) => getTrack(p.learner.track)?.kind === "challenge" && !opensLater(p.learner.track));
   if (!challenges.length) return null;
   // The challenge furthest along carries the quiz worth showing.
   const { learner, submissions } = challenges.sort((a, b) => b.submissions.length - a.submissions.length)[0];

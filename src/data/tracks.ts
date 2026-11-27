@@ -406,9 +406,10 @@ export const allTracks: Track[] = [
   // ── 60-day challenges ─────────────────────────────────────
   // The career-track fields that only the /tracks pages read (weeks,
   // checkpoints, interview questions) are left empty.
-  challenge("claude", "Claude Challenge", "Master Claude AI in 60 days: one scoped task a day, shipped in public.",
+  // Enrolling now; the 60 days open on 5 December.
+  { ...challenge("claude", "Claude Challenge", "Master Claude AI in 60 days: one scoped task a day, shipped in public.",
     ["Prompting", "Context engineering", "Artifacts", "Claude API", "Agents"],
-    ["Write prompts that work reliably", "Build apps and agents with Claude", "Ship a public build every day"]),
+    ["Write prompts that work reliably", "Build apps and agents with Claude", "Ship a public build every day"]), opensOn: "2026-12-05" },
   challenge("artificial-intelligence", "Artificial Intelligence", "Build with models, agents and data, one task a day for 60 days.",
     ["Python", "LLMs", "RAG", "Agents", "Evaluation"],
     ["Build and ship LLM-powered features end to end", "Design retrieval and agent workflows", "Evaluate and improve model quality"]),

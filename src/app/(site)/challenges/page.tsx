@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { opensLater, releaseDay } from "@/lib/release";
 import { listed } from "@/data/course-cards";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
   description: "One scoped task a day for 60 days, built in public on GitHub and LinkedIn, with a quiz every week.",
 };
 
+// Rebuilt every five minutes, so the "starts" wording goes away by itself on the release day.
+export const revalidate = 300;
+
 /** The four 60-day challenges, side by side. */
 export default function ChallengesPage() {
   // On the live site no challenge is listed yet, so the page goes to the course list.
@@ -23,7 +27,7 @@ export default function ChallengesPage() {
       <PageHeader
         eyebrow="60-day challenges"
         title="One task a day. Sixty days. In public."
-        intro="Pick a skill and build it every day: a scoped task, pushed to GitHub and posted on LinkedIn, with a quiz at the end of each week. Start any day, at your own pace."
+        intro="Pick a skill and build it every day: a scoped task, pushed to GitHub and posted on LinkedIn, with a quiz at the end of each week. Go at your own pace."
       />
       <section aria-label="All challenges" className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <ul className="grid gap-6 sm:grid-cols-2">
@@ -36,7 +40,7 @@ export default function ChallengesPage() {
                   </Link>
                   <div className="flex flex-1 flex-col gap-4 p-7">
                     <div>
-                      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">60-day challenge</p>
+                      <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-muted">60-day challenge{opensLater(c.slug) ? ` · starts ${releaseDay(opensLater(c.slug)!)}` : ""}</p>
                       <h2 className="display mt-2 text-2xl">{c.name}</h2>
                       <p className="mt-2 text-[15px] leading-relaxed text-muted">{c.description}</p>
                     </div>

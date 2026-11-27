@@ -25,6 +25,7 @@ import { requireLearner } from "@/lib/learner/data";
 import { cohortDayDate, todayIn } from "@/lib/learn";
 import { learnerTimeZone } from "@/lib/learner/zone";
 import { db } from "@/lib/db/client";
+import { opensLater, releaseDay } from "@/lib/release";
 import { getCurriculum } from "@/data/curricula";
 
 export const metadata: Metadata = { title: "My track", robots: { index: false, follow: false } };
@@ -66,6 +67,27 @@ export default async function TrackHomePage({ params }: { params: Promise<{ slug
       </>
     );
   }
+  // Enrolled before the release: nothing of the course is shown until it opens.
+  const opens = opensLater(learner.track);
+  if (opens) {
+    return (
+      <>
+        <LearnerTopBar name={learner.name} image={session?.user?.image} />
+        <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-8">
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-red-deep">{track.name}</p>
+          <h1 className="display mt-4 text-4xl text-balance">You&apos;re enrolled. Day 1 opens on {releaseDay(opens)}.</h1>
+          <p className="mt-4 text-muted">
+            It opens at 12:00 AM India time. Come back then and sign in with{" "}
+            <strong className="text-ink">{learner.email}</strong>. There is nothing else to do until then.
+          </p>
+          <p className="mt-6 text-sm text-muted">
+            Questions? <Link href={`mailto:${contact.email}`} className="font-semibold underline underline-offset-2">{contact.email}</Link>
+          </p>
+        </div>
+      </>
+    );
+  }
+
   const canPractise = topicsFor(learner.track).length > 0;
   const doneDays = new Set(submissions.map((s) => s.day));
   const paid = track.price > 0 ? await hasPaid(learner.email, learner.track) : true;
