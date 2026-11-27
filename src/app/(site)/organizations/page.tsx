@@ -1,80 +1,133 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, Minus } from "lucide-react";
-import { ButtonLink } from "@/components/ui/Button";
+import { ClipboardCheck, Gavel, LineChart, Send, UserPlus, UsersRound } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { orgNotYet } from "@/data/public-story";
-import { contact } from "@/data/config";
+import { OrgEnquiryForm } from "@/components/org/OrgEnquiryForm";
+import "./organizations.css";
 
 export const metadata: Metadata = {
   title: "Klymb for organizations",
-  description: "Add your people, group them into teams, assign System Design and follow their progress.",
+  description: "Hire with proctored tests, then upskill your teams with System Design and follow their progress.",
 };
 
-/** What the organization pages (/org/...) let a company do today. */
-const steps = [
-  { title: "People", body: "Add people one at a time or from a CSV. Each person is emailed how to sign in. Removing someone ends their access at once." },
-  { title: "Teams", body: "Create teams, choose a head for each, and move people between them." },
-  { title: "Learning", body: "Assign System Design to your people, then see who has started, lessons passed and final assessment scores." },
+/** The illustration's people: initials, team, and how far up they climb (percent). */
+const climbers = [
+  { i: "PS", team: "a", h: 88 },
+  { i: "AK", team: "b", h: 54 },
+  { i: "RM", team: "a", h: 72 },
+  { i: "NJ", team: "c", h: 38 },
+  { i: "SV", team: "b", h: 94 },
+  { i: "DT", team: "c", h: 63 },
+  { i: "MA", team: "a", h: 46 },
 ];
+
+const toasts = ["Priya passed Caching", "12 candidates invited", "Backend team · 82% done"];
+
+/** What the organization pages (/org/...) let a company do today: hire, then upskill. */
+const ways = [
+  {
+    key: "hire",
+    label: "Hire",
+    title: "Find who can really do the job.",
+    steps: [
+      { icon: ClipboardCheck, title: "Pick a test", line: "Write one, or start from ours." },
+      { icon: Send, title: "Invite candidates", line: "Paste a list, or a CSV." },
+      { icon: Gavel, title: "Score and decide", line: "Proctored, then reviewed." },
+    ],
+  },
+  {
+    key: "grow",
+    label: "Upskill",
+    title: "Level up the team you have.",
+    steps: [
+      { icon: UserPlus, title: "Add people", line: "One by one, or a CSV." },
+      { icon: UsersRound, title: "Make teams", line: "Pick a head for each." },
+      { icon: LineChart, title: "Watch them climb", line: "Lessons and scores, live." },
+    ],
+  },
+];
+
+function Climb() {
+  return (
+    <figure className="org-climb relative" aria-label="Illustration: a team's progress bars rising as people learn">
+      <div className="flex items-center justify-between text-xs font-semibold text-white/60">
+        <span className="inline-flex items-center gap-2"><span className="org-live" aria-hidden="true" />Live progress</span>
+        <span className="org-count display text-2xl text-white" aria-hidden="true" />
+      </div>
+      <div className="org-bars mt-4" aria-hidden="true">
+        {climbers.map((c, n) => (
+          <div key={c.i} className={`org-bar org-team-${c.team}`} style={{ "--h": `${c.h}%`, "--d": `${n * 0.18}s` } as React.CSSProperties}>
+            <span className="org-avatar">{c.i}</span>
+          </div>
+        ))}
+      </div>
+      <div className="org-toasts" aria-hidden="true">
+        {toasts.map((t, n) => (
+          <p key={t} className="org-toast" style={{ "--t": `${n * 3}s` } as React.CSSProperties}>
+            <span className="org-tick">✓</span>{t}
+          </p>
+        ))}
+      </div>
+    </figure>
+  );
+}
 
 export default function OrganizationsPage() {
   return (
     <>
-      <PageHeader eyebrow="For organizations" title="Upskill the people you already employ." intro="Klymb for organizations is for companies that want their own people to learn, not for hiring. You set up the group, and each person learns on their own time.">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <a href={`mailto:${contact.email}?subject=Klymb%20for%20organizations`} className="group inline-flex items-center justify-center gap-2 rounded-lg border-2 border-red-strong bg-red-strong px-5 py-3 text-sm font-bold text-white transition-[background-color,transform] duration-150 hover:bg-red-press active:scale-[0.97]">
-            Write to {contact.email}
-          </a>
-          <ButtonLink href="/org/sign-in" variant="secondary" soft>Already invited? Sign in</ButtonLink>
-        </div>
-      </PageHeader>
-
-      <Container className="py-14 sm:py-20">
-        <SectionHeader id="can-title" eyebrow="What you can do today" title="Three pages, one clear job each." />
-        <ol className="mt-10 grid gap-5 md:grid-cols-3">
-          {steps.map((s, i) => (
-            <li key={s.title} className="card flex gap-4 p-7">
-              <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-full bg-ink text-sm font-bold text-white">{i + 1}</span>
-              <div>
-                <h3 className="display text-xl">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </Container>
-
-      <section aria-labelledby="learners-title" className="border-y border-line/25 bg-white">
-        <Container className="grid gap-10 py-14 sm:py-20 lg:grid-cols-2">
-          <div>
-            <SectionHeader id="learners-title" eyebrow="For the people learning" title="What your people get." />
-            <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
-              System Design is a course explained with real examples and built for interviews. Each person works through it on their own. The progress you see is theirs, recorded under the email they sign in with.
+      <section className="org-hero relative isolate overflow-hidden bg-night text-white">
+        <div aria-hidden="true" className="org-grid" />
+        <div aria-hidden="true" className="org-glow" />
+        <Container className="grid gap-10 pb-16 pt-10 sm:pt-16 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_1fr] lg:gap-x-14 lg:pb-24">
+          <div className="org-rise">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-white/70 ring-1 ring-white/12">
+              For organizations
             </p>
-            <Link href="/system-design" className="mt-4 inline-block text-sm font-bold underline underline-offset-4 hover:text-red-deep">See the System Design course</Link>
+            <h1 className="display mt-5 text-[clamp(2.6rem,7vw,5rem)] leading-[0.95]">
+              Hire them.<br />
+              <span className="org-shine">Level them up.</span>
+            </h1>
           </div>
-          <ul className="space-y-3 text-[15px]">
-            {["Live progress, not a report", "People sign in with an emailed code", "You stay in control of who has access"].map((t) => (
-              <li key={t} className="flex gap-3"><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-strong" />{t}</li>
-            ))}
-          </ul>
+
+          <div className="org-rise lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center" style={{ "--rise": "0.12s" } as React.CSSProperties}>
+            <div className="org-card relative rounded-slab bg-card p-6 text-ink shadow-float sm:p-8">
+              <OrgEnquiryForm />
+            </div>
+            <p className="mt-4 text-center text-sm text-white/60">
+              Already invited? <Link href="/org/sign-in" className="font-bold text-white underline underline-offset-4 hover:text-red-soft">Sign in</Link>
+            </p>
+          </div>
+
+          <div className="org-rise lg:self-end" style={{ "--rise": "0.24s" } as React.CSSProperties}>
+            <Climb />
+          </div>
         </Container>
       </section>
 
-      <Container className="py-14 sm:py-20">
-        <SectionHeader id="not-title" eyebrow="Not available yet" title="What isn't built, said plainly." />
-        <ul className="mt-8 max-w-2xl space-y-3 text-[15px] text-muted">
-          {orgNotYet.map((t) => (
-            <li key={t} className="flex gap-3"><Minus aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{t}</li>
+      <Container className="py-16 sm:py-24">
+        <h2 className="display text-center text-[clamp(2rem,5vw,3.25rem)]">Two ways to use Klymb.</h2>
+        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+          {ways.map((w) => (
+            <section key={w.key} aria-labelledby={`way-${w.key}`} className={`org-way org-way-${w.key} rounded-slab p-6 sm:p-8`}>
+              <p className="org-way-label">{w.label}</p>
+              <h3 id={`way-${w.key}`} className="display mt-4 text-[clamp(1.6rem,3.4vw,2.25rem)]">{w.title}</h3>
+              <ol className="mt-8 grid gap-3">
+                {w.steps.map((s, n) => (
+                  <li key={s.title} className="org-step group relative flex items-center gap-4 overflow-hidden rounded-card p-4">
+                    <span aria-hidden="true" className="org-step-icon grid size-11 shrink-0 place-items-center rounded-xl">
+                      <s.icon className="size-5 transition-transform duration-300 group-hover:scale-110" />
+                    </span>
+                    <div className="relative">
+                      <h4 className="font-heading text-lg font-bold">{s.title}</h4>
+                      <p className="text-sm opacity-70">{s.line}</p>
+                    </div>
+                    <span aria-hidden="true" className="org-step-num display">{n + 1}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
           ))}
-        </ul>
-        <p className="mt-6 max-w-2xl text-[15px] text-muted">
-          Need one of these, or want to set up your company? Write to{" "}
-          <a href={`mailto:${contact.email}`} className="font-semibold text-ink underline underline-offset-2">{contact.email}</a>.
-        </p>
+        </div>
       </Container>
     </>
   );
