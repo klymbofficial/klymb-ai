@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AccountLink } from "@/components/layout/AccountLink";
 import { useLogoClimb } from "@/components/layout/KlymbLogo";
@@ -23,6 +24,8 @@ const LINKS = [
  */
 export function LandingNav({ site = false }: { site?: boolean }) {
   const base = site ? "/" : "";
+  // The money-back promise is about paid courses; on the free counseling page it would only confuse.
+  const free = usePathname() === "/counseling";
   const brand = useRef<HTMLAnchorElement>(null);
   const bar = useRef<HTMLDivElement>(null);
 
@@ -59,10 +62,12 @@ export function LandingNav({ site = false }: { site?: boolean }) {
           <a href={`${base}#teams`} className="kl-navlink kl-navlink--teams">For Teams</a>
         </div>
         {site && <AccountLink className="kl-btn kl-btn-secondary kl-navlogin" />}
-        <span className="kl-pulse">
-          <IconShieldCheck size={16} />
-          100% money back
-        </span>
+        {!free && (
+          <span className="kl-pulse">
+            <IconShieldCheck size={16} />
+            100% money back
+          </span>
+        )}
         <PhoneMenu base={base} />
       </nav>
     </div>
