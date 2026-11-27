@@ -401,7 +401,7 @@ function Templates({ c }: { c: Ctx }) {
       {readOnly}
       <div>
         <h2 className="text-base font-semibold">Invitation email</h2>
-        <p className="mt-1 text-sm text-muted">Leave both empty for the standard invitation. Your words replace the subject and the opening; the start time, time allowed, the button with their own link, and your help line are always added.</p>
+        <p className="mt-1 text-sm text-muted">Leave both empty for the standard invitation. Your words replace the subject and the opening; the start time, time allowed, the button with their own link, a Google Calendar link for the deadline, and your help line are always added.</p>
       </div>
       <label className="flex flex-col gap-1 text-sm font-semibold">
         Subject
@@ -424,9 +424,9 @@ function Templates({ c }: { c: Ctx }) {
         <div className="rounded-md border border-line/40 bg-white p-4 text-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-muted">Preview, for a sample person</p>
           <p className="mt-2"><span className="text-muted">Subject:</span> <strong>{renderTemplate(subj, vars) || "—"}</strong></p>
-          <p className="mt-3">Hi {SAMPLE.candidate_name}.</p>
+          <p className="mt-3">Dear {SAMPLE.candidate_name},</p>
           <p className="mt-2 whitespace-pre-line">{renderTemplate(text, vars) || "—"}</p>
-          <p className="mt-3 text-xs text-muted">Then: start by, time allowed, the “Open your assessment” button with their own link, and your help line.</p>
+          <p className="mt-3 text-xs text-muted">Then: start by, time allowed, the “Open your assessment” button with their own link, the Google Calendar link, and your help line.</p>
         </div>
       )}
       {canEdit && (
