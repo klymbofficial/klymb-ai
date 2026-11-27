@@ -63,8 +63,8 @@ export const grievance = {
 } as const;
 
 export const policyVersion = {
-  version: "2026-11-13",
-  effective: "13 November 2026",
+  version: "2026-11-25",
+  effective: "25 November 2026",
 } as const;
 
 /**
@@ -116,7 +116,7 @@ export const sdRefund = {
   /** confirm: does a change this strict need notice for people who bought before it? */
   missed: "If you miss a day, you can keep learning and finish the course, but your streak resets and the refund is no longer available. There are no exceptions and a missed day cannot be made up.",
   /** confirm: the 60 days. */
-  window: "You can claim from the day you pass the final assessment, and up to 60 days after that. Write to us from the email you paid with.",
+  window: "You can claim from the day you pass the final assessment, and up to 60 days after that, with the Claim my refund button on your final results, or by writing to us from the email you paid with.",
   /** confirm: 14 working days. Razorpay refuses a normal refund on a payment older than six months. */
   payout: "Refunds are paid to the original payment method within 14 working days of your claim, once completion has been verified. If the payment is too old for our payment provider to refund, we pay it by bank transfer instead.",
   partial: "There is no partial refund. Finishing some of the lessons, or finishing late, does not qualify: the point of the guarantee is finishing on schedule.",

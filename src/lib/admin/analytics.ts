@@ -35,11 +35,14 @@ export function rangeDays(key: string | undefined): number {
 export interface Filters {
   country?: string;
   device?: string;
+  /** One page's path, such as /webinar: only visits that viewed it count. */
+  page?: string;
 }
 
-export function readFilters(params: { country?: string; device?: string }): Filters {
+export function readFilters(params: { country?: string; device?: string; page?: string }): Filters {
   const clean = (v?: string) => (v && v.length <= 64 && /^[\p{L}\p{N} ().'-]+$/u.test(v) ? v : undefined);
-  return { country: clean(params.country), device: clean(params.device) };
+  const path = (v?: string) => (v && v.length <= 200 && /^\/[\w\-./~%]*$/.test(v) ? v : undefined);
+  return { country: clean(params.country), device: clean(params.device), page: path(params.page) };
 }
 
 export type SparkKey = "totalUsers" | "newUsers" | "activeUsers" | "sessions" | "views";
@@ -112,7 +115,7 @@ export interface AnalyticsDashboard {
   /** Klymb's own events, counted by GA in the window. */
   conversions: { registrations: number; daySubmissions: number; knowledgeChecks: number };
   /** Choices for the filter dropdowns, unfiltered so they never empty themselves. */
-  options: { countries: string[]; devices: string[] };
+  options: { countries: string[]; devices: string[]; pages: string[] };
 }
 
 const EMPTY: AnalyticsDashboard = {
@@ -133,7 +136,7 @@ const EMPTY: AnalyticsDashboard = {
   events: [],
   funnel: [],
   conversions: { registrations: 0, daySubmissions: 0, knowledgeChecks: 0 },
-  options: { countries: [], devices: [] },
+  options: { countries: [], devices: [], pages: [] },
 };
 
 function client() {
@@ -168,18 +171,19 @@ function dimensionFilter(f: Filters) {
   const clauses: StringFilter[] = [];
   if (f.country) clauses.push({ filter: { fieldName: "country", stringFilter: { matchType: "EXACT", value: f.country } } });
   if (f.device) clauses.push({ filter: { fieldName: "deviceCategory", stringFilter: { matchType: "EXACT", value: f.device } } });
+  if (f.page) clauses.push({ filter: { fieldName: "pagePath", stringFilter: { matchType: "EXACT", value: f.page } } });
   if (!clauses.length) return undefined;
   return clauses.length === 1 ? clauses[0] : { andGroup: { expressions: clauses } };
 }
 
-/** The GA calls themselves, cached per (days, country, device). */
+/** The GA calls themselves, cached per (days, country, device, page). */
 const fetchDashboard = unstable_cache(
-  async (days: number, country: string, device: string): Promise<AnalyticsDashboard> => {
+  async (days: number, country: string, device: string, page: string): Promise<AnalyticsDashboard> => {
     const connection = client();
     if (!connection) return EMPTY;
 
     const { analytics, property } = connection;
-    const filters: Filters = { country: country || undefined, device: device || undefined };
+    const filters: Filters = { country: country || undefined, device: device || undefined, page: page || undefined };
     const where = dimensionFilter(filters);
     const scoped = where ? { dimensionFilter: where } : {};
 
@@ -212,7 +216,7 @@ const fetchDashboard = unstable_cache(
     try {
       const [
         totals, prior, timeseries, countries, cities, devices, browsers, os, languages, returning,
-        channels, sourceMedium, landing, pages, events, eventUsers, countryOptions, deviceOptions,
+        channels, sourceMedium, landing, pages, events, eventUsers, countryOptions, deviceOptions, pageOptions,
       ] = await Promise.all([
         analytics.runReport({ property, dateRanges: [current], metrics: summaryMetrics, ...scoped }),
         analytics.runReport({ property, dateRanges: [previous], metrics: summaryMetrics, ...scoped }),
@@ -257,6 +261,7 @@ const fetchDashboard = unstable_cache(
         breakdown("eventName", "totalUsers", 25),
         breakdown("country", "totalUsers", 50, true),
         breakdown("deviceCategory", "sessions", 5, true),
+        breakdown("pagePath", "screenPageViews", 60, true),
       ]);
 
       type Report = (typeof totals)[0];
@@ -353,6 +358,7 @@ const fetchDashboard = unstable_cache(
         options: {
           countries: rows(countryOptions[0]).map((r) => r.label).filter((c) => c !== "(not set)"),
           devices: rows(deviceOptions[0]).map((r) => r.label),
+          pages: rows(pageOptions[0]).map((r) => r.label).filter((p) => p.startsWith("/")),
         },
       };
     } catch (error) {
@@ -364,13 +370,13 @@ const fetchDashboard = unstable_cache(
       };
     }
   },
-  ["ga-dashboard-v7"],
+  ["ga-dashboard-v8"],
   { revalidate: 300 },
 );
 
 export async function getAnalyticsDashboard(days = 30, filters: Filters = {}): Promise<AnalyticsDashboard> {
   if (!(await getAdmin())) return EMPTY;
-  return fetchDashboard(days, filters.country ?? "", filters.device ?? "");
+  return fetchDashboard(days, filters.country ?? "", filters.device ?? "", filters.page ?? "");
 }
 
 /**
@@ -403,4 +409,94 @@ const fetchRealtime = unstable_cache(
 export async function getRealtime() {
   if (!(await getAdmin())) return null;
   return fetchRealtime();
+}
+
+export interface MarketingReport {
+  configured: boolean;
+  /** Distinct people at each step of the $1 webinar sign-up. */
+  webinarFunnel: Breakdown[];
+  paidByCountry: Breakdown[];
+  checkoutFails: Breakdown[];
+  /** Taps by what was tapped. Null until link_label is registered as a custom dimension in GA. */
+  clicks: Breakdown[] | null;
+  clickTypes: Breakdown[] | null;
+  clicksByPage: Breakdown[];
+  campaigns: { label: string; sessions: number; paid: number }[];
+  sources: { label: string; sessions: number; paid: number }[];
+}
+
+const NO_MARKETING: MarketingReport = {
+  configured: false, webinarFunnel: [], paidByCountry: [], checkoutFails: [], clicks: null, clickTypes: null, clicksByPage: [], campaigns: [], sources: [],
+};
+
+type EventFilter = { filter: { fieldName: string; stringFilter: { matchType: "EXACT"; value: string } } };
+const eventIs = (name: string): EventFilter => ({ filter: { fieldName: "eventName", stringFilter: { matchType: "EXACT", value: name } } });
+
+/** Clicks, the webinar funnel and campaigns, for the Conversions tab. Each query stands alone, so one failing never blanks the rest. */
+const fetchMarketing = unstable_cache(
+  async (days: number, country: string, device: string): Promise<MarketingReport> => {
+    const connection = client();
+    if (!connection) return NO_MARKETING;
+    const { analytics, property } = connection;
+    const range = [{ startDate: `${days}daysAgo`, endDate: "today" }];
+    const scope = dimensionFilter({ country: country || undefined, device: device || undefined });
+    const and = (...f: (object | undefined)[]) => {
+      const all = f.filter(Boolean) as object[];
+      return all.length === 1 ? all[0] : { andGroup: { expressions: all } };
+    };
+    const report = (dimension: string, metric: string, limit: number, filter?: object) =>
+      analytics.runReport({
+        property, dateRanges: range,
+        dimensions: [{ name: dimension }], metrics: [{ name: metric }],
+        orderBys: [{ metric: { metricName: metric }, desc: true }], limit,
+        ...(filter || scope ? { dimensionFilter: and(filter, scope) } : {}),
+      }).then(([r]) => (r.rows ?? []).map((row) => ({ label: row.dimensionValues?.[0]?.value || "(not set)", value: num(row.metricValues?.[0]?.value) })));
+
+    const steps = ["webinar_form_start", "webinar_register_submit", "webinar_checkout_open", "webinar_paid"];
+    const settled = await Promise.allSettled([
+      report("pagePath", "totalUsers", 5, { filter: { fieldName: "pagePath", stringFilter: { matchType: "EXACT", value: "/webinar" } } }),
+      report("eventName", "totalUsers", 10, { orGroup: { expressions: steps.map(eventIs) } }),
+      report("country", "eventCount", 10, eventIs("webinar_paid")),
+      report("customEvent:reason", "eventCount", 6, eventIs("webinar_checkout_fail")),
+      report("customEvent:link_label", "eventCount", 20, eventIs("ui_click")),
+      report("customEvent:link_type", "eventCount", 8, eventIs("ui_click")),
+      report("pagePath", "eventCount", 10, eventIs("ui_click")),
+      report("sessionCampaignName", "sessions", 12),
+      report("sessionCampaignName", "eventCount", 50, eventIs("webinar_paid")),
+      report("sessionSourceMedium", "sessions", 12),
+      report("sessionSourceMedium", "eventCount", 50, eventIs("webinar_paid")),
+    ]);
+    const got = (i: number) => (settled[i].status === "fulfilled" ? (settled[i] as PromiseFulfilledResult<Breakdown[]>).value : null);
+    for (const s of settled) if (s.status === "rejected") console.error("marketing query failed:", String(s.reason).slice(0, 200));
+
+    const people = got(1) ?? [];
+    const of = (name: string) => people.find((r) => r.label === name)?.value ?? 0;
+    const join = (sessions: Breakdown[] | null, paid: Breakdown[] | null) =>
+      (sessions ?? []).map((s) => ({ label: s.label, sessions: s.value, paid: paid?.find((p) => p.label === s.label)?.value ?? 0 }));
+
+    return {
+      configured: true,
+      webinarFunnel: [
+        { label: "Opened /webinar", value: got(0)?.[0]?.value ?? 0 },
+        { label: "Started the form", value: of("webinar_form_start") },
+        { label: "Submitted the form", value: of("webinar_register_submit") },
+        { label: "Opened payment", value: of("webinar_checkout_open") },
+        { label: "Paid $1", value: of("webinar_paid") },
+      ],
+      paidByCountry: got(2) ?? [],
+      checkoutFails: (got(3) ?? []).map((r) => ({ ...r, label: ({ closed: "Closed the payment window", card_failed: "Card declined, then closed", verify: "Paid but not confirmed", script: "Payment window didn't load" } as Record<string, string>)[r.label] ?? r.label })),
+      clicks: got(4),
+      clickTypes: got(5),
+      clicksByPage: got(6) ?? [],
+      campaigns: join(got(7), got(8)),
+      sources: join(got(9), got(10)),
+    };
+  },
+  ["ga-marketing-v1"],
+  { revalidate: 300 },
+);
+
+export async function getMarketingReport(days = 30, filters: Filters = {}): Promise<MarketingReport> {
+  if (!(await getAdmin())) return NO_MARKETING;
+  return fetchMarketing(days, filters.country ?? "", filters.device ?? "");
 }

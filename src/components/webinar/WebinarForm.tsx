@@ -6,6 +6,7 @@ import { useState } from "react";
 import { DIAL_CODES, INDIA_DIAL, phoneProblem, type SdRole } from "@/lib/sd-offer";
 import { WEBINAR, WEBINAR_LIMITS, googleCalendarLink, webinarProblems } from "@/lib/webinar";
 import { payForSeat } from "@/lib/webinar-checkout";
+import { trackEvent } from "@/lib/analytics";
 
 // 16px text: anything smaller makes iPhones zoom the page when a field is tapped. Same fields as /join.
 const input =
@@ -29,6 +30,7 @@ export function WebinarForm({ open }: { open: boolean }) {
   const [question, setQuestion] = useState("");
   const [website, setWebsite] = useState("");
   const [tried, setTried] = useState(false);
+  const [started, setStarted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ group: string; emailed: boolean } | null>(null);
@@ -67,7 +69,11 @@ export function WebinarForm({ open }: { open: boolean }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (missing.length) return setTried(true);
+    if (missing.length) {
+      trackEvent("webinar_form_error", { missing: missing.length, form: "plain" }, { missing: missing.length });
+      return setTried(true);
+    }
+    trackEvent("webinar_register_submit", { form: "plain", country_code: dial, role }, { country_code: dial, form: "plain" });
     setBusy(true);
     const res = await fetch("/api/webinar/register", {
       method: "POST",
@@ -86,7 +92,7 @@ export function WebinarForm({ open }: { open: boolean }) {
   }
 
   return (
-    <form noValidate onSubmit={submit} className="flex flex-col gap-5">
+    <form noValidate onSubmit={submit} onFocus={() => { if (!started) { setStarted(true); trackEvent("webinar_form_start", { form: "plain" }, { form: "plain" }); } }} className="flex flex-col gap-5">
       <div>
         <h2 className="display text-2xl sm:text-3xl">Save your seat</h2>
         <p className="mt-1 text-sm text-muted">{WEBINAR.price ? `${WEBINAR.price.label}, paid with Razorpay.` : "Free."} Takes 30 seconds. {WEBINAR.dateLabel}, {WEBINAR.timeLabel}.</p>

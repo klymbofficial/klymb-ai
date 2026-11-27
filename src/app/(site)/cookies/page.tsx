@@ -13,9 +13,9 @@ export default function CookiePolicyPage() {
   return (
     <LegalPage
       title="Cookie Policy"
-      intro="Two cookies keep you signed in. We measure aggregate usage with Google Analytics, which runs by default, and use Meta Pixel and Google Ads for our ads only if you allow it. You can change either on this page at any time."
+      intro="Two cookies keep you signed in. We measure aggregate usage with Google Analytics, which runs by default, and use Meta Pixel and Google Ads for our ads, and Microsoft Clarity to see how pages are used, only if you allow it. You can change either on this page at any time."
     >
-      <Section n="1." title="Your choice" plain="Analytics is on by default. Meta Pixel and Google Ads are off until you tap OK. Change either here.">
+      <Section n="1." title="Your choice" plain="Analytics is on by default. Meta Pixel, Google Ads and Microsoft Clarity are off until you tap OK. Change either here.">
         <p>
           On your first visit a small notice tells you about analytics and our ad tags. Google Analytics runs by default so we can see, in aggregate,
           which pages people read and where they arrive from. Meta Pixel and Google Ads load only if you tap OK. If you would rather we did not, switch them off below: the
@@ -41,7 +41,7 @@ export default function CookiePolicyPage() {
       <Section n="3." title="Analytics" plain="Google Analytics 4, aggregate only, on by default, off whenever you want.">
         <Facts
           rows={[
-            ["Google Analytics 4", "Measures page views and aggregate usage: which pages people read, which track pages they open, how many registrations complete."],
+            ["Google Analytics 4", "Measures page views and aggregate usage: which pages people read, which links and buttons they tap, which track pages they open, how many registrations complete."],
             ["Vercel Web Analytics and Speed Insights", "Cookieless page-view counts and page-load timings from our hosting provider. They set no cookies and identify no one, so they keep running when Google Analytics is off."],
             ["What we never send", "Your name, email, phone number, GitHub or LinkedIn identity, submissions or answers. None of it is sent to Google."],
             ["Retention", "Google retains this data for 14 months."],
@@ -60,6 +60,12 @@ export default function CookiePolicyPage() {
           Google keeps this under its own privacy policy.
         </p>
         <p>
+          <strong>Microsoft Clarity (only if you tap OK):</strong> records how this browser scrolls, taps and moves on our
+          public pages, as heatmaps and replays, so we can see where a page confuses people. What you type into forms is
+          masked before it leaves your browser, and it never runs on your learner pages. Microsoft keeps this under its own
+          privacy policy.
+        </p>
+        <p>
           If you turn analytics off, we stop loading the script immediately for the rest of your visit and on every page
           afterwards. Events Google has already recorded stay until they age out of its 14-month retention window.
         </p>
@@ -68,7 +74,7 @@ export default function CookiePolicyPage() {
       <Section n="4." title="What we do not do" plain="No selling data, no data brokers, no ad tag without your OK.">
         <p>
           We do not sell personal data, and we do not use third-party data brokers. The only advertising tools we use are
-          Meta Pixel and Google Ads, and only after you tap OK. If that ever changes, we will update this policy and ask for your consent
+          Meta Pixel and Google Ads, and with Microsoft Clarity they load only after you tap OK. If that ever changes, we will update this policy and ask for your consent
           again before enabling anything new.
         </p>
         <p>

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { DIAL_CODES, INDIA_DIAL, phoneProblem, type SdRole } from "@/lib/sd-offer";
 import { WEBINAR, WEBINAR_LIMITS, googleCalendarLink, webinarFee, webinarProblems } from "@/lib/webinar";
 import { payForSeat } from "@/lib/webinar-checkout";
+import { trackEvent } from "@/lib/analytics";
 import { useCountdownParts, useWorkshop } from "./WorkshopClock";
 
 // 16px text: anything smaller makes iPhones zoom the page when a field is tapped.
@@ -35,6 +36,7 @@ export function WorkshopRegister() {
   const [role, setRole] = useState<SdRole | "">("");
   const [website, setWebsite] = useState("");
   const [tried, setTried] = useState(false);
+  const [started, setStarted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ group: string; emailed: boolean } | null>(null);
@@ -46,7 +48,11 @@ export function WorkshopRegister() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (missing.length) return setTried(true);
+    if (missing.length) {
+      trackEvent("webinar_form_error", { missing: missing.length, form: "ticket" }, { missing: missing.length });
+      return setTried(true);
+    }
+    trackEvent("webinar_register_submit", { form: "ticket", country_code: dial, role }, { country_code: dial, form: "ticket" });
     setBusy(true);
     const res = await fetch("/api/webinar/register", {
       method: "POST",
@@ -110,7 +116,7 @@ export function WorkshopRegister() {
           <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-muted">This webinar has ended. Follow Klymb.ai to hear about the next one.</p>
         </div>
       ) : (
-        <form noValidate onSubmit={submit} className="grid gap-4 px-6 py-6">
+        <form noValidate onSubmit={submit} onFocus={() => { if (!started) { setStarted(true); trackEvent("webinar_form_start", { form: "ticket" }, { form: "ticket" }); } }} className="grid gap-4 px-6 py-6">
           {phase === "before" && (
             <ul className="nums grid grid-cols-4 gap-1.5" aria-label="Time until the webinar starts">
               {parts.map((c) => (

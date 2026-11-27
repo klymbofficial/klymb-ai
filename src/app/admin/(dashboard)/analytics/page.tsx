@@ -14,7 +14,7 @@ import { ShareTable } from "@/components/admin/ga/ShareTable";
 import { AreaLineChart } from "@/components/charts/AreaLineChart";
 import { BarList } from "@/components/charts/BarList";
 import { FunnelBars } from "@/components/charts/FunnelBars";
-import { getAnalyticsDashboard, getRealtime, RANGES, rangeDays, readFilters, type SparkKey } from "@/lib/admin/analytics";
+import { getAnalyticsDashboard, getMarketingReport, getRealtime, RANGES, rangeDays, readFilters, type SparkKey } from "@/lib/admin/analytics";
 import { getRegistrations, summariseRegistrations } from "@/lib/admin/data";
 import { formatDuration } from "@/lib/chart";
 
@@ -29,7 +29,7 @@ const ICONS = {
   "Bounce rate": TrendingDown,
 } as const;
 
-type Params = { range?: string; country?: string; device?: string; tab?: string };
+type Params = { range?: string; country?: string; device?: string; page?: string; tab?: string };
 
 export default async function AdminAnalyticsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
@@ -43,7 +43,7 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
       />
       {/* The header answers instantly; GA streams in beneath it. Keyed on the
           query so a new range or filter shows the skeleton instead of stale data. */}
-      <Suspense key={`${params.range}|${params.country}|${params.device}`} fallback={<AnalyticsSkeleton />}>
+      <Suspense key={`${params.range}|${params.country}|${params.device}|${params.page}`} fallback={<AnalyticsSkeleton />}>
         <AnalyticsBody params={params} />
       </Suspense>
     </>
@@ -66,15 +66,16 @@ async function AnalyticsBody({ params }: { params: Params }) {
   const days = rangeDays(params.range);
   const filters = readFilters(params);
 
-  const [analytics, realtime, registrations] = await Promise.all([
+  const [analytics, realtime, registrations, marketing] = await Promise.all([
     getAnalyticsDashboard(days, filters),
     getRealtime(),
     getRegistrations(),
+    getMarketingReport(days, filters),
   ]);
   const stats = summariseRegistrations(registrations);
   const spark = (key?: SparkKey) => (key ? analytics.series.map((p) => p[key]) : undefined);
   const visitors = analytics.kpis.find((k) => k.label === "Total users")?.value ?? 0;
-  const filtered = Boolean(filters.country || filters.device);
+  const filtered = Boolean(filters.country || filters.device || filters.page);
 
   return (
     <>
@@ -103,11 +104,14 @@ async function AnalyticsBody({ params }: { params: Params }) {
                 )}
               </p>
             </div>
-            <GaFilters countries={analytics.options.countries} devices={analytics.options.devices} />
+            <GaFilters countries={analytics.options.countries} devices={analytics.options.devices} pages={analytics.options.pages} />
           </div>
           {filtered && (
             <p className="-mt-3 text-xs font-semibold text-red-deep">
-              Filtered to {[filters.country, filters.device].filter(Boolean).join(" · ")}. Every number below reflects only those visits.
+              Filtered to {[filters.page, filters.country, filters.device].filter(Boolean).join(" · ")}.{" "}
+              {filters.page
+                ? `Every number below counts only visits that opened ${filters.page}; Source / medium shows where those visits came from.`
+                : "Every number below reflects only those visits."}
             </p>
           )}
 
@@ -146,6 +150,47 @@ async function AnalyticsBody({ params }: { params: Params }) {
           <GaTabs
             initial={params.tab}
             tabs={[
+              {
+                key: "conversions",
+                label: "Clicks & webinar",
+                content: (
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <Panel title="Webinar sign-up funnel" note="Distinct people at each step of the $1 webinar sign-up in this window. The biggest drop is the step to fix first.">
+                      <FunnelBars steps={marketing.webinarFunnel} />
+                    </Panel>
+                    <Panel title="Paid seats by country" note="Where the $1 seats came from, by the payer's location as GA sees it.">
+                      <BarList rows={marketing.paidByCountry} unit="paid" emptyLabel="No paid seats tracked in this window yet." />
+                    </Panel>
+                    <Panel title="Top clicks" note="Every link and button tapped on the public site, by its label. Outbound, WhatsApp and email links included.">
+                      {marketing.clicks ? (
+                        <BarList rows={marketing.clicks} unit="taps" emptyLabel="No clicks recorded in this window yet." />
+                      ) : (
+                        <p className="py-6 text-sm text-muted">
+                          Clicks are being recorded. To see them by label here, register <strong>link_label</strong>, <strong>link_type</strong> and{" "}
+                          <strong>reason</strong> as event-scoped custom dimensions in GA (Admin → Custom definitions). Data shows from that day on.
+                        </p>
+                      )}
+                    </Panel>
+                    <Panel title="Clicks by page" note="Which pages get tapped on most. A busy page with few sign-ups is worth a look.">
+                      <BarList rows={marketing.clicksByPage} unit="taps" emptyLabel="No clicks recorded in this window yet." />
+                    </Panel>
+                    {marketing.clickTypes && (
+                      <Panel title="Kind of click" note="Internal links, outbound links, WhatsApp, email, phone and plain buttons.">
+                        <Composition rows={marketing.clickTypes} unit="taps" />
+                      </Panel>
+                    )}
+                    <Panel title="Why payments didn't finish" note="People who opened the payment window and left without paying.">
+                      <BarList rows={marketing.checkoutFails} unit="times" emptyLabel="No abandoned payments in this window." />
+                    </Panel>
+                    <Panel title="Campaigns" note="utm_campaign on your links, and Google Ads campaigns once Ads is linked to GA. Paid seats are $1 webinar payments from that campaign's visits." className="lg:col-span-2">
+                      <ShareTable columns={["Campaign", "Sessions", "Paid seats"]} shareOf={0} rows={marketing.campaigns.map((c) => ({ label: c.label, values: [c.sessions, c.paid] }))} />
+                    </Panel>
+                    <Panel title="Source / medium → paid seats" note="Where each visit came from, and how many of them bought a seat." className="lg:col-span-2">
+                      <ShareTable columns={["Source / medium", "Sessions", "Paid seats"]} shareOf={0} rows={marketing.sources.map((c) => ({ label: c.label, values: [c.sessions, c.paid] }))} />
+                    </Panel>
+                  </div>
+                ),
+              },
               {
                 key: "audience",
                 label: "Audience",

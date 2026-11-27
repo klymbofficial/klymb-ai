@@ -8,6 +8,7 @@ import { recordMail, type Batch, type MailTarget } from "@/lib/company/batch-dat
 import { PREP_COURSES, allowedMinutes, deadlineText, deliveryError, durationText, lastStart, type MailKind } from "@/lib/company/batch-rules";
 import { loadCompanyBrand } from "@/lib/company/invite";
 import type { Db } from "@/lib/db/client";
+import { deadlineCalendarLink } from "@/lib/company/calendar";
 import { MAIL_SUPPORT, candidateInviteEmail, sendMail } from "@/lib/mail";
 
 /**
@@ -40,6 +41,10 @@ export function buildCandidateMail(
   const link = candidateLink(base, t.id, t.generation);
   if (!link) return null;
   const last = lastStart({ closesAt: batch.closesAt, minutes: batch.minutes }, t);
+  const calendarUrl = deadlineCalendarLink({
+    title: batch.title, company: brand.name, startBy: last, startByText: deadlineText(last, batch.timeZone),
+    allowed: durationText(allowedMinutes(batch.minutes, t.extraMinutes)), now,
+  });
   const vars = {
     candidate_name: t.name,
     test_name: batch.title,
@@ -64,6 +69,7 @@ export function buildCandidateMail(
     prep: batch.prepCourse
       ? { course: PREP_COURSES[batch.prepCourse], url: `${base}${PREP_URL[batch.prepCourse]}`, until: deadlineText(batch.closesAt, batch.timeZone) }
       : null,
+    calendarUrl,
     siteUrl: base,
     supportEmail: MAIL_SUPPORT,
   });

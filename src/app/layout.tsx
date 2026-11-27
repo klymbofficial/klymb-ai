@@ -2,6 +2,8 @@ import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@/components/legal/Analytics";
 import { MetaPixel } from "@/components/legal/MetaPixel";
+import { ClickTracker } from "@/components/legal/ClickTracker";
+import { Clarity } from "@/components/legal/Clarity";
 import { GoogleAds } from "@/components/legal/GoogleAds";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -64,6 +66,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MetaPixel />
         {/* Google Ads for the webinar: loads only after OK on the cookie notice. */}
         <GoogleAds />
+        {/* Every link and button tap, to GA4 and Vercel; heatmaps and recordings only after OK. */}
+        <ClickTracker />
+        <Clarity />
       </body>
       {gaId && <Analytics gaId={gaId} />}
     </html>

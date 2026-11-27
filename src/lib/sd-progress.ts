@@ -14,7 +14,7 @@ const UNDEFINED_TABLE = "42P01";
  */
 export async function sdProgress(email: string, sql: Db | null = db()): Promise<SdProgress | null> {
   if (!sql) return null;
-  const [passes, finals, seat, zone] = await Promise.all([
+  const [passes, finals, seat, zone, claim] = await Promise.all([
     sql.rows<{ lesson: string; passed_at: string }>`
       select lesson, passed_at from course.lesson_checks
        where email = ${email} and course = ${SD_COURSE} and passed_at is not null
@@ -32,6 +32,11 @@ export async function sdProgress(email: string, sql: Db | null = db()): Promise<
     `,
     // On its own, so a database without 0048 still reads progress, on India time.
     sql.row<{ timezone: string }>`select timezone from course.enrollments where email = ${email} and course = ${SD_COURSE}`,
+    // On its own too, so a database without 0049 still reads progress.
+    sql.row<{ refund_claimed_at: string | null }>`
+      select p.refund_claimed_at from course.enrollments e join course.payments p on p.id = e.payment_id
+       where e.email = ${email} and e.course = ${SD_COURSE}
+    `,
   ]);
   // Code can go live before its migration. Only the final needs this table, so lesson checks mustn't stop without it.
   const noFinals = finals.error?.code === UNDEFINED_TABLE;
@@ -45,6 +50,7 @@ export async function sdProgress(email: string, sql: Db | null = db()): Promise<
     finals: (finals.data ?? []).map((f) => ({ attempt: f.attempt, score: f.score, at: new Date(f.taken_at).toISOString() })),
     refundable: !!seat.data?.refundable,
     timeZone: timeZoneOf(zone.data?.timezone) ?? IST,
+    refundClaimedAt: claim.data?.refund_claimed_at ? new Date(claim.data.refund_claimed_at).toISOString() : null,
   };
 }
 

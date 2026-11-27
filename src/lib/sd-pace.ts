@@ -30,7 +30,11 @@ export interface FinalAttempt { attempt: number; score: number; at: string }
  * hasn't already come back. `timeZone`: whose midnight a day ends at, India
  * time when not given.
  */
-export interface SdProgress { passes: LessonPass[]; finals: FinalAttempt[]; refundable: boolean; timeZone?: string }
+export interface SdProgress {
+  passes: LessonPass[]; finals: FinalAttempt[]; refundable: boolean; timeZone?: string;
+  /** When they claimed the completion refund, if they have. */
+  refundClaimedAt?: string | null;
+}
 
 export type PaceState =
   /** Nothing passed yet: Day 1 can start any day. */

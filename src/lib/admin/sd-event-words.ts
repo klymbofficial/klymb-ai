@@ -58,6 +58,10 @@ function describe(e: TrailEvent): Omit<TrailLine, "at" | "lesson"> {
       ? { text: "Finished the quick tour of the lesson screen", tone: "nav" }
       : { text: `Skipped the tour at tip ${p.at}`, tone: "nav" };
     case "day_complete": return { text: "Completed the day 🎉", tone: "win" };
+    case "refund": return p.choice === "claim"
+      ? { text: "Claimed the completion refund", tone: "win" }
+      : p.choice === "keep" ? { text: "Chose to keep supporting Klymb instead of claiming the refund 💛", tone: "win" }
+      : { text: "Opened the refund claim", tone: "nav" };
     case "share": return { text: p.kind === "image" ? "Downloaded the share image" : "Shared on LinkedIn", tone: "win" };
     case "lang": return { text: `Switched lesson language to ${p.lang === "hi" ? "Hinglish" : "English"}`, tone: "setting" };
     case "subs": return { text: p.on ? `Turned subtitles on${p.lang ? ` (${p.lang === "hi" ? "Hinglish" : "English"})` : ""}` : "Turned subtitles off", tone: "setting" };
