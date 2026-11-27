@@ -56,7 +56,10 @@ export async function getWebinarList(current: { slug: string; label: string }): 
   const sql = db();
   if (!sql) return [];
   const { data, error } = await sql.rows<{ slug: string; registered: number; first_at: string }>`
-    select webinar as slug, count(*)::int as registered, min(created_at) as first_at
+    select webinar as slug,
+           -- Seats only: a paid webinar's unfinished checkouts aren't registrations.
+           count(*) filter (where amount is null or paid_at is not null)::int as registered,
+           min(created_at) as first_at
       from course.webinar_registrations
      group by webinar
      order by min(created_at) desc
