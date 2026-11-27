@@ -224,6 +224,7 @@ export const footerLinks = {
     { label: "About", href: "/about" },
     { label: "Program", href: "/program" },
     { label: "Register", href: "/register" },
+    { label: "Free counseling", href: "/counseling" },
     { label: "Log in", href: "/learn/login" },
     { label: "Contact", href: "/contact" },
   ],
