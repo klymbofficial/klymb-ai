@@ -33,6 +33,8 @@ export function ProctorGuard({ token, attemptId, config, home, children }: { tok
   const [warn, setWarn] = useState<Warn | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [camera, setCamera] = useState<"off" | "on" | "denied" | "lost">("off");
+  // Bumped by "Try again" after the candidate allows the camera in the browser.
+  const [cameraTry, setCameraTry] = useState(0);
   const video = useRef<HTMLVideoElement>(null);
   const lastHidden = useRef(0);
   const lastCopyNote = useRef(0);
@@ -159,7 +161,7 @@ export function ProctorGuard({ token, attemptId, config, home, children }: { tok
       window.clearInterval(timer);
       stream?.getTracks().forEach((t) => t.stop());
     };
-  }, [config.webcam, token, attemptId, send]);
+  }, [config.webcam, token, attemptId, send, cameraTry]);
 
   const enterFull = () => { void document.documentElement.requestFullscreen?.().catch(() => setToast("Your browser didn't allow full screen. Try again, or use another browser.")); };
   const left = warn && warn.limit !== null ? Math.max(0, warn.limit - warn.warnings) : null;
@@ -207,6 +209,12 @@ export function ProctorGuard({ token, attemptId, config, home, children }: { tok
             <span className={`size-2 rounded-full ${camera === "on" ? "bg-[#3ec46d]" : "bg-error"}`} />
             {camera === "on" ? "Camera on" : camera === "denied" ? "Camera blocked" : camera === "lost" ? "Camera stopped" : "Starting camera…"}
           </p>
+          {(camera === "denied" || camera === "lost") && (
+            <div className="w-56 border-t border-white/15 px-2 py-2 text-[0.7rem] leading-snug text-paper">
+              <p>This test needs your camera. Allow it from the camera icon in the address bar, then try again.</p>
+              <button type="button" onClick={() => { setCamera("off"); setCameraTry((n) => n + 1); }} className="mt-1.5 rounded bg-white px-2 py-1 font-bold text-ink">Try again</button>
+            </div>
+          )}
         </div>
       )}
     </>
