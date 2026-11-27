@@ -11,10 +11,13 @@ export type CounselingResult =
 
 const DETAIL = "Free counseling page";
 
-/** The free community's WhatsApp invite, set in the environment so it can change without a deploy of code. */
+/** The free community's WhatsApp group invite. */
+const COMMUNITY_URL = "https://chat.whatsapp.com/D28Ct7tlc6CJpjImbA6pvC";
+
+/** COMMUNITY_WHATSAPP_URL, when set, replaces the invite without a code change (say, after the link is reset). */
 const community = () => {
   const url = process.env.COMMUNITY_WHATSAPP_URL?.trim();
-  return url && /^https:\/\//.test(url) ? url : null;
+  return url && /^https:\/\//.test(url) ? url : COMMUNITY_URL;
 };
 
 /**
