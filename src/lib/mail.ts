@@ -530,14 +530,16 @@ export function welcomeEmail(p: { name: string; trackName: string; becomes: stri
 }
 
 /** The welcome for a 60-day challenge: no checkpoints or interview prep, a task a day in public and a weekly quiz. */
-export function challengeWelcomeEmail(p: { name: string; challengeName: string; siteUrl: string; supportEmail: string }) {
+/** `opensOn` ("5 December") is set while the challenge takes enrolments but has not opened. */
+export function challengeWelcomeEmail(p: { name: string; challengeName: string; siteUrl: string; supportEmail: string; opensOn?: string }) {
   const site = esc(p.siteUrl);
   const subject = `Welcome to Klymb.ai, ${p.name}`;
   const text = [
     `Hi ${p.name},`, "",
     `Welcome to Klymb.ai. You're on the ${p.challengeName} 60-day challenge.`, "",
-    `Start Day 1: ${p.siteUrl}/learn`,
-    "Start any day: Day 1 opens as soon as you are enrolled, and each day opens once the one before is in.", "",
+    ...(p.opensOn
+      ? [`You're enrolled. Day 1 opens on ${p.opensOn} at 12:00 AM India time, and each day opens once the one before is in.`]
+      : [`Start Day 1: ${p.siteUrl}/learn`, "Start any day: Day 1 opens as soon as you are enrolled, and each day opens once the one before is in."]), "",
     "Your 60 days",
     "One scoped task a day, usually under an hour.",
     "Push the work to GitHub and post about it on LinkedIn: both links are your submission.",
@@ -548,12 +550,12 @@ export function challengeWelcomeEmail(p: { name: string; challengeName: string; 
   ].join("\n");
   const html = layout({
     site, supportEmail: p.supportEmail,
-    preview: `You're on the ${p.challengeName} challenge. Day 1 is open.`,
+    preview: `You're on the ${p.challengeName} challenge. Day 1 ${p.opensOn ? `opens on ${p.opensOn}` : "is open"}.`,
     eyebrow: "Welcome to Klymb.ai",
     title: `Glad you're here, ${esc(p.name)}.`,
     intro: `You're on the <strong style="color:#fff">${esc(p.challengeName)}</strong> 60-day challenge. Sixty days from now, you'll have sixty days of public, dated work to show for it.`,
     sections: [
-      `${sectionTitle("Start when you're ready")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Challenge", p.challengeName)}${row("Starts", "Any day you choose")}</table>${button(`${site}/learn`, "Start Day 1")}`,
+      `${sectionTitle(p.opensOn ? "You're enrolled" : "Start when you're ready")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${C.line}">${row("Challenge", p.challengeName)}${row("Starts", p.opensOn ? `${p.opensOn}, 12:00 AM India time` : "Any day you choose")}</table>${button(`${site}/learn`, p.opensOn ? "See your challenge" : "Start Day 1")}`,
       `${sectionTitle("Your 60 days")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
         ${step(1, "One task a day", "Scoped to usually under an hour. Each day opens once the one before is submitted.")}
         ${step(2, "Built in public", "Push the work to your GitHub repository and post about it on LinkedIn. Both links are your submission.")}

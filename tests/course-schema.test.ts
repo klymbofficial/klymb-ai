@@ -128,6 +128,13 @@ test("every table storing a track allows all six", () => {
   }
 });
 
+test("the Claude Challenge can be enrolled on: both tables it writes allow it", () => {
+  const sql = readFileSync(`${dir}/0102_claude_challenge_track.sql`, "utf8");
+  for (const table of ["registrations", "learners"]) {
+    assert.match(sql, new RegExp(`${table}_track_check\\s+check \\(track in \\([^)]*'claude'\\)\\)`));
+  }
+});
+
 test("every final attempt is kept, keyed so a double submit records one", () => {
   const final = code(readFileSync(`${dir}/0024_final_attempts.sql`, "utf8"));
   assert.match(final, /create table if not exists course\.final_attempts/);

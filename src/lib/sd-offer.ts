@@ -291,6 +291,8 @@ export function signInFailedPath(callback: string | undefined) {
     const track = url.searchParams.get("track") ?? "";
     return /^[a-z0-9-]{1,40}$/.test(track) ? `/register?track=${track}&signin=failed` : "/register?signin=failed";
   }
+  // Enrolling on a challenge starts with Google too: back to that challenge's page, with a note.
+  if (/^\/challenges\/[a-z0-9-]{1,40}$/.test(url.pathname)) return `${url.pathname}?signin=failed`;
   // The hackathon's own sign-in: back to its registration section, with a note.
   if (url.pathname === "/hackathons") return "/hackathons?signin=failed#register";
   // The learner login sends people on to /dashboard, so that counts as a learner sign-in too.

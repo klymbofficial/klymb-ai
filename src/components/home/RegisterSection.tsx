@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, BadgeIndianRupee, BriefcaseBusiness, CalendarDays, Check, FolderGit2, MessagesSquare, ShieldCheck, Target } from "lucide-react";
-import { getTrack, isOneClickStart, priceFrom } from "@/data/tracks";
+import { getTrack, priceFrom } from "@/data/tracks";
 import { trackImages } from "@/data/track-images";
 import teamLaptop from "@/assets/track-page/team-laptop.jpg";
 import type { TrackSlug } from "@/types/program";
@@ -13,7 +13,6 @@ import { Appear } from "@/components/motion/Appear";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { RegistrationForm, type GoogleUser } from "./RegistrationForm";
 import { RegisterSignIn } from "./RegisterSignIn";
-import { StartChallenge } from "./StartChallenge";
 import { ExpertsStrip } from "./ExpertsStrip";
 import { OfferBadge, OfferPrice } from "@/components/ui/OfferPrice";
 import { StudyBuddy } from "@/components/learner/StudyBuddy";
@@ -26,22 +25,13 @@ const INCLUDED = [
   { icon: FolderGit2, title: "A public portfolio on GitHub", body: "Evidence a recruiter can open, built day by day." },
 ];
 
-/** What a 60-day challenge includes instead. */
-const INCLUDED_CHALLENGE = [
-  { icon: Target, title: "60 tasks, one a day", body: "Scoped to under an hour, each opening once the last is in." },
-  { icon: ShieldCheck, title: "A quiz every week", body: "Multiple choice, marked straight away with the reasons." },
-  { icon: FolderGit2, title: "Built in public", body: "Every day on GitHub and LinkedIn: sixty days of proof." },
-  { icon: MessagesSquare, title: "Badges to share", body: "First day, seven days, halfway and the finish." },
-];
-
 /**
  * Signed out, the right-hand side is a single step: sign in with Google. The
  * details form only exists once there is a verified Google account to register
  * as, so there is nothing to type, send or save before that.
  *
- * A challenge that is open and built has no form at all: signed in, it starts
- * on arrival and lands on Day 1 (see StartChallenge); signed out, Google is
- * the only step. The 30-day career tracks keep the form.
+ * Only the 30-day career tracks register here. A challenge is enrolled on from
+ * its own page (ChallengeEnroll), and its links are sent there.
  */
 export function RegisterSection({
   defaultTrack, googleUser, unknownTrack, signInFailed, inApp,
@@ -51,18 +41,10 @@ export function RegisterSection({
   const track = slug ? getTrack(slug) : undefined;
   const price = track?.price ?? priceFrom;
   const free = price === 0;
-  const isChallenge = track?.kind === "challenge";
-  const total = isChallenge ? 60 : 30;
-  // From the link's track, not the picker: a challenge only reaches the form by its own link.
-  const oneClick = !!defaultTrack && isOneClickStart(getTrack(defaultTrack));
   const first = googleUser?.name.split(" ")[0] || "there";
-  const buddy = oneClick
-    ? (googleUser
-        ? `Hi ${first}, I'm Kamran. Getting your Day 1 ready now.`
-        : `Hi, I'm Kamran, your study buddy for the next ${total} days. Sign in with Google and Day 1 opens straight away.`)
-    : (googleUser
-        ? `Hi ${first}, I'm Kamran. One minute here, then I'll see you on Day 1.`
-        : `Hi, I'm Kamran, your study buddy for the next ${total} days. First, sign in with Google. Then it takes about a minute.`);
+  const buddy = googleUser
+    ? `Hi ${first}, I'm Kamran. One minute here, then I'll see you on Day 1.`
+    : "Hi, I'm Kamran, your study buddy for the next 30 days. First, sign in with Google. Then it takes about a minute.";
 
   return (
     <section id="register" aria-labelledby="register-title" className="grid grid-cols-[minmax(0,1fr)] lg:h-dvh lg:grid-cols-[2fr_3fr]">
@@ -94,11 +76,10 @@ export function RegisterSection({
 
         <Appear className="relative">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">
-            {isChallenge ? "60-day challenge" : track ? `${track.name} track` : "30-day track"}
+            {track ? `${track.name} track` : "30-day track"}
           </p>
           <h1 id="register-title" className="display display-soft mt-3 max-w-2xl text-[clamp(1.8rem,2.3vw,2.6rem)] text-white">
-            {isChallenge && track ? <>{track.name}: <span className="text-red-soft">one task a day</span>, for 60 days.</>
-              : track ? <>From {track.name} to <span className="text-red-soft">{track.becomes}</span>, in 30 days.</> : "30 days. Real work. A portfolio that gets you hired."}
+            {track ? <>From {track.name} to <span className="text-red-soft">{track.becomes}</span>, in 30 days.</> : "30 days. Real work. A portfolio that gets you hired."}
           </h1>
         </Appear>
 
@@ -136,7 +117,7 @@ export function RegisterSection({
         <Appear delay={0.2} className="relative hidden sm:block">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-white/60">What you get</p>
           <ul className="mt-3 grid gap-2.5">
-            {(isChallenge ? INCLUDED_CHALLENGE : INCLUDED).map(({ icon: Icon, title, body }) => (
+            {INCLUDED.map(({ icon: Icon, title, body }) => (
               <li key={title} className="flex items-center gap-3 rounded-xl bg-black/15 px-3.5 py-3 ring-1 ring-white/10 backdrop-blur-sm">
                 <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/10">
                   <Icon aria-hidden="true" className="size-4.5 text-red-soft" />
@@ -187,11 +168,9 @@ export function RegisterSection({
             </div>
           )}
           {googleUser ? (
-            oneClick && defaultTrack
-              ? <StartChallenge slug={defaultTrack} />
-              : <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} unknownTrack={unknownTrack} bare titled onTrackChange={setSlug} onDoneChange={setDone} />
+            <RegistrationForm defaultTrack={defaultTrack} googleUser={googleUser} unknownTrack={unknownTrack} bare titled onTrackChange={setSlug} onDoneChange={setDone} />
           ) : (
-            <RegisterSignIn track={defaultTrack} unknownTrack={unknownTrack} failed={signInFailed} inApp={!!inApp} oneClick={oneClick} />
+            <RegisterSignIn track={defaultTrack} unknownTrack={unknownTrack} failed={signInFailed} inApp={!!inApp} />
           )}
         </div>
       </div>

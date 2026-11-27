@@ -874,6 +874,7 @@ html.lenis { scroll-behavior: auto; }
   display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 10px; border-radius: 999px;
   background: var(--kl-ink); color: var(--kl-bg); box-shadow: var(--kl-shadow-lg); max-width: calc(100vw - 120px);
 }
+.kl button.kl-dock { border: 0; cursor: pointer; text-align: left; font-family: var(--kl-font); }
 .kl .kl-dock.is-on { transform: translate(-50%, 0); opacity: 1; }
 .kl .kl-dock:hover { background: var(--kl-red-800); color: var(--kl-bg); }
 .kl-dock-ring { position: relative; flex: none; width: 44px; height: 44px; display: grid; place-items: center; }

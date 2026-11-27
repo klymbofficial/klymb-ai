@@ -24,11 +24,11 @@ const RING = 119.4;
  * little bump on each change.
  *
  * Other pages pass their own link, label (and a `short` one for phones) and section steps (the Claude
- * Challenge's "Start the challenge, free"); anything marked data-hero keeps
+ * Challenge's "Enroll now"); anything marked data-hero keeps
  * it away.
  */
-export function JourneyDock({ href = "/courses", label = "Start your journey", short, steps = STEPS }: { href?: string; label?: string; short?: string; steps?: Record<string, string> } = {}) {
-  const dock = useRef<HTMLAnchorElement>(null);
+export function JourneyDock({ href = "/courses", onPress, label = "Start your journey", short, steps = STEPS }: { href?: string; /** Makes the dock a button that does this, instead of a link. */ onPress?: () => void; label?: string; short?: string; steps?: Record<string, string> } = {}) {
+  const dock = useRef<HTMLElement | null>(null);
   const ring = useRef<SVGCircleElement>(null);
   const [on, setOn] = useState(false);
   const [step, setStep] = useState("01");
@@ -83,15 +83,15 @@ export function JourneyDock({ href = "/courses", label = "Start your journey", s
     };
   }, [steps]);
 
-  return (
-    <Link
-      ref={dock}
-      href={href}
-      className={on ? "kl-dock is-on" : "kl-dock"}
-      aria-label={label}
-      aria-hidden={!on}
-      tabIndex={on ? 0 : -1}
-    >
+  const shared = {
+    ref: (el: HTMLElement | null) => { dock.current = el; },
+    className: on ? "kl-dock is-on" : "kl-dock",
+    "aria-label": label,
+    "aria-hidden": !on,
+    tabIndex: on ? 0 : -1,
+  };
+  const inside = (
+    <>
       <span className="kl-dock-ring">
         <svg viewBox="0 0 44 44" aria-hidden="true">
           <circle className="kl-dock-track" cx="22" cy="22" r="19" fill="none" strokeWidth="3" />
@@ -105,6 +105,10 @@ export function JourneyDock({ href = "/courses", label = "Start your journey", s
       <span className="kl-dock-go">
         <IconArrowUpRight size={18} />
       </span>
-    </Link>
+    </>
   );
+
+  return onPress
+    ? <button type="button" onClick={onPress} {...shared}>{inside}</button>
+    : <Link href={href} {...shared}>{inside}</Link>;
 }

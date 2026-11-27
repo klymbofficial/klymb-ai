@@ -61,6 +61,8 @@ export interface Track {
    * open before the content is ready.
    */
   contentLive: boolean;
+  /** Enrolment is open but the course is not: every day stays locked until this date (YYYY-MM-DD) starts in India. See lib/release. */
+  opensOn?: string;
   /**
    * Shown in public lists (home, tracks page, footer, sitemap, the form's
    * dropdown). False makes the track invite-only: it works for anyone with its

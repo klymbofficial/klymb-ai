@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import type { Level, LibraryCourse, MyCourse, Tint } from "@/data/course-cards";
 import { trackImages } from "@/data/track-images";
+import { opensLater, releaseDay } from "@/lib/release";
+import { HIDE_MONEY } from "@/lib/site-status";
 import { CourseArt, hasCourseArt } from "./CourseArt";
 
 /** The art ground, its ruled lines and the colour of the big letters. */
@@ -61,6 +63,9 @@ function toggleSaved(slug: string) {
   savedListeners.forEach((l) => l());
 }
 
+// Read in the browser only: the card is built ahead of time, and the date moves on.
+const noChange = () => () => {};
+
 function LevelBars({ level }: { level: Level }) {
   const on = LEVEL_BARS[level];
   return (
@@ -81,6 +86,8 @@ function LevelBars({ level }: { level: Level }) {
 export function LibraryCard({ course: c, mine }: { course: LibraryCourse; mine?: MyCourse }) {
   const saved = parseSaved(useSyncExternalStore(subscribeSaved, readSaved, () => "[]")).includes(c.slug);
   const t = TINTS[c.tint];
+  const opens = useSyncExternalStore(noChange, () => opensLater(c.slug), () => null);
+  const badge = opens ? `Starts ${releaseDay(opens)}` : c.badge;
   const d = c.card;
   // A career track keeps its photograph; the featured courses are drawn; the rest get their letters.
   const photo = hasCourseArt(c.slug) ? undefined : (trackImages as Record<string, (typeof trackImages)[keyof typeof trackImages] | undefined>)[c.slug];
@@ -109,9 +116,9 @@ export function LibraryCard({ course: c, mine }: { course: LibraryCourse; mine?:
         )}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
           <span className="rounded-lg bg-white/95 px-2.5 py-1 text-[13px] font-semibold text-ink">{c.category}</span>
-          {c.badge && <span className="rounded-lg bg-ink px-2.5 py-1 text-[13px] font-bold text-white">{c.badge}</span>}
+          {badge && <span className="rounded-lg bg-ink px-2.5 py-1 text-[13px] font-bold text-white">{badge}</span>}
           {mine ? <span className="rounded-lg bg-red-deep px-2.5 py-1 text-[13px] font-bold text-white">Enrolled</span>
-            : c.free && <span className="rounded-lg bg-[#e1f4e8] px-2.5 py-1 text-[13px] font-bold text-[#17653a]">Free</span>}
+            : c.free && !HIDE_MONEY && <span className="rounded-lg bg-[#e1f4e8] px-2.5 py-1 text-[13px] font-bold text-[#17653a]">Free</span>}
         </div>
         <button
           type="button"

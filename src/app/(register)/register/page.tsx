@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, verifiedEmailFrom } from "@/auth";
 import { RegisterSection } from "@/components/home/RegisterSection";
-import { trackSlugs } from "@/data/tracks";
+import { getTrack, trackSlugs } from "@/data/tracks";
 import { isListed } from "@/data/course-cards";
 import { getLearnerState } from "@/lib/learner/data";
 import { inAppBrowser } from "@/lib/sd-offer";
@@ -16,6 +16,8 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   const defaultTrack = trackSlugs.includes(track as TrackSlug) ? (track as TrackSlug) : undefined;
   // A track the live site does not list takes no sign-up: back to the course list.
   if (defaultTrack && !isListed(defaultTrack)) redirect("/courses");
+  // A challenge is enrolled on from its own page: old links land there.
+  if (defaultTrack && getTrack(defaultTrack)?.kind === "challenge") redirect(`/challenges/${defaultTrack}`);
   // A link that names a track we do not have: say so, rather than showing an empty picker with no explanation.
   const unknownTrack = !!track && !defaultTrack;
 

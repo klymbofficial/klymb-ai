@@ -20,7 +20,7 @@ import { WEBINAR, webinarOpen } from "@/lib/webinar";
 export const metadata: Metadata = { title: "Dashboard", robots: { index: false, follow: false } };
 
 const BUILD_FAQ: [string, string][] = [
-  ["When can I start a course?", "Any day. Day 1 opens as soon as you join, and your days run from there."],
+  ["When can I start a course?", "Any day. Day 1 opens as soon as you join, and your days run from there. A course with a later release date shows that date, and opens then."],
   ["Can I take more than one course?", "Yes. Start another from the rows above or the Library. Each keeps its own days and progress, and this dashboard shows them all."],
   ["I missed a day. What now?", "Open the day you missed and submit it: days stay open and unlock in order. System Design is the exception: one lesson a day, and a missed day ends the refund."],
   ["Is a job guaranteed?", "No. Klymb doesn’t guarantee a job, placement or salary. The courses build practical ability, a portfolio and interview readiness; outcomes depend on you and the job market."],

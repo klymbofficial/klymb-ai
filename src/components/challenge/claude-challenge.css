@@ -25,6 +25,8 @@
   transition: background-color .2s, color .2s, transform .16s var(--kl-ease);
 }
 .kc-cta:active { transform: scale(0.97); }
+button.kc-cta { border: 0; cursor: pointer; }
+button.kc-cta:disabled { cursor: progress; opacity: .75; }
 .kl .kc-cta--red { background: var(--kl-red); color: var(--kl-bg); }
 .kl .kc-cta--red:hover { background: var(--kl-red-600); color: var(--kl-bg); }
 .kl .kc-cta--light { background: var(--kl-bg); color: var(--kl-ink); justify-self: start; }
@@ -227,7 +229,7 @@
 .kc-steps li span:last-child { font-size: 20px; line-height: 1.1; }
 .kc-start .kc-h2 { font-size: clamp(44px, 8vw, 120px); line-height: 0.9; letter-spacing: -0.05em; }
 
-/* The docked "Start the challenge, free" (JourneyDock): its short label on phones, where the long one would be cut off. */
+/* The docked "Enroll now" (JourneyDock): its short label on phones, where the long one would be cut off. */
 .kl-dock-short { display: none; }
 @media (max-width: 760px) {
   .kl-dock-long { display: none; }

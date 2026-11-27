@@ -66,9 +66,8 @@ export interface MyCourse { title: string; href: string; label: string; progress
 const SD_LESSONS = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 
 /**
- * Not in the catalog yet. The Claude Challenge's page is /challenges/claude,
- * which comes with branch claude/klymb-ux-flow-audit-377d4b. The AI Cohort's
- * page is /courses/ai-cohort.
+ * Not in the catalog yet. The Claude Challenge's page is /challenges/claude.
+ * The AI Cohort's page is /courses/ai-cohort.
  */
 const claude: LibraryCourse = {
   slug: "claude",
@@ -180,7 +179,7 @@ export const libraryCourses: LibraryCourse[] = [claude, agenticAi, aiCohort, ...
  * This only decides what the library and the dashboard's rows offer. A
  * course's own page and its sign-up link still work for anyone who has them.
  */
-export const LIVE_COURSES: readonly string[] = ["system-design"];
+export const LIVE_COURSES: readonly string[] = ["claude", "system-design"];
 
 /** Whether the library lists a course: all of them in development, only the live ones in a production build. */
 export const isListed = (slug: string) => process.env.NODE_ENV === "development" || LIVE_COURSES.includes(slug);

@@ -3,6 +3,7 @@ import { site } from "@/data/config";
 import { getTrack } from "@/data/tracks";
 import { formatINR } from "@/lib/format";
 import { offerOpen, priceNow } from "@/lib/offer";
+import { opensLater, releaseDay } from "@/lib/release";
 import { challengeWelcomeEmail, MAIL_SUPPORT, sendMail, welcomeEmail } from "@/lib/mail";
 
 /**
@@ -13,8 +14,9 @@ import { challengeWelcomeEmail, MAIL_SUPPORT, sendMail, welcomeEmail } from "@/l
 export async function sendWelcome({ email, name, track }: { email: string; name: string; track: string }) {
   const t = getTrack(track);
   if (!t) return;
+  const opens = opensLater(t.slug);
   const mail = t.kind === "challenge"
-    ? challengeWelcomeEmail({ name: name.split(" ")[0] || "there", challengeName: t.name, siteUrl: site.url, supportEmail: MAIL_SUPPORT })
+    ? challengeWelcomeEmail({ name: name.split(" ")[0] || "there", challengeName: t.name, siteUrl: site.url, supportEmail: MAIL_SUPPORT, opensOn: opens ? releaseDay(opens) : undefined })
     : welcomeEmail({
     name: name.split(" ")[0] || "there",
     trackName: t.name,

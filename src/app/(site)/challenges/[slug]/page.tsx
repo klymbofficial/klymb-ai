@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
+import { opensLater, releaseDay } from "@/lib/release";
 import { Appear } from "@/components/motion/Appear";
 import { ButtonLink } from "@/components/ui/Button";
+import { ChallengeEnroll } from "@/components/challenge/ChallengeEnroll";
 import { ClaudeChallenge } from "@/components/challenge/ClaudeChallenge";
 import { isListed, libraryCourses } from "@/data/course-cards";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -15,6 +17,9 @@ export function generateStaticParams() {
 }
 
 export const dynamicParams = false;
+
+// Rebuilt every five minutes, so the "opens on" wording goes away by itself on the release day.
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const c = getTrack((await params).slug);
@@ -35,10 +40,11 @@ export default async function ChallengePage({ params }: { params: Promise<{ slug
   if (!c || !course) notFound();
   // Not listed on the live site: the course list instead.
   if (!isListed(c.slug)) redirect("/courses");
-  const start = `/register?track=${c.slug}`;
+  const date = opensLater(c.slug);
+  const opens = date ? releaseDay(date) : null;
 
   // The Claude challenge has its own page, from the Claude Design file "Klymb Claude Challenge".
-  if (c.slug === "claude") return <ClaudeChallenge weeks={course.modules.map((m) => m.name)} start={start} facts={libraryCourses.find((l) => l.slug === "claude")?.card ?? null} />;
+  if (c.slug === "claude") return <ClaudeChallenge weeks={course.modules.map((m) => m.name)} opens={opens} facts={libraryCourses.find((l) => l.slug === "claude")?.card ?? null} />;
 
   return (
     <>
@@ -50,7 +56,7 @@ export default async function ChallengePage({ params }: { params: Promise<{ slug
               <Appear delay={0.08} y={24}><h1 id="challenge-title" className="display mt-4 text-[clamp(2.4rem,6vw,4rem)]">{c.name}</h1></Appear>
               <Appear delay={0.16}><p className="mt-5 max-w-xl text-[15px] leading-relaxed text-muted sm:text-base">{c.description}</p></Appear>
               <Appear delay={0.24} className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <ButtonLink href={start} soft arrow>Start this challenge</ButtonLink>
+                <ChallengeEnroll slug={c.slug} opens={opens} className="inline-flex items-center justify-center rounded-lg border-2 border-red-strong bg-red-strong px-5 py-3 text-sm font-bold text-white hover:bg-red-press disabled:cursor-progress disabled:opacity-70">Enroll now</ChallengeEnroll>
                 <ButtonLink href="#weeks" variant="secondary" soft className="border-line hover:bg-ink">See the 60 days</ButtonLink>
               </Appear>
               <Appear delay={0.28}>
@@ -113,7 +119,7 @@ export default async function ChallengePage({ params }: { params: Promise<{ slug
             );
           })}
         </div>
-        <div className="mt-10"><ButtonLink href={start} soft arrow>Start this challenge</ButtonLink></div>
+        <div className="mt-10"><ButtonLink href="#challenge-title" soft arrow>Enroll at the top</ButtonLink></div>
       </section>
     </>
   );

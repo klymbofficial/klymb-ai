@@ -14,6 +14,7 @@ import { ensureLearner, UNIQUE_VIOLATION } from "@/lib/learner/enrolment";
 import { enrolmentClient } from "@/lib/learner/enrolment-db";
 import { lookupPlaces } from "@/lib/registration-place";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { startDateFor } from "@/lib/release";
 import { clamp, LIMITS, parseRepoUrl, validateRegistration, type RegistrationData, type RegistrationErrors } from "@/lib/validation";
 import type { TrackSlug } from "@/types/program";
 
@@ -153,8 +154,8 @@ export async function registerInterest(input: RegistrationData, honeypot?: strin
       email: data.email,
       name: data.name,
       track: data.track,
-      // Rolling enrolment: Day 1 is the day they join, not a shared date.
-      cohortStart: todayIn(zone),
+      // Rolling enrolment: Day 1 is the day they join, or the release day if that is later.
+      cohortStart: startDateFor(data.track, todayIn(zone)),
       githubUsername: repo.owner,
       githubUrl: repo.url,
     });

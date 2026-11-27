@@ -4,6 +4,7 @@ import { dayLock } from "@/lib/access";
 import { getTrack } from "@/data/tracks";
 import { getCurriculum } from "@/data/curricula";
 import { streakEnding } from "@/lib/reminders";
+import { opensLater } from "@/lib/release";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ export async function GET() {
   if (s.state !== "enrolled") return NextResponse.json({ state: s.state, email: s.state === "not-enrolled" ? s.email : undefined });
 
   const { learner, submissions } = s;
+  // Not out yet: no day to talk about, so Kamran answers generally.
+  if (opensLater(learner.track)) return NextResponse.json({ state: "not-open" });
   const track = getTrack(learner.track);
   const done = submissions.map((x) => x.day);
   const doneSet = new Set(done);
