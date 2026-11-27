@@ -4,9 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { submitTest } from "@/app/assessment/[token]/actions";
 import { AnswerEditor, type AnswerControl } from "@/components/company/AnswerEditor";
 import { AttemptFiles, type ShownFile } from "@/components/company/AttemptFiles";
+import { SubmitDialog, TestBar, type TestBarParts } from "@/components/company/TestBar";
 
-const PRIMARY = "inline-flex min-h-11 items-center rounded-md border-2 border-red-strong bg-red-strong px-6 text-base font-bold text-white hover:border-red-press hover:bg-red-press disabled:opacity-50";
-const SECONDARY = "inline-flex min-h-11 items-center rounded-md border-2 border-ink bg-white px-5 text-sm font-bold hover:bg-ink hover:text-paper disabled:opacity-50";
 
 const WHY: Record<string, string> = {
   conflict: "Your answer was saved in another tab or device. Reload this page, check it, then submit.",
@@ -21,13 +20,13 @@ const WHY: Record<string, string> = {
 };
 
 /**
- * The running test's work area: the answer box, the files (for written_file
- * tests) and Submit. Submit asks once, waits for any upload, saves what is
+ * The running test's work area: the top bar with the timer and Submit (user,
+ * 27 Nov), the task, the answer box and the files (for written_file tests). Submit asks once, waits for any upload, saves what is
  * typed, then submits the revision this page shows. The server copies that
  * answer and the files into a frozen submission and opens the receipt.
  */
 export function AttemptWork({
-  token, attemptId, withFiles, initialAnswer, initialRevision, initialSavedAt, initialFiles, deadline, serverNow, timeZone,
+  token, attemptId, withFiles, initialAnswer, initialRevision, initialSavedAt, initialFiles, deadline, serverNow, timeZone, bar, task,
 }: {
   token: string;
   attemptId: string;
@@ -39,6 +38,10 @@ export function AttemptWork({
   deadline: string;
   serverNow: string;
   timeZone: string;
+  /** The top bar's name and timer, drawn on the server. */
+  bar: TestBarParts;
+  /** The task itself, shown under the bar. */
+  task: React.ReactNode;
 }) {
   const control = useRef<AnswerControl | null>(null);
   const [files, setFiles] = useState({ count: initialFiles.length, busy: false });
@@ -83,8 +86,18 @@ export function AttemptWork({
     }
   }
 
+  const warning = asking && (asking.empty || (withFiles && files.count === 0))
+    ? asking.empty && withFiles && files.count === 0 ? "Your answer is empty and no files are attached."
+      : asking.empty ? "Your answer is empty." : "No files are attached."
+    : null;
+
   return (
     <>
+      <TestBar parts={bar} over={over} disabled={pending || files.busy} onSubmit={() => void ask()} label={files.busy ? "Wait for the file…" : pending ? "Saving…" : "Submit test"} />
+      {problem && !asking && <p role="alert" className="-mt-2 rounded-md border border-error/40 bg-white px-4 py-2 text-sm font-semibold text-error">{problem}</p>}
+      {over && <p role="status" className="-mt-2 rounded-md border border-line/40 bg-white px-4 py-2 text-sm">Time is up. What you saved{withFiles ? " and the files attached" : ""} will be submitted automatically. <a href={`/assessment/${token}`} className="font-bold underline underline-offset-4">See your receipt</a></p>}
+      <SubmitDialog open={!!asking && !over} warning={warning} pending={pending} blocked={files.busy} onConfirm={() => void submit()} onCancel={() => setAsking(null)} />
+      {task}
       <AnswerEditor
         token={token}
         attemptId={attemptId}
@@ -97,35 +110,6 @@ export function AttemptWork({
         controlRef={control}
       />
       {withFiles && <AttemptFiles token={token} attemptId={attemptId} initial={initialFiles} deadline={deadline} serverNow={serverNow} onChange={onFiles} />}
-
-      <section aria-labelledby="submit-title" className="card p-6">
-        <h2 id="submit-title" className="display text-lg">Submit</h2>
-        {over ? (
-          <p className="mt-2 text-sm">Time is up. What you saved{withFiles ? " and the files attached" : ""} will be submitted automatically. <a href={`/assessment/${token}`} className="font-bold underline underline-offset-4">See your receipt</a></p>
-        ) : asking ? (
-          <div className="mt-3 border-l-4 border-ink bg-white px-4 py-3">
-            <p className="text-sm font-semibold">Submit now? You can&apos;t change your answer{withFiles ? " or files" : ""} after.</p>
-            {(asking.empty || (withFiles && files.count === 0)) && (
-              <p className="mt-1 text-sm text-error">
-                {asking.empty && withFiles && files.count === 0 ? "Your answer is empty and no files are attached."
-                  : asking.empty ? "Your answer is empty." : "No files are attached."}
-              </p>
-            )}
-            <div className="mt-3 flex flex-wrap gap-3">
-              <button type="button" onClick={() => void submit()} disabled={pending || files.busy} className={PRIMARY}>{pending ? "Submitting…" : "Yes, submit"}</button>
-              <button type="button" onClick={() => setAsking(null)} disabled={pending} className={SECONDARY}>Keep working</button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <p className="mt-2 text-sm text-muted">When you&apos;re finished, submit your answer{withFiles ? " and files" : ""}. You can&apos;t change them after.</p>
-            <button type="button" onClick={() => void ask()} disabled={pending || files.busy} className={`mt-4 ${PRIMARY}`}>
-              {files.busy ? "Wait for the file…" : pending ? "Saving…" : "Submit test"}
-            </button>
-          </>
-        )}
-        {problem && <p role="alert" className="mt-3 text-sm font-semibold text-error">{problem}</p>}
-      </section>
     </>
   );
 }

@@ -57,26 +57,35 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
   const brand = brandRow ? { name: brandRow.name, logoUrl: brandRow.logoUrl, accent: readableBrandColor(brandRow.brandColor) } : null;
   const support = brandRow?.supportEmail ?? MAIL_SUPPORT;
   const tz = found.batch.timeZone;
+  // The top bar's left side and timer; the work area draws the bar with Submit beside the timer (user, 27 Nov).
+  const bar = {
+    info: (
+      <>
+        <p className="mb-1 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-[#14532d]">Secure assessment · answers autosave</p>
+        <p className="truncate text-base font-bold">{found.batch.title}</p>
+        <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
+          <span>Ends {deadlineText(attempt.deadlineAt, tz)}</span>
+          <ProctorChips config={proctor} />
+        </p>
+      </>
+    ),
+    timer: <Countdown deadline={attempt.deadlineAt} serverNow={now.toISOString()} />,
+  };
+  // When the saved work can't load there's nothing to submit yet, but the clock still shows.
+  const plainBar = (
+    <div className="sticky top-3 z-30 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line/30 bg-white/95 px-4 py-3 shadow-card backdrop-blur sm:px-5">
+      <div className="min-w-0 flex-1">{bar.info}</div>
+      {bar.timer}
+    </div>
+  );
 
   return (
     <CandidateShell brand={brand} wide>
       <ProctorGuard token={token} attemptId={attempt.id} config={proctor} home={home}>
       {proctor.watermark && <Watermark text={found.candidate.email} />}
-      <div className="sticky top-3 z-30 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line/30 bg-white/95 px-4 py-3 shadow-card backdrop-blur sm:px-5">
-        <div className="min-w-0">
-          <p className="mb-1 text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-[#14532d]">Secure assessment · answers autosave</p>
-          <p className="truncate text-base font-bold">{found.batch.title}</p>
-          <p className="flex flex-wrap items-center gap-2 text-xs text-muted">
-            <span>Ends {deadlineText(attempt.deadlineAt, tz)}</span>
-            <ProctorChips config={proctor} />
-          </p>
-        </div>
-        <Countdown deadline={attempt.deadlineAt} serverNow={now.toISOString()} />
-      </div>
-
       {task?.questions ? (
         answers === null || files === null ? (
-          <section role="alert" className="card p-6 text-sm">Your saved work can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section>
+          <>{plainBar}<section role="alert" className="card p-6 text-sm">Your saved work can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section></>
         ) : (
           <>
             <h1 className="sr-only">{found.batch.title}</h1>
@@ -89,18 +98,14 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
               deadline={new Date(attempt.deadlineAt).toISOString()}
               serverNow={now.toISOString()}
               timeZone={tz}
+              bar={bar}
             />
           </>
         )
       ) : (
       <>
-      <section aria-labelledby="task" className="card p-6">
-        <h1 id="task" className="display text-2xl">{task?.taskTitle ?? "Your task"}</h1>
-        <div className="mt-4 whitespace-pre-line text-sm leading-relaxed">{task?.taskBrief ?? "The task can't be shown right now. Reload the page; your time keeps running."}</div>
-      </section>
-
       {draft === null || (task?.submission === "written_file" && files === null) ? (
-        <section role="alert" className="card p-6 text-sm">Your saved work can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section>
+        <>{plainBar}<section role="alert" className="card p-6 text-sm">Your saved work can&apos;t be loaded right now. Reload the page in a moment; your time keeps running and nothing saved is lost.</section></>
       ) : (
         <AttemptWork
           token={token}
@@ -113,6 +118,13 @@ export default async function AttemptPage({ params }: { params: Promise<{ token:
           deadline={new Date(attempt.deadlineAt).toISOString()}
           serverNow={now.toISOString()}
           timeZone={tz}
+          bar={bar}
+          task={
+            <section aria-labelledby="task" className="card p-6">
+              <h1 id="task" className="display text-2xl">{task?.taskTitle ?? "Your task"}</h1>
+              <div className="mt-4 whitespace-pre-line text-sm leading-relaxed">{task?.taskBrief ?? "The task can't be shown right now. Reload the page; your time keeps running."}</div>
+            </section>
+          }
         />
       )}
       </>
