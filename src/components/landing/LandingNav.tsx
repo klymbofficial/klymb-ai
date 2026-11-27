@@ -55,6 +55,7 @@ export function LandingNav({ site = false }: { site?: boolean }) {
           {LINKS.map((l) => (
             <a key={l.href} href={base + l.href} className="kl-navlink">{l.label}</a>
           ))}
+          <Link href="/counseling" className="kl-navlink">Free counseling</Link>
           <a href={`${base}#teams`} className="kl-navlink kl-navlink--teams">For Teams</a>
         </div>
         {site && <AccountLink className="kl-btn kl-btn-secondary kl-navlogin" />}
@@ -118,6 +119,9 @@ function PhoneMenu({ base }: { base: string }) {
               <a href={base + l.href} onClick={() => setOpen(false)}>{l.label}</a>
             </li>
           ))}
+          <li>
+            <Link href="/counseling" onClick={() => setOpen(false)}>Free counseling</Link>
+          </li>
           <li>
             <a href={`${base}#teams`} className="kl-menu-teams" onClick={() => setOpen(false)}>For Teams</a>
           </li>

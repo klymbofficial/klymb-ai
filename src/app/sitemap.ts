@@ -37,6 +37,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/why-klymb", 0.7, "monthly"),
     page("/about", 0.6, "monthly"),
     page("/organizations", 0.7, "monthly"),
+    page("/counseling", 0.7, "monthly"),
     page("/contact", 0.4, "yearly"),
     page("/privacy", 0.2, "yearly"),
     page("/terms", 0.2, "yearly"),
