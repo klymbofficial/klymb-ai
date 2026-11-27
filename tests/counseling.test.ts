@@ -1,56 +1,38 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { counselingNote, indiaToday, slotDays, slotLabel, validateCounseling } from "../src/lib/counseling";
+import { counselingNote, validateCounseling } from "../src/lib/counseling";
 
-const TODAY = "2026-11-27";
-const full = {
-  day: "2026-11-30",
-  hour: 18,
-  name: "  Rahul   Verma ",
-  phone: "98765 43210",
-  email: "Rahul@Gmail.COM",
-  college: " AKTU ",
-  year: "2026",
-  role: "Backend",
-  question: " How do I   get my first job? ",
-};
+const full = { name: "  Rahul   Verma ", phone: "98765 43210", email: "Rahul@Gmail.COM", college: " AKTU ", year: "2026", role: "Backend", question: " How do I   get my first job? " };
 
 test("a full request is cleaned: email lowercased, phone with country code, spaces squeezed", () => {
-  const r = validateCounseling(full, TODAY);
+  const r = validateCounseling(full);
   assert.deepEqual(r, {
     ok: true,
-    data: { day: "2026-11-30", hour: 18, name: "Rahul Verma", phone: "919876543210", email: "rahul@gmail.com", college: "AKTU", year: "2026", role: "Backend", question: "How do I get my first job?" },
+    data: { name: "Rahul Verma", phone: "919876543210", role: "Backend", email: "rahul@gmail.com", college: "AKTU", year: "2026", question: "How do I get my first job?" },
   });
 });
 
-test("the question is optional; every other missing field gets its own message", () => {
-  assert.equal(validateCounseling({ ...full, question: "" }, TODAY).ok, true);
-  const r = validateCounseling({}, TODAY);
+test("only name, WhatsApp and career interest are required", () => {
+  const r = validateCounseling({});
   assert.equal(r.ok, false);
-  if (!r.ok) assert.deepEqual(Object.keys(r.errors).sort(), ["college", "day", "email", "hour", "name", "phone", "role", "year"]);
+  if (!r.ok) assert.deepEqual(Object.keys(r.errors).sort(), ["name", "phone", "role"]);
+  assert.deepEqual(validateCounseling({ name: "Rahul", phone: "9876543210", role: "Not sure yet" }), {
+    ok: true,
+    data: { name: "Rahul", phone: "919876543210", role: "Not sure yet", email: "", college: "", year: "", question: "" },
+  });
 });
 
-test("a year or role not on the list is refused", () => {
-  const r = validateCounseling({ ...full, year: "1999", role: "Astronaut" }, TODAY);
+test("optional fields are still checked when given; a role not on the list is refused", () => {
+  const r = validateCounseling({ ...full, email: "rahul@gmail", year: "1999", role: "Astronaut" });
   assert.equal(r.ok, false);
-  if (!r.ok) assert.deepEqual(Object.keys(r.errors).sort(), ["role", "year"]);
+  if (!r.ok) assert.deepEqual(Object.keys(r.errors).sort(), ["email", "role", "year"]);
 });
 
-test("slots are the next seven days, 5 to 8 PM starts; today, past days and other hours are refused", () => {
-  assert.deepEqual(slotDays(TODAY), ["2026-11-28", "2026-11-29", "2026-11-30", "2026-12-01", "2026-12-02", "2026-12-03", "2026-12-04"]);
-  for (const day of ["2026-11-27", "2026-11-26", "2026-12-05", "soon"]) assert.equal(validateCounseling({ ...full, day }, TODAY).ok, false, day);
-  for (const hour of [16, 21, "x"]) assert.equal(validateCounseling({ ...full, hour }, TODAY).ok, false, String(hour));
-  assert.equal(validateCounseling({ ...full, hour: "20" }, TODAY).ok, true);
-});
-
-test("India's date rolls over at midnight IST, not UTC", () => {
-  assert.equal(indiaToday(new Date("2026-11-27T18:29:00Z")), "2026-11-27");
-  assert.equal(indiaToday(new Date("2026-11-27T18:31:00Z")), "2026-11-28");
-});
-
-test("the Sales note carries the preferred slot, role, year and the question", () => {
-  assert.equal(slotLabel("2026-11-30", 18), "Mon 30 Nov, 6 PM");
-  const r = validateCounseling(full, TODAY);
+test("the Sales note carries role, year and the question, and skips what was left out", () => {
+  const r = validateCounseling(full);
   assert.ok(r.ok);
-  if (r.ok) assert.equal(counselingNote(r.data, TODAY), "Free counseling request · prefers Mon 30 Nov, 6 PM IST · Backend · passed out 2026 · 2026-11-27 · Wants to ask: How do I get my first job?");
+  if (r.ok) assert.equal(counselingNote(r.data, "2026-11-27"), "Free counseling request · Backend · passed out 2026 · 2026-11-27 · Wants to ask: How do I get my first job?");
+  const bare = validateCounseling({ name: "Rahul", phone: "9876543210", role: "Backend" });
+  assert.ok(bare.ok);
+  if (bare.ok) assert.equal(counselingNote(bare.data, "2026-11-27"), "Free counseling request · Backend · 2026-11-27");
 });
