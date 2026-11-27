@@ -6,7 +6,7 @@ import { PageTitle } from "@/components/admin/PageTitle";
 import { StatTile } from "@/components/admin/StatTile";
 import { WebinarMeetSend } from "@/components/admin/WebinarMeetSend";
 import { AutoSelect } from "@/components/admin/sales/LeadSearch";
-import { getWebinarList, getWebinarRegistrations } from "@/lib/admin/webinars";
+import { getWebinarList, getWebinarRegistrations, type WebinarRegistration } from "@/lib/admin/webinars";
 import { WEBINAR, webinarOpen } from "@/lib/webinar";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +52,7 @@ export default async function AdminWebinarsPage({ searchParams }: { searchParams
         eyebrow={isCurrent ? "Live webinar" : "Past webinar"}
         title={isCurrent ? WEBINAR.title : (past?.label ?? slug)}
         intro={isCurrent
-          ? `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}.${WEBINAR.price ? ` ${WEBINAR.price.label} a seat.` : ""} Everyone who registered on /webinar, newest first.`
+          ? `${WEBINAR.dateLabel}, ${WEBINAR.timeLabel}.${WEBINAR.price ? ` ${WEBINAR.price.label} a seat. Everyone who has paid, newest first; people who started checkout and stopped are listed below.` : " Everyone who registered on /webinar, newest first."}`
           : "Everyone who registered for this webinar, newest first. The /webinar page now shows the next one."}
         actions={<div className="flex items-center gap-2">{isCurrent && <Link href="/webinar" className="rounded-lg border border-line/50 px-3 py-1.5 text-xs font-bold hover:bg-ink hover:text-paper">Open page</Link>}<ExportCsv rows={csv} filename={`klymb-webinar-${slug}`} /></div>}
       />
@@ -79,35 +79,58 @@ export default async function AdminWebinarsPage({ searchParams }: { searchParams
             <StatTile label="Working" value={list.length - students} />
             <StatTile label="Confirmation sent" value={emailed} hint={emailed < list.length ? `${list.length - emailed} not emailed` : "Everyone"} tone={emailed < list.length ? "red" : "ink"} />
           </div>
-          <div className="card overflow-x-auto">
-            <table className="w-full min-w-[860px] text-left text-sm">
-              <thead className="bg-ink text-paper">
-                <tr>
-                  {["Registered", "Name", "Contact", "Role", "Question", "Email", ...(paid ? ["Paid"] : [])].map((h) => (
-                    <th key={h} scope="col" className="p-3 text-xs font-extrabold uppercase tracking-[0.1em]">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {all.map((r, i) => (
-                  <tr key={r.id} className={clsx("border-t border-line align-top", i % 2 && "bg-surface/60")}>
-                    <td className="p-3 whitespace-nowrap nums text-muted">{when(r.created_at)}</td>
-                    <td className="max-w-[14rem] p-3 font-bold break-words">{r.name}</td>
-                    <td className="max-w-[18rem] p-3 break-words">
-                      <a href={`mailto:${r.email}`} className="underline underline-offset-2 hover:text-red-deep">{r.email}</a>
-                      <span className="block text-xs text-muted">{r.phone}</span>
-                    </td>
-                    <td className="p-3 text-xs">{r.role === "working" ? "Working" : "Student"}<span className="block text-muted">{r.org ?? "-"}</span></td>
-                    <td className="max-w-[22rem] p-3 text-xs break-words">{r.question ?? <span className="text-muted">-</span>}</td>
-                    <td className="p-3 text-xs">{r.confirmation_sent_at ? "Sent" : <span className="font-bold text-red">Not sent</span>}</td>
-                    {paid && <td className="p-3 text-xs">{r.paid_at ? "Paid" : <span className="text-muted">Not paid</span>}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SeatTable rows={list} empty={paid ? "No paid seats yet." : "No registrations yet."} />
+          {unpaid.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <div>
+                <h2 className="text-sm font-extrabold uppercase tracking-[0.1em]">Started checkout, didn&apos;t pay · {unpaid.length}</h2>
+                <p className="mt-1 text-xs text-muted">
+                  They filled in the form and closed the payment window, or their card was declined. No seat, no confirmation email and no Meet link. Worth a follow-up: if they pay, they move up to the list above.
+                </p>
+              </div>
+              <SeatTable rows={unpaid} unpaid />
+            </section>
+          )}
         </div>
       )}
     </>
+  );
+}
+
+/** One table of sign-ups. The unpaid one swaps the email column for a WhatsApp link, for following up. */
+function SeatTable({ rows, unpaid, empty }: { rows: WebinarRegistration[]; unpaid?: boolean; empty?: string }) {
+  const heads = [unpaid ? "Started" : "Registered", "Name", "Contact", "Role", "Question", unpaid ? "Follow up" : "Email"];
+  return (
+    <div className={clsx("card overflow-x-auto", unpaid && "opacity-90")}>
+      <table className="w-full min-w-[860px] text-left text-sm">
+        <thead className={unpaid ? "bg-surface text-ink" : "bg-ink text-paper"}>
+          <tr>
+            {heads.map((h) => <th key={h} scope="col" className="p-3 text-xs font-extrabold uppercase tracking-[0.1em]">{h}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr className="border-t border-line"><td colSpan={heads.length} className="p-6 text-center text-sm text-muted">{empty}</td></tr>
+          )}
+          {rows.map((r, i) => (
+            <tr key={r.id} className={clsx("border-t border-line align-top", i % 2 && "bg-surface/60")}>
+              <td className="p-3 whitespace-nowrap nums text-muted">{when(r.created_at)}</td>
+              <td className="max-w-[14rem] p-3 font-bold break-words">{r.name}</td>
+              <td className="max-w-[18rem] p-3 break-words">
+                <a href={`mailto:${r.email}`} className="underline underline-offset-2 hover:text-red-deep">{r.email}</a>
+                <span className="block text-xs text-muted">{r.phone}</span>
+              </td>
+              <td className="p-3 text-xs">{r.role === "working" ? "Working" : "Student"}<span className="block text-muted">{r.org ?? "-"}</span></td>
+              <td className="max-w-[22rem] p-3 text-xs break-words">{r.question ?? <span className="text-muted">-</span>}</td>
+              <td className="p-3 text-xs">
+                {unpaid
+                  ? <a href={`https://wa.me/${r.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="font-bold text-emerald-800 underline underline-offset-2">WhatsApp</a>
+                  : r.confirmation_sent_at ? "Sent" : <span className="font-bold text-red">Not sent</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
