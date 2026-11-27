@@ -21,9 +21,10 @@ const community = () => {
 };
 
 /**
- * The /counseling form. It becomes a B2C lead in Sales (source "website",
- * detail "Free counseling page"), due today, with the college, passing year,
- * role and question in the notes. Throttled per network address, a hidden
+ * The /counseling booking. It becomes a B2C lead in Sales (source "website",
+ * detail "Free counseling page"), due today, with the preferred evening slot,
+ * college, passing year, role and question in the notes. The slot is only a
+ * preference: the team reaches out to confirm it. Throttled per network address, a hidden
  * honeypot catches bots, and every value is rebuilt on the server.
  *
  * Someone already in Sales (same number or email) is updated, not duplicated:
@@ -33,7 +34,8 @@ const community = () => {
 export async function submitCounseling(input: CounselingInput, honeypot?: string): Promise<CounselingResult> {
   if (honeypot) return { ok: true, firstName: "", community: null };
 
-  const v = validateCounseling(input);
+  const today = istToday();
+  const v = validateCounseling(input, today);
   if (!v.ok) return { ok: false, errors: v.errors };
   const d = v.data;
 
@@ -43,7 +45,6 @@ export async function submitCounseling(input: CounselingInput, honeypot?: string
   const sql = db();
   if (!sql) return { ok: false, message: "We couldn't save that just now. Please try again in a minute." };
 
-  const today = istToday();
   const note = counselingNote(d, today);
   const owner = process.env.SALES_FORM_OWNER?.trim().toLowerCase() || null;
 
