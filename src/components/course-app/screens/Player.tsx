@@ -30,7 +30,8 @@ const useTouch = () => useSyncExternalStore(watchTouch, () => window.matchMedia(
 /** How long the controls stay up after the last tap while the video plays. */
 const BAR_IDLE_MS = 2500;
 
-function Video({ s, act, subs, bar, hold }: { s: CourseState; act: Act; subs?: boolean; bar: ReactNode; hold?: boolean }) {
+/** Exported for the company workspace's lesson page (user, 26 Nov), which plays lessons with this same player. */
+export function Video({ s, act, subs, bar, hold }: { s: CourseState; act: Act; subs?: boolean; bar: ReactNode; hold?: boolean }) {
   const day = dayOf(s.cur)!;
   const voice = audioTrack(s)!;
   const wide = !!voice.wide;
@@ -155,7 +156,7 @@ function Subtitles({ s }: { s: CourseState }) {
   );
 }
 
-function Notes({ s, act }: { s: CourseState; act: Act }) {
+export function Notes({ s, act }: { s: CourseState; act: Act }) {
   const notes = [...(s.notes[s.cur] ?? [])].sort((a, b) => a.t - b.t);
   return (
     <div className="flex flex-col gap-3 px-5 py-3.5 lg:p-3.5">

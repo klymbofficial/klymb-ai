@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { brandColor, companyName, companySlug, firstHrBlocked, hrEmail, logoUrl, personName, seatCount } from "@/lib/admin/companies";
-import { sendCompanyInvite } from "@/lib/company/invite";
+import { loadCompanyBrand, sendCompanyInvite } from "@/lib/company/invite";
 import { db } from "@/lib/db/client";
 
 export type CompanyResult = { ok: true; message?: string } | { ok: false; message: string };
@@ -88,9 +88,9 @@ export async function updateCompanySettings(
 }
 
 /**
- * Any admin, and only while the company has no HR person yet. After that HR
- * manages their own people. Needs a free seat, and the email must not be a
- * Klymb learner or already in a company.
+ * Any admin, and only while the company has no admin of its own yet. After
+ * that the company's admin manages their own people. Needs a free seat. The
+ * email may be a Klymb learner or in another company already.
  */
 export async function addFirstHr(id: string, rawEmail: string, rawName: string): Promise<CompanyResult> {
   const admin = await getAdmin();
@@ -104,52 +104,58 @@ export async function addFirstHr(id: string, rawEmail: string, rawName: string):
   if (!sql) return UNAVAILABLE;
   const { data: c, error: readError } = await sql.row<{
     name: string; logo_url: string | null; brand_color: string | null;
-    seat_count: number; members: number; has_hr: boolean; is_learner: boolean; member_of: string | null;
+    seat_count: number; members: number; has_hr: boolean; in_company: boolean;
   }>`
     select c.name, c.logo_url, c.brand_color, c.seat_count,
            (select count(*)::int from course.company_members m where m.company_id = c.id and m.removed_at is null) as members,
+           -- company_members.role is 'hr' for every admin (kept so by migration 0072's trigger).
            exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null) as has_hr,
-           exists (select 1 from course.learners l where l.email = ${email.value}) as is_learner,
-           (select o.slug from course.company_members m join course.companies o on o.id = m.company_id
-             where m.email = ${email.value}) as member_of
+           exists (select 1 from course.company_members m where m.company_id = c.id and m.email = ${email.value}) as in_company
       from course.companies c where c.id = ${id}
   `;
   if (readError) return UNAVAILABLE;
   if (!c) return GONE;
-  const blocked = firstHrBlocked({ seatCount: c.seat_count, members: c.members, hasHr: c.has_hr, isLearner: c.is_learner, memberOf: c.member_of });
+  const blocked = firstHrBlocked({ seatCount: c.seat_count, members: c.members, hasHr: c.has_hr, inCompany: c.in_company });
   if (blocked) return { ok: false, message: blocked };
 
   // The same rules again inside the insert, so nothing changed since the read
   // above can slip through. (Two admins adding HR in the same instant could
   // still both succeed; rare enough for an admin-only form.)
-  const { data: count, error } = await sql.run`
-    insert into course.company_members (email, company_id, role, name)
-    select ${email.value}, c.id, 'hr', ${name}
-      from course.companies c
-     where c.id = ${id}
-       and (select count(*) from course.company_members m where m.company_id = c.id and m.removed_at is null) < c.seat_count
-       and not exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null)
-       and not exists (select 1 from course.learners l where l.email = ${email.value})
+  const { data: count, error } = await sql.scalar<number>`
+    with added as (
+      insert into course.company_members (email, company_id, role, name)
+      select ${email.value}, c.id, 'hr', ${name}
+        from course.companies c
+       where c.id = ${id}
+         and (select count(*) from course.company_members m where m.company_id = c.id and m.removed_at is null) < c.seat_count
+         and not exists (select 1 from course.company_members m where m.company_id = c.id and m.role = 'hr' and m.removed_at is null)
+      returning email, company_id
+    ), granted as (
+      insert into course.company_member_roles (company_id, email, role, granted_by)
+      select company_id, email, 'admin', ${admin.email} from added
+      returning 1
+    )
+    select count(*)::int from added
   `;
-  if (error?.code === "23505") return { ok: false, message: "That email already belongs to a company. A person can only be in one." };
+  if (error?.code === "23505") return { ok: false, message: "That email is already in this company." };
   if (error) {
-    console.error("company HR add failed:", error.code, error.message);
+    console.error("company admin add failed:", error.code, error.message);
     return { ok: false, message: "That could not be saved." };
   }
   if (!count) return { ok: false, message: "Something changed meanwhile. Reload and try again." };
-  await logAdmin(admin, "company.hr_add", id, { email: email.value, ...(name ? { name } : {}) });
+  await logAdmin(admin, "company.hr_add", id, { email: email.value, role: "admin", ...(name ? { name } : {}) });
 
   // Adding them has worked by now; the email is a courtesy and never undoes it.
   const sent = await sendCompanyInvite({
-    email: email.value, name, role: "hr",
-    company: { name: c.name, logoUrl: c.logo_url, brandColor: c.brand_color },
+    email: email.value, name, role: "admin",
+    company: (await loadCompanyBrand(sql, id)) ?? { name: c.name, logoUrl: c.logo_url, brandColor: c.brand_color },
   });
 
   revalidatePath("/admin/companies");
   return {
     ok: true,
     message: sent
-      ? `${email.value} is the HR person and has been emailed how to sign in.`
-      : `${email.value} is the HR person. The invite email couldn't be sent, so tell them to sign in at /org/sign-in.`,
+      ? `${email.value} is the company's admin and has been emailed how to sign in.`
+      : `${email.value} is the company's admin. The invite email couldn't be sent, so tell them to sign in at /org/sign-in.`,
   };
 }

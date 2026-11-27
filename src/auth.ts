@@ -32,6 +32,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return null;
       },
     }),
+    // Members who set a password in Settings may sign in with it instead of a
+    // code. Like the code, it opens company pages only (see companyEmailFrom).
+    // The throttles live inside redeemPassword, so they hold for direct calls
+    // to /api/auth/callback/password too.
+    Credentials({
+      id: "password",
+      name: "Password",
+      credentials: { email: {}, password: {} },
+      async authorize(credentials) {
+        // Loaded on demand: the module is server-only and touches the database.
+        const { redeemPassword } = await import("@/lib/company/password");
+        const result = await redeemPassword(credentials.email, credentials.password);
+        if (result.ok) return { id: result.email, email: result.email };
+        if (result.reason === "limited") throw new CodeRateLimited();
+        return null;
+      },
+    }),
     // Dev sign-in: a fixed list of fake people, so any worktree on any port can
     // be authenticated without Google. Refuses unless devLoginEnabled(), which
     // needs AUTH_DEV_LOGIN=true and a dev or preview environment (never Vercel
@@ -67,6 +84,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Said outright, not left to the default: a code proves the mailbox to
         // company pages only, never to admin.
         token.emailIsVerified = false;
+      } else if (params.account?.provider === "password") {
+        // A company password, like a code, opens company pages and nothing else.
+        token.signInMethod = "password";
+        token.emailIsVerified = false;
       } else if (params.account?.provider === "dev-login") {
         // Only a person from DEV_USERS, only while enabled; authorize checked both.
         token.signInMethod = devLoginEnabled() ? "dev" : undefined;
@@ -84,15 +105,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const device = await import("@/lib/learner/device");
         if (email && !(await device.deviceBusy(email))) await device.claimDevice(email, sid);
       }
+      // Every sign-in records when it happened and has an id, so "Log out from
+      // other sessions" can refuse older ones and keep this one (0098).
+      if (params.account) {
+        token.authAt = Date.now();
+        token.sid ??= randomUUID();
+      }
       return token;
     },
     session(params) {
       const session = authConfig.callbacks.session(params);
       if (session.user) {
         session.user.sid = typeof params.token.sid === "string" ? params.token.sid : undefined;
+        session.user.authAt = typeof params.token.authAt === "number" ? params.token.authAt : undefined;
         const method = params.token.signInMethod;
         session.user.signInMethod =
-          method === "google" || method === "email-code" || method === "dev" ? method : undefined;
+          method === "google" || method === "email-code" || method === "password" || method === "dev" ? method : undefined;
       }
       return session;
     },
@@ -110,8 +138,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 export function verifiedEmailFrom(session: Session | null): string | null {
   if (!session?.user) return null;
   if (session.user.emailIsVerified !== true) return null;
-  // A code sign-in never counts here, even if a flag were somehow set.
-  if (session.user.signInMethod === "email-code") return null;
+  // A code or company-password sign-in never counts here, even if a flag were somehow set.
+  if (session.user.signInMethod === "email-code" || session.user.signInMethod === "password") return null;
   // A dev session counts only where the dev sign-in is on right now, and only
   // for a person on the fixed list. A token carried to an environment where it
   // is off, or one with any other address, is nothing.
@@ -146,12 +174,15 @@ export async function currentAdminEmail(): Promise<string | null> {
 
 /**
  * The identity company pages authorise against: a Google-verified email, or
- * an email proven by a sign-in code. Only src/lib/company/auth.ts uses it,
- * so a code sign-in opens company pages and nothing else.
+ * an email proven by a sign-in code or a company password. Only
+ * src/lib/company/auth.ts uses it, so those sign-ins open company pages and
+ * nothing else.
  */
 export function companyEmailFrom(session: Session | null): string | null {
   const verified = verifiedEmailFrom(session);
   if (verified) return verified;
-  if (session?.user?.signInMethod !== "email-code") return null;
+  if (!session?.user) return null;
+  const method = session.user.signInMethod;
+  if (method !== "email-code" && method !== "password") return null;
   return normaliseEmail(session.user.email);
 }

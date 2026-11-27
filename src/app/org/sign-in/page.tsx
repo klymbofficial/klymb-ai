@@ -3,19 +3,25 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CompanySignInForm } from "@/components/company/CompanySignInForm";
 import { Wordmark } from "@/components/layout/Wordmark";
-import { getMember } from "@/lib/company/auth";
+import { getMemberships } from "@/lib/company/auth";
+import { safeOrgNext } from "@/lib/company/return-path";
 
 export const metadata: Metadata = { title: "Company sign-in", robots: { index: false, follow: false } };
 
 /**
- * The sign-in page for every company. Invited members ask for a code by
- * email; nothing here names a company, so it can't be used to find out
+ * The sign-in page for every company. Invited members sign in with a
+ * password, or ask for a code by email; nothing here names a company, so it can't be used to find out
  * which companies or people are on Klymb.
+ *
+ * ?next= is the workspace page someone was sent here from. It is kept through
+ * both steps and followed after sign-in, only when safeOrgNext allows it.
  */
-export default async function CompanySignInPage() {
-  // Already signed in as a member: straight to their company.
-  const member = await getMember();
-  if (member) redirect(`/org/${member.companySlug}`);
+export default async function CompanySignInPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
+  const next = safeOrgNext((await searchParams).next);
+  // Already signed in as a member: straight on, to the page asked for, their
+  // one workspace, or the list of their workspaces.
+  const memberships = await getMemberships();
+  if (memberships.length) redirect(next ?? (memberships.length === 1 ? `/org/${memberships[0].companySlug}` : "/org"));
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
@@ -27,12 +33,13 @@ export default async function CompanySignInPage() {
         <div className="card p-6 sm:p-8">
           <h1 className="display text-2xl">Sign in</h1>
           <p className="mt-2 text-sm text-muted">
-            For people invited by their company. Enter your work email and we&apos;ll send you a code.
+            For people invited by their company. Sign in with your work email.
           </p>
-          <CompanySignInForm />
+          <CompanySignInForm next={next} />
         </div>
         <ul className="mt-6 space-y-2 text-xs text-muted">
-          <li>HR contacts manage their company&apos;s people and teams. Team heads and employees see their own learning.</li>
+          <li>First time here, or forgot your password? Email yourself a code, then set a password in Settings.</li>
+          <li>Admins manage people and teams. Track course progress in Upskill.</li>
           <li>
             Not invited by a company? <Link href="/dashboard" className="font-semibold text-ink underline underline-offset-2">Sign in to your course</Link> instead.
           </li>

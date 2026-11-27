@@ -194,7 +194,7 @@ export function VideoBar({ s, act, ui }: { s: CourseState; act: Act; ui: ReturnT
           type="range" min={0} max={1} step={0.05} value={quiet ? 0 : s.volume}
           onChange={(e) => { const volume = Number(e.target.value); act((p) => ({ ...p, volume, muted: volume === 0 })); }}
           aria-label="Volume" aria-valuetext={`${Math.round((quiet ? 0 : s.volume) * 100)}%`}
-          className="mr-1 hidden w-20 cursor-pointer accent-sd-accent-400 lg:block"
+          className="mr-1 hidden w-20 cursor-pointer accent-sd-accent-400 @xl:block"
         />
         <span className="pl-1 text-xs font-semibold whitespace-nowrap tabular-nums">{fmt(s.t)}<span className="max-[359px]:hidden"> / {fmt(d)}</span></span>
         <span className="flex-1" />

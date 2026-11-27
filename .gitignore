@@ -45,3 +45,5 @@ next-env.d.ts
 .claude/
 AGENTS.md
 CLAUDE.md
+# Company brand files saved locally in development (src/lib/company/brand-storage.ts)
+/.data/

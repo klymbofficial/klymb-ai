@@ -3,12 +3,14 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   MAX_CSV_ROWS,
-  headBlocked,
+  grantedRoles,
+  leadBlocked,
+  leadsAfterMove,
   parseCsv,
   planAdd,
   readPeopleCsv,
   removeBlocked,
-  roleAfterMove,
+  rolesBlocked,
   teamKey,
   teamName,
   type AddContext,
@@ -31,7 +33,6 @@ function ctx(over: Partial<AddContext> = {}): AddContext {
     activeMembers: 2,
     teams: new Map([["sales", "team-sales"], ["data science", "team-ds"]]),
     existing: new Map(),
-    learners: new Set(),
     ...over,
   };
 }
@@ -109,42 +110,37 @@ test("planAdd is all or nothing, and lists every problem by line", () => {
       person(3, "not-an-email"),
       person(4, ""),
       person(5, "OK@x.com"),
-      person(6, "other@x.com"),
-      person(7, "here@x.com"),
-      person(8, "learner@x.com"),
-      person(9, "d@x.com", "Marketing"),
+      person(6, "here@x.com"),
+      person(7, "d@x.com", "Marketing"),
     ],
-    ctx({
-      existing: new Map([
-        ["other@x.com", { sameCompany: false, removed: false }],
-        ["here@x.com", { sameCompany: true, removed: false }],
-      ]),
-      learners: new Set(["learner@x.com"]),
-    }),
+    ctx({ existing: new Map([["here@x.com", { removed: false }]]) }),
   );
   assert.equal(plan.ok, false);
   assert.deepEqual(plan.add, [], "nobody is added when any row fails");
-  assert.deepEqual(plan.errors.map((e) => e.line), [3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(plan.errors.map((e) => e.line), [3, 4, 5, 6, 7]);
   const text = plan.errors.map((e) => e.message);
   assert.match(text[0], /isn't a valid email/);
   assert.match(text[1], /email is missing/);
   assert.match(text[2], /already on line 2/);
-  assert.match(text[3], /another company/);
-  assert.match(text[4], /already in your company/);
-  assert.match(text[5], /learner/);
-  assert.match(text[6], /no team called "Marketing"/);
+  assert.match(text[3], /already in your company/);
+  assert.match(text[4], /no team called "Marketing"/);
 });
 
 test("planAdd brings back a removed member of the same company", () => {
-  const plan = planAdd([person(2, "back@x.com")], ctx({ existing: new Map([["back@x.com", { sameCompany: true, removed: true }]]) }));
+  const plan = planAdd([person(2, "back@x.com")], ctx({ existing: new Map([["back@x.com", { removed: true }]]) }));
   assert.equal(plan.ok, true);
   assert.equal(plan.add[0].returning, true);
 });
 
-test("planAdd never takes someone removed from a different company", () => {
-  const plan = planAdd([person(2, "gone@x.com")], ctx({ existing: new Map([["gone@x.com", { sameCompany: false, removed: true }]]) }));
-  assert.equal(plan.ok, false);
-  assert.match(plan.errors[0].message, /another company/);
+test("planAdd takes people in other companies and Klymb learners: only this company's rows are asked about", () => {
+  // AddContext holds no other company and no learners, so nothing can refuse them.
+  const plan = planAdd([person(2, "in-another-company@x.com"), person(3, "learner@x.com")], ctx());
+  assert.equal(plan.ok, true);
+  assert.equal(plan.add.length, 2);
+  const data = read("src/lib/company/people-data.ts");
+  const load = fnSource(data, "loadAddContext");
+  assert.doesNotMatch(load, /course\.learners/);
+  assert.match(load, /where company_id = \$\{companyId\}::uuid and email = any/);
 });
 
 test("planAdd keeps to the seat limit, counting only active members", () => {
@@ -155,9 +151,9 @@ test("planAdd keeps to the seat limit, counting only active members", () => {
   assert.equal(over.errors[0].line, null);
   assert.match(over.errors[0].message, /adds 3 people, but only 2 of 5 seats are free/);
 
-  const one = planAdd([{ ...person(1, "a@x.com"), role: "hr" }], ctx({ seatCount: 2, activeMembers: 2 }));
+  const one = planAdd([{ ...person(1, "a@x.com"), role: "admin" }], ctx({ seatCount: 2, activeMembers: 2 }));
   assert.match(one.errors[0].message, /needs a free seat, and all 2 are taken/);
-  assert.equal(planAdd([{ ...person(1, "a@x.com"), role: "hr" }], ctx()).add[0].role, "hr");
+  assert.equal(planAdd([{ ...person(1, "a@x.com"), role: "admin" }], ctx()).add[0].role, "admin");
 });
 
 test("teamKey matches the way team names are compared", () => {
@@ -166,15 +162,40 @@ test("teamKey matches the way team names are compared", () => {
 
 // ── Removing, heads and moves ───────────────────────────────
 
-test("removeBlocked protects HR: not yourself, never the last HR", () => {
-  const employee = { email: "e@x.com", role: "employee", removed: false };
-  assert.equal(removeBlocked({ actorEmail: "hr@x.com", target: employee, activeHr: 1 }), null);
-  assert.match(removeBlocked({ actorEmail: "hr@x.com", target: null, activeHr: 1 })!, /isn't in your company/);
-  assert.match(removeBlocked({ actorEmail: "hr@x.com", target: { ...employee, removed: true }, activeHr: 1 })!, /already been removed/);
-  assert.match(removeBlocked({ actorEmail: "hr@x.com", target: { email: "hr@x.com", role: "hr", removed: false }, activeHr: 2 })!, /can't remove yourself/);
-  assert.match(removeBlocked({ actorEmail: "hr@x.com", target: { email: "hr2@x.com", role: "hr", removed: false }, activeHr: 1 })!, /last HR/);
-  assert.equal(removeBlocked({ actorEmail: "hr@x.com", target: { email: "hr2@x.com", role: "hr", removed: false }, activeHr: 2 }), null);
-  assert.equal(removeBlocked({ actorEmail: "hr@x.com", target: { ...employee, role: "head" }, activeHr: 1 }), null, "a head can be removed; the team is left without one");
+test("removeBlocked protects admins: not yourself, never the last admin", () => {
+  const employee = { email: "e@x.com", roles: ["employee"], removed: false };
+  const admin2 = { email: "a2@x.com", roles: ["admin", "recruiter"], removed: false };
+  assert.equal(removeBlocked({ actorEmail: "a@x.com", target: employee, activeAdmins: 1 }), null);
+  assert.match(removeBlocked({ actorEmail: "a@x.com", target: null, activeAdmins: 1 })!, /isn't in your company/);
+  assert.match(removeBlocked({ actorEmail: "a@x.com", target: { ...employee, removed: true }, activeAdmins: 1 })!, /already been removed/);
+  assert.match(removeBlocked({ actorEmail: "a@x.com", target: { email: "a@x.com", roles: ["admin"], removed: false }, activeAdmins: 2 })!, /can't remove yourself/);
+  assert.match(removeBlocked({ actorEmail: "a@x.com", target: admin2, activeAdmins: 1 })!, /last admin/);
+  assert.equal(removeBlocked({ actorEmail: "a@x.com", target: admin2, activeAdmins: 2 }), null);
+  assert.equal(removeBlocked({ actorEmail: "a@x.com", target: { ...employee, roles: ["team_lead"] }, activeAdmins: 1 }), null, "a lead can be removed; the team is left without one");
+});
+
+test("grantedRoles keeps known grantable roles only, once each, in a fixed order", () => {
+  assert.deepEqual(grantedRoles(["employee", "recruiter", "admin", "recruiter"]), ["admin", "recruiter", "employee"]);
+  assert.deepEqual(grantedRoles([]), []);
+  assert.equal(grantedRoles(["team_lead"]), null, "a team's lead is set on the Teams page");
+  assert.equal(grantedRoles(["owner"]), null);
+  assert.equal(grantedRoles("admin"), null);
+  assert.equal(grantedRoles([1]), null);
+  assert.equal(grantedRoles(Array(20).fill("employee")), null);
+});
+
+test("rolesBlocked: at least one responsibility, own admin kept, last admin kept", () => {
+  const target = (roles: string[], email = "t@x.com") => ({ email, roles, removed: false });
+  const base = { actorEmail: "a@x.com", activeAdmins: 2 };
+  assert.equal(rolesBlocked({ ...base, target: target(["employee"]), next: ["recruiter", "reviewer"] }), null);
+  assert.match(rolesBlocked({ ...base, target: target(["employee"]), next: [] })!, /at least one/);
+  assert.equal(rolesBlocked({ ...base, target: target(["team_lead", "employee"]), next: [] }), null, "leading a team is a responsibility");
+  assert.match(rolesBlocked({ ...base, target: target(["admin"], "a@x.com"), next: ["employee"] })!, /your own admin/);
+  assert.equal(rolesBlocked({ ...base, target: target(["admin"], "a@x.com"), next: ["admin", "recruiter"] }), null, "an admin may add to their own");
+  assert.match(rolesBlocked({ ...base, activeAdmins: 1, target: target(["admin"]), next: ["employee"] })!, /last admin/);
+  assert.equal(rolesBlocked({ ...base, target: target(["admin"]), next: ["company_head"] }), null);
+  assert.match(rolesBlocked({ ...base, target: null, next: ["employee"] })!, /isn't in your company/);
+  assert.match(rolesBlocked({ ...base, target: { ...target(["employee"]), removed: true }, next: ["employee"] })!, /isn't in your company/);
 });
 
 test("teamName tidies spacing and refuses empty or long names", () => {
@@ -184,20 +205,17 @@ test("teamName tidies spacing and refuses empty or long names", () => {
   assert.equal(teamName("x".repeat(61)).ok, false);
 });
 
-test("headBlocked: only an active non-HR member can head a team", () => {
-  assert.equal(headBlocked({ role: "employee", removed: false }), null);
-  assert.equal(headBlocked({ role: "head", removed: false }), null);
-  assert.ok(headBlocked({ role: "hr", removed: false }));
-  assert.ok(headBlocked({ role: "employee", removed: true }));
-  assert.ok(headBlocked(null));
+test("leadBlocked: any active member can lead a team, admins included", () => {
+  assert.equal(leadBlocked({ removed: false }), null);
+  assert.ok(leadBlocked({ removed: true }));
+  assert.ok(leadBlocked(null));
 });
 
-test("roleAfterMove: a head who changes team becomes an employee", () => {
-  assert.equal(roleAfterMove("head", "t1", "t2"), "employee");
-  assert.equal(roleAfterMove("head", "t1", null), "employee");
-  assert.equal(roleAfterMove("head", "t1", "t1"), "head");
-  assert.equal(roleAfterMove("employee", "t1", "t2"), "employee");
-  assert.equal(roleAfterMove("hr", null, "t2"), "hr");
+test("leadsAfterMove: a lead who changes team stops leading the old one", () => {
+  assert.equal(leadsAfterMove("t1", "t2"), null);
+  assert.equal(leadsAfterMove("t1", null), null);
+  assert.equal(leadsAfterMove("t1", "t1"), "t1");
+  assert.equal(leadsAfterMove(null, "t2"), null);
 });
 
 // ── The database and the access check ───────────────────────
@@ -212,6 +230,7 @@ test("migration 0013 adds removed_at and one head per team, safely re-runnable",
 
 test("removed people get no access: lookup and code sign-in skip them", () => {
   assert.match(read("src/lib/company/lookup.ts"), /where m\.email = \$\{email\} and m\.removed_at is null/);
+  assert.match(read("src/lib/company/lookup.ts"), /where m\.email = \$\{email\} and c\.slug = \$\{wanted\} and m\.removed_at is null/);
   const store = read("src/lib/company/signin-store.ts");
   const isMember = store.slice(store.indexOf("isMember"), store.indexOf("save"));
   assert.match(isMember, /removed_at is null/);
@@ -224,28 +243,31 @@ test("removed people free their seat in the admin's counts too", () => {
   assert.ok((data.match(/removed_at is null/g) ?? []).length >= 2);
 });
 
-test("removing stamps removed_at (data stays), ends codes, and re-checks HR rules in the statement", () => {
+test("removing stamps removed_at (data stays), ends this company's roles, keeps a code another company still needs, and re-checks admin rules", () => {
   const data = read("src/lib/company/people-data.ts");
   const fn = fnSource(data, "removePersonRow");
   assert.match(fn, /set removed_at = now\(\)/);
   assert.doesNotMatch(fn, /delete from course\.company_members/, "the person's row is never deleted");
+  assert.match(fn, /delete from course\.company_member_roles x using r\s+where x\.company_id = \$\{companyId\}::uuid/);
   assert.match(fn, /delete from course\.company_signin_codes/);
+  assert.match(fn, /o\.company_id <> \$\{companyId\}::uuid/);
   assert.match(fn, /email <> \$\{actorEmail\}/);
+  assert.match(fn, /a\.role = 'admin'/);
 });
 
-test("adding re-checks seats and learners inside the insert, and only revives this company's removed rows", () => {
+test("adding re-checks seats inside the insert, gives the first role, and only revives this company's removed rows", () => {
   const data = read("src/lib/company/people-data.ts");
   const fn = fnSource(data, "insertPeople");
   assert.match(fn, /<= \(select seat_count from course\.companies/);
-  assert.match(fn, /where g\.fits and g\.free and g\.not_learners and g\.teams_ok/);
-  assert.match(fn, /course\.learners/);
-  assert.match(fn, /on conflict \(email\) do update\s+set removed_at = null/);
-  assert.match(fn, /removed_at is not null/);
-  assert.match(fn, /company_id = excluded\.company_id/);
+  assert.match(fn, /where g\.fits and g\.free and g\.teams_ok/);
+  assert.doesNotMatch(fn, /course\.learners/, "Klymb learners may join");
+  assert.match(fn, /on conflict \(company_id, email\) do update\s+set removed_at = null/);
+  assert.match(fn, /where m\.removed_at is not null/);
+  assert.match(fn, /insert into course\.company_member_roles/);
 });
 
-test("every People and Teams action checks for HR of this company first", () => {
-  for (const file of ["src/app/org/[slug]/people/actions.ts", "src/app/org/[slug]/teams/actions.ts"]) {
+test("every People and Teams action checks for an admin of this company first", () => {
+  for (const file of ["src/app/org/[slug]/(workspace)/people/actions.ts", "src/app/org/[slug]/(workspace)/teams/actions.ts"]) {
     const src = read(file);
     assert.match(src, /^"use server";/);
     const fns = src.split(/\nexport async function /).slice(1);
@@ -253,25 +275,36 @@ test("every People and Teams action checks for HR of this company first", () => 
     for (const fn of fns) {
       // The body starts after the return type (a parameter type can hold braces too).
       const body = fn.slice(fn.indexOf("> {"));
-      // The first thing each action does is the HR check (addPerson hands straight to addPlanned, which does it).
-      const first = body.match(/\b(hrFor|addPlanned|db)\(/)?.[1];
-      assert.ok(first === "hrFor" || first === "addPlanned", `${file}: ${fn.slice(0, 30)} must check HR first (found ${first})`);
+      // The first thing each action does is the admin check (addPerson hands straight to addPlanned, which does it).
+      const first = body.match(/\b(adminFor|addPlanned|db)\(/)?.[1];
+      assert.ok(first === "adminFor" || first === "addPlanned", `${file}: ${fn.slice(0, 30)} must check for an admin first (found ${first})`);
     }
     assert.doesNotMatch(src, /companyId:\s*form|formData\.get\("company/, "the company always comes from the login");
   }
 });
 
-test("both pages are HR-only: other roles get a role panel and nothing is loaded; the org layout checks membership (task 1.7)", () => {
-  for (const page of ["people", "teams"]) {
-    const src = read(`src/app/org/[slug]/${page}/page.tsx`);
-    // Membership of this company is required, then the role; a non-HR member is stopped before any query.
+test("Team is admin-only and People (candidates) is for those who see hiring: other roles get a role panel before any query; the org layout checks membership (task 1.7)", () => {
+  for (const [page, check] of [["teams", "!isAdmin(hr)"], ["people", "!seesHiring(member)"]] as const) {
+    const src = read(`src/app/org/[slug]/(workspace)/${page}/page.tsx`);
+    // Membership of this company is required, then the role; a member without it is stopped before any query.
     assert.match(src, /requireCompany\(slug\)/);
-    const role = src.indexOf('hr.role !== "hr"');
+    const role = src.indexOf(check);
     assert.ok(role > -1, `${page} checks the role`);
     assert.match(src.slice(role, role + 140), /return <RoleOnly/);
     assert.ok(role < src.indexOf("db()"), `${page} checks the role before touching the database`);
   }
-  const layout = read("src/app/org/[slug]/layout.tsx");
-  assert.match(layout, /getMember\(\)/);
+  const layout = read("src/app/org/[slug]/(workspace)/layout.tsx");
+  assert.match(layout, /getWorkspaceMember\(slug\)/);
   assert.match(layout, /allowCompany\(member, slug\)/);
+});
+
+test("uploading the same file again leaves people already here as they are, and adds only the new ones", () => {
+  const existing = new Map([["here@x.com", { removed: false }], ["back@x.com", { removed: true }]]);
+  const plan = planAdd([person(2, "here@x.com"), person(3, "back@x.com"), person(4, "new@x.com")], ctx({ existing }), { skipExisting: true });
+  assert.equal(plan.ok, true);
+  assert.deepEqual(plan.skipped, [{ line: 2, email: "here@x.com" }]);
+  assert.deepEqual(plan.add.map((p) => [p.email, p.returning]), [["back@x.com", true], ["new@x.com", false]]);
+  const again = planAdd([person(2, "here@x.com")], ctx({ existing }), { skipExisting: true });
+  assert.deepEqual([again.ok, again.add.length, again.skipped.length], [true, 0, 1]);
+  assert.equal(planAdd([person(2, "here@x.com")], ctx({ existing })).ok, false, "a single add still says they're already here");
 });

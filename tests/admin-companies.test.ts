@@ -97,29 +97,30 @@ test("seats can never go below the people already in the company", () => {
   refused(seatCount("0", 1), /already has 1 person/);
 });
 
-// ── First HR person ─────────────────────────────────────────
+// ── First company admin ─────────────────────────────────────
 
-const open = { seatCount: 5, members: 0, hasHr: false, isLearner: false, memberOf: null };
+const open = { seatCount: 5, members: 0, hasHr: false, inCompany: false };
 
-test("the first HR person can be added when there is a free seat and no HR yet", () => {
+test("the first admin can be added when there is a free seat and no admin yet", () => {
   assert.equal(firstHrBlocked(open), null);
 });
 
-test("only the first: a company that has HR refuses another", () => {
-  assert.match(firstHrBlocked({ ...open, hasHr: true, members: 1 }) ?? "", /already has an HR person/);
+test("only the first: a company that has an admin refuses another", () => {
+  assert.match(firstHrBlocked({ ...open, hasHr: true, members: 1 }) ?? "", /already has an admin/);
 });
 
-test("adding HR needs a free seat", () => {
+test("adding the admin needs a free seat", () => {
   assert.match(firstHrBlocked({ ...open, seatCount: 0 }) ?? "", /no free seat/);
   assert.match(firstHrBlocked({ ...open, seatCount: 2, members: 2 }) ?? "", /no free seat/);
 });
 
-test("a Klymb learner's email is refused", () => {
-  assert.match(firstHrBlocked({ ...open, isLearner: true }) ?? "", /Klymb learner/);
-});
-
-test("someone already in a company can't join another", () => {
-  assert.match(firstHrBlocked({ ...open, memberOf: "globex" }) ?? "", /already belongs to a company \(globex\)/);
+test("someone already in this company is refused; other companies and Klymb learners are not asked about", () => {
+  assert.match(firstHrBlocked({ ...open, inCompany: true }) ?? "", /already in this company/);
+  const actions = readFileSync("src/app/admin/company-actions.ts", "utf8");
+  const fn = actions.slice(actions.indexOf("export async function addFirstHr"));
+  assert.doesNotMatch(fn, /course\.learners/);
+  assert.match(fn, /insert into course\.company_member_roles/);
+  assert.match(fn, /'admin'/);
 });
 
 test("HR emails are canonicalised, names tidied and optional", () => {
@@ -149,13 +150,13 @@ test("the page itself requires an admin", () => {
   assert.match(data, /if \(!\(await getAdmin\(\)\)\) return null;/);
 });
 
-test("the HR insert re-checks seats, existing HR and learners in the same statement", () => {
+test("the admin insert re-checks seats and an existing admin in the same statement", () => {
   const insert = actions.slice(actions.indexOf("insert into course.company_members"));
   const statement = insert.slice(0, insert.indexOf("`"));
   // Removed people (1.11) neither hold a seat nor count as the company's HR.
   assert.match(statement, /m\.company_id = c\.id and m\.removed_at is null\) < c\.seat_count/);
   assert.match(statement, /not exists \(select 1 from course\.company_members m where m\.company_id = c\.id and m\.role = 'hr' and m\.removed_at is null\)/);
-  assert.match(statement, /not exists \(select 1 from course\.learners l where l\.email = /);
+  assert.doesNotMatch(statement, /course\.learners/, "Klymb learners may be a company's admin");
 });
 
 test("the seat update re-checks the member count in the same statement", () => {

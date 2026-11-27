@@ -24,7 +24,7 @@ export function OrgNav({ items }: { items: OrgNavItem[] }) {
             aria-current={current ? "page" : undefined}
             className={clsx(
               "whitespace-nowrap px-3 py-2 text-sm font-bold transition-colors",
-              current ? "bg-paper text-ink" : "text-paper/70 hover:bg-paper/10 hover:text-paper",
+              current ? "bg-paper text-ink" : "text-current underline-offset-4 hover:underline",
             )}
           >
             {item.label}

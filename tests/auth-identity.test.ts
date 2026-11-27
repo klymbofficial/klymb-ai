@@ -111,3 +111,20 @@ test("a code sign-in is explicitly marked unverified when the token is made", ()
   const authSource = readFileSync("src/auth.ts", "utf8");
   assert.match(authSource, /token\.signInMethod = "email-code";\s*(\/\/.*\s*)*token\.emailIsVerified = false;/);
 });
+
+// ── Company passwords ───────────────────────────────────────
+// A company password, like a code, opens company pages and nothing else.
+
+test("a company-password sign-in opens company pages, never admin or the course", () => {
+  for (const extra of [{}, { emailIsVerified: false }, { emailIsVerified: true }]) {
+    const s = session({ email: " Dev@Acme.com ", signInMethod: "password", ...extra });
+    assert.equal(companyEmailFrom(s), "dev@acme.com", JSON.stringify(extra));
+    assert.equal(verifiedEmailFrom(s), null, JSON.stringify(extra));
+    assert.equal(adminEmailFrom(s), null, JSON.stringify(extra));
+  }
+});
+
+test("a password sign-in is explicitly marked unverified when the token is made", () => {
+  const authSource = readFileSync("src/auth.ts", "utf8");
+  assert.match(authSource, /token\.signInMethod = "password";\s*(\/\/.*\s*)*token\.emailIsVerified = false;/);
+});

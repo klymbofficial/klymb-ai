@@ -4,6 +4,7 @@ import { AuthError, CredentialsSignin } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { CODE_TTL_MINUTES } from "@/lib/company/signin-code";
+import { safeOrgNext } from "@/lib/company/return-path";
 import { requestSignInCode } from "@/lib/company/signin";
 import { normaliseEmail } from "@/lib/email";
 
@@ -16,7 +17,10 @@ export interface SignInState {
 
 const UNAVAILABLE = "Sign-in isn't available right now. Please try again in a few minutes.";
 
-/** Both steps of /org/sign-in, told apart by the submit button's `intent`. */
+/**
+ * Every step of /org/sign-in, told apart by the submit button's `intent`:
+ * a password, or the email code in two steps (ask for it, then type it).
+ */
 export async function companySignIn(_prev: SignInState, formData: FormData): Promise<SignInState> {
   const intent = formData.get("intent");
   const rawEmail = formData.get("email");
@@ -25,6 +29,27 @@ export async function companySignIn(_prev: SignInState, formData: FormData): Pro
   const typed = typeof rawEmail === "string" ? rawEmail.trim().slice(0, 254) : undefined;
 
   if (intent === "restart") return { step: "email", email: email ?? undefined };
+
+  if (intent === "password") {
+    if (!email) return { step: "email", email: typed, error: "Enter a valid email address." };
+    const password = formData.get("password");
+    if (typeof password !== "string" || password.length === 0) {
+      return { step: "email", email, error: "Enter your password, or email yourself a code." };
+    }
+    try {
+      await signIn("password", { email, password, redirect: false });
+    } catch (error) {
+      if (error instanceof CredentialsSignin && error.code === "rate_limited") {
+        return { step: "email", email, error: "Too many attempts. Please wait 15 minutes, or email yourself a code." };
+      }
+      if (error instanceof AuthError) {
+        // The same answer for a wrong password, no password yet and not invited, so it says nothing about who is on Klymb.
+        return { step: "email", email, error: "That email and password don't match. No password yet, or forgot it? Email yourself a code." };
+      }
+      throw error;
+    }
+    redirect(safeOrgNext(formData.get("next")) ?? "/org");
+  }
 
   if (intent === "request") {
     if (!email) return { step: "email", email: typed, error: "Enter a valid email address." };
@@ -60,8 +85,10 @@ export async function companySignIn(_prev: SignInState, formData: FormData): Pro
       throw error;
     }
 
-    // Signed in. /org sends them to their own company; the slug comes from the database, never the form.
-    redirect("/org");
+    // Signed in. Back to the workspace page they asked for, when it is a safe
+    // one; otherwise /org sends them to their own company. Either way the
+    // workspace's layout checks membership again, so `next` grants nothing.
+    redirect(safeOrgNext(formData.get("next")) ?? "/org");
   }
 
   return { step: "email" };

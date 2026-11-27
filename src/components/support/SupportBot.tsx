@@ -209,7 +209,7 @@ export function SupportBot() {
   }, [open, learner]);
 
   // The offer page shows the bot too, so buyers can talk to the team before paying.
-  if (pathname.startsWith("/admin") || pathname === "/join" || pathname === "/internship" || pathname === "/sales" || pathname.startsWith("/sales/") || (SITE_CLOSED && !learner)) return null;
+  if (pathname === "/org" || pathname.startsWith("/org/") || pathname.startsWith("/admin") || pathname === "/join" || pathname === "/internship" || pathname === "/sales" || pathname.startsWith("/sales/") || (SITE_CLOSED && !learner)) return null;
 
   /** Moves the launcher, and the panel with it if it is open. `save` keeps the spot for next time. */
   const moveTo = (p: Pos, save = false) => {

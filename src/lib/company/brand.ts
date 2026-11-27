@@ -1,12 +1,18 @@
 /**
  * A company's look in the emails Klymb sends for it (invites). Pure, so the
- * tests can import it.
+ * tests can import it. Built from the company's published branding
+ * (branding.ts, resolveBrand) by loadCompanyBrand.
  */
 
 export interface CompanyBrand {
   name: string;
+  /** An https link, or a path on this site (a logo served by /api/company-brand). */
   logoUrl: string | null;
   brandColor: string | null;
+  /** The workspace, for its own sign-in page. Without it, the neutral one. */
+  slug?: string;
+  supportEmail?: string | null;
+  supportText?: string | null;
 }
 
 /** WCAG relative luminance of a #rrggbb color. */
@@ -33,7 +39,7 @@ export function readableBrandColor(color: string | null | undefined): string | n
 }
 
 /**
- * "Acme via Klymb.ai". Quotes, angle brackets and control characters are
+ * A safe company display name. Quotes, angle brackets and control characters are
  * dropped so the name can't break the From header or pose as another address.
  */
 export function inviteSenderName(companyName: string): string {
@@ -44,7 +50,7 @@ export function inviteSenderName(companyName: string): string {
     .trim()
     .slice(0, 60)
     .trim();
-  return clean ? `${clean} via Klymb.ai` : "Klymb.ai";
+  return clean || "Klymb.ai";
 }
 
 /** Resend limits: per person, so nobody is flooded, and per HR person, so one account can't spam. */

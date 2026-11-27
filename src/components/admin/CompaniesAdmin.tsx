@@ -39,7 +39,7 @@ export function CompaniesAdmin({ companies }: { companies: CompanyRow[] | null }
       {companies === null ? (
         <EmptyState title="Companies unavailable" body="The database isn't reachable from here, or migration 0012 hasn't been run yet." />
       ) : companies.length === 0 ? (
-        <EmptyState title="No companies yet" body="Create the first one above. It starts with no seats, so set the seats before adding its HR person." />
+        <EmptyState title="No companies yet" body="Create the first one above. It starts with no seats, so set the seats before adding its admin." />
       ) : (
         companies.map((c) => <CompanyCard key={c.id} company={c} />)
       )}
@@ -124,12 +124,15 @@ function SettingsForm({ company: c }: { company: CompanyRow }) {
         await run(() => updateCompanySettings(c.id, { logoUrl: logo, brandColor: color, seatCount: seats }), "Saved.");
       }}
     >
+      <p className="w-full text-xs text-muted">
+        The company&apos;s admin sets its branding at <span className="font-mono">/org/{c.slug}/branding</span>. The logo link and colour here are used only until they publish their own.
+      </p>
       <label className={label}>
-        Logo link (https)
+        Fallback logo link (https)
         <input type="url" value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="https://…/logo.png" autoComplete="off" spellCheck={false} className={`${input} w-72`} />
       </label>
       <label className={label}>
-        Color
+        Fallback colour
         <span className="flex items-center gap-2">
           <input
             type="color" value={swatch} onChange={(e) => setColor(e.target.value)}
@@ -156,7 +159,7 @@ function HrForm({ company: c }: { company: CompanyRow }) {
   if (c.hr_email) {
     return (
       <p className="border-t border-line/20 pt-4 text-sm">
-        <span className="text-xs font-bold uppercase tracking-wider text-muted">HR person</span>{" "}
+        <span className="text-xs font-bold uppercase tracking-wider text-muted">Company admin</span>{" "}
         <strong>{c.hr_name ?? c.hr_email}</strong>{c.hr_name && <span className="text-muted"> ({c.hr_email})</span>}
       </p>
     );
@@ -172,14 +175,14 @@ function HrForm({ company: c }: { company: CompanyRow }) {
       }}
     >
       <label className={label}>
-        First HR person&apos;s email
+        First admin&apos;s email
         <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="off" spellCheck={false} className={`${input} w-72`} />
       </label>
       <label className={label}>
         Name (optional)
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="off" className={`${input} w-48`} />
       </label>
-      <button type="submit" disabled={busy || noSeat} className={submit}>{busy ? "Adding…" : "Add HR person"}</button>
+      <button type="submit" disabled={busy || noSeat} className={submit}>{busy ? "Adding…" : "Add admin"}</button>
       {noSeat && !msg && <p className="w-full text-xs text-muted">Set at least one free seat first.</p>}
       <Note msg={msg} />
     </form>

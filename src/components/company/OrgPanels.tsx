@@ -26,7 +26,7 @@ export function RoleOnly({ role, home }: { role: string; home: string }) {
     <div role="status" className="card p-6">
       <h2 className="display text-xl">This page is for {role}</h2>
       <p className="mt-2 max-w-xl text-sm text-muted">
-        You&apos;re signed in, but your role here doesn&apos;t include this page. Ask your company&apos;s HR contact if you think it should.
+        You&apos;re signed in, but your role here doesn&apos;t include this page. Ask your company&apos;s admin if you think it should.
       </p>
       <Link href={home} className="mt-4 inline-block text-sm font-bold underline underline-offset-4 hover:text-red-deep">
         Back to overview

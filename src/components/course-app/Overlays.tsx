@@ -228,9 +228,10 @@ export function Toast({ text }: { text: string }) {
   );
 }
 
-const PLEDGES: { icon: "shield" | "flame"; title: string; body: string }[] = [
+/** The refund line only for a paid seat: a seat a company assigned, or one given free, has no fee to lose. */
+const pledges = (refundable: boolean): { icon: "shield" | "flame"; title: string; body: string }[] => [
   { icon: "shield", title: "I’ll learn honestly", body: "No looking up answers. An honest score shows what to rewatch." },
-  { icon: "flame", title: "I’ll do one lesson every day", body: "If I miss a day, I can keep learning, but my streak resets and I lose the refund." },
+  { icon: "flame", title: "I’ll do one lesson every day", body: `If I miss a day, I can keep learning, but my streak resets${refundable ? " and I lose the refund" : ""}.` },
 ];
 const HOLD_MS = 1200;
 
@@ -270,7 +271,7 @@ export function Commitment({ s, act }: { s: CourseState; act: Act }) {
             <span className="sd-kicker text-sd-accent-700">Before you start</span>
             <h1 className="m-0 mb-1 text-[34px] leading-[.98] tracking-[-0.04em] text-balance lg:text-[52px]">Make two promises.</h1>
             <div className="flex flex-col gap-2.5" role="group" aria-label="Promises">
-              {PLEDGES.map((pl, i) => {
+              {pledges(!!s.progress?.refundable).map((pl, i) => {
                 const on = pledge[i];
                 return (
                   <button

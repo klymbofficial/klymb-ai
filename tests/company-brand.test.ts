@@ -28,12 +28,12 @@ test("readableBrandColor refuses anything that isn't #rrggbb, so nothing odd rea
   }
 });
 
-test("inviteSenderName reads 'Acme via Klymb.ai' and can't break the From header", () => {
-  assert.equal(inviteSenderName("Acme"), "Acme via Klymb.ai");
-  assert.equal(inviteSenderName('  Acme   "Labs" <ceo@acme.com> '), "Acme Labs ceoacme.com via Klymb.ai");
-  assert.equal(inviteSenderName("Acme\r\nBcc: x"), "Acme Bcc: x via Klymb.ai");
+test("inviteSenderName is white-label and can't break the From header", () => {
+  assert.equal(inviteSenderName("Acme"), "Acme");
+  assert.equal(inviteSenderName('  Acme   "Labs" <ceo@acme.com> '), "Acme Labs ceoacme.com");
+  assert.equal(inviteSenderName("Acme\r\nBcc: x"), "Acme Bcc: x");
   assert.equal(inviteSenderName('"<>"'), "Klymb.ai", "nothing left falls back to Klymb.ai");
-  assert.ok(inviteSenderName("x".repeat(200)).length <= 60 + " via Klymb.ai".length);
+  assert.ok(inviteSenderName("x".repeat(200)).length <= 60);
 });
 
 test("resend limits: one per person per 10 minutes, 50 per HR per hour", () => {
@@ -60,6 +60,17 @@ test("mail: the company invite uses the checked color, the escaped logo and the 
   assert.match(mail, /alt="\$\{esc\(brand\.name\)\}"/);
 });
 
+test("mail: company-branded invitations do not add Klymb co-branding", () => {
+  const mail = read("src/lib/mail.ts");
+  const companyInvite = mail.slice(mail.indexOf("export function companyInviteEmail"), mail.indexOf("export function candidateInviteEmail"));
+  const companyAssessment = mail.slice(mail.indexOf("export function candidateInviteEmail"), mail.indexOf("const reminderFooter"));
+  for (const section of [companyInvite, companyAssessment]) {
+    assert.doesNotMatch(section, /on Klymb\.ai/);
+    assert.doesNotMatch(section, /via Klymb\.ai/);
+    assert.doesNotMatch(section, /Sent for .* by Klymb\.ai/);
+  }
+});
+
 test("mail: emails without a brand keep Klymb's header and footer", () => {
   const mail = read("src/lib/mail.ts");
   assert.match(mail, /if \(!brand\) \{\s+return `<td[^`]*klymb-icon\.png/);
@@ -70,17 +81,18 @@ test("mail: emails without a brand keep Klymb's header and footer", () => {
   }
 });
 
-test("both invite senders pass the company's brand", () => {
-  assert.match(read("src/app/admin/company-actions.ts"), /company: \{ name: c\.name, logoUrl: c\.logo_url, brandColor: c\.brand_color \}/);
-  const people = read("src/app/org/[slug]/people/actions.ts");
+test("both invite senders pass the company's published brand", () => {
+  assert.match(read("src/app/admin/company-actions.ts"), /company: \(await loadCompanyBrand\(sql, id\)\) \?\?/);
+  assert.match(read("src/lib/company/invite.ts"), /publishedBrand\(sql, companyId\)/);
+  const people = read("src/app/org/[slug]/(workspace)/people/actions.ts");
   assert.match(people, /sendCompanyInvite\(\{ email: p\.email, name: p\.name, company, role: p\.role \}\)/);
 });
 
-test("resend is HR-only, for active people, and limited per person and per HR before anything is sent", () => {
-  const src = read("src/app/org/[slug]/people/actions.ts");
+test("resend is admin-only, for active people, and limited per person and per admin before anything is sent", () => {
+  const src = read("src/app/org/[slug]/(workspace)/people/actions.ts");
   const fn = src.slice(src.indexOf("export async function resendInvite"));
   const at = (s: string) => { const i = fn.indexOf(s); assert.ok(i >= 0, s); return i; };
-  assert.ok(at("hrFor(slug)") < at("loadPerson("));
+  assert.ok(at("adminFor(slug)") < at("loadPerson("));
   assert.ok(at("target.removed") < at('checkRateLimit("company_invite_resend"'));
   assert.ok(at('checkRateLimit("company_invite_resend"') < at("sendCompanyInvite("));
   assert.ok(at('checkRateLimit("company_invite_resend_hr"') < at("sendCompanyInvite("));
