@@ -72,8 +72,8 @@ const SD_LESSONS = MODULES.reduce((n, m) => n + m.lessons.length, 0);
 const claude: LibraryCourse = {
   slug: "claude",
   name: "Claude Challenge",
-  kind: "60-day challenge",
-  summary: "Master Claude AI in 60 days: one scoped task a day, shipped in public.",
+  kind: "30-day challenge",
+  summary: "Master Claude AI in 30 days: one scoped task a day, shipped in public.",
   category: "AI",
   glyph: "C",
   tint: "clay",
@@ -82,7 +82,7 @@ const claude: LibraryCourse = {
   open: true,
   free: true,
   href: "/challenges/claude",
-  card: { level: "Beginner", hours: 60, lessons: 60, rating: 4.8, reviews: 2140, learners: 12400 },
+  card: { level: "Beginner", hours: 30, lessons: 30, rating: 4.8, reviews: 2140, learners: 12400 },
 };
 
 /**

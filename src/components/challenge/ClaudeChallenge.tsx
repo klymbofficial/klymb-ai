@@ -8,6 +8,7 @@ import "@/components/landing/landing.css";
 import "./claude-challenge.css";
 import { EnrollControl, useChallengeEnrollment } from "./ChallengeEnroll";
 import { SKILLS } from "./claude-chats";
+import { CLAUDE_DAYS } from "./claude-days";
 import { Conversation } from "./Conversation";
 
 const STEPS = [
@@ -51,8 +52,7 @@ function Facts({ d }: { d: CardDetails }) {
   );
 }
 
-/** Day i (0-based) belongs to week 1 to 9: seven days each, the last one four. */
-const weekOf = (i: number) => Math.min(8, Math.floor(i / 7));
+const DAYS = CLAUDE_DAYS.length;
 
 const Tick = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
@@ -64,14 +64,14 @@ const Arrow = () => (
 /**
  * /challenges/claude, from the Claude Design file "Klymb Claude Challenge":
  * a drag-to-compare hero (it sweeps once on its own), the five skills as real
- * before-and-after conversations (claude-chats.ts), the 60 squares filling in, and the start banner.
+ * before-and-after conversations (claude-chats.ts), the 30 squares filling in, and the start banner.
  *
- * `weeks` are the nine week names of the challenge's curriculum; `facts` is
+ * The squares are the 30 days of the curriculum (claude-days.ts); `facts` is
  * what its card in /courses shows. People enrol right here (ChallengeEnroll). As on the
  * homepage, "Enroll now" docks at the bottom once the hero's
  * own button has scrolled away, and steps aside for the start banner.
  */
-export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** "5 December" while the challenge has not opened. */ opens: string | null; facts: CardDetails | null }) {
+export function ClaudeChallenge({ opens, facts }: { /** "5 December" while the challenge has not opened. */ opens: string | null; facts: CardDetails | null }) {
   const enrollment = useChallengeEnrollment("claude");
   const [skill, setSkill] = useState(0);
   const [day, setDay] = useState(0);
@@ -114,7 +114,7 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
     return () => cancelAnimationFrame(raf.current);
   }, [setPos]);
 
-  // The 60 squares fill one by one while they are on screen, and rest when they are not or motion is reduced.
+  // The 30 squares fill one by one while they are on screen, and rest when they are not or motion is reduced.
   useEffect(() => {
     const el = grid.current;
     if (!el || reduceMotion()) return;
@@ -122,7 +122,7 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; });
     io.observe(el);
     const timer = setInterval(() => {
-      if (visible && !hovering.current) setDay((d) => (d + 1) % 60);
+      if (visible && !hovering.current) setDay((d) => (d + 1) % DAYS);
     }, 260);
     return () => { io.disconnect(); clearInterval(timer); clearTimeout(hoverTimer.current); };
   }, []);
@@ -162,7 +162,7 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
   };
 
   const cur = SKILLS[skill];
-  const curWeek = weekOf(day);
+  const curDay = CLAUDE_DAYS[day];
 
   return (
     <div className="kl kc">
@@ -170,8 +170,8 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
         <section aria-labelledby="kc-title" className="kc-hero" data-hero="">
           <div className="kc-hero-head">
             <div className="kc-hero-title">
-              <span className="kc-eyebrow kc-kicker">Claude Challenge · 60 days</span>
-              <h1 id="kc-title" className="kc-h1">Same you.<br /><span className="kc-em">60 days</span> apart.</h1>
+              <span className="kc-eyebrow kc-kicker">Claude Challenge · 30 days</span>
+              <h1 id="kc-title" className="kc-h1">Same you.<br /><span className="kc-em">30 days</span> apart.</h1>
             </div>
             <div className="kc-hero-aside">
               <EnrollControl enrollment={enrollment} opens={opens} className="kc-cta kc-cta--red">Enroll now <Arrow /></EnrollControl>
@@ -186,19 +186,19 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
             onKeyDown={nudge}
             tabIndex={0}
             role="slider"
-            aria-label="Day 1 against day 60"
+            aria-label="Day 1 against day 30"
             aria-valuemin={4}
             aria-valuemax={96}
             aria-valuenow={50}
-            aria-valuetext="Drag, or use the arrow keys, to compare day 1 with day 60"
+            aria-valuetext="Drag, or use the arrow keys, to compare day 1 with day 30"
           >
             <div className="kc-pane kc-pane--after">
-              <span className="kc-eyebrow kc-pane-label">Day 60 · You + Claude</span>
+              <span className="kc-eyebrow kc-pane-label">Day 30 · You + Claude</span>
               <div className="kc-pane-list">
                 <span className="kc-chip"><Tick />Portfolio site, live</span>
                 <span className="kc-chip"><Tick />Your own Claude agent</span>
-                <span className="kc-chip"><Tick />60 projects on GitHub</span>
-                <span className="kc-chip kc-chip--hot">60 LinkedIn posts. Recruiters noticing.</span>
+                <span className="kc-chip"><Tick />30 projects on GitHub</span>
+                <span className="kc-chip kc-chip--hot">30 LinkedIn posts. Recruiters noticing.</span>
               </div>
               <span className="kc-big">Shipping.</span>
             </div>
@@ -242,11 +242,11 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
 
         <section id="days" aria-labelledby="kc-days" className="kc-section">
           <div className="kc-days-head">
-            <h2 id="kc-days" className="kc-h2">60 squares.<br />Fill them all.</h2>
+            <h2 id="kc-days" className="kc-h2">30 squares.<br />Fill them all.</h2>
           </div>
           <div className="kc-days">
             <div ref={grid} className="kc-grid" aria-hidden="true">
-              {Array.from({ length: 60 }, (_, i) => (
+              {CLAUDE_DAYS.map((d, i) => (
                 <span
                   key={i}
                   className="kc-sq"
@@ -254,16 +254,16 @@ export function ClaudeChallenge({ weeks, opens, facts }: { weeks: string[]; /** 
                   onClick={() => showDay(i)}
                   style={{
                     background: i < day ? "var(--kl-red)" : i === day ? "var(--kl-ink)" : "color-mix(in srgb, var(--kl-ink) 10%, transparent)",
-                    outline: weekOf(i) === curWeek ? "2px solid var(--kl-red-300)" : "none",
+                    outline: d.stage === curDay.stage ? "2px solid var(--kl-red-300)" : "none",
                     outlineOffset: 1,
                   }}
                 />
               ))}
             </div>
             <div className="kc-weekcard">
-              <span className="kc-eyebrow">Day {day + 1} · Week {curWeek + 1}</span>
-              <span className="kc-card-title">{weeks[curWeek]}</span>
-              <p>Hover any square to see its week. Quiz at the end of each week.</p>
+              <span className="kc-eyebrow">Day {day + 1} · {curDay.stage}</span>
+              <span className="kc-card-title">{curDay.title}</span>
+              <p>Hover any square to see that day.</p>
             </div>
           </div>
         </section>

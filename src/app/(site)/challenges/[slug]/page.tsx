@@ -23,7 +23,7 @@ export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const c = getTrack((await params).slug);
-  return c ? { title: `${c.name}: 60-day challenge`, description: c.description } : {};
+  return c ? { title: `${c.name}: ${c.slug === "claude" ? 30 : 60}-day challenge`, description: c.description } : {};
 }
 
 const STEPS = [
@@ -44,7 +44,7 @@ export default async function ChallengePage({ params }: { params: Promise<{ slug
   const opens = date ? releaseDay(date) : null;
 
   // The Claude challenge has its own page, from the Claude Design file "Klymb Claude Challenge".
-  if (c.slug === "claude") return <ClaudeChallenge weeks={course.modules.map((m) => m.name)} opens={opens} facts={libraryCourses.find((l) => l.slug === "claude")?.card ?? null} />;
+  if (c.slug === "claude") return <ClaudeChallenge opens={opens} facts={libraryCourses.find((l) => l.slug === "claude")?.card ?? null} />;
 
   return (
     <>
