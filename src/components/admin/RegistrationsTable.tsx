@@ -5,9 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { allTracks as tracks } from "@/data/tracks";
 import { enrollRegistration } from "@/app/admin/enroll";
-import type { Registration } from "@/lib/admin/data";
+import type { Registration, SdSeat } from "@/lib/admin/data";
 
-const trackName = (slug: string) => tracks.find((t) => t.slug === slug)?.name ?? slug;
+const SD = "system-design" as const;
+const trackName = (slug: string) => (slug === SD ? "System Design" : tracks.find((t) => t.slug === slug)?.name ?? slug);
+const SEAT: Record<SdSeat, string> = { active: "Enrolled", refunded: "Refunded", revoked: "Revoked", "not-paid": "Not paid" };
+const roleName = (r: Registration) => (r.track === SD ? (r.job_role === "student" ? "Student" : r.job_role === "working" ? "Working" : "") : r.job_role);
 
 const csvCell = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
@@ -40,9 +43,9 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
   }, [rows, query, track]);
 
   function exportCsv() {
-    const header = ["Registered", "Name", "Email", "Phone", "Track", "Current role", "Experience", "LinkedIn"];
+    const header = ["Registered", "Name", "Email", "Phone", "Track", "Current role", "Experience", "LinkedIn", "System Design seat"];
     const body = filtered.map((r) =>
-      [new Date(r.created_at).toISOString(), r.name, r.email, r.phone, trackName(r.track), r.job_role, r.experience, r.linkedin ?? ""]
+      [new Date(r.created_at).toISOString(), r.name, r.email, r.phone, trackName(r.track), roleName(r), r.experience, r.linkedin ?? "", r.sd_status ? SEAT[r.sd_status] : ""]
         .map(csvCell)
         .join(","),
     );
@@ -75,6 +78,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
           >
             <option value="">All tracks</option>
             {tracks.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
+            <option value={SD}>System Design</option>
           </select>
         </div>
         <button
@@ -110,15 +114,17 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
                   <a href={`mailto:${r.email}`} className="underline underline-offset-2 hover:text-red-deep">{r.email}</a>
                   <span className="block text-xs text-muted">{r.phone}</span>
                 </td>
-                <td className="p-3"><span className="border border-ink/40 px-2 py-0.5 text-xs font-bold">{trackName(r.track)}</span></td>
-                <td className="p-3 text-xs">{r.job_role}<span className="block text-muted">{r.experience}</span></td>
+                <td className="p-3"><span className="border border-ink/40 px-2 py-0.5 text-xs font-bold whitespace-nowrap">{trackName(r.track)}</span></td>
+                <td className="p-3 text-xs">{roleName(r)}<span className="block text-muted">{r.experience}</span></td>
                 <td className="p-3 text-xs">
                   {r.linkedin ? (
                     <a href={r.linkedin} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-red-deep">Profile</a>
                   ) : <span className="text-muted">-</span>}
                 </td>
                 <td className="p-3 text-xs">
-                  {enrolled.includes(r.email.toLowerCase()) || justEnrolled.includes(r.email.toLowerCase()) ? (
+                  {r.sd_status ? (
+                    <span className={clsx("border px-2 py-0.5 text-xs font-bold uppercase tracking-wider", r.sd_status === "active" ? "border-ink" : "border-line text-muted")}>{SEAT[r.sd_status]}</span>
+                  ) : enrolled.includes(r.email.toLowerCase()) || justEnrolled.includes(r.email.toLowerCase()) ? (
                     <span className="border border-ink px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Enrolled</span>
                   ) : (
                     <button
@@ -127,7 +133,7 @@ export function RegistrationsTable({ rows, enrolled }: { rows: Registration[]; e
                       onClick={async () => {
                         setEnrolError("");
                         setEnrolling(r.id);
-                        const result = await enrollRegistration({ name: r.name, email: r.email, track: r.track, cohort_start: r.cohort_start });
+                        const result = await enrollRegistration({ name: r.name, email: r.email, track: r.track as Exclude<Registration["track"], typeof SD>, cohort_start: r.cohort_start });
                         setEnrolling("");
                         if (result.ok) setJustEnrolled((prev) => [...prev, r.email.toLowerCase()]);
                         else setEnrolError(result.message);
