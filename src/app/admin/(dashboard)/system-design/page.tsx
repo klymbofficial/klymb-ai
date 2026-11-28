@@ -227,8 +227,8 @@ export default async function AdminSystemDesignPage({ searchParams }: { searchPa
 
       {announce && (
         <div id="announce" className="mt-10 scroll-mt-6">
-          <Panel title="WhatsApp group announcement" note={`Once only, to paid learners (granted seats and company learners are left out). Email: “Join the System Design learners' WhatsApp group”, with the join button. Phone: “${SD_WHATSAPP_PUSH.title}: ${SD_WHATSAPP_PUSH.body}” to ${announce.devices} devices.`}>
-            <WhatsAppAnnounce learners={announce.learners} devices={announce.devices} sentAt={announce.sent?.at ?? null} />
+          <Panel title="WhatsApp group announcement" note={`To every enrolled learner (paid, granted or company) who hasn't had it yet; nobody gets it twice, and new buyers get it automatically after paying. Email: “Join the System Design learners' WhatsApp group”, with the join button. Phone: “${SD_WHATSAPP_PUSH.title}: ${SD_WHATSAPP_PUSH.body}” to ${announce.devices} devices.`}>
+            <WhatsAppAnnounce learners={announce.learners} devices={announce.devices} lastSentAt={announce.lastSentAt} />
           </Panel>
         </div>
       )}

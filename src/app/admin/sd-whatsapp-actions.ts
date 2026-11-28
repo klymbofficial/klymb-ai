@@ -1,13 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { site } from "@/data/config";
 import { getAdmin } from "@/lib/admin/auth";
 import { logAdmin } from "@/lib/admin/audit";
 import { db } from "@/lib/db/client";
-import { MAIL_SUPPORT, sdWhatsAppGroupEmail, sendMail } from "@/lib/mail";
 import { pushReady, sendPush, type PushTarget } from "@/lib/push";
-import { SD_WHATSAPP_GROUP, paidLearners } from "@/lib/sd-community";
+import { learnersAwaitingGroupEmail, sendGroupEmailOnce } from "@/lib/sd-community";
 import { SD_WHATSAPP_PUSH } from "@/lib/sd-whatsapp-announce";
 
 export type AnnounceResult =
@@ -15,9 +13,10 @@ export type AnnounceResult =
   | { ok: false; message: string };
 
 /**
- * Sends the WhatsApp group announcement once: an email to every paid System
- * Design learner and a push to each of their devices. Owners only. The audit
- * log is the record that it went out, so a second press is refused.
+ * Sends the WhatsApp group announcement to every active System Design seat
+ * that has not had it yet, and a push to each of their devices. Owners only.
+ * Each seat remembers when it was emailed (whatsapp_mailed_at), so pressing
+ * again only reaches people who enrolled since, and nobody gets it twice.
  */
 export async function sendWhatsAppAnnouncement(): Promise<AnnounceResult> {
   const admin = await getAdmin();
@@ -25,30 +24,25 @@ export async function sendWhatsAppAnnouncement(): Promise<AnnounceResult> {
   const sql = db();
   if (!sql) return { ok: false, message: "Unavailable right now." };
 
-  const { data: prior, error: priorError } = await sql.rows<{ id: string }>`
-    select id from course.admin_audit_log where action = 'sd.whatsapp_announce' limit 1
-  `;
-  if (priorError) return { ok: false, message: "Could not check whether it was already sent." };
-  if (prior?.length) return { ok: false, message: "Already sent." };
-
-  const { data: rows, error } = await paidLearners(sql);
+  const { data: rows, error } = await learnersAwaitingGroupEmail(sql);
   if (error) return { ok: false, message: "Could not read learners." };
   const learners = [...new Map((rows ?? []).map((r) => [r.email, r])).values()];
-  // Claim it before sending, so a double click can't send twice.
+  if (!learners.length) return { ok: false, message: "Everyone enrolled has already had it." };
   await logAdmin(admin, "sd.whatsapp_announce", null, { learners: learners.length });
 
+  // A seat is claimed before its email goes, so a double click sends nothing twice.
   let emailed = 0, emailFailed = 0;
+  const reached: string[] = [];
   for (const l of learners) {
-    const mail = sdWhatsAppGroupEmail({ name: l.name?.trim().split(/\s+/)[0] || "there", groupUrl: SD_WHATSAPP_GROUP, siteUrl: site.url, supportEmail: MAIL_SUPPORT });
-    const out = await sendMail({ to: { email: l.email, name: l.name ?? undefined }, ...mail, kind: "sd.whatsapp_group", idempotencyKey: `${l.email}:sd-whatsapp-group` });
-    if (out.ok) emailed++;
-    else emailFailed++;
+    const out = await sendGroupEmailOnce(sql, l.email, l.name);
+    if (out === "sent") { emailed++; reached.push(l.email); }
+    else if (out === "failed") emailFailed++;
   }
 
   let pushed = 0, pushFailed = 0;
-  if (learners.length && pushReady()) {
+  if (reached.length && pushReady()) {
     const { data: devices } = await sql.rows<PushTarget>`
-      select endpoint, p256dh, auth from course.sd_push_subscriptions where email = any(${learners.map((l) => l.email)}::text[])
+      select endpoint, p256dh, auth from course.sd_push_subscriptions where email = any(${reached}::text[])
     `;
     for (const d of devices ?? []) {
       const out = await sendPush(d, { ...SD_WHATSAPP_PUSH, url: "/learn/system-design" });
