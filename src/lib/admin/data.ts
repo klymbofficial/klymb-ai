@@ -12,12 +12,16 @@ export interface Registration {
   name: string;
   email: string;
   phone: string;
-  track: TrackSlug;
+  track: TrackSlug | typeof SD_COURSE;
   job_role: string;
   experience: string;
   linkedin: string | null;
   cohort_start: string;
+  /** System Design only: where their seat stands. "not-paid" filled the checkout form and never paid. */
+  sd_status?: SdSeat;
 }
+
+export type SdSeat = "active" | "refunded" | "revoked" | "not-paid";
 
 export interface LearnerProgress {
   id: string;
@@ -69,6 +73,38 @@ export async function getRegistrations(): Promise<Registration[]> {
      limit 1000
   `;
   return data ?? [];
+}
+
+/**
+ * System Design people, shaped as registrations: everyone who filled the
+ * checkout form (name, phone, LinkedIn, student or working), plus anyone with
+ * a seat who never filled it (a seat granted by hand). The learner profile
+ * fills in a name, phone or LinkedIn the form left empty.
+ */
+export async function getSdRegistrations(): Promise<Registration[]> {
+  if (!(await getAdmin())) return [];
+  const sql = db();
+  if (!sql) return [];
+  const { data } = await sql.rows<Omit<Registration, "track">>`
+    select coalesce(r.email, e.email)                                  as id,
+           coalesce(r.created_at, e.created_at)                        as created_at,
+           coalesce(r.name, p.name, '')                                as name,
+           coalesce(r.email, e.email)                                  as email,
+           coalesce(r.phone, p.phone, '')                              as phone,
+           coalesce(r.status, p.status, '')                            as job_role,
+           ''                                                          as experience,
+           coalesce(nullif(r.linkedin, ''),
+                    case when p.linkedin_slug is not null
+                         then 'https://www.linkedin.com/in/' || p.linkedin_slug end) as linkedin,
+           ''                                                          as cohort_start,
+           coalesce(e.status, 'not-paid')                              as sd_status
+      from course.sd_preregistrations r
+      full join (select * from course.enrollments where course = ${SD_COURSE}) e on e.email = r.email
+      left join course.profiles p on p.email = coalesce(r.email, e.email)
+     order by 2 desc
+     limit 2000
+  `;
+  return (data ?? []).map((r) => ({ ...r, track: SD_COURSE }));
 }
 
 export async function getLearnerProgress(): Promise<LearnerProgress[]> {
