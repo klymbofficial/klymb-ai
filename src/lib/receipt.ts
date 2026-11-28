@@ -5,6 +5,7 @@ import { formatMinor } from "@/lib/pricing";
 import { db } from "@/lib/db/client";
 import { MAIL_SUPPORT, mailReady, sdReceiptEmail, sendMail, thankYouEmail } from "@/lib/mail";
 import { referralFor } from "@/lib/referrals";
+import { sendGroupEmailOnce } from "@/lib/sd-community";
 import { SD_COURSE } from "@/lib/sd-offer";
 
 /**
@@ -57,5 +58,11 @@ export async function sendReceiptOnce(orderId: string) {
   if (!sent.ok && !sent.skipped) {
     console.error("thank-you email failed:", orderId, sent.reason);
     await sql.run`update course.payments set receipt_sent_at = null where id = ${pay.id}`;
+  }
+
+  // A System Design buyer also gets the learners' WhatsApp group, in its own email, once.
+  if (sd) {
+    const group = await sendGroupEmailOnce(sql, pay.email, reg?.name ?? null);
+    if (group === "failed") console.error("whatsapp group email failed:", orderId);
   }
 }
